@@ -69,8 +69,8 @@ pub struct Orderbook<Asset>
 where
     Asset: Debug + Clone + Copy + Eq,
 {
-    order_asset: Asset,
-    price_asset: Asset,
+    base_asset: Asset,
+    quote_asset: Asset,
     bid_queue: OrderQueue<Order<Asset>>,
     ask_queue: OrderQueue<Order<Asset>>,
     seq: sequence::TradeSequence,
@@ -78,7 +78,7 @@ where
 }
 
 
-impl<Asset> Orderbook<Asset>
+impl<Asset> Orderbook <Asset>
 where
     Asset: Debug + Clone + Copy + Eq,
 {
@@ -87,16 +87,16 @@ where
     /// # Examples
     ///
     /// Basic usage:
-    /// ```
+    /// ///```
     /// let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
     /// let result = orderbook.process_order(OrderRequest::MarketOrder{  });
     /// assert_eq!(orderbook)
-    /// ```
-    // todo fix doc test!
-    pub fn new(order_asset: Asset, price_asset: Asset) -> Self {
+    /// /// ```
+    // todo fix doc test, e.g. make above run w '''
+    pub fn new(base_asset: Asset, quote_asset: Asset) -> Self {
         Orderbook {
-            order_asset,
-            price_asset,
+            base_asset,
+            quote_asset,
             bid_queue: OrderQueue::new(
                 OrderSide::Bid,
                 MAX_STALLED_INDICES_IN_QUEUE,
@@ -109,8 +109,8 @@ where
             ),
             seq: sequence::new_sequence_gen(MIN_SEQUENCE_ID, MAX_SEQUENCE_ID),
             order_validator: OrderRequestValidator::new(
-                order_asset,
-                price_asset,
+                base_asset,
+                quote_asset,
                 MIN_SEQUENCE_ID,
                 MAX_SEQUENCE_ID,
             ),
@@ -130,8 +130,8 @@ where
 
         match order {
             OrderRequest::NewMarketOrder {
-                order_asset,
-                price_asset,
+                base_asset,
+                quote_asset,
                 side,
                 qty,
                 ts: _ts,
@@ -147,16 +147,16 @@ where
                 self.process_market_order(
                     &mut proc_result,
                     order_id,
-                    order_asset,
-                    price_asset,
+                    base_asset,
+                    quote_asset,
                     side,
                     qty,
                 );
             }
 
             OrderRequest::NewLimitOrder {
-                order_asset,
-                price_asset,
+                base_asset,
+                quote_asset,
                 side,
                 price,
                 qty,
@@ -172,8 +172,8 @@ where
                 self.process_limit_order(
                     &mut proc_result,
                     order_id,
-                    order_asset,
-                    price_asset,
+                    base_asset,
+                    quote_asset,
                     side,
                     price,
                     qty,
@@ -215,8 +215,8 @@ where
         &mut self,
         results: &mut OrderProcessingResult,
         order_id: u64,
-        order_asset: Asset,
-        price_asset: Asset,
+        base_asset: Asset,
+        quote_asset: Asset,
         side: OrderSide,
         qty: f64,
     ) {
@@ -234,8 +234,8 @@ where
                 results,
                 &opposite_order,
                 order_id,
-                order_asset,
-                price_asset,
+                base_asset,
+                quote_asset,
                 OrderType::Market,
                 side,
                 qty,
@@ -246,8 +246,8 @@ where
                 self.process_market_order(
                     results,
                     order_id,
-                    order_asset,
-                    price_asset,
+                    base_asset,
+                    quote_asset,
                     side,
                     qty - opposite_order.qty,
                 );
@@ -264,8 +264,8 @@ where
         &mut self,
         results: &mut OrderProcessingResult,
         order_id: u64,
-        order_asset: Asset,
-        price_asset: Asset,
+        base_asset: Asset,
+        quote_asset: Asset,
         side: OrderSide,
         price: f64,
         qty: f64,
@@ -293,8 +293,8 @@ where
                     results,
                     &opposite_order,
                     order_id,
-                    order_asset,
-                    price_asset,
+                    base_asset,
+                    quote_asset,
                     OrderType::Limit,
                     side,
                     qty,
@@ -305,8 +305,8 @@ where
                     self.process_limit_order(
                         results,
                         order_id,
-                        order_asset,
-                        price_asset,
+                        base_asset,
+                        quote_asset,
                         side,
                         price,
                         qty - opposite_order.qty,
@@ -319,8 +319,8 @@ where
                 self.store_new_limit_order(
                     results,
                     order_id,
-                    order_asset,
-                    price_asset,
+                    base_asset,
+                    quote_asset,
                     side,
                     price,
                     qty,
@@ -332,8 +332,8 @@ where
             self.store_new_limit_order(
                 results,
                 order_id,
-                order_asset,
-                price_asset,
+                base_asset,
+                quote_asset,
                 side,
                 price,
                 qty,
@@ -363,8 +363,8 @@ where
             ts,
             Order {
                 order_id,
-                order_asset: self.order_asset,
-                price_asset: self.price_asset,
+                base_asset: self.base_asset,
+                quote_asset: self.quote_asset,
                 side,
                 price,
                 qty,
@@ -412,8 +412,8 @@ where
         &mut self,
         results: &mut OrderProcessingResult,
         order_id: u64,
-        order_asset: Asset,
-        price_asset: Asset,
+        base_asset: Asset,
+        quote_asset: Asset,
         side: OrderSide,
         price: f64,
         qty: f64,
@@ -429,8 +429,8 @@ where
             ts,
             Order {
                 order_id,
-                order_asset,
-                price_asset,
+                base_asset,
+                quote_asset,
                 side,
                 price,
                 qty,
@@ -447,8 +447,8 @@ where
         results: &mut OrderProcessingResult,
         opposite_order: &Order<Asset>,
         order_id: u64,
-        order_asset: Asset,
-        price_asset: Asset,
+        base_asset: Asset,
+        quote_asset: Asset,
         order_type: OrderType,
         side: OrderSide,
         qty: f64,
@@ -489,8 +489,8 @@ where
                 };
                 opposite_queue.modify_current_order(Order {
                     order_id: opposite_order.order_id,
-                    order_asset,
-                    price_asset,
+                    base_asset,
+                    quote_asset,
                     side: opposite_order.side,
                     price: opposite_order.price,
                     qty: opposite_order.qty - qty,

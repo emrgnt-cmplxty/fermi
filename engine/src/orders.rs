@@ -11,16 +11,16 @@ where
     Asset: Debug + Clone,
 {
     NewMarketOrder {
-        order_asset: Asset,
-        price_asset: Asset,
+        base_asset: Asset,
+        quote_asset: Asset,
         side: OrderSide,
         qty: f64,
         ts: SystemTime,
     },
 
     NewLimitOrder {
-        order_asset: Asset,
-        price_asset: Asset,
+        base_asset: Asset,
+        quote_asset: Asset,
         side: OrderSide,
         price: f64,
         qty: f64,
@@ -48,8 +48,8 @@ where
 
 /// Create request for the new market order
 pub fn new_market_order_request<Asset>(
-    order_asset: Asset,
-    price_asset: Asset,
+    base_asset: Asset,
+    quote_asset: Asset,
     side: OrderSide,
     qty: f64,
     ts: SystemTime,
@@ -59,8 +59,8 @@ where
 {
 
     OrderRequest::NewMarketOrder {
-        order_asset,
-        price_asset,
+        base_asset,
+        quote_asset,
         qty,
         side,
         ts,
@@ -70,8 +70,8 @@ where
 
 /// Create request for the new limit order
 pub fn new_limit_order_request<Asset>(
-    order_asset: Asset,
-    price_asset: Asset,
+    base_asset: Asset,
+    quote_asset: Asset,
     side: OrderSide,
     price: f64,
     qty: f64,
@@ -82,8 +82,8 @@ where
 {
 
     OrderRequest::NewLimitOrder {
-        order_asset,
-        price_asset,
+        base_asset,
+        quote_asset,
         side,
         price,
         qty,

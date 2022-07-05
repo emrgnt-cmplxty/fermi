@@ -1,0 +1,11 @@
+[package]
+name = "orderbook-test"
+version = "0.1.0"
+authors = []
+edition = "2018"
+
+[dependencies]
+assert_approx_eq = "1.1.0"
+rand = "0.8.4"
+engine = { path = "../engine" }
+user = { path = "../user" }

@@ -1,11 +1,11 @@
 
 extern crate engine;
-extern crate user;
+extern crate proc;
 
 pub use engine::domain::OrderSide;
 pub use engine::orderbook::{Orderbook, OrderProcessingResult, Success, Failed};
 pub use engine::orders;
-pub use user::account::{Account, MAX_N};
+pub use proc::account::{Account, MAX_N};
 
 #[cfg(test)]
 mod tests {

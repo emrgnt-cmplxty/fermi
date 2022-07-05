@@ -1,2 +1,2 @@
 [workspace]
-members = ["engine", "user", "orderbook-test"]
+members = ["engine", "proc", "orderbook-test"]

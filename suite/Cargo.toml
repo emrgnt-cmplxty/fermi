@@ -24,3 +24,7 @@ harness = false
 [[bench]]
 name = "proc_bench"
 harness = false
+
+[[bench]]
+name = "proc_bench_with_db"
+harness = false

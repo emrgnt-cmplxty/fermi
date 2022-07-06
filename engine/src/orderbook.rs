@@ -22,7 +22,7 @@ pub type OrderProcessingResult = Vec<Result<Success, Failed>>;
 #[derive(Debug)]
 pub enum Success {
     Accepted {
-        id: u64,
+        order_id: u64,
         order_type: OrderType,
         ts: SystemTime,
     },
@@ -46,7 +46,7 @@ pub enum Success {
     },
 
     Amended {
-        id: u64,
+        order_id: u64,
         price: f64,
         qty: f64,
         ts: SystemTime,
@@ -139,7 +139,7 @@ where
                 // generate new ID for order
                 let order_id = self.seq.next_id();
                 proc_result.push(Ok(Success::Accepted {
-                    id: order_id,
+                    order_id: order_id,
                     order_type: OrderType::Market,
                     ts: SystemTime::now(),
                 }));
@@ -164,7 +164,7 @@ where
             } => {
                 let order_id = self.seq.next_id();
                 proc_result.push(Ok(Success::Accepted {
-                    id: order_id,
+                    order_id: order_id,
                     order_type: OrderType::Limit,
                     ts: SystemTime::now(),
                 }));
@@ -372,7 +372,7 @@ where
         )
         {
             results.push(Ok(Success::Amended {
-                id: order_id,
+                order_id: order_id,
                 price,
                 qty,
                 ts: SystemTime::now(),

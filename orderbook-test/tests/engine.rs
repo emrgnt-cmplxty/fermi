@@ -5,7 +5,6 @@ extern crate proc;
 pub use engine::domain::OrderSide;
 pub use engine::orderbook::{Orderbook, OrderProcessingResult, Success, Failed};
 pub use engine::orders;
-pub use proc::account::{Account, MAX_N};
 
 #[cfg(test)]
 mod tests {
@@ -59,7 +58,7 @@ mod tests {
         let res = orderbook.process_order(order1);
 
         if !match res[0] {
-            Ok(Success::Accepted { id: 1, .. }) => true,
+            Ok(Success::Accepted { order_id: 1, .. }) => true,
             _ => false,
         } ||
             !match res[1] {
@@ -101,7 +100,7 @@ mod tests {
         let res = orderbook.process_order(order2);
 
         if !match res[0] {
-            Ok(Success::Accepted { id: 2, .. }) => true,
+            Ok(Success::Accepted { order_id: 2, .. }) => true,
             _ => false,
         } ||
             !match res[1] {
@@ -167,7 +166,7 @@ mod tests {
         let res = orderbook.process_order(order3);
 
         if !match res[0] {
-            Ok(Success::Accepted { id: 3, .. }) => true,
+            Ok(Success::Accepted { order_id: 3, .. }) => true,
             _ => false,
         } ||
             !match res[1] {
@@ -233,7 +232,7 @@ mod tests {
         let res = orderbook.process_order(order1);
 
         if !match res[0] {
-            Ok(Success::Accepted { id: 1, .. }) => true,
+            Ok(Success::Accepted { order_id: 1, .. }) => true,
             _ => false,
         }
         {
@@ -272,7 +271,7 @@ mod tests {
         let res = orderbook.process_order(order2);
 
         if !match res[0] {
-            Ok(Success::Accepted { id: 2, .. }) => true,
+            Ok(Success::Accepted { order_id: 2, .. }) => true,
             _ => false,
         } ||
             !match res[1] {
@@ -329,7 +328,7 @@ mod tests {
         let res = orderbook.process_order(order2);
 
         if !match res[0] {
-            Ok(Success::Accepted { id: 2, .. }) => true,
+            Ok(Success::Accepted { order_id: 2, .. }) => true,
             _ => false,
         } ||
             !match res[1] {
@@ -366,7 +365,7 @@ mod tests {
         let res2 = orderbook.process_order(order3);
 
         if !match res2[0] {
-            Ok(Success::Accepted { id: 3, .. }) => true,
+            Ok(Success::Accepted { order_id: 3, .. }) => true,
             _ => false,
         } ||
             !match res2[1] {

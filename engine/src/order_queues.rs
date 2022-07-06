@@ -201,7 +201,7 @@ impl<T> OrderQueue<T> {
                 order_side: self.queue_side,
             });
             // construct new queue
-            let mut amended_queue = BinaryHeap::from(active_orders);
+            let amended_queue = BinaryHeap::from(active_orders);
             self.idx_queue = Some(amended_queue);
         }
     }

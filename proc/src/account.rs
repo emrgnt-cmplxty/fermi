@@ -22,9 +22,7 @@ use diem_crypto::{
     ed25519::{Ed25519PrivateKey, Ed25519PublicKey, Ed25519Signature},
     traits::{Signature},
 };
-
 use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
-
 
 pub type AccountPubKey = Ed25519PublicKey;
 pub type AccountPrivKey = Ed25519PrivateKey;
@@ -115,7 +113,7 @@ where
 
 
     // the controller places bid on behalf of an account corresponding to account_pub_key
-    pub fn place_limit_order(&mut self, account_pub_key: &AccountPubKey, side: OrderSide, qty: f64, price: f64) -> Result<(), AccountError> {
+    pub fn place_limit_order(&mut self, account_pub_key: &AccountPubKey, side: OrderSide, qty: f64, price: f64) -> Result<OrderProcessingResult, AccountError> {
         // check account has sufficient balances
         {
             let account: &Account = self.accounts.get(account_pub_key).unwrap();
@@ -133,38 +131,36 @@ where
             qty,
             SystemTime::now()
         );
-        // println!("order={:?}", order);
         let res: Vec<Result<Success, Failed>> = self.orderbook.process_order(order);
-        // println!("res={:?}", res);
         self.proc_limit_result(account_pub_key, side, price, qty, res)
     }
 
-    pub fn place_signed_limit_order(&mut self, account_pub_key: &AccountPubKey, side: OrderSide, qty: f64, price: f64, signed_message: &AccountSignature) -> Result<(), AccountError> {
+    pub fn place_signed_limit_order(&mut self, account_pub_key: &AccountPubKey, side: OrderSide, qty: f64, price: f64, signed_message: &AccountSignature) -> Result<OrderProcessingResult, AccountError> {
         signed_message.verify(&TestDiemCrypto(DUMMY_MESSAGE.to_string()), &account_pub_key).unwrap();
         self.place_limit_order(account_pub_key, side, qty, price)
     }
 
     // loop over and process the output from placing a limit order
-    fn proc_limit_result(&mut self, account_pub_key: &AccountPubKey, sub_side: OrderSide, sub_price: f64, sub_qty: f64,  res: OrderProcessingResult) -> Result<(), AccountError> {
-        for order in res {
+    fn proc_limit_result(&mut self, account_pub_key: &AccountPubKey, sub_side: OrderSide, sub_price: f64, sub_qty: f64,  res: OrderProcessingResult) -> Result<OrderProcessingResult, AccountError> {
+        for order in &res {
             match order {
                 // first order is expected to be an Accepted result
                 Ok(Success::Accepted{order_id, ..}) => { 
                     let account: &mut Account = self.accounts.get_mut(&account_pub_key).unwrap();
                     AccountController::<Asset>::proc_order_init(account, sub_side, sub_price, sub_qty);
                     // insert new order to map
-                    self.order_to_account.insert(order_id, *account_pub_key);
+                    self.order_to_account.insert(*order_id, *account_pub_key);
                 },
                 // subsequent orders are expected to be an PartialFill or Fill results
                 Ok(Success::PartiallyFilled{order_id, side, price, qty, ..}) => {
                     let existing_pub_key: &AccountPubKey = self.order_to_account.get(&order_id).unwrap();
                     let account: &mut Account = self.accounts.get_mut(&existing_pub_key).unwrap();
-                    AccountController::<Asset>::proc_order_fill(account, side, price, qty, 0);
+                    AccountController::<Asset>::proc_order_fill(account, *side, *price, *qty, 0);
                 },
                 Ok(Success::Filled{order_id, side, price, qty, ..}) => {
                     let existing_pub_key: &AccountPubKey = self.order_to_account.get(&order_id).unwrap();
                     let account: &mut Account = self.accounts.get_mut(&existing_pub_key).unwrap();
-                    AccountController::<Asset>::proc_order_fill(account, side, price, qty, -1);
+                    AccountController::<Asset>::proc_order_fill(account, *side, *price, *qty, -1);
                     // erase existing order
                     self.order_to_account.remove(&order_id).unwrap();
                 }
@@ -175,7 +171,7 @@ where
                 }
             }
         }
-        Ok(())
+        Ok(res)
     }
 
     // process an initialized order by modifying the associated account

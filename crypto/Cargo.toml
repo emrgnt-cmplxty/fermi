@@ -58,9 +58,5 @@ u64 = ["curve25519-dalek/u64_backend", "ed25519-dalek/u64_backend", "x25519-dale
 u32 = ["curve25519-dalek/u32_backend", "ed25519-dalek/u32_backend", "x25519-dalek/u32_backend"]
 
 [[bench]]
-name = "noise"
-harness = false
-
-[[bench]]
 name = "ed25519"
 harness = false

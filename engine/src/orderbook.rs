@@ -1,4 +1,5 @@
-
+use std::any::Any;
+use std::convert::TryInto;
 use std::time::SystemTime;
 use std::fmt::Debug;
 
@@ -52,7 +53,7 @@ pub enum Success {
         ts: SystemTime,
     },
 
-    Cancelled { id: u64, ts: SystemTime },
+    Cancelled { order_id: u64, ts: SystemTime },
 }
 
 
@@ -66,8 +67,8 @@ pub enum Failed {
 
 
 pub struct Orderbook<Asset>
-where
-    Asset: Debug + Clone + Copy + Eq,
+    where
+        Asset: Debug + Clone + Copy + Eq,
 {
     base_asset: Asset,
     quote_asset: Asset,
@@ -78,22 +79,23 @@ where
 }
 
 
-impl<Asset> Orderbook <Asset>
-where
-    Asset: Debug + Clone + Copy + Eq,
+impl<Asset> Orderbook<Asset>
+    where
+        Asset: Debug + Clone + Copy + Eq,
 {
     /// Create new orderbook for pair of assets
     ///
     /// # Examples
     ///
     /// Basic usage:
-    /// ///```
-    /// let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
-    /// let result = orderbook.process_order(OrderRequest::MarketOrder{  });
-    /// assert_eq!(orderbook)
-    /// /// ```
-    // todo fix doc test, e.g. make above run w '''
+    /// ```
+    ///// let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
+    ///// let result = orderbook.process_order(OrderRequest::MarketOrder{  });
+    ///// assert_eq!(orderbook)
+    /// ```
+    // todo fix doc test!
     pub fn new(base_asset: Asset, quote_asset: Asset) -> Self {
+
         Orderbook {
             base_asset,
             quote_asset,
@@ -117,7 +119,6 @@ where
         }
     }
 
-
     pub fn process_order(&mut self, order: OrderRequest<Asset>) -> OrderProcessingResult {
         // processing result accumulator
         let mut proc_result: OrderProcessingResult = vec![];
@@ -139,7 +140,7 @@ where
                 // generate new ID for order
                 let order_id = self.seq.next_id();
                 proc_result.push(Ok(Success::Accepted {
-                    order_id: order_id,
+                    order_id,
                     order_type: OrderType::Market,
                     ts: SystemTime::now(),
                 }));
@@ -164,7 +165,7 @@ where
             } => {
                 let order_id = self.seq.next_id();
                 proc_result.push(Ok(Success::Accepted {
-                    order_id: order_id,
+                    order_id,
                     order_type: OrderType::Limit,
                     ts: SystemTime::now(),
                 }));
@@ -197,6 +198,7 @@ where
         }
 
         // return collected processing results
+
         proc_result
     }
 
@@ -372,7 +374,7 @@ where
         )
         {
             results.push(Ok(Success::Amended {
-                order_id: order_id,
+                order_id,
                 price,
                 qty,
                 ts: SystemTime::now(),
@@ -396,7 +398,7 @@ where
 
         if order_queue.cancel(order_id) {
             results.push(Ok(Success::Cancelled {
-                id: order_id,
+                order_id,
                 ts: SystemTime::now(),
             }));
         } else {

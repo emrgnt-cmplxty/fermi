@@ -43,21 +43,21 @@ where
     pub fn validate(&self, request: &OrderRequest<Asset>) -> Result<(), &str> {
         match *request {
             OrderRequest::NewMarketOrder {
-                order_asset,
-                price_asset,
+                base_asset,
+                quote_asset,
                 side: _side,
                 qty,
                 ts: _ts,
-            } => self.validate_market(order_asset, price_asset, qty),
+            } => self.validate_market(base_asset, quote_asset, qty),
 
             OrderRequest::NewLimitOrder {
-                order_asset,
-                price_asset,
+                base_asset,
+                quote_asset,
                 side: _side,
                 price,
                 qty,
                 ts: _ts,
-            } => self.validate_limit(order_asset, price_asset, price, qty),
+            } => self.validate_limit(base_asset, quote_asset, price, qty),
 
             OrderRequest::AmendOrder {
                 id,
@@ -75,16 +75,16 @@ where
 
     fn validate_market(
         &self,
-        order_asset: Asset,
-        price_asset: Asset,
+        base_asset: Asset,
+        quote_asset: Asset,
         qty: f64,
     ) -> Result<(), &str> {
 
-        if self.orderbook_order_asset != order_asset {
+        if self.orderbook_order_asset != base_asset {
             return Err(ERR_BAD_ORDER_ASSET);
         }
 
-        if self.orderbook_price_asset != price_asset {
+        if self.orderbook_price_asset != quote_asset {
             return Err(ERR_BAD_PRICE_ASSET);
         }
 
@@ -98,17 +98,17 @@ where
 
     fn validate_limit(
         &self,
-        order_asset: Asset,
-        price_asset: Asset,
+        base_asset: Asset,
+        quote_asset: Asset,
         price: f64,
         qty: f64,
     ) -> Result<(), &str> {
 
-        if self.orderbook_order_asset != order_asset {
+        if self.orderbook_order_asset != base_asset {
             return Err(ERR_BAD_ORDER_ASSET);
         }
 
-        if self.orderbook_price_asset != price_asset {
+        if self.orderbook_price_asset != quote_asset {
             return Err(ERR_BAD_PRICE_ASSET);
         }
 

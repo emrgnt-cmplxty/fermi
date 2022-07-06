@@ -1,10 +1,10 @@
 
-mod engine;
+extern crate engine;
+extern crate proc;
 
 pub use engine::domain::OrderSide;
 pub use engine::orderbook::{Orderbook, OrderProcessingResult, Success, Failed};
 pub use engine::orders;
-
 
 #[cfg(test)]
 mod tests {
@@ -43,12 +43,12 @@ mod tests {
         use std::time::SystemTime;
 
         let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
-        let order_asset = parse_asset("BTC").unwrap();
-        let price_asset = parse_asset("USD").unwrap();
+        let base_asset = parse_asset("BTC").unwrap();
+        let quote_asset = parse_asset("USD").unwrap();
 
         let order1 = orders::new_market_order_request(
-            order_asset,
-            price_asset,
+            base_asset,
+            quote_asset,
             OrderSide::Bid,
             2.0,
             SystemTime::now(),
@@ -58,7 +58,7 @@ mod tests {
         let res = orderbook.process_order(order1);
 
         if !match res[0] {
-            Ok(Success::Accepted { id: 1, .. }) => true,
+            Ok(Success::Accepted { order_id: 1, .. }) => true,
             _ => false,
         } ||
             !match res[1] {
@@ -76,12 +76,12 @@ mod tests {
         use std::time::SystemTime;
 
         let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
-        let order_asset = parse_asset("BTC").unwrap();
-        let price_asset = parse_asset("USD").unwrap();
+        let base_asset = parse_asset("BTC").unwrap();
+        let quote_asset = parse_asset("USD").unwrap();
 
         let order1 = orders::new_limit_order_request(
-            order_asset,
-            price_asset,
+            base_asset,
+            quote_asset,
             OrderSide::Bid,
             10.0,
             1.0,
@@ -89,8 +89,8 @@ mod tests {
         );
 
         let order2 = orders::new_market_order_request(
-            order_asset,
-            price_asset,
+            base_asset,
+            quote_asset,
             OrderSide::Ask,
             0.5,
             SystemTime::now(),
@@ -100,7 +100,7 @@ mod tests {
         let res = orderbook.process_order(order2);
 
         if !match res[0] {
-            Ok(Success::Accepted { id: 2, .. }) => true,
+            Ok(Success::Accepted { order_id: 2, .. }) => true,
             _ => false,
         } ||
             !match res[1] {
@@ -132,12 +132,12 @@ mod tests {
         use std::time::SystemTime;
 
         let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
-        let order_asset = parse_asset("BTC").unwrap();
-        let price_asset = parse_asset("USD").unwrap();
+        let base_asset = parse_asset("BTC").unwrap();
+        let quote_asset = parse_asset("USD").unwrap();
 
         let order1 = orders::new_limit_order_request(
-            order_asset,
-            price_asset,
+            base_asset,
+            quote_asset,
             OrderSide::Bid,
             10.0,
             1.0,
@@ -145,8 +145,8 @@ mod tests {
         );
 
         let order2 = orders::new_limit_order_request(
-            order_asset,
-            price_asset,
+            base_asset,
+            quote_asset,
             OrderSide::Bid,
             12.0,
             1.0,
@@ -154,8 +154,8 @@ mod tests {
         );
 
         let order3 = orders::new_market_order_request(
-            order_asset,
-            price_asset,
+            base_asset,
+            quote_asset,
             OrderSide::Ask,
             1.5,
             SystemTime::now(),
@@ -166,7 +166,7 @@ mod tests {
         let res = orderbook.process_order(order3);
 
         if !match res[0] {
-            Ok(Success::Accepted { id: 3, .. }) => true,
+            Ok(Success::Accepted { order_id: 3, .. }) => true,
             _ => false,
         } ||
             !match res[1] {
@@ -216,12 +216,12 @@ mod tests {
         use std::time::SystemTime;
 
         let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
-        let order_asset = parse_asset("BTC").unwrap();
-        let price_asset = parse_asset("USD").unwrap();
+        let base_asset = parse_asset("BTC").unwrap();
+        let quote_asset = parse_asset("USD").unwrap();
 
         let order1 = orders::new_limit_order_request(
-            order_asset,
-            price_asset,
+            base_asset,
+            quote_asset,
             OrderSide::Bid,
             10.0,
             2.0,
@@ -232,7 +232,7 @@ mod tests {
         let res = orderbook.process_order(order1);
 
         if !match res[0] {
-            Ok(Success::Accepted { id: 1, .. }) => true,
+            Ok(Success::Accepted { order_id: 1, .. }) => true,
             _ => false,
         }
         {
@@ -246,12 +246,12 @@ mod tests {
         use std::time::SystemTime;
 
         let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
-        let order_asset = parse_asset("BTC").unwrap();
-        let price_asset = parse_asset("USD").unwrap();
+        let base_asset = parse_asset("BTC").unwrap();
+        let quote_asset = parse_asset("USD").unwrap();
 
         let order1 = orders::new_limit_order_request(
-            order_asset,
-            price_asset,
+            base_asset,
+            quote_asset,
             OrderSide::Bid,
             10.0,
             1.0,
@@ -259,8 +259,8 @@ mod tests {
         );
 
         let order2 = orders::new_limit_order_request(
-            order_asset,
-            price_asset,
+            base_asset,
+            quote_asset,
             OrderSide::Ask,
             9.0,
             0.5,
@@ -271,7 +271,7 @@ mod tests {
         let res = orderbook.process_order(order2);
 
         if !match res[0] {
-            Ok(Success::Accepted { id: 2, .. }) => true,
+            Ok(Success::Accepted { order_id: 2, .. }) => true,
             _ => false,
         } ||
             !match res[1] {
@@ -303,12 +303,12 @@ mod tests {
         use std::time::SystemTime;
 
         let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
-        let order_asset = parse_asset("BTC").unwrap();
-        let price_asset = parse_asset("USD").unwrap();
+        let base_asset = parse_asset("BTC").unwrap();
+        let quote_asset = parse_asset("USD").unwrap();
 
         let order1 = orders::new_limit_order_request(
-            order_asset,
-            price_asset,
+            base_asset,
+            quote_asset,
             OrderSide::Bid,
             10.0,
             1.0,
@@ -316,8 +316,8 @@ mod tests {
         );
 
         let order2 = orders::new_limit_order_request(
-            order_asset,
-            price_asset,
+            base_asset,
+            quote_asset,
             OrderSide::Ask,
             9.0,
             0.5,
@@ -328,7 +328,7 @@ mod tests {
         let res = orderbook.process_order(order2);
 
         if !match res[0] {
-            Ok(Success::Accepted { id: 2, .. }) => true,
+            Ok(Success::Accepted { order_id: 2, .. }) => true,
             _ => false,
         } ||
             !match res[1] {
@@ -354,8 +354,8 @@ mod tests {
         }
 
         let order3 = orders::new_limit_order_request(
-            order_asset,
-            price_asset,
+            base_asset,
+            quote_asset,
             OrderSide::Ask,
             8.0,
             0.5,
@@ -365,7 +365,7 @@ mod tests {
         let res2 = orderbook.process_order(order3);
 
         if !match res2[0] {
-            Ok(Success::Accepted { id: 3, .. }) => true,
+            Ok(Success::Accepted { order_id: 3, .. }) => true,
             _ => false,
         } ||
             !match res2[1] {
@@ -399,12 +399,12 @@ mod tests {
         use std::time::SystemTime;
 
         let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
-        let order_asset = parse_asset("BTC").unwrap();
-        let price_asset = parse_asset("USD").unwrap();
+        let base_asset = parse_asset("BTC").unwrap();
+        let quote_asset = parse_asset("USD").unwrap();
 
         let order1 = orders::new_limit_order_request(
-            order_asset,
-            price_asset,
+            base_asset,
+            quote_asset,
             OrderSide::Bid,
             10.0,
             1.0,
@@ -415,8 +415,8 @@ mod tests {
         assert_eq!(orderbook.current_spread(), None);
 
         let order2 = orders::new_limit_order_request(
-            order_asset,
-            price_asset,
+            base_asset,
+            quote_asset,
             OrderSide::Ask,
             12.0,
             0.5,
@@ -424,8 +424,8 @@ mod tests {
         );
 
         let order3 = orders::new_limit_order_request(
-            order_asset,
-            price_asset,
+            base_asset,
+            quote_asset,
             OrderSide::Ask,
             12.5,
             2.5,
@@ -440,8 +440,8 @@ mod tests {
 
         // wider spread
         let order4 = orders::new_limit_order_request(
-            order_asset,
-            price_asset,
+            base_asset,
+            quote_asset,
             OrderSide::Bid,
             14.0,
             1.5,

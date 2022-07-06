@@ -1,8 +1,2 @@
-[package]
-name = "orderbook"
-version = "0.1.0"
-authors = ["Anton Dort-Golts <dortgolts@gmail.com>"]
-edition = "2018"
-
-[dependencies]
-rand = "0.8.4"
+[workspace]
+members = ["engine", "proc", "orderbook-test"]

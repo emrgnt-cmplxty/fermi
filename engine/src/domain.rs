@@ -13,8 +13,8 @@ where
     Asset: Debug + Clone,
 {
     pub order_id: u64,
-    pub order_asset: Asset,
-    pub price_asset: Asset,
+    pub base_asset: Asset,
+    pub quote_asset: Asset,
     pub side: OrderSide,
     pub price: f64,
     pub qty: f64,

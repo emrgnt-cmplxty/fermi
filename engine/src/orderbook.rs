@@ -1,7 +1,10 @@
+extern crate rocksdb;
 
+use std::any::Any;
+use std::convert::TryInto;
 use std::time::SystemTime;
 use std::fmt::Debug;
-
+use rocksdb::{ColumnFamilyDescriptor, DB, DBWithThreadMode, Options, SingleThreaded};
 
 use super::domain::{Order, OrderSide, OrderType};
 use super::orders::OrderRequest;
@@ -52,7 +55,7 @@ pub enum Success {
         ts: SystemTime,
     },
 
-    Cancelled { id: u64, ts: SystemTime },
+    Cancelled { order_id: u64, ts: SystemTime },
 }
 
 
@@ -66,8 +69,8 @@ pub enum Failed {
 
 
 pub struct Orderbook<Asset>
-where
-    Asset: Debug + Clone + Copy + Eq,
+    where
+        Asset: Debug + Clone + Copy + Eq,
 {
     base_asset: Asset,
     quote_asset: Asset,
@@ -75,25 +78,33 @@ where
     ask_queue: OrderQueue<Order<Asset>>,
     seq: sequence::TradeSequence,
     order_validator: OrderRequestValidator<Asset>,
+    db: DBWithThreadMode<SingleThreaded>
 }
 
 
-impl<Asset> Orderbook <Asset>
-where
-    Asset: Debug + Clone + Copy + Eq,
+impl<Asset> Orderbook<Asset>
+    where
+        Asset: Debug + Clone + Copy + Eq,
 {
     /// Create new orderbook for pair of assets
     ///
     /// # Examples
     ///
     /// Basic usage:
-    /// ///```
-    /// let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
-    /// let result = orderbook.process_order(OrderRequest::MarketOrder{  });
-    /// assert_eq!(orderbook)
-    /// /// ```
-    // todo fix doc test, e.g. make above run w '''
+    /// ```
+    ///// let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
+    ///// let result = orderbook.process_order(OrderRequest::MarketOrder{  });
+    ///// assert_eq!(orderbook)
+    /// ```
+    // todo fix doc test!
     pub fn new(base_asset: Asset, quote_asset: Asset) -> Self {
+        let path = "./db.rocks";
+        let mut cf_opts = Options::default();
+        cf_opts.set_max_write_buffer_number(16);
+        let cf = ColumnFamilyDescriptor::new("cf1", cf_opts);
+        let mut db_opts = Options::default();
+        db_opts.create_missing_column_families(true);
+        db_opts.create_if_missing(true);
         Orderbook {
             base_asset,
             quote_asset,
@@ -114,15 +125,36 @@ where
                 MIN_SEQUENCE_ID,
                 MAX_SEQUENCE_ID,
             ),
+            db: DB::open_cf_descriptors(&db_opts, path, vec![cf]).unwrap()
         }
     }
+
+
+    pub fn persist_result(&mut self, proc_result: &OrderProcessingResult) -> () {
+        for result in proc_result {
+            let id = match result {
+                Ok(Success::Accepted{order_id, ..}) => { self.db.put(order_id.to_string(), "a"); order_id},
+                Ok(Success::PartiallyFilled{order_id, qty, ..}) => { self.db.put(order_id.to_string(),"pf"); order_id},
+                Ok(Success::Filled{order_id, qty, ..}) =>  { self.db.put(order_id.to_string(),"f"); order_id},
+                _ => &0
+            };
+            // if self.db.key_may_exist(id.to_string()) {
+            //     match self.db.get(id.to_string()) {
+            //         Ok(Some(value)) => println!("retrieved value {}", String::from_utf8(value).unwrap()),
+            //         Ok(None) => println!("value not found"),
+            //         Err(e) => println!("operational problem encountered: {}", e),
+            //     }
+            // }
+        }
+    }
+
 
 
     pub fn process_order(&mut self, order: OrderRequest<Asset>) -> OrderProcessingResult {
         // processing result accumulator
         let mut proc_result: OrderProcessingResult = vec![];
 
-        // validate request
+        // validate requestç
         if let Err(reason) = self.order_validator.validate(&order) {
             proc_result.push(Err(Failed::ValidationFailed(String::from(reason))));
             return proc_result;
@@ -139,7 +171,7 @@ where
                 // generate new ID for order
                 let order_id = self.seq.next_id();
                 proc_result.push(Ok(Success::Accepted {
-                    order_id: order_id,
+                    order_id,
                     order_type: OrderType::Market,
                     ts: SystemTime::now(),
                 }));
@@ -156,7 +188,7 @@ where
 
             OrderRequest::NewLimitOrder {
                 base_asset,
-                quote_asset,
+                quote_asset: quote_asset,
                 side,
                 price,
                 qty,
@@ -164,7 +196,7 @@ where
             } => {
                 let order_id = self.seq.next_id();
                 proc_result.push(Ok(Success::Accepted {
-                    order_id: order_id,
+                    order_id,
                     order_type: OrderType::Limit,
                     ts: SystemTime::now(),
                 }));
@@ -197,6 +229,7 @@ where
         }
 
         // return collected processing results
+
         proc_result
     }
 
@@ -396,7 +429,7 @@ where
 
         if order_queue.cancel(order_id) {
             results.push(Ok(Success::Cancelled {
-                id: order_id,
+                order_id: order_id,
                 ts: SystemTime::now(),
             }));
         } else {

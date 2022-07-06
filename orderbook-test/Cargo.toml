@@ -9,3 +9,8 @@ assert_approx_eq = "1.1.0"
 rand = "0.8.4"
 engine = { path = "../engine" }
 proc = { path = "../proc" }
+criterion = "0.3.4"
+diem-crypto-derive = { path = "../crypto-derive", version = "0.0.2" }
+diem-crypto = { path = "../crypto" }
+serde = { version = "1.0.124", features = ["derive"] }
+serde_json = "1.0"

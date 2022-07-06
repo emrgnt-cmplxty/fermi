@@ -82,4 +82,3 @@ Order => NewLimitOrder { base_asset: BTC, quote_asset: USD, side: Bid, price: 1.
 Processing => [Ok(Accepted { order_id 7, order_type: Limit, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 860320000 } }), Ok(PartiallyFilled { order_order_id 7, side: Bid, order_type: Limit, price: 1.05, qty: 0.5, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 860325000 } }), Ok(Filled { order_order_id 6, side: Ask, order_type: Limit, price: 1.05, qty: 0.5, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 860325000 } })]
 Spread => not available
 ```
-# rust-orderbook

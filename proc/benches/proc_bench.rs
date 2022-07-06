@@ -32,23 +32,29 @@ fn round(x: f64, decimals: u32) -> f64 {
 }
 
 #[inline]
-fn place_orders(n_orders: u128, rng: &mut ThreadRng) {
+fn place_orders(n_orders: u64, n_accounts: u64, rng: &mut ThreadRng) {
     // initialize market controller
     let base_asset:BrokerAsset = parse_asset("BTC").unwrap();
     let quote_asset:BrokerAsset = parse_asset("USD").unwrap();
-    let account_id:u64 = 0;
+    // let account_id: u64 = 0;
     let base_balance: f64 = 1_000_000_000.0;
     let quote_balance: f64 = 1_000_000_000.0;
-
     let mut market_controller: AccountController<BrokerAsset> = AccountController::new(base_asset, quote_asset);
-    market_controller.create_account(account_id, base_balance, quote_balance).unwrap();
+
+    let mut i_account: u64 = 0;
+    let mut i_order: u64 = 0;
+
+    while i_account < n_accounts{
+        market_controller.create_account(i_account, base_balance, quote_balance).unwrap();
+        i_account += 1;
+    }
 
     // bench
-    let mut i_order: u128 = 0;
     while i_order < n_orders {
         let order_type = if i_order % 2 == 0 { OrderSide::Bid } else { OrderSide::Ask };
         let qty = round(rng.gen_range(0.0..10.0), 3)+0.001;
         let price = round(rng.gen_range(0.0..10.0), 3)+0.001;
+        let account_id = rng.gen_range(0..100);
 
         market_controller.place_limit_order(account_id,  order_type, qty, price).unwrap();
 
@@ -59,7 +65,7 @@ fn place_orders(n_orders: u128, rng: &mut ThreadRng) {
 pub fn criterion_benchmark(c: &mut Criterion) {
     // initialize market controller helpers
     let mut rng: ThreadRng = rand::thread_rng();
-    c.bench_function("place_orders_engine_plus_account", |b| b.iter(|| place_orders(black_box(100_000),  &mut rng)));
+    c.bench_function("place_orders_engine_plus_account", |b| b.iter(|| place_orders(black_box(100_000), black_box(100),&mut rng)));
 }
 criterion_group!(benches, criterion_benchmark);
 criterion_main!(benches);

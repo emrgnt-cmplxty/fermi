@@ -53,7 +53,7 @@ impl Account {
             base_balance, 
             base_escrow: 0.0, 
             quote_balance, 
-            quote_escrow: 0.0 
+            quote_escrow: 0.0, 
         }
     }
 }

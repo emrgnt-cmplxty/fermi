@@ -73,7 +73,7 @@ impl Clone for Ed25519PrivateKey {
 }
 
 /// An Ed25519 public key
-#[derive(DeserializeKey, Clone, SerializeKey)]
+#[derive(DeserializeKey, Clone, Copy, SerializeKey)]
 pub struct Ed25519PublicKey(ed25519_dalek::PublicKey);
 
 #[cfg(mirai)]

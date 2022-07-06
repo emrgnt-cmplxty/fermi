@@ -18,13 +18,5 @@ diem-crypto = { path = "../crypto" }
 rocksdb = "0.18.0"
 
 [[bench]]
-name = "engine_bench"
-harness = false
-
-[[bench]]
-name = "proc_bench"
-harness = false
-
-[[bench]]
-name = "proc_bench_with_db"
+name = "orderbook_bench"
 harness = false

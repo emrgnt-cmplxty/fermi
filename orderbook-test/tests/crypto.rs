@@ -1,5 +1,3 @@
-// pub use crypto::ed25519
-
 #[macro_use]
 extern crate criterion;
 
@@ -17,24 +15,66 @@ use diem_crypto::{
     traits::{Signature, SigningKey, Uniform},
 };
 
-fn verify(c: &mut Criterion) {
-    let mut csprng: ThreadRng = thread_rng();
-    let priv_key = Ed25519PrivateKey::generate(&mut csprng);
-    let pub_key: Ed25519PublicKey = (&priv_key).into();
-    let msg = TestDiemCrypto("".to_string());
-    let sig: Ed25519Signature = priv_key.sign(&msg);
-
-    c.bench_function("Ed25519 signature verification", move |b| {
-        b.iter(|| sig.verify(&msg, &pub_key))
-    });
-}
-
 #[cfg(test)]
 mod tests {
-    
+    use super::*;
+
+    // testing basic verification
     #[test]
-    fn test_testing(){
-        assert_eq!(1, 1);
+    fn test_basic_verification(){
+        let mut csprng: ThreadRng = thread_rng();
+        let priv_key = Ed25519PrivateKey::generate(&mut csprng);
+        let pub_key: Ed25519PublicKey = (&priv_key).into();
+        let msg = TestDiemCrypto("".to_string());
+        let sig: Ed25519Signature = priv_key.sign(&msg);
+        // gives us 1 if it was verified and 0 if it wasn't
+        let result = match sig.verify(&msg, &pub_key) {
+            Ok(_) => 1,
+            Err(_) => 0
+        };
+        // it should be verified in this case
+        assert_eq!(result, 1);
     }
-    // have a test where 
+
+    // testing incorrect message verification fail
+    #[test]
+    fn test_incorrect_message_verification_fail(){
+        let mut csprng: ThreadRng = thread_rng();
+        let priv_key = Ed25519PrivateKey::generate(&mut csprng);
+        let pub_key: Ed25519PublicKey = (&priv_key).into();
+        let msg = TestDiemCrypto("".to_string());
+        // making a different message than what was encoded
+        let faulty_message = TestDiemCrypto("a".to_string());
+        // signing correct message but verifying with faulty message
+        let sig: Ed25519Signature = priv_key.sign(&msg);
+        let result = match sig.verify(&faulty_message, &pub_key) {
+            Ok(_) => 1,
+            Err(_) => 0
+        };
+        // making sure it failed
+        assert_eq!(result, 0);
+    }
+
+    // testing incorrect keys fail
+    #[test]
+    fn test_incorrect_key_failure(){
+        // first set of private and public keys that it will sign with
+        let mut csprng: ThreadRng = thread_rng();
+        let priv_key = Ed25519PrivateKey::generate(&mut csprng);
+        let pub_key: Ed25519PublicKey = (&priv_key).into();
+        // making a new public key
+        let mut csprng_2: ThreadRng = thread_rng();
+        let priv_key_2 = Ed25519PrivateKey::generate(&mut csprng_2);
+        let pub_key_2: Ed25519PublicKey = (&priv_key_2).into();
+        // creating and signing the msg
+        let msg = TestDiemCrypto("".to_string());
+        // making a different message than what was encoded
+        let sig: Ed25519Signature = priv_key.sign(&msg);
+        let result = match sig.verify(&msg, &pub_key_2) {
+            Ok(_) => 1,
+            Err(_) => 0
+        };
+        // making sure it failed
+        assert_eq!(result, 0);
+    }
 }

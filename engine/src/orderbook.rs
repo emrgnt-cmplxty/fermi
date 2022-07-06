@@ -374,7 +374,7 @@ impl<Asset> Orderbook<Asset>
         )
         {
             results.push(Ok(Success::Amended {
-                order_id: order_id,
+                order_id,
                 price,
                 qty,
                 ts: SystemTime::now(),
@@ -398,7 +398,7 @@ impl<Asset> Orderbook<Asset>
 
         if order_queue.cancel(order_id) {
             results.push(Ok(Success::Cancelled {
-                order_id: order_id,
+                order_id,
                 ts: SystemTime::now(),
             }));
         } else {

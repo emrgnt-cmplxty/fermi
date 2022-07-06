@@ -18,7 +18,7 @@ use diem_crypto::{
     traits::{Signature, SigningKey, Uniform},
 };
 
-const NUMBER_OF_MESSAGES: i32 = 100000;
+const NUMBER_OF_MESSAGES: i32 = 1_000;
 const NUMBER_OF_ACCOUNTS: i32 = 100;
 
 // we pass in the number of messages we want to verify, a list of signatures, a list of private keys, and a list of public keys

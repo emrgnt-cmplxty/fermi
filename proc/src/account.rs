@@ -39,7 +39,6 @@ pub struct Account {
 
 impl Account {
     fn new(account_id: u64, base_balance: f64, quote_balance: f64) -> Self {
-        // TODO: generate a public and private key for the account
         Account{
             n_orders: 0, 
             account_id,
@@ -47,8 +46,6 @@ impl Account {
             base_escrow: 0.0, 
             quote_balance, 
             quote_escrow: 0.0, 
-            //public_key:,
-            //private_key:
         }
     }
 }
@@ -76,12 +73,6 @@ where
     // modifying an account associated to a new order
     fn proc_order_init(account: &mut Account, side: OrderSide, price: f64, qty: f64) {
         account.n_orders = account.n_orders + 1;
-        // ideally we will have to do verification here (they are sending assets)
-        // TODO:
-        // 1) Create some sort of representation of the data of an order (something we can sign)
-        // 2) The account has the private key so we sign it with the private key
-        // 3) We now have a signed payload, and to imitate what happens onchain we "verify" the payload with the account's public key
-        // 4) From here, the "verification" has completed and we can continue ith placing their order 
         if matches!(side, OrderSide::Ask) { 
             // E.g. ask 1 BTC @ $20k moves 1 BTC (base) from balance to escrow
             account.base_balance -= qty; 

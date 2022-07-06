@@ -1,3 +1,7 @@
+//! TODO
+//! 1.) Add support for market orders
+//! 2.) Consider ways to avoid passing full mut self in proc_limit_result
+//! 3.) Implement cryptographic verification
 
 extern crate engine;
 
@@ -9,11 +13,13 @@ use engine::domain::{OrderSide};
 use engine::orderbook::{Orderbook, OrderProcessingResult, Success, Failed};
 use engine::orders::{OrderRequest};
 
-// TODO
-// 1.) Add support for market orders
-// 2.) should we consider ways to avoid passing full mut self in process_limit_result?
 
-/// Controller for account associated to a given market
+type AccountId = u64;
+type OrderId = u64;
+
+// Controller 
+// The controller is responsible for performing checks and placing orders on behalf controlled accounts
+// The controller updates global account state according to the order output
 #[derive(Debug)]
 pub struct MarketController<Asset> 
 where
@@ -21,16 +27,15 @@ where
 {
     base_asset: Asset,
     quote_asset: Asset,
-    accounts: HashMap<u64, Account>,
-    // order id to account id map
-    order_to_account: HashMap<u64, u64>,
+    accounts: HashMap<AccountId, Account>,
+    order_to_account: HashMap<OrderId, AccountId>,
 }
 
 /// Orderbook account
 #[derive(Debug)]
 pub struct Account {
     pub n_orders: u64,
-    pub account_id: u64,
+    pub account_id: AccountId,
     pub base_balance: f64,
     pub base_escrow: f64,
     pub quote_balance: f64,
@@ -69,36 +74,8 @@ where
             order_to_account: HashMap::new(),
         }
     }
-    
-    // modifying an account associated to a new order
-    fn proc_order_init(account: &mut Account, side: OrderSide, price: f64, qty: f64) {
-        account.n_orders = account.n_orders + 1;
-        if matches!(side, OrderSide::Ask) { 
-            // E.g. ask 1 BTC @ $20k moves 1 BTC (base) from balance to escrow
-            account.base_balance -= qty; 
-            account.base_escrow += qty;  
-        } else { 
-            // E.g. bid 1 BTC @ $20k moves 20k USD (quote) from balance to escrow
-            account.quote_balance -= qty * price; 
-            account.quote_escrow += qty * price; 
-        }
-    }
-    
-    // modifying an account associated to a fill
-    fn proc_order_fill(account: &mut Account, side: OrderSide, price: f64, qty: f64, order_increment: i64) {
-        account.n_orders = (account.n_orders as i64 + order_increment) as u64; 
-        if matches!(side, OrderSide::Ask) { 
-            // E.g. fill ask 1 BTC @ 20k adds 20k USD (quote) to bal, subtracts 1 BTC (base) from escrow
-            account.quote_balance += qty * price; 
-            account.base_escrow -= qty;  
-        } else { 
-            // E.g. fill bid 1 BTC @ 20k adds 1 BTC (base) to bal, subtracts 20k USD (quote) from escrow
-            account.base_balance += qty; 
-            account.quote_escrow -= qty * price; 
-        }
-    }
 
-    // create account inside market controller
+    // create a controlled account corresponding to account_id
     pub fn create_account(&mut self, account_id: u64, base_balance: f64, quote_balance: f64) -> Result<(), AccountError> {
         if self.accounts.contains_key(&account_id) {
             Err(AccountError::Creation("Account already exists!".to_string()))
@@ -108,7 +85,14 @@ where
         }
     }
 
-    // place bid on behalf of account
+    // get a controlled account corresponding to account_id
+    pub fn get_account(&self, account_id: u64) -> Result<&Account, AccountError> {
+        let account: &Account = self.accounts.get(&account_id).ok_or(AccountError::Lookup("Failed to find account".to_string()))?;
+        Ok(account)
+    }
+
+
+    // the controller places bid on behalf of an account corresponding to account_id
     pub fn place_limit_order(&mut self, account_id: u64, orderbook: &mut Orderbook<Asset>, side: OrderSide, qty: f64, price: f64) -> Result<(), AccountError> {
         // check account has sufficient balances
         {
@@ -128,11 +112,11 @@ where
             SystemTime::now()
         );
         let res: Vec<Result<Success, Failed>> = orderbook.process_order(order);
-        self.process_limit_result(account_id, side, price, qty, res)
+        self.proc_limit_result(account_id, side, price, qty, res)
     }
 
-    // process output 
-    fn process_limit_result(&mut self, account_id: u64, sub_side: OrderSide, sub_price: f64, sub_qty: f64,  res: OrderProcessingResult) -> Result<(), AccountError> {
+    // loop over and process the output from placing a limit order
+    fn proc_limit_result(&mut self, account_id: u64, sub_side: OrderSide, sub_price: f64, sub_qty: f64,  res: OrderProcessingResult) -> Result<(), AccountError> {
         for order in res {
             match order {
                 // first order is expected to be an Accepted result
@@ -167,8 +151,31 @@ where
         Ok(())
     }
 
-    pub fn get_account(&self, account_id: u64) -> Result<&Account, AccountError> {
-        let account: &Account = self.accounts.get(&account_id).ok_or(AccountError::Lookup("Failed to find account".to_string()))?;
-        Ok(account)
+    // process an initialized order by modifying the associated account
+    fn proc_order_init(account: &mut Account, side: OrderSide, price: f64, qty: f64) {
+        account.n_orders = account.n_orders + 1;
+        if matches!(side, OrderSide::Ask) { 
+            // E.g. ask 1 BTC @ $20k moves 1 BTC (base) from balance to escrow
+            account.base_balance -= qty; 
+            account.base_escrow += qty;  
+        } else { 
+            // E.g. bid 1 BTC @ $20k moves 20k USD (quote) from balance to escrow
+            account.quote_balance -= qty * price; 
+            account.quote_escrow += qty * price; 
+        }
+    }
+    
+    // process a filled order by modifying the associated account
+    fn proc_order_fill(account: &mut Account, side: OrderSide, price: f64, qty: f64, order_increment: i64) {
+        account.n_orders = (account.n_orders as i64 + order_increment) as u64; 
+        if matches!(side, OrderSide::Ask) { 
+            // E.g. fill ask 1 BTC @ 20k adds 20k USD (quote) to bal, subtracts 1 BTC (base) from escrow
+            account.quote_balance += qty * price; 
+            account.base_escrow -= qty;  
+        } else { 
+            // E.g. fill bid 1 BTC @ 20k adds 1 BTC (base) to bal, subtracts 20k USD (quote) from escrow
+            account.base_balance += qty; 
+            account.quote_escrow -= qty * price; 
+        }
     }
 }

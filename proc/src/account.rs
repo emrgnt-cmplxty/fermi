@@ -5,7 +5,7 @@
 //! 3.) Consider ways to avoid passing full mut self in proc_limit_result
 //! 4.) Limit overwrite_orderbook to bench-only mode
 //! 5.) replace dummy_message encryption scheme w/ smarter & more realistic solution
-//! 6.) erase TestDiemCrypto
+//! 6.) What to do with TestDiemCrypto?
 //! 
 extern crate engine;
 
@@ -32,9 +32,10 @@ pub type AccountSignature = Ed25519Signature;
 
 type OrderId = u64;
 
-#[derive(Debug, CryptoHasher, BCSCryptoHash, Serialize, Deserialize)]
+#[derive(Debug, BCSCryptoHash, CryptoHasher, Serialize, Deserialize)]
 pub struct TestDiemCrypto(pub String);
-pub const DUMMY_MESSAGE: &str = "dummy_val"; // TestDiemCrypto = TestDiemCrypto(String::from("dummy_val"));
+// dummy msg used for test-encoding
+pub const DUMMY_MESSAGE: &str = "dummy_val";
 
 // Controller 
 // The controller is responsible for performing checks and placing orders on behalf controlled accounts

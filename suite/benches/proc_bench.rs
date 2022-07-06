@@ -4,13 +4,10 @@ extern crate engine;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rand::{Rng};
 use rand::rngs::{ThreadRng};
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 use diem_crypto::{
-    traits::{Signature, SigningKey, Uniform},
+    traits::{SigningKey, Uniform},
 };
-use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
 use engine::orderbook::{Orderbook};
 use engine::domain::OrderSide;
 use proc::account::{AccountPubKey, AccountPrivKey, AccountSignature, AccountController, TestDiemCrypto, DUMMY_MESSAGE};
@@ -72,7 +69,7 @@ fn place_orders_signed(n_orders: u64, account_to_pub_key: &mut Vec<AccountPubKey
     // initialize orderbook
     let base_asset:BrokerAsset = parse_asset("BTC").unwrap();
     let quote_asset:BrokerAsset = parse_asset("USD").unwrap();
-    let mut orderbook: Orderbook<BrokerAsset> = Orderbook::new(base_asset, quote_asset);
+    let orderbook: Orderbook<BrokerAsset> = Orderbook::new(base_asset, quote_asset);
 
     // clean market controller orderbook to keep from getting clogged
     market_controller.overwrite_orderbook(orderbook);

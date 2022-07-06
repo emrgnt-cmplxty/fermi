@@ -26,14 +26,14 @@ mod tests {
         let quote_balance: f64 = 1_000_000.0;
         let account_id: u64 = 0;
 
-        let mut orderbook: Orderbook<BrokerAsset> = Orderbook::new(base_asset, quote_asset);
-        let mut market_controller = MarketController::new(base_asset, quote_asset);
+        // let mut orderbook: Orderbook<BrokerAsset> = Orderbook::new(base_asset, quote_asset);
+        let mut market_controller: MarketController<BrokerAsset> = MarketController::new(base_asset, quote_asset);
 
         market_controller.create_account(account_id, base_balance, quote_balance).unwrap();
 
         let bid_size: f64 = 100.0;
         let bid_price: f64 = 100.0;
-        market_controller.place_limit_order(account_id, &mut orderbook, OrderSide::Bid, bid_size, bid_price).unwrap();
+        market_controller.place_limit_order(account_id, OrderSide::Bid, bid_size, bid_price).unwrap();
 
         let account_0: &Account =  market_controller.get_account(account_id).unwrap();
 
@@ -52,14 +52,13 @@ mod tests {
         let quote_balance:f64 = 1_000_000.0;
         let account_id:u64 = 0;
 
-        let mut orderbook: Orderbook<BrokerAsset> = Orderbook::new(base_asset, quote_asset);
         let mut market_controller: MarketController<BrokerAsset> = MarketController::new(base_asset, quote_asset);
 
         market_controller.create_account(account_id, base_balance, quote_balance).unwrap();
 
         let bid_size: f64 = 100.0;
         let bid_price: f64 = 100.0;
-        market_controller.place_limit_order(account_id, &mut orderbook, OrderSide::Ask, bid_size, bid_price).unwrap();
+        market_controller.place_limit_order(account_id,  OrderSide::Ask, bid_size, bid_price).unwrap();
 
         let account_0: &Account =  market_controller.get_account(account_id).unwrap();
 
@@ -68,27 +67,6 @@ mod tests {
 
         assert_approx_eq!(account_0.base_balance, base_balance - bid_size);
         assert_approx_eq!(account_0.base_escrow, bid_size);
-    }
-
-    #[test]
-    fn fail_on_asset_mismatch() {
-        let base_asset:BrokerAsset = BrokerAsset::BTC;
-        let quote_asset:BrokerAsset = BrokerAsset::USD;
-        let third_asset:BrokerAsset = BrokerAsset::EUR;
-
-        let base_balance:f64 = 1_000_000.0;
-        let quote_balance:f64 = 1_000_000.0;
-        let account_id:u64 = 0;
-
-        let mut orderbook: Orderbook<BrokerAsset> = Orderbook::new(base_asset, third_asset);
-        let mut market_controller: MarketController<BrokerAsset> = MarketController::new(base_asset, quote_asset);
-
-        market_controller.create_account(account_id, base_balance, quote_balance).unwrap();
-
-        let bid_size: f64 = 100.0;
-        let bid_price: f64 = 100.0;
-        let result: AccountError = market_controller.place_limit_order(account_id, &mut orderbook, OrderSide::Ask, bid_size, bid_price).unwrap_err();
-        assert!(matches!(result, AccountError::OrderProc(_)));
     }
     
     #[test]
@@ -129,7 +107,6 @@ mod tests {
         let quote_balance_1: f64 = 1_000_000.0;
         let account_id_1: u64 = 1;
 
-        let mut orderbook: Orderbook<BrokerAsset> = Orderbook::new(base_asset, quote_asset);
         let mut market_controller: MarketController<BrokerAsset> = MarketController::new(base_asset, quote_asset);
 
         market_controller.create_account(account_id_0, base_balance_0, quote_balance_0).unwrap();
@@ -137,12 +114,12 @@ mod tests {
 
         let bid_size_0: f64 = 100.0;
         let bid_price_0: f64 = 100.0;
-        market_controller.place_limit_order(account_id_0, &mut orderbook, OrderSide::Bid, bid_size_0, bid_price_0).unwrap();
+        market_controller.place_limit_order(account_id_0,  OrderSide::Bid, bid_size_0, bid_price_0).unwrap();
 
 
         let bid_size_1: f64 = 10.0;
         let bid_price_1: f64 = 10.0;
-        market_controller.place_limit_order(account_id_1, &mut orderbook, OrderSide::Bid, bid_size_1, bid_price_1).unwrap();
+        market_controller.place_limit_order(account_id_1,  OrderSide::Bid, bid_size_1, bid_price_1).unwrap();
 
         let account_0: &Account =  market_controller.get_account(account_id_0).unwrap();
 
@@ -168,7 +145,6 @@ mod tests {
         let quote_balance_1: f64 = 1_000_000.0;
         let account_id_1: u64 = 1;
 
-        let mut orderbook: Orderbook<BrokerAsset> = Orderbook::new(base_asset, quote_asset);
         let mut market_controller: MarketController<BrokerAsset> = MarketController::new(base_asset, quote_asset);
 
         // TODO - check & handle account creation error
@@ -178,7 +154,7 @@ mod tests {
         // Place bid for account 0
         let bid_size_0: f64 = 95.3;
         let bid_price_0: f64 = 200.1;
-        market_controller.place_limit_order(account_id_0, &mut orderbook, OrderSide::Bid, bid_size_0, bid_price_0).unwrap();
+        market_controller.place_limit_order(account_id_0,  OrderSide::Bid, bid_size_0, bid_price_0).unwrap();
 
         
         let account_0: &Account =  market_controller.get_account(account_id_0).unwrap();
@@ -189,7 +165,7 @@ mod tests {
         // Place bid for account 1 behind account 0
         let bid_size_1: f64 = bid_size_0 - 2.;
         let bid_price_1: f64 = bid_price_0 - 2.;
-        market_controller.place_limit_order(account_id_1, &mut orderbook, OrderSide::Bid, bid_size_1, bid_price_1).unwrap();
+        market_controller.place_limit_order(account_id_1,  OrderSide::Bid, bid_size_1, bid_price_1).unwrap();
 
         let account_1: &Account =  market_controller.get_account(account_id_1).unwrap();
         assert_approx_eq!(account_1.quote_balance, quote_balance_1 - bid_size_1 * bid_price_1);
@@ -199,7 +175,7 @@ mod tests {
         // Place ask for account 1 at price that crosses spread entirely
         let ask_size_0: f64 = bid_size_0;
         let ask_price_0: f64 = bid_price_0 - 1.;
-        market_controller.place_limit_order(account_id_1, &mut orderbook, OrderSide::Ask, ask_size_0, ask_price_0).unwrap();
+        market_controller.place_limit_order(account_id_1,  OrderSide::Ask, ask_size_0, ask_price_0).unwrap();
 
         let account_0: &Account =  market_controller.get_account(account_id_0).unwrap();
         let account_1: &Account =  market_controller.get_account(account_id_1).unwrap();
@@ -227,7 +203,7 @@ mod tests {
         // Place second ask for account 1 at price that crosses spread entirely
         let ask_size_1: f64 = bid_size_1;
         let ask_price_1: f64 = bid_price_1 - 1.;
-        market_controller.place_limit_order(account_id_1, &mut orderbook, OrderSide::Ask, ask_size_1, ask_price_1).unwrap();
+        market_controller.place_limit_order(account_id_1, OrderSide::Ask, ask_size_1, ask_price_1).unwrap();
 
         let account_0: &Account = market_controller.get_account(account_id_0).unwrap();
         let account_1: &Account = market_controller.get_account(account_id_1).unwrap();

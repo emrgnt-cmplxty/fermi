@@ -1,8 +1,11 @@
+//! 
+//! 
 //! TODO
 //! 1.) Add support for market orders
-//! 2.) Consider ways to avoid passing full mut self in proc_limit_result
-//! 3.) Implement cryptographic verification
-
+//! 2.) Implement cryptographic verification
+//! 3.) Consider ways to avoid passing full mut self in proc_limit_result
+//! 
+//! 
 extern crate engine;
 
 use std::collections::HashMap;
@@ -20,13 +23,13 @@ type OrderId = u64;
 // Controller 
 // The controller is responsible for performing checks and placing orders on behalf controlled accounts
 // The controller updates global account state according to the order output
-#[derive(Debug)]
 pub struct MarketController<Asset> 
 where
     Asset: Debug + Clone + Copy + Eq,
 {
     base_asset: Asset,
     quote_asset: Asset,
+    orderbook: Orderbook<Asset>,
     accounts: HashMap<AccountId, Account>,
     order_to_account: HashMap<OrderId, AccountId>,
 }
@@ -67,9 +70,11 @@ where
     Asset: Debug + Clone + Copy + Eq,
 {
     pub fn new(base_asset: Asset, quote_asset: Asset) -> Self {
+        let mut orderbook: Orderbook<Asset> = Orderbook::new(base_asset, quote_asset);
         MarketController{
             base_asset: base_asset,
             quote_asset: quote_asset,
+            orderbook: orderbook,
             accounts: HashMap::new(),
             order_to_account: HashMap::new(),
         }
@@ -93,7 +98,7 @@ where
 
 
     // the controller places bid on behalf of an account corresponding to account_id
-    pub fn place_limit_order(&mut self, account_id: u64, orderbook: &mut Orderbook<Asset>, side: OrderSide, qty: f64, price: f64) -> Result<(), AccountError> {
+    pub fn place_limit_order(&mut self, account_id: u64, side: OrderSide, qty: f64, price: f64) -> Result<(), AccountError> {
         // check account has sufficient balances
         {
             let account: &Account = self.accounts.get(&account_id).unwrap();
@@ -111,7 +116,7 @@ where
             qty,
             SystemTime::now()
         );
-        let res: Vec<Result<Success, Failed>> = orderbook.process_order(order);
+        let res: Vec<Result<Success, Failed>> = self.orderbook.process_order(order);
         self.proc_limit_result(account_id, side, price, qty, res)
     }
 

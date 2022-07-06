@@ -6,7 +6,7 @@ use rand::{Rng};
 use rand::rngs::{ThreadRng};
 
 use engine::domain::OrderSide;
-use proc::account::{Account, AccountController};
+use proc::account::{AccountController};
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub enum BrokerAsset {
@@ -36,25 +36,26 @@ fn place_orders(n_orders: u64, n_accounts: u64, rng: &mut ThreadRng) {
     // initialize market controller
     let base_asset:BrokerAsset = parse_asset("BTC").unwrap();
     let quote_asset:BrokerAsset = parse_asset("USD").unwrap();
-    // let account_id: u64 = 0;
+    // specify large base balances to avoid failures
     let base_balance: f64 = 1_000_000_000.0;
     let quote_balance: f64 = 1_000_000_000.0;
     let mut market_controller: AccountController<BrokerAsset> = AccountController::new(base_asset, quote_asset);
 
+    // generaet 100 accounts to transact w/ orderbook
     let mut i_account: u64 = 0;
-    let mut i_order: u64 = 0;
-
     while i_account < n_accounts{
         market_controller.create_account(i_account, base_balance, quote_balance).unwrap();
         i_account += 1;
     }
 
     // bench
+    let mut i_order: u64 = 0;
     while i_order < n_orders {
         let order_type = if i_order % 2 == 0 { OrderSide::Bid } else { OrderSide::Ask };
-        // generate two random a number between 0.001 & 10 w/ interval of 0.001
+        // generate two random a number between 0.001 and 10 w/ interval of 0.001
         let qty = round(rng.gen_range(0.0..10.0), 3) + 0.001;
         let price = round(rng.gen_range(0.0..10.0), 3) + 0.001;
+        // generate a random integer between 0 and 100
         let account_id = rng.gen_range(0..100);
 
         market_controller.place_limit_order(account_id,  order_type, qty, price).unwrap();

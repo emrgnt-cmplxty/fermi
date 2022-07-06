@@ -76,3 +76,18 @@ fn criterion_benchmark(c: &mut Criterion) {
 
 criterion_group!(benches, criterion_benchmark);
 criterion_main!(benches);
+
+// fn verify(c: &mut Criterion) {
+//     let mut csprng: ThreadRng = thread_rng();
+//     let priv_key = Ed25519PrivateKey::generate(&mut csprng);
+//     let pub_key: Ed25519PublicKey = (&priv_key).into();
+//     let msg = TestDiemCrypto("".to_string());
+//     let sig: Ed25519Signature = priv_key.sign(&msg);
+
+//     c.bench_function("Ed25519 signature verification", move |b| {
+//         b.iter(|| sig.verify(&msg, &pub_key))
+//     });
+// }
+
+// criterion_group!(ed25519_benches, verify);
+// criterion_main!(ed25519_benches);

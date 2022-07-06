@@ -4,11 +4,9 @@ extern crate engine;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rand::{Rng};
 use rand::rngs::{ThreadRng};
-use std::time::SystemTime;
 
-use engine::orderbook::{Orderbook};
-use engine::orders;
 use engine::domain::OrderSide;
+use proc::account::{Account, AccountController};
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub enum BrokerAsset {
@@ -35,10 +33,15 @@ fn round(x: f64, decimals: u32) -> f64 {
 
 #[inline]
 fn place_orders(n_orders: u128, rng: &mut ThreadRng) {
-    // initialize orderbook
+    // initialize market controller
     let base_asset:BrokerAsset = parse_asset("BTC").unwrap();
     let quote_asset:BrokerAsset = parse_asset("USD").unwrap();
-    let mut orderbook: Orderbook<BrokerAsset> = Orderbook::new(base_asset, quote_asset);
+    let account_id:u64 = 0;
+    let base_balance: f64 = 1_000_000_000.0;
+    let quote_balance: f64 = 1_000_000_000.0;
+
+    let mut market_controller: AccountController<BrokerAsset> = AccountController::new(base_asset, quote_asset);
+    market_controller.create_account(account_id, base_balance, quote_balance).unwrap();
 
     // bench
     let mut i_order: u128 = 0;
@@ -47,25 +50,16 @@ fn place_orders(n_orders: u128, rng: &mut ThreadRng) {
         let qty = round(rng.gen_range(0.0..10.0), 3)+0.001;
         let price = round(rng.gen_range(0.0..10.0), 3)+0.001;
 
-        // order construction & submission
-        let order = orders::new_limit_order_request(
-            base_asset,
-            quote_asset,
-            order_type,
-            price,
-            qty,
-            SystemTime::now()
-        );
-        orderbook.process_order(order);
-        
+        market_controller.place_limit_order(account_id,  order_type, qty, price).unwrap();
+
         i_order+=1;
     }
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {
-    // initialize orderbook helpers
+    // initialize market controller helpers
     let mut rng: ThreadRng = rand::thread_rng();
-    c.bench_function("place_orders_engine_only", |b| b.iter(|| place_orders(black_box(100_000), &mut rng)));
+    c.bench_function("place_orders_engine_plus_account", |b| b.iter(|| place_orders(black_box(100_000),  &mut rng)));
 }
 criterion_group!(benches, criterion_benchmark);
 criterion_main!(benches);

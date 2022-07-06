@@ -23,7 +23,7 @@ type OrderId = u64;
 // Controller 
 // The controller is responsible for performing checks and placing orders on behalf controlled accounts
 // The controller updates global account state according to the order output
-pub struct MarketController<Asset> 
+pub struct AccountController<Asset> 
 where
     Asset: Debug + Clone + Copy + Eq,
 {
@@ -65,16 +65,16 @@ pub enum AccountError {
     OrderProc(String)
 }
 
-impl<Asset> MarketController <Asset>
+impl<Asset> AccountController <Asset>
 where
     Asset: Debug + Clone + Copy + Eq,
 {
     pub fn new(base_asset: Asset, quote_asset: Asset) -> Self {
-        let mut orderbook: Orderbook<Asset> = Orderbook::new(base_asset, quote_asset);
-        MarketController{
-            base_asset: base_asset,
-            quote_asset: quote_asset,
-            orderbook: orderbook,
+        let orderbook: Orderbook<Asset> = Orderbook::new(base_asset, quote_asset);
+        AccountController{
+            base_asset,
+            quote_asset,
+            orderbook,
             accounts: HashMap::new(),
             order_to_account: HashMap::new(),
         }
@@ -116,7 +116,9 @@ where
             qty,
             SystemTime::now()
         );
+        // println!("order={:?}", order);
         let res: Vec<Result<Success, Failed>> = self.orderbook.process_order(order);
+        // println!("res={:?}", res);
         self.proc_limit_result(account_id, side, price, qty, res)
     }
 
@@ -127,7 +129,7 @@ where
                 // first order is expected to be an Accepted result
                 Ok(Success::Accepted{order_id, ..}) => { 
                     let account: &mut Account = self.accounts.get_mut(&account_id).unwrap();
-                    MarketController::<Asset>::proc_order_init(account, sub_side, sub_price, sub_qty);
+                    AccountController::<Asset>::proc_order_init(account, sub_side, sub_price, sub_qty);
                     // insert new order to map
                     self.order_to_account.insert(order_id, account_id);
                 },
@@ -135,19 +137,19 @@ where
                 Ok(Success::PartiallyFilled{order_id, side, price, qty, ..}) => {
                     let existing_id: &u64 = self.order_to_account.get(&order_id).unwrap();
                     let account: &mut Account = self.accounts.get_mut(&existing_id).unwrap();
-                    MarketController::<Asset>::proc_order_fill(account, side, price, qty, 0);
+                    AccountController::<Asset>::proc_order_fill(account, side, price, qty, 0);
                 },
                 Ok(Success::Filled{order_id, side, price, qty, ..}) => {
                     let existing_id: &u64 = self.order_to_account.get(&order_id).unwrap();
                     let account: &mut Account = self.accounts.get_mut(&existing_id).unwrap();
-                    MarketController::<Asset>::proc_order_fill(account, side, price, qty, -1);
+                    AccountController::<Asset>::proc_order_fill(account, side, price, qty, -1);
                     // erase existing order
                     self.order_to_account.remove(&order_id).unwrap();
                 }
                 Ok(Success::Amended { .. }) => { panic!("This needs to be implemented...") }
                 Ok(Success::Cancelled { .. }) => { panic!("This needs to be implemented...") }
-                Err(_) => { 
-                    return Err(AccountError::OrderProc("Order failed to process".to_string()));
+                Err(failure) => { 
+                    return Err(AccountError::OrderProc(format!("Order failed to process with {:?}", failure)));
                 }
             }
         }

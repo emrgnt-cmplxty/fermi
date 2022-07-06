@@ -55,9 +55,9 @@ fn place_orders(n_orders: u128, base_asset:BrokerAsset, quote_asset:BrokerAsset,
         let res = orderbook.process_order(order);
         i_order+=1;
     }
-    let time_in_milis: u128 = now.elapsed().unwrap().as_millis();
-    println!("Processing {} orders took {} milis, giving {} TPS",
-                n_orders, time_in_milis, (n_orders as f64)/(time_in_milis as f64) * 1000.); 
+    // let time_in_nanos: u128 = now.elapsed().unwrap().as_nanos();
+    // println!("Processing {} orders took {} nanos, giving {} TPS",
+    //             n_orders, time_in_nanos, (n_orders as f64)/(time_in_nanos as f64) * 1e9); 
 
 }
 

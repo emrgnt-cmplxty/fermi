@@ -136,8 +136,6 @@ where
                     let existing_id: &u64 = self.order_to_account.get(&order_id).unwrap();
                     let account: &mut Account = self.accounts.get_mut(&existing_id).unwrap();
                     MarketController::<Asset>::proc_order_fill(account, side, price, qty, 0);
-                    // over-write existing order
-                    self.order_to_account.insert(order_id, account_id);
                 },
                 Ok(Success::Filled{order_id, side, price, qty, ..}) => {
                     let existing_id: &u64 = self.order_to_account.get(&order_id).unwrap();

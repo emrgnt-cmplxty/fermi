@@ -138,9 +138,9 @@ where
                 // first order is expected to be an Accepted result
                 Ok(Success::Accepted{order_id, ..}) => { 
                     let account: &mut Account = self.accounts.get_mut(&account_id).unwrap();
-                    self.order_to_account.insert(order_id, account_id);
-                    // special case handling for initializing order
                     MarketController::<Asset>::proc_order_init(account, sub_side, sub_price, sub_qty);
+                    // insert new order to map
+                    self.order_to_account.insert(order_id, account_id);
                 },
                 // subsequent orders are expected to be an PartialFill or Fill results
                 Ok(Success::PartiallyFilled{order_id, side, price, qty, ..}) => {

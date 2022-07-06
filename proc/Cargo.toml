@@ -5,4 +5,10 @@ authors = []
 edition = "2018"
 
 [dependencies]
+rand = "0.8.4"
+criterion = "0.3"
 engine = { path = "../engine" }
+
+[[bench]]
+name = "proc_bench"
+harness = false

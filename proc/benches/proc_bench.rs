@@ -52,8 +52,9 @@ fn place_orders(n_orders: u64, n_accounts: u64, rng: &mut ThreadRng) {
     // bench
     while i_order < n_orders {
         let order_type = if i_order % 2 == 0 { OrderSide::Bid } else { OrderSide::Ask };
-        let qty = round(rng.gen_range(0.0..10.0), 3)+0.001;
-        let price = round(rng.gen_range(0.0..10.0), 3)+0.001;
+        // generate two random a number between 0.001 & 10 w/ interval of 0.001
+        let qty = round(rng.gen_range(0.0..10.0), 3) + 0.001;
+        let price = round(rng.gen_range(0.0..10.0), 3) + 0.001;
         let account_id = rng.gen_range(0..100);
 
         market_controller.place_limit_order(account_id,  order_type, qty, price).unwrap();

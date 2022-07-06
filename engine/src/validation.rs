@@ -5,8 +5,8 @@ use super::orders::OrderRequest;
 
 
 /// Validation errors
-const ERR_BAD_ORDER_ASSET: &str = "bad order asset";
-const ERR_BAD_PRICE_ASSET: &str = "bad price asset";
+const ERR_BAD_BASE_ASSET: &str = "bad order asset";
+const ERR_BAD_QUOTE_ASSET: &str = "bad price asset";
 const ERR_BAD_PRICE_VALUE: &str = "price must be non-negative";
 const ERR_BAD_QUANTITY_VALUE: &str = "quantity must be non-negative";
 const ERR_BAD_SEQ_ID: &str = "order ID out of range";
@@ -15,8 +15,8 @@ const ERR_BAD_SEQ_ID: &str = "order ID out of range";
 /* Validators */
 
 pub struct OrderRequestValidator<Asset> {
-    orderbook_order_asset: Asset,
-    orderbook_price_asset: Asset,
+    orderbook_base_asset: Asset,
+    orderbook_quote_asset: Asset,
     min_sequence_id: u64,
     max_sequence_id: u64,
 }
@@ -26,14 +26,14 @@ where
     Asset: Debug + Clone + Copy + Eq,
 {
     pub fn new(
-        orderbook_order_asset: Asset,
-        orderbook_price_asset: Asset,
+        orderbook_base_asset: Asset,
+        orderbook_quote_asset: Asset,
         min_sequence_id: u64,
         max_sequence_id: u64,
     ) -> Self {
         OrderRequestValidator {
-            orderbook_order_asset,
-            orderbook_price_asset,
+            orderbook_base_asset,
+            orderbook_quote_asset,
             min_sequence_id,
             max_sequence_id,
         }
@@ -80,12 +80,12 @@ where
         qty: f64,
     ) -> Result<(), &str> {
 
-        if self.orderbook_order_asset != base_asset {
-            return Err(ERR_BAD_ORDER_ASSET);
+        if self.orderbook_base_asset != base_asset {
+            return Err(ERR_BAD_BASE_ASSET);
         }
 
-        if self.orderbook_price_asset != quote_asset {
-            return Err(ERR_BAD_PRICE_ASSET);
+        if self.orderbook_quote_asset != quote_asset {
+            return Err(ERR_BAD_QUOTE_ASSET);
         }
 
         if qty <= 0.0 {
@@ -104,12 +104,12 @@ where
         qty: f64,
     ) -> Result<(), &str> {
 
-        if self.orderbook_order_asset != base_asset {
-            return Err(ERR_BAD_ORDER_ASSET);
+        if self.orderbook_base_asset != base_asset {
+            return Err(ERR_BAD_BASE_ASSET);
         }
 
-        if self.orderbook_price_asset != quote_asset {
-            return Err(ERR_BAD_PRICE_ASSET);
+        if self.orderbook_quote_asset != quote_asset {
+            return Err(ERR_BAD_QUOTE_ASSET);
         }
 
         if price <= 0.0 {

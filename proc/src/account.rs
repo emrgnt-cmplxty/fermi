@@ -98,7 +98,7 @@ where
 
 
     // the controller places bid on behalf of an account corresponding to account_id
-    pub fn place_limit_order(&mut self, account_id: u64, side: OrderSide, qty: f64, price: f64) -> Result<(), AccountError> {
+    pub fn place_limit_order(&mut self, account_id: u64, side: OrderSide, qty: f64, price: f64) -> Result<OrderProcessingResult, AccountError> {
         // check account has sufficient balances
         {
             let account: &Account = self.accounts.get(&account_id).unwrap();
@@ -123,26 +123,26 @@ where
     }
 
     // loop over and process the output from placing a limit order
-    fn proc_limit_result(&mut self, account_id: u64, sub_side: OrderSide, sub_price: f64, sub_qty: f64,  res: OrderProcessingResult) -> Result<(), AccountError> {
-        for order in res {
+    fn proc_limit_result(&mut self, account_id: u64, sub_side: OrderSide, sub_price: f64, sub_qty: f64,  res: OrderProcessingResult) -> Result<OrderProcessingResult, AccountError> {
+        for order in &res {
             match order {
                 // first order is expected to be an Accepted result
                 Ok(Success::Accepted{order_id, ..}) => { 
                     let account: &mut Account = self.accounts.get_mut(&account_id).unwrap();
                     AccountController::<Asset>::proc_order_init(account, sub_side, sub_price, sub_qty);
                     // insert new order to map
-                    self.order_to_account.insert(order_id, account_id);
+                    self.order_to_account.insert(*order_id, account_id);
                 },
                 // subsequent orders are expected to be an PartialFill or Fill results
                 Ok(Success::PartiallyFilled{order_id, side, price, qty, ..}) => {
                     let existing_id: &u64 = self.order_to_account.get(&order_id).unwrap();
                     let account: &mut Account = self.accounts.get_mut(&existing_id).unwrap();
-                    AccountController::<Asset>::proc_order_fill(account, side, price, qty, 0);
+                    AccountController::<Asset>::proc_order_fill(account, *side, *price, *qty, 0);
                 },
                 Ok(Success::Filled{order_id, side, price, qty, ..}) => {
                     let existing_id: &u64 = self.order_to_account.get(&order_id).unwrap();
                     let account: &mut Account = self.accounts.get_mut(&existing_id).unwrap();
-                    AccountController::<Asset>::proc_order_fill(account, side, price, qty, -1);
+                    AccountController::<Asset>::proc_order_fill(account, *side, *price, *qty, -1);
                     // erase existing order
                     self.order_to_account.remove(&order_id).unwrap();
                 }
@@ -153,7 +153,7 @@ where
                 }
             }
         }
-        Ok(())
+        Ok(res)
     }
 
     // process an initialized order by modifying the associated account

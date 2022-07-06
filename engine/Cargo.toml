@@ -7,7 +7,3 @@ edition = "2018"
 [dependencies]
 rand = "0.8.4"
 criterion = "0.3"
-
-[[bench]]
-name = "engine_bench"
-harness = false

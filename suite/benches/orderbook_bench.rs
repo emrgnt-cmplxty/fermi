@@ -16,7 +16,7 @@ use engine::orderbook::{Orderbook, OrderProcessingResult, Success};
 use engine::domain::OrderSide;
 use proc::account::{AccountPubKey, AccountPrivKey, AccountSignature, AccountController, TestDiemCrypto, DUMMY_MESSAGE};
 
-const n_orders_bench: u64 = 1_000;
+const N_ORDERS_BENCH: u64 = 1_000;
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub enum BrokerAsset {
@@ -43,17 +43,17 @@ fn round(x: f64, decimals: u32) -> f64 {
 
 fn persist_result(db: &DBWithThreadMode<SingleThreaded>, proc_result: &OrderProcessingResult) -> () {
     for result in proc_result {
-        let id = match result {
+        match result {
             Ok(Success::Accepted { order_id, .. }) => {
-                db.put(order_id.to_string(), "a");
+                db.put(order_id.to_string(), "a").unwrap();
                 order_id
             },
-            Ok(Success::PartiallyFilled { order_id, qty, .. }) => {
-                db.put(order_id.to_string(), "pf");
+            Ok(Success::PartiallyFilled { order_id, .. }) => {
+                db.put(order_id.to_string(), "pf").unwrap();
                 order_id
             },
-            Ok(Success::Filled { order_id, qty, .. }) => {
-                db.put(order_id.to_string(), "f");
+            Ok(Success::Filled { order_id, .. }) => {
+                db.put(order_id.to_string(), "f").unwrap();
                 order_id
             },
             _ => &0
@@ -210,22 +210,22 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     }
     
     c.bench_function("place_orders_engine", |b| b.iter(|| 
-        place_orders_engine(black_box(n_orders_bench), &mut rng, &db, false)));
+        place_orders_engine(black_box(N_ORDERS_BENCH), &mut rng, &db, false)));
 
     c.bench_function("place_orders_engine_db", |b| b.iter(|| 
-        place_orders_engine(black_box(n_orders_bench), &mut rng, &db, true)));
+        place_orders_engine(black_box(N_ORDERS_BENCH), &mut rng, &db, true)));
     
     c.bench_function("place_orders_engine_account", |b| b.iter(|| 
-        place_orders_engine_account(black_box(n_orders_bench), &mut account_to_pub_key, &mut market_controller, &mut rng, &db, false)));
+        place_orders_engine_account(black_box(N_ORDERS_BENCH), &mut account_to_pub_key, &mut market_controller, &mut rng, &db, false)));
     
     c.bench_function("place_orders_engine_account_db", |b| b.iter(|| 
-        place_orders_engine_account(black_box(n_orders_bench), &mut account_to_pub_key, &mut market_controller, &mut rng, &db, true)));
+        place_orders_engine_account(black_box(N_ORDERS_BENCH), &mut account_to_pub_key, &mut market_controller, &mut rng, &db, true)));
 
     c.bench_function("place_orders_engine_account_signed", |b| b.iter(|| 
-        place_orders_engine_account_signed(black_box(n_orders_bench), &mut account_to_pub_key, &mut account_to_signed_msg, &mut market_controller, &mut rng, &db, false)));
+        place_orders_engine_account_signed(black_box(N_ORDERS_BENCH), &mut account_to_pub_key, &mut account_to_signed_msg, &mut market_controller, &mut rng, &db, false)));
 
     c.bench_function("place_orders_engine_account_signed_db", |b| b.iter(|| 
-        place_orders_engine_account_signed(black_box(n_orders_bench), &mut account_to_pub_key, &mut account_to_signed_msg, &mut market_controller, &mut rng, &db, true)));
+        place_orders_engine_account_signed(black_box(N_ORDERS_BENCH), &mut account_to_pub_key, &mut account_to_signed_msg, &mut market_controller, &mut rng, &db, true)));
     
 }
 

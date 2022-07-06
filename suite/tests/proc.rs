@@ -1,11 +1,17 @@
+//! TODO
+//! 1) Add tests for acc crypto
 
 extern crate engine;
 extern crate proc;
 
-use engine::orderbook::{Orderbook};
-use engine::domain::OrderSide;    
-use proc::account::{Account, AccountError, AccountController};
 use assert_approx_eq::assert_approx_eq;
+use rand::rngs::{ThreadRng};
+
+use diem_crypto::{
+    traits::{Uniform},
+};
+use engine::domain::OrderSide;    
+use proc::account::{Account, AccountError, AccountPubKey, AccountPrivKey, AccountController};
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub enum BrokerAsset {
@@ -24,18 +30,22 @@ mod tests {
         let quote_asset: BrokerAsset = BrokerAsset::USD;
         let base_balance: f64 = 1_000_000.0;
         let quote_balance: f64 = 1_000_000.0;
-        let account_pub_key: u64 = 0;
+
+        let mut rng: ThreadRng = rand::thread_rng();
+        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
+        let account_pub_key: AccountPubKey = (&private_key).into();
+
 
         // let mut orderbook: Orderbook<BrokerAsset> = Orderbook::new(base_asset, quote_asset);
         let mut market_controller: AccountController<BrokerAsset> = AccountController::new(base_asset, quote_asset);
 
-        market_controller.create_account(account_pub_key, base_balance, quote_balance).unwrap();
+        market_controller.create_account(&account_pub_key, base_balance, quote_balance).unwrap();
 
         let bid_size: f64 = 100.0;
         let bid_price: f64 = 100.0;
-        market_controller.place_limit_order(account_pub_key, OrderSide::Bid, bid_size, bid_price).unwrap();
+        market_controller.place_limit_order(&account_pub_key, OrderSide::Bid, bid_size, bid_price).unwrap();
 
-        let account_0: &Account =  market_controller.get_account(account_pub_key).unwrap();
+        let account_0: &Account =  market_controller.get_account(&account_pub_key).unwrap();
 
         assert_approx_eq!(account_0.quote_balance, quote_balance - bid_size * bid_price);
         assert_approx_eq!(account_0.quote_escrow, bid_size * bid_price);
@@ -50,17 +60,20 @@ mod tests {
         let quote_asset:BrokerAsset = BrokerAsset::USD;
         let base_balance:f64 = 1_000_000.0;
         let quote_balance:f64 = 1_000_000.0;
-        let account_pub_key:u64 = 0;
+
+        let mut rng: ThreadRng = rand::thread_rng();
+        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
+        let account_pub_key: AccountPubKey = (&private_key).into();
 
         let mut market_controller: AccountController<BrokerAsset> = AccountController::new(base_asset, quote_asset);
 
-        market_controller.create_account(account_pub_key, base_balance, quote_balance).unwrap();
+        market_controller.create_account(&account_pub_key, base_balance, quote_balance).unwrap();
 
         let bid_size: f64 = 100.0;
         let bid_price: f64 = 100.0;
-        market_controller.place_limit_order(account_pub_key,  OrderSide::Ask, bid_size, bid_price).unwrap();
+        market_controller.place_limit_order(&account_pub_key,  OrderSide::Ask, bid_size, bid_price).unwrap();
 
-        let account_0: &Account =  market_controller.get_account(account_pub_key).unwrap();
+        let account_0: &Account =  market_controller.get_account(&account_pub_key).unwrap();
 
         assert_approx_eq!(account_0.quote_balance, quote_balance);
         assert_approx_eq!(account_0.quote_escrow, 0.0);
@@ -74,10 +87,13 @@ mod tests {
         let base_asset:BrokerAsset = BrokerAsset::BTC;
         let quote_asset:BrokerAsset = BrokerAsset::USD;
 
-        let account_pub_key:u64 = 0;
         let market_controller: AccountController<BrokerAsset> = AccountController::new(base_asset, quote_asset);
 
-        let result: AccountError = market_controller.get_account(account_pub_key).unwrap_err();
+        let mut rng: ThreadRng = rand::thread_rng();
+        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
+        let account_pub_key: AccountPubKey = (&private_key).into();
+
+        let result: AccountError = market_controller.get_account(&account_pub_key).unwrap_err();
         assert!(matches!(result, AccountError::Lookup(_)));
     }
 
@@ -88,11 +104,14 @@ mod tests {
         let base_balance: f64 = 1_000_000.0;
         let quote_balance: f64 = 1_000_000.0;
 
-        let account_pub_key:u64 = 0;
         let mut market_controller: AccountController<BrokerAsset> = AccountController::new(base_asset, quote_asset);
 
-        market_controller.create_account(account_pub_key, base_balance, quote_balance).unwrap();
-        let result: AccountError = market_controller.create_account(account_pub_key, base_balance, quote_balance).unwrap_err();
+        let mut rng: ThreadRng = rand::thread_rng();
+        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
+        let account_pub_key: AccountPubKey = (&private_key).into();
+
+        market_controller.create_account(&account_pub_key, base_balance, quote_balance).unwrap();
+        let result: AccountError = market_controller.create_account(&account_pub_key, base_balance, quote_balance).unwrap_err();
         assert!(matches!(result, AccountError::Creation(_)));
     }
 
@@ -102,31 +121,36 @@ mod tests {
         let quote_asset:BrokerAsset = BrokerAsset::USD;
         let base_balance_0: f64 = 1_000_000.0;
         let quote_balance_0: f64 = 1_000_000.0;
-        let account_id_0: u64 = 0;
         let base_balance_1: f64 = 1_000_000.0;
         let quote_balance_1: f64 = 1_000_000.0;
-        let account_id_1: u64 = 1;
 
         let mut market_controller: AccountController<BrokerAsset> = AccountController::new(base_asset, quote_asset);
 
-        market_controller.create_account(account_id_0, base_balance_0, quote_balance_0).unwrap();
-        market_controller.create_account(account_id_1, base_balance_1, quote_balance_1).unwrap();
+        let mut rng: ThreadRng = rand::thread_rng();
+        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
+        let account_pub_key_0: AccountPubKey = (&private_key).into();
+        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
+        let account_pub_key_1: AccountPubKey = (&private_key).into();
+
+
+        market_controller.create_account(&account_pub_key_0, base_balance_0, quote_balance_0).unwrap();
+        market_controller.create_account(&account_pub_key_1, base_balance_1, quote_balance_1).unwrap();
 
         let bid_size_0: f64 = 100.0;
         let bid_price_0: f64 = 100.0;
-        market_controller.place_limit_order(account_id_0,  OrderSide::Bid, bid_size_0, bid_price_0).unwrap();
+        market_controller.place_limit_order(&account_pub_key_0,  OrderSide::Bid, bid_size_0, bid_price_0).unwrap();
 
 
         let bid_size_1: f64 = 10.0;
         let bid_price_1: f64 = 10.0;
-        market_controller.place_limit_order(account_id_1,  OrderSide::Bid, bid_size_1, bid_price_1).unwrap();
+        market_controller.place_limit_order(&account_pub_key_1,  OrderSide::Bid, bid_size_1, bid_price_1).unwrap();
 
-        let account_0: &Account =  market_controller.get_account(account_id_0).unwrap();
+        let account_0: &Account =  market_controller.get_account(&account_pub_key_0).unwrap();
 
         assert_approx_eq!(account_0.quote_balance, quote_balance_0 - bid_size_0 * bid_price_0);
         assert_approx_eq!(account_0.quote_escrow, bid_size_0 * bid_price_0);
 
-        let account_1: &Account =  market_controller.get_account(account_id_1).unwrap();
+        let account_1: &Account =  market_controller.get_account(&account_pub_key_1).unwrap();
 
         assert_approx_eq!(account_1.quote_balance, quote_balance_1 - bid_size_1 * bid_price_1);
         assert_approx_eq!(account_1.quote_escrow, bid_size_1 * bid_price_1);
@@ -140,24 +164,28 @@ mod tests {
         let quote_asset:BrokerAsset = BrokerAsset::USD;
         let base_balance_0: f64 = 1_000_000.0;
         let quote_balance_0: f64 = 1_000_000.0;
-        let account_id_0: u64 = 0;
         let base_balance_1: f64 = 1_000_000.0;
         let quote_balance_1: f64 = 1_000_000.0;
-        let account_id_1: u64 = 1;
+
+        let mut rng: ThreadRng = rand::thread_rng();
+        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
+        let account_pub_key_0: AccountPubKey = (&private_key).into();
+        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
+        let account_pub_key_1: AccountPubKey = (&private_key).into();
 
         let mut market_controller: AccountController<BrokerAsset> = AccountController::new(base_asset, quote_asset);
 
         // TODO - check & handle account creation error
-        market_controller.create_account(account_id_0, base_balance_0, quote_balance_0).unwrap();
-        market_controller.create_account(account_id_1, base_balance_1, quote_balance_1).unwrap();
+        market_controller.create_account(&account_pub_key_0, base_balance_0, quote_balance_0).unwrap();
+        market_controller.create_account(&account_pub_key_1, base_balance_1, quote_balance_1).unwrap();
 
         // Place bid for account 0
         let bid_size_0: f64 = 95.3;
         let bid_price_0: f64 = 200.1;
-        market_controller.place_limit_order(account_id_0,  OrderSide::Bid, bid_size_0, bid_price_0).unwrap();
+        market_controller.place_limit_order(&account_pub_key_0,  OrderSide::Bid, bid_size_0, bid_price_0).unwrap();
 
         
-        let account_0: &Account =  market_controller.get_account(account_id_0).unwrap();
+        let account_0: &Account =  market_controller.get_account(&account_pub_key_0).unwrap();
         assert_approx_eq!(account_0.quote_balance, quote_balance_0 - bid_size_0 * bid_price_0);
         assert_approx_eq!(account_0.quote_escrow, bid_size_0 * bid_price_0);
 
@@ -165,9 +193,9 @@ mod tests {
         // Place bid for account 1 behind account 0
         let bid_size_1: f64 = bid_size_0 - 2.;
         let bid_price_1: f64 = bid_price_0 - 2.;
-        market_controller.place_limit_order(account_id_1,  OrderSide::Bid, bid_size_1, bid_price_1).unwrap();
+        market_controller.place_limit_order(&account_pub_key_1,  OrderSide::Bid, bid_size_1, bid_price_1).unwrap();
 
-        let account_1: &Account =  market_controller.get_account(account_id_1).unwrap();
+        let account_1: &Account =  market_controller.get_account(&account_pub_key_1).unwrap();
         assert_approx_eq!(account_1.quote_balance, quote_balance_1 - bid_size_1 * bid_price_1);
         assert_approx_eq!(account_1.quote_escrow, bid_size_1 * bid_price_1);
 
@@ -175,10 +203,10 @@ mod tests {
         // Place ask for account 1 at price that crosses spread entirely
         let ask_size_0: f64 = bid_size_0;
         let ask_price_0: f64 = bid_price_0 - 1.;
-        market_controller.place_limit_order(account_id_1,  OrderSide::Ask, ask_size_0, ask_price_0).unwrap();
+        market_controller.place_limit_order(&account_pub_key_1,  OrderSide::Ask, ask_size_0, ask_price_0).unwrap();
 
-        let account_0: &Account =  market_controller.get_account(account_id_0).unwrap();
-        let account_1: &Account =  market_controller.get_account(account_id_1).unwrap();
+        let account_0: &Account =  market_controller.get_account(&account_pub_key_0).unwrap();
+        let account_1: &Account =  market_controller.get_account(&account_pub_key_1).unwrap();
 
         // check account 0
         // paid bid_size_0 * bid_price_0 in quote asset to balance
@@ -203,10 +231,10 @@ mod tests {
         // Place second ask for account 1 at price that crosses spread entirely
         let ask_size_1: f64 = bid_size_1;
         let ask_price_1: f64 = bid_price_1 - 1.;
-        market_controller.place_limit_order(account_id_1, OrderSide::Ask, ask_size_1, ask_price_1).unwrap();
+        market_controller.place_limit_order(&account_pub_key_1, OrderSide::Ask, ask_size_1, ask_price_1).unwrap();
 
-        let account_0: &Account = market_controller.get_account(account_id_0).unwrap();
-        let account_1: &Account = market_controller.get_account(account_id_1).unwrap();
+        let account_0: &Account = market_controller.get_account(&account_pub_key_0).unwrap();
+        let account_1: &Account = market_controller.get_account(&account_pub_key_1).unwrap();
 
         // check account 0
         // state should remain unchanged from prior

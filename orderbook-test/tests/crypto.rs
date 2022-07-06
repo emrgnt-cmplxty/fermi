@@ -1,8 +1,3 @@
-#[macro_use]
-extern crate criterion;
-
-use criterion::Criterion;
-
 use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
 use rand::{prelude::ThreadRng, thread_rng};
 use serde::{Deserialize, Serialize};

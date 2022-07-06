@@ -1,10 +1,8 @@
-extern crate rocksdb;
-
 use std::any::Any;
 use std::convert::TryInto;
 use std::time::SystemTime;
 use std::fmt::Debug;
-use rocksdb::{ColumnFamilyDescriptor, DB, DBWithThreadMode, Options, SingleThreaded};
+
 
 use super::domain::{Order, OrderSide, OrderType};
 use super::orders::OrderRequest;
@@ -78,7 +76,6 @@ pub struct Orderbook<Asset>
     ask_queue: OrderQueue<Order<Asset>>,
     seq: sequence::TradeSequence,
     order_validator: OrderRequestValidator<Asset>,
-    db: DBWithThreadMode<SingleThreaded>
 }
 
 
@@ -98,13 +95,7 @@ impl<Asset> Orderbook<Asset>
     /// ```
     // todo fix doc test!
     pub fn new(base_asset: Asset, quote_asset: Asset) -> Self {
-        let path = "./db.rocks";
-        let mut cf_opts = Options::default();
-        cf_opts.set_max_write_buffer_number(16);
-        let cf = ColumnFamilyDescriptor::new("cf1", cf_opts);
-        let mut db_opts = Options::default();
-        db_opts.create_missing_column_families(true);
-        db_opts.create_if_missing(true);
+
         Orderbook {
             base_asset,
             quote_asset,
@@ -125,30 +116,8 @@ impl<Asset> Orderbook<Asset>
                 MIN_SEQUENCE_ID,
                 MAX_SEQUENCE_ID,
             ),
-            db: DB::open_cf_descriptors(&db_opts, path, vec![cf]).unwrap()
         }
     }
-
-
-    pub fn persist_result(&mut self, proc_result: &OrderProcessingResult) -> () {
-        for result in proc_result {
-            let id = match result {
-                Ok(Success::Accepted{order_id, ..}) => { self.db.put(order_id.to_string(), "a"); order_id},
-                Ok(Success::PartiallyFilled{order_id, qty, ..}) => { self.db.put(order_id.to_string(),"pf"); order_id},
-                Ok(Success::Filled{order_id, qty, ..}) =>  { self.db.put(order_id.to_string(),"f"); order_id},
-                _ => &0
-            };
-            // if self.db.key_may_exist(id.to_string()) {
-            //     match self.db.get(id.to_string()) {
-            //         Ok(Some(value)) => println!("retrieved value {}", String::from_utf8(value).unwrap()),
-            //         Ok(None) => println!("value not found"),
-            //         Err(e) => println!("operational problem encountered: {}", e),
-            //     }
-            // }
-        }
-    }
-
-
 
     pub fn process_order(&mut self, order: OrderRequest<Asset>) -> OrderProcessingResult {
         // processing result accumulator
@@ -228,7 +197,7 @@ impl<Asset> Orderbook<Asset>
             }
         }
 
-        // return collected processing results
+        // return collected processing result
 
         proc_result
     }

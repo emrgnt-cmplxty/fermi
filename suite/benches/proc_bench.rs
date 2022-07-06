@@ -1,5 +1,6 @@
 
 extern crate engine;
+extern crate rocksdb;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rand::{Rng};
@@ -7,6 +8,8 @@ use rand::rngs::{ThreadRng};
 
 use engine::domain::OrderSide;
 use proc::account::{AccountController};
+use rocksdb::{ColumnFamilyDescriptor, DB, DBWithThreadMode, Options, SingleThreaded};
+use engine::orderbook::{OrderProcessingResult, Success};
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub enum BrokerAsset {
@@ -31,8 +34,28 @@ fn round(x: f64, decimals: u32) -> f64 {
     (x * y).round() / y
 }
 
+pub fn persist_result(db: &DBWithThreadMode<SingleThreaded>, proc_result: &OrderProcessingResult) -> () {
+    for result in proc_result {
+        let id = match result {
+            Ok(Success::Accepted { order_id, .. }) => {
+                db.put(order_id.to_string(), "a");
+                order_id
+            },
+            Ok(Success::PartiallyFilled { order_id, qty, .. }) => {
+                db.put(order_id.to_string(), "pf");
+                order_id
+            },
+            Ok(Success::Filled { order_id, qty, .. }) => {
+                db.put(order_id.to_string(), "f");
+                order_id
+            },
+            _ => &0
+        };
+    }
+}
+
 #[inline]
-fn place_orders(n_orders: u64, n_accounts: u64, rng: &mut ThreadRng) {
+fn place_orders(n_orders: u64, n_accounts: u64, rng: &mut ThreadRng, db: &DBWithThreadMode<SingleThreaded>) {
     // initialize market controller
     let base_asset:BrokerAsset = parse_asset("BTC").unwrap();
     let quote_asset:BrokerAsset = parse_asset("USD").unwrap();
@@ -58,7 +81,8 @@ fn place_orders(n_orders: u64, n_accounts: u64, rng: &mut ThreadRng) {
         // generate a random integer between 0 and 100
         let account_id = rng.gen_range(0..100);
 
-        market_controller.place_limit_order(account_id,  order_type, qty, price).unwrap();
+        let res = market_controller.place_limit_order(account_id,  order_type, qty, price).unwrap();
+        persist_result(db, &res);
 
         i_order+=1;
     }
@@ -67,7 +91,15 @@ fn place_orders(n_orders: u64, n_accounts: u64, rng: &mut ThreadRng) {
 pub fn criterion_benchmark(c: &mut Criterion) {
     // initialize market controller helpers
     let mut rng: ThreadRng = rand::thread_rng();
-    c.bench_function("place_orders_engine_plus_account", |b| b.iter(|| place_orders(black_box(100_000), black_box(100),&mut rng)));
+    let path = "./db.rocks";
+    let mut cf_opts = Options::default();
+    cf_opts.set_max_write_buffer_number(16);
+    let cf = ColumnFamilyDescriptor::new("cf1", cf_opts);
+    let mut db_opts = Options::default();
+    db_opts.create_missing_column_families(true);
+    db_opts.create_if_missing(true);
+    let db = DB::open_cf_descriptors(&db_opts, path, vec![cf]).unwrap();
+    c.bench_function("place_orders_engine_plus_account", |b| b.iter(|| place_orders(black_box(100_000), black_box(100),&mut rng, &db)));
 }
 criterion_group!(benches, criterion_benchmark);
 criterion_main!(benches);

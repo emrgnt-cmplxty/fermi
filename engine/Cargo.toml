@@ -7,8 +7,3 @@ edition = "2018"
 [dependencies]
 rand = "0.8.4"
 criterion = "0.3"
-rocksdb = "0.18.0"
-
-[[bench]]
-name = "engine_bench"
-harness = false

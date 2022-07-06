@@ -123,7 +123,7 @@ impl<Asset> Orderbook<Asset>
         // processing result accumulator
         let mut proc_result: OrderProcessingResult = vec![];
 
-        // validate requestç
+        // validate request
         if let Err(reason) = self.order_validator.validate(&order) {
             proc_result.push(Err(Failed::ValidationFailed(String::from(reason))));
             return proc_result;
@@ -157,7 +157,7 @@ impl<Asset> Orderbook<Asset>
 
             OrderRequest::NewLimitOrder {
                 base_asset,
-                quote_asset: quote_asset,
+                quote_asset,
                 side,
                 price,
                 qty,
@@ -197,7 +197,7 @@ impl<Asset> Orderbook<Asset>
             }
         }
 
-        // return collected processing result
+        // return collected processing results
 
         proc_result
     }

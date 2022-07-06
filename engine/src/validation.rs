@@ -5,8 +5,8 @@ use super::orders::OrderRequest;
 
 
 /// Validation errors
-const ERR_BAD_base_asset: &str = "bad order asset";
-const ERR_BAD_quote_asset: &str = "bad price asset";
+const ERR_BAD_BASE_ASSET: &str = "bad order asset";
+const ERR_BAD_QUOTE_ASSET: &str = "bad price asset";
 const ERR_BAD_PRICE_VALUE: &str = "price must be non-negative";
 const ERR_BAD_QUANTITY_VALUE: &str = "quantity must be non-negative";
 const ERR_BAD_SEQ_ID: &str = "order ID out of range";
@@ -81,11 +81,11 @@ where
     ) -> Result<(), &str> {
 
         if self.orderbook_base_asset != base_asset {
-            return Err(ERR_BAD_base_asset);
+            return Err(ERR_BAD_BASE_ASSET);
         }
 
         if self.orderbook_quote_asset != quote_asset {
-            return Err(ERR_BAD_quote_asset);
+            return Err(ERR_BAD_QUOTE_ASSET);
         }
 
         if qty <= 0.0 {
@@ -105,11 +105,11 @@ where
     ) -> Result<(), &str> {
 
         if self.orderbook_base_asset != base_asset {
-            return Err(ERR_BAD_base_asset);
+            return Err(ERR_BAD_BASE_ASSET);
         }
 
         if self.orderbook_quote_asset != quote_asset {
-            return Err(ERR_BAD_quote_asset);
+            return Err(ERR_BAD_QUOTE_ASSET);
         }
 
         if price <= 0.0 {

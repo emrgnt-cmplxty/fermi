@@ -51,7 +51,7 @@ impl Account {
 }
 
 #[derive(Debug)]
-pub enum AccountErrors {
+pub enum AccountError {
     Creation(String),
     Lookup(String),
     OrderProc(String)
@@ -99,9 +99,9 @@ where
     }
 
     // create account inside market controller
-    pub fn create_account(&mut self, account_id: u64, base_balance: f64, quote_balance: f64) -> Result<(), AccountErrors> {
+    pub fn create_account(&mut self, account_id: u64, base_balance: f64, quote_balance: f64) -> Result<(), AccountError> {
         if self.accounts.contains_key(&account_id) {
-            Err(AccountErrors::Creation("Account already exists!".to_string()))
+            Err(AccountError::Creation("Account already exists!".to_string()))
         } else {
             self.accounts.insert(account_id, Account::new(account_id, base_balance, quote_balance));
             Ok(())
@@ -109,7 +109,7 @@ where
     }
 
     // place bid on behalf of account
-    pub fn place_limit_order(&mut self, account_id: u64, orderbook: &mut Orderbook<Asset>, side: OrderSide, qty: f64, price: f64) {
+    pub fn place_limit_order(&mut self, account_id: u64, orderbook: &mut Orderbook<Asset>, side: OrderSide, qty: f64, price: f64) -> Result<(), AccountError> {
         // check account has sufficient balances
         {
             let account: &Account = self.accounts.get(&account_id).unwrap();
@@ -128,11 +128,11 @@ where
             SystemTime::now()
         );
         let res: Vec<Result<Success, Failed>> = orderbook.process_order(order);
-        self.process_limit_result(account_id, side, price, qty, res).unwrap();
+        self.process_limit_result(account_id, side, price, qty, res)
     }
 
     // process output 
-    fn process_limit_result(&mut self, account_id: u64, sub_side: OrderSide, sub_price: f64, sub_qty: f64,  res: OrderProcessingResult) -> Result<(), AccountErrors> {
+    fn process_limit_result(&mut self, account_id: u64, sub_side: OrderSide, sub_price: f64, sub_qty: f64,  res: OrderProcessingResult) -> Result<(), AccountError> {
         for order in res {
             match order {
                 // first order is expected to be an Accepted result
@@ -157,18 +157,18 @@ where
                     // erase existing order
                     self.order_to_account.remove(&order_id).unwrap();
                 }
-                Ok(Success::Amended { .. }) => { panic!("THIS NEEDS TO BE IMPLEMENTED") }
-                Ok(Success::Cancelled { .. }) => { panic!("THIS NEEDS TO BE IMPLEMENTED") }
+                Ok(Success::Amended { .. }) => { panic!("This needs to be implemented...") }
+                Ok(Success::Cancelled { .. }) => { panic!("This needs to be implemented...") }
                 Err(_) => { 
-                    return Err(AccountErrors::OrderProc("AN UNEXPECTED ERROR WAS ENCOUNTERED DURING ORDER PROCESSING".to_string()));
+                    return Err(AccountError::OrderProc("Order failed to process".to_string()));
                 }
             }
         }
         Ok(())
     }
 
-    pub fn get_account(&self, account_id: u64) -> &Account {
-        let account: &Account = self.accounts.get(&account_id).unwrap();
-        account
+    pub fn get_account(&self, account_id: u64) -> Result<&Account, AccountError> {
+        let account: &Account = self.accounts.get(&account_id).ok_or(AccountError::Lookup("Failed to find account".to_string()))?;
+        Ok(account)
     }
 }

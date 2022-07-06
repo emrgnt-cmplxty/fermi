@@ -4,7 +4,7 @@ extern crate proc;
 
 use engine::orderbook::{Orderbook};
 use engine::domain::OrderSide;    
-use proc::account::{Account, AccountError, MarketController};
+use proc::account::{Account, AccountError, AccountController};
 use assert_approx_eq::assert_approx_eq;
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
@@ -27,7 +27,7 @@ mod tests {
         let account_id: u64 = 0;
 
         // let mut orderbook: Orderbook<BrokerAsset> = Orderbook::new(base_asset, quote_asset);
-        let mut market_controller: MarketController<BrokerAsset> = MarketController::new(base_asset, quote_asset);
+        let mut market_controller: AccountController<BrokerAsset> = AccountController::new(base_asset, quote_asset);
 
         market_controller.create_account(account_id, base_balance, quote_balance).unwrap();
 
@@ -52,7 +52,7 @@ mod tests {
         let quote_balance:f64 = 1_000_000.0;
         let account_id:u64 = 0;
 
-        let mut market_controller: MarketController<BrokerAsset> = MarketController::new(base_asset, quote_asset);
+        let mut market_controller: AccountController<BrokerAsset> = AccountController::new(base_asset, quote_asset);
 
         market_controller.create_account(account_id, base_balance, quote_balance).unwrap();
 
@@ -75,7 +75,7 @@ mod tests {
         let quote_asset:BrokerAsset = BrokerAsset::USD;
 
         let account_id:u64 = 0;
-        let market_controller: MarketController<BrokerAsset> = MarketController::new(base_asset, quote_asset);
+        let market_controller: AccountController<BrokerAsset> = AccountController::new(base_asset, quote_asset);
 
         let result: AccountError = market_controller.get_account(account_id).unwrap_err();
         assert!(matches!(result, AccountError::Lookup(_)));
@@ -89,7 +89,7 @@ mod tests {
         let quote_balance: f64 = 1_000_000.0;
 
         let account_id:u64 = 0;
-        let mut market_controller: MarketController<BrokerAsset> = MarketController::new(base_asset, quote_asset);
+        let mut market_controller: AccountController<BrokerAsset> = AccountController::new(base_asset, quote_asset);
 
         market_controller.create_account(account_id, base_balance, quote_balance).unwrap();
         let result: AccountError = market_controller.create_account(account_id, base_balance, quote_balance).unwrap_err();
@@ -107,7 +107,7 @@ mod tests {
         let quote_balance_1: f64 = 1_000_000.0;
         let account_id_1: u64 = 1;
 
-        let mut market_controller: MarketController<BrokerAsset> = MarketController::new(base_asset, quote_asset);
+        let mut market_controller: AccountController<BrokerAsset> = AccountController::new(base_asset, quote_asset);
 
         market_controller.create_account(account_id_0, base_balance_0, quote_balance_0).unwrap();
         market_controller.create_account(account_id_1, base_balance_1, quote_balance_1).unwrap();
@@ -145,7 +145,7 @@ mod tests {
         let quote_balance_1: f64 = 1_000_000.0;
         let account_id_1: u64 = 1;
 
-        let mut market_controller: MarketController<BrokerAsset> = MarketController::new(base_asset, quote_asset);
+        let mut market_controller: AccountController<BrokerAsset> = AccountController::new(base_asset, quote_asset);
 
         // TODO - check & handle account creation error
         market_controller.create_account(account_id_0, base_balance_0, quote_balance_0).unwrap();

@@ -14,7 +14,7 @@ use super::validation::OrderRequestValidator;
 
 
 const MIN_SEQUENCE_ID: u64 = 1;
-const MAX_SEQUENCE_ID: u64 = 1000;
+const MAX_SEQUENCE_ID: u64 = 1_000_000;
 const MAX_STALLED_INDICES_IN_QUEUE: u64 = 10;
 const ORDER_QUEUE_INIT_CAPACITY: usize = 500;
 

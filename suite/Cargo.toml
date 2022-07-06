@@ -1,0 +1,25 @@
+[package]
+name = "suite"
+version = "0.1.0"
+authors = []
+edition = "2018"
+
+[dependencies]
+assert_approx_eq = "1.1.0"
+rand = "0.8.4"
+criterion = "0.3.4"
+serde = { version = "1.0.124", features = ["derive"] }
+serde_json = "1.0"
+bcs = "0.1.2"
+engine = { path = "../engine" }
+proc = { path = "../proc" }
+diem-crypto-derive = { path = "../crypto-derive", version = "0.0.2" }
+diem-crypto = { path = "../crypto" }
+
+[[bench]]
+name = "engine_bench"
+harness = false
+
+[[bench]]
+name = "proc_bench"
+harness = false

@@ -9,14 +9,16 @@ use rocksdb::{ColumnFamilyDescriptor, DB, DBWithThreadMode, Options, SingleThrea
 use std::time::SystemTime;
 
 use diem_crypto::{
-    traits::{SigningKey, Uniform},
+    traits::{Signature, SigningKey, Uniform},
+    
 };
 use engine::orders;
 use engine::orderbook::{Orderbook, OrderProcessingResult, Success};
 use engine::domain::OrderSide;
 use proc::account::{AccountPubKey, AccountPrivKey, AccountSignature, AccountController, TestDiemCrypto, DUMMY_MESSAGE};
 
-const N_ORDERS_BENCH: u64 = 1_000;
+const N_ORDERS_BENCH: u64 = 1_024;
+const N_ACCOUNTS: u64 = 1_024;
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub enum BrokerAsset {
@@ -61,7 +63,6 @@ fn persist_result(db: &DBWithThreadMode<SingleThreaded>, proc_result: &OrderProc
     }
 }
 
-#[inline]
 fn place_orders_engine(
     n_orders: u64, 
     rng: &mut ThreadRng, 
@@ -77,8 +78,8 @@ fn place_orders_engine(
     let mut i_order: u64 = 0;
     while i_order < n_orders {
         let order_type = if i_order % 2 == 0 { OrderSide::Bid } else { OrderSide::Ask };
-        let qty = round(rng.gen_range(0.0..10.0), 3)+0.001;
-        let price = round(rng.gen_range(0.0..10.0), 3)+0.001;
+        let qty = round(rng.gen_range(0.0, 10.0), 3)+0.001;
+        let price = round(rng.gen_range(0.0, 10.0), 3)+0.001;
 
         // order construction & submission
         let order = orders::new_limit_order_request(
@@ -97,8 +98,6 @@ fn place_orders_engine(
     }
 }
 
-
-#[inline]
 fn place_orders_engine_account(
     n_orders: u64, 
     account_to_pub_key: &mut Vec<AccountPubKey>, 
@@ -120,10 +119,10 @@ fn place_orders_engine_account(
     while i_order < n_orders {
         let order_type = if i_order % 2 == 0 { OrderSide::Bid } else { OrderSide::Ask };
         // generate two random a number between 0.001 and 10 w/ interval of 0.001
-        let qty = round(rng.gen_range(0.0..10.0), 3) + 0.001;
-        let price = round(rng.gen_range(0.0..10.0), 3) + 0.001;
+        let qty = round(rng.gen_range(0.0, 10.0), 3) + 0.001;
+        let price = round(rng.gen_range(0.0, 10.0), 3) + 0.001;
         // generate a random integer between 0 and 100
-        let account_pub_key: AccountPubKey = account_to_pub_key[rng.gen_range(0..100)];
+        let account_pub_key: AccountPubKey = account_to_pub_key[rng.gen_range(0, 100)];
 
         let res = market_controller.place_limit_order(&account_pub_key,  order_type, qty, price).unwrap();
         if persist {
@@ -132,8 +131,7 @@ fn place_orders_engine_account(
         i_order+=1;
     }
 }
-
-#[inline]
+    
 fn place_orders_engine_account_signed(
     n_orders: u64, 
     account_to_pub_key: &mut Vec<AccountPubKey>, 
@@ -156,10 +154,10 @@ fn place_orders_engine_account_signed(
     while i_order < n_orders {
         let order_type = if i_order % 2 == 0 { OrderSide::Bid } else { OrderSide::Ask };
         // generate two random a number between 0.001 and 10 w/ interval of 0.001
-        let qty = round(rng.gen_range(0.0..10.0), 3) + 0.001;
-        let price = round(rng.gen_range(0.0..10.0), 3) + 0.001;
+        let qty = round(rng.gen_range(0.0, 10.0), 3) + 0.001;
+        let price = round(rng.gen_range(0.0, 10.0), 3) + 0.001;
         // generate a random integer between 0 and 100
-        let i_account = rng.gen_range(0..100);
+        let i_account = rng.gen_range(0, 100);
         let account_pub_key: AccountPubKey = account_to_pub_key[i_account];
         let account_sig_msg: &AccountSignature = &account_to_signed_msg[i_account];
 
@@ -173,6 +171,19 @@ fn place_orders_engine_account_signed(
     }
 }
 
+#[cfg(feature = "batch")]
+fn place_orders_engine_account_batch_signed(
+    n_orders: u64, 
+    account_to_pub_key: &mut Vec<AccountPubKey>, 
+    keys_and_signatures: &mut Vec<(AccountPubKey, AccountSignature)>, 
+    market_controller: &mut AccountController<BrokerAsset>, 
+    rng: &mut ThreadRng,
+    db: &DBWithThreadMode<SingleThreaded>, 
+    persist: bool) 
+{
+    Signature::batch_verify(&TestDiemCrypto(DUMMY_MESSAGE.to_string()), keys_and_signatures.to_vec()).unwrap();
+    place_orders_engine_account(n_orders, account_to_pub_key, market_controller, rng, db, persist);
+}
 
 pub fn criterion_benchmark(c: &mut Criterion) {
     // initialize market controller
@@ -187,7 +198,6 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     // other helpers
     let mut rng: ThreadRng = rand::thread_rng();
     let mut i_account: u64 = 0;
-    let n_accounts = 100;
     let path: &str = "./db.rocks";
     let mut cf_opts: Options = Options::default();
     cf_opts.set_max_write_buffer_number(16);
@@ -197,16 +207,20 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     db_opts.create_if_missing(true);
     let db: DBWithThreadMode<SingleThreaded> = DB::open_cf_descriptors(&db_opts, path, vec![cf]).unwrap();
 
+    // instantiating joint vector
+    let mut keys_and_signatures: Vec<(AccountPubKey, AccountSignature)> = Vec::new();
+
     
-    // generate n_accounts accounts to transact w/ orderbook
-    while i_account < n_accounts{
+    // generate N_ACCOUNTS accounts to transact w/ orderbook
+    while i_account < N_ACCOUNTS{
         let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
         let account_pub_key: AccountPubKey = (&private_key).into();
         account_to_pub_key.push(account_pub_key);
         let sig: AccountSignature  = private_key.sign(&TestDiemCrypto(DUMMY_MESSAGE.to_string()));
-        account_to_signed_msg.push(sig);
+        account_to_signed_msg.push(sig.clone());
         market_controller.create_account(&account_pub_key, base_balance, quote_balance).unwrap();
         i_account += 1;
+        keys_and_signatures.push((account_pub_key, sig));
     }
     
     c.bench_function("place_orders_engine", |b| b.iter(|| 
@@ -227,6 +241,14 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("place_orders_engine_account_signed_db", |b| b.iter(|| 
         place_orders_engine_account_signed(black_box(N_ORDERS_BENCH), &mut account_to_pub_key, &mut account_to_signed_msg, &mut market_controller, &mut rng, &db, true)));
     
+    #[cfg(feature = "batch")]
+    c.bench_function("place_orders_engine_account_batch_signed", |b| b.iter(|| 
+        place_orders_engine_account_batch_signed(black_box(N_ORDERS_BENCH), &mut account_to_pub_key, &mut keys_and_signatures, &mut market_controller, &mut rng, &db, false)));
+
+    #[cfg(feature = "batch")]
+    c.bench_function("place_orders_engine_account_batch_signed_db", |b| b.iter(|| 
+        place_orders_engine_account_batch_signed(black_box(N_ORDERS_BENCH), &mut account_to_pub_key, &mut keys_and_signatures, &mut market_controller, &mut rng, &db, true)));
+
 }
 
 

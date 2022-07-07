@@ -45,8 +45,8 @@ num-traits = { version = "0.2.14", features = ["default", "i128", "std"] }
 petgraph = { version = "0.5.1", features = ["default", "graphmap", "matrix_graph", "stable_graph"] }
 plotters = { version = "0.3.0", default-features = false, features = ["area_series", "evcxr", "histogram", "line_series", "plotters-svg", "svg_backend"] }
 prost = { version = "0.8.0", features = ["default", "prost-derive", "std"] }
-rand = { version = "0.8.3", features = ["alloc", "default", "getrandom", "libc", "rand_chacha", "rand_hc", "small_rng", "std", "std_rng"] }
-rand_core = { version = "0.5.1", default-features = false, features = ["alloc", "getrandom", "std"] }
+rand = { version = "0.8.5", features = ["alloc", "default", "getrandom", "libc", "rand_chacha", "rand_hc", "small_rng", "std", "std_rng"] }
+rand_core = { version = "0.6.2", default-features = false, features = ["alloc", "getrandom", "std"] }
 regex = { version = "1.5.6", features = ["aho-corasick", "default", "memchr", "perf", "perf-cache", "perf-dfa", "perf-inline", "perf-literal", "std", "unicode", "unicode-age", "unicode-bool", "unicode-case", "unicode-gencat", "unicode-perl", "unicode-script", "unicode-segment"] }
 regex-automata = { version = "0.1.10", features = ["default", "regex-syntax", "std"] }
 regex-syntax = { version = "0.6.26", features = ["default", "unicode", "unicode-age", "unicode-bool", "unicode-case", "unicode-gencat", "unicode-perl", "unicode-script", "unicode-segment"] }

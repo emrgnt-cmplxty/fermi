@@ -15,7 +15,10 @@ Tests reside in suite/test, benchmarks reside in suite/benches
 
     # bench
     cargo bench
-
+    # or, if you want to include batch features
+    cargo bench --features="batch"
+    # lastly, to bench just order book placement
+    cargo bench --features="batch" place_orders
 
 ## Orderbook Details
 

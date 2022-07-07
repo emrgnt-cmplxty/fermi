@@ -3,10 +3,11 @@ name = "suite"
 version = "0.1.0"
 authors = []
 edition = "2018"
+features = ["batch"]
 
 [dependencies]
 assert_approx_eq = "1.1.0"
-rand = "0.8.4"
+rand = "0.7.0"
 criterion = "0.3.4"
 serde = { version = "1.0.124", features = ["derive"] }
 serde_json = "1.0"
@@ -14,9 +15,12 @@ bcs = "0.1.2"
 engine = { path = "../engine" }
 proc = { path = "../proc" }
 diem-crypto-derive = { path = "../crypto-derive", version = "0.0.2" }
-diem-crypto = { path = "../crypto" }
+diem-crypto = { path = "../crypto", features = ["batch"] }
 rocksdb = "0.18.0"
 
 [[bench]]
 name = "orderbook_bench"
 harness = false
+
+[features]
+batch = []

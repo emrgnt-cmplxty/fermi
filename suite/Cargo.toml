@@ -22,5 +22,9 @@ rocksdb = "0.18.0"
 name = "orderbook_bench"
 harness = false
 
+[[bench]]
+name = "ed25519"
+harness = false
+
 [features]
 batch = []

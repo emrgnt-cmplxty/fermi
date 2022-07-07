@@ -16,6 +16,7 @@ engine = { path = "../engine" }
 proc = { path = "../proc" }
 diem-crypto-derive = { path = "../crypto-derive", version = "0.0.2" }
 diem-crypto = { path = "../crypto", features = ["batch"] }
+diem-workspace-hack = { path = "../workspace-hack" }
 rocksdb = "0.18.0"
 
 [[bench]]

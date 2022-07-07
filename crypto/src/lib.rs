@@ -32,7 +32,7 @@ pub use serde_name as _serde_name;
 // in maintained forks of the dalek suite of libraries ({curve, ed,
 // x}25519-dalek). This is controlled by a feature in the forked crates
 // ('fiat_u64_backend'), which we turn on by default.
-#[cfg(not(any(feature = "fiat", feature = "u64", feature = "u32")))]
+#[cfg(not(any(feature = "avx2", feature = "u64", feature = "u32")))]
 compile_error!(
     "no dalek arithmetic backend cargo feature enabled! \
      please enable one of: fiat, u64, u32"

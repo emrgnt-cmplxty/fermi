@@ -30,8 +30,8 @@ pub enum Success {
         order_id: u64,
         side: OrderSide,
         order_type: OrderType,
-        price: f64,
-        qty: f64,
+        price: u64,
+        qty: u64,
         ts: SystemTime,
     },
 
@@ -39,15 +39,15 @@ pub enum Success {
         order_id: u64,
         side: OrderSide,
         order_type: OrderType,
-        price: f64,
-        qty: f64,
+        price: u64,
+        qty: u64,
         ts: SystemTime,
     },
 
     Amended {
         order_id: u64,
-        price: f64,
-        qty: f64,
+        price: u64,
+        qty: u64,
         ts: SystemTime,
     },
 
@@ -202,7 +202,7 @@ impl<Asset> Orderbook<Asset>
 
 
     /// Get current spread as a tuple: (bid, ask)
-    pub fn current_spread(&mut self) -> Option<(f64, f64)> {
+    pub fn current_spread(&mut self) -> Option<(u64, u64)> {
         let bid = self.bid_queue.peek()?.price;
         let ask = self.ask_queue.peek()?.price;
         Some((bid, ask))
@@ -218,7 +218,7 @@ impl<Asset> Orderbook<Asset>
         base_asset: Asset,
         quote_asset: Asset,
         side: OrderSide,
-        qty: f64,
+        qty: u64,
     ) {
         // get copy of the current limit order
         let opposite_order_result = {
@@ -267,8 +267,8 @@ impl<Asset> Orderbook<Asset>
         base_asset: Asset,
         quote_asset: Asset,
         side: OrderSide,
-        price: f64,
-        qty: f64,
+        price: u64,
+        qty: u64,
         ts: SystemTime,
     ) {
         // take a look at current opposite limit order
@@ -348,8 +348,8 @@ impl<Asset> Orderbook<Asset>
         results: &mut OrderProcessingResult,
         order_id: u64,
         side: OrderSide,
-        price: f64,
-        qty: f64,
+        price: u64,
+        qty: u64,
         ts: SystemTime,
     ) {
         let order_queue = match side {
@@ -415,8 +415,8 @@ impl<Asset> Orderbook<Asset>
         base_asset: Asset,
         quote_asset: Asset,
         side: OrderSide,
-        price: f64,
-        qty: f64,
+        price: u64,
+        qty: u64,
         ts: SystemTime,
     ) {
         let order_queue = match side {
@@ -451,7 +451,7 @@ impl<Asset> Orderbook<Asset>
         quote_asset: Asset,
         order_type: OrderType,
         side: OrderSide,
-        qty: f64,
+        qty: u64,
     ) -> bool {
 
         // real processing time

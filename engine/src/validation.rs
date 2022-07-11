@@ -71,13 +71,15 @@ where
         }
     }
 
+
     /* Internal validators */
 
+    
     fn validate_market(
         &self,
         base_asset: Asset,
         quote_asset: Asset,
-        qty: f64,
+        qty: u64,
     ) -> Result<(), &str> {
 
         if self.orderbook_base_asset != base_asset {
@@ -88,7 +90,7 @@ where
             return Err(ERR_BAD_QUOTE_ASSET);
         }
 
-        if qty <= 0.0 {
+        if qty <= 0 {
             return Err(ERR_BAD_QUANTITY_VALUE);
         }
 
@@ -100,8 +102,8 @@ where
         &self,
         base_asset: Asset,
         quote_asset: Asset,
-        price: f64,
-        qty: f64,
+        price: u64,
+        qty: u64,
     ) -> Result<(), &str> {
 
         if self.orderbook_base_asset != base_asset {
@@ -112,11 +114,11 @@ where
             return Err(ERR_BAD_QUOTE_ASSET);
         }
 
-        if price <= 0.0 {
+        if price <= 0 {
             return Err(ERR_BAD_PRICE_VALUE);
         }
 
-        if qty <= 0.0 {
+        if qty <= 0 {
             return Err(ERR_BAD_QUANTITY_VALUE);
         }
 
@@ -124,16 +126,16 @@ where
     }
 
 
-    fn validate_amend(&self, id: u64, price: f64, qty: f64) -> Result<(), &str> {
+    fn validate_amend(&self, id: u64, price: u64, qty: u64) -> Result<(), &str> {
         if self.min_sequence_id > id || self.max_sequence_id < id {
             return Err(ERR_BAD_SEQ_ID);
         }
 
-        if price <= 0.0 {
+        if price <= 0 {
             return Err(ERR_BAD_PRICE_VALUE);
         }
 
-        if qty <= 0.0 {
+        if qty <= 0 {
             return Err(ERR_BAD_QUANTITY_VALUE);
         }
 

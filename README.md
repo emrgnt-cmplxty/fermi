@@ -44,44 +44,13 @@ Supported features:
 * balance updating
 * TODO - cryptopgrahic verification
 
+## How is this module organized?
 
-## Example output
-Full example code could be found in `bin/example.rs` of initial commit. Here is an event log created from processing test orders:
-
-```
-Order => NewLimitOrder { base_asset: BTC, quote_asset: USD, side: Bid, price: 0.98, qty: 5.0, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 859954000 } }
-Processing => [Ok(Accepted { order_id 1, order_type: Limit, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 860016000 } })]
-Spread => not available
-
-Order => NewLimitOrder { base_asset: BTC, quote_asset: USD, side: Ask, price: 1.02, qty: 1.0, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 859954000 } }
-Processing => [Ok(Accepted { order_id 2, order_type: Limit, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 860064000 } })]
-Spread => border_id 0.98, ask: 1.02
-
-Order => AmendOrder { order_id 1, side: Bid, price: 0.99, qty: 4.0, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 859954000 } }
-Processing => [Ok(Amended { order_id 1, price: 0.99, qty: 4.0, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 860094000 } })]
-Spread => border_id 0.99, ask: 1.02
-
-Order => NewLimitOrder { base_asset: BTC, quote_asset: USD, side: Bid, price: 1.01, qty: 0.4, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 859955000 } }
-Processing => [Ok(Accepted { order_id 3, order_type: Limit, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 860119000 } })]
-Spread => border_id 1.01, ask: 1.02
-
-Order => NewLimitOrder { base_asset: BTC, quote_asset: USD, side: Ask, price: 1.03, qty: 0.5, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 859955000 } }
-Processing => [Ok(Accepted { order_id 4, order_type: Limit, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 860155000 } })]
-Spread => border_id 1.01, ask: 1.02
-
-Order => NewMarketOrder { base_asset: BTC, quote_asset: USD, side: Bid, qty: 1.0, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 859955000 } }
-Processing => [Ok(Accepted { order_id 5, order_type: Market, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 860180000 } }), Ok(Filled { order_order_id 5, side: Bid, order_type: Market, price: 1.02, qty: 1.0, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 860183000 } }), Ok(Filled { order_order_id 2, side: Ask, order_type: Limit, price: 1.02, qty: 1.0, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 860183000 } })]
-Spread => border_id 1.01, ask: 1.03
-
-Order => NewLimitOrder { base_asset: BTC, quote_asset: USD, side: Ask, price: 1.05, qty: 0.5, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 859955000 } }
-Processing => [Ok(Accepted { order_id 6, order_type: Limit, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 860248000 } })]
-Spread => border_id 1.01, ask: 1.03
-
-Order => CancelOrder { order_id 4, side: Ask }
-Processing => [Ok(Cancelled { order_id 4, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 860291000 } })]
-Spread => border_id 1.01, ask: 1.05
-
-Order => NewLimitOrder { base_asset: BTC, quote_asset: USD, side: Bid, price: 1.06, qty: 0.6, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 859955000 } }
-Processing => [Ok(Accepted { order_id 7, order_type: Limit, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 860320000 } }), Ok(PartiallyFilled { order_order_id 7, side: Bid, order_type: Limit, price: 1.05, qty: 0.5, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 860325000 } }), Ok(Filled { order_order_id 6, side: Ask, order_type: Limit, price: 1.05, qty: 0.5, ts: SystemTime { tv_sec: 1516040690, tv_nsec: 860325000 } })]
-Spread => not available
-```
+    crypto # In-memory storage of blocks and related data structures
+    ├── src
+    │   ├── block_storage          # In-memory storage of blocks and related data structures
+    │   ├── consensusdb            # Database interaction to persist consensus data for safety and liveness
+    │   ├── liveness               # RoundState, proposer, and other liveness related code
+    │   └── test_utils             # Mock implementations that are used for testing only
+    ├── consensus-types            # Consensus data types (i.e. quorum certificates)
+    └── safety-rules               # Safety (voting) rules

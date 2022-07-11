@@ -15,7 +15,10 @@ use diem_crypto::{
 use engine::orders;
 use engine::orderbook::{Orderbook, OrderProcessingResult, Success};
 use engine::domain::OrderSide;
-use proc::account::{AccountPubKey, AccountPrivKey, AccountSignature, AccountController, TestDiemCrypto, DUMMY_MESSAGE};
+use proc::account::{AccountPubKey, AccountPrivKey, AccountSignature};
+use proc::bank::{BankController};
+use proc::spot::{SpotController, TestDiemCrypto, DUMMY_MESSAGE};
+
 
 const N_ORDERS_BENCH: u64 = 1_024;
 const N_ACCOUNTS: u64 = 1_024;
@@ -36,11 +39,6 @@ fn parse_asset(asset: &str) -> Option<BrokerAsset> {
         "ETH" => Some(BrokerAsset::ETH),
         _ => None,
     }
-}
-
-fn round(x: f64, decimals: u32) -> f64 {
-    let y = 10i64.pow(decimals) as f64;
-    (x * y).round() / y
 }
 
 fn persist_result(db: &DBWithThreadMode<SingleThreaded>, proc_result: &OrderProcessingResult) -> () {
@@ -78,8 +76,8 @@ fn place_orders_engine(
     let mut i_order: u64 = 0;
     while i_order < n_orders {
         let order_type = if i_order % 2 == 0 { OrderSide::Bid } else { OrderSide::Ask };
-        let qty = round(rng.gen_range(0.0, 10.0), 3)+0.001;
-        let price = round(rng.gen_range(0.0, 10.0), 3)+0.001;
+        let qty = rng.gen_range(0, 100);
+        let price = rng.gen_range(0, 100);
 
         // order construction & submission
         let order = orders::new_limit_order_request(
@@ -101,7 +99,7 @@ fn place_orders_engine(
 fn place_orders_engine_account(
     n_orders: u64, 
     account_to_pub_key: &mut Vec<AccountPubKey>, 
-    market_controller: &mut AccountController<BrokerAsset>, 
+    spot_controller: &mut SpotController<BrokerAsset>, 
     rng: &mut ThreadRng,
     db: &DBWithThreadMode<SingleThreaded>, 
     persist: bool) 
@@ -112,19 +110,19 @@ fn place_orders_engine_account(
     let orderbook: Orderbook<BrokerAsset> = Orderbook::new(base_asset, quote_asset);
 
     // clean market controller orderbook to keep from getting clogged
-    market_controller.overwrite_orderbook(orderbook);
+    spot_controller.overwrite_orderbook(orderbook);
 
     // bench
     let mut i_order: u64 = 0;
     while i_order < n_orders {
         let order_type = if i_order % 2 == 0 { OrderSide::Bid } else { OrderSide::Ask };
         // generate two random a number between 0.001 and 10 w/ interval of 0.001
-        let qty = round(rng.gen_range(0.0, 10.0), 3) + 0.001;
-        let price = round(rng.gen_range(0.0, 10.0), 3) + 0.001;
+        let qty = rng.gen_range(0, 100);
+        let price = rng.gen_range(0, 100);
         // generate a random integer between 0 and 100
         let account_pub_key: AccountPubKey = account_to_pub_key[rng.gen_range(0, 100)];
 
-        let res = market_controller.place_limit_order(&account_pub_key,  order_type, qty, price).unwrap();
+        let res = spot_controller.place_limit_order(&account_pub_key,  order_type, qty, price).unwrap();
         if persist {
             persist_result(db, &res);
         }
@@ -136,7 +134,7 @@ fn place_orders_engine_account_signed(
     n_orders: u64, 
     account_to_pub_key: &mut Vec<AccountPubKey>, 
     account_to_signed_msg: &mut Vec<AccountSignature>, 
-    market_controller: &mut AccountController<BrokerAsset>, 
+    spot_controller: &mut SpotController<BrokerAsset>, 
     rng: &mut ThreadRng,
     db: &DBWithThreadMode<SingleThreaded>, 
     persist: bool) 
@@ -147,21 +145,21 @@ fn place_orders_engine_account_signed(
     let orderbook: Orderbook<BrokerAsset> = Orderbook::new(base_asset, quote_asset);
 
     // clean market controller orderbook to keep from getting clogged
-    market_controller.overwrite_orderbook(orderbook);
+    spot_controller.overwrite_orderbook(orderbook);
 
     // bench
     let mut i_order: u64 = 0;
     while i_order < n_orders {
         let order_type = if i_order % 2 == 0 { OrderSide::Bid } else { OrderSide::Ask };
         // generate two random a number between 0.001 and 10 w/ interval of 0.001
-        let qty = round(rng.gen_range(0.0, 10.0), 3) + 0.001;
-        let price = round(rng.gen_range(0.0, 10.0), 3) + 0.001;
+        let qty = rng.gen_range(0, 100);
+        let price = rng.gen_range(0, 100);
         // generate a random integer between 0 and 100
         let i_account = rng.gen_range(0, 100);
         let account_pub_key: AccountPubKey = account_to_pub_key[i_account];
         let account_sig_msg: &AccountSignature = &account_to_signed_msg[i_account];
 
-        let res = market_controller.place_signed_limit_order(&account_pub_key,  order_type, qty, price, account_sig_msg).unwrap();
+        let res = spot_controller.place_signed_limit_order(&account_pub_key,  order_type, qty, price, account_sig_msg).unwrap();
 
         i_order+=1;
 
@@ -176,24 +174,25 @@ fn place_orders_engine_account_batch_signed(
     n_orders: u64, 
     account_to_pub_key: &mut Vec<AccountPubKey>, 
     keys_and_signatures: &mut Vec<(AccountPubKey, AccountSignature)>, 
-    market_controller: &mut AccountController<BrokerAsset>, 
+    spot_controller: &mut SpotController<BrokerAsset>, 
     rng: &mut ThreadRng,
     db: &DBWithThreadMode<SingleThreaded>, 
     persist: bool) 
 {
     Signature::batch_verify(&TestDiemCrypto(DUMMY_MESSAGE.to_string()), keys_and_signatures.to_vec()).unwrap();
-    place_orders_engine_account(n_orders, account_to_pub_key, market_controller, rng, db, persist);
+    place_orders_engine_account(n_orders, account_to_pub_key, spot_controller, rng, db, persist);
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {
     // initialize market controller
     let base_asset:BrokerAsset = parse_asset("BTC").unwrap();
     let quote_asset:BrokerAsset = parse_asset("USD").unwrap();
-    let base_balance: f64 = 1_000_000_000.0;
-    let quote_balance: f64 = 1_000_000_000.0;
+    let base_balance: u64 = 1_000_000_000;
+    let quote_balance: u64 = 1_000_000_000;
     let mut account_to_pub_key: Vec<AccountPubKey> = Vec::new();
     let mut account_to_signed_msg: Vec<AccountSignature> = Vec::new();
-    let mut market_controller: AccountController<BrokerAsset> = AccountController::new(base_asset, quote_asset);
+    let mut bank_controller: BankController = BankController::new();
+    let mut spot_controller: SpotController<BrokerAsset> = SpotController::new(base_asset, quote_asset, &mut bank_controller);
 
     // other helpers
     let mut rng: ThreadRng = rand::thread_rng();
@@ -218,7 +217,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         account_to_pub_key.push(account_pub_key);
         let sig: AccountSignature  = private_key.sign(&TestDiemCrypto(DUMMY_MESSAGE.to_string()));
         account_to_signed_msg.push(sig.clone());
-        market_controller.create_account(&account_pub_key, base_balance, quote_balance).unwrap();
+        spot_controller.create_account(&account_pub_key, base_balance, quote_balance).unwrap();
         i_account += 1;
         keys_and_signatures.push((account_pub_key, sig));
     }
@@ -230,24 +229,24 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         place_orders_engine(black_box(N_ORDERS_BENCH), &mut rng, &db, true)));
     
     c.bench_function("place_orders_engine_account", |b| b.iter(|| 
-        place_orders_engine_account(black_box(N_ORDERS_BENCH), &mut account_to_pub_key, &mut market_controller, &mut rng, &db, false)));
+        place_orders_engine_account(black_box(N_ORDERS_BENCH), &mut account_to_pub_key, &mut spot_controller, &mut rng, &db, false)));
     
     c.bench_function("place_orders_engine_account_db", |b| b.iter(|| 
-        place_orders_engine_account(black_box(N_ORDERS_BENCH), &mut account_to_pub_key, &mut market_controller, &mut rng, &db, true)));
+        place_orders_engine_account(black_box(N_ORDERS_BENCH), &mut account_to_pub_key, &mut spot_controller, &mut rng, &db, true)));
 
     c.bench_function("place_orders_engine_account_signed", |b| b.iter(|| 
-        place_orders_engine_account_signed(black_box(N_ORDERS_BENCH), &mut account_to_pub_key, &mut account_to_signed_msg, &mut market_controller, &mut rng, &db, false)));
+        place_orders_engine_account_signed(black_box(N_ORDERS_BENCH), &mut account_to_pub_key, &mut account_to_signed_msg, &mut spot_controller, &mut rng, &db, false)));
 
     c.bench_function("place_orders_engine_account_signed_db", |b| b.iter(|| 
-        place_orders_engine_account_signed(black_box(N_ORDERS_BENCH), &mut account_to_pub_key, &mut account_to_signed_msg, &mut market_controller, &mut rng, &db, true)));
+        place_orders_engine_account_signed(black_box(N_ORDERS_BENCH), &mut account_to_pub_key, &mut account_to_signed_msg, &mut spot_controller, &mut rng, &db, true)));
     
     #[cfg(feature = "batch")]
     c.bench_function("place_orders_engine_account_batch_signed", |b| b.iter(|| 
-        place_orders_engine_account_batch_signed(black_box(N_ORDERS_BENCH), &mut account_to_pub_key, &mut keys_and_signatures, &mut market_controller, &mut rng, &db, false)));
+        place_orders_engine_account_batch_signed(black_box(N_ORDERS_BENCH), &mut account_to_pub_key, &mut keys_and_signatures, &mut spot_controller, &mut rng, &db, false)));
 
     #[cfg(feature = "batch")]
     c.bench_function("place_orders_engine_account_batch_signed_db", |b| b.iter(|| 
-        place_orders_engine_account_batch_signed(black_box(N_ORDERS_BENCH), &mut account_to_pub_key, &mut keys_and_signatures, &mut market_controller, &mut rng, &db, true)));
+        place_orders_engine_account_batch_signed(black_box(N_ORDERS_BENCH), &mut account_to_pub_key, &mut keys_and_signatures, &mut spot_controller, &mut rng, &db, true)));
 
 }
 

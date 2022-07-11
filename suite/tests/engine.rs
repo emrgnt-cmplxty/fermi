@@ -10,16 +10,6 @@ pub use engine::orders;
 mod tests {
     use super::*;
 
-    const FLOAT_THRESHOLD: f64 = 1e-6;
-
-    fn match_float(expected: f64, get: f64) -> bool {
-        if (expected - get).abs() < FLOAT_THRESHOLD {
-            true
-        } else {
-            false
-        }
-    }
-
     #[derive(PartialEq, Eq, Debug, Copy, Clone)]
     enum Asset {
         USD,
@@ -50,7 +40,7 @@ mod tests {
             base_asset,
             quote_asset,
             OrderSide::Bid,
-            2.0,
+            2,
             SystemTime::now(),
         );
 
@@ -83,8 +73,8 @@ mod tests {
             base_asset,
             quote_asset,
             OrderSide::Bid,
-            10.0,
-            1.0,
+            10,
+            2,
             SystemTime::now(),
         );
 
@@ -92,7 +82,7 @@ mod tests {
             base_asset,
             quote_asset,
             OrderSide::Ask,
-            0.5,
+            1,
             SystemTime::now(),
         );
 
@@ -109,7 +99,7 @@ mod tests {
                        price,
                        qty,
                        ..
-                   }) if match_float(price, 10.0) && match_float(qty, 0.5) => true,
+                   }) if price == 10 && qty == 1 => true,
                 _ => false,
             } ||
             !match res[2] {
@@ -118,7 +108,7 @@ mod tests {
                        price,
                        qty,
                        ..
-                   }) if match_float(price, 10.0) && match_float(qty, 0.5) => true,
+                   }) if price == 10 && qty == 1 => true,
                 _ => false,
             }
         {
@@ -139,8 +129,8 @@ mod tests {
             base_asset,
             quote_asset,
             OrderSide::Bid,
-            10.0,
-            1.0,
+            10,
+            10,
             SystemTime::now(),
         );
 
@@ -148,8 +138,8 @@ mod tests {
             base_asset,
             quote_asset,
             OrderSide::Bid,
-            12.0,
-            1.0,
+            12,
+            10,
             SystemTime::now(),
         );
 
@@ -157,7 +147,7 @@ mod tests {
             base_asset,
             quote_asset,
             OrderSide::Ask,
-            1.5,
+            15,
             SystemTime::now(),
         );
 
@@ -175,7 +165,7 @@ mod tests {
                        price,
                        qty,
                        ..
-                   }) if match_float(price, 12.0) && match_float(qty, 1.0) => true,
+                   }) if price == 12 && qty == 10 => true,
                 _ => false,
             } ||
             !match res[2] {
@@ -184,7 +174,7 @@ mod tests {
                        price,
                        qty,
                        ..
-                   }) if match_float(price, 12.0) && match_float(qty, 1.0) => true,
+                   }) if price == 12 && qty == 10 => true,
                 _ => false,
             } ||
             !match res[3] {
@@ -193,7 +183,7 @@ mod tests {
                        price,
                        qty,
                        ..
-                   }) if match_float(price, 10.0) && match_float(qty, 0.5) => true,
+                   }) if price == 10 && qty == 5 => true,
                 _ => false,
             } ||
             !match res[4] {
@@ -202,7 +192,7 @@ mod tests {
                        price,
                        qty,
                        ..
-                   }) if match_float(price, 10.0) && match_float(qty, 0.5) => true,
+                   }) if price == 10 && qty == 5 => true,
                 _ => false,
             }
         {
@@ -223,8 +213,8 @@ mod tests {
             base_asset,
             quote_asset,
             OrderSide::Bid,
-            10.0,
-            2.0,
+            100,
+            20,
             SystemTime::now(),
         );
 
@@ -253,8 +243,8 @@ mod tests {
             base_asset,
             quote_asset,
             OrderSide::Bid,
-            10.0,
-            1.0,
+            100,
+            100,
             SystemTime::now(),
         );
 
@@ -262,8 +252,8 @@ mod tests {
             base_asset,
             quote_asset,
             OrderSide::Ask,
-            9.0,
-            0.5,
+            90,
+            50,
             SystemTime::now(),
         );
 
@@ -280,7 +270,7 @@ mod tests {
                        price,
                        qty,
                        ..
-                   }) if match_float(price, 10.0) && match_float(qty, 0.5) => true,
+                   }) if price == 100 && qty == 50 => true,
                 _ => false,
             } ||
             !match res[2] {
@@ -289,7 +279,7 @@ mod tests {
                        price,
                        qty,
                        ..
-                   }) if match_float(price, 10.0) && match_float(qty, 0.5) => true,
+                   }) if price == 100 && qty == 50 => true,
                 _ => false,
             }
         {
@@ -310,8 +300,8 @@ mod tests {
             base_asset,
             quote_asset,
             OrderSide::Bid,
-            10.0,
-            1.0,
+            100,
+            10,
             SystemTime::now(),
         );
 
@@ -319,8 +309,8 @@ mod tests {
             base_asset,
             quote_asset,
             OrderSide::Ask,
-            9.0,
-            0.5,
+            90,
+            5,
             SystemTime::now(),
         );
 
@@ -337,7 +327,7 @@ mod tests {
                        price,
                        qty,
                        ..
-                   }) if match_float(price, 10.0) && match_float(qty, 0.5) => true,
+                   }) if price == 100 && qty == 5 => true,
                 _ => false,
             } ||
             !match res[2] {
@@ -346,7 +336,7 @@ mod tests {
                        price,
                        qty,
                        ..
-                   }) if match_float(price, 10.0) && match_float(qty, 0.5) => true,
+                   }) if price == 100 && qty == 5 => true,
                 _ => false,
             }
         {
@@ -357,8 +347,8 @@ mod tests {
             base_asset,
             quote_asset,
             OrderSide::Ask,
-            8.0,
-            0.5,
+            80,
+            5,
             SystemTime::now(),
         );
 
@@ -374,7 +364,7 @@ mod tests {
                        price,
                        qty,
                        ..
-                   }) if match_float(price, 10.0) && match_float(qty, 0.5) => true,
+                   }) if price == 100 && qty == 5 => true,
                 _ => false,
             } ||
             !match res2[2] {
@@ -383,7 +373,7 @@ mod tests {
                        price,
                        qty,
                        ..
-                   }) if match_float(price, 10.0) && match_float(qty, 0.5) => true,
+                   }) if price == 100 && qty == 5 => true,
                 _ => false,
             }
         {
@@ -406,8 +396,8 @@ mod tests {
             base_asset,
             quote_asset,
             OrderSide::Bid,
-            10.0,
-            1.0,
+            100,
+            10,
             SystemTime::now(),
         );
 
@@ -418,8 +408,8 @@ mod tests {
             base_asset,
             quote_asset,
             OrderSide::Ask,
-            12.0,
-            0.5,
+            120,
+            5,
             SystemTime::now(),
         );
 
@@ -427,8 +417,8 @@ mod tests {
             base_asset,
             quote_asset,
             OrderSide::Ask,
-            12.5,
-            2.5,
+            125,
+            25,
             SystemTime::now(),
         );
 
@@ -436,20 +426,20 @@ mod tests {
         orderbook.process_order(order2);
         orderbook.process_order(order3);
 
-        assert_eq!(orderbook.current_spread(), Some((10.0, 12.0)));
+        assert_eq!(orderbook.current_spread(), Some((100, 120)));
 
         // wider spread
         let order4 = orders::new_limit_order_request(
             base_asset,
             quote_asset,
             OrderSide::Bid,
-            14.0,
-            1.5,
+            140,
+            15,
             SystemTime::now(),
         );
         let res = orderbook.process_order(order4);
         println!("{:?}", res);
 
-        assert_eq!(orderbook.current_spread(), Some((10.0, 12.5)));
+        assert_eq!(orderbook.current_spread(), Some((100, 125)));
     }
 }

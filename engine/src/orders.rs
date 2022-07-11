@@ -1,11 +1,13 @@
 
+use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 use std::fmt::Debug;
 
+use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
 use super::domain::OrderSide;
 
 
-#[derive(Debug)]
+#[derive(BCSCryptoHash, CryptoHasher, Debug, Serialize, Deserialize)]
 pub enum OrderRequest<Asset>
 where
     Asset: Debug + Clone,
@@ -14,7 +16,7 @@ where
         base_asset: Asset,
         quote_asset: Asset,
         side: OrderSide,
-        qty: f64,
+        qty: u64,
         ts: SystemTime,
     },
 
@@ -22,16 +24,16 @@ where
         base_asset: Asset,
         quote_asset: Asset,
         side: OrderSide,
-        price: f64,
-        qty: f64,
+        price: u64,
+        qty: u64,
         ts: SystemTime,
     },
 
     AmendOrder {
         id: u64,
         side: OrderSide,
-        price: f64,
-        qty: f64,
+        price: u64,
+        qty: u64,
         ts: SystemTime,
     },
 
@@ -51,7 +53,7 @@ pub fn new_market_order_request<Asset>(
     base_asset: Asset,
     quote_asset: Asset,
     side: OrderSide,
-    qty: f64,
+    qty: u64,
     ts: SystemTime,
 ) -> OrderRequest<Asset>
 where
@@ -73,8 +75,8 @@ pub fn new_limit_order_request<Asset>(
     base_asset: Asset,
     quote_asset: Asset,
     side: OrderSide,
-    price: f64,
-    qty: f64,
+    price: u64,
+    qty: u64,
     ts: SystemTime,
 ) -> OrderRequest<Asset>
 where
@@ -99,8 +101,8 @@ where
 pub fn amend_order_request<Asset>(
     id: u64,
     side: OrderSide,
-    price: f64,
-    qty: f64,
+    price: u64,
+    qty: u64,
     ts: SystemTime,
 ) -> OrderRequest<Asset>
 where

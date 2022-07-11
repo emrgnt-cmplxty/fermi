@@ -1,7 +1,10 @@
 
+use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
-#[derive(Debug, Copy, Clone)]
+use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
+
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, CryptoHasher, BCSCryptoHash)]
 pub enum OrderSide {
     Bid,
     Ask,
@@ -16,8 +19,8 @@ where
     pub base_asset: Asset,
     pub quote_asset: Asset,
     pub side: OrderSide,
-    pub price: f64,
-    pub qty: f64,
+    pub price: u64,
+    pub qty: u64,
 }
 
 

@@ -16,6 +16,13 @@ struct Order {
     side: String,
 }
 
+// make a new struct for an order that we have to hash
+#[derive(Serialize, Deserialize, CryptoHasher, BCSCryptoHash)]
+struct Order {
+    quantity: i32,
+    side: String,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

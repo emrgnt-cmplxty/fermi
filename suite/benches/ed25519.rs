@@ -6,6 +6,7 @@ extern crate criterion;
 use criterion::Criterion;
 use rand::{prelude::ThreadRng, thread_rng};
 
+use criterion::Throughput;
 use diem_crypto::{
     ed25519::{Ed25519PrivateKey, Ed25519PublicKey, Ed25519Signature},
     traits::{Signature, SigningKey, Uniform},
@@ -34,9 +35,7 @@ fn basic_sig_verify(
 }
 
 #[cfg(feature = "batch")]
-fn batch_sig_verify(
-    keys_and_signatures: &Vec<(Ed25519PublicKey, Ed25519Signature)>
-) {
+fn batch_sig_verify(keys_and_signatures: &Vec<(Ed25519PublicKey, Ed25519Signature)>) {
     let msg = TestDiemCrypto("dummy".to_string());
     // gives us 1 if it was verified and 0 if it wasn't
     Signature::batch_verify(&msg, keys_and_signatures.to_vec()).unwrap();
@@ -76,7 +75,9 @@ fn criterion_benchmark(c: &mut Criterion) {
         private_keys.push(private_key);
         public_keys.push(public_key);
     }
-    c.bench_function("basic_sig_verify", |b| {
+    let mut group = c.benchmark_group("sig_verification");
+    group.throughput(Throughput::Elements((NUMBER_OF_MESSAGES) as u64));
+    group.bench_function("basic_sig_verify", |b| {
         b.iter(|| basic_sig_verify(&mut sigs, &mut public_keys, &mut messages))
     });
     #[cfg(feature = "batch")]

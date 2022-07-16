@@ -100,13 +100,6 @@ impl <'a> SpotController <'a>
         self.proc_limit_result(account_pub_key, side, price, qty, res)
     }
 
-    // signed workflow
-    // TODO - flesh out more
-    pub fn place_signed_limit_order(&mut self, account_pub_key: &AccountPubKey, side: OrderSide, qty: u64, price: u64, signed_message: &AccountSignature) -> Result<OrderProcessingResult, AccountError> {
-        signed_message.verify(&TestDiemCrypto(DUMMY_MESSAGE.to_string()), &account_pub_key).unwrap();
-        self.place_limit_order(account_pub_key, side, qty, price)
-    }
-
     // loop over and process the output from placing a limit order
     fn proc_limit_result(&mut self, account_pub_key: &AccountPubKey, sub_side: OrderSide, sub_price: u64, sub_qty: u64,  res: OrderProcessingResult) -> Result<OrderProcessingResult, AccountError> {
         for order in &res {
@@ -158,6 +151,14 @@ impl <'a> SpotController <'a>
             // E.g. fill bid 1 BTC @ 20k adds 1 BTC (base) to bal, subtracts 20k USD (quote) from escrow
             self.bank_controller.update_balance(account_pub_key, self.base_asset_id, qty as i64);
         }
+    }
+
+
+    // signed workflow
+    // TODO - flesh out more
+    pub fn place_signed_limit_order(&mut self, account_pub_key: &AccountPubKey, side: OrderSide, qty: u64, price: u64, signed_message: &AccountSignature) -> Result<OrderProcessingResult, AccountError> {
+        signed_message.verify(&TestDiemCrypto(DUMMY_MESSAGE.to_string()), &account_pub_key).unwrap();
+        self.place_limit_order(account_pub_key, side, qty, price)
     }
 
     // TODO - can we guard this to only be accessible in "bench" mode?

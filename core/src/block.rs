@@ -1,16 +1,21 @@
+use std::{fmt::Debug};
 use diem_crypto::{
-    hash::HashValue,
+    hash::{CryptoHash, HashValue},
 };
 
-use super::transaction::{Transaction};
+use super::transaction::{TxnRequest};
 
-pub struct BlockContainer
+pub struct BlockContainer <Variant>
+where
+Variant: Debug + Clone + CryptoHash,
 {
-    pub blocks: Vec<Block>,
+    pub blocks: Vec<Block<Variant>>,
 }
 
-pub struct Block
+pub struct Block <Variant>
+where
+Variant: Debug + Clone + CryptoHash,
 {
-    pub txns: Vec<Transaction>,
+    pub txns: Vec<TxnRequest<Variant>>,
     pub block_hash: HashValue
 }

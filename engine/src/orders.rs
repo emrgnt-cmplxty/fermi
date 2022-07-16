@@ -8,7 +8,7 @@ use types::{
     orderbook::{OrderSide}
 };
 
-#[derive(BCSCryptoHash, CryptoHasher, Debug, Serialize, Deserialize)]
+#[derive(BCSCryptoHash, CryptoHasher, Clone, Debug, Serialize, Deserialize)]
 pub enum OrderRequest
 {
     NewMarketOrder {

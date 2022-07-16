@@ -1,24 +1,19 @@
 
-// use super::transaction;
-
 use std::fmt::Debug;
 use diem_crypto::{
     hash::HashValue,
 };
-// use transaction::{Transaction};
+
+use super::transaction::{Transaction};
 
 
-pub struct BlockContainer<Asset> 
-where
-    Asset: Debug + Clone + Copy + Eq,
+pub struct BlockContainer
 {
-    pub blocks: Vec<Block<Asset>>,
+    pub blocks: Vec<Block>,
 }
 
-pub struct Block<Asset> 
-where
-    Asset: Debug + Clone + Copy + Eq, 
+pub struct Block
 {
-    pub txns: Vec<Transaction<Asset>>,
+    pub txns: Vec<Transaction>,
     pub hash: HashValue
 }

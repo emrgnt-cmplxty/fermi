@@ -11,6 +11,7 @@ bcs = "0.1.2"
 diem-crypto-derive = { path = "../crypto-derive", version = "0.0.2" }
 diem-crypto = { path = "../crypto", features = ["batch"] }
 diem-workspace-hack = { path = "../workspace-hack" }
+engine = { path = "../engine" }
 types = { path = "../types" }
 
 [features]

@@ -6,7 +6,6 @@ edition = "2018"
 
 [dependencies]
 bcs = "0.1.2"
-core = { path = "../core" }
 serde = { version = "1.0.124", features = ["derive"] }
 rand = "0.8.4"
 criterion = "0.3"

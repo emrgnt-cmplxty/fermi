@@ -1,4 +1,3 @@
-
 // Rotating index sequence
 pub struct TradeSequence {
     min_id: u64,

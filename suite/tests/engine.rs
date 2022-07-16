@@ -1,44 +1,27 @@
-
 extern crate engine;
 extern crate proc;
+extern crate types;
 
-pub use engine::domain::OrderSide;
-pub use engine::orderbook::{Orderbook, OrderProcessingResult, Success, Failed};
+use std::time::SystemTime;
+
+pub use engine::orderbook::{Orderbook};
 pub use engine::orders;
+pub use types::orderbook::{Failed, OrderProcessingResult, OrderSide, Success};
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    const BASE_ASSET_ID: u64 = 0;
+    const QUOTE_ASSET_ID: u64 = 1;
 
-    #[derive(PartialEq, Eq, Debug, Copy, Clone)]
-    enum Asset {
-        USD,
-        EUR,
-        BTC,
-        ETH,
-    }
-
-    fn parse_asset(asset: &str) -> Option<Asset> {
-        match asset {
-            "USD" => Some(Asset::USD),
-            "EUR" => Some(Asset::EUR),
-            "BTC" => Some(Asset::BTC),
-            "ETH" => Some(Asset::ETH),
-            _ => None,
-        }
-    }
 
     #[test]
     fn market_order_on_empty_orderbook() {
-        use std::time::SystemTime;
-
-        let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
-        let base_asset = parse_asset("BTC").unwrap();
-        let quote_asset = parse_asset("USD").unwrap();
+        let mut orderbook = Orderbook::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
 
         let order1 = orders::new_market_order_request(
-            base_asset,
-            quote_asset,
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
             OrderSide::Bid,
             2,
             SystemTime::now(),
@@ -63,15 +46,11 @@ mod tests {
 
     #[test]
     fn market_order_partial_match() {
-        use std::time::SystemTime;
-
-        let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
-        let base_asset = parse_asset("BTC").unwrap();
-        let quote_asset = parse_asset("USD").unwrap();
+        let mut orderbook = Orderbook::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
 
         let order1 = orders::new_limit_order_request(
-            base_asset,
-            quote_asset,
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
             OrderSide::Bid,
             10,
             2,
@@ -79,8 +58,8 @@ mod tests {
         );
 
         let order2 = orders::new_market_order_request(
-            base_asset,
-            quote_asset,
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
             OrderSide::Ask,
             1,
             SystemTime::now(),
@@ -119,15 +98,11 @@ mod tests {
 
     #[test]
     fn market_order_two_orders_match() {
-        use std::time::SystemTime;
-
-        let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
-        let base_asset = parse_asset("BTC").unwrap();
-        let quote_asset = parse_asset("USD").unwrap();
+        let mut orderbook = Orderbook::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
 
         let order1 = orders::new_limit_order_request(
-            base_asset,
-            quote_asset,
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
             OrderSide::Bid,
             10,
             10,
@@ -135,8 +110,8 @@ mod tests {
         );
 
         let order2 = orders::new_limit_order_request(
-            base_asset,
-            quote_asset,
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
             OrderSide::Bid,
             12,
             10,
@@ -144,8 +119,8 @@ mod tests {
         );
 
         let order3 = orders::new_market_order_request(
-            base_asset,
-            quote_asset,
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
             OrderSide::Ask,
             15,
             SystemTime::now(),
@@ -203,15 +178,11 @@ mod tests {
 
     #[test]
     fn limit_order_on_empty_orderbook() {
-        use std::time::SystemTime;
-
-        let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
-        let base_asset = parse_asset("BTC").unwrap();
-        let quote_asset = parse_asset("USD").unwrap();
+        let mut orderbook = Orderbook::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
 
         let order1 = orders::new_limit_order_request(
-            base_asset,
-            quote_asset,
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
             OrderSide::Bid,
             100,
             20,
@@ -233,15 +204,11 @@ mod tests {
 
     #[test]
     fn limit_order_partial_match() {
-        use std::time::SystemTime;
-
-        let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
-        let base_asset = parse_asset("BTC").unwrap();
-        let quote_asset = parse_asset("USD").unwrap();
+        let mut orderbook = Orderbook::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
 
         let order1 = orders::new_limit_order_request(
-            base_asset,
-            quote_asset,
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
             OrderSide::Bid,
             100,
             100,
@@ -249,8 +216,8 @@ mod tests {
         );
 
         let order2 = orders::new_limit_order_request(
-            base_asset,
-            quote_asset,
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
             OrderSide::Ask,
             90,
             50,
@@ -290,15 +257,11 @@ mod tests {
 
     #[test]
     fn limit_order_exact_match() {
-        use std::time::SystemTime;
-
-        let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
-        let base_asset = parse_asset("BTC").unwrap();
-        let quote_asset = parse_asset("USD").unwrap();
+        let mut orderbook = Orderbook::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
 
         let order1 = orders::new_limit_order_request(
-            base_asset,
-            quote_asset,
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
             OrderSide::Bid,
             100,
             10,
@@ -306,8 +269,8 @@ mod tests {
         );
 
         let order2 = orders::new_limit_order_request(
-            base_asset,
-            quote_asset,
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
             OrderSide::Ask,
             90,
             5,
@@ -344,8 +307,8 @@ mod tests {
         }
 
         let order3 = orders::new_limit_order_request(
-            base_asset,
-            quote_asset,
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
             OrderSide::Ask,
             80,
             5,
@@ -386,15 +349,11 @@ mod tests {
 
     #[test]
     fn current_spread() {
-        use std::time::SystemTime;
-
-        let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
-        let base_asset = parse_asset("BTC").unwrap();
-        let quote_asset = parse_asset("USD").unwrap();
+        let mut orderbook = Orderbook::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
 
         let order1 = orders::new_limit_order_request(
-            base_asset,
-            quote_asset,
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
             OrderSide::Bid,
             100,
             10,
@@ -405,8 +364,8 @@ mod tests {
         assert_eq!(orderbook.current_spread(), None);
 
         let order2 = orders::new_limit_order_request(
-            base_asset,
-            quote_asset,
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
             OrderSide::Ask,
             120,
             5,
@@ -414,8 +373,8 @@ mod tests {
         );
 
         let order3 = orders::new_limit_order_request(
-            base_asset,
-            quote_asset,
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
             OrderSide::Ask,
             125,
             25,
@@ -430,8 +389,8 @@ mod tests {
 
         // wider spread
         let order4 = orders::new_limit_order_request(
-            base_asset,
-            quote_asset,
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
             OrderSide::Bid,
             140,
             15,

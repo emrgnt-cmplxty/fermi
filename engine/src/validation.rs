@@ -1,8 +1,5 @@
-
-use std::fmt::Debug;
-
 use super::orders::OrderRequest;
-
+use types::asset::{AssetId};
 
 /// Validation errors
 const ERR_BAD_BASE_ASSET: &str = "bad order asset";
@@ -14,20 +11,18 @@ const ERR_BAD_SEQ_ID: &str = "order ID out of range";
 
 /* Validators */
 
-pub struct OrderRequestValidator<Asset> {
-    orderbook_base_asset: Asset,
-    orderbook_quote_asset: Asset,
+pub struct OrderRequestValidator {
+    orderbook_base_asset: AssetId,
+    orderbook_quote_asset: AssetId,
     min_sequence_id: u64,
     max_sequence_id: u64,
 }
 
-impl<Asset> OrderRequestValidator<Asset>
-where
-    Asset: Debug + Clone + Copy + Eq,
+impl OrderRequestValidator
 {
     pub fn new(
-        orderbook_base_asset: Asset,
-        orderbook_quote_asset: Asset,
+        orderbook_base_asset: AssetId,
+        orderbook_quote_asset: AssetId,
         min_sequence_id: u64,
         max_sequence_id: u64,
     ) -> Self {
@@ -40,7 +35,7 @@ where
     }
 
 
-    pub fn validate(&self, request: &OrderRequest<Asset>) -> Result<(), &str> {
+    pub fn validate(&self, request: &OrderRequest) -> Result<(), &str> {
         match *request {
             OrderRequest::NewMarketOrder {
                 base_asset,
@@ -77,8 +72,8 @@ where
     
     fn validate_market(
         &self,
-        base_asset: Asset,
-        quote_asset: Asset,
+        base_asset: AssetId,
+        quote_asset: AssetId,
         qty: u64,
     ) -> Result<(), &str> {
 
@@ -100,8 +95,8 @@ where
 
     fn validate_limit(
         &self,
-        base_asset: Asset,
-        quote_asset: Asset,
+        base_asset: AssetId,
+        quote_asset: AssetId,
         price: u64,
         qty: u64,
     ) -> Result<(), &str> {

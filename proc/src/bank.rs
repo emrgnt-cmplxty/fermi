@@ -1,16 +1,19 @@
 //! 
 //! TODO
 //! 1.) Move asset addr to proper addr
-//! 2.) Improve create asset functionality
+//! 2.) Improve general asset functionality
+//! 3.) Make errors more robust, like in fetching non-existent account
 //! 
-
-extern crate engine;
+extern crate types;
 
 use std::collections::HashMap;
 
-use super::account::{AccountError, AccountPubKey,  BankAccount};
-use super::asset::{Asset, AssetId};
+use super::account::{BankAccount};
+use types::account::{AccountError, AccountPubKey};
+use types::asset::{Asset, AssetId};
 
+// TODO - change to process this via input
+const CREATED_ASSET_BALANCE: i64 = 1_000_000_000_000;
 
 // The bank controller is responsible for accessing & modifying user balances 
 pub struct BankController
@@ -42,13 +45,8 @@ impl BankController
 
     pub fn create_asset(&mut self, owner_pub_key: &AccountPubKey) {
         self.asset_id_to_asset.insert(self.n_assets, Asset{asset_id: self.n_assets, asset_addr: self.n_assets});
-        self.update_balance(owner_pub_key, self.n_assets, 1_000_000_000);
+        self.update_balance(owner_pub_key, self.n_assets, CREATED_ASSET_BALANCE);
         self.n_assets += 1;
-    }
-
-    pub fn get_account(&self, account_pub_key: &AccountPubKey) -> Result<&BankAccount, AccountError> {
-        let account: &BankAccount = self.accounts.get(account_pub_key).ok_or(AccountError::Lookup("Failed to find account".to_string()))?;
-        Ok(account)
     }
 
     pub fn get_balance(&self, account_pub_key: &AccountPubKey, asset_id: AssetId) -> u64 {

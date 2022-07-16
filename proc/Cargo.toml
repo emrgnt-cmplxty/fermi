@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 assert_approx_eq = "1.1.0"
+core = { path = "../core" }
 rand = "0.8.4"
 criterion = "0.3.4"
 serde = { version = "1.0.124", features = ["derive"] }
@@ -15,3 +16,4 @@ engine = { path = "../engine" }
 diem-crypto-derive = { path = "../crypto-derive", version = "0.0.2" }
 diem-crypto = { path = "../crypto" }
 diem-workspace-hack = { path = "../workspace-hack" }
+types = { path = "../types" }

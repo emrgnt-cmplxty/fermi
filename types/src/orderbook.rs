@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
-use std::fmt::Debug;
-use std::time::SystemTime;
+use std::{
+    fmt::Debug,
+    time::SystemTime
+};
 
 use super::asset::{AssetId};
 use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};

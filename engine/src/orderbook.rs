@@ -6,8 +6,10 @@ use super::orders::OrderRequest;
 use super::order_queues::OrderQueue;
 use super::sequence;
 use super::validation::OrderRequestValidator;
-use types::asset::{AssetId};
-use types::orderbook::{Order, OrderSide, OrderType, OrderProcessingResult, Success, Failed};
+use types::{
+    asset::{AssetId},
+    orderbook::{Order, OrderSide, OrderType, OrderProcessingResult, Success, Failed}
+};
 
 const MIN_SEQUENCE_ID: u64 = 1;
 const MAX_SEQUENCE_ID: u64 = 1_000_000;

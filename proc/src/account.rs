@@ -1,8 +1,12 @@
-use std::collections::HashMap;
-use std::fmt::Debug;
+use std::{
+    collections::HashMap,
+    fmt::Debug
+};
 
-use types::account::{AccountPubKey, AccountBalance};
-use types::asset::{AssetId};
+use types::{
+    account::{AccountPubKey, AccountBalance},
+    asset::{AssetId}
+};
 
 #[derive(Debug)]
 pub struct BankAccount {

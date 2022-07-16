@@ -9,8 +9,10 @@ extern crate types;
 use std::collections::HashMap;
 
 use super::account::{BankAccount};
-use types::account::{AccountError, AccountPubKey};
-use types::asset::{Asset, AssetId};
+use types::{
+    account::{AccountError, AccountPubKey},
+    asset::{Asset, AssetId}
+};
 
 // TODO - change to process this via input
 const CREATED_ASSET_BALANCE: i64 = 1_000_000_000_000;

@@ -1,11 +1,12 @@
 extern crate engine;
-extern crate proc;
 extern crate types;
 
 use std::time::SystemTime;
 
-pub use engine::orderbook::{Orderbook};
-pub use engine::orders;
+pub use engine::{
+    orderbook::{Orderbook},
+    orders
+};
 pub use types::orderbook::{Failed, OrderProcessingResult, OrderSide, Success};
 
 #[cfg(test)]

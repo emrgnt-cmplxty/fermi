@@ -2,7 +2,6 @@
 //! 1.) Add tests for acc crypto
 //! 2.) Move to pre-determined keys to avoid use of RNG
 //! 
-extern crate engine;
 extern crate proc;
 extern crate types;
 
@@ -11,10 +10,14 @@ use rand::rngs::{ThreadRng};
 use diem_crypto::{
     traits::{Uniform},
 };
-use proc::spot::{SpotController};
-use proc::bank::{BankController};
-use types::orderbook::OrderSide;    
-use types::account::{AccountError, AccountPubKey, AccountPrivKey};
+use proc::{
+    spot::{SpotController},
+    bank::{BankController}
+};
+use types::{
+    account::{AccountError, AccountPubKey, AccountPrivKey},
+    orderbook::OrderSide
+};
 
 #[cfg(test)]
 mod tests {

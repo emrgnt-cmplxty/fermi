@@ -3,8 +3,10 @@ use std::time::SystemTime;
 use std::fmt::Debug;
 
 use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
-use types::asset::{AssetId};
-use types::orderbook::{OrderSide};
+use types::{
+    asset::{AssetId},
+    orderbook::{OrderSide}
+};
 
 #[derive(BCSCryptoHash, CryptoHasher, Debug, Serialize, Deserialize)]
 pub enum OrderRequest

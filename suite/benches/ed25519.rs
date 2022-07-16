@@ -4,18 +4,13 @@
 extern crate criterion;
 
 use criterion::Criterion;
-
-use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
 use rand::{prelude::ThreadRng, thread_rng};
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, CryptoHasher, BCSCryptoHash, Serialize, Deserialize)]
-pub struct TestDiemCrypto(pub String);
 
 use diem_crypto::{
     ed25519::{Ed25519PrivateKey, Ed25519PublicKey, Ed25519Signature},
     traits::{Signature, SigningKey, Uniform},
 };
+use types::spot::{TestDiemCrypto};
 
 const NUMBER_OF_MESSAGES: i32 = 128;
 const NUMBER_OF_ACCOUNTS: i32 = 128;

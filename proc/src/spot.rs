@@ -11,28 +11,29 @@
 //! 9.) Check assets for orderbook exist on creation
 //! 
 extern crate engine;
-extern crate core;
 extern crate types;
 
-use std::collections::HashMap;
-use std::fmt::Debug;
-use std::time::SystemTime;
-use serde::{Deserialize, Serialize};
+use std::{
+    collections::HashMap,
+    time::SystemTime
+};
 
-use super::account::{OrderAccount};
-use super::bank::{BankController};
-use engine::orders;
-use engine::orderbook::{Orderbook};
-use engine::orders::{OrderRequest};
+use super::{
+    account::{OrderAccount},
+    bank::{BankController}
+};
+use engine::{
+    orderbook::{Orderbook},
+    orders::{OrderRequest, new_limit_order_request}
+};
 use diem_crypto::{traits::{Signature}};
-use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
-use types::account::{AccountError, AccountPubKey, AccountSignature};
-use types::asset::{AssetId};
-use types::orderbook::{Failed, OrderSide, OrderProcessingResult, Success};
-use types::spot::{OrderId};
+use types::{
+    account::{AccountError, AccountPubKey, AccountSignature},
+    asset::{AssetId},
+    orderbook::{Failed, OrderSide, OrderProcessingResult, Success},
+    spot::{OrderId, TestDiemCrypto}
+};
 
-#[derive(Debug, BCSCryptoHash, CryptoHasher, Serialize, Deserialize)]
-pub struct TestDiemCrypto(pub String);
 // dummy msg used for test-encoding
 pub const DUMMY_MESSAGE: &str = "dummy_val";
 
@@ -87,7 +88,7 @@ impl <'a> SpotController <'a>
             assert!(self.bank_controller.get_balance(account_pub_key, self.quote_asset_id)   > qty * price);
         }
         // create and process limit order
-        let order: OrderRequest = orders::new_limit_order_request(
+        let order: OrderRequest = new_limit_order_request(
             self.base_asset_id,
             self.quote_asset_id,
             side,

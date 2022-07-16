@@ -4,16 +4,10 @@
 extern crate criterion;
 
 use criterion::Criterion;
-
-use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, CryptoHasher, BCSCryptoHash, Serialize, Deserialize)]
-pub struct TestDiemCrypto(pub String);
-
-use diem_crypto::{
-    hash::CryptoHash,
-};
+use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
+use diem_crypto::{hash::CryptoHash};
 
 
 // make a new struct for an order that we have to hash

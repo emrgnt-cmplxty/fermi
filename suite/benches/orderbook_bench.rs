@@ -1,6 +1,6 @@
+extern crate rocksdb;
 
 extern crate engine;
-extern crate rocksdb;
 extern crate types;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
@@ -10,16 +10,21 @@ use rocksdb::{ColumnFamilyDescriptor, DB, DBWithThreadMode, Options, SingleThrea
 use std::time::SystemTime;
 
 use diem_crypto::{
-    traits::{Uniform, SigningKey},
-    
+    traits::{Uniform, Signature, SigningKey},
 };
-use engine::orders;
-use engine::orderbook::{Orderbook};
-use proc::bank::{BankController};
-use proc::spot::{SpotController, TestDiemCrypto, DUMMY_MESSAGE};
-use types::account::{AccountPubKey, AccountPrivKey, AccountSignature};
-use types::orderbook::{OrderProcessingResult, OrderSide, Success};
-
+use engine::{
+    orders,
+    orderbook::{Orderbook}
+};
+use proc::{
+    bank::{BankController},
+    spot::{SpotController, DUMMY_MESSAGE}
+};
+use types::{
+    account::{AccountPubKey, AccountPrivKey, AccountSignature},
+    orderbook::{OrderProcessingResult, OrderSide, Success},
+    spot::{TestDiemCrypto}
+};
 
 const N_ORDERS_BENCH: u64 = 1_024;
 const N_ACCOUNTS: u64 = 1_024;
@@ -154,7 +159,7 @@ fn place_orders_engine_account_batch_signed(
     n_orders: u64, 
     account_to_pub_key: &mut Vec<AccountPubKey>, 
     keys_and_signatures: &mut Vec<(AccountPubKey, AccountSignature)>, 
-    spot_controller: &mut SpotController<BrokerAsset>, 
+    spot_controller: &mut SpotController, 
     rng: &mut ThreadRng,
     db: &DBWithThreadMode<SingleThreaded>, 
     persist: bool) 

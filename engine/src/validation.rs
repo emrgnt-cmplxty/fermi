@@ -1,8 +1,5 @@
-
-use std::fmt::Debug;
-
 use super::orders::OrderRequest;
-
+use types::asset::{AssetId};
 
 /// Validation errors
 const ERR_BAD_BASE_ASSET: &str = "bad order asset";
@@ -14,20 +11,18 @@ const ERR_BAD_SEQ_ID: &str = "order ID out of range";
 
 /* Validators */
 
-pub struct OrderRequestValidator<Asset> {
-    orderbook_base_asset: Asset,
-    orderbook_quote_asset: Asset,
+pub struct OrderRequestValidator {
+    orderbook_base_asset: AssetId,
+    orderbook_quote_asset: AssetId,
     min_sequence_id: u64,
     max_sequence_id: u64,
 }
 
-impl<Asset> OrderRequestValidator<Asset>
-where
-    Asset: Debug + Clone + Copy + Eq,
+impl OrderRequestValidator
 {
     pub fn new(
-        orderbook_base_asset: Asset,
-        orderbook_quote_asset: Asset,
+        orderbook_base_asset: AssetId,
+        orderbook_quote_asset: AssetId,
         min_sequence_id: u64,
         max_sequence_id: u64,
     ) -> Self {
@@ -40,7 +35,7 @@ where
     }
 
 
-    pub fn validate(&self, request: &OrderRequest<Asset>) -> Result<(), &str> {
+    pub fn validate(&self, request: &OrderRequest) -> Result<(), &str> {
         match *request {
             OrderRequest::NewMarketOrder {
                 base_asset,
@@ -71,13 +66,15 @@ where
         }
     }
 
+
     /* Internal validators */
 
+    
     fn validate_market(
         &self,
-        base_asset: Asset,
-        quote_asset: Asset,
-        qty: f64,
+        base_asset: AssetId,
+        quote_asset: AssetId,
+        qty: u64,
     ) -> Result<(), &str> {
 
         if self.orderbook_base_asset != base_asset {
@@ -88,7 +85,7 @@ where
             return Err(ERR_BAD_QUOTE_ASSET);
         }
 
-        if qty <= 0.0 {
+        if qty <= 0 {
             return Err(ERR_BAD_QUANTITY_VALUE);
         }
 
@@ -98,10 +95,10 @@ where
 
     fn validate_limit(
         &self,
-        base_asset: Asset,
-        quote_asset: Asset,
-        price: f64,
-        qty: f64,
+        base_asset: AssetId,
+        quote_asset: AssetId,
+        price: u64,
+        qty: u64,
     ) -> Result<(), &str> {
 
         if self.orderbook_base_asset != base_asset {
@@ -112,11 +109,11 @@ where
             return Err(ERR_BAD_QUOTE_ASSET);
         }
 
-        if price <= 0.0 {
+        if price <= 0 {
             return Err(ERR_BAD_PRICE_VALUE);
         }
 
-        if qty <= 0.0 {
+        if qty <= 0 {
             return Err(ERR_BAD_QUANTITY_VALUE);
         }
 
@@ -124,16 +121,16 @@ where
     }
 
 
-    fn validate_amend(&self, id: u64, price: f64, qty: f64) -> Result<(), &str> {
+    fn validate_amend(&self, id: u64, price: u64, qty: u64) -> Result<(), &str> {
         if self.min_sequence_id > id || self.max_sequence_id < id {
             return Err(ERR_BAD_SEQ_ID);
         }
 
-        if price <= 0.0 {
+        if price <= 0 {
             return Err(ERR_BAD_PRICE_VALUE);
         }
 
-        if qty <= 0.0 {
+        if qty <= 0 {
             return Err(ERR_BAD_QUANTITY_VALUE);
         }
 

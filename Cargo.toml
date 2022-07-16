@@ -1,2 +1,2 @@
 [workspace]
-members = ["engine", "proc", "suite"]
+members = ["core", "engine", "proc", "suite"]

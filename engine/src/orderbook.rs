@@ -1,85 +1,33 @@
+extern crate core;
+
 use std::time::SystemTime;
-use std::fmt::Debug;
 
-
-use super::domain::{Order, OrderSide, OrderType};
 use super::orders::OrderRequest;
 use super::order_queues::OrderQueue;
 use super::sequence;
 use super::validation::OrderRequestValidator;
-
+use types::{
+    asset::{AssetId},
+    orderbook::{Order, OrderSide, OrderType, OrderProcessingResult, Success, Failed}
+};
 
 const MIN_SEQUENCE_ID: u64 = 1;
 const MAX_SEQUENCE_ID: u64 = 1_000_000;
 const MAX_STALLED_INDICES_IN_QUEUE: u64 = 10;
 const ORDER_QUEUE_INIT_CAPACITY: usize = 500;
 
-
-pub type OrderProcessingResult = Vec<Result<Success, Failed>>;
-
-
-#[derive(Debug)]
-pub enum Success {
-    Accepted {
-        order_id: u64,
-        order_type: OrderType,
-        ts: SystemTime,
-    },
-
-    Filled {
-        order_id: u64,
-        side: OrderSide,
-        order_type: OrderType,
-        price: f64,
-        qty: f64,
-        ts: SystemTime,
-    },
-
-    PartiallyFilled {
-        order_id: u64,
-        side: OrderSide,
-        order_type: OrderType,
-        price: f64,
-        qty: f64,
-        ts: SystemTime,
-    },
-
-    Amended {
-        order_id: u64,
-        price: f64,
-        qty: f64,
-        ts: SystemTime,
-    },
-
-    Cancelled { order_id: u64, ts: SystemTime },
-}
-
-
-#[derive(Debug)]
-pub enum Failed {
-    ValidationFailed(String),
-    DuplicateOrderID(u64),
-    NoMatch(u64),
-    OrderNotFound(u64),
-}
-
-
-pub struct Orderbook<Asset>
-    where
-        Asset: Debug + Clone + Copy + Eq,
+pub struct Orderbook
 {
-    base_asset: Asset,
-    quote_asset: Asset,
-    bid_queue: OrderQueue<Order<Asset>>,
-    ask_queue: OrderQueue<Order<Asset>>,
+    base_asset: AssetId,
+    quote_asset: AssetId,
+    bid_queue: OrderQueue<Order>,
+    ask_queue: OrderQueue<Order>,
     seq: sequence::TradeSequence,
-    order_validator: OrderRequestValidator<Asset>,
+    order_validator: OrderRequestValidator,
 }
 
 
-impl<Asset> Orderbook<Asset>
-    where
-        Asset: Debug + Clone + Copy + Eq,
+impl Orderbook
 {
     /// Create new orderbook for pair of assets
     ///
@@ -92,7 +40,7 @@ impl<Asset> Orderbook<Asset>
     ///// assert_eq!(orderbook)
     /// ```
     // todo fix doc test!
-    pub fn new(base_asset: Asset, quote_asset: Asset) -> Self {
+    pub fn new(base_asset: AssetId, quote_asset: AssetId) -> Self {
 
         Orderbook {
             base_asset,
@@ -117,7 +65,7 @@ impl<Asset> Orderbook<Asset>
         }
     }
 
-    pub fn process_order(&mut self, order: OrderRequest<Asset>) -> OrderProcessingResult {
+    pub fn process_order(&mut self, order: OrderRequest) -> OrderProcessingResult {
         // processing result accumulator
         let mut proc_result: OrderProcessingResult = vec![];
 
@@ -202,7 +150,7 @@ impl<Asset> Orderbook<Asset>
 
 
     /// Get current spread as a tuple: (bid, ask)
-    pub fn current_spread(&mut self) -> Option<(f64, f64)> {
+    pub fn current_spread(&mut self) -> Option<(u64, u64)> {
         let bid = self.bid_queue.peek()?.price;
         let ask = self.ask_queue.peek()?.price;
         Some((bid, ask))
@@ -215,10 +163,10 @@ impl<Asset> Orderbook<Asset>
         &mut self,
         results: &mut OrderProcessingResult,
         order_id: u64,
-        base_asset: Asset,
-        quote_asset: Asset,
+        base_asset: AssetId,
+        quote_asset: AssetId,
         side: OrderSide,
-        qty: f64,
+        qty: u64,
     ) {
         // get copy of the current limit order
         let opposite_order_result = {
@@ -264,11 +212,11 @@ impl<Asset> Orderbook<Asset>
         &mut self,
         results: &mut OrderProcessingResult,
         order_id: u64,
-        base_asset: Asset,
-        quote_asset: Asset,
+        base_asset: AssetId,
+        quote_asset: AssetId,
         side: OrderSide,
-        price: f64,
-        qty: f64,
+        price: u64,
+        qty: u64,
         ts: SystemTime,
     ) {
         // take a look at current opposite limit order
@@ -348,8 +296,8 @@ impl<Asset> Orderbook<Asset>
         results: &mut OrderProcessingResult,
         order_id: u64,
         side: OrderSide,
-        price: f64,
-        qty: f64,
+        price: u64,
+        qty: u64,
         ts: SystemTime,
     ) {
         let order_queue = match side {
@@ -412,11 +360,11 @@ impl<Asset> Orderbook<Asset>
         &mut self,
         results: &mut OrderProcessingResult,
         order_id: u64,
-        base_asset: Asset,
-        quote_asset: Asset,
+        base_asset: AssetId,
+        quote_asset: AssetId,
         side: OrderSide,
-        price: f64,
-        qty: f64,
+        price: u64,
+        qty: u64,
         ts: SystemTime,
     ) {
         let order_queue = match side {
@@ -445,13 +393,13 @@ impl<Asset> Orderbook<Asset>
     fn order_matching(
         &mut self,
         results: &mut OrderProcessingResult,
-        opposite_order: &Order<Asset>,
+        opposite_order: &Order,
         order_id: u64,
-        base_asset: Asset,
-        quote_asset: Asset,
+        base_asset: AssetId,
+        quote_asset: AssetId,
         order_type: OrderType,
         side: OrderSide,
-        qty: f64,
+        qty: u64,
     ) -> bool {
 
         // real processing time
@@ -576,15 +524,12 @@ mod test {
     use super::*;
     use super::super::orders;
 
-    #[derive(PartialEq, Eq, Debug, Copy, Clone)]
-    pub enum Asset {
-        USD,
-        BTC,
-    }
+    const USD: u64 = 0;
+    const BTC: u64 = 1;
 
     #[test]
     fn cancel_nonexisting() {
-        let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
+        let mut orderbook = Orderbook::new(BTC, USD);
         let request = orders::limit_order_cancel_request(1, OrderSide::Bid);
         let mut result = orderbook.process_order(request);
 

@@ -1,15 +1,20 @@
-use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
 use rand::{prelude::ThreadRng, thread_rng};
 use serde::{Deserialize, Serialize};
-
-#[derive(Debug, CryptoHasher, BCSCryptoHash, Serialize, Deserialize)]
-pub struct TestDiemCrypto(pub String);
 
 use diem_crypto::{
     ed25519::{Ed25519PrivateKey, Ed25519PublicKey, Ed25519Signature},
     hash::CryptoHash,
     traits::{Signature, SigningKey, Uniform},
 };
+use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
+use types::spot::{TestDiemCrypto};
+
+// make a new struct for an order that we have to hash
+#[derive(Serialize, Deserialize, CryptoHasher, BCSCryptoHash)]
+struct Order {
+    quantity: i32,
+    side: String,
+}
 
 // make a new struct for an order that we have to hash
 #[derive(Serialize, Deserialize, CryptoHasher, BCSCryptoHash)]

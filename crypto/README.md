@@ -19,17 +19,15 @@ Diem makes use of several cryptographic algorithms:
 ## How is this module organized?
 ```
     crypto/src
-    ├── hash.rs             # Hash function (SHA-3)
-    ├── hkdf.rs             # HKDF implementation (HMAC-based Extract-and-Expand Key Derivation Function based on RFC 5869)
-    ├── macros/             # Derivations for SilentDebug and SilentDisplay
-    ├── utils.rs            # Serialization utility functions
-    ├── lib.rs
+    ├── compat.rs
     ├── ed25519.rs          # Ed25519 implementation of the signing/verification API in traits.rs
+    ├── error.rs
+    ├── hash.rs             # Hash function (SHA-3)
+    ├── lib.rs
     ├── multi_ed25519.rs    # MultiEd25519 implementation of the signing/verification API in traits.rs
-    ├── x25519.rs           # X25519 wrapper
     ├── test_utils.rs
     ├── traits.rs           # New API design and the necessary abstractions
-    └── unit_tests/         # Tests
+    ├── x25519.rs           # X25519 wrapper
 ```
 
 Note: This crate historically had support for BLS12381, ECVRF, and SlIP-0010, though were removed due to lack of use. The last git revision before there removal is 00301524.

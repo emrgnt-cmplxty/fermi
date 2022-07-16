@@ -12,12 +12,14 @@ criterion = "0.3.4"
 serde = { version = "1.0.124", features = ["derive"] }
 serde_json = "1.0"
 bcs = "0.1.2"
-engine = { path = "../engine" }
-proc = { path = "../proc" }
+rocksdb = "0.18.0"
+core = { path = "../core" }
 diem-crypto-derive = { path = "../crypto-derive", version = "0.0.2" }
 diem-crypto = { path = "../crypto", features = ["batch"] }
 diem-workspace-hack = { path = "../workspace-hack" }
-rocksdb = "0.18.0"
+engine = { path = "../engine" }
+proc = { path = "../proc" }
+types = { path = "../types" }
 
 [[bench]]
 name = "orderbook_bench"
@@ -25,6 +27,10 @@ harness = false
 
 [[bench]]
 name = "ed25519"
+harness = false
+
+[[bench]]
+name = "hash"
 harness = false
 
 [features]

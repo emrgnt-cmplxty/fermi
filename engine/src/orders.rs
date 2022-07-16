@@ -1,37 +1,38 @@
-
+use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 use std::fmt::Debug;
 
-use super::domain::OrderSide;
+use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
+use types::{
+    asset::{AssetId},
+    orderbook::{OrderSide}
+};
 
-
-#[derive(Debug)]
-pub enum OrderRequest<Asset>
-where
-    Asset: Debug + Clone,
+#[derive(BCSCryptoHash, CryptoHasher, Debug, Serialize, Deserialize)]
+pub enum OrderRequest
 {
     NewMarketOrder {
-        base_asset: Asset,
-        quote_asset: Asset,
+        base_asset: AssetId,
+        quote_asset: AssetId,
         side: OrderSide,
-        qty: f64,
+        qty: u64,
         ts: SystemTime,
     },
 
     NewLimitOrder {
-        base_asset: Asset,
-        quote_asset: Asset,
+        base_asset: AssetId,
+        quote_asset: AssetId,
         side: OrderSide,
-        price: f64,
-        qty: f64,
+        price: u64,
+        qty: u64,
         ts: SystemTime,
     },
 
     AmendOrder {
         id: u64,
         side: OrderSide,
-        price: f64,
-        qty: f64,
+        price: u64,
+        qty: u64,
         ts: SystemTime,
     },
 
@@ -47,15 +48,13 @@ where
 
 
 /// Create request for the new market order
-pub fn new_market_order_request<Asset>(
-    base_asset: Asset,
-    quote_asset: Asset,
+pub fn new_market_order_request(
+    base_asset: AssetId,
+    quote_asset: AssetId,
     side: OrderSide,
-    qty: f64,
+    qty: u64,
     ts: SystemTime,
-) -> OrderRequest<Asset>
-where
-    Asset: Debug + Clone,
+) -> OrderRequest
 {
 
     OrderRequest::NewMarketOrder {
@@ -69,16 +68,14 @@ where
 
 
 /// Create request for the new limit order
-pub fn new_limit_order_request<Asset>(
-    base_asset: Asset,
-    quote_asset: Asset,
+pub fn new_limit_order_request(
+    base_asset: AssetId,
+    quote_asset: AssetId,
     side: OrderSide,
-    price: f64,
-    qty: f64,
+    price: u64,
+    qty: u64,
     ts: SystemTime,
-) -> OrderRequest<Asset>
-where
-    Asset: Debug + Clone,
+) -> OrderRequest
 {
 
     OrderRequest::NewLimitOrder {
@@ -96,15 +93,13 @@ where
 ///
 /// Note: do not change order side!
 /// Instead cancel existing order and create a new one.
-pub fn amend_order_request<Asset>(
+pub fn amend_order_request(
     id: u64,
     side: OrderSide,
-    price: f64,
-    qty: f64,
+    price: u64,
+    qty: u64,
     ts: SystemTime,
-) -> OrderRequest<Asset>
-where
-    Asset: Debug + Clone,
+) -> OrderRequest
 {
 
     OrderRequest::AmendOrder {
@@ -118,9 +113,7 @@ where
 
 
 /// Create request for cancelling active limit order
-pub fn limit_order_cancel_request<Asset>(order_id: u64, side: OrderSide) -> OrderRequest<Asset>
-where
-    Asset: Debug + Clone,
+pub fn limit_order_cancel_request(order_id: u64, side: OrderSide) -> OrderRequest
 {
     OrderRequest::CancelOrder { id: order_id, side }
 }

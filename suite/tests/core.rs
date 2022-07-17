@@ -173,9 +173,7 @@ fn block_hash_test() {
     verify_transaction::<TxnVariant>(&signed_txn, &account_pub_key); 
     txns.push(signed_txn);
 
-    println!("txn_hash={}", txn_hash);
     let block_hash: HashValue = generate_block_hash(&txns);
-    println!("block_hash={}", block_hash);
     let block: Block<TxnVariant> = Block::<TxnVariant>{ txns: txns, block_hash: block_hash};
     let mut blocks: Vec<Block<TxnVariant>> = Vec::new();
     blocks.push(block);

@@ -45,10 +45,11 @@ impl BankController
         }
     }
 
-    pub fn create_asset(&mut self, owner_pub_key: &AccountPubKey) {
+    pub fn create_asset(&mut self, owner_pub_key: &AccountPubKey) -> u64 {
         self.asset_id_to_asset.insert(self.n_assets, Asset{asset_id: self.n_assets, asset_addr: self.n_assets});
         self.update_balance(owner_pub_key, self.n_assets, CREATED_ASSET_BALANCE);
         self.n_assets += 1;
+        self.n_assets - 1
     }
 
     pub fn get_balance(&self, account_pub_key: &AccountPubKey, asset_id: AssetId) -> u64 {

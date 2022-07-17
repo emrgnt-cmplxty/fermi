@@ -81,7 +81,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         b.iter(|| basic_sig_verify(&mut sigs, &mut public_keys, &mut messages))
     });
     #[cfg(feature = "batch")]
-    c.bench_function("batch_sig_verify", |b| {
+    group.bench_function("batch_sig_verify", |b| {
         b.iter(|| batch_sig_verify(&keys_and_signatures))
     });
 }

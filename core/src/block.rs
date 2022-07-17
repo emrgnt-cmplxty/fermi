@@ -10,14 +10,14 @@ use types::{
 
 pub struct BlockContainer <Variant>
 where
-    Variant: Debug + Clone + CryptoHash,
+    Variant: Debug + Clone + CryptoHash + Copy,
 {
     pub blocks: Vec<Block<Variant>>,
 }
 
 pub struct Block <Variant>
 where
-    Variant: Debug + Clone + CryptoHash,
+    Variant: Debug + Clone + CryptoHash  + Copy,
 {
     pub txns: Vec<TxnRequest<Variant>>,
     pub block_hash: HashValue

@@ -28,7 +28,7 @@ mod tests {
     const TRANSFER_AMOUNT: u64 = 1_000_000;
 
     #[test]
-    fn place_bid() {
+    fn place_bid_22() {
         let mut rng: ThreadRng = rand::thread_rng();
         let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
         let account_pub_key: AccountPubKey = (&private_key).into();
@@ -39,12 +39,12 @@ mod tests {
         bank_controller.create_asset(&account_pub_key);
         bank_controller.create_asset(&account_pub_key);
 
-        let mut spot_controller: SpotController = SpotController::new(BASE_ASSET_ID, QUOTE_ASSET_ID, &mut bank_controller);
+        let mut spot_controller: SpotController = SpotController::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
         spot_controller.create_account(&account_pub_key).unwrap();
 
         let bid_size: u64 = 100;
         let bid_price: u64 = 100;
-        spot_controller.place_limit_order(&account_pub_key, OrderSide::Bid, bid_size, bid_price).unwrap();
+        spot_controller.place_limit_order(&mut bank_controller, &account_pub_key, OrderSide::Bid, bid_size, bid_price).unwrap();
 
         assert_eq!(bank_controller.get_balance(&account_pub_key, QUOTE_ASSET_ID), CREATED_ASSET_BALANCE - bid_size * bid_price);
         assert_eq!(bank_controller.get_balance(&account_pub_key, BASE_ASSET_ID), CREATED_ASSET_BALANCE);
@@ -62,12 +62,12 @@ mod tests {
         bank_controller.create_asset(&account_pub_key);
         bank_controller.create_asset(&account_pub_key);
 
-        let mut spot_controller: SpotController = SpotController::new(BASE_ASSET_ID, QUOTE_ASSET_ID, &mut bank_controller);
+        let mut spot_controller: SpotController = SpotController::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
         spot_controller.create_account(&account_pub_key).unwrap();
 
         let bid_size: u64 = 100;
         let bid_price: u64 = 100;
-        spot_controller.place_limit_order(&account_pub_key, OrderSide::Ask, bid_size, bid_price).unwrap();
+        spot_controller.place_limit_order(&mut bank_controller, &account_pub_key, OrderSide::Ask, bid_size, bid_price).unwrap();
 
         assert_eq!(bank_controller.get_balance(&account_pub_key, QUOTE_ASSET_ID), CREATED_ASSET_BALANCE);
         assert_eq!(bank_controller.get_balance(&account_pub_key, BASE_ASSET_ID), CREATED_ASSET_BALANCE - bid_size);
@@ -79,10 +79,7 @@ mod tests {
         let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
         let account_pub_key: AccountPubKey = (&private_key).into();
 
-
-        let mut bank_controller: BankController = BankController::new();
-
-        let spot_controller: SpotController = SpotController::new(BASE_ASSET_ID, QUOTE_ASSET_ID, &mut bank_controller);
+        let spot_controller: SpotController = SpotController::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
         let result: AccountError = spot_controller.get_account(&account_pub_key).unwrap_err();
 
         assert!(matches!(result, AccountError::Lookup(_)));
@@ -94,10 +91,7 @@ mod tests {
         let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
         let account_pub_key: AccountPubKey = (&private_key).into();
 
-
-        let mut bank_controller: BankController = BankController::new();
-
-        let mut spot_controller: SpotController = SpotController::new(BASE_ASSET_ID, QUOTE_ASSET_ID, &mut bank_controller);
+        let mut spot_controller: SpotController = SpotController::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
         spot_controller.create_account(&account_pub_key).unwrap();
         let result: AccountError = spot_controller.create_account(&account_pub_key).unwrap_err();
         assert!(matches!(result, AccountError::Creation(_)));
@@ -121,15 +115,15 @@ mod tests {
         bank_controller.transfer(&account_pub_key_0, &account_pub_key_1, BASE_ASSET_ID, TRANSFER_AMOUNT);
         bank_controller.transfer(&account_pub_key_0, &account_pub_key_1, QUOTE_ASSET_ID, TRANSFER_AMOUNT);
 
-        let mut spot_controller: SpotController = SpotController::new(BASE_ASSET_ID, QUOTE_ASSET_ID, &mut bank_controller);
+        let mut spot_controller: SpotController = SpotController::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
 
         let bid_size_0: u64 = 100;
         let bid_price_0: u64 = 100;
-        spot_controller.place_limit_order(&account_pub_key_0, OrderSide::Bid, bid_size_0, bid_price_0).unwrap();
+        spot_controller.place_limit_order(&mut bank_controller, &account_pub_key_0, OrderSide::Bid, bid_size_0, bid_price_0).unwrap();
 
         let bid_size_1: u64 = 110;
         let bid_price_1: u64 = 110;
-        spot_controller.place_limit_order(&account_pub_key_1, OrderSide::Bid, bid_size_1, bid_price_1).unwrap();
+        spot_controller.place_limit_order(&mut bank_controller, &account_pub_key_1, OrderSide::Bid, bid_size_1, bid_price_1).unwrap();
 
         assert_eq!(bank_controller.get_balance(&account_pub_key_0, QUOTE_ASSET_ID), CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0);
         assert_eq!(bank_controller.get_balance(&account_pub_key_0, BASE_ASSET_ID), CREATED_ASSET_BALANCE - TRANSFER_AMOUNT);
@@ -156,56 +150,56 @@ mod tests {
         bank_controller.transfer(&account_pub_key_0, &account_pub_key_1, BASE_ASSET_ID, TRANSFER_AMOUNT);
         bank_controller.transfer(&account_pub_key_0, &account_pub_key_1, QUOTE_ASSET_ID, TRANSFER_AMOUNT);
 
-        let mut spot_controller: SpotController = SpotController::new(BASE_ASSET_ID, QUOTE_ASSET_ID, &mut bank_controller);
+        let mut spot_controller: SpotController = SpotController::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
 
         let bid_size_0: u64 = 95;
         let bid_price_0: u64 = 200;
-        spot_controller.place_limit_order(&account_pub_key_0, OrderSide::Bid, bid_size_0, bid_price_0).unwrap();
+        spot_controller.place_limit_order(&mut bank_controller, &account_pub_key_0, OrderSide::Bid, bid_size_0, bid_price_0).unwrap();
 
         let bid_size_1: u64 = bid_size_0;
         let bid_price_1: u64 = bid_price_0 - 2;
-        spot_controller.place_limit_order(&account_pub_key_1, OrderSide::Bid, bid_size_1, bid_price_1).unwrap();
+        spot_controller.place_limit_order(&mut bank_controller, &account_pub_key_1, OrderSide::Bid, bid_size_1, bid_price_1).unwrap();
 
-        assert_eq!(spot_controller.get_bank_controller().get_balance(&account_pub_key_0, QUOTE_ASSET_ID), CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0);
-        assert_eq!(spot_controller.get_bank_controller().get_balance(&account_pub_key_0, BASE_ASSET_ID), CREATED_ASSET_BALANCE - TRANSFER_AMOUNT);
+        assert_eq!(bank_controller.get_balance(&account_pub_key_0, QUOTE_ASSET_ID), CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0);
+        assert_eq!(bank_controller.get_balance(&account_pub_key_0, BASE_ASSET_ID), CREATED_ASSET_BALANCE - TRANSFER_AMOUNT);
 
-        assert_eq!(spot_controller.get_bank_controller().get_balance(&account_pub_key_1, QUOTE_ASSET_ID), TRANSFER_AMOUNT - bid_size_1 * bid_price_1);
-        assert_eq!(spot_controller.get_bank_controller().get_balance(&account_pub_key_1, BASE_ASSET_ID), TRANSFER_AMOUNT);
+        assert_eq!(bank_controller.get_balance(&account_pub_key_1, QUOTE_ASSET_ID), TRANSFER_AMOUNT - bid_size_1 * bid_price_1);
+        assert_eq!(bank_controller.get_balance(&account_pub_key_1, BASE_ASSET_ID), TRANSFER_AMOUNT);
 
         // Place ask for account 1 at price that crosses spread entirely
         let ask_size_0: u64 = bid_size_0;
         let ask_price_0: u64 = bid_price_0 - 1;
-        spot_controller.place_limit_order(&account_pub_key_1,  OrderSide::Ask, ask_size_0, ask_price_0).unwrap();
+        spot_controller.place_limit_order(&mut bank_controller, &account_pub_key_1,  OrderSide::Ask, ask_size_0, ask_price_0).unwrap();
 
         // check account 0
         // received initial asset creation balance
         // paid bid_size_0 * bid_price_0 in quote asset to orderbook
         // received bid_size_0 in base asset from settled trade
-        assert_eq!(spot_controller.get_bank_controller().get_balance(&account_pub_key_0, QUOTE_ASSET_ID), CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0);
-        assert_eq!(spot_controller.get_bank_controller().get_balance(&account_pub_key_0, BASE_ASSET_ID), CREATED_ASSET_BALANCE - TRANSFER_AMOUNT + bid_size_0);
+        assert_eq!(bank_controller.get_balance(&account_pub_key_0, QUOTE_ASSET_ID), CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0);
+        assert_eq!(bank_controller.get_balance(&account_pub_key_0, BASE_ASSET_ID), CREATED_ASSET_BALANCE - TRANSFER_AMOUNT + bid_size_0);
 
         // check account 1
         // received initial transfer amount
         // received bid_size_0 * bid_price_0 in quote asset to balance
         // sent bid_size_1 * bid_price_1 in quote asset to escrow
         // paid bid_size_0 in base asset from balance
-        assert_eq!(spot_controller.get_bank_controller().get_balance(&account_pub_key_1, QUOTE_ASSET_ID), TRANSFER_AMOUNT - bid_size_1 * bid_price_1 + bid_size_0 * bid_price_0);
-        assert_eq!(spot_controller.get_bank_controller().get_balance(&account_pub_key_1, BASE_ASSET_ID), TRANSFER_AMOUNT - bid_size_0);
+        assert_eq!(bank_controller.get_balance(&account_pub_key_1, QUOTE_ASSET_ID), TRANSFER_AMOUNT - bid_size_1 * bid_price_1 + bid_size_0 * bid_price_0);
+        assert_eq!(bank_controller.get_balance(&account_pub_key_1, BASE_ASSET_ID), TRANSFER_AMOUNT - bid_size_0);
 
 
         // Place final order for account 1 at price that crosses spread entirely and closes it's own position
         let ask_size_1: u64 = bid_size_1;
         let ask_price_1: u64 = bid_price_1 - 1;
-        spot_controller.place_limit_order(&account_pub_key_1, OrderSide::Ask, ask_size_1, ask_price_1).unwrap();
+        spot_controller.place_limit_order(&mut bank_controller, &account_pub_key_1, OrderSide::Ask, ask_size_1, ask_price_1).unwrap();
 
         // check account 0
         // state should remain unchanged from prior
-        assert_eq!(spot_controller.get_bank_controller().get_balance(&account_pub_key_0, QUOTE_ASSET_ID), CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0);
-        assert_eq!(spot_controller.get_bank_controller().get_balance(&account_pub_key_0, BASE_ASSET_ID), CREATED_ASSET_BALANCE - TRANSFER_AMOUNT + bid_size_0);
+        assert_eq!(bank_controller.get_balance(&account_pub_key_0, QUOTE_ASSET_ID), CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0);
+        assert_eq!(bank_controller.get_balance(&account_pub_key_0, BASE_ASSET_ID), CREATED_ASSET_BALANCE - TRANSFER_AMOUNT + bid_size_0);
 
         // check account 1
         // additional trade should act to move bid_size_1 * bid_price_1 in quote from escrow to balance
-        assert_eq!(spot_controller.get_bank_controller().get_balance(&account_pub_key_1, QUOTE_ASSET_ID), TRANSFER_AMOUNT + bid_size_0 * bid_price_0);
-        assert_eq!(spot_controller.get_bank_controller().get_balance(&account_pub_key_1, BASE_ASSET_ID), TRANSFER_AMOUNT - bid_size_0);
+        assert_eq!(bank_controller.get_balance(&account_pub_key_1, QUOTE_ASSET_ID), TRANSFER_AMOUNT + bid_size_0 * bid_price_0);
+        assert_eq!(bank_controller.get_balance(&account_pub_key_1, BASE_ASSET_ID), TRANSFER_AMOUNT - bid_size_0);
     }
 }

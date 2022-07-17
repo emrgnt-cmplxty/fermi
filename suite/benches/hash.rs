@@ -25,7 +25,7 @@ fn basic_hash(
     // getting the hash the first time
     let mut i = 0;
     while i < 10_000{
-        let hash1 = order.hash();
+        order.hash();
         i+=1
     }
 }

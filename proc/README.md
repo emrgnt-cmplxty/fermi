@@ -4,4 +4,5 @@
     ├── bank.rs             # Bank ("token") controller
     ├── lib.rs
     ├── spot.rs             # Spot orderbook controller
+    ├── stake.rs            # Control staked assets
 ```

@@ -123,7 +123,7 @@ impl Ed25519PublicKey {
     }
 
     /// Deserialize an Ed25519PublicKey without any validation checks apart from expected key size.
-    pub(crate) fn from_bytes_unchecked(
+    pub fn from_bytes_unchecked(
         bytes: &[u8],
     ) -> std::result::Result<Ed25519PublicKey, CryptoMaterialError> {
         match ed25519_dalek::PublicKey::from_bytes(bytes) {

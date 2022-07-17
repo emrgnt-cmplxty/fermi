@@ -35,3 +35,20 @@ impl OrderAccount {
         }
     }
 }
+
+#[derive(Debug)]
+pub struct StakeAccount {
+    pub account_pub_key: AccountPubKey,
+    pub staked_amount: u64
+}
+
+impl StakeAccount {
+    pub fn new(account_pub_key: AccountPubKey) -> Self {
+        StakeAccount {
+            account_pub_key,
+            staked_amount: 0,
+        }
+    }
+}
+
+

@@ -15,7 +15,6 @@ mod tests {
     const BASE_ASSET_ID: u64 = 0;
     const QUOTE_ASSET_ID: u64 = 1;
 
-
     #[test]
     fn market_order_on_empty_orderbook() {
         let mut orderbook = Orderbook::new(BASE_ASSET_ID, QUOTE_ASSET_ID);

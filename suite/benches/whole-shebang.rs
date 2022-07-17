@@ -46,8 +46,6 @@ use types::{
 
 const N_ORDERS_BENCH: u64 = 1_024;
 const N_ACCOUNTS: u64 = 1_024;
-const BASE_ASSET_ID: u64 = 0;
-const QUOTE_ASSET_ID: u64 = 1;
 const TRANSFER_AMOUNT: u64 = 500_000_000;
 
 fn persist_result(db: &DBWithThreadMode<SingleThreaded>, proc_result: &OrderProcessingResult) -> () {
@@ -72,6 +70,8 @@ fn persist_result(db: &DBWithThreadMode<SingleThreaded>, proc_result: &OrderProc
 
 fn whole_shebang(
     n_orders: u64, 
+    base_asset_id: u64,
+    quote_asset_id: u64,
     signed_txns: &mut Vec<TxnRequest<TxnVariant>>, 
     bank_controller: &mut BankController, 
     spot_controller: &mut SpotController, 
@@ -80,7 +80,7 @@ fn whole_shebang(
     persist: bool) 
 {
     // initialize orderbook
-    let orderbook: Orderbook = Orderbook::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
+    let orderbook: Orderbook = Orderbook::new(base_asset_id, quote_asset_id);
 
     // clean market controller orderbook to keep from getting clogged
     spot_controller.overwrite_orderbook(orderbook);
@@ -97,13 +97,21 @@ fn whole_shebang(
 }
     
 pub fn criterion_benchmark(c: &mut Criterion) {
+    let mut rng: ThreadRng = rand::thread_rng();
+
+    // initialize creator account
+    let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
+    let creator_key: AccountPubKey = (&private_key).into();
     // initialize market controller
     let mut account_to_pub_key: Vec<AccountPubKey> = Vec::new();
     let mut account_to_signed_msg: Vec<AccountSignature> = Vec::new();
     let mut bank_controller: BankController = BankController::new();
-    let mut spot_controller: SpotController = SpotController::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
+    bank_controller.create_account(&creator_key).unwrap();
+    let base_asset_id = bank_controller.create_asset(&creator_key);
+    let quote_asset_id = bank_controller.create_asset(&creator_key);
+    let mut spot_controller: SpotController = SpotController::new(base_asset_id, quote_asset_id);
+    spot_controller.create_account(&creator_key).unwrap();
     // other helpers
-    let mut rng: ThreadRng = rand::thread_rng();
     let mut i_account: u64 = 0;
     let path: &str = "./db.rocks";
     let mut cf_opts: Options = Options::default();
@@ -117,13 +125,6 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     // instantiating joint vector
     let mut keys_and_signatures: Vec<(AccountPubKey, AccountSignature)> = Vec::new();
     
-    let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-    let creator_key: AccountPubKey = (&private_key).into();
-    // create spot & bank accounts and create assets for test
-    spot_controller.create_account(&creator_key).unwrap();
-    bank_controller.create_account(&creator_key).unwrap();
-    bank_controller.create_asset(&creator_key);
-    bank_controller.create_asset(&creator_key);
     // generate N_ACCOUNTS accounts to transact w/ orderbook
     while i_account < N_ACCOUNTS - 1 {
         let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
@@ -131,8 +132,8 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
         spot_controller.create_account(&account_pub_key).unwrap();
         bank_controller.create_account(&account_pub_key).unwrap();
-        bank_controller.transfer(&creator_key, &account_pub_key, BASE_ASSET_ID, TRANSFER_AMOUNT);
-        bank_controller.transfer(&creator_key, &account_pub_key, QUOTE_ASSET_ID, TRANSFER_AMOUNT);
+        bank_controller.transfer(&creator_key, &account_pub_key, base_asset_id, TRANSFER_AMOUNT);
+        bank_controller.transfer(&creator_key, &account_pub_key, quote_asset_id, TRANSFER_AMOUNT);
 
         // create initial asset
         account_to_pub_key.push(account_pub_key);
@@ -157,8 +158,8 @@ pub fn criterion_benchmark(c: &mut Criterion) {
             Order{
                 request: 
                     new_limit_order_request(
-                        BASE_ASSET_ID,
-                        QUOTE_ASSET_ID,
+                        base_asset_id,
+                        quote_asset_id,
                         order_type,
                         price,
                         qty,
@@ -178,7 +179,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     }
 
     c.bench_function("whole_shebang", |b| b.iter(|| 
-        whole_shebang(N_ORDERS_BENCH, &mut signed_txns, &mut bank_controller, &mut spot_controller, &mut rng, &db, true)));
+        whole_shebang(N_ORDERS_BENCH, base_asset_id, quote_asset_id, &mut signed_txns, &mut bank_controller, &mut spot_controller, &mut rng, &db, true)));
 
 }
 

@@ -55,7 +55,6 @@ pub struct SpotController
     order_to_account: HashMap<OrderId, AccountPubKey>,
 }
 
-
 impl SpotController
 {
     pub fn new(base_asset_id: AssetId, quote_asset_id: AssetId) -> Self {

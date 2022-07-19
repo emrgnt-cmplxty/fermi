@@ -15,7 +15,6 @@ pub struct BlockContainer <Variant>
 {
     blocks: Vec<Block<Variant>>,
 }
-
 impl <Variant> BlockContainer <Variant> 
     where Variant : Debug + Clone + CryptoHash + Copy
 {
@@ -33,6 +32,7 @@ impl <Variant> BlockContainer <Variant>
         self.blocks.push(block);
     }
 }
+
 pub struct Block <Variant>
     where Variant : Debug + Clone + CryptoHash + Copy
 {
@@ -42,7 +42,6 @@ pub struct Block <Variant>
     clock_hash: HashValue,
     vote_cert: VoteCert
 }
-
 impl <Variant> Block <Variant> 
     where Variant : Debug + Clone + CryptoHash + Copy
 {
@@ -80,6 +79,10 @@ impl <Variant> Block <Variant>
 
     pub fn get_vote_cert(&self) -> &VoteCert {
         &self.vote_cert
+    }
+
+    pub fn validate_block(&self) {
+        assert!(self.get_vote_cert().vote_has_passed());
     }
 }
 

@@ -10,7 +10,7 @@ use rocksdb::{ColumnFamilyDescriptor, DB, DBWithThreadMode, Options, SingleThrea
 use std::time::SystemTime;
 
 use diem_crypto::{
-    traits::{Uniform, Signature, SigningKey},
+    traits::{Uniform, SigningKey},
 };
 use engine::{
     orders,
@@ -161,6 +161,11 @@ fn place_orders_engine_account_signed(
 }
 
 #[cfg(feature = "batch")]
+use diem_crypto::{
+    traits::{Signature},
+};
+
+#[cfg(feature = "batch")]
 fn place_orders_engine_account_batch_signed(
     n_orders: u64, 
     base_asset_id: u64,
@@ -187,13 +192,11 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     let mut account_to_pub_key: Vec<AccountPubKey> = Vec::new();
     let mut account_to_signed_msg: Vec<AccountSignature> = Vec::new();
     let mut bank_controller: BankController = BankController::new();
-    bank_controller.create_account(&creator_key).unwrap();
-    let base_asset_id = bank_controller.create_asset(&creator_key);
-    let quote_asset_id = bank_controller.create_asset(&creator_key);
+    let base_asset_id = bank_controller.create_asset(&creator_key).unwrap();
+    let quote_asset_id = bank_controller.create_asset(&creator_key).unwrap();
 
     let mut spot_controller: SpotController = SpotController::new(base_asset_id, quote_asset_id);
     spot_controller.create_account(&creator_key).unwrap();
-    
     // other helpers
     let mut i_account: u64 = 0;
     let path: &str = "./db.rocks";
@@ -213,10 +216,8 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
         let account_pub_key: AccountPubKey = (&private_key).into();
 
-        spot_controller.create_account(&account_pub_key).unwrap();
-        bank_controller.create_account(&account_pub_key).unwrap();
-        bank_controller.transfer(&creator_key, &account_pub_key, base_asset_id, TRANSFER_AMOUNT);
-        bank_controller.transfer(&creator_key, &account_pub_key, quote_asset_id, TRANSFER_AMOUNT);
+        bank_controller.transfer(&creator_key, &account_pub_key, base_asset_id, TRANSFER_AMOUNT).unwrap();
+        bank_controller.transfer(&creator_key, &account_pub_key, quote_asset_id, TRANSFER_AMOUNT).unwrap();
 
         // create initial asset
         account_to_pub_key.push(account_pub_key);

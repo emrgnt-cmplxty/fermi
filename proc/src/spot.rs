@@ -80,14 +80,23 @@ impl SpotController
         Ok(account)
     }
 
-    pub fn place_limit_order(&mut self, bank_controller: &mut BankController, account_pub_key: &AccountPubKey, side: OrderSide, qty: u64, price: u64) -> Result<OrderProcessingResult, AccountError> {
+    pub fn place_limit_order(
+        &mut self, 
+        bank_controller: &mut BankController, 
+        account_pub_key: &AccountPubKey, 
+        side: OrderSide, 
+        qty: u64, 
+        price: u64,
+    ) -> Result<OrderProcessingResult, AccountError> {
+
+        let balance = bank_controller.get_balance(account_pub_key, self.base_asset_id)?;
         // check balances before placing order
         if matches!(side, OrderSide::Ask) { 
             // if ask, selling qty of base asset
-            assert!(bank_controller.get_balance(account_pub_key, self.base_asset_id)  > qty);
+            assert!(balance > qty);
         } else { 
             // if bid, buying base asset with qty*price of quote asset
-            assert!(bank_controller.get_balance(account_pub_key, self.quote_asset_id)   > qty * price);
+            assert!(balance > qty * price);
         }
         // create and process limit order
         let order: OrderRequest = new_limit_order_request(
@@ -103,7 +112,11 @@ impl SpotController
     }
 
     // TODO #5 //
-    pub fn parse_limit_order_txn(&mut self, bank_controller: &mut BankController, signed_txn: &TxnRequest<TxnVariant>) -> Result<OrderProcessingResult, AccountError> {
+    pub fn parse_limit_order_txn(
+        &mut self, 
+        bank_controller: &mut BankController, 
+        signed_txn: &TxnRequest<TxnVariant>,
+    ) -> Result<OrderProcessingResult, AccountError> {
         // verify transaction is an order
         if let TxnVariant::OrderTransaction(order) = &signed_txn.get_txn() {
             // verify and place a limit order
@@ -118,25 +131,33 @@ impl SpotController
     }
 
     // loop over and process the output from placing a limit order
-    fn proc_limit_result(&mut self, bank_controller: &mut BankController, account_pub_key: &AccountPubKey, sub_side: OrderSide, sub_price: u64, sub_qty: u64,  res: OrderProcessingResult) -> Result<OrderProcessingResult, AccountError> {
+    fn proc_limit_result(
+        &mut self, 
+        bank_controller: &mut BankController, 
+        account_pub_key: &AccountPubKey, 
+        sub_side: OrderSide, 
+        sub_price: u64, 
+        sub_qty: u64,  
+        res: OrderProcessingResult
+    ) -> Result<OrderProcessingResult, AccountError> {
         for order in &res {
             match order {
                 // first order is expected to be an Accepted result
                 Ok(Success::Accepted{order_id, ..}) => { 
-                    self.proc_order_init(bank_controller, &account_pub_key, sub_side, sub_price, sub_qty);
+                    self.proc_order_init(bank_controller, &account_pub_key, sub_side, sub_price, sub_qty)?;
                     // insert new order to map
                     self.order_to_account.insert(*order_id, *account_pub_key);
                 },
                 // subsequent orders are expected to be an PartialFill or Fill results
                 Ok(Success::PartiallyFilled{order_id, side, price, qty, ..}) => {
-                    let existing_pub_key: AccountPubKey = *self.order_to_account.get(&order_id).unwrap();
-                    self.proc_order_fill(bank_controller, &existing_pub_key, *side, *price, *qty);
+                    let existing_pub_key: AccountPubKey = *self.order_to_account.get(&order_id).ok_or(AccountError::Lookup("Failed to find account".to_string()))?;
+                    self.proc_order_fill(bank_controller, &existing_pub_key, *side, *price, *qty)?;
                 },
                 Ok(Success::Filled{order_id, side, price, qty, ..}) => {
-                    let existing_pub_key: AccountPubKey = *self.order_to_account.get(&order_id).unwrap();
-                    self.proc_order_fill(bank_controller,   &existing_pub_key, *side, *price, *qty);
+                    let existing_pub_key: AccountPubKey = *self.order_to_account.get(&order_id).ok_or(AccountError::Lookup("Failed to find account".to_string()))?;
+                    self.proc_order_fill(bank_controller,   &existing_pub_key, *side, *price, *qty)?;
                     // erase existing order
-                    self.order_to_account.remove(&order_id).unwrap();
+                    self.order_to_account.remove(&order_id).ok_or(AccountError::OrderProc("Failed to find order".to_string()))?;
                 }
                 Ok(Success::Amended { .. }) => { panic!("This needs to be implemented...") }
                 Ok(Success::Cancelled { .. }) => { panic!("This needs to be implemented...") }
@@ -149,33 +170,59 @@ impl SpotController
     }
 
     // process an initialized order by modifying the associated account
-    fn proc_order_init(&mut self, bank_controller: &mut BankController, account_pub_key: &AccountPubKey, side: OrderSide, price: u64, qty: u64) {
+    fn proc_order_init(
+        &mut self, 
+        bank_controller: 
+        &mut BankController, 
+        account_pub_key: 
+        &AccountPubKey, 
+        side: OrderSide, 
+        price: u64, 
+        qty: u64
+    ) -> Result<(), AccountError> {
         if matches!(side, OrderSide::Ask) { 
             // E.g. ask 1 BTC @ $20k moves 1 BTC (base) from balance to escrow
-            bank_controller.update_balance(account_pub_key, self.base_asset_id, -(qty as i64));
+            bank_controller.update_balance(account_pub_key, self.base_asset_id, -(qty as i64))?;
         } else { 
             // E.g. bid 1 BTC @ $20k moves 20k USD (quote) from balance to escrow
-            bank_controller.update_balance(account_pub_key, self.quote_asset_id, -((qty * price) as i64));
+            bank_controller.update_balance(account_pub_key, self.quote_asset_id, -((qty * price) as i64))?;
         }
+        Ok(())
     }
     
     // process a filled order by modifying the associated account
-    fn proc_order_fill(&mut self, bank_controller: &mut BankController, account_pub_key: &AccountPubKey, side: OrderSide, price: u64, qty: u64) {
+    fn proc_order_fill(
+        &mut self, 
+        bank_controller: &mut BankController, 
+        account_pub_key: &AccountPubKey, 
+        side: OrderSide, 
+        price: u64, 
+        qty: u64
+    )  -> Result<(), AccountError> {
         if matches!(side, OrderSide::Ask) { 
             // E.g. fill ask 1 BTC @ 20k adds 20k USD (quote) to bal, subtracts 1 BTC (base) from escrow
-            bank_controller.update_balance(account_pub_key, self.quote_asset_id, (qty*price) as i64);
+            bank_controller.update_balance(account_pub_key, self.quote_asset_id, (qty*price) as i64)?;
         } else { 
             // E.g. fill bid 1 BTC @ 20k adds 1 BTC (base) to bal, subtracts 20k USD (quote) from escrow
-            bank_controller.update_balance(account_pub_key, self.base_asset_id, qty as i64);
+            bank_controller.update_balance(account_pub_key, self.base_asset_id, qty as i64)?;
         }
+        Ok(())
     }
-
 
     // signed workflow
     // TODO #1 //
-    pub fn place_signed_limit_order(&mut self, bank_controller: &mut BankController, account_pub_key: &AccountPubKey, side: OrderSide, qty: u64, price: u64, signed_message: &AccountSignature) -> Result<OrderProcessingResult, AccountError> {
-        signed_message.verify(&DiemCryptoMessage(DUMMY_MESSAGE.to_string()), &account_pub_key).unwrap();
-        self.place_limit_order(bank_controller, account_pub_key, side, qty, price)
+    pub fn place_signed_limit_order(&mut self, 
+        bank_controller: &mut BankController, 
+        account_pub_key: &AccountPubKey, 
+        side: OrderSide, 
+        qty: u64, 
+        price: u64, 
+        signed_message: &AccountSignature) -> Result<OrderProcessingResult, AccountError> 
+    {
+        match signed_message.verify(&DiemCryptoMessage(DUMMY_MESSAGE.to_string()), &account_pub_key) {
+            Ok(_) => { return self.place_limit_order(bank_controller, account_pub_key, side, qty, price) },
+            Err(_) => { return Err(AccountError::Lookup("Failed to find account".to_string())); }
+        }
     }
 
     // TODO #2 //

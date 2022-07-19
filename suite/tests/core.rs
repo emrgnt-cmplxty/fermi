@@ -12,7 +12,6 @@ use core::{
         TxnVariant::PaymentTransaction,
         TxnVariant::OrderTransaction,
         TxnVariant::CreateAssetTransaction,
-        verify_transaction,
     },
     block::{
         Block, 
@@ -67,7 +66,7 @@ fn create_signed_order_transaction() {
         account_pub_key, 
         signed_hash 
     );
-    verify_transaction::<Order>(&signed_txn, &account_pub_key); 
+    signed_txn.verify_transaction().unwrap();
 }
 
 #[test]
@@ -92,7 +91,7 @@ fn create_signed_payment_transaction() {
         sender_pub_key, 
         signed_hash 
     );
-    verify_transaction::<Payment>(&signed_txn, &sender_pub_key); 
+    signed_txn.verify_transaction().unwrap();
 }
 
 #[test]
@@ -110,7 +109,7 @@ fn create_asset_transaction() {
         sender_pub_key, 
         signed_hash 
     );
-    verify_transaction::<CreateAsset>(&signed_txn, &sender_pub_key); 
+    signed_txn.verify_transaction().unwrap();
 }
 
 #[test]
@@ -144,7 +143,7 @@ fn block_hash_test() {
         account_pub_key, 
         signed_hash,
     );
-    verify_transaction::<TxnVariant>(&signed_txn, &account_pub_key);
+    signed_txn.verify_transaction().unwrap();
     txns.push(signed_txn);
 
     let txn: TxnVariant = PaymentTransaction(
@@ -162,7 +161,7 @@ fn block_hash_test() {
         account_pub_key, 
         signed_hash, 
     );
-    verify_transaction::<TxnVariant>(&signed_txn, &account_pub_key); 
+    signed_txn.verify_transaction().unwrap();
     txns.push(signed_txn);
 
 
@@ -174,12 +173,12 @@ fn block_hash_test() {
         account_pub_key, 
         signed_hash, 
     );
-    verify_transaction::<TxnVariant>(&signed_txn, &account_pub_key); 
+    signed_txn.verify_transaction().unwrap();
     txns.push(signed_txn);
 
     let block_hash: HashValue = generate_block_hash(&txns);
     let hash_clock: HashClock = HashClock::new();
-    let dummy_vote_cert: VoteCert = VoteCert::new(0);
+    let dummy_vote_cert: VoteCert = VoteCert::new(0, block_hash);
 
     let block: Block<TxnVariant> = Block::<TxnVariant>::new(txns, account_pub_key, block_hash, hash_clock.get_time(), dummy_vote_cert);
     

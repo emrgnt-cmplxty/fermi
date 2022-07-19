@@ -1,3 +1,7 @@
+//! THE WHOLE SHEBANG TEST IS AN ONGOING WORK IN PROGRESS
+//! HERE WE WILL CONSTRUCT A LARGE-SCALE TEST THAT LOOKS
+//! TO SHOW THAT THE ENTIRE CODEBASE IS GENERALLY SOUND
+//! 
 extern crate engine;
 extern crate core;
 
@@ -15,7 +19,13 @@ use core::{
         Block, 
         BlockContainer, 
         generate_block_hash
-    }
+    },
+    hash_clock::{
+        HashClock
+    },
+    vote_cert::{
+        VoteCert
+    },
 };
 use diem_crypto::{
     SigningKey,
@@ -25,12 +35,12 @@ use diem_crypto::{
 use engine::orders::{new_limit_order_request};
 use proc::{
     bank::{BankController},
-    spot::{SpotController}
+    spot::{SpotController},
 };
 use types::{
     account::{AccountPubKey, AccountPrivKey, AccountSignature},
     orderbook::{OrderSide},
-    spot::{TestDiemCrypto}
+    spot::{DiemCryptoMessage},
 };
 
 
@@ -52,8 +62,7 @@ fn test_orderbook_signed_txn() {
     let price = 1;
     let qty = 10;
     let txn: TxnVariant = TxnVariant::OrderTransaction(
-        Order {
-            request: 
+        Order::new(
             new_limit_order_request(
                 base_asset_id,
                 quote_asset_id,
@@ -62,16 +71,16 @@ fn test_orderbook_signed_txn() {
                 qty,
                 time::SystemTime::now()
             )
-        }
+        )
     );
 
     let txn_hash: HashValue = txn.hash();
-    let signed_hash: AccountSignature  = private_key.sign(&TestDiemCrypto(txn_hash.to_string()));
-    let signed_txn: TxnRequest<TxnVariant> = TxnRequest::<TxnVariant>{
-        txn: txn,
-        sender_address: account_pub_key, 
-        txn_signature: signed_hash 
-    };
+    let signed_hash: AccountSignature  = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
+    let signed_txn: TxnRequest<TxnVariant> = TxnRequest::<TxnVariant>::new(
+        txn,
+        account_pub_key, 
+        signed_hash 
+    );
 
     spot_controller.parse_limit_order_txn(&mut bank_controller, &signed_txn).unwrap();
     verify_transaction::<TxnVariant>(&signed_txn, &account_pub_key); 
@@ -79,9 +88,10 @@ fn test_orderbook_signed_txn() {
     let mut txns: Vec<TxnRequest<TxnVariant>> = Vec::new();
     txns.push(signed_txn);
     let block_hash: HashValue = generate_block_hash(&txns);
-    let block: Block<TxnVariant> = Block::<TxnVariant>{ txns: txns, block_hash: block_hash};
-    let mut blocks: Vec<Block<TxnVariant>> = Vec::new();
-    blocks.push(block);
-    BlockContainer{blocks};
+    let hash_clock: HashClock = HashClock::new();
+    let dummy_vote_cert: VoteCert = VoteCert::new(0);
+    let block: Block<TxnVariant> = Block::<TxnVariant>::new(txns, account_pub_key, block_hash, hash_clock.get_time(), dummy_vote_cert);
 
+    let mut block_container:BlockContainer<TxnVariant> = BlockContainer::new();
+    block_container.append_block(block);
 }

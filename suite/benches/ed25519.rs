@@ -11,7 +11,7 @@ use diem_crypto::{
     ed25519::{Ed25519PrivateKey, Ed25519PublicKey, Ed25519Signature},
     traits::{Signature, SigningKey, Uniform},
 };
-use types::spot::{TestDiemCrypto};
+use types::spot::{DiemCryptoMessage};
 
 const NUMBER_OF_MESSAGES: i32 = 128;
 const NUMBER_OF_ACCOUNTS: i32 = 128;
@@ -21,7 +21,7 @@ const NUMBER_OF_ACCOUNTS: i32 = 128;
 fn basic_sig_verify(
     sigs: &mut Vec<Ed25519Signature>,
     public_keys: &mut Vec<Ed25519PublicKey>,
-    possible_messages: &mut Vec<TestDiemCrypto>,
+    possible_messages: &mut Vec<DiemCryptoMessage>,
 ) {
     let messages_per_account = NUMBER_OF_MESSAGES / NUMBER_OF_ACCOUNTS;
     for i in 0..NUMBER_OF_ACCOUNTS {
@@ -36,7 +36,7 @@ fn basic_sig_verify(
 
 #[cfg(feature = "batch")]
 fn batch_sig_verify(keys_and_signatures: &Vec<(Ed25519PublicKey, Ed25519Signature)>) {
-    let msg = TestDiemCrypto("dummy".to_string());
+    let msg = DiemCryptoMessage("dummy".to_string());
     // gives us 1 if it was verified and 0 if it wasn't
     Signature::batch_verify(&msg, keys_and_signatures.to_vec()).unwrap();
 }
@@ -46,9 +46,9 @@ fn criterion_benchmark(c: &mut Criterion) {
     // getting list of possible raw messages
     let messages_pre_format: Vec<i32> = (0..messages_per_account).collect();
     // getting formatted list of possible messages
-    let mut messages: Vec<TestDiemCrypto> = messages_pre_format
+    let mut messages: Vec<DiemCryptoMessage> = messages_pre_format
         .iter()
-        .map(|&_| TestDiemCrypto("dummy".to_string()))
+        .map(|&_| DiemCryptoMessage("dummy".to_string()))
         .collect();
     // instantiating private keys
     let mut private_keys: Vec<Ed25519PrivateKey> = Vec::new();
@@ -66,7 +66,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         let public_key: Ed25519PublicKey = (&private_key).into();
         // pushing transactions
         for _ in 0..messages_per_account {
-            let msg = TestDiemCrypto("dummy".to_string());
+            let msg = DiemCryptoMessage("dummy".to_string());
             let sig: Ed25519Signature = private_key.sign(&msg);
             sigs.push(sig.clone());
             keys_and_signatures.push((public_key, sig));

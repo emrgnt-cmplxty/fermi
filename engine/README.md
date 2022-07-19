@@ -1,3 +1,7 @@
+## Overview
+
+This directory contains an efficient orderbook implementation.
+
 ```
     engine/src
     ├── lib.rs

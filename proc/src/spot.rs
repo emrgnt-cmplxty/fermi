@@ -1,15 +1,11 @@
 //! 
 //! TODO
-//! 1.) Add support for market orders
-//! 2.) Properly implement cryptographic verification
-//! 3.) Consider ways to avoid passing full mut self in proc_limit_result
-//! 4.) Limit overwrite_orderbook to bench-only mode
-//! 5.) replace dummy_message encryption scheme w/ smarter & more realistic solution
-//! 6.) What to do with TestDiemCrypto?
-//! 7.) Protect overwrite_orderbook access to bench mode
-//! 8.) Re-implement escrow & order counting if helpful
-//! 9.) Check assets for orderbook exist on creation
-//! 10.) Check passed asset ids on order placement
+//! 0.) ADD MARKET ORDER SUPPORT
+//! 1.) REMOVE SIG VERIFICATION - HERE FOR EARLY DEV TESTING
+//! 2.) RESTRICT overwrite_orderbook TO BENCH ONLY MODE
+//! 3.) CONSIDER ADDITIONAL FEATURES, LIKE ESCROW IMPLEMENTATION OR ORDER LIMITS
+//! 4.) CHECK PASSED ASSETS EXIST IN BANK MODULE
+//! 5.) CHECK PASSED ASSET IDS FOR CONSISTENTC6
 //! 
 extern crate core;
 extern crate engine;
@@ -39,7 +35,7 @@ use types::{
     account::{AccountError, AccountPubKey, AccountSignature},
     asset::{AssetId},
     orderbook::{Failed, OrderSide, OrderProcessingResult, Success},
-    spot::{OrderId, TestDiemCrypto},
+    spot::{OrderId, DiemCryptoMessage},
 };
 
 // dummy msg used for test-encoding
@@ -57,6 +53,7 @@ pub struct SpotController
 
 impl SpotController
 {
+    // TODO #4 //
     pub fn new(base_asset_id: AssetId, quote_asset_id: AssetId) -> Self {
         assert!(base_asset_id != quote_asset_id);
         let orderbook: Orderbook = Orderbook::new(base_asset_id, quote_asset_id);
@@ -99,18 +96,19 @@ impl SpotController
             side,
             price,
             qty,
-            SystemTime::now()
+            SystemTime::now(),
         );
         let res: Vec<Result<Success, Failed>> = self.orderbook.process_order(order);
         self.proc_limit_result(bank_controller, account_pub_key, side, price, qty, res)
     }
 
+    // TODO #5 //
     pub fn parse_limit_order_txn(&mut self, bank_controller: &mut BankController, signed_txn: &TxnRequest<TxnVariant>) -> Result<OrderProcessingResult, AccountError> {
         // verify transaction is an order
-        if let TxnVariant::OrderTransaction(order) = &signed_txn.txn {
+        if let TxnVariant::OrderTransaction(order) = &signed_txn.get_txn() {
             // verify and place a limit order
-            if let OrderRequest::NewLimitOrder{side, price, qty, ..} = order.request {
-                return self.place_limit_order(bank_controller, &signed_txn.sender_address, side, qty, price)
+            if let OrderRequest::NewLimitOrder{side, price, qty, ..} = order.get_order_request() {
+                return self.place_limit_order(bank_controller, &signed_txn.get_sender(), *side, *qty, *price)
             } else {
                 return Err(AccountError::OrderProc("Only limit orders supported".to_string()))
             }
@@ -174,14 +172,13 @@ impl SpotController
 
 
     // signed workflow
-    // TODO - flesh out more
+    // TODO #1 //
     pub fn place_signed_limit_order(&mut self, bank_controller: &mut BankController, account_pub_key: &AccountPubKey, side: OrderSide, qty: u64, price: u64, signed_message: &AccountSignature) -> Result<OrderProcessingResult, AccountError> {
-        signed_message.verify(&TestDiemCrypto(DUMMY_MESSAGE.to_string()), &account_pub_key).unwrap();
+        signed_message.verify(&DiemCryptoMessage(DUMMY_MESSAGE.to_string()), &account_pub_key).unwrap();
         self.place_limit_order(bank_controller, account_pub_key, side, qty, price)
     }
 
-    // TODO - can we guard this to only be accessible in "bench" mode?
-    // e.g. like #[cfg(bench)], except this only works locally
+    // TODO #2 //
     pub fn overwrite_orderbook(&mut self, new_orderbook: Orderbook) {
         self.orderbook = new_orderbook;
     }

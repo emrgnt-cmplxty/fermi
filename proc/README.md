@@ -1,3 +1,7 @@
+## Overview
+
+This directory contains the various sub-modules of the blockchain construction.
+
 ```
     proc/src
     ├── account.rs          # Account data structure

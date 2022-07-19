@@ -23,7 +23,7 @@ use proc::{
 use types::{
     account::{AccountPubKey, AccountPrivKey, AccountSignature},
     orderbook::{OrderProcessingResult, OrderSide, Success},
-    spot::{TestDiemCrypto}
+    spot::{DiemCryptoMessage}
 };
 
 const N_ORDERS_BENCH: u64 = 1_024;
@@ -173,7 +173,7 @@ fn place_orders_engine_account_batch_signed(
     db: &DBWithThreadMode<SingleThreaded>, 
     persist: bool) 
 {
-    Signature::batch_verify(&TestDiemCrypto(DUMMY_MESSAGE.to_string()), keys_and_signatures.to_vec()).unwrap();
+    Signature::batch_verify(&DiemCryptoMessage(DUMMY_MESSAGE.to_string()), keys_and_signatures.to_vec()).unwrap();
     place_orders_engine_account(n_orders, base_asset_id, quote_asset_id, account_to_pub_key, bank_controller, spot_controller, rng, db, persist);
 }
 
@@ -220,7 +220,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
         // create initial asset
         account_to_pub_key.push(account_pub_key);
-        let sig: AccountSignature  = private_key.sign(&TestDiemCrypto(DUMMY_MESSAGE.to_string()));
+        let sig: AccountSignature  = private_key.sign(&DiemCryptoMessage(DUMMY_MESSAGE.to_string()));
         account_to_signed_msg.push(sig.clone());
 
         i_account += 1;

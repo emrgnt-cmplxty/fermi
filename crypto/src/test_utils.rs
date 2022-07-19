@@ -126,7 +126,7 @@ where
 /// BCS serialization and domain separation
 #[cfg(any(test, feature = "fuzzing"))]
 #[derive(Debug, Serialize, Deserialize)]
-pub struct TestDiemCrypto(pub String);
+pub struct DiemCryptoMessage(pub String);
 
 // the following block is macro expanded from derive(CryptoHasher, BCSCryptoHash)
 
@@ -150,7 +150,7 @@ static TEST_DIEM_CRYPTO_SEED: crate::_once_cell::sync::OnceCell<[u8; 32]> =
 #[cfg(any(test, feature = "fuzzing"))]
 impl TestDiemCryptoHasher {
     fn new() -> Self {
-        let name = crate::_serde_name::trace_name::<TestDiemCrypto>()
+        let name = crate::_serde_name::trace_name::<DiemCryptoMessage>()
             .expect("The `CryptoHasher` macro only applies to structs and enums");
         TestDiemCryptoHasher(crate::hash::DefaultHasher::new(&name.as_bytes()))
     }
@@ -168,7 +168,7 @@ impl std::default::Default for TestDiemCryptoHasher {
 impl crate::hash::CryptoHasher for TestDiemCryptoHasher {
     fn seed() -> &'static [u8; 32] {
         TEST_DIEM_CRYPTO_SEED.get_or_init(|| {
-            let name = crate::_serde_name::trace_name::<TestDiemCrypto>()
+            let name = crate::_serde_name::trace_name::<DiemCryptoMessage>()
                 .expect("The `CryptoHasher` macro only applies to structs and enums.")
                 .as_bytes();
             crate::hash::DefaultHasher::prefixed_hash(&name)
@@ -192,19 +192,19 @@ impl std::io::Write for TestDiemCryptoHasher {
     }
 }
 #[cfg(any(test, feature = "fuzzing"))]
-impl crate::hash::CryptoHash for TestDiemCrypto {
+impl crate::hash::CryptoHash for DiemCryptoMessage {
     type Hasher = TestDiemCryptoHasher;
     fn hash(&self) -> crate::hash::HashValue {
         use crate::hash::CryptoHasher;
         let mut state = Self::Hasher::default();
         bcs::serialize_into(&mut state, &self)
-            .expect("BCS serialization of TestDiemCrypto should not fail");
+            .expect("BCS serialization of DiemCryptoMessage should not fail");
         state.finish()
     }
 }
 
-/// Produces a random TestDiemCrypto signable / verifiable struct.
+/// Produces a random DiemCryptoMessage signable / verifiable struct.
 #[cfg(any(test, feature = "fuzzing"))]
-pub fn random_serializable_struct() -> impl Strategy<Value = TestDiemCrypto> {
-    (String::arbitrary()).prop_map(TestDiemCrypto).no_shrink()
+pub fn random_serializable_struct() -> impl Strategy<Value = DiemCryptoMessage> {
+    (String::arbitrary()).prop_map(DiemCryptoMessage).no_shrink()
 }

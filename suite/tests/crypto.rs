@@ -7,7 +7,7 @@ use diem_crypto::{
     traits::{Signature, SigningKey, Uniform},
 };
 use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
-use types::spot::{TestDiemCrypto};
+use types::spot::{DiemCryptoMessage};
 
 // make a new struct for an order that we have to hash
 #[derive(Serialize, Deserialize, CryptoHasher, BCSCryptoHash)]
@@ -26,7 +26,7 @@ mod tests {
         let mut csprng: ThreadRng = thread_rng();
         let priv_key = Ed25519PrivateKey::generate(&mut csprng);
         let pub_key: Ed25519PublicKey = (&priv_key).into();
-        let msg = TestDiemCrypto("".to_string());
+        let msg = DiemCryptoMessage("".to_string());
         let sig: Ed25519Signature = priv_key.sign(&msg);
         // gives us 1 if it was verified and 0 if it wasn't
         let result = match sig.verify(&msg, &pub_key) {
@@ -43,7 +43,7 @@ mod tests {
         let mut csprng: ThreadRng = thread_rng();
         let priv_key = Ed25519PrivateKey::generate(&mut csprng);
         let pub_key: Ed25519PublicKey = (&priv_key).into();
-        let msg = TestDiemCrypto("".to_string());
+        let msg = DiemCryptoMessage("".to_string());
         let sig: Ed25519Signature = priv_key.sign(&msg);
         let mut keys_and_signatures: Vec<(Ed25519PublicKey, Ed25519Signature)> = Vec::new();
         keys_and_signatures.push((pub_key, sig));
@@ -63,9 +63,9 @@ mod tests {
         let mut csprng: ThreadRng = thread_rng();
         let priv_key = Ed25519PrivateKey::generate(&mut csprng);
         let pub_key: Ed25519PublicKey = (&priv_key).into();
-        let msg = TestDiemCrypto("".to_string());
+        let msg = DiemCryptoMessage("".to_string());
         // making a different message than what was encoded
-        let faulty_message = TestDiemCrypto("a".to_string());
+        let faulty_message = DiemCryptoMessage("a".to_string());
         // signing correct message but verifying with faulty message
         let sig: Ed25519Signature = priv_key.sign(&msg);
         let result = match sig.verify(&faulty_message, &pub_key) {
@@ -87,7 +87,7 @@ mod tests {
         let priv_key_2 = Ed25519PrivateKey::generate(&mut csprng_2);
         let pub_key_2: Ed25519PublicKey = (&priv_key_2).into();
         // creating and signing the msg
-        let msg = TestDiemCrypto("".to_string());
+        let msg = DiemCryptoMessage("".to_string());
         // making a different message than what was encoded
         let sig: Ed25519Signature = priv_key.sign(&msg);
         let result = match sig.verify(&msg, &pub_key_2) {

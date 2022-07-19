@@ -1,6 +1,6 @@
 //! TODO
-//! 1.) Add tests for acc crypto
-//! 2.) Move to pre-determined keys to avoid use of RNG
+//! 1.) ADD TESTS FOR CRYPTOGRAPHIC VERIFICATINO
+//! 2.) MOVE TOWARDS PRE-DETRMINED KEYS INSTEAD OF RNG
 //! 
 extern crate proc;
 extern crate types;

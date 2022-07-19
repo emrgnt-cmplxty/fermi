@@ -29,7 +29,7 @@ use diem_crypto::{
     hash::{CryptoHash, HashValue},
 };
 use proc::{
-    bank::{BankController, CREATED_ASSET_BALANCE, STAKE_ASSET_ID},
+    bank::{BankController},
     stake::{StakeController},
 };
 use types::{
@@ -39,8 +39,6 @@ use types::{
 
 // Specify # of tokens creator stakes at genesis
 const GENESIS_STAKE_AMOUNT: u64 = 1_000_000;
-// Specify # of tokens sent to second validator
-const SECONDARY_SEED_PAYMENT: u64 = 100_000;
 
 // TOY CONSENSUS
 fn asset_creation_txn(sender_pub_key: AccountPubKey, sender_private_key: &AccountPrivKey) -> Result<TxnRequest<TxnVariant>, AccountError>  {
@@ -192,6 +190,13 @@ impl ConsensusManager {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // Specify # of tokens sent to second validator
+    const SECONDARY_SEED_PAYMENT: u64 = 100_000;
+    use proc::{
+        bank::{CREATED_ASSET_BALANCE, STAKE_ASSET_ID},
+    };
+
     #[test]
     fn test_consensus() {
         // two-validator setup
@@ -243,6 +248,7 @@ mod tests {
         // ~~ this is not yet used in the codebase, but will be consumed later ~~
         primary_validator.tick_hash_clock(1_000);
         let second_block: Block<TxnVariant> = primary_validator.propose_block(txns).unwrap();
+        // second validator does not need to vote as his stake is still small
         second_block.validate_block().unwrap();
 
 
@@ -255,6 +261,7 @@ mod tests {
         assert!(new_asset_balance == CREATED_ASSET_BALANCE, "Unexpected balance after second token genesis");
 
         // TODO - add order book logic here
+        // TODO - play around w/ consensus to create failures
 
     }
 }

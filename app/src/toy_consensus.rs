@@ -213,7 +213,7 @@ mod tests {
         // check funding was successful
         let primary_pub_key: AccountPubKey = primary_validator.get_validator_pub_key();
         let primary_balance: u64 = primary_validator.get_bank_controller().get_balance(&primary_pub_key, STAKE_ASSET_ID).unwrap();
-        assert!(primary_balance == CREATED_ASSET_BALANCE, "Unexpected balance after token genesis");
+        assert!(primary_balance == CREATED_ASSET_BALANCE - GENESIS_STAKE_AMOUNT, "Unexpected balance after token genesis & stake");
         let primary_staked: u64 = primary_validator.get_stake_controller().get_staked(&primary_pub_key).unwrap();
         assert!(primary_staked == GENESIS_STAKE_AMOUNT, "Unexpected stake balance after staking primary validator");
 

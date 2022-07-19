@@ -7,9 +7,7 @@ extern crate proc;
 extern crate types;
 
 use rand::rngs::{ThreadRng};
-use super::{
-    router::{route_transaction}
-};
+use super::{router::{route_transaction}};
 use core::{
     block::{Block, BlockContainer, generate_block_hash},
     hash_clock::{HashClock},
@@ -36,7 +34,7 @@ use types::{
     spot::{DiemCryptoMessage},
 };
 
-// Specify the number of tokens creator stakes during genesis
+// specify the number of tokens creator stakes during genesis
 const GENESIS_STAKE_AMOUNT: u64 = 1_000_000;
 
 // helper functions for constructing and signing various blockchain transactions
@@ -190,7 +188,7 @@ mod tests {
         bank::{CREATED_ASSET_BALANCE, STAKE_ASSET_ID},
     };
 
-    // Specify # of tokens sent to second validator
+    // specify # of tokens sent to second validator
     const SECONDARY_SEED_PAYMENT: u64 = 100_000;
 
     #[test]

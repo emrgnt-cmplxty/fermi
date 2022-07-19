@@ -18,48 +18,11 @@ use types::{
     account::{AccountError},
 };
 
-// pub struct Router {
-//     // manager: ConsensusManager,
-// }
-// impl Router {
-//     pub fn new() -> Self {
-//         Router {
-//             // manager: ConsensusManager::new(),
-//         }
-//     }
-    
-//     pub fn route_transaction(&mut self, manager: &mut ConsensusManager, txn_request: &TxnRequest<TxnVariant>) -> Result<(), AccountError> {
-//         // TODO # 1 //
-//         println!("routing transaction now....");
-
-//         txn_request.verify_transaction().unwrap();
-//         match txn_request.get_txn() {
-//             &TxnVariant::OrderTransaction(_order) => {
-//                 // DO NOTHING
-//                 return Ok(())
-//             }
-//             &TxnVariant::PaymentTransaction(payment) => {
-//                 let bank_controller: &mut BankController = manager.get_bank_controller();
-//                 println!("successful match found");
-//                 bank_controller.parse_payment_transaction(&payment)?;
-//                 return Ok(())
-//             }
-//             _ => {
-//                 Err(AccountError::OrderProc("Order not matched".to_string()))
-//             }
-//         }
-//     }
-
-//     // pub fn get_manager(&mut self) -> &mut ConsensusManager {
-//     //     &mut self.manager
-//     // }
-// }
-
 pub fn route_transaction(consensus_manager: &mut ConsensusManager, txn_request: &TxnRequest<TxnVariant>) -> Result<(), AccountError> {
     txn_request.verify_transaction().unwrap();
     match txn_request.get_txn() {
         &TxnVariant::OrderTransaction(_order) => {
-            // DO NOTHING
+            // DO NOTHING, THIS NEEDS IMPLEMENTING
             return Ok(())
         }
         &TxnVariant::PaymentTransaction(payment) => {
@@ -131,7 +94,6 @@ mod tests {
         let receiver_private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
         let receiver_pub_key: AccountPubKey = (&receiver_private_key).into();
 
-        // let mut router: Router = Router::new();
         let mut consensus_manager = ConsensusManager::new();
         consensus_manager.build_genesis_block().unwrap();
         

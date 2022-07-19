@@ -1,6 +1,6 @@
 //! 
 //! TODO
-//! 0.) ADD ROBUST ERROR HANDLING THROUGHOUT
+//! 0.) ADD SIZE CHECKS ON TRANSACTIONS
 //! 
 extern crate types;
 
@@ -38,24 +38,34 @@ impl StakeController
         }
     }
 
-    // TODO #0 //
-    pub fn get_staked(&self, account_pub_key: &AccountPubKey) -> u64 {
-        let stake_account: &StakeAccount = self.stake_accounts.get(account_pub_key).unwrap();
-        stake_account.get_staked_amount()
+    pub fn get_staked(&self, account_pub_key: &AccountPubKey) -> Result<u64, AccountError> {
+        let stake_account: &StakeAccount = self.stake_accounts.get(account_pub_key).ok_or(AccountError::Lookup("Failed to find account".to_string()))?;
+        Ok(stake_account.get_staked_amount())
+    }
+
+    pub fn stake(&mut self, bank_controller: &mut BankController, account_pub_key: &AccountPubKey, amount: u64) -> Result<(), AccountError> {
+        bank_controller.update_balance(account_pub_key, STAKE_ASSET_ID, -(amount as i64))?;
+        let lookup: Option<&mut StakeAccount> = self.stake_accounts.get_mut(account_pub_key);
+        match lookup {
+            Some(stake_account) => {
+                stake_account.set_staked_amount(stake_account.get_staked_amount() + amount as u64);
+                Ok(())
+            }
+            None => {
+                let mut new_stake_account: StakeAccount = StakeAccount::new(*account_pub_key);
+                new_stake_account.set_staked_amount(amount);
+                self.stake_accounts.insert(*account_pub_key, new_stake_account);
+                Ok(())
+            }
+        }
     }
 
     // TODO #0 //
-    pub fn stake(&mut self, bank_controller: &mut BankController, account_pub_key: &AccountPubKey, amount: u64) {
-        bank_controller.update_balance(account_pub_key, STAKE_ASSET_ID, -(amount as i64));
-        let stake_account: &mut StakeAccount = self.stake_accounts.get_mut(account_pub_key).unwrap();
-        stake_account.set_staked_amount(stake_account.get_staked_amount() + amount as u64);
-    }
-
-    // TODO #0 //
-    pub fn unstake(&mut self, bank_controller: &mut BankController, account_pub_key: &AccountPubKey, amount: u64) {
-        bank_controller.update_balance(account_pub_key, STAKE_ASSET_ID, amount as i64);
-        let stake_account: &mut StakeAccount = self.stake_accounts.get_mut(account_pub_key).unwrap();
+    pub fn unstake(&mut self, bank_controller: &mut BankController, account_pub_key: &AccountPubKey, amount: u64) -> Result<(), AccountError> {
+        bank_controller.update_balance(account_pub_key, STAKE_ASSET_ID, amount as i64)?;
+        let stake_account: &mut StakeAccount = self.stake_accounts.get_mut(account_pub_key).ok_or(AccountError::Lookup("Failed to find account".to_string()))?;
         stake_account.set_staked_amount(stake_account.get_staked_amount() - amount);
+        Ok(())
     }
 }
 
@@ -72,9 +82,8 @@ mod tests {
     };
     
     use super::*;
-    use super::super::bank::{CREATED_ASSET_BALANCE, BANK_ACCOUNT_BYTES, STAKE_ASSET_ID};
+    use super::super::bank::{CREATED_ASSET_BALANCE, STAKE_ASSET_ID};
 
-    const TRANSFER_AMOUNT: u64 = 1_000_000;
     const STAKE_AMOUNT: u64 = 1_000;
     #[test]
     fn stake() {
@@ -84,20 +93,15 @@ mod tests {
 
 
         let mut bank_controller: BankController = BankController::new();
-        bank_controller.create_account(&account_pub_key).unwrap();
-        bank_controller.create_asset(&account_pub_key);
-        bank_controller.create_asset(&account_pub_key);
+        bank_controller.create_asset(&account_pub_key).unwrap();
+        bank_controller.create_asset(&account_pub_key).unwrap();
 
         let mut stake_controller: StakeController = StakeController::new();
         stake_controller.create_account(&account_pub_key).unwrap();
 
-        let bank_pub_key: AccountPubKey = AccountPubKey::from_bytes_unchecked(&BANK_ACCOUNT_BYTES).unwrap();
-        bank_controller.transfer(&bank_pub_key, &account_pub_key, STAKE_ASSET_ID, TRANSFER_AMOUNT);
-
-        stake_controller.stake(&mut bank_controller, &account_pub_key, STAKE_AMOUNT);
-        assert_eq!(bank_controller.get_balance(&bank_pub_key, STAKE_ASSET_ID), CREATED_ASSET_BALANCE - TRANSFER_AMOUNT);
-        assert_eq!(bank_controller.get_balance(&account_pub_key, STAKE_ASSET_ID), TRANSFER_AMOUNT - STAKE_AMOUNT);
-        assert_eq!(stake_controller.get_staked(&account_pub_key), STAKE_AMOUNT);
+        stake_controller.stake(&mut bank_controller, &account_pub_key, STAKE_AMOUNT).unwrap();
+        assert_eq!(bank_controller.get_balance(&account_pub_key, STAKE_ASSET_ID).unwrap(), CREATED_ASSET_BALANCE - STAKE_AMOUNT);
+        assert_eq!(stake_controller.get_staked(&account_pub_key).unwrap(), STAKE_AMOUNT);
     }
 
     // TODO #0 //
@@ -111,13 +115,13 @@ mod tests {
 
         let mut bank_controller: BankController = BankController::new();
         bank_controller.create_account(&account_pub_key).unwrap();
-        bank_controller.create_asset(&account_pub_key);
-        bank_controller.create_asset(&account_pub_key);
+        bank_controller.create_asset(&account_pub_key).unwrap();
+        bank_controller.create_asset(&account_pub_key).unwrap();
 
         let mut stake_controller: StakeController = StakeController::new();
         stake_controller.create_account(&account_pub_key).unwrap();
-        assert_eq!(bank_controller.get_balance(&account_pub_key, STAKE_ASSET_ID), 0);
+        assert_eq!(bank_controller.get_balance(&account_pub_key, STAKE_ASSET_ID).unwrap(), 0);
 
-        stake_controller.stake(&mut bank_controller, &account_pub_key, STAKE_AMOUNT);
+        stake_controller.stake(&mut bank_controller, &account_pub_key, STAKE_AMOUNT).unwrap();
     }
 }

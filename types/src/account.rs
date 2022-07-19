@@ -11,5 +11,8 @@ pub type AccountBalance = u64;
 pub enum AccountError {
     Creation(String),
     Lookup(String),
-    OrderProc(String)
+    OrderProc(String),
+    Payment(String),
+    Vote(String),
+    Signing(String),
 }

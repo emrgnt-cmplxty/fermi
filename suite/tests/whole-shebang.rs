@@ -13,7 +13,6 @@ use core::{
         Order, 
         TxnRequest, 
         TxnVariant,
-        verify_transaction,
     },
     block::{
         Block, 
@@ -51,12 +50,10 @@ fn test_orderbook_signed_txn() {
     let account_pub_key: AccountPubKey = (&private_key).into();
 
     let mut bank_controller: BankController = BankController::new();
-    bank_controller.create_account(&account_pub_key).unwrap();
-    let base_asset_id = bank_controller.create_asset(&account_pub_key);
-    let quote_asset_id = bank_controller.create_asset(&account_pub_key);
+    let base_asset_id = bank_controller.create_asset(&account_pub_key).unwrap();
+    let quote_asset_id = bank_controller.create_asset(&account_pub_key).unwrap();
 
     let mut spot_controller: SpotController = SpotController::new(base_asset_id, quote_asset_id);
-    spot_controller.create_account(&account_pub_key).unwrap();
 
 
     let price = 1;
@@ -83,13 +80,14 @@ fn test_orderbook_signed_txn() {
     );
 
     spot_controller.parse_limit_order_txn(&mut bank_controller, &signed_txn).unwrap();
-    verify_transaction::<TxnVariant>(&signed_txn, &account_pub_key); 
+    signed_txn.verify_transaction().unwrap();
 
     let mut txns: Vec<TxnRequest<TxnVariant>> = Vec::new();
     txns.push(signed_txn);
     let block_hash: HashValue = generate_block_hash(&txns);
     let hash_clock: HashClock = HashClock::new();
-    let dummy_vote_cert: VoteCert = VoteCert::new(0);
+    
+    let dummy_vote_cert: VoteCert = VoteCert::new(0, block_hash);
     let block: Block<TxnVariant> = Block::<TxnVariant>::new(txns, account_pub_key, block_hash, hash_clock.get_time(), dummy_vote_cert);
 
     let mut block_container:BlockContainer<TxnVariant> = BlockContainer::new();

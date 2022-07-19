@@ -12,7 +12,6 @@ pub struct HashClock {
     time: HashValue,
     n_ticks: u64
 } 
-
 impl HashClock {
     pub fn new() -> Self {
         HashClock {
@@ -21,9 +20,12 @@ impl HashClock {
         }
     }
 
-    pub fn tick(&mut self) {
-        self.time = DiemCryptoMessage(self.time.to_string()).hash();
-        self.n_ticks += 1;
+    pub fn tick(&mut self, ticks: u64) {
+        let init_tick: u64 = self.n_ticks;
+        while self.n_ticks < init_tick + ticks {
+            self.time = DiemCryptoMessage(self.time.to_string()).hash();
+            self.n_ticks += 1;
+        }
     }
 
     pub fn get_time(&self) -> HashValue {
@@ -42,9 +44,7 @@ mod tests {
     fn test_clock() {
         let mut clock: HashClock = HashClock::new();
         println!("Clock={:?}", clock);
-        while clock.n_ticks < 100 {
-            clock.tick();
-        }
+        clock.tick(100);
         println!("Clock={:?}", clock);
     }
 }

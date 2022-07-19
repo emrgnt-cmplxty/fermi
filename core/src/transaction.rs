@@ -109,9 +109,10 @@ where
     pub fn get_txn_signature(&self) -> &AccountSignature {
         &self.txn_signature
     }
+
+    pub fn verify_transaction(&self) -> Result<(), diem_crypto::error::Error> {
+        let txn_hash: HashValue = self.txn.hash();
+        self.txn_signature.verify(&DiemCryptoMessage(txn_hash.to_string()), &self.sender)
+    }
 }
 
-pub fn verify_transaction<TxnVariant: Debug + Clone + CryptoHash + Copy>(signed_txn: &TxnRequest<TxnVariant>, account_pub_key: &AccountPubKey) {
-    let txn_hash: HashValue = signed_txn.txn.hash();
-    signed_txn.txn_signature.verify(&DiemCryptoMessage(txn_hash.to_string()), &account_pub_key).unwrap()
-}

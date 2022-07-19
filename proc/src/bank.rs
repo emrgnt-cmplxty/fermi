@@ -10,11 +10,6 @@ extern crate types;
 use std::collections::HashMap;
 
 use super::account::{BankAccount};
-use core::{
-    transaction::{
-        Payment
-    }
-};
 use types::{
     account::{AccountError, AccountPubKey},
     asset::{Asset, AssetId}
@@ -106,10 +101,5 @@ impl BankController
         self.update_balance(account_pub_key_from, asset_id, -(amount as i64))?;
         self.update_balance(account_pub_key_to, asset_id, amount as i64)?;
         Ok(())
-    }
-
-    pub fn parse_payment_transaction(&mut self, payment: &Payment) -> Result<(), AccountError> {
-        // verify transaction is an order
-        self.transfer(payment.get_from(), payment.get_to(), payment.get_asset_id(), payment.get_amount())
     }
 }

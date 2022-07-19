@@ -6,7 +6,7 @@ use diem_crypto::{
     hash::{CryptoHash, HashValue},
 };
 use types::{
-    account::{AccountPubKey},
+    account::{AccountPubKey, AccountError},
     spot::{DiemCryptoMessage},
 };
 
@@ -81,8 +81,12 @@ impl <Variant> Block <Variant>
         &self.vote_cert
     }
 
-    pub fn validate_block(&self) {
-        assert!(self.get_vote_cert().vote_has_passed());
+    pub fn validate_block(&self) -> Result<(), AccountError> {
+        if self.get_vote_cert().vote_has_passed() {
+            Ok(())
+        } else {
+            Err(AccountError::BlockValidation("Validation failed".to_string()))
+        }
     }
 }
 

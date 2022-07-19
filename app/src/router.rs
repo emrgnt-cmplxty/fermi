@@ -11,48 +11,74 @@ use core::{
         TxnVariant,
     },
 };
-use proc::bank::BankController;
+use proc::{
+    bank::{BankController}, 
+};
 use types::{
     account::{AccountError},
 };
 
-pub struct Router {
-    manager: ConsensusManager,
-}
-impl Router {
-    pub fn new() -> Self {
-        Router {
-            manager: ConsensusManager::new(),
-        }
-    }
+// pub struct Router {
+//     // manager: ConsensusManager,
+// }
+// impl Router {
+//     pub fn new() -> Self {
+//         Router {
+//             // manager: ConsensusManager::new(),
+//         }
+//     }
     
-    pub fn route_transaction(&mut self, txn_request: &TxnRequest<TxnVariant>) -> Result<(), AccountError> {
-        // TODO # 1 //
-        println!("routing transaction now....");
+//     pub fn route_transaction(&mut self, manager: &mut ConsensusManager, txn_request: &TxnRequest<TxnVariant>) -> Result<(), AccountError> {
+//         // TODO # 1 //
+//         println!("routing transaction now....");
 
-        txn_request.verify_transaction().unwrap();
-        match txn_request.get_txn() {
-            &TxnVariant::OrderTransaction(_order) => {
-                // DO NOTHING
-                return Ok(())
-            }
-            &TxnVariant::PaymentTransaction(payment) => {
-                let bank_controller: &mut BankController = self.manager.get_bank_controller();
-                println!("successful match found");
-                bank_controller.parse_payment_transaction(&payment)?;
-                return Ok(())
-            }
-            _ => {
-                Err(AccountError::OrderProc("Order not matched".to_string()))
-            }
+//         txn_request.verify_transaction().unwrap();
+//         match txn_request.get_txn() {
+//             &TxnVariant::OrderTransaction(_order) => {
+//                 // DO NOTHING
+//                 return Ok(())
+//             }
+//             &TxnVariant::PaymentTransaction(payment) => {
+//                 let bank_controller: &mut BankController = manager.get_bank_controller();
+//                 println!("successful match found");
+//                 bank_controller.parse_payment_transaction(&payment)?;
+//                 return Ok(())
+//             }
+//             _ => {
+//                 Err(AccountError::OrderProc("Order not matched".to_string()))
+//             }
+//         }
+//     }
+
+//     // pub fn get_manager(&mut self) -> &mut ConsensusManager {
+//     //     &mut self.manager
+//     // }
+// }
+
+pub fn route_transaction(consensus_manager: &mut ConsensusManager, txn_request: &TxnRequest<TxnVariant>) -> Result<(), AccountError> {
+    txn_request.verify_transaction().unwrap();
+    match txn_request.get_txn() {
+        &TxnVariant::OrderTransaction(_order) => {
+            // DO NOTHING
+            return Ok(())
+        }
+        &TxnVariant::PaymentTransaction(payment) => {
+            let bank_controller: &mut BankController = consensus_manager.get_bank_controller();
+            bank_controller.transfer(payment.get_from(), payment.get_to(), payment.get_asset_id(), payment.get_amount())?;
+            return Ok(())
+        }
+        &TxnVariant::CreateAssetTransaction(_creation) => {
+            let bank_controller: &mut BankController = consensus_manager.get_bank_controller();
+            bank_controller.create_asset(&txn_request.get_sender())?;
+            return Ok(())
+        }
+        &TxnVariant::StakeAssetTransaction(stake) => {
+            let (bank_controller,stake_controller) = consensus_manager.get_all_controllers();
+            stake_controller.stake(bank_controller, stake.get_from(), stake.get_amount())?;
+            return Ok(())
         }
     }
-
-    pub fn get_manager(&mut self) -> &mut ConsensusManager {
-        &mut self.manager
-    }
 }
-
 #[cfg(test)]
 mod tests {
     use core::{
@@ -105,8 +131,8 @@ mod tests {
         let receiver_private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
         let receiver_pub_key: AccountPubKey = (&receiver_private_key).into();
 
-        let mut router: Router = Router::new();
-        let consensus_manager = router.get_manager();
+        // let mut router: Router = Router::new();
+        let mut consensus_manager = ConsensusManager::new();
         consensus_manager.build_genesis_block().unwrap();
         
         let sender_private_key: &AccountPrivKey = consensus_manager.get_validator_private_key();
@@ -114,6 +140,6 @@ mod tests {
 
         let signed_txn = create_signed_payment_transaction(sender_private_key, sender_pub_key, receiver_pub_key);
 
-        router.route_transaction(&signed_txn).unwrap();
+        route_transaction(&mut consensus_manager, &signed_txn).unwrap();
     }
 }

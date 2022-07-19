@@ -15,4 +15,5 @@ pub enum AccountError {
     Payment(String),
     Vote(String),
     Signing(String),
+    BlockValidation(String),
 }

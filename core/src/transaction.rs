@@ -73,10 +73,33 @@ impl Order {
 }
 
 #[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
+pub struct Stake 
+{
+    from: AccountPubKey,
+    amount: u64,
+}
+impl Stake {
+    pub fn new(from: AccountPubKey, amount: u64) -> Self {
+        Stake {
+            from,
+            amount
+        }
+    }
+
+    pub fn get_from(&self) -> &AccountPubKey {
+        &self.from
+    }
+
+    pub fn get_amount(&self) -> u64 {
+        self.amount
+    }
+}
+#[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
 pub enum TxnVariant {
     PaymentTransaction(Payment),
     CreateAssetTransaction(CreateAsset),
     OrderTransaction(Order),
+    StakeAssetTransaction(Stake),
 }
 pub struct TxnRequest <TxnVariant>
 where

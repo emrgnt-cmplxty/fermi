@@ -38,7 +38,7 @@ fn place_orders_consensus(
 {
     // verify transactions and update state
     for order_transaction in transactions.iter() {
-        route_transaction(consensus_manager, &order_transaction).unwrap();
+        route_transaction(consensus_manager, order_transaction).unwrap();
     }
     // propose new block
     consensus_manager.propose_block(transactions).unwrap();
@@ -69,15 +69,15 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     // initiate new consensus instances by creating the genesis block from perspective of primary validator
     consensus_manager.build_genesis_block().unwrap();
-    let signed_txn: TxnRequest<TxnVariant> = asset_creation_txn(validator_pub_key, &consensus_manager.get_validator_private_key()).unwrap();
+    let signed_txn: TxnRequest<TxnVariant> = asset_creation_txn(validator_pub_key, consensus_manager.get_validator_private_key()).unwrap();
     route_transaction(&mut consensus_manager, &signed_txn).unwrap();
 
     // create quote asset, this is asset #1 of the blockchain
-    let signed_txn: TxnRequest<TxnVariant> = asset_creation_txn(validator_pub_key, &consensus_manager.get_validator_private_key()).unwrap();
+    let signed_txn: TxnRequest<TxnVariant> = asset_creation_txn(validator_pub_key, consensus_manager.get_validator_private_key()).unwrap();
     route_transaction(&mut consensus_manager, &signed_txn).unwrap();
 
     // create orderbook, the base asset for this orderbook will be the primary asset (# 0) created at genesis
-    let signed_txn: TxnRequest<TxnVariant> = orderbook_creation_txn(validator_pub_key, &consensus_manager.get_validator_private_key(), BASE_ASSET_ID, QUOTE_ASSET_ID).unwrap();
+    let signed_txn: TxnRequest<TxnVariant> = orderbook_creation_txn(validator_pub_key, consensus_manager.get_validator_private_key(), BASE_ASSET_ID, QUOTE_ASSET_ID).unwrap();
     route_transaction(&mut consensus_manager, &signed_txn).unwrap();
 
     // generate and fund accounts and create orders for bench

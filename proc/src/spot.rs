@@ -53,7 +53,7 @@ impl OrderbookInterface
     }
 
     pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), AccountError> {
-        if self.accounts.contains_key(&account_pub_key) {
+        if self.accounts.contains_key(account_pub_key) {
             Err(AccountError::Creation("Account already exists!".to_string()))
         } else {
             self.accounts.insert(*account_pub_key, OrderAccount::new(*account_pub_key));
@@ -111,20 +111,20 @@ impl OrderbookInterface
             match order {
                 // first order is expected to be an Accepted result
                 Ok(Success::Accepted{order_id, ..}) => { 
-                    self.proc_order_init(bank_controller, &account_pub_key, sub_side, sub_price, sub_qty)?;
+                    self.proc_order_init(bank_controller, account_pub_key, sub_side, sub_price, sub_qty)?;
                     // insert new order to map
                     self.order_to_account.insert(*order_id, *account_pub_key);
                 },
                 // subsequent orders are expected to be an PartialFill or Fill results
                 Ok(Success::PartiallyFilled{order_id, side, price, qty, ..}) => {
-                    let existing_pub_key: AccountPubKey = *self.order_to_account.get(&order_id).ok_or_else( || AccountError::Lookup("Failed to find account".to_string()))?;
+                    let existing_pub_key: AccountPubKey = *self.order_to_account.get(order_id).ok_or_else( || AccountError::Lookup("Failed to find account".to_string()))?;
                     self.proc_order_fill(bank_controller, &existing_pub_key, *side, *price, *qty)?;
                 },
                 Ok(Success::Filled{order_id, side, price, qty, ..}) => {
-                    let existing_pub_key: AccountPubKey = *self.order_to_account.get(&order_id).ok_or_else( || AccountError::Lookup("Failed to find account".to_string()))?;
+                    let existing_pub_key: AccountPubKey = *self.order_to_account.get(order_id).ok_or_else( || AccountError::Lookup("Failed to find account".to_string()))?;
                     self.proc_order_fill(bank_controller,   &existing_pub_key, *side, *price, *qty)?;
                     // erase existing order
-                    self.order_to_account.remove(&order_id).ok_or(AccountError::OrderProc("Failed to find order".to_string()))?;
+                    self.order_to_account.remove(order_id).ok_or(AccountError::OrderProc("Failed to find order".to_string()))?;
                 }
                 Ok(Success::Amended { .. }) => { panic!("This needs to be implemented...") }
                 Ok(Success::Cancelled { .. }) => { panic!("This needs to be implemented...") }
@@ -205,11 +205,11 @@ impl SpotController {
 
     pub fn create_orderbook(&mut self, base_asset_id: AssetId, quote_asset_id: AssetId) -> Result<(), AccountError> {
         let orderbook_lookup: AssetPairKey = self.get_orderbook_key(base_asset_id, quote_asset_id);
-        if self.orderbooks.contains_key(&orderbook_lookup) {
-            Err(AccountError::OrderBookCreation("Orderbook already edxists!".to_string()))
-        } else {
-            self.orderbooks.insert(orderbook_lookup, OrderbookInterface::new(base_asset_id, quote_asset_id));
+        if let std::collections::hash_map::Entry::Vacant(e) = self.orderbooks.entry(orderbook_lookup) {
+            e.insert(OrderbookInterface::new(base_asset_id, quote_asset_id));
             Ok(())
+        } else {
+            Err(AccountError::OrderBookCreation("Orderbook already edxists!".to_string()))
         }
     }
 

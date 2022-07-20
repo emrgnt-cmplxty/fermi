@@ -82,7 +82,7 @@ impl BankController
         };
 
         bank_account.set_balance(asset_id, (prev_amount + amount) as u64);
-        return Ok(())
+        Ok(())
     }
 
     pub fn transfer(&mut self, account_pub_key_from: &AccountPubKey, account_pub_key_to:  &AccountPubKey, asset_id: AssetId, amount: u64)  -> Result<(), AccountError> {
@@ -92,7 +92,7 @@ impl BankController
             return Err(AccountError::Payment("Insufficent balance".to_string()));
         };
 
-        if self.check_account_exists(&account_pub_key_to).is_err() {
+        if self.check_account_exists(account_pub_key_to).is_err() {
             if asset_id == 0 { self.create_account(account_pub_key_to)? } else { return Err(AccountError::Payment("First create account".to_string())) }
         }
 

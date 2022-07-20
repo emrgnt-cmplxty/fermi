@@ -124,9 +124,9 @@ impl<T> OrderQueue<T> {
 
     // use it when price was changed
     pub fn amend(&mut self, id: u64, price: u64, ts: time::SystemTime, order: T) -> bool {
-        if self.orders.contains_key(&id) {
+        if let std::collections::hash_map::Entry::Occupied(mut e) = self.orders.entry(id) {
             // store new order data
-            self.orders.insert(id, order);
+            e.insert(order);
             self.rebuild_idx(id, price, ts);
             true
         } else {
@@ -152,8 +152,8 @@ impl<T> OrderQueue<T> {
     /// Note: do not modify price or time, cause index doesn't change!
     pub fn modify_current_order(&mut self, new_order: T) -> bool {
         if let Some(order_id) = self.get_current_order_id() {
-            if self.orders.contains_key(&order_id) {
-                self.orders.insert(order_id, new_order);
+            if let std::collections::hash_map::Entry::Occupied(mut e) = self.orders.entry(order_id) {
+                e.insert(new_order);
                 return true;
             }
         }

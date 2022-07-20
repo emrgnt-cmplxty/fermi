@@ -185,7 +185,7 @@ mod tests {
         assert!(secondary_balance == SECONDARY_SEED_PAYMENT, "Unexpected balance after funding second validator");
 
         // stake second validator
-        let signed_txn: TxnRequest<TxnVariant> = stake_txn(secondary_pub_key, &secondary_validator.get_validator_private_key(), SECONDARY_SEED_PAYMENT).unwrap();
+        let signed_txn: TxnRequest<TxnVariant> = stake_txn(secondary_pub_key, secondary_validator.get_validator_private_key(), SECONDARY_SEED_PAYMENT).unwrap();
         route_transaction(&mut primary_validator, &signed_txn).unwrap();
         txns.push(signed_txn);
         let secondary_staked: u64 = primary_validator.stake_controller.get_staked(&secondary_validator.get_validator_pub_key()).unwrap();
@@ -201,7 +201,7 @@ mod tests {
 
         // begin third block - here a second asset will be made and an orderbook inistantiated
         let mut txns: Vec<TxnRequest<TxnVariant>> = Vec::new();
-        let signed_txn: TxnRequest<TxnVariant> = asset_creation_txn(secondary_pub_key, &secondary_validator.get_validator_private_key()).unwrap();
+        let signed_txn: TxnRequest<TxnVariant> = asset_creation_txn(secondary_pub_key, secondary_validator.get_validator_private_key()).unwrap();
         route_transaction(&mut primary_validator, &signed_txn).unwrap();
         txns.push(signed_txn);
 
@@ -209,13 +209,13 @@ mod tests {
         assert!(new_asset_balance == CREATED_ASSET_BALANCE, "Unexpected balance after second token genesis");
 
         // TODO - add order book logic here
-        let signed_txn: TxnRequest<TxnVariant> = orderbook_creation_txn(secondary_pub_key, &secondary_validator.get_validator_private_key(), PRIMARY_ASSET_ID, QUOTE_ASSET_ID).unwrap();
+        let signed_txn: TxnRequest<TxnVariant> = orderbook_creation_txn(secondary_pub_key, secondary_validator.get_validator_private_key(), PRIMARY_ASSET_ID, QUOTE_ASSET_ID).unwrap();
         route_transaction(&mut primary_validator, &signed_txn).unwrap();
         txns.push(signed_txn);
 
         let signed_txn: TxnRequest<TxnVariant> = order_transaction(
             primary_pub_key, 
-            &primary_validator.get_validator_private_key(), 
+            primary_validator.get_validator_private_key(), 
             PRIMARY_ASSET_ID, 
             QUOTE_ASSET_ID,
             OrderSide::Ask,

@@ -21,7 +21,7 @@ const N_ORDERS_BENCH: u64 = 1_024;
 const N_ACCOUNTS: u64 = 1_024;
 const TRANSFER_AMOUNT: u64 = 500_000_000;
 
-fn persist_result(db: &DBWithThreadMode<SingleThreaded>, proc_result: &OrderProcessingResult) -> () {
+fn persist_result(db: &DBWithThreadMode<SingleThreaded>, proc_result: &OrderProcessingResult) {
     for result in proc_result {
         match result {
             Ok(Success::Accepted { order_id, .. }) => {

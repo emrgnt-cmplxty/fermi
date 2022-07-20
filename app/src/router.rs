@@ -193,12 +193,12 @@ mod tests {
         let sender_pub_key: AccountPubKey = consensus_manager.get_validator_pub_key();
         let asset_id: u64 = 0;
         let send_amount: u64 = STAKE_TRANSACTION_AMOUNT+10;
-        let signed_txn: TxnRequest<TxnVariant> = payment_txn(sender_pub_key, &consensus_manager.get_validator_private_key(), receiver_pub_key, asset_id, send_amount).unwrap();
+        let signed_txn: TxnRequest<TxnVariant> = payment_txn(sender_pub_key, consensus_manager.get_validator_private_key(), receiver_pub_key, asset_id, send_amount).unwrap();
 
         route_transaction(&mut consensus_manager, &signed_txn).unwrap();
         assert!(consensus_manager.get_bank_controller().get_balance(&receiver_pub_key, asset_id).unwrap() == send_amount, "Unexpected balance after making payment");
 
-        let signed_txn: TxnRequest<TxnVariant> = asset_creation_txn(sender_pub_key, &consensus_manager.get_validator_private_key()).unwrap();
+        let signed_txn: TxnRequest<TxnVariant> = asset_creation_txn(sender_pub_key, consensus_manager.get_validator_private_key()).unwrap();
         route_transaction(&mut consensus_manager, &signed_txn).unwrap();
         let new_asset_id: u64 = 1;
         assert!(consensus_manager.get_bank_controller().get_balance(&sender_pub_key, new_asset_id).unwrap() == CREATED_ASSET_BALANCE, "Unexpected balance after token creation");

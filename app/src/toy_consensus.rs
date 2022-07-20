@@ -8,7 +8,6 @@ extern crate types;
 
 use super::router::{
     asset_creation_txn,
-    orderbook_creation_txn,
     route_transaction, 
     stake_txn,
 };
@@ -143,9 +142,9 @@ impl ConsensusManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use super::super::router::payment_txn;
-    use proc::{bank::{CREATED_ASSET_BALANCE, PRIMARY_ASSET_ID}};
-    use types::asset::AssetId;
+    use super::super::router::{orderbook_creation_txn, order_transaction, payment_txn};
+    use proc::bank::{CREATED_ASSET_BALANCE, PRIMARY_ASSET_ID};
+    use types::{asset::AssetId, orderbook::OrderSide};
     
     // specify the number of tokens sent to second validator
     const SECONDARY_SEED_PAYMENT: u64 = 100_000;
@@ -220,6 +219,17 @@ mod tests {
         route_transaction(&mut primary_validator, &signed_txn).unwrap();
         txns.push(signed_txn);
 
+        let signed_txn: TxnRequest<TxnVariant> = order_transaction(
+            primary_pub_key, 
+            &primary_validator.get_validator_private_key(), 
+            PRIMARY_ASSET_ID, 
+            QUOTE_ASSET_ID,
+            OrderSide::Ask,
+            10,
+            10,
+        ).unwrap();
+        route_transaction(&mut primary_validator, &signed_txn).unwrap();
+        txns.push(signed_txn);
         // TODO - play around w/ consensus to test it in more scenarios
     }
 }

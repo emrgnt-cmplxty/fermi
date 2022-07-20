@@ -235,16 +235,15 @@ impl SpotController {
 
     pub fn parse_limit_order_txn(
         &mut self, 
-        base_asset_id: AssetId,
-        quote_asset_id: AssetId,
         bank_controller: &mut BankController, 
         signed_txn: &TxnRequest<TxnVariant>,
     ) -> Result<OrderProcessingResult, AccountError> {
-        let orderbook: &mut OrderbookInterface = self.get_orderbook(base_asset_id, quote_asset_id)?;
         // verify transaction is an order
         if let TxnVariant::OrderTransaction(order) = &signed_txn.get_txn() {
             // verify and place a limit order
-            if let OrderRequest::NewLimitOrder{side, price, qty, ..} = order.get_order_request() {
+            if let OrderRequest::NewLimitOrder{side, price, qty, base_asset, quote_asset, ..} = order.get_order_request() {
+                let orderbook: &mut OrderbookInterface = self.get_orderbook(*base_asset, *quote_asset)?;
+
                 return orderbook.place_limit_order(bank_controller, &signed_txn.get_sender(), *side, *qty, *price)
             } else {
                 return Err(AccountError::OrderProc("Only limit orders supported".to_string()))

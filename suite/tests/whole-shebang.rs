@@ -68,7 +68,7 @@ mod tests {
             signed_hash 
         );
 
-        spot_controller.parse_limit_order_txn(base_asset_id, quote_asset_id, &mut bank_controller, &signed_txn).unwrap();
+        spot_controller.parse_limit_order_txn(&mut bank_controller, &signed_txn).unwrap();
         signed_txn.verify_transaction().unwrap();
 
         let mut txns: Vec<TxnRequest<TxnVariant>> = Vec::new();

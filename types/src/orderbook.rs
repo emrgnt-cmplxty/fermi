@@ -70,7 +70,7 @@ pub enum Success {
 
 #[derive(Debug)]
 pub enum Failed {
-    ValidationFailed(String),
+    Validation(String),
     DuplicateOrderID(u64),
     NoMatch(u64),
     OrderNotFound(u64),

@@ -66,9 +66,9 @@ impl MultiEd25519PrivateKey {
     ) -> std::result::Result<Self, CryptoMaterialError> {
         let num_of_keys = private_keys.len();
         if threshold == 0 || num_of_keys < threshold as usize {
-            Err(CryptoMaterialError::ValidationError)
+            Err(CryptoMaterialError::Validation)
         } else if num_of_keys > MAX_NUM_OF_KEYS {
-            Err(CryptoMaterialError::WrongLengthError)
+            Err(CryptoMaterialError::WrongLength)
         } else {
             Ok(MultiEd25519PrivateKey {
                 private_keys,
@@ -95,9 +95,9 @@ impl MultiEd25519PublicKey {
     ) -> std::result::Result<Self, CryptoMaterialError> {
         let num_of_keys = public_keys.len();
         if threshold == 0 || num_of_keys < threshold as usize {
-            Err(CryptoMaterialError::ValidationError)
+            Err(CryptoMaterialError::Validation)
         } else if num_of_keys > MAX_NUM_OF_KEYS {
-            Err(CryptoMaterialError::WrongLengthError)
+            Err(CryptoMaterialError::WrongLength)
         } else {
             Ok(MultiEd25519PublicKey {
                 public_keys,
@@ -208,7 +208,7 @@ impl TryFrom<&[u8]> for MultiEd25519PrivateKey {
     /// Deserialize an Ed25519PrivateKey. This method will also check for key and threshold validity.
     fn try_from(bytes: &[u8]) -> std::result::Result<MultiEd25519PrivateKey, CryptoMaterialError> {
         if bytes.is_empty() {
-            return Err(CryptoMaterialError::WrongLengthError);
+            return Err(CryptoMaterialError::WrongLength);
         }
         let threshold = check_and_get_threshold(bytes, ED25519_PRIVATE_KEY_LENGTH)?;
 
@@ -296,7 +296,7 @@ impl TryFrom<&[u8]> for MultiEd25519PublicKey {
     /// validity, and will only deserialize keys that are safe against small subgroup attacks.
     fn try_from(bytes: &[u8]) -> std::result::Result<MultiEd25519PublicKey, CryptoMaterialError> {
         if bytes.is_empty() {
-            return Err(CryptoMaterialError::WrongLengthError);
+            return Err(CryptoMaterialError::WrongLength);
         }
         let threshold = check_and_get_threshold(bytes, ED25519_PUBLIC_KEY_LENGTH)?;
         let public_keys: Result<Vec<Ed25519PublicKey>, _> = bytes
@@ -352,7 +352,7 @@ impl MultiEd25519Signature {
     ) -> std::result::Result<Self, CryptoMaterialError> {
         let num_of_sigs = signatures.len();
         if num_of_sigs == 0 || num_of_sigs > MAX_NUM_OF_KEYS {
-            return Err(CryptoMaterialError::ValidationError);
+            return Err(CryptoMaterialError::Validation);
         }
 
         let mut sorted_signatures = signatures;
@@ -367,14 +367,14 @@ impl MultiEd25519Signature {
             if i < MAX_NUM_OF_KEYS as u8 {
                 // if an index has been set already (thus, there is a duplicate).
                 if bitmap_get_bit(bitmap, i as usize) {
-                    return Err(CryptoMaterialError::BitVecError(
+                    return Err(CryptoMaterialError::BitVec(
                         "Duplicate signature index".to_string(),
                     ));
                 } else {
                     bitmap_set_bit(&mut bitmap, i as usize);
                 }
             } else {
-                return Err(CryptoMaterialError::BitVecError(
+                return Err(CryptoMaterialError::BitVec(
                     "Signature index is out of range".to_string(),
                 ));
             }
@@ -425,15 +425,15 @@ impl TryFrom<&[u8]> for MultiEd25519Signature {
             || num_of_sigs > MAX_NUM_OF_KEYS
             || bitmap_num_of_bytes != BITMAP_NUM_OF_BYTES
         {
-            return Err(CryptoMaterialError::WrongLengthError);
+            return Err(CryptoMaterialError::WrongLength);
         }
 
         let bitmap = match bytes[length - BITMAP_NUM_OF_BYTES..].try_into() {
             Ok(bitmap) => bitmap,
-            Err(_) => return Err(CryptoMaterialError::DeserializationError),
+            Err(_) => return Err(CryptoMaterialError::Deserialization),
         };
         if bitmap_count_ones(bitmap) != num_of_sigs as u32 {
-            return Err(CryptoMaterialError::DeserializationError);
+            return Err(CryptoMaterialError::Deserialization);
         }
 
         let signatures: Result<Vec<Ed25519Signature>, _> = bytes
@@ -489,7 +489,7 @@ impl Signature for MultiEd25519Signature {
         precondition!(has_tag!(public_key, ValidatedPublicKeyTag));
         let mut bytes = <T as CryptoHash>::Hasher::seed().to_vec();
         bcs::serialize_into(&mut bytes, &message)
-            .map_err(|_| CryptoMaterialError::SerializationError)?;
+            .map_err(|_| CryptoMaterialError::Serialization)?;
         Self::verify_arbitrary_msg(self, &bytes, public_key)
     }
 
@@ -508,14 +508,14 @@ impl Signature for MultiEd25519Signature {
             _ => {
                 return Err(anyhow!(
                     "{}",
-                    CryptoMaterialError::BitVecError("Signature index is out of range".to_string())
+                    CryptoMaterialError::BitVec("Signature index is out of range".to_string())
                 ))
             }
         };
         if bitmap_count_ones(self.bitmap) < public_key.threshold as u32 {
             return Err(anyhow!(
                 "{}",
-                CryptoMaterialError::BitVecError(
+                CryptoMaterialError::BitVec(
                     "Not enough signatures to meet the threshold".to_string()
                 )
             ));
@@ -568,16 +568,16 @@ fn check_and_get_threshold(
 ) -> std::result::Result<u8, CryptoMaterialError> {
     let payload_length = bytes.len();
     if bytes.is_empty() {
-        return Err(CryptoMaterialError::WrongLengthError);
+        return Err(CryptoMaterialError::WrongLength);
     }
     let threshold_num_of_bytes = payload_length % key_size;
     let num_of_keys = payload_length / key_size;
     let threshold_byte = bytes[bytes.len() - 1];
 
     if num_of_keys == 0 || num_of_keys > MAX_NUM_OF_KEYS || threshold_num_of_bytes != 1 {
-        Err(CryptoMaterialError::WrongLengthError)
+        Err(CryptoMaterialError::WrongLength)
     } else if threshold_byte == 0 || threshold_byte > num_of_keys as u8 {
-        Err(CryptoMaterialError::ValidationError)
+        Err(CryptoMaterialError::Validation)
     } else {
         Ok(threshold_byte)
     }

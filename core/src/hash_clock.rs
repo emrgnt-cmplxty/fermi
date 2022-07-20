@@ -36,6 +36,12 @@ impl HashClock {
     }
 }
 
+impl Default for HashClock {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

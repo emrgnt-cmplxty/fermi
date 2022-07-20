@@ -2,21 +2,82 @@
 //! transactions are the base unit fed into the blockchain
 //! to trigger state transitions
 //! 
-extern crate engine;
-
-use engine::orders::OrderRequest;
 use gdex_crypto::{Signature, hash::{CryptoHash, HashValue}};
 use gdex_crypto_derive::{BCSCryptoHash, CryptoHasher};
 use serde::{Deserialize, Serialize};
-use std::fmt::Debug;
+use std::{fmt::Debug, time::SystemTime};
 use types::{
     account::{AccountPubKey, AccountSignature},
     asset::AssetId,
+    orderbook::OrderSide,
     spot::DiemCryptoMessage,
 };
 
 #[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
-pub struct Payment 
+pub struct CreateAssetRequest 
+{
+}
+
+#[derive(CryptoHasher, BCSCryptoHash, Serialize, Deserialize, Clone, Copy, Debug)]
+pub enum OrderRequest
+{
+    Market {
+        base_asset: AssetId,
+        quote_asset: AssetId,
+        side: OrderSide,
+        qty: u64,
+        ts: SystemTime,
+    },
+
+    Limit {
+        base_asset: AssetId,
+        quote_asset: AssetId,
+        side: OrderSide,
+        price: u64,
+        qty: u64,
+        ts: SystemTime,
+    },
+
+    Amend {
+        id: u64,
+        side: OrderSide,
+        price: u64,
+        qty: u64,
+        ts: SystemTime,
+    },
+
+    CancelOrder {
+        id: u64,
+        side: OrderSide,
+        //ts: SystemTime,
+    },
+}
+
+#[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
+pub struct CreateOrderbookRequest 
+{
+    base_asset_id: AssetId,
+    quote_asset_id: AssetId,
+}
+impl CreateOrderbookRequest {
+    pub fn new(base_asset_id: AssetId, quote_asset_id: AssetId) -> Self {
+        CreateOrderbookRequest {
+            base_asset_id,
+            quote_asset_id,
+        }
+    }
+
+    pub fn get_base_asset_id(&self) -> AssetId {
+        self.base_asset_id
+    }
+
+    pub fn get_quote_asset_id(&self) -> AssetId {
+        self.quote_asset_id
+    }
+}
+
+#[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
+pub struct PaymentRequest 
 {
     // storing from here is not redundant as from may not equal sender
     // e.g. we are preserving the possibility of adding re-key functionality
@@ -25,9 +86,9 @@ pub struct Payment
     asset_id: AssetId,
     amount: u64,
 }
-impl Payment {
+impl PaymentRequest {
     pub fn new(from: AccountPubKey, to: AccountPubKey, asset_id: AssetId, amount: u64) -> Self {
-        Payment {
+        PaymentRequest {
             from,
             to,
             asset_id,
@@ -51,37 +112,16 @@ impl Payment {
         self.amount
     }
 }
-#[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
-pub struct CreateAsset 
-{
-}
 
 #[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
-pub struct Order 
-{
-    order_request: OrderRequest,
-}
-impl Order {
-    pub fn new(order_request: OrderRequest) -> Self {
-        Order {
-            order_request,
-        }
-    }
-
-    pub fn get_order_request(&self) -> &OrderRequest {
-        &self.order_request
-    }
-}
-
-#[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
-pub struct Stake 
+pub struct StakeRequest 
 {
     from: AccountPubKey,
     amount: u64,
 }
-impl Stake {
+impl StakeRequest {
     pub fn new(from: AccountPubKey, amount: u64) -> Self {
-        Stake {
+        StakeRequest {
             from,
             amount
         }
@@ -97,35 +137,12 @@ impl Stake {
 }
 
 #[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
-pub struct CreateOrderBook 
-{
-    base_asset_id: AssetId,
-    quote_asset_id: AssetId,
-}
-impl CreateOrderBook {
-    pub fn new(base_asset_id: AssetId, quote_asset_id: AssetId) -> Self {
-        CreateOrderBook {
-            base_asset_id,
-            quote_asset_id,
-        }
-    }
-
-    pub fn get_base_asset_id(&self) -> AssetId {
-        self.base_asset_id
-    }
-
-    pub fn get_quote_asset_id(&self) -> AssetId {
-        self.quote_asset_id
-    }
-}
-
-#[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
 pub enum TxnVariant {
-    PaymentTransaction(Payment),
-    CreateOrderbookTransaction(CreateOrderBook),
-    CreateAssetTransaction(CreateAsset),
-    OrderTransaction(Order),
-    StakeAssetTransaction(Stake),
+    PaymentTransaction(PaymentRequest),
+    CreateOrderbookTransaction(CreateOrderbookRequest),
+    CreateAssetTransaction(CreateAssetRequest),
+    OrderTransaction(OrderRequest),
+    StakeAsset(StakeRequest),
 }
 
 #[derive(Clone)]
@@ -168,8 +185,7 @@ where
 }
 
 #[cfg(feature = "batch")]
-pub fn verify_transaction_batch(txn_requests: &Vec<TxnRequest<TxnVariant>>) -> Result<(), gdex_crypto::error::Error>  {
-
+pub fn verify_transaction_batch(txn_requests: &[TxnRequest<TxnVariant>]) -> Result<(), gdex_crypto::error::Error>  {
     let mut messages: Vec<DiemCryptoMessage> = Vec::new();
     let mut keys_and_signatures: Vec<(AccountPubKey, AccountSignature)> = Vec::new();
 

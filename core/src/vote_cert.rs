@@ -80,16 +80,16 @@ impl VoteCert {
         // verify validator signed this block with submitted response
         match validator_signature.verify(vote_msg, &valdator_pub_key) {
             Ok(()) => { 
-                if self.votes.contains_key(&valdator_pub_key) {
-                    Err(AccountError::Vote("Vote already exists!".to_string()))
-                } else {
-                    self.votes.insert(valdator_pub_key, Vote {vote_response, stake, validator_signature});
+                if let std::collections::hash_map::Entry::Vacant(e) = self.votes.entry(valdator_pub_key) {
+                    e.insert(Vote {vote_response, stake, validator_signature});
                     self.total_voted += stake;
-                    self.total_votes_for += if vote_response == true { stake } else { 0 };
+                    self.total_votes_for += if vote_response { stake } else { 0 };
                     Ok(())
+                } else {
+                    Err(AccountError::Vote("Vote already exists!".to_string()))
                 }
             },
-            Err(_) => { return Err(AccountError::Vote("Failed to verify signature".to_string())); }
+            Err(_) => { Err(AccountError::Vote("Failed to verify signature".to_string())) }
         }
     }
     

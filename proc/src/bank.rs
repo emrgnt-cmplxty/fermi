@@ -38,7 +38,7 @@ impl BankController
     }
     pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), AccountError> {
         // do not allow double-creation of a single account
-        if self.bank_accounts.contains_key(&account_pub_key) {
+        if self.bank_accounts.contains_key(account_pub_key) {
             Err(AccountError::Creation("Account already exists!".to_string()))
         } else {
             self.bank_accounts.insert(*account_pub_key, BankAccount::new(*account_pub_key));
@@ -47,12 +47,14 @@ impl BankController
     }
 
     pub fn check_account_exists(&self, account_pub_key: &AccountPubKey) -> Result<(), AccountError> {
-        self.bank_accounts.get(account_pub_key).ok_or(AccountError::Lookup("Failed to find account".to_string()))?;
+        self.bank_accounts.get(account_pub_key).ok_or_else(|| AccountError::Lookup("Failed to find account".to_string()))?;
         Ok(())
     }
     // TODO #0  //
     pub fn create_asset(&mut self, owner_pub_key: &AccountPubKey) -> Result<u64, AccountError> {
         // special handling for genesis
+        // an account must be created in this instance
+        // since account creation is gated by receipt and balance of primary blockchain asset
         if self.n_assets == 0 {
             self.create_account(owner_pub_key)?
         }
@@ -67,35 +69,41 @@ impl BankController
     }
 
     pub fn get_balance(&self, account_pub_key: &AccountPubKey, asset_id: AssetId) -> Result<u64, AccountError> {
-        let bank_account: &BankAccount = self.bank_accounts.get(account_pub_key).ok_or(AccountError::Lookup("Failed to find account".to_string()))?;
+        let bank_account: &BankAccount = self.bank_accounts.get(account_pub_key).ok_or_else(|| AccountError::Lookup("Failed to find account".to_string()))?;
         Ok(*bank_account.get_balances().get(&asset_id).unwrap_or(&0))
     }
 
     pub fn update_balance(&mut self, account_pub_key: &AccountPubKey, asset_id: AssetId, amount: i64) -> Result<(), AccountError> {
-        let bank_account: &mut BankAccount = self.bank_accounts.get_mut(account_pub_key).ok_or(AccountError::Lookup("Failed to find account".to_string()))?;
+        let bank_account: &mut BankAccount = self.bank_accounts.get_mut(account_pub_key).ok_or_else(|| AccountError::Lookup("Failed to find account".to_string()))?;
         let prev_amount: i64 = *bank_account.get_balances().get(&asset_id).unwrap_or(&0) as i64;
         // return error if insufficient user balance
         if (prev_amount + amount) < 0  {
-            return Err(AccountError::Payment("Insufficent balance".to_string()));
+            return Err(AccountError::PaymentRequest("Insufficent balance".to_string()));
         };
 
         bank_account.set_balance(asset_id, (prev_amount + amount) as u64);
-        return Ok(())
+        Ok(())
     }
 
     pub fn transfer(&mut self, account_pub_key_from: &AccountPubKey, account_pub_key_to:  &AccountPubKey, asset_id: AssetId, amount: u64)  -> Result<(), AccountError> {
         // return error if insufficient user balance
         let balance = self.get_balance(account_pub_key_from, asset_id)?;
         if balance < amount {
-            return Err(AccountError::Payment("Insufficent balance".to_string()));
+            return Err(AccountError::PaymentRequest("Insufficent balance".to_string()));
         };
 
-        if self.check_account_exists(&account_pub_key_to).is_err() {
-            if asset_id == 0 { self.create_account(account_pub_key_to)? } else { return Err(AccountError::Payment("First create account".to_string())) }
+        if self.check_account_exists(account_pub_key_to).is_err() {
+            if asset_id == 0 { self.create_account(account_pub_key_to)? } else { return Err(AccountError::PaymentRequest("First create account".to_string())) }
         }
 
         self.update_balance(account_pub_key_from, asset_id, -(amount as i64))?;
         self.update_balance(account_pub_key_to, asset_id, amount as i64)?;
         Ok(())
+    }
+}
+
+impl Default for BankController {
+    fn default() -> Self {
+        Self::new()
     }
 }

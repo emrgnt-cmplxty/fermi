@@ -15,19 +15,23 @@ struct OrderIndex {
 // Arrange at first by price and after that by time
 impl Ord for OrderIndex {
     fn cmp(&self, other: &Self) -> Ordering {
-        if self.price < other.price {
-            match self.order_side {
-                OrderSide::Bid => Ordering::Less,
-                OrderSide::Ask => Ordering::Greater,
+        match self.price {
+            x if x < other.price => {
+                match self.order_side {
+                    OrderSide::Bid => Ordering::Less,
+                    OrderSide::Ask => Ordering::Greater,
+                }
+            } 
+            x if x > other.price => {
+                match self.order_side {
+                    OrderSide::Bid => Ordering::Greater,
+                    OrderSide::Ask => Ordering::Less,
+                }
+            } 
+            _ => {
+                // FIFO
+                other.timestamp.cmp(&self.timestamp)
             }
-        } else if self.price > other.price {
-            match self.order_side {
-                OrderSide::Bid => Ordering::Greater,
-                OrderSide::Ask => Ordering::Less,
-            }
-        } else {
-            // FIFO
-            other.timestamp.cmp(&self.timestamp)
         }
     }
 }
@@ -40,7 +44,7 @@ impl PartialOrd for OrderIndex {
 
 impl PartialEq for OrderIndex {
     fn eq(&self, other: &Self) -> bool {
-        if self.price > other.price || self.price < other.price {
+        if self.price != other.price {
             false
         } else {
             self.timestamp == other.timestamp
@@ -124,9 +128,9 @@ impl<T> OrderQueue<T> {
 
     // use it when price was changed
     pub fn amend(&mut self, id: u64, price: u64, ts: time::SystemTime, order: T) -> bool {
-        if self.orders.contains_key(&id) {
+        if let std::collections::hash_map::Entry::Occupied(mut e) = self.orders.entry(id) {
             // store new order data
-            self.orders.insert(id, order);
+            e.insert(order);
             self.rebuild_idx(id, price, ts);
             true
         } else {
@@ -145,23 +149,20 @@ impl<T> OrderQueue<T> {
         }
     }
 
-
     /* Internal methods */
-
 
     /// Used internally when current order is partially matched.
     ///
     /// Note: do not modify price or time, cause index doesn't change!
     pub fn modify_current_order(&mut self, new_order: T) -> bool {
         if let Some(order_id) = self.get_current_order_id() {
-            if self.orders.contains_key(&order_id) {
-                self.orders.insert(order_id, new_order);
+            if let std::collections::hash_map::Entry::Occupied(mut e) = self.orders.entry(order_id) {
+                e.insert(new_order);
                 return true;
             }
         }
         false
     }
-
 
     /// Verify if queue should be cleaned
     fn clean_check(&mut self) {
@@ -173,7 +174,6 @@ impl<T> OrderQueue<T> {
         }
     }
 
-
     /// Remove dangling indices without orders from queue
     fn remove_stalled(&mut self) {
         if let Some(idx_queue) = self.idx_queue.take() {
@@ -182,7 +182,6 @@ impl<T> OrderQueue<T> {
             self.idx_queue = Some(BinaryHeap::from(active_orders));
         }
     }
-
 
     /// Recreate order-index queue with changed index info
     fn rebuild_idx(&mut self, id: u64, price: u64, ts: time::SystemTime) {
@@ -204,7 +203,6 @@ impl<T> OrderQueue<T> {
         }
     }
 
-
     /// Return ID of current order in queue
     fn get_current_order_id(&self) -> Option<u64> {
         let order_id = self.idx_queue.as_ref()?.peek()?;
@@ -222,11 +220,9 @@ mod test {
         pub name: &'static str,
     }
 
-
     fn get_queue_empty(side: OrderSide) -> OrderQueue<TestOrder> {
         OrderQueue::new(side, 5, 10)
     }
-
 
     fn get_queue_bids() -> OrderQueue<TestOrder> {
         let mut bid_queue = get_queue_empty(OrderSide::Bid);
@@ -255,7 +251,6 @@ mod test {
         bid_queue
     }
 
-
     fn get_queue_asks() -> OrderQueue<TestOrder> {
         let mut ask_queue = get_queue_empty(OrderSide::Ask);
         assert!(ask_queue.insert(
@@ -281,7 +276,6 @@ mod test {
         ask_queue
     }
 
-
     #[test]
     fn queue_operations_insert_unique() {
         let mut bid_queue = get_queue_empty(OrderSide::Bid);
@@ -303,7 +297,6 @@ mod test {
             TestOrder { name: "another first bid" },
         ));
     }
-
 
     #[test]
     fn queue_operations_ordering_bid() {
@@ -339,7 +332,6 @@ mod test {
         assert_eq!(bid_queue.pop().unwrap().name, "low bid");
     }
 
-
     #[test]
     fn queue_operations_amend() {
         let mut ask_queue = get_queue_asks();
@@ -370,7 +362,6 @@ mod test {
         assert_eq!(ask_queue.pop().unwrap().name, "new last");
     }
 
-
     #[test]
     fn queue_operations_cancel_order1() {
         let mut bid_queue = get_queue_bids();
@@ -380,7 +371,6 @@ mod test {
         assert_eq!(bid_queue.pop().unwrap().name, "high bid second");
         assert_eq!(bid_queue.pop().unwrap().name, "low bid");
     }
-
 
     #[test]
     fn queue_operations_cancel_order2() {

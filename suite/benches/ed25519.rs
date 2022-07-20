@@ -25,7 +25,7 @@ fn basic_sig_verify(
         for x in 0..messages_per_account {
             let sig = &sigs[((i * messages_per_account) + x) as usize];
             let msg = &possible_messages[x as usize];
-            sig.verify(msg, &public_key).unwrap();
+            sig.verify(msg, public_key).unwrap();
         }
     }
 }

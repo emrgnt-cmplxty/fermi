@@ -25,21 +25,21 @@ use thiserror::Error;
 #[error("{:?}", self)]
 pub enum CryptoMaterialError {
     /// Struct to be signed does not serialize correctly.
-    SerializationError,
+    Serialization,
     /// Key or signature material does not deserialize correctly.
-    DeserializationError,
+    Deserialization,
     /// Key or signature material deserializes, but is otherwise not valid.
-    ValidationError,
+    Validation,
     /// Key, threshold or signature material does not have the expected size.
-    WrongLengthError,
+    WrongLength,
     /// Part of the signature or key is not canonical resulting to malleability issues.
-    CanonicalRepresentationError,
+    CanonicalRepresentation,
     /// A curve point (i.e., a public key) lies on a small group.
-    SmallSubgroupError,
+    SmallSubgroup,
     /// A curve point (i.e., a public key) does not satisfy the curve equation.
-    PointNotOnCurveError,
+    PointNotOnCurve,
     /// BitVec errors in accountable multi-sig schemes.
-    BitVecError(String),
+    BitVec(String),
 }
 
 /// The serialized length of the data that enables macro derived serialization and deserialization.
@@ -78,7 +78,7 @@ pub trait ValidCryptoMaterialStringExt: ValidCryptoMaterial {
         // We defer to `try_from` to make sure we only produce valid crypto materials.
         bytes_out
             // We reinterpret a failure to serialize: key is mangled someway.
-            .or(Err(CryptoMaterialError::DeserializationError))
+            .or(Err(CryptoMaterialError::Deserialization))
             .and_then(|ref bytes| Self::try_from(bytes))
     }
     /// A function to encode into hex-string after serializing.
@@ -260,7 +260,7 @@ pub trait Signature:
     /// that by default iterates over each signature. More efficient
     /// implementations exist and should be implemented for many schemes.
     fn batch_verify_distinct<T: CryptoHash + Serialize>(
-        messages: &Vec<T>,
+        messages: &[T],
         keys_and_signatures: Vec<(Self::VerifyingKeyMaterial, Self)>,
     ) -> Result<()> {
         for (key, signature) in keys_and_signatures {

@@ -1,51 +1,9 @@
-use serde::{Deserialize, Serialize};
+extern crate core;
+use types::{asset::AssetId, orderbook::OrderSide};
+use core::transaction::OrderRequest;
 use std::time::SystemTime;
-use std::fmt::Debug;
-
-use gdex_crypto_derive::{BCSCryptoHash, CryptoHasher};
-use types::{
-    asset::{AssetId},
-    orderbook::{OrderSide}
-};
-
-#[derive(CryptoHasher, BCSCryptoHash, Serialize, Deserialize, Clone, Copy, Debug)]
-pub enum OrderRequest
-{
-    NewMarketOrder {
-        base_asset: AssetId,
-        quote_asset: AssetId,
-        side: OrderSide,
-        qty: u64,
-        ts: SystemTime,
-    },
-
-    NewLimitOrder {
-        base_asset: AssetId,
-        quote_asset: AssetId,
-        side: OrderSide,
-        price: u64,
-        qty: u64,
-        ts: SystemTime,
-    },
-
-    AmendOrder {
-        id: u64,
-        side: OrderSide,
-        price: u64,
-        qty: u64,
-        ts: SystemTime,
-    },
-
-    CancelOrder {
-        id: u64,
-        side: OrderSide,
-        //ts: SystemTime,
-    },
-}
-
 
 /* Constructors */
-
 
 /// Create request for the new market order
 pub fn new_market_order_request(
@@ -56,8 +14,7 @@ pub fn new_market_order_request(
     ts: SystemTime,
 ) -> OrderRequest
 {
-
-    OrderRequest::NewMarketOrder {
+    OrderRequest::Market {
         base_asset,
         quote_asset,
         qty,
@@ -78,7 +35,7 @@ pub fn new_limit_order_request(
 ) -> OrderRequest
 {
 
-    OrderRequest::NewLimitOrder {
+    OrderRequest::Limit {
         base_asset,
         quote_asset,
         side,
@@ -102,7 +59,7 @@ pub fn amend_order_request(
 ) -> OrderRequest
 {
 
-    OrderRequest::AmendOrder {
+    OrderRequest::Amend {
         id,
         side,
         price,

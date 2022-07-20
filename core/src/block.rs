@@ -1,7 +1,7 @@
-//! 
-//! the block contains a list of transactions as well 
+//!
+//! the block contains a list of transactions as well
 //! as a associated metadata which relates to consensus
-//! 
+//!
 //! TODO
 //! 0.) RELOCATE APPROPRIATE TESTS FROM SUITE/CORE TO HERE
 //!
@@ -10,22 +10,22 @@ use super::vote_cert::VoteCert;
 use gdex_crypto::hash::{CryptoHash, HashValue};
 use std::fmt::Debug;
 use types::{
-    account::{AccountPubKey, AccountError},
+    account::{AccountError, AccountPubKey},
     spot::DiemCryptoMessage,
 };
 
-pub struct BlockContainer <Variant>
-    where Variant : Debug + Clone + CryptoHash + Copy
+pub struct BlockContainer<Variant>
+where
+    Variant: Debug + Clone + CryptoHash + Copy,
 {
     blocks: Vec<Block<Variant>>,
 }
-impl <Variant> BlockContainer <Variant> 
-    where Variant : Debug + Clone + CryptoHash + Copy
+impl<Variant> BlockContainer<Variant>
+where
+    Variant: Debug + Clone + CryptoHash + Copy,
 {
     pub fn new() -> Self {
-        BlockContainer {
-            blocks: Vec::new(),
-        }
+        BlockContainer { blocks: Vec::new() }
     }
 
     pub fn get_blocks(&self) -> &Vec<Block<Variant>> {
@@ -36,31 +36,33 @@ impl <Variant> BlockContainer <Variant>
         self.blocks.push(block);
     }
 }
-pub struct Block <Variant>
-    where Variant : Debug + Clone + CryptoHash + Copy
+pub struct Block<Variant>
+where
+    Variant: Debug + Clone + CryptoHash + Copy,
 {
     txns: Vec<TxnRequest<Variant>>,
     proposer: AccountPubKey,
     block_hash: HashValue,
     clock_hash: HashValue,
-    vote_cert: VoteCert
+    vote_cert: VoteCert,
 }
-impl <Variant> Block <Variant> 
-    where Variant : Debug + Clone + CryptoHash + Copy
+impl<Variant> Block<Variant>
+where
+    Variant: Debug + Clone + CryptoHash + Copy,
 {
     pub fn new(
-        txns: Vec<TxnRequest<Variant>>, 
-        proposer: AccountPubKey, 
-        block_hash: HashValue, 
+        txns: Vec<TxnRequest<Variant>>,
+        proposer: AccountPubKey,
+        block_hash: HashValue,
         clock_hash: HashValue,
-        vote_cert: VoteCert
+        vote_cert: VoteCert,
     ) -> Self {
         Block {
             txns,
             proposer,
             block_hash,
             clock_hash,
-            vote_cert
+            vote_cert,
         }
     }
 
@@ -93,14 +95,15 @@ impl <Variant> Block <Variant>
     }
 }
 
-impl<Variant> Default for BlockContainer <Variant> 
-    where Variant : Debug + Clone + CryptoHash + Copy
+impl<Variant> Default for BlockContainer<Variant>
+where
+    Variant: Debug + Clone + CryptoHash + Copy,
 {
     fn default() -> Self {
         Self::new()
     }
 }
-    
+
 // generate a unique block hash by appending all the hashes transactions inside the block
 pub fn generate_block_hash(txns: &Vec<TxnRequest<TxnVariant>>) -> HashValue {
     let mut hash_string = String::from("");

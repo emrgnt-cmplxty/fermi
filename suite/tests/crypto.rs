@@ -1,4 +1,3 @@
-
 #[cfg(test)]
 mod tests {
     use gdex_crypto::{
@@ -9,15 +8,15 @@ mod tests {
     use gdex_crypto_derive::{BCSCryptoHash, CryptoHasher};
     use rand::{prelude::ThreadRng, thread_rng};
     use serde::{Deserialize, Serialize};
-    use types::spot::{DiemCryptoMessage};
-    
+    use types::spot::DiemCryptoMessage;
+
     // make a new struct for an order that we have to hash
     #[derive(Serialize, Deserialize, CryptoHasher, BCSCryptoHash)]
     struct Order {
         quantity: i32,
         side: String,
     }
-    
+
     // testing basic verification
     #[test]
     fn test_basic_verification() {

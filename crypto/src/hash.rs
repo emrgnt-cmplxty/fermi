@@ -226,9 +226,7 @@ impl HashValue {
     }
 
     /// Constructs a `HashValue` from an iterator of bits.
-    pub fn from_bit_iter(
-        iter: impl ExactSizeIterator<Item = bool>,
-    ) -> Result<Self, HashValueParseError> {
+    pub fn from_bit_iter(iter: impl ExactSizeIterator<Item = bool>) -> Result<Self, HashValueParseError> {
         if iter.len() != Self::LENGTH_IN_BITS {
             return Err(HashValueParseError);
         }
@@ -286,8 +284,7 @@ impl ser::Serialize for HashValue {
             // In order to preserve the Serde data model and help analysis tools,
             // make sure to wrap our value in a container with the same name
             // as the original type.
-            serializer
-                .serialize_newtype_struct("HashValue", serde_bytes::Bytes::new(&self.hash[..]))
+            serializer.serialize_newtype_struct("HashValue", serde_bytes::Bytes::new(&self.hash[..]))
         }
     }
 }
@@ -299,8 +296,7 @@ impl<'de> de::Deserialize<'de> for HashValue {
     {
         if deserializer.is_human_readable() {
             let encoded_hash = <String>::deserialize(deserializer)?;
-            HashValue::from_hex(encoded_hash.as_str())
-                .map_err(<D::Error as ::serde::de::Error>::custom)
+            HashValue::from_hex(encoded_hash.as_str()).map_err(<D::Error as ::serde::de::Error>::custom)
         } else {
             // See comment in serialize.
             #[derive(::serde::Deserialize)]
@@ -640,17 +636,15 @@ pub static SPARSE_MERKLE_PLACEHOLDER_HASH: Lazy<HashValue> =
     Lazy::new(|| create_literal_hash("SPARSE_MERKLE_PLACEHOLDER_HASH"));
 
 /// Block id reserved as the id of parent block of the genesis block.
-pub static PRE_GENESIS_BLOCK_ID: Lazy<HashValue> =
-    Lazy::new(|| create_literal_hash("PRE_GENESIS_BLOCK_ID"));
+pub static PRE_GENESIS_BLOCK_ID: Lazy<HashValue> = Lazy::new(|| create_literal_hash("PRE_GENESIS_BLOCK_ID"));
 
 /// Genesis block id is used as a parent of the very first block executed by the executor.
 pub static GENESIS_BLOCK_ID: Lazy<HashValue> = Lazy::new(|| {
     // This maintains the invariant that block.id() == block.hash(), for
     // the genesis block and allows us to (de/)serialize it consistently
     HashValue::new([
-        0x5e, 0x10, 0xba, 0xd4, 0x5b, 0x35, 0xed, 0x92, 0x9c, 0xd6, 0xd2, 0xc7, 0x09, 0x8b, 0x13,
-        0x5d, 0x02, 0xdd, 0x25, 0x9a, 0xe8, 0x8a, 0x8d, 0x09, 0xf4, 0xeb, 0x5f, 0xba, 0xe9, 0xa6,
-        0xf6, 0xe4,
+        0x5e, 0x10, 0xba, 0xd4, 0x5b, 0x35, 0xed, 0x92, 0x9c, 0xd6, 0xd2, 0xc7, 0x09, 0x8b, 0x13, 0x5d, 0x02, 0xdd,
+        0x25, 0x9a, 0xe8, 0x8a, 0x8d, 0x09, 0xf4, 0xeb, 0x5f, 0xba, 0xe9, 0xa6, 0xf6, 0xe4,
     ])
 });
 

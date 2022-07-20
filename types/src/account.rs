@@ -1,6 +1,4 @@
-use gdex_crypto::{
-    ed25519::{Ed25519PublicKey, Ed25519PrivateKey, Ed25519Signature},
-};
+use gdex_crypto::ed25519::{Ed25519PrivateKey, Ed25519PublicKey, Ed25519Signature};
 
 pub type AccountPubKey = Ed25519PublicKey;
 pub type AccountPrivKey = Ed25519PrivateKey;

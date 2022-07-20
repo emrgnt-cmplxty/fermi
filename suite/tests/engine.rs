@@ -1,13 +1,9 @@
-
 #[cfg(test)]
 mod tests {
     extern crate engine;
     extern crate types;
 
-    use engine::{
-        orderbook::Orderbook,
-        orders
-    };
+    use engine::{orderbook::Orderbook, orders};
     use std::time::SystemTime;
     use types::orderbook::{Failed, OrderSide, Success};
 
@@ -18,13 +14,8 @@ mod tests {
     fn market_order_on_empty_orderbook() {
         let mut orderbook = Orderbook::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
 
-        let order1 = orders::new_market_order_request(
-            BASE_ASSET_ID,
-            QUOTE_ASSET_ID,
-            OrderSide::Bid,
-            2,
-            SystemTime::now(),
-        );
+        let order1 =
+            orders::new_market_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Bid, 2, SystemTime::now());
 
         // process market order
         let res = orderbook.process_order(order1);
@@ -32,37 +23,23 @@ mod tests {
         if !match res[0] {
             Ok(Success::Accepted { order_id: 1, .. }) => true,
             _ => false,
-        } ||
-            !match res[1] {
-                Err(Failed::NoMatch(1)) => true,
-                _ => false,
-            }
-        {
+        } || !match res[1] {
+            Err(Failed::NoMatch(1)) => true,
+            _ => false,
+        } {
             panic!("unexpected event sequence: {:?}", res)
         }
     }
-
 
     #[test]
     fn market_order_partial_match() {
         let mut orderbook = Orderbook::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
 
-        let order1 = orders::new_limit_order_request(
-            BASE_ASSET_ID,
-            QUOTE_ASSET_ID,
-            OrderSide::Bid,
-            10,
-            2,
-            SystemTime::now(),
-        );
+        let order1 =
+            orders::new_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Bid, 10, 2, SystemTime::now());
 
-        let order2 = orders::new_market_order_request(
-            BASE_ASSET_ID,
-            QUOTE_ASSET_ID,
-            OrderSide::Ask,
-            1,
-            SystemTime::now(),
-        );
+        let order2 =
+            orders::new_market_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Ask, 1, SystemTime::now());
 
         orderbook.process_order(order1);
         let res = orderbook.process_order(order2);
@@ -70,60 +47,39 @@ mod tests {
         if !match res[0] {
             Ok(Success::Accepted { order_id: 2, .. }) => true,
             _ => false,
-        } ||
-            !match res[1] {
-                Ok(Success::Filled {
-                       order_id: 2,
-                       price,
-                       qty,
-                       ..
-                   }) if price == 10 && qty == 1 => true,
-                _ => false,
-            } ||
-            !match res[2] {
-                Ok(Success::PartiallyFilled {
-                       order_id: 1,
-                       price,
-                       qty,
-                       ..
-                   }) if price == 10 && qty == 1 => true,
-                _ => false,
-            }
-        {
+        } || !match res[1] {
+            Ok(Success::Filled {
+                order_id: 2,
+                price,
+                qty,
+                ..
+            }) if price == 10 && qty == 1 => true,
+            _ => false,
+        } || !match res[2] {
+            Ok(Success::PartiallyFilled {
+                order_id: 1,
+                price,
+                qty,
+                ..
+            }) if price == 10 && qty == 1 => true,
+            _ => false,
+        } {
             panic!("unexpected event sequence: {:?}", res)
         }
     }
-
 
     #[test]
     fn market_order_two_orders_match() {
         let mut orderbook = Orderbook::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
 
-        let order1 = orders::new_limit_order_request(
-            BASE_ASSET_ID,
-            QUOTE_ASSET_ID,
-            OrderSide::Bid,
-            10,
-            10,
-            SystemTime::now(),
-        );
+        let order1 =
+            orders::new_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Bid, 10, 10, SystemTime::now());
 
-        let order2 = orders::new_limit_order_request(
-            BASE_ASSET_ID,
-            QUOTE_ASSET_ID,
-            OrderSide::Bid,
-            12,
-            10,
-            SystemTime::now(),
-        );
+        let order2 =
+            orders::new_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Bid, 12, 10, SystemTime::now());
 
-        let order3 = orders::new_market_order_request(
-            BASE_ASSET_ID,
-            QUOTE_ASSET_ID,
-            OrderSide::Ask,
-            15,
-            SystemTime::now(),
-        );
+        let order3 =
+            orders::new_market_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Ask, 15, SystemTime::now());
 
         orderbook.process_order(order1);
         orderbook.process_order(order2);
@@ -132,48 +88,42 @@ mod tests {
         if !match res[0] {
             Ok(Success::Accepted { order_id: 3, .. }) => true,
             _ => false,
-        } ||
-            !match res[1] {
-                Ok(Success::PartiallyFilled {
-                       order_id: 3,
-                       price,
-                       qty,
-                       ..
-                   }) if price == 12 && qty == 10 => true,
-                _ => false,
-            } ||
-            !match res[2] {
-                Ok(Success::Filled {
-                       order_id: 2,
-                       price,
-                       qty,
-                       ..
-                   }) if price == 12 && qty == 10 => true,
-                _ => false,
-            } ||
-            !match res[3] {
-                Ok(Success::Filled {
-                       order_id: 3,
-                       price,
-                       qty,
-                       ..
-                   }) if price == 10 && qty == 5 => true,
-                _ => false,
-            } ||
-            !match res[4] {
-                Ok(Success::PartiallyFilled {
-                       order_id: 1,
-                       price,
-                       qty,
-                       ..
-                   }) if price == 10 && qty == 5 => true,
-                _ => false,
-            }
-        {
+        } || !match res[1] {
+            Ok(Success::PartiallyFilled {
+                order_id: 3,
+                price,
+                qty,
+                ..
+            }) if price == 12 && qty == 10 => true,
+            _ => false,
+        } || !match res[2] {
+            Ok(Success::Filled {
+                order_id: 2,
+                price,
+                qty,
+                ..
+            }) if price == 12 && qty == 10 => true,
+            _ => false,
+        } || !match res[3] {
+            Ok(Success::Filled {
+                order_id: 3,
+                price,
+                qty,
+                ..
+            }) if price == 10 && qty == 5 => true,
+            _ => false,
+        } || !match res[4] {
+            Ok(Success::PartiallyFilled {
+                order_id: 1,
+                price,
+                qty,
+                ..
+            }) if price == 10 && qty == 5 => true,
+            _ => false,
+        } {
             panic!("unexpected event sequence: {:?}", res)
         }
     }
-
 
     #[test]
     fn limit_order_on_empty_orderbook() {
@@ -194,12 +144,10 @@ mod tests {
         if !match res[0] {
             Ok(Success::Accepted { order_id: 1, .. }) => true,
             _ => false,
-        }
-        {
+        } {
             panic!("unexpected event sequence: {:?}", res)
         }
     }
-
 
     #[test]
     fn limit_order_partial_match() {
@@ -214,14 +162,8 @@ mod tests {
             SystemTime::now(),
         );
 
-        let order2 = orders::new_limit_order_request(
-            BASE_ASSET_ID,
-            QUOTE_ASSET_ID,
-            OrderSide::Ask,
-            90,
-            50,
-            SystemTime::now(),
-        );
+        let order2 =
+            orders::new_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Ask, 90, 50, SystemTime::now());
 
         orderbook.process_order(order1);
         let res = orderbook.process_order(order2);
@@ -229,30 +171,26 @@ mod tests {
         if !match res[0] {
             Ok(Success::Accepted { order_id: 2, .. }) => true,
             _ => false,
-        } ||
-            !match res[1] {
-                Ok(Success::Filled {
-                       order_id: 2,
-                       price,
-                       qty,
-                       ..
-                   }) if price == 100 && qty == 50 => true,
-                _ => false,
-            } ||
-            !match res[2] {
-                Ok(Success::PartiallyFilled {
-                       order_id: 1,
-                       price,
-                       qty,
-                       ..
-                   }) if price == 100 && qty == 50 => true,
-                _ => false,
-            }
-        {
+        } || !match res[1] {
+            Ok(Success::Filled {
+                order_id: 2,
+                price,
+                qty,
+                ..
+            }) if price == 100 && qty == 50 => true,
+            _ => false,
+        } || !match res[2] {
+            Ok(Success::PartiallyFilled {
+                order_id: 1,
+                price,
+                qty,
+                ..
+            }) if price == 100 && qty == 50 => true,
+            _ => false,
+        } {
             panic!("unexpected event sequence: {:?}", res)
         }
     }
-
 
     #[test]
     fn limit_order_exact_match() {
@@ -267,14 +205,8 @@ mod tests {
             SystemTime::now(),
         );
 
-        let order2 = orders::new_limit_order_request(
-            BASE_ASSET_ID,
-            QUOTE_ASSET_ID,
-            OrderSide::Ask,
-            90,
-            5,
-            SystemTime::now(),
-        );
+        let order2 =
+            orders::new_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Ask, 90, 5, SystemTime::now());
 
         orderbook.process_order(order1);
         let res = orderbook.process_order(order2);
@@ -282,69 +214,56 @@ mod tests {
         if !match res[0] {
             Ok(Success::Accepted { order_id: 2, .. }) => true,
             _ => false,
-        } ||
-            !match res[1] {
-                Ok(Success::Filled {
-                       order_id: 2,
-                       price,
-                       qty,
-                       ..
-                   }) if price == 100 && qty == 5 => true,
-                _ => false,
-            } ||
-            !match res[2] {
-                Ok(Success::PartiallyFilled {
-                       order_id: 1,
-                       price,
-                       qty,
-                       ..
-                   }) if price == 100 && qty == 5 => true,
-                _ => false,
-            }
-        {
+        } || !match res[1] {
+            Ok(Success::Filled {
+                order_id: 2,
+                price,
+                qty,
+                ..
+            }) if price == 100 && qty == 5 => true,
+            _ => false,
+        } || !match res[2] {
+            Ok(Success::PartiallyFilled {
+                order_id: 1,
+                price,
+                qty,
+                ..
+            }) if price == 100 && qty == 5 => true,
+            _ => false,
+        } {
             panic!("unexpected event sequence: {:?}", res)
         }
 
-        let order3 = orders::new_limit_order_request(
-            BASE_ASSET_ID,
-            QUOTE_ASSET_ID,
-            OrderSide::Ask,
-            80,
-            5,
-            SystemTime::now(),
-        );
+        let order3 =
+            orders::new_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Ask, 80, 5, SystemTime::now());
 
         let res2 = orderbook.process_order(order3);
 
         if !match res2[0] {
             Ok(Success::Accepted { order_id: 3, .. }) => true,
             _ => false,
-        } ||
-            !match res2[1] {
-                Ok(Success::Filled {
-                       order_id: 3,
-                       price,
-                       qty,
-                       ..
-                   }) if price == 100 && qty == 5 => true,
-                _ => false,
-            } ||
-            !match res2[2] {
-                Ok(Success::Filled {
-                       order_id: 1,
-                       price,
-                       qty,
-                       ..
-                   }) if price == 100 && qty == 5 => true,
-                _ => false,
-            }
-        {
+        } || !match res2[1] {
+            Ok(Success::Filled {
+                order_id: 3,
+                price,
+                qty,
+                ..
+            }) if price == 100 && qty == 5 => true,
+            _ => false,
+        } || !match res2[2] {
+            Ok(Success::Filled {
+                order_id: 1,
+                price,
+                qty,
+                ..
+            }) if price == 100 && qty == 5 => true,
+            _ => false,
+        } {
             panic!("unexpected event sequence: {:?}", res2)
         }
 
         assert_eq!(orderbook.current_spread(), None);
     }
-
 
     #[test]
     fn current_spread() {
@@ -362,14 +281,8 @@ mod tests {
         // not enough orders to calculate
         assert_eq!(orderbook.current_spread(), None);
 
-        let order2 = orders::new_limit_order_request(
-            BASE_ASSET_ID,
-            QUOTE_ASSET_ID,
-            OrderSide::Ask,
-            120,
-            5,
-            SystemTime::now(),
-        );
+        let order2 =
+            orders::new_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Ask, 120, 5, SystemTime::now());
 
         let order3 = orders::new_limit_order_request(
             BASE_ASSET_ID,

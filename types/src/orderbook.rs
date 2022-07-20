@@ -1,10 +1,7 @@
 use serde::{Deserialize, Serialize};
-use std::{
-    fmt::Debug,
-    time::SystemTime
-};
+use std::{fmt::Debug, time::SystemTime};
 
-use super::asset::{AssetId};
+use super::asset::AssetId;
 use gdex_crypto_derive::{BCSCryptoHash, CryptoHasher};
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, CryptoHasher, BCSCryptoHash)]
@@ -14,8 +11,7 @@ pub enum OrderSide {
 }
 
 #[derive(Debug, Clone)]
-pub struct Order
-{
+pub struct Order {
     pub order_id: u64,
     pub base_asset: AssetId,
     pub quote_asset: AssetId,
@@ -23,7 +19,6 @@ pub struct Order
     pub price: u64,
     pub qty: u64,
 }
-
 
 #[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub enum OrderType {
@@ -64,9 +59,11 @@ pub enum Success {
         ts: SystemTime,
     },
 
-    Cancelled { order_id: u64, ts: SystemTime },
+    Cancelled {
+        order_id: u64,
+        ts: SystemTime,
+    },
 }
-
 
 #[derive(Debug)]
 pub enum Failed {

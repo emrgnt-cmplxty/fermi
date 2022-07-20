@@ -53,8 +53,8 @@ pub const ED25519_SIGNATURE_LENGTH: usize = ed25519_dalek::SIGNATURE_LENGTH;
 
 /// The order of ed25519 as defined in [RFC8032](https://tools.ietf.org/html/rfc8032).
 const L: [u8; 32] = [
-    0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58, 0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
+    0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58, 0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
 ];
 
 /// An Ed25519 private key
@@ -95,9 +95,7 @@ impl Ed25519PrivateKey {
     }
 
     /// Deserialize an Ed25519PrivateKey without any validation checks apart from expected key size.
-    fn from_bytes_unchecked(
-        bytes: &[u8],
-    ) -> std::result::Result<Ed25519PrivateKey, CryptoMaterialError> {
+    fn from_bytes_unchecked(bytes: &[u8]) -> std::result::Result<Ed25519PrivateKey, CryptoMaterialError> {
         match ed25519_dalek::SecretKey::from_bytes(bytes) {
             Ok(dalek_secret_key) => Ok(Ed25519PrivateKey(dalek_secret_key)),
             Err(_) => Err(CryptoMaterialError::Deserialization),
@@ -109,8 +107,7 @@ impl Ed25519PrivateKey {
     fn sign_arbitrary_message(&self, message: &[u8]) -> Ed25519Signature {
         let secret_key: &ed25519_dalek::SecretKey = &self.0;
         let public_key: Ed25519PublicKey = self.into();
-        let expanded_secret_key: ed25519_dalek::ExpandedSecretKey =
-            ed25519_dalek::ExpandedSecretKey::from(secret_key);
+        let expanded_secret_key: ed25519_dalek::ExpandedSecretKey = ed25519_dalek::ExpandedSecretKey::from(secret_key);
         let sig = expanded_secret_key.sign(message.as_ref(), &public_key.0);
         Ed25519Signature(sig)
     }
@@ -123,9 +120,7 @@ impl Ed25519PublicKey {
     }
 
     /// Deserialize an Ed25519PublicKey without any validation checks apart from expected key size.
-    pub fn from_bytes_unchecked(
-        bytes: &[u8],
-    ) -> std::result::Result<Ed25519PublicKey, CryptoMaterialError> {
+    pub fn from_bytes_unchecked(bytes: &[u8]) -> std::result::Result<Ed25519PublicKey, CryptoMaterialError> {
         match ed25519_dalek::PublicKey::from_bytes(bytes) {
             Ok(dalek_public_key) => Ok(Ed25519PublicKey(dalek_public_key)),
             Err(_) => Err(CryptoMaterialError::Deserialization),
@@ -144,9 +139,7 @@ impl Ed25519Signature {
 
     /// Deserialize an Ed25519Signature without any validation checks (malleability)
     /// apart from expected key size.
-    pub(crate) fn from_bytes_unchecked(
-        bytes: &[u8],
-    ) -> std::result::Result<Ed25519Signature, CryptoMaterialError> {
+    pub(crate) fn from_bytes_unchecked(bytes: &[u8]) -> std::result::Result<Ed25519Signature, CryptoMaterialError> {
         match ed25519_dalek::Signature::try_from(bytes) {
             Ok(dalek_signature) => Ok(Ed25519Signature(dalek_signature)),
             Err(_) => Err(CryptoMaterialError::Deserialization),
@@ -335,9 +328,7 @@ impl TryFrom<&[u8]> for Ed25519PublicKey {
         bits.copy_from_slice(&bytes[..ED25519_PUBLIC_KEY_LENGTH]);
 
         let compressed = curve25519_dalek::edwards::CompressedEdwardsY(bits);
-        let point = compressed
-            .decompress()
-            .ok_or(CryptoMaterialError::Deserialization)?;
+        let point = compressed.decompress().ok_or(CryptoMaterialError::Deserialization)?;
 
         // Check if the point lies on a small subgroup. This is required
         // when using curves with a small cofactor (in ed25519, cofactor = 8).
@@ -377,16 +368,11 @@ impl Signature for Ed25519Signature {
     /// Verifies that the provided signature is valid for the provided
     /// message, according to the RFC8032 algorithm. This strict verification performs the
     /// recommended check of 5.1.7 §3, on top of the required RFC8032 verifications.
-    fn verify<T: CryptoHash + Serialize>(
-        &self,
-        message: &T,
-        public_key: &Ed25519PublicKey,
-    ) -> Result<()> {
+    fn verify<T: CryptoHash + Serialize>(&self, message: &T, public_key: &Ed25519PublicKey) -> Result<()> {
         // Public keys should be validated to be safe against small subgroup attacks, etc.
         precondition!(has_tag!(public_key, ValidatedPublicKeyTag));
         let mut bytes = <T::Hasher as CryptoHasher>::seed().to_vec();
-        bcs::serialize_into(&mut bytes, &message)
-            .map_err(|_| CryptoMaterialError::Serialization)?;
+        bcs::serialize_into(&mut bytes, &message).map_err(|_| CryptoMaterialError::Serialization)?;
         Self::verify_arbitrary_msg(self, &bytes, public_key)
     }
 
@@ -421,12 +407,9 @@ impl Signature for Ed25519Signature {
             Ed25519Signature::check_malleability(&sig.to_bytes())?
         }
         let mut message_bytes = <T::Hasher as CryptoHasher>::seed().to_vec();
-        bcs::serialize_into(&mut message_bytes, &message)
-            .map_err(|_| CryptoMaterialError::Serialization)?;
+        bcs::serialize_into(&mut message_bytes, &message).map_err(|_| CryptoMaterialError::Serialization)?;
 
-        let batch_argument = keys_and_signatures
-            .iter()
-            .map(|(key, signature)| (key.0, signature.0));
+        let batch_argument = keys_and_signatures.iter().map(|(key, signature)| (key.0, signature.0));
         let (dalek_public_keys, dalek_signatures): (Vec<_>, Vec<_>) = batch_argument.unzip();
         let message_ref = &(&message_bytes)[..];
         // The original batching algorithm works for different messages and it expects as many
@@ -438,10 +421,9 @@ impl Signature for Ed25519Signature {
         Ok(())
     }
 
-
     // same as batch_verify above, but re-written to allow distinct messages
     // TODO - owen did some nasty to get this to work, what is a cleaner way?
-    // e.g. trying to directly store  &(&message_bytes)[..] into Vec<&[u8]> creates 
+    // e.g. trying to directly store  &(&message_bytes)[..] into Vec<&[u8]> creates
     // ref err as message_bytes goes out of scope
     // to avoid the bytes are stored directly and mapped into refs afterwards
     // is that the best way to handle such cases?
@@ -453,18 +435,14 @@ impl Signature for Ed25519Signature {
         for (_, sig) in keys_and_signatures.iter() {
             Ed25519Signature::check_malleability(&sig.to_bytes())?
         }
-        let batch_argument = keys_and_signatures
-        .iter()
-        .map(|(key, signature)| (key.0, signature.0));
+        let batch_argument = keys_and_signatures.iter().map(|(key, signature)| (key.0, signature.0));
         let (dalek_public_keys, dalek_signatures): (Vec<_>, Vec<_>) = batch_argument.unzip();
 
         let mut message_to_bytes: Vec<Vec<u8>> = Vec::new();
         for message in messages.iter() {
             let mut message_bytes = <T::Hasher as CryptoHasher>::seed().to_vec();
-            bcs::serialize_into(&mut message_bytes, &message)
-                .map_err(|_| CryptoMaterialError::Serialization)?;
-                message_to_bytes.push(message_bytes);
-
+            bcs::serialize_into(&mut message_bytes, &message).map_err(|_| CryptoMaterialError::Serialization)?;
+            message_to_bytes.push(message_bytes);
         }
         let message_refs: Vec<&[u8]> = message_to_bytes.iter().map(|x| &x[..]).collect();
 

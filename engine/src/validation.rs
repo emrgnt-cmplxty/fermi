@@ -8,7 +8,6 @@ const ERR_BAD_PRICE_VALUE: &str = "price must be non-negative";
 const ERR_BAD_QUANTITY_VALUE: &str = "quantity must be non-negative";
 const ERR_BAD_SEQ_ID: &str = "order ID out of range";
 
-
 /* Validators */
 
 pub struct OrderRequestValidator {
@@ -18,8 +17,7 @@ pub struct OrderRequestValidator {
     max_sequence_id: u64,
 }
 
-impl OrderRequestValidator
-{
+impl OrderRequestValidator {
     pub fn new(
         orderbook_base_asset: AssetId,
         orderbook_quote_asset: AssetId,
@@ -66,14 +64,8 @@ impl OrderRequestValidator
     }
 
     /* Internal validators */
-    
-    fn validate_market(
-        &self,
-        base_asset: AssetId,
-        quote_asset: AssetId,
-        qty: u64,
-    ) -> Result<(), &str> {
 
+    fn validate_market(&self, base_asset: AssetId, quote_asset: AssetId, qty: u64) -> Result<(), &str> {
         if self.orderbook_base_asset != base_asset {
             return Err(ERR_BAD_BASE_ASSET);
         }
@@ -89,14 +81,7 @@ impl OrderRequestValidator
         Ok(())
     }
 
-    fn validate_limit(
-        &self,
-        base_asset: AssetId,
-        quote_asset: AssetId,
-        price: u64,
-        qty: u64,
-    ) -> Result<(), &str> {
-
+    fn validate_limit(&self, base_asset: AssetId, quote_asset: AssetId, price: u64, qty: u64) -> Result<(), &str> {
         if self.orderbook_base_asset != base_asset {
             return Err(ERR_BAD_BASE_ASSET);
         }

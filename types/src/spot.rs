@@ -1,6 +1,6 @@
-use std::fmt::Debug;
-use serde::{Deserialize, Serialize};
 use gdex_crypto_derive::{BCSCryptoHash, CryptoHasher};
+use serde::{Deserialize, Serialize};
+use std::fmt::Debug;
 
 pub type OrderId = u64;
 

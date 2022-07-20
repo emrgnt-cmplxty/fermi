@@ -71,9 +71,7 @@ pub const SHARED_SECRET_SIZE: usize = 32;
 pub struct PrivateKey(x25519_dalek::StaticSecret);
 
 /// This type should be used to deserialize a received public key
-#[derive(
-    Default, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, SerializeKey, DeserializeKey,
-)]
+#[derive(Default, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, SerializeKey, DeserializeKey)]
 #[cfg_attr(any(test, feature = "fuzzing"), derive(Arbitrary))]
 pub struct PublicKey([u8; PUBLIC_KEY_SIZE]);
 
@@ -108,8 +106,8 @@ impl PrivateKey {
     /// key management solutions, and NOT to promote double usage of keys under
     /// several schemes, which would lead to BAD vulnerabilities.
     pub fn from_ed25519_private_bytes(private_slice: &[u8]) -> Result<Self, CryptoMaterialError> {
-        let ed25519_secretkey = ed25519_dalek::SecretKey::from_bytes(private_slice)
-            .map_err(|_| CryptoMaterialError::Deserialization)?;
+        let ed25519_secretkey =
+            ed25519_dalek::SecretKey::from_bytes(private_slice).map_err(|_| CryptoMaterialError::Deserialization)?;
         let expanded_key = ed25519_dalek::ExpandedSecretKey::from(&ed25519_secretkey);
 
         let mut expanded_keypart = [0u8; 32];

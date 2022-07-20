@@ -1,6 +1,6 @@
-//! 
-//! orderbook holds functions responsible for running an orderbook application 
-//! 
+//!
+//! orderbook holds functions responsible for running an orderbook application
+//!
 //! note, orderbook has commented out line 390 to avoid random failures when submitting transasctions in quick succession
 //! this uniqueness check in the orderbook is seems potentially incorrect, or strange, as it includes the timestamp of the order
 //! we should include some sort of random noise to ensure that every order that touches the book gets inserted
@@ -12,8 +12,8 @@ use super::validation::OrderRequestValidator;
 use core::transaction::OrderRequest;
 use std::time::SystemTime;
 use types::{
-    asset::{AssetId},
-    orderbook::{Order, OrderSide, OrderType, OrderProcessingResult, Success, Failed}
+    asset::AssetId,
+    orderbook::{Failed, Order, OrderProcessingResult, OrderSide, OrderType, Success},
 };
 
 const MIN_SEQUENCE_ID: u64 = 1;
@@ -21,8 +21,7 @@ const MAX_SEQUENCE_ID: u64 = 1_000_000;
 const MAX_STALLED_INDICES_IN_QUEUE: u64 = 10;
 const ORDER_QUEUE_INIT_CAPACITY: usize = 500;
 
-pub struct Orderbook
-{
+pub struct Orderbook {
     base_asset: AssetId,
     quote_asset: AssetId,
     bid_queue: OrderQueue<Order>,
@@ -31,9 +30,7 @@ pub struct Orderbook
     order_validator: OrderRequestValidator,
 }
 
-
-impl Orderbook
-{
+impl Orderbook {
     /// Create new orderbook for pair of assets
     ///
     /// # Examples
@@ -46,27 +43,13 @@ impl Orderbook
     /// ```
     // todo fix doc test!
     pub fn new(base_asset: AssetId, quote_asset: AssetId) -> Self {
-
         Orderbook {
             base_asset,
             quote_asset,
-            bid_queue: OrderQueue::new(
-                OrderSide::Bid,
-                MAX_STALLED_INDICES_IN_QUEUE,
-                ORDER_QUEUE_INIT_CAPACITY,
-            ),
-            ask_queue: OrderQueue::new(
-                OrderSide::Ask,
-                MAX_STALLED_INDICES_IN_QUEUE,
-                ORDER_QUEUE_INIT_CAPACITY,
-            ),
+            bid_queue: OrderQueue::new(OrderSide::Bid, MAX_STALLED_INDICES_IN_QUEUE, ORDER_QUEUE_INIT_CAPACITY),
+            ask_queue: OrderQueue::new(OrderSide::Ask, MAX_STALLED_INDICES_IN_QUEUE, ORDER_QUEUE_INIT_CAPACITY),
             seq: sequence::new_sequence_gen(MIN_SEQUENCE_ID, MAX_SEQUENCE_ID),
-            order_validator: OrderRequestValidator::new(
-                base_asset,
-                quote_asset,
-                MIN_SEQUENCE_ID,
-                MAX_SEQUENCE_ID,
-            ),
+            order_validator: OrderRequestValidator::new(base_asset, quote_asset, MIN_SEQUENCE_ID, MAX_SEQUENCE_ID),
         }
     }
 
@@ -96,14 +79,7 @@ impl Orderbook
                     ts: SystemTime::now(),
                 }));
 
-                self.process_market_order(
-                    &mut proc_result,
-                    order_id,
-                    base_asset,
-                    quote_asset,
-                    side,
-                    qty,
-                );
+                self.process_market_order(&mut proc_result, order_id, base_asset, quote_asset, side, qty);
             }
 
             OrderRequest::Limit {
@@ -153,14 +129,12 @@ impl Orderbook
         proc_result
     }
 
-
     /// Get current spread as a tuple: (bid, ask)
     pub fn current_spread(&mut self) -> Option<(u64, u64)> {
         let bid = self.bid_queue.peek()?.price;
         let ask = self.ask_queue.peek()?.price;
         Some((bid, ask))
     }
-
 
     /* Processing logic */
 
@@ -205,7 +179,6 @@ impl Orderbook
                     qty - opposite_order.qty,
                 );
             }
-
         } else {
             // no limit orders found
             results.push(Err(Failed::NoMatch(order_id)));
@@ -266,35 +239,14 @@ impl Orderbook
                         ts,
                     );
                 }
-
             } else {
                 // just insert new order in queue
-                self.store_new_limit_order(
-                    results,
-                    order_id,
-                    base_asset,
-                    quote_asset,
-                    side,
-                    price,
-                    qty,
-                    ts,
-                );
+                self.store_new_limit_order(results, order_id, base_asset, quote_asset, side, price, qty, ts);
             }
-
         } else {
-            self.store_new_limit_order(
-                results,
-                order_id,
-                base_asset,
-                quote_asset,
-                side,
-                price,
-                qty,
-                ts,
-            );
+            self.store_new_limit_order(results, order_id, base_asset, quote_asset, side, price, qty, ts);
         }
     }
-
 
     fn process_order_amend(
         &mut self,
@@ -322,8 +274,7 @@ impl Orderbook
                 price,
                 qty,
             },
-        )
-        {
+        ) {
             results.push(Ok(Success::Amended {
                 order_id,
                 price,
@@ -335,13 +286,7 @@ impl Orderbook
         }
     }
 
-
-    fn process_order_cancel(
-        &mut self,
-        results: &mut OrderProcessingResult,
-        order_id: u64,
-        side: OrderSide,
-    ) {
+    fn process_order_cancel(&mut self, results: &mut OrderProcessingResult, order_id: u64, side: OrderSide) {
         let order_queue = match side {
             OrderSide::Bid => &mut self.bid_queue,
             OrderSide::Ask => &mut self.ask_queue,
@@ -387,8 +332,7 @@ impl Orderbook
                 price,
                 qty,
             },
-        )
-        {
+        ) {
             // results.push(Err(Failed::DuplicateOrderID(order_id)))
         };
     }
@@ -408,7 +352,7 @@ impl Orderbook
         // real processing time
         let deal_time = SystemTime::now();
         // match immediately
-        match qty { 
+        match qty {
             x if x < opposite_order.qty => {
                 // fill new limit and modify opposite limit
 
@@ -447,8 +391,7 @@ impl Orderbook
                         qty: opposite_order.qty - qty,
                     });
                 }
-
-            } 
+            }
             x if x > opposite_order.qty => {
                 // partially fill new limit order, fill opposite limit and notify to process the rest
                 // report new order partially filled
@@ -482,8 +425,7 @@ impl Orderbook
 
                 // matching incomplete
                 return false;
-
-            } 
+            }
             _ => {
                 // orders exactly match -> fill both and remove old limit
                 // report filled new order
@@ -520,12 +462,11 @@ impl Orderbook
     }
 }
 
-
 #[cfg(test)]
 mod test {
 
-    use super::*;
     use super::super::orders;
+    use super::*;
 
     const USD: u64 = 0;
     const BTC: u64 = 1;

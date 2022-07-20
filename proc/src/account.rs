@@ -1,14 +1,14 @@
-//! 
+//!
 //! account objects are attached to specific Controllers and are
 //! responsible for keeping important controller-specific data
-//! 
+//!
 use std::{collections::HashMap, fmt::Debug};
 use types::{
-    account::{AccountPubKey, AccountBalance},
+    account::{AccountBalance, AccountPubKey},
     asset::AssetId,
 };
 
-// BankAccount is consumed by the BankController 
+// BankAccount is consumed by the BankController
 #[derive(Debug)]
 pub struct BankAccount {
     account_pub_key: AccountPubKey,
@@ -16,7 +16,7 @@ pub struct BankAccount {
 }
 impl BankAccount {
     pub fn new(account_pub_key: AccountPubKey) -> Self {
-        BankAccount{
+        BankAccount {
             account_pub_key,
             balances: HashMap::new(),
         }
@@ -35,16 +35,14 @@ impl BankAccount {
     }
 }
 
-// OrderAccount is consumed by the SpotController 
+// OrderAccount is consumed by the SpotController
 #[derive(Debug)]
 pub struct OrderAccount {
     account_pub_key: AccountPubKey,
 }
 impl OrderAccount {
     pub fn new(account_pub_key: AccountPubKey) -> Self {
-        OrderAccount{
-            account_pub_key,
-        }
+        OrderAccount { account_pub_key }
     }
 
     pub fn get_account_pub_key(&self) -> &AccountPubKey {
@@ -52,7 +50,7 @@ impl OrderAccount {
     }
 }
 
-// StakeAccount is consumed by the StakeController 
+// StakeAccount is consumed by the StakeController
 #[derive(Debug)]
 pub struct StakeAccount {
     account_pub_key: AccountPubKey,

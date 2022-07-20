@@ -7,7 +7,7 @@ use gdex_crypto::{
     traits::{Signature, SigningKey, Uniform},
 };
 use rand::{prelude::ThreadRng, thread_rng};
-use types::spot::{DiemCryptoMessage};
+use types::spot::DiemCryptoMessage;
 
 const NUMBER_OF_MESSAGES: i32 = 1024;
 const NUMBER_OF_ACCOUNTS: i32 = 1024;

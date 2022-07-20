@@ -1,7 +1,7 @@
-//! 
+//!
 //! the hashclock is a blockchain primitive that enables a vdf
 //! to be constructed trivially
-//! 
+//!
 use gdex_crypto::hash::{CryptoHash, HashValue};
 use std::fmt::Debug;
 use types::spot::DiemCryptoMessage;
@@ -9,13 +9,13 @@ use types::spot::DiemCryptoMessage;
 #[derive(Debug)]
 pub struct HashClock {
     time: HashValue,
-    n_ticks: u64
-} 
+    n_ticks: u64,
+}
 impl HashClock {
     pub fn new() -> Self {
         HashClock {
             time: DiemCryptoMessage(String::from("HashClock")).hash(),
-            n_ticks: 0
+            n_ticks: 0,
         }
     }
 

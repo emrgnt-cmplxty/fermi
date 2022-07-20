@@ -138,15 +138,12 @@ impl ::core::clone::Clone for TestDiemCryptoHasher {
     #[inline]
     fn clone(&self) -> TestDiemCryptoHasher {
         match *self {
-            TestDiemCryptoHasher(ref __self_0_0) => {
-                TestDiemCryptoHasher(::core::clone::Clone::clone(&(*__self_0_0)))
-            }
+            TestDiemCryptoHasher(ref __self_0_0) => TestDiemCryptoHasher(::core::clone::Clone::clone(&(*__self_0_0))),
         }
     }
 }
 #[cfg(any(test, feature = "fuzzing"))]
-static TEST_DIEM_CRYPTO_SEED: crate::_once_cell::sync::OnceCell<[u8; 32]> =
-    crate::_once_cell::sync::OnceCell::new();
+static TEST_DIEM_CRYPTO_SEED: crate::_once_cell::sync::OnceCell<[u8; 32]> = crate::_once_cell::sync::OnceCell::new();
 #[cfg(any(test, feature = "fuzzing"))]
 impl TestDiemCryptoHasher {
     fn new() -> Self {
@@ -197,8 +194,7 @@ impl crate::hash::CryptoHash for DiemCryptoMessage {
     fn hash(&self) -> crate::hash::HashValue {
         use crate::hash::CryptoHasher;
         let mut state = Self::Hasher::default();
-        bcs::serialize_into(&mut state, &self)
-            .expect("BCS serialization of DiemCryptoMessage should not fail");
+        bcs::serialize_into(&mut state, &self).expect("BCS serialization of DiemCryptoMessage should not fail");
         state.finish()
     }
 }

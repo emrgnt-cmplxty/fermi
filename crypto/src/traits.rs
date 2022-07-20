@@ -112,9 +112,7 @@ pub trait PrivateKey: Sized {
 /// A trait for a [`ValidCryptoMaterial`][ValidCryptoMaterial] which knows how to sign a
 /// message, and return an associated `Signature` type.
 pub trait SigningKey:
-    PrivateKey<PublicKeyMaterial = <Self as SigningKey>::VerifyingKeyMaterial>
-    + ValidCryptoMaterial
-    + private::Sealed
+    PrivateKey<PublicKeyMaterial = <Self as SigningKey>::VerifyingKeyMaterial> + ValidCryptoMaterial + private::Sealed
 {
     /// The associated verifying key type for this signing key.
     type VerifyingKeyMaterial: VerifyingKey<SigningKeyMaterial = Self>;
@@ -169,9 +167,7 @@ pub trait PublicKey: Sized + Clone + Eq + Hash +
 /// It is linked to a type of the Signature family, which carries the
 /// verification implementation.
 pub trait VerifyingKey:
-    PublicKey<PrivateKeyMaterial = <Self as VerifyingKey>::SigningKeyMaterial>
-    + ValidCryptoMaterial
-    + private::Sealed
+    PublicKey<PrivateKeyMaterial = <Self as VerifyingKey>::SigningKeyMaterial> + ValidCryptoMaterial + private::Sealed
 {
     /// The associated signing key type for this verifying key.
     type SigningKeyMaterial: SigningKey<VerifyingKeyMaterial = Self>;
@@ -212,13 +208,7 @@ pub trait VerifyingKey:
 /// scheme. This would be done as an extension trait of
 /// [`Signature`][Signature].
 pub trait Signature:
-    for<'a> TryFrom<&'a [u8], Error = CryptoMaterialError>
-    + Sized
-    + Debug
-    + Clone
-    + Eq
-    + Hash
-    + private::Sealed
+    for<'a> TryFrom<&'a [u8], Error = CryptoMaterialError> + Sized + Debug + Clone + Eq + Hash + private::Sealed
 {
     /// The associated verifying key type for this signature.
     type VerifyingKeyMaterial: VerifyingKey<SignatureMaterial = Self>;
@@ -227,18 +217,10 @@ pub trait Signature:
 
     /// Verification for a struct we unabmiguously know how to serialize and
     /// that we have a domain separation prefix for.
-    fn verify<T: CryptoHash + Serialize>(
-        &self,
-        message: &T,
-        public_key: &Self::VerifyingKeyMaterial,
-    ) -> Result<()>;
+    fn verify<T: CryptoHash + Serialize>(&self, message: &T, public_key: &Self::VerifyingKeyMaterial) -> Result<()>;
 
     /// Native verification function.
-    fn verify_arbitrary_msg(
-        &self,
-        message: &[u8],
-        public_key: &Self::VerifyingKeyMaterial,
-    ) -> Result<()>;
+    fn verify_arbitrary_msg(&self, message: &[u8], public_key: &Self::VerifyingKeyMaterial) -> Result<()>;
 
     /// Convert the signature into a byte representation.
     fn to_bytes(&self) -> Vec<u8>;
@@ -270,7 +252,6 @@ pub trait Signature:
         }
         Ok(())
     }
-
 }
 
 /// A type family for schemes which know how to generate key material from

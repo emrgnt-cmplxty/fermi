@@ -53,7 +53,7 @@ pub fn impl_enum_tryfrom(name: &Ident, variants: &DataEnum) -> proc_macro2::Toke
             .next()
             .expect("Unrecognized enum for key types")
             .ty;
-        try_chain.extend(quote!{
+        try_chain.extend(quote! {
             .or_else(|_err| #variant_arg::try_from(bytes).and_then(|key| Ok(#name::#variant_ident(key))))
         })
     }
@@ -100,40 +100,33 @@ pub fn impl_enum_valid_crypto_material(name: &Ident, variants: &DataEnum) -> Tok
 }
 
 pub fn get_type_from_attrs(attrs: &[syn::Attribute], attr_name: &str) -> syn::Result<syn::LitStr> {
-    attrs
-        .iter()
-        .find(|attr| attr.path.is_ident(attr_name))
-        .map_or_else(
-            || {
-                Err(syn::Error::new(
-                    proc_macro2::Span::call_site(),
-                    format!("Could not find attribute {}", attr_name),
-                ))
-            },
-            |attr| match attr.parse_meta()? {
-                syn::Meta::NameValue(meta) => {
-                    if let syn::Lit::Str(lit) = &meta.lit {
-                        Ok(lit.clone())
-                    } else {
-                        Err(syn::Error::new_spanned(
-                            meta,
-                            &format!("Could not parse {} attribute", attr_name)[..],
-                        ))
-                    }
+    attrs.iter().find(|attr| attr.path.is_ident(attr_name)).map_or_else(
+        || {
+            Err(syn::Error::new(
+                proc_macro2::Span::call_site(),
+                format!("Could not find attribute {}", attr_name),
+            ))
+        },
+        |attr| match attr.parse_meta()? {
+            syn::Meta::NameValue(meta) => {
+                if let syn::Lit::Str(lit) = &meta.lit {
+                    Ok(lit.clone())
+                } else {
+                    Err(syn::Error::new_spanned(
+                        meta,
+                        &format!("Could not parse {} attribute", attr_name)[..],
+                    ))
                 }
-                bad => Err(syn::Error::new_spanned(
-                    bad,
-                    &format!("Could not parse {} attribute", attr_name)[..],
-                )),
-            },
-        )
+            }
+            bad => Err(syn::Error::new_spanned(
+                bad,
+                &format!("Could not parse {} attribute", attr_name)[..],
+            )),
+        },
+    )
 }
 
-pub fn impl_enum_publickey(
-    name: &Ident,
-    private_key_type: syn::LitStr,
-    variants: &DataEnum,
-) -> TokenStream {
+pub fn impl_enum_publickey(name: &Ident, private_key_type: syn::LitStr, variants: &DataEnum) -> TokenStream {
     let pkt: syn::Type = private_key_type.parse().unwrap();
     let mut from_match_arms = quote! {};
     for variant in variants.variants.iter() {
@@ -160,11 +153,7 @@ pub fn impl_enum_publickey(
     res.into()
 }
 
-pub fn impl_enum_privatekey(
-    name: &Ident,
-    public_key_type: syn::LitStr,
-    _variants: &DataEnum,
-) -> TokenStream {
+pub fn impl_enum_privatekey(name: &Ident, public_key_type: syn::LitStr, _variants: &DataEnum) -> TokenStream {
     let pkt: syn::Type = public_key_type.parse().unwrap();
     let res = quote! {
         impl gdex_crypto::PrivateKey for #name {

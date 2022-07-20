@@ -275,9 +275,7 @@ pub fn derive_enum_verifyingkey(input: TokenStream) -> TokenStream {
     let private_key_type = get_type_from_attrs(&ast.attrs, "PrivateKeyType").unwrap();
     let signature_type = get_type_from_attrs(&ast.attrs, "SignatureType").unwrap();
     match ast.data {
-        Data::Enum(ref variants) => {
-            impl_enum_verifyingkey(name, private_key_type, signature_type, variants)
-        }
+        Data::Enum(ref variants) => impl_enum_verifyingkey(name, private_key_type, signature_type, variants),
         Data::Struct(_) | Data::Union(_) => {
             panic!("#[derive(PrivateKey)] is only defined for enums")
         }
@@ -292,9 +290,7 @@ pub fn derive_enum_signingkey(input: TokenStream) -> TokenStream {
     let public_key_type = get_type_from_attrs(&ast.attrs, "PublicKeyType").unwrap();
     let signature_type = get_type_from_attrs(&ast.attrs, "SignatureType").unwrap();
     match ast.data {
-        Data::Enum(ref variants) => {
-            impl_enum_signingkey(name, public_key_type, signature_type, variants)
-        }
+        Data::Enum(ref variants) => impl_enum_signingkey(name, public_key_type, signature_type, variants),
         Data::Struct(_) | Data::Union(_) => {
             panic!("#[derive(PrivateKey)] is only defined for enums")
         }
@@ -309,9 +305,7 @@ pub fn derive_enum_signature(input: TokenStream) -> TokenStream {
     let public_key_type = get_type_from_attrs(&ast.attrs, "PublicKeyType").unwrap();
     let private_key_type = get_type_from_attrs(&ast.attrs, "PrivateKeyType").unwrap();
     match ast.data {
-        Data::Enum(ref variants) => {
-            impl_enum_signature(name, public_key_type, private_key_type, variants)
-        }
+        Data::Enum(ref variants) => impl_enum_signature(name, public_key_type, private_key_type, variants),
         Data::Struct(_) | Data::Union(_) => {
             panic!("#[derive(PrivateKey)] is only defined for enums")
         }
@@ -324,27 +318,16 @@ pub fn derive_enum_signature(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(CryptoHasher)]
 pub fn hasher_dispatch(input: TokenStream) -> TokenStream {
     let item = parse_macro_input!(input as DeriveInput);
-    let hasher_name = Ident::new(
-        &format!("{}Hasher", &item.ident.to_string()),
-        Span::call_site(),
-    );
+    let hasher_name = Ident::new(&format!("{}Hasher", &item.ident.to_string()), Span::call_site());
     let snake_name = camel_to_snake(&item.ident.to_string());
-    let static_seed_name = Ident::new(
-        &format!("{}_SEED", snake_name.to_uppercase()),
-        Span::call_site(),
-    );
+    let static_seed_name = Ident::new(&format!("{}_SEED", snake_name.to_uppercase()), Span::call_site());
 
-    let static_hasher_name = Ident::new(
-        &format!("{}_HASHER", snake_name.to_uppercase()),
-        Span::call_site(),
-    );
+    let static_hasher_name = Ident::new(&format!("{}_HASHER", snake_name.to_uppercase()), Span::call_site());
     let type_name = &item.ident;
     let param = if item.generics.params.is_empty() {
         quote!()
     } else {
-        let args = proc_macro2::TokenStream::from_iter(
-            std::iter::repeat(quote!(())).take(item.generics.params.len()),
-        );
+        let args = proc_macro2::TokenStream::from_iter(std::iter::repeat(quote!(())).take(item.generics.params.len()));
         quote!(<#args>)
     };
 

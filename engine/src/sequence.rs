@@ -5,7 +5,6 @@ pub struct TradeSequence {
     current_idx: u64,
 }
 
-
 impl TradeSequence {
     pub fn next_id(&mut self) -> u64 {
         let next_id = self.current_idx;
@@ -21,7 +20,6 @@ impl TradeSequence {
     }
 }
 
-
 pub fn new_sequence_gen(min: u64, max: u64) -> TradeSequence {
     TradeSequence {
         min_id: min,
@@ -29,7 +27,6 @@ pub fn new_sequence_gen(min: u64, max: u64) -> TradeSequence {
         current_idx: min,
     }
 }
-
 
 #[cfg(test)]
 mod tests {

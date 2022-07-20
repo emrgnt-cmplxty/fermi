@@ -1,8 +1,11 @@
-//! 
+//!
 //! transactions are the base unit fed into the blockchain
 //! to trigger state transitions
-//! 
-use gdex_crypto::{Signature, hash::{CryptoHash, HashValue}};
+//!
+use gdex_crypto::{
+    hash::{CryptoHash, HashValue},
+    Signature,
+};
 use gdex_crypto_derive::{BCSCryptoHash, CryptoHasher};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Debug, time::SystemTime};
@@ -14,13 +17,10 @@ use types::{
 };
 
 #[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
-pub struct CreateAssetRequest 
-{
-}
+pub struct CreateAssetRequest {}
 
 #[derive(CryptoHasher, BCSCryptoHash, Serialize, Deserialize, Clone, Copy, Debug)]
-pub enum OrderRequest
-{
+pub enum OrderRequest {
     Market {
         base_asset: AssetId,
         quote_asset: AssetId,
@@ -54,8 +54,7 @@ pub enum OrderRequest
 }
 
 #[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
-pub struct CreateOrderbookRequest 
-{
+pub struct CreateOrderbookRequest {
     base_asset_id: AssetId,
     quote_asset_id: AssetId,
 }
@@ -77,8 +76,7 @@ impl CreateOrderbookRequest {
 }
 
 #[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
-pub struct PaymentRequest 
-{
+pub struct PaymentRequest {
     // storing from here is not redundant as from may not equal sender
     // e.g. we are preserving the possibility of adding re-key functionality
     from: AccountPubKey,
@@ -92,7 +90,7 @@ impl PaymentRequest {
             from,
             to,
             asset_id,
-            amount
+            amount,
         }
     }
 
@@ -114,17 +112,13 @@ impl PaymentRequest {
 }
 
 #[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
-pub struct StakeRequest 
-{
+pub struct StakeRequest {
     from: AccountPubKey,
     amount: u64,
 }
 impl StakeRequest {
     pub fn new(from: AccountPubKey, amount: u64) -> Self {
-        StakeRequest {
-            from,
-            amount
-        }
+        StakeRequest { from, amount }
     }
 
     pub fn get_from(&self) -> &AccountPubKey {
@@ -146,7 +140,7 @@ pub enum TxnVariant {
 }
 
 #[derive(Clone)]
-pub struct TxnRequest <TxnVariant>
+pub struct TxnRequest<TxnVariant>
 where
     TxnVariant: Debug + Clone + CryptoHash + Copy,
 {
@@ -154,7 +148,7 @@ where
     sender: AccountPubKey,
     txn_signature: AccountSignature,
 }
-impl <TxnVariant> TxnRequest <TxnVariant>
+impl<TxnVariant> TxnRequest<TxnVariant>
 where
     TxnVariant: Debug + Clone + CryptoHash + Copy,
 {
@@ -162,7 +156,7 @@ where
         TxnRequest {
             txn,
             sender,
-            txn_signature
+            txn_signature,
         }
     }
 
@@ -180,12 +174,13 @@ where
 
     pub fn verify_transaction(&self) -> Result<(), gdex_crypto::error::Error> {
         let txn_hash: HashValue = self.txn.hash();
-        self.txn_signature.verify(&DiemCryptoMessage(txn_hash.to_string()), &self.sender)
+        self.txn_signature
+            .verify(&DiemCryptoMessage(txn_hash.to_string()), &self.sender)
     }
 }
 
 #[cfg(feature = "batch")]
-pub fn verify_transaction_batch(txn_requests: &[TxnRequest<TxnVariant>]) -> Result<(), gdex_crypto::error::Error>  {
+pub fn verify_transaction_batch(txn_requests: &[TxnRequest<TxnVariant>]) -> Result<(), gdex_crypto::error::Error> {
     let mut messages: Vec<DiemCryptoMessage> = Vec::new();
     let mut keys_and_signatures: Vec<(AccountPubKey, AccountSignature)> = Vec::new();
 

@@ -1,30 +1,22 @@
 extern crate rocksdb;
-
 extern crate engine;
 extern crate types;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use rand::{Rng};
-use rand::rngs::{ThreadRng};
-use rocksdb::{ColumnFamilyDescriptor, DB, DBWithThreadMode, Options, SingleThreaded};
-use std::time::SystemTime;
-
-use gdex_crypto::{
-    traits::{Uniform, SigningKey},
-};
-use engine::{
-    orders,
-    orderbook::{Orderbook}
-};
+use engine::{orders::{self, OrderRequest}, orderbook::Orderbook};
+use gdex_crypto::traits::{Uniform, SigningKey};
 use proc::{
-    bank::{BankController},
-    spot::{SpotController, DUMMY_MESSAGE}
+    bank::BankController,
+    spot::{DUMMY_MESSAGE, OrderbookInterface},
 };
 use types::{
     account::{AccountPubKey, AccountPrivKey, AccountSignature},
     orderbook::{OrderProcessingResult, OrderSide, Success},
-    spot::{DiemCryptoMessage}
+    spot::DiemCryptoMessage,
 };
+use rand::{Rng, rngs::{ThreadRng}};
+use rocksdb::{ColumnFamilyDescriptor, DB, DBWithThreadMode, Options, SingleThreaded};
+use std::time::SystemTime;
 
 const N_ORDERS_BENCH: u64 = 1_024;
 const N_ACCOUNTS: u64 = 1_024;
@@ -64,12 +56,12 @@ fn place_orders_engine(
     // bench
     let mut i_order: u64 = 0;
     while i_order < n_orders {
-        let order_type = if i_order % 2 == 0 { OrderSide::Bid } else { OrderSide::Ask };
-        let qty = rng.gen_range(1, 100);
-        let price = rng.gen_range(1, 100);
+        let order_type: OrderSide = if i_order % 2 == 0 { OrderSide::Bid } else { OrderSide::Ask };
+        let qty: u64 = rng.gen_range(1, 100);
+        let price: u64 = rng.gen_range(1, 100);
 
         // order construction & submission
-        let order = orders::new_limit_order_request(
+        let order: OrderRequest = orders::new_limit_order_request(
             base_asset_id,
             quote_asset_id,
             order_type,
@@ -77,7 +69,7 @@ fn place_orders_engine(
             qty,
             SystemTime::now()
         );
-        let res = orderbook.process_order(order);
+        let res: OrderProcessingResult = orderbook.process_order(order);
         if persist {
             persist_result(db, &res);
         }
@@ -91,7 +83,7 @@ fn place_orders_engine_account(
     quote_asset_id: u64,
     account_to_pub_key: &mut Vec<AccountPubKey>, 
     bank_controller: &mut BankController,
-    spot_controller: &mut SpotController, 
+    orderbook_controller: &mut OrderbookInterface, 
     rng: &mut ThreadRng,
     db: &DBWithThreadMode<SingleThreaded>, 
     persist: bool) 
@@ -100,7 +92,7 @@ fn place_orders_engine_account(
     let orderbook: Orderbook = Orderbook::new(base_asset_id, quote_asset_id);
 
     // clean market controller orderbook to keep from getting clogged
-    spot_controller.overwrite_orderbook(orderbook);
+    orderbook_controller.overwrite_orderbook(orderbook);
 
     // bench
     let mut i_order: u64 = 0;
@@ -112,7 +104,7 @@ fn place_orders_engine_account(
         // generate a random integer between 0 and 100
         let account_pub_key: AccountPubKey = account_to_pub_key[rng.gen_range(1, 100)];
 
-        let res = spot_controller.place_limit_order(bank_controller, &account_pub_key,  order_type, qty, price).unwrap();
+        let res = orderbook_controller.place_limit_order(bank_controller, &account_pub_key,  order_type, qty, price).unwrap();
         if persist {
             persist_result(db, &res);
         }
@@ -127,7 +119,7 @@ fn place_orders_engine_account_signed(
     account_to_pub_key: &mut Vec<AccountPubKey>, 
     account_to_signed_msg: &mut Vec<AccountSignature>, 
     bank_controller: &mut BankController, 
-    spot_controller: &mut SpotController, 
+    orderbook_controller: &mut OrderbookInterface, 
     rng: &mut ThreadRng,
     db: &DBWithThreadMode<SingleThreaded>, 
     persist: bool) 
@@ -136,7 +128,7 @@ fn place_orders_engine_account_signed(
     let orderbook: Orderbook = Orderbook::new(base_asset_id, quote_asset_id);
 
     // clean market controller orderbook to keep from getting clogged
-    spot_controller.overwrite_orderbook(orderbook);
+    orderbook_controller.overwrite_orderbook(orderbook);
 
     // bench
     let mut i_order: u64 = 0;
@@ -150,7 +142,7 @@ fn place_orders_engine_account_signed(
         let account_pub_key: AccountPubKey = account_to_pub_key[i_account];
         let account_sig_msg: &AccountSignature = &account_to_signed_msg[i_account];
 
-        let res: Vec<Result<Success, types::orderbook::Failed>>  = spot_controller.place_signed_limit_order(bank_controller, &account_pub_key,  order_type, qty, price, account_sig_msg).unwrap();
+        let res: Vec<Result<Success, types::orderbook::Failed>>  = orderbook_controller.place_signed_limit_order(bank_controller, &account_pub_key,  order_type, qty, price, account_sig_msg).unwrap();
 
         i_order+=1;
 
@@ -173,13 +165,13 @@ fn place_orders_engine_account_batch_signed(
     account_to_pub_key: &mut Vec<AccountPubKey>, 
     keys_and_signatures: &mut Vec<(AccountPubKey, AccountSignature)>, 
     bank_controller: &mut BankController, 
-    spot_controller: &mut SpotController, 
+    orderbook_controller: &mut OrderbookInterface, 
     rng: &mut ThreadRng,
     db: &DBWithThreadMode<SingleThreaded>, 
     persist: bool) 
 {
     Signature::batch_verify(&DiemCryptoMessage(DUMMY_MESSAGE.to_string()), keys_and_signatures.to_vec()).unwrap();
-    place_orders_engine_account(n_orders, base_asset_id, quote_asset_id, account_to_pub_key, bank_controller, spot_controller, rng, db, persist);
+    place_orders_engine_account(n_orders, base_asset_id, quote_asset_id, account_to_pub_key, bank_controller, orderbook_controller, rng, db, persist);
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {
@@ -195,8 +187,8 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     let base_asset_id = bank_controller.create_asset(&creator_key).unwrap();
     let quote_asset_id = bank_controller.create_asset(&creator_key).unwrap();
 
-    let mut spot_controller: SpotController = SpotController::new(base_asset_id, quote_asset_id);
-    spot_controller.create_account(&creator_key).unwrap();
+    let mut orderbook_controller: OrderbookInterface = OrderbookInterface::new(base_asset_id, quote_asset_id);
+    orderbook_controller.create_account(&creator_key).unwrap();
     // other helpers
     let mut i_account: u64 = 0;
     let path: &str = "./db.rocks";
@@ -236,24 +228,24 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         place_orders_engine(base_asset_id, quote_asset_id, black_box(N_ORDERS_BENCH), &mut rng, &db, true)));
     
     c.bench_function("place_orders_engine_account", |b| b.iter(|| 
-        place_orders_engine_account(black_box(N_ORDERS_BENCH), base_asset_id, quote_asset_id, &mut account_to_pub_key, &mut bank_controller, &mut spot_controller, &mut rng, &db, false)));
+        place_orders_engine_account(black_box(N_ORDERS_BENCH), base_asset_id, quote_asset_id, &mut account_to_pub_key, &mut bank_controller, &mut orderbook_controller, &mut rng, &db, false)));
     
     c.bench_function("place_orders_engine_account_db", |b| b.iter(|| 
-        place_orders_engine_account(black_box(N_ORDERS_BENCH), base_asset_id, quote_asset_id, &mut account_to_pub_key, &mut bank_controller, &mut spot_controller, &mut rng, &db, true)));
+        place_orders_engine_account(black_box(N_ORDERS_BENCH), base_asset_id, quote_asset_id, &mut account_to_pub_key, &mut bank_controller, &mut orderbook_controller, &mut rng, &db, true)));
 
     c.bench_function("place_orders_engine_account_signed", |b| b.iter(|| 
-        place_orders_engine_account_signed(black_box(N_ORDERS_BENCH), base_asset_id, quote_asset_id, &mut account_to_pub_key, &mut account_to_signed_msg, &mut bank_controller, &mut spot_controller, &mut rng, &db, false)));
+        place_orders_engine_account_signed(black_box(N_ORDERS_BENCH), base_asset_id, quote_asset_id, &mut account_to_pub_key, &mut account_to_signed_msg, &mut bank_controller, &mut orderbook_controller, &mut rng, &db, false)));
 
     c.bench_function("place_orders_engine_account_signed_db", |b| b.iter(|| 
-        place_orders_engine_account_signed(black_box(N_ORDERS_BENCH), base_asset_id, quote_asset_id, &mut account_to_pub_key, &mut account_to_signed_msg, &mut bank_controller, &mut spot_controller, &mut rng, &db, true)));
+        place_orders_engine_account_signed(black_box(N_ORDERS_BENCH), base_asset_id, quote_asset_id, &mut account_to_pub_key, &mut account_to_signed_msg, &mut bank_controller, &mut orderbook_controller, &mut rng, &db, true)));
     
     #[cfg(feature = "batch")]
     c.bench_function("place_orders_engine_account_batch_signed", |b| b.iter(|| 
-        place_orders_engine_account_batch_signed(black_box(N_ORDERS_BENCH), base_asset_id, quote_asset_id, &mut account_to_pub_key, &mut keys_and_signatures, &mut bank_controller, &mut spot_controller, &mut rng, &db, false)));
+        place_orders_engine_account_batch_signed(black_box(N_ORDERS_BENCH), base_asset_id, quote_asset_id, &mut account_to_pub_key, &mut keys_and_signatures, &mut bank_controller, &mut orderbook_controller, &mut rng, &db, false)));
 
     #[cfg(feature = "batch")]
     c.bench_function("place_orders_engine_account_batch_signed_db", |b| b.iter(|| 
-        place_orders_engine_account_batch_signed(black_box(N_ORDERS_BENCH), base_asset_id, quote_asset_id, &mut account_to_pub_key, &mut keys_and_signatures, &mut bank_controller, &mut spot_controller, &mut rng, &db, true)));
+        place_orders_engine_account_batch_signed(black_box(N_ORDERS_BENCH), base_asset_id, quote_asset_id, &mut account_to_pub_key, &mut keys_and_signatures, &mut bank_controller, &mut orderbook_controller, &mut rng, &db, true)));
 
 }
 

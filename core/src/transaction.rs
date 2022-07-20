@@ -95,9 +95,34 @@ impl Stake {
         self.amount
     }
 }
+
+#[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
+pub struct CreateOrderBook 
+{
+    base_asset_id: AssetId,
+    quote_asset_id: AssetId,
+}
+impl CreateOrderBook {
+    pub fn new(base_asset_id: AssetId, quote_asset_id: AssetId) -> Self {
+        CreateOrderBook {
+            base_asset_id,
+            quote_asset_id,
+        }
+    }
+
+    pub fn get_base_asset_id(&self) -> AssetId {
+        self.base_asset_id
+    }
+
+    pub fn get_quote_asset_id(&self) -> AssetId {
+        self.quote_asset_id
+    }
+}
+
 #[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
 pub enum TxnVariant {
     PaymentTransaction(Payment),
+    CreateOrderbookTransaction(CreateOrderBook),
     CreateAssetTransaction(CreateAsset),
     OrderTransaction(Order),
     StakeAssetTransaction(Stake),

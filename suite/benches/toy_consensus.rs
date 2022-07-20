@@ -32,9 +32,11 @@ fn place_orders_consensus(
     transactions: Vec<TxnRequest<TxnVariant>>,
 ) 
 {
+    // verify transactions and update state
     for order_transaction in transactions.iter() {
         route_transaction(consensus_manager, &order_transaction).unwrap();
     }
+    // propose new block
     consensus_manager.propose_block(transactions).unwrap();
 }
 
@@ -48,7 +50,10 @@ fn place_orders_consensus_batch(
     transactions: Vec<TxnRequest<TxnVariant>>,
 ) 
 {
+    // verify transactions and update state
     route_transaction_batch(consensus_manager, &transactions).unwrap();
+    // propose new block
+    consensus_manager.propose_block(transactions).unwrap();
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {

@@ -1,8 +1,8 @@
 //! 
 //! orderbook holds functions responsible for running an orderbook application 
 //! 
-//! note, orderbook has commented out line 390 to avoid ranndom failures when quickly submitting transasctions
-//! the uniqueness check in the orderbook is a bit strange anyways, as it includes the ts of the order
+//! note, orderbook has commented out line 390 to avoid random failures when submitting transasctions in quick succession
+//! this uniqueness check in the orderbook is seems potentially incorrect, or strange, as it includes the timestamp of the order
 //! we should include some sort of random noise to ensure that every order that touches the book gets inserted
 //! as upstream checks will robustly ensure no duplicates
 extern crate core;
@@ -359,13 +359,11 @@ impl Orderbook
         }
     }
 
-
     /* Helpers */
-
 
     fn store_new_limit_order(
         &mut self,
-        results: &mut OrderProcessingResult,
+        _results: &mut OrderProcessingResult,
         order_id: u64,
         base_asset: AssetId,
         quote_asset: AssetId,

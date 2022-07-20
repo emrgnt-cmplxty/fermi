@@ -13,7 +13,7 @@ pub enum AccountError {
     Lookup(String),
     OrderBookCreation(String),
     OrderProc(String),
-    Payment(String),
+    PaymentRequest(String),
     Vote(String),
     Signing(String),
     BlockValidation(String),

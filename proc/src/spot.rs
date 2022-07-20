@@ -12,12 +12,11 @@ extern crate core;
 extern crate engine;
 extern crate types;
 
-
 use super::{account::OrderAccount, bank::BankController};
-use core::transaction::{TxnRequest, TxnVariant};
+use core::transaction::{OrderRequest, TxnRequest, TxnVariant};
 use engine::{
     orderbook::Orderbook,
-    orders::{OrderRequest, new_limit_order_request},
+    orders::new_limit_order_request,
 };
 use std::{collections::HashMap, time::SystemTime};
 use types::{
@@ -26,7 +25,6 @@ use types::{
     orderbook::{Failed, OrderSide, OrderProcessingResult, Success},
     spot::{OrderId},
 };
-
 
 // The spot controller is responsible for accessing & modifying user orders 
 pub struct OrderbookInterface
@@ -124,7 +122,7 @@ impl OrderbookInterface
                     let existing_pub_key: AccountPubKey = *self.order_to_account.get(order_id).ok_or_else( || AccountError::Lookup("Failed to find account".to_string()))?;
                     self.proc_order_fill(bank_controller,   &existing_pub_key, *side, *price, *qty)?;
                     // erase existing order
-                    self.order_to_account.remove(order_id).ok_or(AccountError::OrderProc("Failed to find order".to_string()))?;
+                    self.order_to_account.remove(order_id).ok_or_else(|| AccountError::OrderProc("Failed to find order".to_string()))?;
                 }
                 Ok(Success::Amended { .. }) => { panic!("This needs to be implemented...") }
                 Ok(Success::Cancelled { .. }) => { panic!("This needs to be implemented...") }
@@ -221,7 +219,7 @@ impl SpotController {
         // verify transaction is an order
         if let TxnVariant::OrderTransaction(order) = &signed_txn.get_txn() {
             // verify and place a limit order
-            if let OrderRequest::NewLimitOrder{side, price, qty, base_asset, quote_asset, ..} = order.get_order_request() {
+            if let OrderRequest::Limit{side, price, qty, base_asset, quote_asset, ..} = order {
                 let orderbook: &mut OrderbookInterface = self.get_orderbook(*base_asset, *quote_asset)?;
 
                 return orderbook.place_limit_order(bank_controller, signed_txn.get_sender(), *side, *qty, *price);
@@ -231,6 +229,10 @@ impl SpotController {
         } 
         Err(AccountError::OrderProc("Only order transactions are supported".to_string()))
     }
-    
+}
 
+impl Default for SpotController {
+    fn default() -> Self {
+        Self::new()
+    }
 }

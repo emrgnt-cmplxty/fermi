@@ -8,16 +8,16 @@
 use super::toy_consensus::ConsensusManager;
 use core::{
     transaction::{
-        CreateAsset,
-        CreateOrderBook,
-        Order,
-        Payment,
-        Stake,
+        CreateAssetRequest,
+        CreateOrderbookRequest,
+        OrderRequest,
+        PaymentRequest,
+        StakeRequest,
         TxnRequest, 
         TxnVariant,
     },
 };
-use engine::orders::{OrderRequest, new_limit_order_request};
+use engine::orders::{new_limit_order_request};
 use gdex_crypto::{SigningKey, hash::{CryptoHash, HashValue}};
 use proc::bank::BankController;
 use std::time::SystemTime;
@@ -30,7 +30,7 @@ use types::{
 
 // helper functions for constructing and signing various blockchain transactions
 pub fn asset_creation_txn(sender_pub_key: AccountPubKey, sender_private_key: &AccountPrivKey) -> Result<TxnRequest<TxnVariant>, AccountError>  {
-    let txn: TxnVariant = TxnVariant::CreateAssetTransaction(CreateAsset{});
+    let txn: TxnVariant = TxnVariant::CreateAssetTransaction(CreateAssetRequest{});
     let txn_hash: HashValue = txn.hash();
     let signed_hash: AccountSignature  = (*sender_private_key).sign(&DiemCryptoMessage(txn_hash.to_string()));
     Ok(
@@ -48,7 +48,7 @@ pub fn orderbook_creation_txn(
     base_asset_id: AssetId,
     quote_asset_id: AssetId, 
 ) -> Result<TxnRequest<TxnVariant>, AccountError>  {
-    let txn: TxnVariant = TxnVariant::CreateOrderbookTransaction(CreateOrderBook::new(base_asset_id, quote_asset_id));
+    let txn: TxnVariant = TxnVariant::CreateOrderbookTransaction(CreateOrderbookRequest::new(base_asset_id, quote_asset_id));
     let txn_hash: HashValue = txn.hash();
     let signed_hash: AccountSignature  = (*sender_private_key).sign(&DiemCryptoMessage(txn_hash.to_string()));
     Ok(
@@ -79,7 +79,7 @@ pub fn order_transaction(
         SystemTime::now()
     );
     
-    let txn: TxnVariant = TxnVariant::OrderTransaction(Order::new(order));
+    let txn: TxnVariant = TxnVariant::OrderTransaction(order);
     let txn_hash: HashValue = txn.hash();
     let signed_hash: AccountSignature  = (*sender_private_key).sign(&DiemCryptoMessage(txn_hash.to_string()));
     Ok(
@@ -92,7 +92,7 @@ pub fn order_transaction(
 }
 
 pub fn stake_txn(validator_pub_key: AccountPubKey, validator_private_key: &AccountPrivKey, amount: u64) -> Result<TxnRequest<TxnVariant>, AccountError>  {
-    let txn: TxnVariant = TxnVariant::StakeAssetTransaction(Stake::new(validator_pub_key, amount));
+    let txn: TxnVariant = TxnVariant::StakeAsset(StakeRequest::new(validator_pub_key, amount));
     let txn_hash: HashValue = txn.hash();
     let signed_hash: AccountSignature  = (*validator_private_key).sign(&DiemCryptoMessage(txn_hash.to_string()));
     Ok(
@@ -111,7 +111,7 @@ pub fn payment_txn(
     asset_id: u64,
     amount: u64
 ) -> Result<TxnRequest<TxnVariant>, AccountError>  {
-    let txn: TxnVariant = TxnVariant::PaymentTransaction(Payment::new(sender_pub_key, receiver_pub_key, asset_id, amount));
+    let txn: TxnVariant = TxnVariant::PaymentTransaction(PaymentRequest::new(sender_pub_key, receiver_pub_key, asset_id, amount));
     let txn_hash: HashValue = txn.hash();
     let signed_hash: AccountSignature  = (*sender_private_key).sign(&DiemCryptoMessage(txn_hash.to_string()));
     Ok(
@@ -157,7 +157,7 @@ fn execute_transaction(consensus_manager: &mut ConsensusManager, txn_request: &T
             let bank_controller: &mut BankController = consensus_manager.get_bank_controller();
             bank_controller.create_asset(txn_request.get_sender())?;
         }
-        TxnVariant::StakeAssetTransaction(stake) => {
+        TxnVariant::StakeAsset(stake) => {
             let (bank_controller, stake_controller, _spot_controller) = consensus_manager.get_all_controllers();
             stake_controller.stake(bank_controller, stake.get_from(), stake.get_amount())?;
         }

@@ -109,7 +109,7 @@ impl PrivateKey {
     /// several schemes, which would lead to BAD vulnerabilities.
     pub fn from_ed25519_private_bytes(private_slice: &[u8]) -> Result<Self, CryptoMaterialError> {
         let ed25519_secretkey = ed25519_dalek::SecretKey::from_bytes(private_slice)
-            .map_err(|_| CryptoMaterialError::DeserializationError)?;
+            .map_err(|_| CryptoMaterialError::Deserialization)?;
         let expanded_key = ed25519_dalek::ExpandedSecretKey::from(&ed25519_secretkey);
 
         let mut expanded_keypart = [0u8; 32];
@@ -118,7 +118,7 @@ impl PrivateKey {
 
         // This checks for x25519 clamping & reduction, which is an RFC requirement
         if potential_x25519.to_bytes()[..] != expanded_key.to_bytes()[..32] {
-            Err(CryptoMaterialError::DeserializationError)
+            Err(CryptoMaterialError::Deserialization)
         } else {
             Ok(potential_x25519)
         }
@@ -138,11 +138,11 @@ impl PublicKey {
     /// schemes, which would lead to BAD vulnerabilities.
     pub fn from_ed25519_public_bytes(ed25519_bytes: &[u8]) -> Result<Self, CryptoMaterialError> {
         if ed25519_bytes.len() != 32 {
-            return Err(CryptoMaterialError::DeserializationError);
+            return Err(CryptoMaterialError::Deserialization);
         }
         let ed_point = curve25519_dalek::edwards::CompressedEdwardsY::from_slice(ed25519_bytes)
             .decompress()
-            .ok_or(CryptoMaterialError::DeserializationError)?;
+            .ok_or(CryptoMaterialError::Deserialization)?;
 
         Ok(x25519::PublicKey::from(ed_point.to_montgomery().to_bytes()))
     }
@@ -167,7 +167,7 @@ impl std::convert::TryFrom<&[u8]> for PrivateKey {
     fn try_from(private_key_bytes: &[u8]) -> Result<Self, Self::Error> {
         let private_key_bytes: [u8; PRIVATE_KEY_SIZE] = private_key_bytes
             .try_into()
-            .map_err(|_| traits::CryptoMaterialError::DeserializationError)?;
+            .map_err(|_| traits::CryptoMaterialError::Deserialization)?;
         Ok(Self(x25519_dalek::StaticSecret::from(private_key_bytes)))
     }
 }
@@ -232,7 +232,7 @@ impl std::convert::TryFrom<&[u8]> for PublicKey {
     fn try_from(public_key_bytes: &[u8]) -> Result<Self, Self::Error> {
         let public_key_bytes: [u8; PUBLIC_KEY_SIZE] = public_key_bytes
             .try_into()
-            .map_err(|_| traits::CryptoMaterialError::WrongLengthError)?;
+            .map_err(|_| traits::CryptoMaterialError::WrongLength)?;
         Ok(Self(public_key_bytes))
     }
 }

@@ -67,6 +67,11 @@ impl StakeController
     }
 }
 
+impl Default for StakeController {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 #[cfg(test)]
 mod tests {

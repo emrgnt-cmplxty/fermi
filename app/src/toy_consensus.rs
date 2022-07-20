@@ -134,6 +134,11 @@ impl ConsensusManager {
     }
 }
 
+impl Default for ConsensusManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 #[cfg(test)]
 mod tests {

@@ -3,7 +3,8 @@ extern crate engine;
 extern crate types;
 
 use criterion::{Criterion, Throughput, black_box, criterion_group, criterion_main};
-use engine::{orders::{OrderRequest, new_limit_order_request}, orderbook::Orderbook};
+use core::transaction::OrderRequest;
+use engine::{orders::{new_limit_order_request}, orderbook::Orderbook};
 use gdex_crypto::traits::{Uniform};
 use proc::{
     bank::BankController,

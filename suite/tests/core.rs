@@ -5,9 +5,9 @@ mod test{
 
     use core::{
         transaction::{
-            CreateAsset,
-            Order, 
-            Payment,
+            CreateAssetRequest,
+            OrderRequest, 
+            PaymentRequest,
             TxnRequest, 
             TxnVariant,
             TxnVariant::PaymentTransaction,
@@ -18,7 +18,7 @@ mod test{
         hash_clock::HashClock,
         vote_cert::VoteCert,
     };
-    use engine::orders::{new_limit_order_request};
+    use engine::orders::new_limit_order_request;
     use gdex_crypto::{
         SigningKey,
         Uniform,
@@ -42,20 +42,18 @@ mod test{
         
         let price = 1;
         let qty = 10;
-        let txn: Order = Order::new(
-            new_limit_order_request(
-                BASE_ASSET_ID,
-                QUOTE_ASSET_ID,
-                OrderSide::Bid,
-                price,
-                qty,
-                time::SystemTime::now()
-            ),
+        let txn: OrderRequest = new_limit_order_request(
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
+            OrderSide::Bid,
+            price,
+            qty,
+            time::SystemTime::now()
         );
 
         let txn_hash: HashValue = txn.hash();
         let signed_hash: AccountSignature  = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
-        let signed_txn: TxnRequest<Order> = TxnRequest::<Order>::new(
+        let signed_txn: TxnRequest<OrderRequest> = TxnRequest::<OrderRequest>::new(
             txn,
             account_pub_key, 
             signed_hash 
@@ -71,7 +69,7 @@ mod test{
         let receiver_private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
         let receiver_pub_key: AccountPubKey = (&receiver_private_key).into();
         
-        let txn: Payment = Payment::new(
+        let txn: PaymentRequest = PaymentRequest::new(
             sender_pub_key,
             receiver_pub_key,
             BASE_ASSET_ID,
@@ -80,7 +78,7 @@ mod test{
 
         let txn_hash: HashValue = txn.hash();
         let signed_hash: AccountSignature  = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
-        let signed_txn: TxnRequest<Payment> = TxnRequest::<Payment>::new(
+        let signed_txn: TxnRequest<PaymentRequest> = TxnRequest::<PaymentRequest>::new(
             txn,
             sender_pub_key, 
             signed_hash 
@@ -94,11 +92,11 @@ mod test{
         let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
         let sender_pub_key: AccountPubKey = (&private_key).into();
         
-        let txn: CreateAsset = CreateAsset{};
+        let txn: CreateAssetRequest = CreateAssetRequest{};
 
         let txn_hash: HashValue = txn.hash();
         let signed_hash: AccountSignature  = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
-        let signed_txn: TxnRequest<CreateAsset> = TxnRequest::<CreateAsset>::new(
+        let signed_txn: TxnRequest<CreateAssetRequest> = TxnRequest::<CreateAssetRequest>::new(
             txn,
             sender_pub_key, 
             signed_hash 
@@ -119,15 +117,13 @@ mod test{
         let price: u64 = 1;
         let qty: u64 = 10;
         let txn: TxnVariant = OrderTransaction(
-            Order::new(
-                new_limit_order_request(
-                    BASE_ASSET_ID,
-                    QUOTE_ASSET_ID,
-                    OrderSide::Bid,
-                    price,
-                    qty,
-                    time::SystemTime::now()
-                ),
+            new_limit_order_request(
+                BASE_ASSET_ID,
+                QUOTE_ASSET_ID,
+                OrderSide::Bid,
+                price,
+                qty,
+                time::SystemTime::now()
             )
         );
         let txn_hash: HashValue = txn.hash();
@@ -141,7 +137,7 @@ mod test{
         txns.push(signed_txn);
 
         let txn: TxnVariant = PaymentTransaction(
-            Payment::new(
+            PaymentRequest::new(
                 account_pub_key,
                 receiver_pub_key,
                 BASE_ASSET_ID,
@@ -159,7 +155,7 @@ mod test{
         txns.push(signed_txn);
 
 
-        let txn: TxnVariant = CreateAssetTransaction(CreateAsset{});
+        let txn: TxnVariant = CreateAssetTransaction(CreateAssetRequest{});
         let txn_hash: HashValue = txn.hash();
         let signed_hash: AccountSignature  = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
         let signed_txn: TxnRequest<TxnVariant> = TxnRequest::<TxnVariant>::new(

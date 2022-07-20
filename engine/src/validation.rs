@@ -1,5 +1,5 @@
-use super::orders::OrderRequest;
-use types::asset::{AssetId};
+use core::transaction::OrderRequest;
+use types::asset::AssetId;
 
 /// Validation errors
 const ERR_BAD_BASE_ASSET: &str = "bad order asset";
@@ -36,7 +36,7 @@ impl OrderRequestValidator
 
     pub fn validate(&self, request: &OrderRequest) -> Result<(), &str> {
         match *request {
-            OrderRequest::NewMarketOrder {
+            OrderRequest::Market {
                 base_asset,
                 quote_asset,
                 side: _side,
@@ -44,7 +44,7 @@ impl OrderRequestValidator
                 ts: _ts,
             } => self.validate_market(base_asset, quote_asset, qty),
 
-            OrderRequest::NewLimitOrder {
+            OrderRequest::Limit {
                 base_asset,
                 quote_asset,
                 side: _side,
@@ -53,7 +53,7 @@ impl OrderRequestValidator
                 ts: _ts,
             } => self.validate_limit(base_asset, quote_asset, price, qty),
 
-            OrderRequest::AmendOrder {
+            OrderRequest::Amend {
                 id,
                 price,
                 side: _side,

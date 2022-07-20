@@ -100,7 +100,7 @@ impl Ed25519PrivateKey {
     ) -> std::result::Result<Ed25519PrivateKey, CryptoMaterialError> {
         match ed25519_dalek::SecretKey::from_bytes(bytes) {
             Ok(dalek_secret_key) => Ok(Ed25519PrivateKey(dalek_secret_key)),
-            Err(_) => Err(CryptoMaterialError::DeserializationError),
+            Err(_) => Err(CryptoMaterialError::Deserialization),
         }
     }
 
@@ -128,7 +128,7 @@ impl Ed25519PublicKey {
     ) -> std::result::Result<Ed25519PublicKey, CryptoMaterialError> {
         match ed25519_dalek::PublicKey::from_bytes(bytes) {
             Ok(dalek_public_key) => Ok(Ed25519PublicKey(dalek_public_key)),
-            Err(_) => Err(CryptoMaterialError::DeserializationError),
+            Err(_) => Err(CryptoMaterialError::Deserialization),
         }
     }
 }
@@ -149,7 +149,7 @@ impl Ed25519Signature {
     ) -> std::result::Result<Ed25519Signature, CryptoMaterialError> {
         match ed25519_dalek::Signature::try_from(bytes) {
             Ok(dalek_signature) => Ok(Ed25519Signature(dalek_signature)),
-            Err(_) => Err(CryptoMaterialError::DeserializationError),
+            Err(_) => Err(CryptoMaterialError::Deserialization),
         }
     }
 
@@ -178,10 +178,10 @@ impl Ed25519Signature {
     /// by a non-signer.
     pub fn check_malleability(bytes: &[u8]) -> std::result::Result<(), CryptoMaterialError> {
         if bytes.len() != ED25519_SIGNATURE_LENGTH {
-            return Err(CryptoMaterialError::WrongLengthError);
+            return Err(CryptoMaterialError::WrongLength);
         }
         if !check_s_lt_l(&bytes[32..]) {
-            return Err(CryptoMaterialError::CanonicalRepresentationError);
+            return Err(CryptoMaterialError::CanonicalRepresentation);
         }
         Ok(())
     }
@@ -202,7 +202,7 @@ impl SigningKey for Ed25519PrivateKey {
     fn sign<T: CryptoHash + Serialize>(&self, message: &T) -> Ed25519Signature {
         let mut bytes = <T::Hasher as CryptoHasher>::seed().to_vec();
         bcs::serialize_into(&mut bytes, &message)
-            .map_err(|_| CryptoMaterialError::SerializationError)
+            .map_err(|_| CryptoMaterialError::Serialization)
             .expect("Serialization of signable material should not fail.");
         Ed25519PrivateKey::sign_arbitrary_message(self, bytes.as_ref())
     }
@@ -328,7 +328,7 @@ impl TryFrom<&[u8]> for Ed25519PublicKey {
         // We need to access the Edwards point which is not directly accessible from
         // ed25519_dalek::PublicKey, so we need to do some custom deserialization.
         if bytes.len() != ED25519_PUBLIC_KEY_LENGTH {
-            return Err(CryptoMaterialError::WrongLengthError);
+            return Err(CryptoMaterialError::WrongLength);
         }
 
         let mut bits = [0u8; ED25519_PUBLIC_KEY_LENGTH];
@@ -337,12 +337,12 @@ impl TryFrom<&[u8]> for Ed25519PublicKey {
         let compressed = curve25519_dalek::edwards::CompressedEdwardsY(bits);
         let point = compressed
             .decompress()
-            .ok_or(CryptoMaterialError::DeserializationError)?;
+            .ok_or(CryptoMaterialError::Deserialization)?;
 
         // Check if the point lies on a small subgroup. This is required
         // when using curves with a small cofactor (in ed25519, cofactor = 8).
         if point.is_small_order() {
-            return Err(CryptoMaterialError::SmallSubgroupError);
+            return Err(CryptoMaterialError::SmallSubgroup);
         }
 
         // Unfortunately, tuple struct `PublicKey` is private so we cannot
@@ -386,7 +386,7 @@ impl Signature for Ed25519Signature {
         precondition!(has_tag!(public_key, ValidatedPublicKeyTag));
         let mut bytes = <T::Hasher as CryptoHasher>::seed().to_vec();
         bcs::serialize_into(&mut bytes, &message)
-            .map_err(|_| CryptoMaterialError::SerializationError)?;
+            .map_err(|_| CryptoMaterialError::Serialization)?;
         Self::verify_arbitrary_msg(self, &bytes, public_key)
     }
 
@@ -422,7 +422,7 @@ impl Signature for Ed25519Signature {
         }
         let mut message_bytes = <T::Hasher as CryptoHasher>::seed().to_vec();
         bcs::serialize_into(&mut message_bytes, &message)
-            .map_err(|_| CryptoMaterialError::SerializationError)?;
+            .map_err(|_| CryptoMaterialError::Serialization)?;
 
         let batch_argument = keys_and_signatures
             .iter()
@@ -447,7 +447,7 @@ impl Signature for Ed25519Signature {
     // is that the best way to handle such cases?
     #[cfg(feature = "batch")]
     fn batch_verify_distinct<T: CryptoHash + Serialize>(
-        messages: &Vec<T>,
+        messages: &[T],
         keys_and_signatures: Vec<(Self::VerifyingKeyMaterial, Self)>,
     ) -> Result<()> {
         for (_, sig) in keys_and_signatures.iter() {
@@ -462,7 +462,7 @@ impl Signature for Ed25519Signature {
         for message in messages.iter() {
             let mut message_bytes = <T::Hasher as CryptoHasher>::seed().to_vec();
             bcs::serialize_into(&mut message_bytes, &message)
-                .map_err(|_| CryptoMaterialError::SerializationError)?;
+                .map_err(|_| CryptoMaterialError::Serialization)?;
                 message_to_bytes.push(message_bytes);
 
         }

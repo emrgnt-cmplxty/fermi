@@ -9,7 +9,7 @@ mod tests {
     use core::{
         block::{Block, BlockContainer, generate_block_hash},
         hash_clock::HashClock,
-        transaction::{Order, TxnRequest, TxnVariant},
+        transaction::{TxnRequest, TxnVariant},
         vote_cert::VoteCert,
     };
     use engine::orders::new_limit_order_request;
@@ -44,19 +44,16 @@ mod tests {
         let mut spot_controller: SpotController = SpotController::new();
         spot_controller.create_orderbook(base_asset_id, quote_asset_id).unwrap();
 
-
         let price: u64 = 1;
         let qty: u64 = 10;
         let txn: TxnVariant = TxnVariant::OrderTransaction(
-            Order::new(
-                new_limit_order_request(
-                    base_asset_id,
-                    quote_asset_id,
-                    OrderSide::Bid,
-                    price,
-                    qty,
-                    time::SystemTime::now()
-                )
+            new_limit_order_request(
+                base_asset_id,
+                quote_asset_id,
+                OrderSide::Bid,
+                price,
+                qty,
+                time::SystemTime::now()
             )
         );
 

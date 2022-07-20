@@ -15,19 +15,23 @@ struct OrderIndex {
 // Arrange at first by price and after that by time
 impl Ord for OrderIndex {
     fn cmp(&self, other: &Self) -> Ordering {
-        if self.price < other.price {
-            match self.order_side {
-                OrderSide::Bid => Ordering::Less,
-                OrderSide::Ask => Ordering::Greater,
+        match self.price {
+            x if x < other.price => {
+                match self.order_side {
+                    OrderSide::Bid => Ordering::Less,
+                    OrderSide::Ask => Ordering::Greater,
+                }
+            } 
+            x if x > other.price => {
+                match self.order_side {
+                    OrderSide::Bid => Ordering::Greater,
+                    OrderSide::Ask => Ordering::Less,
+                }
+            } 
+            _ => {
+                // FIFO
+                other.timestamp.cmp(&self.timestamp)
             }
-        } else if self.price > other.price {
-            match self.order_side {
-                OrderSide::Bid => Ordering::Greater,
-                OrderSide::Ask => Ordering::Less,
-            }
-        } else {
-            // FIFO
-            other.timestamp.cmp(&self.timestamp)
         }
     }
 }

@@ -93,6 +93,14 @@ impl <Variant> Block <Variant>
     }
 }
 
+impl<Variant> Default for BlockContainer <Variant> 
+    where Variant : Debug + Clone + CryptoHash + Copy
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+    
 // generate a unique block hash by appending all the hashes transactions inside the block
 pub fn generate_block_hash(txns: &Vec<TxnRequest<TxnVariant>>) -> HashValue {
     let mut hash_string = String::from("");

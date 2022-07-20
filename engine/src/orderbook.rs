@@ -1,3 +1,10 @@
+//! 
+//! orderbook holds functions responsible for running an orderbook application 
+//! 
+//! note, orderbook has commented out line 390 to avoid ranndom failures when quickly submitting transasctions
+//! the uniqueness check in the orderbook is a bit strange anyways, as it includes the ts of the order
+//! we should include some sort of random noise to ensure that every order that touches the book gets inserted
+//! as upstream checks will robustly ensure no duplicates
 extern crate core;
 
 use std::time::SystemTime;
@@ -385,7 +392,7 @@ impl Orderbook
             },
         )
         {
-            results.push(Err(Failed::DuplicateOrderID(order_id)))
+            // results.push(Err(Failed::DuplicateOrderID(order_id)))
         };
     }
 

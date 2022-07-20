@@ -9,8 +9,8 @@ use gdex_crypto::{
 use rand::{prelude::ThreadRng, thread_rng};
 use types::spot::{DiemCryptoMessage};
 
-const NUMBER_OF_MESSAGES: i32 = 128;
-const NUMBER_OF_ACCOUNTS: i32 = 128;
+const NUMBER_OF_MESSAGES: i32 = 1024;
+const NUMBER_OF_ACCOUNTS: i32 = 1024;
 
 // we pass in the number of messages we want to verify, a list of signatures, a list of private keys, and a list of public keys
 #[inline]
@@ -58,11 +58,11 @@ fn criterion_benchmark(c: &mut Criterion) {
     // looping through accounts
     for _i in 0..NUMBER_OF_ACCOUNTS {
         let mut csprng: ThreadRng = thread_rng();
-        let private_key = Ed25519PrivateKey::generate(&mut csprng);
+        let private_key: Ed25519PrivateKey = Ed25519PrivateKey::generate(&mut csprng);
         let public_key: Ed25519PublicKey = (&private_key).into();
         // pushing transactions
         for _ in 0..messages_per_account {
-            let msg = DiemCryptoMessage("dummy".to_string());
+            let msg: DiemCryptoMessage = DiemCryptoMessage("dummy".to_string());
             let sig: Ed25519Signature = private_key.sign(&msg);
             sigs.push(sig.clone());
             keys_and_signatures.push((public_key, sig));

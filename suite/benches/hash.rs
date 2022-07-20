@@ -3,7 +3,7 @@
 #[macro_use]
 extern crate criterion;
 
-use criterion::Criterion;
+use criterion::{Criterion, Throughput};
 use gdex_crypto_derive::{BCSCryptoHash, CryptoHasher};
 use gdex_crypto::hash::CryptoHash;
 use serde::{Deserialize, Serialize};
@@ -14,6 +14,7 @@ struct Order {
     quantity: i32,
     side: String,
 }
+const NUMBER_OF_MESSAGES: u64 = 10_000;
 
 // we pass in the number of messages we want to verify, a list of signatures, a list of private keys, and a list of public keys
 #[inline]
@@ -22,7 +23,7 @@ fn basic_hash(
 ) {
     // getting the hash the first time
     let mut i = 0;
-    while i < 10_000{
+    while i < NUMBER_OF_MESSAGES {
         order.hash();
         i+=1
     }
@@ -35,8 +36,9 @@ fn criterion_benchmark(c: &mut Criterion) {
         quantity: 10,
         side: String::from("Buy"),
     };
-
-    c.bench_function("basic_hash", |b| {
+    let mut group = c.benchmark_group("hash_speed");
+    group.throughput(Throughput::Elements((NUMBER_OF_MESSAGES) as u64));
+    group.bench_function("basic_hash", |b| {
         b.iter(|| basic_hash(&order))
     });
 }

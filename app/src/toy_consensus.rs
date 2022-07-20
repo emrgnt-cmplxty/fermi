@@ -6,11 +6,7 @@ extern crate core;
 extern crate proc;
 extern crate types;
 
-use super::router::{
-    asset_creation_txn,
-    route_transaction, 
-    stake_txn,
-};
+use super::router::{asset_creation_txn, route_transaction, stake_txn};
 use core::{
     block::{Block, BlockContainer, generate_block_hash},
     hash_clock::HashClock,
@@ -60,7 +56,7 @@ impl ConsensusManager {
         }
     }
 
-    // take a list of transactions and create a valid Block w/ validator vote included
+    // take a list of transactions and create a valid Block w/ the managers vote included
     pub fn propose_block(&self, txns: Vec<TxnRequest<TxnVariant>>) -> Result<Block::<TxnVariant>, AccountError> {
         let block_hash: HashValue = generate_block_hash(&txns);
         let mut vote_cert: VoteCert = VoteCert::new(self.stake_controller.get_staked(&self.validator_pub_key)?, block_hash);
@@ -74,16 +70,14 @@ impl ConsensusManager {
     pub fn build_genesis_block(&mut self) -> Result<Block::<TxnVariant>, AccountError> {
         let mut txns: Vec<TxnRequest<TxnVariant>> = Vec::new();
 
-        // GENESIS TXN #0
-        // create the base asset of the blockhain
-        // <-- clearly there is some hair on this process as we are assuming all tokens at genesis go to our primary validator -->
-        // --> this can be alleviated by extending the functionality of the bank module <--
+        // GENESIS TXN #0 -> create the base asset of the blockhain
+        // <-- there is some hair on this process as we currently issue all tokens at genesis to the initial generator -->
+        // --> however, this can be alleviated by extending the functionality of the bank module <--
         let signed_txn: TxnRequest<TxnVariant> = asset_creation_txn(self.validator_pub_key, &self.validator_private_key)?;
         route_transaction(self, &signed_txn)?;
         txns.push(signed_txn);
 
-        // GENESIS TXN 1
-        // stake initial funds to allow consensus to begin
+        // GENESIS TXN 1 -> stake some manager funds to allow consensus to begin
         let signed_txn: TxnRequest<TxnVariant> = stake_txn(self.validator_pub_key, &self.validator_private_key, GENESIS_STAKE_AMOUNT)?;
         route_transaction(self, &signed_txn)?;
         txns.push(signed_txn);
@@ -94,10 +88,11 @@ impl ConsensusManager {
 
     // cast a vote on a given block and append a valid signature
     pub fn cast_vote(&self, vote_cert: &mut VoteCert, vote_response: bool) -> Result<(), AccountError> {
-        let validator_signed_hash: AccountSignature  = self.validator_private_key.sign(&vote_cert.compute_vote_msg(vote_response));
+        // validator signs the block hash appended to their vote response
+        let validator_signature: AccountSignature  = self.validator_private_key.sign(&vote_cert.compute_vote_msg(vote_response));
         vote_cert.append_vote(
             self.validator_pub_key, 
-            validator_signed_hash, 
+            validator_signature, 
             vote_response, 
             self.stake_controller.get_staked(&self.validator_pub_key)?
         )?;
@@ -193,7 +188,6 @@ mod tests {
         route_transaction(&mut primary_validator, &signed_txn).unwrap();
         txns.push(signed_txn);
         let secondary_staked: u64 = primary_validator.stake_controller.get_staked(&secondary_validator.get_validator_pub_key()).unwrap();
-
         assert!(secondary_staked == SECONDARY_SEED_PAYMENT, "Unexpected stake after staking secondary validator");
 
         // process second block
@@ -203,7 +197,6 @@ mod tests {
         let second_block: Block<TxnVariant> = primary_validator.propose_block(txns).unwrap();
         // second validator does not need to vote as staked amount remains significantly less than primary
         second_block.validate_block().unwrap();
-
 
         // begin third block - here a second asset will be made and an orderbook inistantiated
         let mut txns: Vec<TxnRequest<TxnVariant>> = Vec::new();

@@ -437,6 +437,42 @@ impl Signature for Ed25519Signature {
             .map_err(|e| anyhow!("{}", e))?;
         Ok(())
     }
+
+
+    // same as batch_verify above, but re-written to allow distinct messages
+    // TODO - owen did some nasty to get this to work, what is a cleaner way?
+    // e.g. trying to directly store  &(&message_bytes)[..] into Vec<&[u8]> creates 
+    // ref err as message_bytes goes out of scope
+    // to avoid the bytes are stored directly and mapped into refs afterwards
+    // is that the best way to handle such cases?
+    #[cfg(feature = "batch")]
+    fn batch_verify_distinct<T: CryptoHash + Serialize>(
+        messages: &Vec<T>,
+        keys_and_signatures: Vec<(Self::VerifyingKeyMaterial, Self)>,
+    ) -> Result<()> {
+        for (_, sig) in keys_and_signatures.iter() {
+            Ed25519Signature::check_malleability(&sig.to_bytes())?
+        }
+        let batch_argument = keys_and_signatures
+        .iter()
+        .map(|(key, signature)| (key.0, signature.0));
+        let (dalek_public_keys, dalek_signatures): (Vec<_>, Vec<_>) = batch_argument.unzip();
+
+        let mut message_to_bytes: Vec<Vec<u8>> = Vec::new();
+        for message in messages.iter() {
+            let mut message_bytes = <T::Hasher as CryptoHasher>::seed().to_vec();
+            bcs::serialize_into(&mut message_bytes, &message)
+                .map_err(|_| CryptoMaterialError::SerializationError)?;
+                message_to_bytes.push(message_bytes);
+
+        }
+        let message_refs: Vec<&[u8]> = message_to_bytes.iter().map(|x| &x[..]).collect();
+
+        ed25519_dalek::verify_batch(&message_refs[..], &dalek_signatures[..], &dalek_public_keys[..])
+            .map_err(|e| anyhow!("{}", e))?;
+
+        Ok(())
+    }
 }
 
 impl Length for Ed25519Signature {

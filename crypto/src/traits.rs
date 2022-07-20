@@ -255,6 +255,22 @@ pub trait Signature:
         }
         Ok(())
     }
+
+    /// The implementer can override a batch verification implementation
+    /// that by default iterates over each signature. More efficient
+    /// implementations exist and should be implemented for many schemes.
+    fn batch_verify_distinct<T: CryptoHash + Serialize>(
+        messages: &Vec<T>,
+        keys_and_signatures: Vec<(Self::VerifyingKeyMaterial, Self)>,
+    ) -> Result<()> {
+        for (key, signature) in keys_and_signatures {
+            for message in messages.iter() {
+                signature.verify(message, &key)?
+            }
+        }
+        Ok(())
+    }
+
 }
 
 /// A type family for schemes which know how to generate key material from

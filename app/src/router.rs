@@ -45,10 +45,10 @@ pub fn asset_creation_txn(sender_pub_key: AccountPubKey, sender_private_key: &Ac
 pub fn orderbook_creation_txn(
     sender_pub_key: AccountPubKey, 
     sender_private_key: &AccountPrivKey, 
-    quote_asset_id: AssetId, 
     base_asset_id: AssetId,
+    quote_asset_id: AssetId, 
 ) -> Result<TxnRequest<TxnVariant>, AccountError>  {
-    let txn: TxnVariant = TxnVariant::CreateOrderbookTransaction(CreateOrderBook::new(quote_asset_id, base_asset_id));
+    let txn: TxnVariant = TxnVariant::CreateOrderbookTransaction(CreateOrderBook::new(base_asset_id, quote_asset_id));
     let txn_hash: HashValue = txn.hash();
     let signed_hash: AccountSignature  = (*sender_private_key).sign(&DiemCryptoMessage(txn_hash.to_string()));
     Ok(
@@ -127,7 +127,25 @@ pub fn payment_txn(
 pub fn route_transaction(consensus_manager: &mut ConsensusManager, txn_request: &TxnRequest<TxnVariant>) -> Result<(), AccountError> {
     // TODO #0 //
     txn_request.verify_transaction().unwrap();
-    match txn_request.get_txn() {
+    execute_transaction(consensus_manager, &txn_request)
+}
+
+#[cfg(feature = "batch")]
+use core::transaction::verify_transaction_batch;
+
+#[cfg(feature = "batch")]
+// take a vector of transaction requests and batch verify before routing appropriate controller function(s)
+pub fn route_transaction_batch(consensus_manager: &mut ConsensusManager, txn_requests: &Vec<TxnRequest<TxnVariant>>) -> Result<(), AccountError> {
+    verify_transaction_batch(txn_requests).unwrap();
+    for order_transaction in txn_requests.iter() {
+        execute_transaction(consensus_manager, &order_transaction)?;
+        break;
+    }
+    Ok(())
+}
+
+fn execute_transaction(consensus_manager: &mut ConsensusManager, txn_request: &TxnRequest<TxnVariant>) -> Result<(), AccountError> {
+    match &txn_request.get_txn() {
         &TxnVariant::OrderTransaction(_order) => {
             let (bank_controller, _stake_controller, spot_controller) = consensus_manager.get_all_controllers();
             spot_controller.parse_limit_order_txn(bank_controller, txn_request)?;

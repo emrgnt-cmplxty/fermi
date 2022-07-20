@@ -94,6 +94,7 @@ impl <Variant> Block <Variant>
     }
 }
 
+// generate a unique block hash by appending all the hashes transactions inside the block
 pub fn generate_block_hash(txns: &Vec<TxnRequest<TxnVariant>>) -> HashValue {
     let mut hash_string = String::from("");
     for txn in txns {

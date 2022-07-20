@@ -1,4 +1,7 @@
 //! 
+//! this controller is responsible for managing interactions with a single orderbook
+//! it relies on BankController to verify correctness of balances
+//! 
 //! TODO
 //! 0.) ADD MARKET ORDER SUPPORT
 //! 1.) REMOVE SIG VERIFICATION - HERE FOR EARLY DEV TESTING
@@ -11,29 +14,18 @@ extern crate core;
 extern crate engine;
 extern crate types;
 
-use std::{
-    collections::HashMap,
-    time::SystemTime
-};
 
-use super::{
-    account::{OrderAccount},
-    bank::{BankController}
-};
-use core::{
-    transaction::{
-        TxnRequest, 
-        TxnVariant,
-    }
-};
-use diem_crypto::{traits::{Signature}};
+use super::{account::OrderAccount, bank::BankController};
+use core::transaction::{TxnRequest, TxnVariant};
 use engine::{
-    orderbook::{Orderbook},
-    orders::{OrderRequest, new_limit_order_request}
+    orderbook::Orderbook,
+    orders::{OrderRequest, new_limit_order_request},
 };
+use gdex_crypto::traits::Signature;
+use std::{collections::HashMap, time::SystemTime};
 use types::{
     account::{AccountError, AccountPubKey, AccountSignature},
-    asset::{AssetId},
+    asset::AssetId,
     orderbook::{Failed, OrderSide, OrderProcessingResult, Success},
     spot::{OrderId, DiemCryptoMessage},
 };

@@ -1,4 +1,4 @@
-// Copyright (c) The Diem Core Contributors
+// Copyright (c) The GDEX Core Contributors
 // SPDX-License-Identifier: Apache-2.0
 
 //! This module provides an API for the PureEdDSA signature scheme over the ed25519 twisted
@@ -9,8 +9,8 @@
 //! # Examples
 //!
 //! ```
-//! use diem_crypto_derive::{CryptoHasher, BCSCryptoHash};
-//! use diem_crypto::{
+//! use gdex_crypto_derive::{CryptoHasher, BCSCryptoHash};
+//! use gdex_crypto::{
 //!     ed25519::*,
 //!     traits::{Signature, SigningKey, Uniform},
 //! };
@@ -37,7 +37,7 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use core::convert::TryFrom;
-use diem_crypto_derive::{DeserializeKey, SerializeKey, SilentDebug, SilentDisplay};
+use gdex_crypto_derive::{DeserializeKey, SerializeKey, SilentDebug, SilentDisplay};
 use mirai_annotations::*;
 use serde::Serialize;
 use std::{cmp::Ordering, fmt};

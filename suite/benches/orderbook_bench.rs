@@ -9,7 +9,7 @@ use rand::rngs::{ThreadRng};
 use rocksdb::{ColumnFamilyDescriptor, DB, DBWithThreadMode, Options, SingleThreaded};
 use std::time::SystemTime;
 
-use diem_crypto::{
+use gdex_crypto::{
     traits::{Uniform, SigningKey},
 };
 use engine::{
@@ -161,7 +161,7 @@ fn place_orders_engine_account_signed(
 }
 
 #[cfg(feature = "batch")]
-use diem_crypto::{
+use gdex_crypto::{
     traits::{Signature},
 };
 

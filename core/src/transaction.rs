@@ -1,17 +1,18 @@
+//! 
+//! transactions are the base unit fed into the blockchain
+//! to trigger state transitions
+//! 
 extern crate engine;
-use serde::{Deserialize, Serialize};
-use std::{fmt::Debug};
 
-use diem_crypto::{
-    Signature,
-    hash::{CryptoHash, HashValue},
-};
-use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
-use engine::orders::{OrderRequest};
+use engine::orders::OrderRequest;
+use gdex_crypto::{Signature, hash::{CryptoHash, HashValue}};
+use gdex_crypto_derive::{BCSCryptoHash, CryptoHasher};
+use serde::{Deserialize, Serialize};
+use std::fmt::Debug;
 use types::{
     account::{AccountPubKey, AccountSignature},
-    asset::{AssetId},
-    spot::{DiemCryptoMessage},
+    asset::AssetId,
+    spot::DiemCryptoMessage,
 };
 
 #[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
@@ -133,7 +134,7 @@ where
         &self.txn_signature
     }
 
-    pub fn verify_transaction(&self) -> Result<(), diem_crypto::error::Error> {
+    pub fn verify_transaction(&self) -> Result<(), gdex_crypto::error::Error> {
         let txn_hash: HashValue = self.txn.hash();
         self.txn_signature.verify(&DiemCryptoMessage(txn_hash.to_string()), &self.sender)
     }

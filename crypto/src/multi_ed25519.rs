@@ -1,4 +1,4 @@
-// Copyright (c) The Diem Core Contributors
+// Copyright (c) The GDEX Core Contributors
 // SPDX-License-Identifier: Apache-2.0
 
 //! This module provides an API for the accountable threshold multi-sig PureEdDSA signature scheme
@@ -16,7 +16,7 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use core::convert::TryFrom;
-use diem_crypto_derive::{DeserializeKey, SerializeKey, SilentDebug, SilentDisplay};
+use gdex_crypto_derive::{DeserializeKey, SerializeKey, SilentDebug, SilentDisplay};
 use mirai_annotations::*;
 use rand::Rng;
 use serde::Serialize;

@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 use std::fmt::Debug;
 
-use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
+use gdex_crypto_derive::{BCSCryptoHash, CryptoHasher};
 use types::{
     asset::{AssetId},
     orderbook::{OrderSide}

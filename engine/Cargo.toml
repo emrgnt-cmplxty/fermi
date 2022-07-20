@@ -9,7 +9,7 @@ bcs = "0.1.2"
 serde = { version = "1.0.124", features = ["derive"] }
 rand = "0.8.4"
 criterion = "0.3"
-diem-crypto = { path = "../crypto", features = ["batch"] }
-diem-crypto-derive = { path = "../crypto-derive", version = "0.0.2" }
+gdex-crypto = { path = "../crypto", features = ["batch"] }
+gdex-crypto-derive = { path = "../crypto-derive", version = "0.0.2" }
 diem-workspace-hack = { path = "../workspace-hack" }
 types = { path = "../types" }

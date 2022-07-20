@@ -1,4 +1,4 @@
-// Copyright (c) The Diem Core Contributors
+// Copyright (c) The GDEX Core Contributors
 // SPDX-License-Identifier: Apache-2.0
 #[macro_use]
 extern crate criterion;
@@ -6,8 +6,8 @@ extern crate criterion;
 use criterion::Criterion;
 use serde::{Deserialize, Serialize};
 
-use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
-use diem_crypto::{hash::CryptoHash};
+use gdex_crypto_derive::{BCSCryptoHash, CryptoHasher};
+use gdex_crypto::{hash::CryptoHash};
 
 
 // make a new struct for an order that we have to hash

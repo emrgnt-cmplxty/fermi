@@ -1,4 +1,4 @@
-use diem_crypto::{
+use gdex_crypto::{
     ed25519::{Ed25519PublicKey, Ed25519PrivateKey, Ed25519Signature},
 };
 

@@ -8,5 +8,5 @@ This directory contains the various sub-modules of the blockchain construction.
     ├── bank.rs             # Bank ("token") controller
     ├── lib.rs
     ├── spot.rs             # Spot orderbook controller
-    ├── stake.rs            # Control staked assets
+    └── stake.rs            # Control staked assets
 ```

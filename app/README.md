@@ -5,4 +5,5 @@ This toy consensus model implements a simple proof of stake example with VDF int
 ### How is the module organized?
 
     app/src 
-    └── toy_consensus              # Toy consensus implementation
+    ├── toy_consensus              # Toy consensus implementation
+    └── router                     # Transaction routing implementation

@@ -5,7 +5,7 @@ use std::{
 };
 
 use super::asset::{AssetId};
-use diem_crypto_derive::{BCSCryptoHash, CryptoHasher};
+use gdex_crypto_derive::{BCSCryptoHash, CryptoHasher};
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, CryptoHasher, BCSCryptoHash)]
 pub enum OrderSide {

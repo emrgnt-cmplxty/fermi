@@ -8,8 +8,8 @@ edition = "2018"
 rand = "0.7.0"
 serde = { version = "1.0.124", features = ["derive"] }
 bcs = "0.1.2"
-diem-crypto-derive = { path = "../crypto-derive", version = "0.0.2" }
-diem-crypto = { path = "../crypto", features = ["batch"] }
+gdex-crypto-derive = { path = "../crypto-derive", version = "0.0.2" }
+gdex-crypto = { path = "../crypto", features = ["batch"] }
 diem-workspace-hack = { path = "../workspace-hack" }
 engine = { path = "../engine" }
 types = { path = "../types" }

@@ -1,26 +1,23 @@
 //! 
+//! this controller is responsible for managing user staking
+//! it relies on BankController and only accesses the 0th (first) created asset
+//! 
+//! 
 //! TODO
 //! 0.) ADD SIZE CHECKS ON TRANSACTIONS
 //! 
 extern crate types;
 
+use super::account::StakeAccount;
+use super::bank::{BankController, PRIMARY_ASSET_ID};
 use std::collections::HashMap;
-
-use super::account::{StakeAccount};
-use super::bank::{
-    BankController,
-    STAKE_ASSET_ID,
-};
-use types::{
-    account::{AccountError, AccountPubKey},
-};
+use types::account::{AccountError, AccountPubKey};
 
 // The stake controller is responsible for accessing & modifying user balances 
 pub struct StakeController
 {
     stake_accounts: HashMap<AccountPubKey, StakeAccount>,
 }
-
 impl StakeController
 {
     pub fn new() -> Self {
@@ -43,8 +40,9 @@ impl StakeController
         Ok(stake_account.get_staked_amount())
     }
 
+    // stake funds to participate in consensus
     pub fn stake(&mut self, bank_controller: &mut BankController, account_pub_key: &AccountPubKey, amount: u64) -> Result<(), AccountError> {
-        bank_controller.update_balance(account_pub_key, STAKE_ASSET_ID, -(amount as i64))?;
+        bank_controller.update_balance(account_pub_key, PRIMARY_ASSET_ID, -(amount as i64))?;
         let lookup: Option<&mut StakeAccount> = self.stake_accounts.get_mut(account_pub_key);
         match lookup {
             Some(stake_account) => {
@@ -62,7 +60,7 @@ impl StakeController
 
     // TODO #0 //
     pub fn unstake(&mut self, bank_controller: &mut BankController, account_pub_key: &AccountPubKey, amount: u64) -> Result<(), AccountError> {
-        bank_controller.update_balance(account_pub_key, STAKE_ASSET_ID, amount as i64)?;
+        bank_controller.update_balance(account_pub_key, PRIMARY_ASSET_ID, amount as i64)?;
         let stake_account: &mut StakeAccount = self.stake_accounts.get_mut(account_pub_key).ok_or(AccountError::Lookup("Failed to find account".to_string()))?;
         stake_account.set_staked_amount(stake_account.get_staked_amount() - amount);
         Ok(())
@@ -72,17 +70,12 @@ impl StakeController
 
 #[cfg(test)]
 mod tests {
-
-    use rand::rngs::{ThreadRng};
-    use types::{
-        account::{AccountPubKey, AccountPrivKey},
-    };
-    use diem_crypto::{
-        traits::{Uniform},
-    };
-    
     use super::*;
-    use super::super::bank::{CREATED_ASSET_BALANCE, STAKE_ASSET_ID};
+    use super::super::bank::{CREATED_ASSET_BALANCE, PRIMARY_ASSET_ID};
+
+    use gdex_crypto::traits::{Uniform};
+    use rand::rngs::ThreadRng;
+    use types::account::{AccountPubKey, AccountPrivKey};
 
     const STAKE_AMOUNT: u64 = 1_000;
     #[test]
@@ -90,7 +83,6 @@ mod tests {
         let mut rng: ThreadRng = rand::thread_rng();
         let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
         let account_pub_key: AccountPubKey = (&private_key).into();
-
 
         let mut bank_controller: BankController = BankController::new();
         bank_controller.create_asset(&account_pub_key).unwrap();
@@ -100,7 +92,7 @@ mod tests {
         stake_controller.create_account(&account_pub_key).unwrap();
 
         stake_controller.stake(&mut bank_controller, &account_pub_key, STAKE_AMOUNT).unwrap();
-        assert_eq!(bank_controller.get_balance(&account_pub_key, STAKE_ASSET_ID).unwrap(), CREATED_ASSET_BALANCE - STAKE_AMOUNT);
+        assert_eq!(bank_controller.get_balance(&account_pub_key, PRIMARY_ASSET_ID).unwrap(), CREATED_ASSET_BALANCE - STAKE_AMOUNT);
         assert_eq!(stake_controller.get_staked(&account_pub_key).unwrap(), STAKE_AMOUNT);
     }
 
@@ -114,14 +106,14 @@ mod tests {
 
 
         let mut bank_controller: BankController = BankController::new();
-        bank_controller.create_account(&account_pub_key).unwrap();
         bank_controller.create_asset(&account_pub_key).unwrap();
         bank_controller.create_asset(&account_pub_key).unwrap();
 
         let mut stake_controller: StakeController = StakeController::new();
-        stake_controller.create_account(&account_pub_key).unwrap();
-        assert_eq!(bank_controller.get_balance(&account_pub_key, STAKE_ASSET_ID).unwrap(), 0);
-
-        stake_controller.stake(&mut bank_controller, &account_pub_key, STAKE_AMOUNT).unwrap();
+        assert_eq!(bank_controller.get_balance(&account_pub_key, PRIMARY_ASSET_ID).unwrap(), 0);
+        // staking without funding should create error
+        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
+        let second_account_pub_key: AccountPubKey = (&private_key).into();
+        stake_controller.stake(&mut bank_controller, &second_account_pub_key, STAKE_AMOUNT).unwrap();
     }
 }

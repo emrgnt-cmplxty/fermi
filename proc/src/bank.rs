@@ -1,4 +1,7 @@
 //! 
+//! this controller is responsible for managing user balances 
+//! note, other controllers that rely on balance info will consume this
+//! 
 //! TODO
 //! 0.) ADD MISSING FEATURES TO ASSET WORKFLOW, LIKE OWNER TOKEN MINTING, VARIABLE INITIAL MINT AMT., ...
 //! 1.) MAKE ROBUST ERROR HANDLING FOR ALL FUNCTIONS ~~ DONE
@@ -7,30 +10,23 @@
 //! 
 extern crate types;
 
+use super::account::BankAccount;
 use std::collections::HashMap;
-
-use super::account::{BankAccount};
 use types::{
     account::{AccountError, AccountPubKey},
     asset::{Asset, AssetId}
 };
 
 // TODO #0 //
+pub const PRIMARY_ASSET_ID: u64 = 0;
 pub const CREATED_ASSET_BALANCE: u64 = 1_000_000_000_000;
 
-// The stake asset is used in consensus and is the primary asset of the blockchain 
-// This asset will be used for transaction payment 
-// Further, it is used in other balance related gating 
-pub const STAKE_ASSET_ID: u64 = 0;
-
-// The bank controller is responsible for accessing & modifying user balances 
 pub struct BankController
 {
     asset_id_to_asset: HashMap<AssetId, Asset>,
     bank_accounts: HashMap<AccountPubKey, BankAccount>,
     n_assets: u64,
 }
-
 impl BankController
 {
     pub fn new() -> Self {
@@ -40,8 +36,8 @@ impl BankController
             n_assets: 0,
         }
     }
-
     pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), AccountError> {
+        // do not allow double-creation of a single account
         if self.bank_accounts.contains_key(&account_pub_key) {
             Err(AccountError::Creation("Account already exists!".to_string()))
         } else {
@@ -60,7 +56,7 @@ impl BankController
         if self.n_assets == 0 {
             self.create_account(owner_pub_key)?
         }
-        // throw error if attempting to create asset prior to creating account
+        // throw error if attempting to create asset prior to account creation
         self.check_account_exists(owner_pub_key)?;
 
         self.asset_id_to_asset.insert(self.n_assets, Asset{asset_id: self.n_assets, asset_addr: self.n_assets, owner_pubkey: *owner_pub_key});

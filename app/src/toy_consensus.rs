@@ -1,85 +1,35 @@
 //! 
-//! Toy consensus model that imitates a simple PoS
-//! Features still need further fleshing out
+//! toy consensus model that imitates a simple PoS
+//! features still need further fleshing out
 //! 
 extern crate core;
 extern crate proc;
 extern crate types;
 
-use rand::rngs::{ThreadRng};
-use super::{router::{route_transaction}};
+use super::router::{
+    asset_creation_txn, 
+    route_transaction, 
+    stake_txn,
+};
 use core::{
     block::{Block, BlockContainer, generate_block_hash},
-    hash_clock::{HashClock},
+    hash_clock::HashClock,
     transaction::{
-        CreateAsset,
-        Payment,
-        Stake,
         TxnRequest, 
         TxnVariant, 
     },
-    vote_cert::{VoteCert},
+    vote_cert::VoteCert,
 };
-use diem_crypto::{
-    SigningKey,
-    traits::{Uniform},
-    hash::{CryptoHash, HashValue},
-};
+use gdex_crypto::{SigningKey, traits::Uniform, hash::{HashValue}};
 use proc::{
-    bank::{BankController},
-    stake::{StakeController},
+    bank::BankController,
+    stake::StakeController,
 };
-use types::{
-    account::{AccountPubKey, AccountPrivKey, AccountSignature, AccountError},
-    spot::{DiemCryptoMessage},
-};
+use rand::rngs::ThreadRng;
+use types::{account::{AccountPubKey, AccountPrivKey, AccountSignature, AccountError}};
 
 // specify the number of tokens creator stakes during genesis
 const GENESIS_STAKE_AMOUNT: u64 = 1_000_000;
-
-// helper functions for constructing and signing various blockchain transactions
-fn asset_creation_txn(sender_pub_key: AccountPubKey, sender_private_key: &AccountPrivKey) -> Result<TxnRequest<TxnVariant>, AccountError>  {
-    let txn: TxnVariant = TxnVariant::CreateAssetTransaction(CreateAsset{});
-    let txn_hash: HashValue = txn.hash();
-    let signed_hash: AccountSignature  = (*sender_private_key).sign(&DiemCryptoMessage(txn_hash.to_string()));
-    Ok(
-        TxnRequest::<TxnVariant>::new(
-            txn,
-            sender_pub_key, 
-            signed_hash 
-        )
-    )
-}
-fn stake_txn(validator_pub_key: AccountPubKey, validator_private_key: &AccountPrivKey, amount: u64) -> Result<TxnRequest<TxnVariant>, AccountError>  {
-    let txn: TxnVariant = TxnVariant::StakeAssetTransaction(Stake::new(validator_pub_key, amount));
-    let txn_hash: HashValue = txn.hash();
-    let signed_hash: AccountSignature  = (*validator_private_key).sign(&DiemCryptoMessage(txn_hash.to_string()));
-    Ok(
-        TxnRequest::<TxnVariant>::new(
-            txn,
-            validator_pub_key, 
-            signed_hash 
-        )
-    )
-}
-fn payment_txn(
-    sender_pub_key: AccountPubKey, 
-    sender_private_key: &AccountPrivKey, 
-    receiver_pub_key: AccountPubKey, 
-    asset_id: u64,
-    amount: u64
-) -> Result<TxnRequest<TxnVariant>, AccountError>  {
-    let txn: TxnVariant = TxnVariant::PaymentTransaction(Payment::new(sender_pub_key, receiver_pub_key, asset_id, amount));
-    let txn_hash: HashValue = txn.hash();
-    let signed_hash: AccountSignature  = (*sender_private_key).sign(&DiemCryptoMessage(txn_hash.to_string()));
-    Ok(
-        TxnRequest::<TxnVariant>::new(
-            txn,
-            sender_pub_key, 
-            signed_hash 
-        )
-    )
-}
 
 pub struct ConsensusManager
 {
@@ -184,11 +134,10 @@ impl ConsensusManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use proc::{
-        bank::{CREATED_ASSET_BALANCE, STAKE_ASSET_ID},
-    };
-
-    // specify # of tokens sent to second validator
+    use super::super::router::payment_txn;
+    use proc::{bank::{CREATED_ASSET_BALANCE, PRIMARY_ASSET_ID}};
+    
+    // specify the number of tokens sent to second validator
     const SECONDARY_SEED_PAYMENT: u64 = 100_000;
 
     #[test]
@@ -206,7 +155,7 @@ mod tests {
 
         // check that the initial funding was successful by checking state of controllers
         let primary_pub_key: AccountPubKey = primary_validator.get_validator_pub_key();
-        let primary_balance: u64 = primary_validator.get_bank_controller().get_balance(&primary_pub_key, STAKE_ASSET_ID).unwrap();
+        let primary_balance: u64 = primary_validator.get_bank_controller().get_balance(&primary_pub_key, PRIMARY_ASSET_ID).unwrap();
         assert!(primary_balance == CREATED_ASSET_BALANCE - GENESIS_STAKE_AMOUNT, "Unexpected balance after token genesis & stake");
         let primary_staked: u64 = primary_validator.get_stake_controller().get_staked(&primary_pub_key).unwrap();
         assert!(primary_staked == GENESIS_STAKE_AMOUNT, "Unexpected stake balance after staking primary validator");
@@ -219,14 +168,14 @@ mod tests {
             primary_pub_key,
             primary_validator.get_validator_private_key(),
             secondary_validator.get_validator_pub_key(),
-            STAKE_ASSET_ID,
+            PRIMARY_ASSET_ID,
             SECONDARY_SEED_PAYMENT
         ).unwrap();
         route_transaction(&mut primary_validator, &signed_txn).unwrap();
         txns.push(signed_txn);
 
         let secondary_pub_key: AccountPubKey = secondary_validator.get_validator_pub_key();
-        let secondary_balance: u64 = primary_validator.get_bank_controller().get_balance(&secondary_pub_key, STAKE_ASSET_ID).unwrap();
+        let secondary_balance: u64 = primary_validator.get_bank_controller().get_balance(&secondary_pub_key, PRIMARY_ASSET_ID).unwrap();
         assert!(secondary_balance == SECONDARY_SEED_PAYMENT, "Unexpected balance after funding second validator");
 
         // stake second validator
@@ -252,7 +201,7 @@ mod tests {
         route_transaction(&mut primary_validator, &signed_txn).unwrap();
         txns.push(signed_txn);
 
-        let new_asset_balance: u64 = primary_validator.get_bank_controller().get_balance(&secondary_pub_key, STAKE_ASSET_ID+1).unwrap();
+        let new_asset_balance: u64 = primary_validator.get_bank_controller().get_balance(&secondary_pub_key, PRIMARY_ASSET_ID+1).unwrap();
         assert!(new_asset_balance == CREATED_ASSET_BALANCE, "Unexpected balance after second token genesis");
 
         // TODO - add order book logic here

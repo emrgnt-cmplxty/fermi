@@ -7,8 +7,8 @@ edition = "2018"
 [dependencies]
 bcs = "0.1.2"
 serde = { version = "1.0.124", features = ["derive"] }
-diem-crypto = { path = "../crypto" }
-diem-crypto-derive = { path = "../crypto-derive", version = "0.0.2" }
+gdex-crypto = { path = "../crypto" }
+gdex-crypto-derive = { path = "../crypto-derive", version = "0.0.2" }
 
 [features]
 batch = []

@@ -1,8 +1,8 @@
 [package]
-name = "diem-crypto-derive"
+name = "gdex-crypto-derive"
 version = "0.0.2"
-authors = ["Diem Association <opensource@diem.com>"]
-description = "Diem custom derives for `diem-crypto`"
+authors = ["GDEX Association <opensource@diem.com>"]
+description = "GDEX custom derives for `gdex-crypto`"
 repository = "https://github.com/diem/diem"
 homepage = "https://diem.com"
 license = "Apache-2.0"

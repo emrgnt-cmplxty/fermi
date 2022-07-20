@@ -1,9 +1,9 @@
-// Copyright (c) The Diem Core Contributors
+// Copyright (c) The GDEX Core Contributors
 // SPDX-License-Identifier: Apache-2.0
 
 //! This module defines traits and implementations of
 //! [cryptographic hash functions](https://en.wikipedia.org/wiki/Cryptographic_hash_function)
-//! for the Diem project.
+//! for the GDEX project.
 //!
 //! It is designed to help authors protect against two types of real world attacks:
 //!
@@ -21,9 +21,9 @@
 //!    same input to the hash function and therefore the same hash. This
 //!    creates a collision.
 //!
-//! Regarding (1), this library makes it easy for Diem developers to create as
+//! Regarding (1), this library makes it easy for GDEX developers to create as
 //! many new "hashable" Rust types as needed so that each Rust type hashed and signed
-//! in Diem has a unique meaning, that is, unambiguously captures the intent of a signer.
+//! in GDEX has a unique meaning, that is, unambiguously captures the intent of a signer.
 //!
 //! Regarding (2), this library provides the `CryptoHasher` abstraction to easily manage
 //! cryptographic seeds for hashing. Hashing seeds aim to ensure that
@@ -37,10 +37,10 @@
 //! # Quick Start
 //!
 //! To obtain a `hash()` method for any new type `MyNewStruct`, it is (strongly) recommended to
-//! use the derive macros of `serde` and `diem_crypto_derive` as follows:
+//! use the derive macros of `serde` and `gdex_crypto_derive` as follows:
 //! ```
-//! use diem_crypto::hash::CryptoHash;
-//! use diem_crypto_derive::{CryptoHasher, BCSCryptoHash};
+//! use gdex_crypto::hash::CryptoHash;
+//! use gdex_crypto_derive::{CryptoHasher, BCSCryptoHash};
 //! use serde::{Deserialize, Serialize};
 //! #[derive(Serialize, Deserialize, CryptoHasher, BCSCryptoHash)]
 //! struct MyNewStruct { /*...*/ }
@@ -63,7 +63,7 @@
 //! use the derive macro [`CryptoHasher`](https://doc.rust-lang.org/reference/procedural-macros.html).
 //!
 //! ```
-//! use diem_crypto_derive::CryptoHasher;
+//! use gdex_crypto_derive::CryptoHasher;
 //! use serde::Deserialize;
 //! #[derive(Deserialize, CryptoHasher)]
 //! #[serde(rename = "OptionalCustomSerdeName")]
@@ -92,7 +92,7 @@
 //! **IMPORTANT:** Do NOT use this for new code unless you know what you are doing.
 //!
 //! ```
-//! use diem_crypto::hash::{CryptoHasher, TestOnlyHasher};
+//! use gdex_crypto::hash::{CryptoHasher, TestOnlyHasher};
 //!
 //! let mut hasher = TestOnlyHasher::default();
 //! hasher.update("Test message".as_bytes());
@@ -659,7 +659,7 @@ pub static GENESIS_BLOCK_ID: Lazy<HashValue> = Lazy::new(|| {
 ///
 /// # Example
 /// ```
-/// use diem_crypto::hash::TestOnlyHash;
+/// use gdex_crypto::hash::TestOnlyHash;
 ///
 /// b"hello world".test_only_hash();
 /// ```

@@ -7,7 +7,7 @@ extern crate types;
 
 use rand::rngs::{ThreadRng};
 
-use diem_crypto::{
+use gdex_crypto::{
     traits::{Uniform},
 };
 use proc::{

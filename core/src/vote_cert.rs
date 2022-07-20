@@ -1,3 +1,7 @@
+//! 
+//! vote certificates are used to certify that a block
+//! has passed through consensus and garnered sufficient votes
+//! 
 //! TODO
 //! 0.) BUILD CUSTOM ERROR TYPES
 //! 1.) GET RID OF LAZY PANIC CHECKS
@@ -5,21 +9,16 @@
 //! 3.) INCLUDE VOTE HASH & SIGNATURE
 //! 4.) Move compute_vote_output to dedicated type
 //! 
-
-use std::{
-    collections::HashMap,
-};
-
-use diem_crypto::{
-    Signature,
-    hash::{HashValue},
-};
+use gdex_crypto::{Signature, hash::HashValue};
+use std::collections::HashMap;
 use types::{
     account::{AccountPubKey, AccountSignature, AccountError},
     spot::{DiemCryptoMessage},
 };
 
+// default fraction of staked amount that must vote for a quorum to be reached
 pub const DEFAULT_QUORUM_THRESHOLD: f64 = 0.05;
+// default fraction of positive votes necessary for block to pass
 pub const DEFAULT_VOTE_THRESHOLD: f64 = 0.50;
 
     // TODO #2 & # 3 //
@@ -117,7 +116,7 @@ impl VoteCert {
 
 #[cfg(test)]
 mod tests {
-    use diem_crypto::{
+    use gdex_crypto::{
         SigningKey,
         Uniform,
         hash::{CryptoHash},

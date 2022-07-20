@@ -1,11 +1,10 @@
-use std::{fmt::Debug};
-
-use diem_crypto::{
-    hash::{CryptoHash, HashValue},
-};
-use types::{
-    spot::{DiemCryptoMessage},
-};
+//! 
+//! the hashclock is a blockchain primitive that enables a vdf
+//! to be constructed trivially
+//! 
+use gdex_crypto::hash::{CryptoHash, HashValue};
+use std::fmt::Debug;
+use types::spot::DiemCryptoMessage;
 
 #[derive(Debug)]
 pub struct HashClock {

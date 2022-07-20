@@ -1,13 +1,17 @@
-use std::{fmt::Debug};
-
+//! 
+//! the block contains a list of transactions as well 
+//! as a associated metadata which relates to consensus
+//! 
+//! TODO
+//! 0.) RELOCATE APPROPRIATE TESTS FROM SUITE/CORE TO HERE
+//!
 use super::transaction::{TxnRequest, TxnVariant};
-use super::vote_cert::{VoteCert};
-use diem_crypto::{
-    hash::{CryptoHash, HashValue},
-};
+use super::vote_cert::VoteCert;
+use gdex_crypto::hash::{CryptoHash, HashValue};
+use std::fmt::Debug;
 use types::{
     account::{AccountPubKey, AccountError},
-    spot::{DiemCryptoMessage},
+    spot::DiemCryptoMessage,
 };
 
 pub struct BlockContainer <Variant>

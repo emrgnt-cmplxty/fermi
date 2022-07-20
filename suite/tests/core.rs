@@ -25,7 +25,7 @@ use core::{
         VoteCert
     },
 };
-use diem_crypto::{
+use gdex_crypto::{
     SigningKey,
     Uniform,
     hash::{CryptoHash, HashValue},

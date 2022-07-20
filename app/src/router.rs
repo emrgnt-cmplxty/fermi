@@ -9,6 +9,7 @@ use super::toy_consensus::ConsensusManager;
 use core::{
     transaction::{
         CreateAsset,
+        CreateOrderBook,
         Payment,
         Stake,
         TxnRequest, 
@@ -18,6 +19,7 @@ use core::{
 use gdex_crypto::{SigningKey, hash::{CryptoHash, HashValue}};
 use proc::bank::BankController;
 use types::{
+    asset::AssetId,
     account::{AccountPubKey, AccountPrivKey, AccountSignature, AccountError},
     spot::DiemCryptoMessage,
 };
@@ -25,6 +27,24 @@ use types::{
 // helper functions for constructing and signing various blockchain transactions
 pub fn asset_creation_txn(sender_pub_key: AccountPubKey, sender_private_key: &AccountPrivKey) -> Result<TxnRequest<TxnVariant>, AccountError>  {
     let txn: TxnVariant = TxnVariant::CreateAssetTransaction(CreateAsset{});
+    let txn_hash: HashValue = txn.hash();
+    let signed_hash: AccountSignature  = (*sender_private_key).sign(&DiemCryptoMessage(txn_hash.to_string()));
+    Ok(
+        TxnRequest::<TxnVariant>::new(
+            txn,
+            sender_pub_key, 
+            signed_hash 
+        )
+    )
+}
+
+pub fn orderbook_creation_txn(
+    sender_pub_key: AccountPubKey, 
+    sender_private_key: &AccountPrivKey, 
+    quote_asset_id: AssetId, 
+    base_asset_id: AssetId,
+) -> Result<TxnRequest<TxnVariant>, AccountError>  {
+    let txn: TxnVariant = TxnVariant::CreateOrderbookTransaction(CreateOrderBook::new(quote_asset_id, base_asset_id));
     let txn_hash: HashValue = txn.hash();
     let signed_hash: AccountSignature  = (*sender_private_key).sign(&DiemCryptoMessage(txn_hash.to_string()));
     Ok(
@@ -88,8 +108,14 @@ pub fn route_transaction(consensus_manager: &mut ConsensusManager, txn_request: 
             return Ok(())
         }
         &TxnVariant::StakeAssetTransaction(stake) => {
-            let (bank_controller,stake_controller) = consensus_manager.get_all_controllers();
+            let (bank_controller, stake_controller, _spot_controller) = consensus_manager.get_all_controllers();
             stake_controller.stake(bank_controller, stake.get_from(), stake.get_amount())?;
+            return Ok(())
+        }
+        &TxnVariant::CreateOrderbookTransaction(create_orderbook) => {
+            let (_bank_controller, _stake_controller, spot_controller) = consensus_manager.get_all_controllers();
+            // stake_controller.stake(bank_controller, stake.get_from(), stake.get_amount())?;
+            spot_controller.create_orderbook(create_orderbook.get_base_asset_id(), create_orderbook.get_quote_asset_id())?;
             return Ok(())
         }
     }

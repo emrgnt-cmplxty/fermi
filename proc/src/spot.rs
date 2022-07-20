@@ -8,7 +8,6 @@
 //! 2.) RESTRICT overwrite_orderbook TO BENCH ONLY MODE
 //! 3.) CONSIDER ADDITIONAL FEATURES, LIKE ESCROW IMPLEMENTATION OR ORDER LIMITS
 //! 4.) CHECK PASSED ASSETS EXIST IN BANK MODULE
-//! 5.) CHECK PASSED ASSET IDS FOR CONSISTENTC6
 //! 
 extern crate core;
 extern crate engine;
@@ -25,7 +24,7 @@ use gdex_crypto::traits::Signature;
 use std::{collections::HashMap, time::SystemTime};
 use types::{
     account::{AccountError, AccountPubKey, AccountSignature},
-    asset::AssetId,
+    asset::{AssetId, AssetPairKey},
     orderbook::{Failed, OrderSide, OrderProcessingResult, Success},
     spot::{OrderId, DiemCryptoMessage},
 };
@@ -34,7 +33,7 @@ use types::{
 pub const DUMMY_MESSAGE: &str = "dummy_val";
 
 // The spot controller is responsible for accessing & modifying user orders 
-pub struct SpotController
+pub struct OrderbookInterface
 {
     base_asset_id: AssetId,
     quote_asset_id: AssetId,
@@ -42,14 +41,13 @@ pub struct SpotController
     accounts: HashMap<AccountPubKey, OrderAccount>,
     order_to_account: HashMap<OrderId, AccountPubKey>,
 }
-
-impl SpotController
+impl OrderbookInterface
 {
     // TODO #4 //
     pub fn new(base_asset_id: AssetId, quote_asset_id: AssetId) -> Self {
         assert!(base_asset_id != quote_asset_id);
         let orderbook: Orderbook = Orderbook::new(base_asset_id, quote_asset_id);
-        SpotController{
+        OrderbookInterface{
             base_asset_id,
             quote_asset_id,
             orderbook,
@@ -101,25 +99,6 @@ impl SpotController
         );
         let res: Vec<Result<Success, Failed>> = self.orderbook.process_order(order);
         self.proc_limit_result(bank_controller, account_pub_key, side, price, qty, res)
-    }
-
-    // TODO #5 //
-    pub fn parse_limit_order_txn(
-        &mut self, 
-        bank_controller: &mut BankController, 
-        signed_txn: &TxnRequest<TxnVariant>,
-    ) -> Result<OrderProcessingResult, AccountError> {
-        // verify transaction is an order
-        if let TxnVariant::OrderTransaction(order) = &signed_txn.get_txn() {
-            // verify and place a limit order
-            if let OrderRequest::NewLimitOrder{side, price, qty, ..} = order.get_order_request() {
-                return self.place_limit_order(bank_controller, &signed_txn.get_sender(), *side, *qty, *price)
-            } else {
-                return Err(AccountError::OrderProc("Only limit orders supported".to_string()))
-            }
-        } else {
-            return Err(AccountError::OrderProc("Only order transactions are supported".to_string()))
-        };
     }
 
     // loop over and process the output from placing a limit order
@@ -221,4 +200,59 @@ impl SpotController
     pub fn overwrite_orderbook(&mut self, new_orderbook: Orderbook) {
         self.orderbook = new_orderbook;
     }
+}
+pub struct SpotController
+{
+    orderbooks: HashMap<AssetPairKey, OrderbookInterface>,
+}
+impl SpotController {
+    pub fn new() -> Self {
+        SpotController {
+            orderbooks: HashMap::new(),
+        }
+    }
+
+    fn get_orderbook_key(&self, base_asset_id: AssetId, quote_asset_id: AssetId) -> AssetPairKey {
+        format!("{}_{}", base_asset_id, quote_asset_id) 
+    }
+
+    fn get_orderbook(&mut self, base_asset_id: AssetId, quote_asset_id: AssetId) -> Result<&mut OrderbookInterface, AccountError> {
+        let orderbook_lookup: AssetPairKey = self.get_orderbook_key(base_asset_id, quote_asset_id);
+
+        let orderbook: &mut OrderbookInterface = self.orderbooks.get_mut(&orderbook_lookup).ok_or(AccountError::Lookup("Failed to find orderbook".to_string()))?;
+        Ok(orderbook)
+    }
+
+    pub fn create_orderbook(&mut self, base_asset_id: AssetId, quote_asset_id: AssetId) -> Result<(), AccountError> {
+        let orderbook_lookup: AssetPairKey = self.get_orderbook_key(base_asset_id, quote_asset_id);
+        if self.orderbooks.contains_key(&orderbook_lookup) {
+            Err(AccountError::OrderBookCreation("Orderbook already edxists!".to_string()))
+        } else {
+            self.orderbooks.insert(orderbook_lookup, OrderbookInterface::new(base_asset_id, quote_asset_id));
+            Ok(())
+        }
+    }
+
+    pub fn parse_limit_order_txn(
+        &mut self, 
+        base_asset_id: AssetId,
+        quote_asset_id: AssetId,
+        bank_controller: &mut BankController, 
+        signed_txn: &TxnRequest<TxnVariant>,
+    ) -> Result<OrderProcessingResult, AccountError> {
+        let orderbook: &mut OrderbookInterface = self.get_orderbook(base_asset_id, quote_asset_id)?;
+        // verify transaction is an order
+        if let TxnVariant::OrderTransaction(order) = &signed_txn.get_txn() {
+            // verify and place a limit order
+            if let OrderRequest::NewLimitOrder{side, price, qty, ..} = order.get_order_request() {
+                return orderbook.place_limit_order(bank_controller, &signed_txn.get_sender(), *side, *qty, *price)
+            } else {
+                return Err(AccountError::OrderProc("Only limit orders supported".to_string()))
+            }
+        } else {
+            return Err(AccountError::OrderProc("Only order transactions are supported".to_string()))
+        };
+    }
+    
+
 }

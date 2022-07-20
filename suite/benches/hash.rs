@@ -4,11 +4,9 @@
 extern crate criterion;
 
 use criterion::Criterion;
-use serde::{Deserialize, Serialize};
-
 use gdex_crypto_derive::{BCSCryptoHash, CryptoHasher};
-use gdex_crypto::{hash::CryptoHash};
-
+use gdex_crypto::hash::CryptoHash;
+use serde::{Deserialize, Serialize};
 
 // make a new struct for an order that we have to hash
 #[derive(Serialize, Deserialize, CryptoHasher, BCSCryptoHash)]

@@ -7,7 +7,8 @@ extern crate proc;
 extern crate types;
 
 use super::router::{
-    asset_creation_txn, 
+    asset_creation_txn,
+    orderbook_creation_txn,
     route_transaction, 
     stake_txn,
 };
@@ -23,20 +24,23 @@ use core::{
 use gdex_crypto::{SigningKey, traits::Uniform, hash::{HashValue}};
 use proc::{
     bank::BankController,
-    stake::StakeController,
+    stake::StakeController, spot::SpotController,
 };
 use rand::rngs::ThreadRng;
-use types::{account::{AccountPubKey, AccountPrivKey, AccountSignature, AccountError}};
+use types::account::{AccountPubKey, AccountPrivKey, AccountSignature, AccountError};
 
 // specify the number of tokens creator stakes during genesis
 const GENESIS_STAKE_AMOUNT: u64 = 1_000_000;
 
+// the consensus manager owns all Controllers and is responsible for
+// processing transactions, updating state, and reaching consensus in "toy" conditions
 pub struct ConsensusManager
 {
     block_container: BlockContainer<TxnVariant>,
     hash_clock: HashClock,
     bank_controller: BankController,
     stake_controller: StakeController,
+    spot_controller: SpotController,
     validator_pub_key: AccountPubKey,
     validator_private_key: AccountPrivKey,
 }
@@ -51,6 +55,7 @@ impl ConsensusManager {
             hash_clock: HashClock::new(),
             bank_controller: BankController::new(),
             stake_controller: StakeController::new(),
+            spot_controller: SpotController::new(),
             validator_pub_key: account_pub_key,
             validator_private_key: private_key,
         }
@@ -108,6 +113,10 @@ impl ConsensusManager {
         &mut self.stake_controller
     }
 
+    pub fn get_spot_controller(&mut self) -> &mut SpotController {
+        &mut self.spot_controller
+    }
+
     pub fn get_block_container(&mut self) -> &mut BlockContainer<TxnVariant> {
         &mut self.block_container
     }
@@ -125,8 +134,8 @@ impl ConsensusManager {
     }
 
     // this is necessary because rust does not allow multiple mutable borrows to coexist
-    pub fn get_all_controllers(&mut self) -> (&mut BankController,  &mut StakeController){
-        (&mut self.bank_controller, &mut self.stake_controller)
+    pub fn get_all_controllers(&mut self) -> (&mut BankController,  &mut StakeController, &mut SpotController){
+        (&mut self.bank_controller, &mut self.stake_controller, &mut self.spot_controller)
     }
 }
 
@@ -136,9 +145,11 @@ mod tests {
     use super::*;
     use super::super::router::payment_txn;
     use proc::{bank::{CREATED_ASSET_BALANCE, PRIMARY_ASSET_ID}};
+    use types::asset::AssetId;
     
     // specify the number of tokens sent to second validator
     const SECONDARY_SEED_PAYMENT: u64 = 100_000;
+    const QUOTE_ASSET_ID: AssetId = 1;
 
     #[test]
     fn test_simple_consensus() {
@@ -201,10 +212,14 @@ mod tests {
         route_transaction(&mut primary_validator, &signed_txn).unwrap();
         txns.push(signed_txn);
 
-        let new_asset_balance: u64 = primary_validator.get_bank_controller().get_balance(&secondary_pub_key, PRIMARY_ASSET_ID+1).unwrap();
+        let new_asset_balance: u64 = primary_validator.get_bank_controller().get_balance(&secondary_pub_key, QUOTE_ASSET_ID).unwrap();
         assert!(new_asset_balance == CREATED_ASSET_BALANCE, "Unexpected balance after second token genesis");
 
         // TODO - add order book logic here
+        let signed_txn: TxnRequest<TxnVariant> = orderbook_creation_txn(secondary_pub_key, &secondary_validator.get_validator_private_key(), PRIMARY_ASSET_ID, QUOTE_ASSET_ID).unwrap();
+        route_transaction(&mut primary_validator, &signed_txn).unwrap();
+        txns.push(signed_txn);
+
         // TODO - play around w/ consensus to test it in more scenarios
     }
 }

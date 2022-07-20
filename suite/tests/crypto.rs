@@ -1,25 +1,23 @@
-use rand::{prelude::ThreadRng, thread_rng};
-use serde::{Deserialize, Serialize};
-
-use gdex_crypto::{
-    ed25519::{Ed25519PrivateKey, Ed25519PublicKey, Ed25519Signature},
-    hash::CryptoHash,
-    traits::{Signature, SigningKey, Uniform},
-};
-use gdex_crypto_derive::{BCSCryptoHash, CryptoHasher};
-use types::spot::{DiemCryptoMessage};
-
-// make a new struct for an order that we have to hash
-#[derive(Serialize, Deserialize, CryptoHasher, BCSCryptoHash)]
-struct Order {
-    quantity: i32,
-    side: String,
-}
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
+    use gdex_crypto::{
+        ed25519::{Ed25519PrivateKey, Ed25519PublicKey, Ed25519Signature},
+        hash::CryptoHash,
+        traits::{Signature, SigningKey, Uniform},
+    };
+    use gdex_crypto_derive::{BCSCryptoHash, CryptoHasher};
+    use rand::{prelude::ThreadRng, thread_rng};
+    use serde::{Deserialize, Serialize};
+    use types::spot::{DiemCryptoMessage};
+    
+    // make a new struct for an order that we have to hash
+    #[derive(Serialize, Deserialize, CryptoHasher, BCSCryptoHash)]
+    struct Order {
+        quantity: i32,
+        side: String,
+    }
+    
     // testing basic verification
     #[test]
     fn test_basic_verification() {

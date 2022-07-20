@@ -1,131 +1,48 @@
-extern crate engine;
-extern crate core;
 
-use std::{time};
-use core::{
-    transaction::{
-        CreateAsset,
-        Order, 
-        Payment,
-        TxnRequest, 
-        TxnVariant,
-        TxnVariant::PaymentTransaction,
-        TxnVariant::OrderTransaction,
-        TxnVariant::CreateAssetTransaction,
-    },
-    block::{
-        Block, 
-        BlockContainer, 
-        generate_block_hash
-    },
-    hash_clock::{
-        HashClock
-    },
-    vote_cert::{
-        VoteCert
-    },
-};
-use gdex_crypto::{
-    SigningKey,
-    Uniform,
-    hash::{CryptoHash, HashValue},
-};
-use engine::orders::{new_limit_order_request};
-use types::{
-    account::{AccountPubKey, AccountPrivKey, AccountSignature},
-    orderbook::{OrderSide},
-    spot::{DiemCryptoMessage}
-};
+mod test{
+    extern crate engine;
+        extern crate core;
 
-const BASE_ASSET_ID: u64 = 0;
-const QUOTE_ASSET_ID: u64 = 1;
+    use core::{
+        transaction::{
+            CreateAsset,
+            Order, 
+            Payment,
+            TxnRequest, 
+            TxnVariant,
+            TxnVariant::PaymentTransaction,
+            TxnVariant::OrderTransaction,
+            TxnVariant::CreateAssetTransaction,
+        },
+        block::{Block, BlockContainer, generate_block_hash},
+        hash_clock::HashClock,
+        vote_cert::VoteCert,
+    };
+    use engine::orders::{new_limit_order_request};
+    use gdex_crypto::{
+        SigningKey,
+        Uniform,
+        hash::{CryptoHash, HashValue},
+    };
+    use types::{
+        account::{AccountPubKey, AccountPrivKey, AccountSignature},
+        orderbook::OrderSide,
+        spot::DiemCryptoMessage,
+    };
+    use std::time;
 
-#[test]
-fn create_signed_order_transaction() {
-    let mut rng = rand::thread_rng();
-    let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-    let account_pub_key: AccountPubKey = (&private_key).into();
-    
-    let price = 1;
-    let qty = 10;
-    let txn: Order = Order::new(
-        new_limit_order_request(
-            BASE_ASSET_ID,
-            QUOTE_ASSET_ID,
-            OrderSide::Bid,
-            price,
-            qty,
-            time::SystemTime::now()
-        ),
-    );
+    const BASE_ASSET_ID: u64 = 0;
+    const QUOTE_ASSET_ID: u64 = 1;
 
-    let txn_hash: HashValue = txn.hash();
-    let signed_hash: AccountSignature  = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
-    let signed_txn: TxnRequest<Order> = TxnRequest::<Order>::new(
-        txn,
-        account_pub_key, 
-        signed_hash 
-    );
-    signed_txn.verify_transaction().unwrap();
-}
-
-#[test]
-fn create_signed_payment_transaction() {
-    let mut rng = rand::thread_rng();
-    let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-    let sender_pub_key: AccountPubKey = (&private_key).into();
-    let receiver_private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-    let receiver_pub_key: AccountPubKey = (&receiver_private_key).into();
-    
-    let txn: Payment = Payment::new(
-        sender_pub_key,
-        receiver_pub_key,
-        BASE_ASSET_ID,
-        10
-    );
-
-    let txn_hash: HashValue = txn.hash();
-    let signed_hash: AccountSignature  = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
-    let signed_txn: TxnRequest<Payment> = TxnRequest::<Payment>::new(
-        txn,
-        sender_pub_key, 
-        signed_hash 
-    );
-    signed_txn.verify_transaction().unwrap();
-}
-
-#[test]
-fn create_asset_transaction() {
-    let mut rng = rand::thread_rng();
-    let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-    let sender_pub_key: AccountPubKey = (&private_key).into();
-    
-    let txn: CreateAsset = CreateAsset{};
-
-    let txn_hash: HashValue = txn.hash();
-    let signed_hash: AccountSignature  = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
-    let signed_txn: TxnRequest<CreateAsset> = TxnRequest::<CreateAsset>::new(
-        txn,
-        sender_pub_key, 
-        signed_hash 
-    );
-    signed_txn.verify_transaction().unwrap();
-}
-
-#[test]
-fn block_hash_test() {
-    let mut rng = rand::thread_rng();
-    let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-    let account_pub_key: AccountPubKey = (&private_key).into();
-    let receiver_private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-    let receiver_pub_key: AccountPubKey = (&receiver_private_key).into();
-
-    let mut txns: Vec<TxnRequest<TxnVariant>> = Vec::new();
-    
-    let price: u64 = 1;
-    let qty: u64 = 10;
-    let txn: TxnVariant = OrderTransaction(
-        Order::new(
+    #[test]
+    fn create_signed_order_transaction() {
+        let mut rng = rand::thread_rng();
+        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
+        let account_pub_key: AccountPubKey = (&private_key).into();
+        
+        let price = 1;
+        let qty = 10;
+        let txn: Order = Order::new(
             new_limit_order_request(
                 BASE_ASSET_ID,
                 QUOTE_ASSET_ID,
@@ -134,54 +51,132 @@ fn block_hash_test() {
                 qty,
                 time::SystemTime::now()
             ),
-        )
-    );
-    let txn_hash: HashValue = txn.hash();
-    let signed_hash: AccountSignature  = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
-    let signed_txn: TxnRequest<TxnVariant>= TxnRequest::<TxnVariant>::new(
-        txn,
-        account_pub_key, 
-        signed_hash,
-    );
-    signed_txn.verify_transaction().unwrap();
-    txns.push(signed_txn);
+        );
 
-    let txn: TxnVariant = PaymentTransaction(
-        Payment::new(
-            account_pub_key,
+        let txn_hash: HashValue = txn.hash();
+        let signed_hash: AccountSignature  = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
+        let signed_txn: TxnRequest<Order> = TxnRequest::<Order>::new(
+            txn,
+            account_pub_key, 
+            signed_hash 
+        );
+        signed_txn.verify_transaction().unwrap();
+    }
+
+    #[test]
+    fn create_signed_payment_transaction() {
+        let mut rng = rand::thread_rng();
+        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
+        let sender_pub_key: AccountPubKey = (&private_key).into();
+        let receiver_private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
+        let receiver_pub_key: AccountPubKey = (&receiver_private_key).into();
+        
+        let txn: Payment = Payment::new(
+            sender_pub_key,
             receiver_pub_key,
             BASE_ASSET_ID,
-            10,
-        )
-    );
-    let txn_hash: HashValue = txn.hash();
-    let signed_hash: AccountSignature  = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
-    let signed_txn: TxnRequest<TxnVariant> = TxnRequest::<TxnVariant>::new(
-        txn,
-        account_pub_key, 
-        signed_hash, 
-    );
-    signed_txn.verify_transaction().unwrap();
-    txns.push(signed_txn);
+            10
+        );
+
+        let txn_hash: HashValue = txn.hash();
+        let signed_hash: AccountSignature  = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
+        let signed_txn: TxnRequest<Payment> = TxnRequest::<Payment>::new(
+            txn,
+            sender_pub_key, 
+            signed_hash 
+        );
+        signed_txn.verify_transaction().unwrap();
+    }
+
+    #[test]
+    fn create_asset_transaction() {
+        let mut rng = rand::thread_rng();
+        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
+        let sender_pub_key: AccountPubKey = (&private_key).into();
+        
+        let txn: CreateAsset = CreateAsset{};
+
+        let txn_hash: HashValue = txn.hash();
+        let signed_hash: AccountSignature  = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
+        let signed_txn: TxnRequest<CreateAsset> = TxnRequest::<CreateAsset>::new(
+            txn,
+            sender_pub_key, 
+            signed_hash 
+        );
+        signed_txn.verify_transaction().unwrap();
+    }
+
+    #[test]
+    fn block_hash_test() {
+        let mut rng = rand::thread_rng();
+        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
+        let account_pub_key: AccountPubKey = (&private_key).into();
+        let receiver_private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
+        let receiver_pub_key: AccountPubKey = (&receiver_private_key).into();
+
+        let mut txns: Vec<TxnRequest<TxnVariant>> = Vec::new();
+        
+        let price: u64 = 1;
+        let qty: u64 = 10;
+        let txn: TxnVariant = OrderTransaction(
+            Order::new(
+                new_limit_order_request(
+                    BASE_ASSET_ID,
+                    QUOTE_ASSET_ID,
+                    OrderSide::Bid,
+                    price,
+                    qty,
+                    time::SystemTime::now()
+                ),
+            )
+        );
+        let txn_hash: HashValue = txn.hash();
+        let signed_hash: AccountSignature  = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
+        let signed_txn: TxnRequest<TxnVariant>= TxnRequest::<TxnVariant>::new(
+            txn,
+            account_pub_key, 
+            signed_hash,
+        );
+        signed_txn.verify_transaction().unwrap();
+        txns.push(signed_txn);
+
+        let txn: TxnVariant = PaymentTransaction(
+            Payment::new(
+                account_pub_key,
+                receiver_pub_key,
+                BASE_ASSET_ID,
+                10,
+            )
+        );
+        let txn_hash: HashValue = txn.hash();
+        let signed_hash: AccountSignature  = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
+        let signed_txn: TxnRequest<TxnVariant> = TxnRequest::<TxnVariant>::new(
+            txn,
+            account_pub_key, 
+            signed_hash, 
+        );
+        signed_txn.verify_transaction().unwrap();
+        txns.push(signed_txn);
 
 
-    let txn: TxnVariant = CreateAssetTransaction(CreateAsset{});
-    let txn_hash: HashValue = txn.hash();
-    let signed_hash: AccountSignature  = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
-    let signed_txn: TxnRequest<TxnVariant> = TxnRequest::<TxnVariant>::new(
-        txn,
-        account_pub_key, 
-        signed_hash, 
-    );
-    signed_txn.verify_transaction().unwrap();
-    txns.push(signed_txn);
+        let txn: TxnVariant = CreateAssetTransaction(CreateAsset{});
+        let txn_hash: HashValue = txn.hash();
+        let signed_hash: AccountSignature  = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
+        let signed_txn: TxnRequest<TxnVariant> = TxnRequest::<TxnVariant>::new(
+            txn,
+            account_pub_key, 
+            signed_hash, 
+        );
+        signed_txn.verify_transaction().unwrap();
+        txns.push(signed_txn);
 
-    let block_hash: HashValue = generate_block_hash(&txns);
-    let hash_clock: HashClock = HashClock::new();
-    let dummy_vote_cert: VoteCert = VoteCert::new(0, block_hash);
+        let block_hash: HashValue = generate_block_hash(&txns);
+        let hash_clock: HashClock = HashClock::new();
+        let dummy_vote_cert: VoteCert = VoteCert::new(0, block_hash);
 
-    let block: Block<TxnVariant> = Block::<TxnVariant>::new(txns, account_pub_key, block_hash, hash_clock.get_time(), dummy_vote_cert);
-    
-    let mut block_container:BlockContainer<TxnVariant> = BlockContainer::new();
-    block_container.append_block(block);
+        let block: Block<TxnVariant> = Block::<TxnVariant>::new(txns, account_pub_key, block_hash, hash_clock.get_time(), dummy_vote_cert);
+        
+        let mut block_container:BlockContainer<TxnVariant> = BlockContainer::new();
+        block_container.append_block(block);
+    }
 }

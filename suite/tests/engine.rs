@@ -1,17 +1,16 @@
-extern crate engine;
-extern crate types;
-
-use std::time::SystemTime;
-
-pub use engine::{
-    orderbook::{Orderbook},
-    orders
-};
-pub use types::orderbook::{Failed, OrderProcessingResult, OrderSide, Success};
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    extern crate engine;
+    extern crate types;
+
+    use engine::{
+        orderbook::Orderbook,
+        orders
+    };
+    use std::time::SystemTime;
+    use types::orderbook::{Failed, OrderSide, Success};
+
     const BASE_ASSET_ID: u64 = 0;
     const QUOTE_ASSET_ID: u64 = 1;
 

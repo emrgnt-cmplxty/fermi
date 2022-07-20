@@ -13,17 +13,14 @@ serde = { version = "1.0.124", features = ["derive"] }
 serde_json = "1.0"
 bcs = "0.1.2"
 rocksdb = "0.18.0"
-core = { path = "../core" }
+app = { path = "../app", features = ["batch"] }
+core = { path = "../core", features = ["batch"] }
 gdex-crypto-derive = { path = "../crypto-derive", version = "0.0.2" }
 gdex-crypto = { path = "../crypto", features = ["batch"] }
 diem-workspace-hack = { path = "../workspace-hack" }
 engine = { path = "../engine" }
 proc = { path = "../proc" }
 types = { path = "../types" }
-
-[[bench]]
-name = "orderbook_bench"
-harness = false
 
 [[bench]]
 name = "ed25519"
@@ -33,5 +30,14 @@ harness = false
 name = "hash"
 harness = false
 
+[[bench]]
+name = "orderbook"
+harness = false
+
+[[bench]]
+name = "toy_consensus"
+harness = false
+
 [features]
+default = ["batch"]
 batch = []

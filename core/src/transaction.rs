@@ -127,6 +127,8 @@ pub enum TxnVariant {
     OrderTransaction(Order),
     StakeAssetTransaction(Stake),
 }
+
+#[derive(Clone)]
 pub struct TxnRequest <TxnVariant>
 where
     TxnVariant: Debug + Clone + CryptoHash + Copy,
@@ -165,3 +167,17 @@ where
     }
 }
 
+#[cfg(feature = "batch")]
+pub fn verify_transaction_batch(txn_requests: &Vec<TxnRequest<TxnVariant>>) -> Result<(), gdex_crypto::error::Error>  {
+
+    let mut messages: Vec<DiemCryptoMessage> = Vec::new();
+    let mut keys_and_signatures: Vec<(AccountPubKey, AccountSignature)> = Vec::new();
+
+    for txn_request in txn_requests.iter() {
+        let txn_hash: HashValue = txn_request.txn.hash();
+        messages.push(DiemCryptoMessage(txn_hash.to_string()));
+        keys_and_signatures.push((*txn_request.get_sender(), txn_request.get_txn_signature().clone()));
+    }
+    Signature::batch_verify_distinct(&messages, keys_and_signatures)?;
+    Ok(())
+}

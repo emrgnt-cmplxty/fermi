@@ -4,7 +4,6 @@
 //! 
 //! TODO
 //! 0.) ADD MARKET ORDER SUPPORT
-//! 1.) REMOVE SIG VERIFICATION - HERE FOR EARLY DEV TESTING
 //! 2.) RESTRICT overwrite_orderbook TO BENCH ONLY MODE
 //! 3.) CONSIDER ADDITIONAL FEATURES, LIKE ESCROW IMPLEMENTATION OR ORDER LIMITS
 //! 4.) CHECK PASSED ASSETS EXIST IN BANK MODULE
@@ -20,17 +19,14 @@ use engine::{
     orderbook::Orderbook,
     orders::{OrderRequest, new_limit_order_request},
 };
-use gdex_crypto::traits::Signature;
 use std::{collections::HashMap, time::SystemTime};
 use types::{
-    account::{AccountError, AccountPubKey, AccountSignature},
+    account::{AccountError, AccountPubKey},
     asset::{AssetId, AssetPairKey},
     orderbook::{Failed, OrderSide, OrderProcessingResult, Success},
-    spot::{OrderId, DiemCryptoMessage},
+    spot::{OrderId},
 };
 
-// dummy msg used for test-encoding
-pub const DUMMY_MESSAGE: &str = "dummy_val";
 
 // The spot controller is responsible for accessing & modifying user orders 
 pub struct OrderbookInterface
@@ -178,22 +174,6 @@ impl OrderbookInterface
             bank_controller.update_balance(account_pub_key, self.base_asset_id, qty as i64)?;
         }
         Ok(())
-    }
-
-    // signed workflow
-    // TODO #1 //
-    pub fn place_signed_limit_order(&mut self, 
-        bank_controller: &mut BankController, 
-        account_pub_key: &AccountPubKey, 
-        side: OrderSide, 
-        qty: u64, 
-        price: u64, 
-        signed_message: &AccountSignature) -> Result<OrderProcessingResult, AccountError> 
-    {
-        match signed_message.verify(&DiemCryptoMessage(DUMMY_MESSAGE.to_string()), &account_pub_key) {
-            Ok(_) => { return self.place_limit_order(bank_controller, account_pub_key, side, qty, price) },
-            Err(_) => { return Err(AccountError::Lookup("Failed to find account".to_string())); }
-        }
     }
 
     // TODO #2 //

@@ -15,14 +15,12 @@ Tests reside in suite/test, benchmarks reside in suite/benches
     # test
     cargo test
 
-    # bench
+    # or, if you want to include batch features
     cargo bench
 
-    # or, if you want to include batch features
-    cargo bench --features="batch"
-
     # lastly, to bench just order book placement
-    cargo bench --features="batch" place_orders
+    # delete the suite/db.rocks before running to make a clean db
+    rm -rf suite/db.rocks && cargo bench place_orders
 
 
 # Overview 

@@ -16,6 +16,51 @@ use types::{
 };
 
 #[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
+pub struct CreateAsset 
+{
+}
+
+#[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
+pub struct Order 
+{
+    order_request: OrderRequest,
+}
+impl Order {
+    pub fn new(order_request: OrderRequest) -> Self {
+        Order {
+            order_request,
+        }
+    }
+
+    pub fn get_order_request(&self) -> &OrderRequest {
+        &self.order_request
+    }
+}
+
+#[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
+pub struct CreateOrderBook 
+{
+    base_asset_id: AssetId,
+    quote_asset_id: AssetId,
+}
+impl CreateOrderBook {
+    pub fn new(base_asset_id: AssetId, quote_asset_id: AssetId) -> Self {
+        CreateOrderBook {
+            base_asset_id,
+            quote_asset_id,
+        }
+    }
+
+    pub fn get_base_asset_id(&self) -> AssetId {
+        self.base_asset_id
+    }
+
+    pub fn get_quote_asset_id(&self) -> AssetId {
+        self.quote_asset_id
+    }
+}
+
+#[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
 pub struct Payment 
 {
     // storing from here is not redundant as from may not equal sender
@@ -51,27 +96,6 @@ impl Payment {
         self.amount
     }
 }
-#[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
-pub struct CreateAsset 
-{
-}
-
-#[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
-pub struct Order 
-{
-    order_request: OrderRequest,
-}
-impl Order {
-    pub fn new(order_request: OrderRequest) -> Self {
-        Order {
-            order_request,
-        }
-    }
-
-    pub fn get_order_request(&self) -> &OrderRequest {
-        &self.order_request
-    }
-}
 
 #[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
 pub struct Stake 
@@ -93,29 +117,6 @@ impl Stake {
 
     pub fn get_amount(&self) -> u64 {
         self.amount
-    }
-}
-
-#[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
-pub struct CreateOrderBook 
-{
-    base_asset_id: AssetId,
-    quote_asset_id: AssetId,
-}
-impl CreateOrderBook {
-    pub fn new(base_asset_id: AssetId, quote_asset_id: AssetId) -> Self {
-        CreateOrderBook {
-            base_asset_id,
-            quote_asset_id,
-        }
-    }
-
-    pub fn get_base_asset_id(&self) -> AssetId {
-        self.base_asset_id
-    }
-
-    pub fn get_quote_asset_id(&self) -> AssetId {
-        self.quote_asset_id
     }
 }
 
@@ -168,8 +169,7 @@ where
 }
 
 #[cfg(feature = "batch")]
-pub fn verify_transaction_batch(txn_requests: &Vec<TxnRequest<TxnVariant>>) -> Result<(), gdex_crypto::error::Error>  {
-
+pub fn verify_transaction_batch(txn_requests: &[TxnRequest<TxnVariant>]) -> Result<(), gdex_crypto::error::Error>  {
     let mut messages: Vec<DiemCryptoMessage> = Vec::new();
     let mut keys_and_signatures: Vec<(AccountPubKey, AccountSignature)> = Vec::new();
 

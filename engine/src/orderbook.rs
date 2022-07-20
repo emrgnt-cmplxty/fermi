@@ -214,7 +214,7 @@ impl Orderbook
         }
     }
 
-
+    #[allow(clippy::too_many_arguments)]
     fn process_limit_order(
         &mut self,
         results: &mut OrderProcessingResult,
@@ -361,6 +361,7 @@ impl Orderbook
 
     /* Helpers */
 
+    #[allow(clippy::too_many_arguments)]
     fn store_new_limit_order(
         &mut self,
         _results: &mut OrderProcessingResult,
@@ -394,7 +395,7 @@ impl Orderbook
         };
     }
 
-
+    #[allow(clippy::too_many_arguments)]
     fn order_matching(
         &mut self,
         results: &mut OrderProcessingResult,

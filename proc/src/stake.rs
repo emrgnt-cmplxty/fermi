@@ -27,7 +27,7 @@ impl StakeController
     }
 
     pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), AccountError> {
-        if self.stake_accounts.contains_key(&account_pub_key) {
+        if self.stake_accounts.contains_key(account_pub_key) {
             Err(AccountError::Creation("Account already exists!".to_string()))
         } else {
             self.stake_accounts.insert(*account_pub_key, StakeAccount::new(*account_pub_key));
@@ -36,7 +36,7 @@ impl StakeController
     }
 
     pub fn get_staked(&self, account_pub_key: &AccountPubKey) -> Result<u64, AccountError> {
-        let stake_account: &StakeAccount = self.stake_accounts.get(account_pub_key).ok_or(AccountError::Lookup("Failed to find account".to_string()))?;
+        let stake_account: &StakeAccount = self.stake_accounts.get(account_pub_key).ok_or_else(|| AccountError::Lookup("Failed to find account".to_string()))?;
         Ok(stake_account.get_staked_amount())
     }
 
@@ -61,7 +61,7 @@ impl StakeController
     // TODO #0 //
     pub fn unstake(&mut self, bank_controller: &mut BankController, account_pub_key: &AccountPubKey, amount: u64) -> Result<(), AccountError> {
         bank_controller.update_balance(account_pub_key, PRIMARY_ASSET_ID, amount as i64)?;
-        let stake_account: &mut StakeAccount = self.stake_accounts.get_mut(account_pub_key).ok_or(AccountError::Lookup("Failed to find account".to_string()))?;
+        let stake_account: &mut StakeAccount = self.stake_accounts.get_mut(account_pub_key).ok_or_else(|| AccountError::Lookup("Failed to find account".to_string()))?;
         stake_account.set_staked_amount(stake_account.get_staked_amount() - amount);
         Ok(())
     }

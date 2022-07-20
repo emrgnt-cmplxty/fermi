@@ -118,7 +118,7 @@ impl Ed25519PrivateKey {
 
 impl Ed25519PublicKey {
     /// Serialize an Ed25519PublicKey.
-    pub fn to_bytes(&self) -> [u8; ED25519_PUBLIC_KEY_LENGTH] {
+    pub fn to_bytes(self) -> [u8; ED25519_PUBLIC_KEY_LENGTH] {
         self.0.to_bytes()
     }
 
@@ -204,7 +204,7 @@ impl SigningKey for Ed25519PrivateKey {
         bcs::serialize_into(&mut bytes, &message)
             .map_err(|_| CryptoMaterialError::SerializationError)
             .expect("Serialization of signable material should not fail.");
-        Ed25519PrivateKey::sign_arbitrary_message(&self, bytes.as_ref())
+        Ed25519PrivateKey::sign_arbitrary_message(self, bytes.as_ref())
     }
 
     #[cfg(any(test, feature = "fuzzing"))]

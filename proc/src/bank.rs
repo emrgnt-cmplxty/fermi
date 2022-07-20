@@ -38,7 +38,7 @@ impl BankController
     }
     pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), AccountError> {
         // do not allow double-creation of a single account
-        if self.bank_accounts.contains_key(&account_pub_key) {
+        if self.bank_accounts.contains_key(account_pub_key) {
             Err(AccountError::Creation("Account already exists!".to_string()))
         } else {
             self.bank_accounts.insert(*account_pub_key, BankAccount::new(*account_pub_key));
@@ -53,6 +53,8 @@ impl BankController
     // TODO #0  //
     pub fn create_asset(&mut self, owner_pub_key: &AccountPubKey) -> Result<u64, AccountError> {
         // special handling for genesis
+        // an account must be created in this instance
+        // since account creation is gated by receipt and balance of primary blockchain asset
         if self.n_assets == 0 {
             self.create_account(owner_pub_key)?
         }

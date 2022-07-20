@@ -62,7 +62,7 @@ impl OrderbookInterface
     }
 
     pub fn get_account(&self, account_pub_key: &AccountPubKey) -> Result<&OrderAccount, AccountError> {
-        let account: &OrderAccount = self.accounts.get(account_pub_key).ok_or(AccountError::Lookup("Failed to find account".to_string()))?;
+        let account: &OrderAccount = self.accounts.get(account_pub_key).ok_or_else( || AccountError::Lookup("Failed to find account".to_string()))?;
         Ok(account)
     }
 
@@ -117,11 +117,11 @@ impl OrderbookInterface
                 },
                 // subsequent orders are expected to be an PartialFill or Fill results
                 Ok(Success::PartiallyFilled{order_id, side, price, qty, ..}) => {
-                    let existing_pub_key: AccountPubKey = *self.order_to_account.get(&order_id).ok_or(AccountError::Lookup("Failed to find account".to_string()))?;
+                    let existing_pub_key: AccountPubKey = *self.order_to_account.get(&order_id).ok_or_else( || AccountError::Lookup("Failed to find account".to_string()))?;
                     self.proc_order_fill(bank_controller, &existing_pub_key, *side, *price, *qty)?;
                 },
                 Ok(Success::Filled{order_id, side, price, qty, ..}) => {
-                    let existing_pub_key: AccountPubKey = *self.order_to_account.get(&order_id).ok_or(AccountError::Lookup("Failed to find account".to_string()))?;
+                    let existing_pub_key: AccountPubKey = *self.order_to_account.get(&order_id).ok_or_else( || AccountError::Lookup("Failed to find account".to_string()))?;
                     self.proc_order_fill(bank_controller,   &existing_pub_key, *side, *price, *qty)?;
                     // erase existing order
                     self.order_to_account.remove(&order_id).ok_or(AccountError::OrderProc("Failed to find order".to_string()))?;
@@ -199,7 +199,7 @@ impl SpotController {
     fn get_orderbook(&mut self, base_asset_id: AssetId, quote_asset_id: AssetId) -> Result<&mut OrderbookInterface, AccountError> {
         let orderbook_lookup: AssetPairKey = self.get_orderbook_key(base_asset_id, quote_asset_id);
 
-        let orderbook: &mut OrderbookInterface = self.orderbooks.get_mut(&orderbook_lookup).ok_or(AccountError::Lookup("Failed to find orderbook".to_string()))?;
+        let orderbook: &mut OrderbookInterface = self.orderbooks.get_mut(&orderbook_lookup).ok_or_else( || AccountError::Lookup("Failed to find orderbook".to_string()))?;
         Ok(orderbook)
     }
 
@@ -224,13 +224,12 @@ impl SpotController {
             if let OrderRequest::NewLimitOrder{side, price, qty, base_asset, quote_asset, ..} = order.get_order_request() {
                 let orderbook: &mut OrderbookInterface = self.get_orderbook(*base_asset, *quote_asset)?;
 
-                return orderbook.place_limit_order(bank_controller, &signed_txn.get_sender(), *side, *qty, *price)
+                return orderbook.place_limit_order(bank_controller, signed_txn.get_sender(), *side, *qty, *price);
             } else {
-                return Err(AccountError::OrderProc("Only limit orders supported".to_string()))
+                return Err(AccountError::OrderProc("Only limit orders supported".to_string()));
             }
-        } else {
-            return Err(AccountError::OrderProc("Only order transactions are supported".to_string()))
-        };
+        } 
+        Err(AccountError::OrderProc("Only order transactions are supported".to_string()))
     }
     
 

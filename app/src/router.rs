@@ -127,7 +127,7 @@ pub fn payment_txn(
 pub fn route_transaction(consensus_manager: &mut ConsensusManager, txn_request: &TxnRequest<TxnVariant>) -> Result<(), AccountError> {
     // TODO #0 //
     txn_request.verify_transaction().unwrap();
-    execute_transaction(consensus_manager, &txn_request)
+    execute_transaction(consensus_manager, txn_request)
 }
 
 #[cfg(feature = "batch")]
@@ -135,43 +135,38 @@ use core::transaction::verify_transaction_batch;
 
 #[cfg(feature = "batch")]
 // take a vector of transaction requests and batch verify before routing appropriate controller function(s)
-pub fn route_transaction_batch(consensus_manager: &mut ConsensusManager, txn_requests: &Vec<TxnRequest<TxnVariant>>) -> Result<(), AccountError> {
+pub fn route_transaction_batch(consensus_manager: &mut ConsensusManager, txn_requests: &[TxnRequest<TxnVariant>]) -> Result<(), AccountError> {
     verify_transaction_batch(txn_requests).unwrap();
     for order_transaction in txn_requests.iter() {
-        execute_transaction(consensus_manager, &order_transaction)?;
-        break;
+        execute_transaction(consensus_manager, order_transaction)?;
     }
     Ok(())
 }
 
 fn execute_transaction(consensus_manager: &mut ConsensusManager, txn_request: &TxnRequest<TxnVariant>) -> Result<(), AccountError> {
-    match &txn_request.get_txn() {
-        &TxnVariant::OrderTransaction(_order) => {
+    match txn_request.get_txn() {
+        TxnVariant::OrderTransaction(_order) => {
             let (bank_controller, _stake_controller, spot_controller) = consensus_manager.get_all_controllers();
             spot_controller.parse_limit_order_txn(bank_controller, txn_request)?;
-            return Ok(())
         }
-        &TxnVariant::PaymentTransaction(payment) => {
+        TxnVariant::PaymentTransaction(payment) => {
             let bank_controller: &mut BankController = consensus_manager.get_bank_controller();
             bank_controller.transfer(payment.get_from(), payment.get_to(), payment.get_asset_id(), payment.get_amount())?;
-            return Ok(())
         }
-        &TxnVariant::CreateAssetTransaction(_creation) => {
+        TxnVariant::CreateAssetTransaction(_creation) => {
             let bank_controller: &mut BankController = consensus_manager.get_bank_controller();
-            bank_controller.create_asset(&txn_request.get_sender())?;
-            return Ok(())
+            bank_controller.create_asset(txn_request.get_sender())?;
         }
-        &TxnVariant::StakeAssetTransaction(stake) => {
+        TxnVariant::StakeAssetTransaction(stake) => {
             let (bank_controller, stake_controller, _spot_controller) = consensus_manager.get_all_controllers();
             stake_controller.stake(bank_controller, stake.get_from(), stake.get_amount())?;
-            return Ok(())
         }
-        &TxnVariant::CreateOrderbookTransaction(create_orderbook) => {
+        TxnVariant::CreateOrderbookTransaction(create_orderbook) => {
             let (_bank_controller, _stake_controller, spot_controller) = consensus_manager.get_all_controllers();
             spot_controller.create_orderbook(create_orderbook.get_base_asset_id(), create_orderbook.get_quote_asset_id())?;
-            return Ok(())
         }
     }
+    Ok(())
 }
 
 #[cfg(test)]

@@ -36,7 +36,6 @@ impl <Variant> BlockContainer <Variant>
         self.blocks.push(block);
     }
 }
-
 pub struct Block <Variant>
     where Variant : Debug + Clone + CryptoHash + Copy
 {

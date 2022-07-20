@@ -34,7 +34,6 @@ impl OrderRequestValidator
         }
     }
 
-
     pub fn validate(&self, request: &OrderRequest) -> Result<(), &str> {
         match *request {
             OrderRequest::NewMarketOrder {
@@ -66,9 +65,7 @@ impl OrderRequestValidator
         }
     }
 
-
     /* Internal validators */
-
     
     fn validate_market(
         &self,
@@ -85,13 +82,12 @@ impl OrderRequestValidator
             return Err(ERR_BAD_QUOTE_ASSET);
         }
 
-        if qty <= 0 {
+        if qty == 0 {
             return Err(ERR_BAD_QUANTITY_VALUE);
         }
 
         Ok(())
     }
-
 
     fn validate_limit(
         &self,
@@ -109,34 +105,32 @@ impl OrderRequestValidator
             return Err(ERR_BAD_QUOTE_ASSET);
         }
 
-        if price <= 0 {
+        if price == 0 {
             return Err(ERR_BAD_PRICE_VALUE);
         }
 
-        if qty <= 0 {
+        if qty == 0 {
             return Err(ERR_BAD_QUANTITY_VALUE);
         }
 
         Ok(())
     }
-
 
     fn validate_amend(&self, id: u64, price: u64, qty: u64) -> Result<(), &str> {
         if self.min_sequence_id > id || self.max_sequence_id < id {
             return Err(ERR_BAD_SEQ_ID);
         }
 
-        if price <= 0 {
+        if price == 0 {
             return Err(ERR_BAD_PRICE_VALUE);
         }
 
-        if qty <= 0 {
+        if qty == 0 {
             return Err(ERR_BAD_QUANTITY_VALUE);
         }
 
         Ok(())
     }
-
 
     fn validate_cancel(&self, id: u64) -> Result<(), &str> {
         if self.min_sequence_id > id || self.max_sequence_id < id {

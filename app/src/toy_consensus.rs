@@ -34,8 +34,8 @@ pub struct ConsensusManager
     block_container: BlockContainer<TxnVariant>,
     hash_clock: HashClock,
     bank_controller: BankController,
-    stake_controller: StakeController,
     spot_controller: SpotController,
+    stake_controller: StakeController,
     validator_pub_key: AccountPubKey,
     validator_private_key: AccountPrivKey,
 }
@@ -49,22 +49,12 @@ impl ConsensusManager {
             block_container: BlockContainer::new(),
             hash_clock: HashClock::new(),
             bank_controller: BankController::new(),
-            stake_controller: StakeController::new(),
             spot_controller: SpotController::new(),
+            stake_controller: StakeController::new(),
             validator_pub_key: account_pub_key,
             validator_private_key: private_key,
         }
     }
-
-    // take a list of transactions and create a valid Block w/ the managers vote included
-    pub fn propose_block(&self, txns: Vec<TxnRequest<TxnVariant>>) -> Result<Block::<TxnVariant>, AccountError> {
-        let block_hash: HashValue = generate_block_hash(&txns);
-        let mut vote_cert: VoteCert = VoteCert::new(self.stake_controller.get_staked(&self.validator_pub_key)?, block_hash);
-        let vote_response: bool = true;
-
-        self.cast_vote(&mut vote_cert, vote_response)?;
-        Ok(Block::<TxnVariant>::new(txns, self.validator_pub_key, block_hash, self.hash_clock.get_time(), vote_cert))
-    } 
 
     // build the genesis block by creating the base asset and staking some funds
     pub fn build_genesis_block(&mut self) -> Result<Block::<TxnVariant>, AccountError> {
@@ -85,6 +75,17 @@ impl ConsensusManager {
         // return the initial genesis block
         self.propose_block(txns)
     }
+
+    // take a list of transactions and create a valid Block w/ the managers vote included
+    pub fn propose_block(&self, txns: Vec<TxnRequest<TxnVariant>>) -> Result<Block::<TxnVariant>, AccountError> {
+        let block_hash: HashValue = generate_block_hash(&txns);
+        let mut vote_cert: VoteCert = VoteCert::new(self.stake_controller.get_staked(&self.validator_pub_key)?, block_hash);
+
+        let vote_response: bool = true;
+        self.cast_vote(&mut vote_cert, vote_response)?;
+
+        Ok(Block::<TxnVariant>::new(txns, self.validator_pub_key, block_hash, self.hash_clock.get_time(), vote_cert))
+    } 
 
     // cast a vote on a given block and append a valid signature
     pub fn cast_vote(&self, vote_cert: &mut VoteCert, vote_response: bool) -> Result<(), AccountError> {

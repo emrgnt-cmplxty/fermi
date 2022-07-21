@@ -119,8 +119,10 @@ fn place_orders_engine_account(
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {
+    let mut rng: ThreadRng = rand::thread_rng();
+
     // generate creator details
-    let (creator_key, private_key) = generate_key_pair();
+    let (creator_key, _private_key) = generate_key_pair();
 
     // initialize market controller
     let mut account_to_pub_key: Vec<AccountPubKey> = Vec::new();
@@ -143,7 +145,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     // generate N_ACCOUNTS accounts to transact w/ orderbook
     while i_account < N_ACCOUNTS - 1 {
-        let (account_pub_key, private_key) = generate_key_pair();
+        let (account_pub_key, _private_key) = generate_key_pair();
 
         bank_controller
             .transfer(&creator_key, &account_pub_key, base_asset_id, TRANSFER_AMOUNT)

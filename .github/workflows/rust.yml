@@ -34,4 +34,3 @@ jobs:
       run: cargo fmt --all -- --check
     - name: Run benches
       run: cargo bench place_orders_toy_consensus_batch_vanilla
-      

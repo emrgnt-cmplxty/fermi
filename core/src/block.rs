@@ -5,15 +5,13 @@
 //! TODO
 //! 0.) RELOCATE APPROPRIATE TESTS FROM SUITE/CORE TO HERE
 //!
-use super::transaction::{TxnRequest, TxnVariant};
+use super::transaction::{TransactionRequest, TransactionVariant};
 use super::vote_cert::VoteCert;
 use gdex_crypto::hash::{CryptoHash, HashValue};
 use std::fmt::Debug;
-use types::{
-    account::{AccountError, AccountPubKey},
-    spot::DiemCryptoMessage,
-};
+use types::{account::AccountPubKey, hash_clock::HashTime, spot::DiemCryptoMessage};
 
+#[derive(Clone, Debug)]
 pub struct BlockContainer<Variant>
 where
     Variant: Debug + Clone + CryptoHash + Copy,
@@ -36,14 +34,16 @@ where
         self.blocks.push(block);
     }
 }
+
+#[derive(Clone, Debug)]
 pub struct Block<Variant>
 where
     Variant: Debug + Clone + CryptoHash + Copy,
 {
-    txns: Vec<TxnRequest<Variant>>,
+    transactions: Vec<TransactionRequest<Variant>>,
     proposer: AccountPubKey,
     block_hash: HashValue,
-    clock_hash: HashValue,
+    hash_time: HashTime,
     vote_cert: VoteCert,
 }
 impl<Variant> Block<Variant>
@@ -51,23 +51,23 @@ where
     Variant: Debug + Clone + CryptoHash + Copy,
 {
     pub fn new(
-        txns: Vec<TxnRequest<Variant>>,
+        transactions: Vec<TransactionRequest<Variant>>,
         proposer: AccountPubKey,
         block_hash: HashValue,
-        clock_hash: HashValue,
+        hash_time: HashValue,
         vote_cert: VoteCert,
     ) -> Self {
         Block {
-            txns,
+            transactions,
             proposer,
             block_hash,
-            clock_hash,
+            hash_time,
             vote_cert,
         }
     }
 
-    pub fn get_txns(&self) -> &Vec<TxnRequest<Variant>> {
-        &self.txns
+    pub fn get_transactions(&self) -> &Vec<TransactionRequest<Variant>> {
+        &self.transactions
     }
 
     pub fn get_proposer(&self) -> &AccountPubKey {
@@ -78,20 +78,12 @@ where
         self.block_hash
     }
 
-    pub fn get_clock_hash(&self) -> HashValue {
-        self.clock_hash
+    pub fn get_hash_time(&self) -> HashValue {
+        self.hash_time
     }
 
     pub fn get_vote_cert(&self) -> &VoteCert {
         &self.vote_cert
-    }
-
-    pub fn validate_block(&self) -> Result<(), AccountError> {
-        if self.get_vote_cert().vote_has_passed() {
-            Ok(())
-        } else {
-            Err(AccountError::BlockValidation("Validation failed".to_string()))
-        }
     }
 }
 
@@ -105,10 +97,10 @@ where
 }
 
 // generate a unique block hash by appending all the hashes transactions inside the block
-pub fn generate_block_hash(txns: &Vec<TxnRequest<TxnVariant>>) -> HashValue {
+pub fn generate_block_hash(transactions: &Vec<TransactionRequest<TransactionVariant>>) -> HashValue {
     let mut hash_string = String::from("");
-    for txn in txns {
-        hash_string += &txn.get_txn().hash().to_string();
+    for transaction in transactions {
+        hash_string += &transaction.get_transaction().hash().to_string();
     }
     DiemCryptoMessage(hash_string).hash()
 }

@@ -25,7 +25,7 @@ pub enum OrderRequest {
         base_asset: AssetId,
         quote_asset: AssetId,
         side: OrderSide,
-        qty: u64,
+        quantity: u64,
         ts: SystemTime,
     },
 
@@ -34,7 +34,7 @@ pub enum OrderRequest {
         quote_asset: AssetId,
         side: OrderSide,
         price: u64,
-        qty: u64,
+        quantity: u64,
         ts: SystemTime,
     },
 
@@ -42,7 +42,7 @@ pub enum OrderRequest {
         id: u64,
         side: OrderSide,
         price: u64,
-        qty: u64,
+        quantity: u64,
         ts: SystemTime,
     },
 
@@ -131,7 +131,7 @@ impl StakeRequest {
 }
 
 #[derive(BCSCryptoHash, Copy, Clone, CryptoHasher, Debug, Deserialize, Serialize)]
-pub enum TxnVariant {
+pub enum TransactionVariant {
     PaymentTransaction(PaymentRequest),
     CreateOrderbookTransaction(CreateOrderbookRequest),
     CreateAssetTransaction(CreateAssetRequest),
@@ -139,55 +139,64 @@ pub enum TxnVariant {
     StakeAsset(StakeRequest),
 }
 
-#[derive(Clone)]
-pub struct TxnRequest<TxnVariant>
+#[derive(Clone, Debug)]
+pub struct TransactionRequest<TransactionVariant>
 where
-    TxnVariant: Debug + Clone + CryptoHash + Copy,
+    TransactionVariant: Debug + Clone + CryptoHash + Copy,
 {
-    txn: TxnVariant,
+    transaction: TransactionVariant,
     sender: AccountPubKey,
-    txn_signature: AccountSignature,
+    transaction_signature: AccountSignature,
 }
-impl<TxnVariant> TxnRequest<TxnVariant>
+impl<TransactionVariant> TransactionRequest<TransactionVariant>
 where
-    TxnVariant: Debug + Clone + CryptoHash + Copy,
+    TransactionVariant: Debug + Clone + CryptoHash + Copy,
 {
-    pub fn new(txn: TxnVariant, sender: AccountPubKey, txn_signature: AccountSignature) -> Self {
-        TxnRequest {
-            txn,
+    pub fn new(
+        transaction: TransactionVariant,
+        sender: AccountPubKey,
+        transaction_signature: AccountSignature,
+    ) -> Self {
+        TransactionRequest {
+            transaction,
             sender,
-            txn_signature,
+            transaction_signature,
         }
     }
 
-    pub fn get_txn(&self) -> &TxnVariant {
-        &self.txn
+    pub fn get_transaction(&self) -> &TransactionVariant {
+        &self.transaction
     }
 
     pub fn get_sender(&self) -> &AccountPubKey {
         &self.sender
     }
 
-    pub fn get_txn_signature(&self) -> &AccountSignature {
-        &self.txn_signature
+    pub fn get_transaction_signature(&self) -> &AccountSignature {
+        &self.transaction_signature
     }
 
     pub fn verify_transaction(&self) -> Result<(), gdex_crypto::error::Error> {
-        let txn_hash: HashValue = self.txn.hash();
-        self.txn_signature
-            .verify(&DiemCryptoMessage(txn_hash.to_string()), &self.sender)
+        let transaction_hash: HashValue = self.transaction.hash();
+        self.transaction_signature
+            .verify(&DiemCryptoMessage(transaction_hash.to_string()), &self.sender)
     }
 }
 
 #[cfg(feature = "batch")]
-pub fn verify_transaction_batch(txn_requests: &[TxnRequest<TxnVariant>]) -> Result<(), gdex_crypto::error::Error> {
+pub fn verify_transaction_batch(
+    transaction_requests: &[TransactionRequest<TransactionVariant>],
+) -> Result<(), gdex_crypto::error::Error> {
     let mut messages: Vec<DiemCryptoMessage> = Vec::new();
     let mut keys_and_signatures: Vec<(AccountPubKey, AccountSignature)> = Vec::new();
 
-    for txn_request in txn_requests.iter() {
-        let txn_hash: HashValue = txn_request.txn.hash();
-        messages.push(DiemCryptoMessage(txn_hash.to_string()));
-        keys_and_signatures.push((*txn_request.get_sender(), txn_request.get_txn_signature().clone()));
+    for transaction_request in transaction_requests.iter() {
+        let transaction_hash: HashValue = transaction_request.transaction.hash();
+        messages.push(DiemCryptoMessage(transaction_hash.to_string()));
+        keys_and_signatures.push((
+            *transaction_request.get_sender(),
+            transaction_request.get_transaction_signature().clone(),
+        ));
     }
     Signature::batch_verify_distinct(&messages, keys_and_signatures)?;
     Ok(())

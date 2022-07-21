@@ -68,7 +68,7 @@ impl Orderbook {
                 base_asset,
                 quote_asset,
                 side,
-                qty,
+                quantity,
                 ts: _ts,
             } => {
                 // generate new ID for order
@@ -79,7 +79,7 @@ impl Orderbook {
                     ts: SystemTime::now(),
                 }));
 
-                self.process_market_order(&mut proc_result, order_id, base_asset, quote_asset, side, qty);
+                self.process_market_order(&mut proc_result, order_id, base_asset, quote_asset, side, quantity);
             }
 
             OrderRequest::Limit {
@@ -87,7 +87,7 @@ impl Orderbook {
                 quote_asset,
                 side,
                 price,
-                qty,
+                quantity,
                 ts,
             } => {
                 let order_id = self.seq.next_id();
@@ -104,7 +104,7 @@ impl Orderbook {
                     quote_asset,
                     side,
                     price,
-                    qty,
+                    quantity,
                     ts,
                 );
             }
@@ -113,10 +113,10 @@ impl Orderbook {
                 id,
                 side,
                 price,
-                qty,
+                quantity,
                 ts,
             } => {
-                self.process_order_amend(&mut proc_result, id, side, price, qty, ts);
+                self.process_order_amend(&mut proc_result, id, side, price, quantity, ts);
             }
 
             OrderRequest::CancelOrder { id, side } => {
@@ -145,7 +145,7 @@ impl Orderbook {
         base_asset: AssetId,
         quote_asset: AssetId,
         side: OrderSide,
-        qty: u64,
+        quantity: u64,
     ) {
         // get copy of the current limit order
         let opposite_order_result = {
@@ -165,7 +165,7 @@ impl Orderbook {
                 quote_asset,
                 OrderType::Market,
                 side,
-                qty,
+                quantity,
             );
 
             if !matching_complete {
@@ -176,7 +176,7 @@ impl Orderbook {
                     base_asset,
                     quote_asset,
                     side,
-                    qty - opposite_order.qty,
+                    quantity - opposite_order.quantity,
                 );
             }
         } else {
@@ -194,7 +194,7 @@ impl Orderbook {
         quote_asset: AssetId,
         side: OrderSide,
         price: u64,
-        qty: u64,
+        quantity: u64,
         ts: SystemTime,
     ) {
         // take a look at current opposite limit order
@@ -223,7 +223,7 @@ impl Orderbook {
                     quote_asset,
                     OrderType::Limit,
                     side,
-                    qty,
+                    quantity,
                 );
 
                 if !matching_complete {
@@ -235,16 +235,16 @@ impl Orderbook {
                         quote_asset,
                         side,
                         price,
-                        qty - opposite_order.qty,
+                        quantity - opposite_order.quantity,
                         ts,
                     );
                 }
             } else {
                 // just insert new order in queue
-                self.store_new_limit_order(results, order_id, base_asset, quote_asset, side, price, qty, ts);
+                self.store_new_limit_order(results, order_id, base_asset, quote_asset, side, price, quantity, ts);
             }
         } else {
-            self.store_new_limit_order(results, order_id, base_asset, quote_asset, side, price, qty, ts);
+            self.store_new_limit_order(results, order_id, base_asset, quote_asset, side, price, quantity, ts);
         }
     }
 
@@ -254,7 +254,7 @@ impl Orderbook {
         order_id: u64,
         side: OrderSide,
         price: u64,
-        qty: u64,
+        quantity: u64,
         ts: SystemTime,
     ) {
         let order_queue = match side {
@@ -272,13 +272,13 @@ impl Orderbook {
                 quote_asset: self.quote_asset,
                 side,
                 price,
-                qty,
+                quantity,
             },
         ) {
             results.push(Ok(Success::Amended {
                 order_id,
                 price,
-                qty,
+                quantity,
                 ts: SystemTime::now(),
             }));
         } else {
@@ -313,7 +313,7 @@ impl Orderbook {
         quote_asset: AssetId,
         side: OrderSide,
         price: u64,
-        qty: u64,
+        quantity: u64,
         ts: SystemTime,
     ) {
         let order_queue = match side {
@@ -330,7 +330,7 @@ impl Orderbook {
                 quote_asset,
                 side,
                 price,
-                qty,
+                quantity,
             },
         ) {
             // results.push(Err(Failed::DuplicateOrderID(order_id)))
@@ -347,13 +347,13 @@ impl Orderbook {
         quote_asset: AssetId,
         order_type: OrderType,
         side: OrderSide,
-        qty: u64,
+        quantity: u64,
     ) -> bool {
         // real processing time
         let deal_time = SystemTime::now();
         // match immediately
-        match qty {
-            x if x < opposite_order.qty => {
+        match quantity {
+            x if x < opposite_order.quantity => {
                 // fill new limit and modify opposite limit
 
                 // report filled new order
@@ -362,7 +362,7 @@ impl Orderbook {
                     side,
                     order_type,
                     price: opposite_order.price,
-                    qty,
+                    quantity,
                     ts: deal_time,
                 }));
 
@@ -372,7 +372,7 @@ impl Orderbook {
                     side: opposite_order.side,
                     order_type: OrderType::Limit,
                     price: opposite_order.price,
-                    qty,
+                    quantity,
                     ts: deal_time,
                 }));
 
@@ -388,11 +388,11 @@ impl Orderbook {
                         quote_asset,
                         side: opposite_order.side,
                         price: opposite_order.price,
-                        qty: opposite_order.qty - qty,
+                        quantity: opposite_order.quantity - quantity,
                     });
                 }
             }
-            x if x > opposite_order.qty => {
+            x if x > opposite_order.quantity => {
                 // partially fill new limit order, fill opposite limit and notify to process the rest
                 // report new order partially filled
                 results.push(Ok(Success::PartiallyFilled {
@@ -400,7 +400,7 @@ impl Orderbook {
                     side,
                     order_type,
                     price: opposite_order.price,
-                    qty: opposite_order.qty,
+                    quantity: opposite_order.quantity,
                     ts: deal_time,
                 }));
 
@@ -410,7 +410,7 @@ impl Orderbook {
                     side: opposite_order.side,
                     order_type: OrderType::Limit,
                     price: opposite_order.price,
-                    qty: opposite_order.qty,
+                    quantity: opposite_order.quantity,
                     ts: deal_time,
                 }));
 
@@ -434,7 +434,7 @@ impl Orderbook {
                     side,
                     order_type,
                     price: opposite_order.price,
-                    qty,
+                    quantity,
                     ts: deal_time,
                 }));
                 // report filled opposite limit order
@@ -443,7 +443,7 @@ impl Orderbook {
                     side: opposite_order.side,
                     order_type: OrderType::Limit,
                     price: opposite_order.price,
-                    qty,
+                    quantity,
                     ts: deal_time,
                 }));
 

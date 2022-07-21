@@ -9,7 +9,7 @@ mod tests {
     use core::{
         block::{generate_block_hash, Block, BlockContainer},
         hash_clock::HashClock,
-        transaction::{TxnRequest, TxnVariant},
+        transaction::{TransactionRequest, TransactionVariant},
         vote_cert::VoteCert,
     };
     use engine::orders::new_limit_order_request;
@@ -28,7 +28,7 @@ mod tests {
     };
 
     #[test]
-    fn test_orderbook_signed_txn() {
+    fn test_orderbook_signed_transaction() {
         let mut rng: ThreadRng = rand::thread_rng();
         let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
         let account_pub_key: AccountPubKey = (&private_key).into();
@@ -41,40 +41,41 @@ mod tests {
         spot_controller.create_orderbook(base_asset_id, quote_asset_id).unwrap();
 
         let price: u64 = 1;
-        let qty: u64 = 10;
-        let txn: TxnVariant = TxnVariant::OrderTransaction(new_limit_order_request(
+        let quantity: u64 = 10;
+        let transaction: TransactionVariant = TransactionVariant::OrderTransaction(new_limit_order_request(
             base_asset_id,
             quote_asset_id,
             OrderSide::Bid,
             price,
-            qty,
+            quantity,
             time::SystemTime::now(),
         ));
 
-        let txn_hash: HashValue = txn.hash();
-        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
-        let signed_txn: TxnRequest<TxnVariant> = TxnRequest::<TxnVariant>::new(txn, account_pub_key, signed_hash);
+        let transaction_hash: HashValue = transaction.hash();
+        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
+        let signed_transaction: TransactionRequest<TransactionVariant> =
+            TransactionRequest::<TransactionVariant>::new(transaction, account_pub_key, signed_hash);
 
         spot_controller
-            .parse_limit_order_txn(&mut bank_controller, &signed_txn)
+            .parse_limit_order_transaction(&mut bank_controller, &signed_transaction)
             .unwrap();
-        signed_txn.verify_transaction().unwrap();
+        signed_transaction.verify_transaction().unwrap();
 
-        let mut txns: Vec<TxnRequest<TxnVariant>> = Vec::new();
-        txns.push(signed_txn);
-        let block_hash: HashValue = generate_block_hash(&txns);
-        let hash_clock: HashClock = HashClock::new();
+        let mut transactions: Vec<TransactionRequest<TransactionVariant>> = Vec::new();
+        transactions.push(signed_transaction);
+        let block_hash: HashValue = generate_block_hash(&transactions);
+        let hash_clock: HashClock = HashClock::default();
 
         let dummy_vote_cert: VoteCert = VoteCert::new(0, block_hash);
-        let block: Block<TxnVariant> = Block::<TxnVariant>::new(
-            txns,
+        let block: Block<TransactionVariant> = Block::<TransactionVariant>::new(
+            transactions,
             account_pub_key,
             block_hash,
-            hash_clock.get_time(),
+            hash_clock.get_hash_time(),
             dummy_vote_cert,
         );
 
-        let mut block_container: BlockContainer<TxnVariant> = BlockContainer::new();
+        let mut block_container: BlockContainer<TransactionVariant> = BlockContainer::new();
         block_container.append_block(block);
     }
 }

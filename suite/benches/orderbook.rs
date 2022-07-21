@@ -58,12 +58,18 @@ fn place_orders_engine(
         } else {
             OrderSide::Ask
         };
-        let qty: u64 = rng.gen_range(1, 100);
+        let quantity: u64 = rng.gen_range(1, 100);
         let price: u64 = rng.gen_range(1, 100);
 
         // order construction & submission
-        let order: OrderRequest =
-            new_limit_order_request(base_asset_id, quote_asset_id, order_type, price, qty, SystemTime::now());
+        let order: OrderRequest = new_limit_order_request(
+            base_asset_id,
+            quote_asset_id,
+            order_type,
+            price,
+            quantity,
+            SystemTime::now(),
+        );
         let res: OrderProcessingResult = orderbook.process_order(order);
         if persist {
             persist_result(db, &res);
@@ -98,13 +104,13 @@ fn place_orders_engine_account(
             OrderSide::Ask
         };
         // generate two random a number between 0.001 and 10 w/ interval of 0.001
-        let qty = rng.gen_range(1, 100);
+        let quantity = rng.gen_range(1, 100);
         let price = rng.gen_range(1, 100);
         // generate a random integer between 0 and 100
         let account_pub_key: AccountPubKey = account_to_pub_key[rng.gen_range(1, 100)];
 
         let res = orderbook_controller
-            .place_limit_order(bank_controller, &account_pub_key, order_type, qty, price)
+            .place_limit_order(bank_controller, &account_pub_key, order_type, quantity, price)
             .unwrap();
         if persist {
             persist_result(db, &res);

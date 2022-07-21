@@ -4,7 +4,7 @@
 //!
 use gdex_crypto::hash::CryptoHash;
 use std::time::{Duration, Instant};
-use std::{fmt::Debug, marker::Send};
+use std::{fmt::Debug};
 use types::{hash_clock::HashTime, spot::DiemCryptoMessage};
 
 pub const TICKS_PER_CYCLE: u64 = 1_000;
@@ -78,9 +78,6 @@ impl Default for HashClock {
         )
     }
 }
-
-unsafe impl Send for HashClock {}
-unsafe impl Sync for HashClock {}
 
 #[cfg(test)]
 mod tests {

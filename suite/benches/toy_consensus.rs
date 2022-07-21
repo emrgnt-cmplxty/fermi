@@ -90,13 +90,14 @@ fn place_orders_consensus_batch(
     let block: Block<TransactionVariant> = blocks[blocks.len() - 1].clone();
 
     // begin ticking hash clock in async thread
-    let hash_time_handler: JoinHandle<HashValue> = get_clock_handler(&consensus_manager, &block);
+    let hash_time_handler: JoinHandle<HashTime> = get_clock_handler(&consensus_manager, &block);
 
     // verify transactions and update state
     route_transaction_batch(consensus_manager, &transactions).unwrap();
 
-    // propose & validate new block
+    // fetch hash time for inclusion with new block
     let new_hash_time: HashTime = hash_time_handler.join().unwrap();
+    // propose and validate new block
     let new_block: Block<TransactionVariant> = consensus_manager.propose_block(transactions, new_hash_time).unwrap();
     consensus_manager
         .validate_and_store_block(new_block, block.get_hash_time())

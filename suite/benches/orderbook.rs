@@ -5,13 +5,12 @@ extern crate types;
 use core::transaction::OrderRequest;
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use engine::{orderbook::Orderbook, orders::new_limit_order_request};
-use gdex_crypto::traits::Uniform;
-use proc::{bank::BankController, spot::OrderbookInterface};
+use proc::{account::generate_key_pair, bank::BankController, spot::OrderbookInterface};
 use rand::{rngs::ThreadRng, Rng};
 use rocksdb::{ColumnFamilyDescriptor, DBWithThreadMode, Options, SingleThreaded, DB};
 use std::time::SystemTime;
 use types::{
-    account::{AccountPrivKey, AccountPubKey},
+    account::AccountPubKey,
     orderbook::{OrderProcessingResult, OrderSide, Success},
 };
 
@@ -121,9 +120,7 @@ fn place_orders_engine_account(
 
 pub fn criterion_benchmark(c: &mut Criterion) {
     // generate creator details
-    let mut rng: ThreadRng = rand::thread_rng();
-    let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-    let creator_key: AccountPubKey = (&private_key).into();
+    let (creator_key, private_key) = generate_key_pair();
 
     // initialize market controller
     let mut account_to_pub_key: Vec<AccountPubKey> = Vec::new();
@@ -146,8 +143,8 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     // generate N_ACCOUNTS accounts to transact w/ orderbook
     while i_account < N_ACCOUNTS - 1 {
-        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-        let account_pub_key: AccountPubKey = (&private_key).into();
+        let (account_pub_key, private_key) = generate_key_pair();
+
         bank_controller
             .transfer(&creator_key, &account_pub_key, base_asset_id, TRANSFER_AMOUNT)
             .unwrap();

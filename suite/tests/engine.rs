@@ -308,8 +308,7 @@ mod tests {
             15,
             SystemTime::now(),
         );
-        let res = orderbook.process_order(order4);
-        println!("{:?}", res);
+        orderbook.process_order(order4);
 
         assert_eq!(orderbook.current_spread(), Some((100, 125)));
     }

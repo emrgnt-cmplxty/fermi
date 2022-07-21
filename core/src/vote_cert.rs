@@ -23,6 +23,7 @@ pub const DEFAULT_VOTE_THRESHOLD: f64 = 0.50;
 
 // TODO #2 & # 3 //
 #[derive(Clone, Debug)]
+
 pub struct Vote {
     vote_response: bool,
     stake: u64,
@@ -120,10 +121,11 @@ impl VoteCert {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     use gdex_crypto::{hash::CryptoHash, SigningKey, Uniform};
     use types::account::AccountPrivKey;
 
-    use super::*;
     #[test]
     fn valid_vote() {
         let mut rng = rand::thread_rng();

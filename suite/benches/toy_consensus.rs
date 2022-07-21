@@ -15,19 +15,15 @@ use core::{
     transaction::{TransactionRequest, TransactionVariant},
 };
 use criterion::{criterion_group, criterion_main, Criterion, Throughput};
-use gdex_crypto::{hash::CryptoHash, traits::Uniform, HashValue};
-use proc::bank::PRIMARY_ASSET_ID;
+use gdex_crypto::{hash::CryptoHash, HashValue};
+use proc::{account::generate_key_pair, bank::PRIMARY_ASSET_ID};
 use rand::{rngs::ThreadRng, Rng};
 use std::{
     sync::{Arc, Mutex, MutexGuard},
     thread::{spawn, JoinHandle},
 };
 use types::{
-    account::{AccountPrivKey, AccountPubKey},
-    asset::AssetId,
-    hash_clock::HashTime,
-    orderbook::OrderSide,
-    spot::DiemCryptoMessage,
+    account::AccountPubKey, asset::AssetId, hash_clock::HashTime, orderbook::OrderSide, spot::DiemCryptoMessage,
 };
 
 const N_ORDERS_BENCH: u64 = 2_000;
@@ -174,8 +170,8 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     let mut bench_transactions: Vec<TransactionRequest<TransactionVariant>> = Vec::new();
 
     while i_account < N_ACCOUNTS {
-        let account_priv_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-        let account_pub_key: AccountPubKey = (&account_priv_key).into();
+        // generate account
+        let (account_pub_key, account_priv_key) = generate_key_pair();
 
         // fund new account with base asset
         let signed_transaction: TransactionRequest<TransactionVariant> = payment_transaction(

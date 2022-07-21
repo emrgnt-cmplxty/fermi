@@ -199,17 +199,13 @@ fn execute_transaction(
 mod tests {
     use super::*;
 
-    use gdex_crypto::Uniform;
-    use proc::bank::CREATED_ASSET_BALANCE;
-    use rand::prelude::ThreadRng;
-    use types::account::{AccountPrivKey, AccountPubKey};
+    use proc::{account::generate_key_pair, bank::CREATED_ASSET_BALANCE};
+    use types::account::AccountPubKey;
 
     const STAKE_TRANSACTION_AMOUNT: u64 = 1_000_000;
     #[test]
     fn test_router() {
-        let mut rng: ThreadRng = rand::thread_rng();
-        let receiver_private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-        let receiver_pub_key: AccountPubKey = (&receiver_private_key).into();
+        let (receiver_pub_key, receiver_private_key) = generate_key_pair();
 
         let mut consensus_manager: ConsensusManager = ConsensusManager::new();
         consensus_manager.build_genesis_block().unwrap();

@@ -2,11 +2,20 @@
 //! account objects are attached to specific Controllers and are
 //! responsible for keeping important controller-specific data
 //!
+use gdex_crypto::Uniform;
+use rand::rngs::ThreadRng;
 use std::{collections::HashMap, fmt::Debug};
 use types::{
-    account::{AccountBalance, AccountPubKey},
+    account::{AccountBalance, AccountPrivKey, AccountPubKey},
     asset::AssetId,
 };
+
+pub fn generate_key_pair() -> (AccountPubKey, AccountPrivKey) {
+    let mut rng: ThreadRng = rand::thread_rng();
+    let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
+    let account_pub_key: AccountPubKey = (&private_key).into();
+    (account_pub_key, private_key)
+}
 
 // BankAccount is consumed by the BankController
 #[derive(Debug)]

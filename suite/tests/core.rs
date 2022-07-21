@@ -6,8 +6,9 @@ mod test {
         block::{generate_block_hash, Block, BlockContainer},
         hash_clock::HashClock,
         transaction::{
-            CreateAssetRequest, OrderRequest, PaymentRequest, TxnRequest, TxnVariant,
-            TxnVariant::CreateAssetTransaction, TxnVariant::OrderTransaction, TxnVariant::PaymentTransaction,
+            CreateAssetRequest, OrderRequest, PaymentRequest, TransactionRequest, TransactionVariant,
+            TransactionVariant::CreateAssetTransaction, TransactionVariant::OrderTransaction,
+            TransactionVariant::PaymentTransaction,
         },
         vote_cert::VoteCert,
     };
@@ -33,20 +34,21 @@ mod test {
         let account_pub_key: AccountPubKey = (&private_key).into();
 
         let price = 1;
-        let qty = 10;
-        let txn: OrderRequest = new_limit_order_request(
+        let quantity = 10;
+        let transaction: OrderRequest = new_limit_order_request(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             OrderSide::Bid,
             price,
-            qty,
+            quantity,
             time::SystemTime::now(),
         );
 
-        let txn_hash: HashValue = txn.hash();
-        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
-        let signed_txn: TxnRequest<OrderRequest> = TxnRequest::<OrderRequest>::new(txn, account_pub_key, signed_hash);
-        signed_txn.verify_transaction().unwrap();
+        let transaction_hash: HashValue = transaction.hash();
+        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
+        let signed_transaction: TransactionRequest<OrderRequest> =
+            TransactionRequest::<OrderRequest>::new(transaction, account_pub_key, signed_hash);
+        signed_transaction.verify_transaction().unwrap();
     }
 
     #[test]
@@ -57,13 +59,13 @@ mod test {
         let receiver_private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
         let receiver_pub_key: AccountPubKey = (&receiver_private_key).into();
 
-        let txn: PaymentRequest = PaymentRequest::new(sender_pub_key, receiver_pub_key, BASE_ASSET_ID, 10);
+        let transaction: PaymentRequest = PaymentRequest::new(sender_pub_key, receiver_pub_key, BASE_ASSET_ID, 10);
 
-        let txn_hash: HashValue = txn.hash();
-        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
-        let signed_txn: TxnRequest<PaymentRequest> =
-            TxnRequest::<PaymentRequest>::new(txn, sender_pub_key, signed_hash);
-        signed_txn.verify_transaction().unwrap();
+        let transaction_hash: HashValue = transaction.hash();
+        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
+        let signed_transaction: TransactionRequest<PaymentRequest> =
+            TransactionRequest::<PaymentRequest>::new(transaction, sender_pub_key, signed_hash);
+        signed_transaction.verify_transaction().unwrap();
     }
 
     #[test]
@@ -72,13 +74,13 @@ mod test {
         let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
         let sender_pub_key: AccountPubKey = (&private_key).into();
 
-        let txn: CreateAssetRequest = CreateAssetRequest {};
+        let transaction: CreateAssetRequest = CreateAssetRequest {};
 
-        let txn_hash: HashValue = txn.hash();
-        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
-        let signed_txn: TxnRequest<CreateAssetRequest> =
-            TxnRequest::<CreateAssetRequest>::new(txn, sender_pub_key, signed_hash);
-        signed_txn.verify_transaction().unwrap();
+        let transaction_hash: HashValue = transaction.hash();
+        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
+        let signed_transaction: TransactionRequest<CreateAssetRequest> =
+            TransactionRequest::<CreateAssetRequest>::new(transaction, sender_pub_key, signed_hash);
+        signed_transaction.verify_transaction().unwrap();
     }
 
     #[test]
@@ -89,56 +91,59 @@ mod test {
         let receiver_private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
         let receiver_pub_key: AccountPubKey = (&receiver_private_key).into();
 
-        let mut txns: Vec<TxnRequest<TxnVariant>> = Vec::new();
+        let mut transactions: Vec<TransactionRequest<TransactionVariant>> = Vec::new();
 
         let price: u64 = 1;
-        let qty: u64 = 10;
-        let txn: TxnVariant = OrderTransaction(new_limit_order_request(
+        let quantity: u64 = 10;
+        let transaction: TransactionVariant = OrderTransaction(new_limit_order_request(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             OrderSide::Bid,
             price,
-            qty,
+            quantity,
             time::SystemTime::now(),
         ));
-        let txn_hash: HashValue = txn.hash();
-        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
-        let signed_txn: TxnRequest<TxnVariant> = TxnRequest::<TxnVariant>::new(txn, account_pub_key, signed_hash);
-        signed_txn.verify_transaction().unwrap();
-        txns.push(signed_txn);
+        let transaction_hash: HashValue = transaction.hash();
+        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
+        let signed_transaction: TransactionRequest<TransactionVariant> =
+            TransactionRequest::<TransactionVariant>::new(transaction, account_pub_key, signed_hash);
+        signed_transaction.verify_transaction().unwrap();
+        transactions.push(signed_transaction);
 
-        let txn: TxnVariant = PaymentTransaction(PaymentRequest::new(
+        let transaction: TransactionVariant = PaymentTransaction(PaymentRequest::new(
             account_pub_key,
             receiver_pub_key,
             BASE_ASSET_ID,
             10,
         ));
-        let txn_hash: HashValue = txn.hash();
-        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
-        let signed_txn: TxnRequest<TxnVariant> = TxnRequest::<TxnVariant>::new(txn, account_pub_key, signed_hash);
-        signed_txn.verify_transaction().unwrap();
-        txns.push(signed_txn);
+        let transaction_hash: HashValue = transaction.hash();
+        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
+        let signed_transaction: TransactionRequest<TransactionVariant> =
+            TransactionRequest::<TransactionVariant>::new(transaction, account_pub_key, signed_hash);
+        signed_transaction.verify_transaction().unwrap();
+        transactions.push(signed_transaction);
 
-        let txn: TxnVariant = CreateAssetTransaction(CreateAssetRequest {});
-        let txn_hash: HashValue = txn.hash();
-        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(txn_hash.to_string()));
-        let signed_txn: TxnRequest<TxnVariant> = TxnRequest::<TxnVariant>::new(txn, account_pub_key, signed_hash);
-        signed_txn.verify_transaction().unwrap();
-        txns.push(signed_txn);
+        let transaction: TransactionVariant = CreateAssetTransaction(CreateAssetRequest {});
+        let transaction_hash: HashValue = transaction.hash();
+        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
+        let signed_transaction: TransactionRequest<TransactionVariant> =
+            TransactionRequest::<TransactionVariant>::new(transaction, account_pub_key, signed_hash);
+        signed_transaction.verify_transaction().unwrap();
+        transactions.push(signed_transaction);
 
-        let block_hash: HashValue = generate_block_hash(&txns);
-        let hash_clock: HashClock = HashClock::new();
+        let block_hash: HashValue = generate_block_hash(&transactions);
+        let hash_clock: HashClock = HashClock::default();
         let dummy_vote_cert: VoteCert = VoteCert::new(0, block_hash);
 
-        let block: Block<TxnVariant> = Block::<TxnVariant>::new(
-            txns,
+        let block: Block<TransactionVariant> = Block::<TransactionVariant>::new(
+            transactions,
             account_pub_key,
             block_hash,
-            hash_clock.get_time(),
+            hash_clock.get_hash_time(),
             dummy_vote_cert,
         );
 
-        let mut block_container: BlockContainer<TxnVariant> = BlockContainer::new();
+        let mut block_container: BlockContainer<TransactionVariant> = BlockContainer::new();
         block_container.append_block(block);
     }
 }

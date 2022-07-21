@@ -38,26 +38,26 @@ impl OrderRequestValidator {
                 base_asset,
                 quote_asset,
                 side: _side,
-                qty,
+                quantity,
                 ts: _ts,
-            } => self.validate_market(base_asset, quote_asset, qty),
+            } => self.validate_market(base_asset, quote_asset, quantity),
 
             OrderRequest::Limit {
                 base_asset,
                 quote_asset,
                 side: _side,
                 price,
-                qty,
+                quantity,
                 ts: _ts,
-            } => self.validate_limit(base_asset, quote_asset, price, qty),
+            } => self.validate_limit(base_asset, quote_asset, price, quantity),
 
             OrderRequest::Amend {
                 id,
                 price,
                 side: _side,
-                qty,
+                quantity,
                 ts: _ts,
-            } => self.validate_amend(id, price, qty),
+            } => self.validate_amend(id, price, quantity),
 
             OrderRequest::CancelOrder { id, side: _side } => self.validate_cancel(id),
         }
@@ -65,7 +65,7 @@ impl OrderRequestValidator {
 
     /* Internal validators */
 
-    fn validate_market(&self, base_asset: AssetId, quote_asset: AssetId, qty: u64) -> Result<(), &str> {
+    fn validate_market(&self, base_asset: AssetId, quote_asset: AssetId, quantity: u64) -> Result<(), &str> {
         if self.orderbook_base_asset != base_asset {
             return Err(ERR_BAD_BASE_ASSET);
         }
@@ -74,14 +74,14 @@ impl OrderRequestValidator {
             return Err(ERR_BAD_QUOTE_ASSET);
         }
 
-        if qty == 0 {
+        if quantity == 0 {
             return Err(ERR_BAD_QUANTITY_VALUE);
         }
 
         Ok(())
     }
 
-    fn validate_limit(&self, base_asset: AssetId, quote_asset: AssetId, price: u64, qty: u64) -> Result<(), &str> {
+    fn validate_limit(&self, base_asset: AssetId, quote_asset: AssetId, price: u64, quantity: u64) -> Result<(), &str> {
         if self.orderbook_base_asset != base_asset {
             return Err(ERR_BAD_BASE_ASSET);
         }
@@ -94,14 +94,14 @@ impl OrderRequestValidator {
             return Err(ERR_BAD_PRICE_VALUE);
         }
 
-        if qty == 0 {
+        if quantity == 0 {
             return Err(ERR_BAD_QUANTITY_VALUE);
         }
 
         Ok(())
     }
 
-    fn validate_amend(&self, id: u64, price: u64, qty: u64) -> Result<(), &str> {
+    fn validate_amend(&self, id: u64, price: u64, quantity: u64) -> Result<(), &str> {
         if self.min_sequence_id > id || self.max_sequence_id < id {
             return Err(ERR_BAD_SEQ_ID);
         }
@@ -110,7 +110,7 @@ impl OrderRequestValidator {
             return Err(ERR_BAD_PRICE_VALUE);
         }
 
-        if qty == 0 {
+        if quantity == 0 {
             return Err(ERR_BAD_QUANTITY_VALUE);
         }
 

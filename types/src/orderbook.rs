@@ -17,7 +17,7 @@ pub struct Order {
     pub quote_asset: AssetId,
     pub side: OrderSide,
     pub price: u64,
-    pub qty: u64,
+    pub quantity: u64,
 }
 
 #[derive(Eq, PartialEq, Debug, Copy, Clone)]
@@ -39,7 +39,7 @@ pub enum Success {
         side: OrderSide,
         order_type: OrderType,
         price: u64,
-        qty: u64,
+        quantity: u64,
         ts: SystemTime,
     },
 
@@ -48,14 +48,14 @@ pub enum Success {
         side: OrderSide,
         order_type: OrderType,
         price: u64,
-        qty: u64,
+        quantity: u64,
         ts: SystemTime,
     },
 
     Amended {
         order_id: u64,
         price: u64,
-        qty: u64,
+        quantity: u64,
         ts: SystemTime,
     },
 

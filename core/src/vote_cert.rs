@@ -22,6 +22,7 @@ pub const DEFAULT_QUORUM_THRESHOLD: f64 = 0.05;
 pub const DEFAULT_VOTE_THRESHOLD: f64 = 0.50;
 
 // TODO #2 & # 3 //
+#[derive(Clone, Debug)]
 pub struct Vote {
     vote_response: bool,
     stake: u64,
@@ -42,6 +43,7 @@ impl Vote {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct VoteCert {
     // map of validator addresses to vote result
     votes: HashMap<AccountPubKey, Vote>,

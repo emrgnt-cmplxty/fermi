@@ -14,6 +14,7 @@ gdex-crypto = { path = "../crypto", features = ["batch"] }
 diem-workspace-hack = { path = "../workspace-hack" }
 engine = { path = "../engine" }
 proc = { path = "../proc" }
+tokio = { version = "1", features = ["full"] }
 types = { path = "../types" }
 
 [features]

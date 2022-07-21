@@ -51,17 +51,17 @@ mod tests {
             Ok(Success::Filled {
                 order_id: 2,
                 price,
-                qty,
+                quantity,
                 ..
-            }) if price == 10 && qty == 1 => true,
+            }) if price == 10 && quantity == 1 => true,
             _ => false,
         } || !match res[2] {
             Ok(Success::PartiallyFilled {
                 order_id: 1,
                 price,
-                qty,
+                quantity,
                 ..
-            }) if price == 10 && qty == 1 => true,
+            }) if price == 10 && quantity == 1 => true,
             _ => false,
         } {
             panic!("unexpected event sequence: {:?}", res)
@@ -92,33 +92,33 @@ mod tests {
             Ok(Success::PartiallyFilled {
                 order_id: 3,
                 price,
-                qty,
+                quantity,
                 ..
-            }) if price == 12 && qty == 10 => true,
+            }) if price == 12 && quantity == 10 => true,
             _ => false,
         } || !match res[2] {
             Ok(Success::Filled {
                 order_id: 2,
                 price,
-                qty,
+                quantity,
                 ..
-            }) if price == 12 && qty == 10 => true,
+            }) if price == 12 && quantity == 10 => true,
             _ => false,
         } || !match res[3] {
             Ok(Success::Filled {
                 order_id: 3,
                 price,
-                qty,
+                quantity,
                 ..
-            }) if price == 10 && qty == 5 => true,
+            }) if price == 10 && quantity == 5 => true,
             _ => false,
         } || !match res[4] {
             Ok(Success::PartiallyFilled {
                 order_id: 1,
                 price,
-                qty,
+                quantity,
                 ..
-            }) if price == 10 && qty == 5 => true,
+            }) if price == 10 && quantity == 5 => true,
             _ => false,
         } {
             panic!("unexpected event sequence: {:?}", res)
@@ -175,17 +175,17 @@ mod tests {
             Ok(Success::Filled {
                 order_id: 2,
                 price,
-                qty,
+                quantity,
                 ..
-            }) if price == 100 && qty == 50 => true,
+            }) if price == 100 && quantity == 50 => true,
             _ => false,
         } || !match res[2] {
             Ok(Success::PartiallyFilled {
                 order_id: 1,
                 price,
-                qty,
+                quantity,
                 ..
-            }) if price == 100 && qty == 50 => true,
+            }) if price == 100 && quantity == 50 => true,
             _ => false,
         } {
             panic!("unexpected event sequence: {:?}", res)
@@ -218,17 +218,17 @@ mod tests {
             Ok(Success::Filled {
                 order_id: 2,
                 price,
-                qty,
+                quantity,
                 ..
-            }) if price == 100 && qty == 5 => true,
+            }) if price == 100 && quantity == 5 => true,
             _ => false,
         } || !match res[2] {
             Ok(Success::PartiallyFilled {
                 order_id: 1,
                 price,
-                qty,
+                quantity,
                 ..
-            }) if price == 100 && qty == 5 => true,
+            }) if price == 100 && quantity == 5 => true,
             _ => false,
         } {
             panic!("unexpected event sequence: {:?}", res)
@@ -246,17 +246,17 @@ mod tests {
             Ok(Success::Filled {
                 order_id: 3,
                 price,
-                qty,
+                quantity,
                 ..
-            }) if price == 100 && qty == 5 => true,
+            }) if price == 100 && quantity == 5 => true,
             _ => false,
         } || !match res2[2] {
             Ok(Success::Filled {
                 order_id: 1,
                 price,
-                qty,
+                quantity,
                 ..
-            }) if price == 100 && qty == 5 => true,
+            }) if price == 100 && quantity == 5 => true,
             _ => false,
         } {
             panic!("unexpected event sequence: {:?}", res2)

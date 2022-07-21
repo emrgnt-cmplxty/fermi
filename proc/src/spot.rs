@@ -13,7 +13,7 @@ extern crate engine;
 extern crate types;
 
 use super::{account::OrderAccount, bank::BankController};
-use core::transaction::{OrderRequest, TxnRequest, TxnVariant};
+use core::transaction::{OrderRequest, TransactionRequest, TransactionVariant};
 use engine::{orderbook::Orderbook, orders::new_limit_order_request};
 use std::{collections::HashMap, time::SystemTime};
 use types::{
@@ -68,17 +68,17 @@ impl OrderbookInterface {
         bank_controller: &mut BankController,
         account_pub_key: &AccountPubKey,
         side: OrderSide,
-        qty: u64,
+        quantity: u64,
         price: u64,
     ) -> Result<OrderProcessingResult, AccountError> {
         let balance = bank_controller.get_balance(account_pub_key, self.base_asset_id)?;
         // check balances before placing order
         if matches!(side, OrderSide::Ask) {
-            // if ask, selling qty of base asset
-            assert!(balance > qty);
+            // if ask, selling quantity of base asset
+            assert!(balance > quantity);
         } else {
-            // if bid, buying base asset with qty*price of quote asset
-            assert!(balance > qty * price);
+            // if bid, buying base asset with quantity*price of quote asset
+            assert!(balance > quantity * price);
         }
         // create and process limit order
         let order: OrderRequest = new_limit_order_request(
@@ -86,11 +86,11 @@ impl OrderbookInterface {
             self.quote_asset_id,
             side,
             price,
-            qty,
+            quantity,
             SystemTime::now(),
         );
         let res: Vec<Result<Success, Failed>> = self.orderbook.process_order(order);
-        self.proc_limit_result(bank_controller, account_pub_key, side, price, qty, res)
+        self.proc_limit_result(bank_controller, account_pub_key, side, price, quantity, res)
     }
 
     // loop over and process the output from placing a limit order
@@ -116,27 +116,27 @@ impl OrderbookInterface {
                     order_id,
                     side,
                     price,
-                    qty,
+                    quantity,
                     ..
                 }) => {
                     let existing_pub_key: AccountPubKey = *self
                         .order_to_account
                         .get(order_id)
                         .ok_or_else(|| AccountError::Lookup("Failed to find account".to_string()))?;
-                    self.proc_order_fill(bank_controller, &existing_pub_key, *side, *price, *qty)?;
+                    self.proc_order_fill(bank_controller, &existing_pub_key, *side, *price, *quantity)?;
                 }
                 Ok(Success::Filled {
                     order_id,
                     side,
                     price,
-                    qty,
+                    quantity,
                     ..
                 }) => {
                     let existing_pub_key: AccountPubKey = *self
                         .order_to_account
                         .get(order_id)
                         .ok_or_else(|| AccountError::Lookup("Failed to find account".to_string()))?;
-                    self.proc_order_fill(bank_controller, &existing_pub_key, *side, *price, *qty)?;
+                    self.proc_order_fill(bank_controller, &existing_pub_key, *side, *price, *quantity)?;
                     // erase existing order
                     self.order_to_account
                         .remove(order_id)
@@ -166,14 +166,14 @@ impl OrderbookInterface {
         account_pub_key: &AccountPubKey,
         side: OrderSide,
         price: u64,
-        qty: u64,
+        quantity: u64,
     ) -> Result<(), AccountError> {
         if matches!(side, OrderSide::Ask) {
             // E.g. ask 1 BTC @ $20k moves 1 BTC (base) from balance to escrow
-            bank_controller.update_balance(account_pub_key, self.base_asset_id, -(qty as i64))?;
+            bank_controller.update_balance(account_pub_key, self.base_asset_id, -(quantity as i64))?;
         } else {
             // E.g. bid 1 BTC @ $20k moves 20k USD (quote) from balance to escrow
-            bank_controller.update_balance(account_pub_key, self.quote_asset_id, -((qty * price) as i64))?;
+            bank_controller.update_balance(account_pub_key, self.quote_asset_id, -((quantity * price) as i64))?;
         }
         Ok(())
     }
@@ -185,14 +185,14 @@ impl OrderbookInterface {
         account_pub_key: &AccountPubKey,
         side: OrderSide,
         price: u64,
-        qty: u64,
+        quantity: u64,
     ) -> Result<(), AccountError> {
         if matches!(side, OrderSide::Ask) {
             // E.g. fill ask 1 BTC @ 20k adds 20k USD (quote) to bal, subtracts 1 BTC (base) from escrow
-            bank_controller.update_balance(account_pub_key, self.quote_asset_id, (qty * price) as i64)?;
+            bank_controller.update_balance(account_pub_key, self.quote_asset_id, (quantity * price) as i64)?;
         } else {
             // E.g. fill bid 1 BTC @ 20k adds 1 BTC (base) to bal, subtracts 20k USD (quote) from escrow
-            bank_controller.update_balance(account_pub_key, self.base_asset_id, qty as i64)?;
+            bank_controller.update_balance(account_pub_key, self.base_asset_id, quantity as i64)?;
         }
         Ok(())
     }
@@ -242,18 +242,18 @@ impl SpotController {
         }
     }
 
-    pub fn parse_limit_order_txn(
+    pub fn parse_limit_order_transaction(
         &mut self,
         bank_controller: &mut BankController,
-        signed_txn: &TxnRequest<TxnVariant>,
+        signed_transaction: &TransactionRequest<TransactionVariant>,
     ) -> Result<OrderProcessingResult, AccountError> {
         // verify transaction is an order
-        if let TxnVariant::OrderTransaction(order) = &signed_txn.get_txn() {
+        if let TransactionVariant::OrderTransaction(order) = &signed_transaction.get_transaction() {
             // verify and place a limit order
             if let OrderRequest::Limit {
                 side,
                 price,
-                qty,
+                quantity,
                 base_asset,
                 quote_asset,
                 ..
@@ -261,7 +261,13 @@ impl SpotController {
             {
                 let orderbook: &mut OrderbookInterface = self.get_orderbook(*base_asset, *quote_asset)?;
 
-                return orderbook.place_limit_order(bank_controller, signed_txn.get_sender(), *side, *qty, *price);
+                return orderbook.place_limit_order(
+                    bank_controller,
+                    signed_transaction.get_sender(),
+                    *side,
+                    *quantity,
+                    *price,
+                );
             } else {
                 return Err(AccountError::OrderProc("Only limit orders supported".to_string()));
             }

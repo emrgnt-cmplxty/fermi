@@ -15,8 +15,9 @@ mod tests {
     };
     use rand::rngs::ThreadRng;
     use types::{
-        account::{AccountError, AccountPrivKey, AccountPubKey},
+        account::{AccountPrivKey, AccountPubKey},
         asset::AssetId,
+        error::GDEXError,
         orderbook::OrderSide,
     };
 
@@ -99,9 +100,9 @@ mod tests {
         let base_asset_id: AssetId = 0;
         let quote_asset_id: AssetId = 1;
         let orderbook_interface: OrderbookInterface = OrderbookInterface::new(base_asset_id, quote_asset_id);
-        let result: AccountError = orderbook_interface.get_account(&account_pub_key).unwrap_err();
+        let result: GDEXError = orderbook_interface.get_account(&account_pub_key).unwrap_err();
 
-        assert!(matches!(result, AccountError::Lookup(_)));
+        assert!(matches!(result, GDEXError::AccountLookup(_)));
     }
 
     #[test]
@@ -114,8 +115,8 @@ mod tests {
         let quote_asset_id: AssetId = 1;
         let mut orderbook_interface: OrderbookInterface = OrderbookInterface::new(base_asset_id, quote_asset_id);
         orderbook_interface.create_account(&account_pub_key).unwrap();
-        let result: AccountError = orderbook_interface.create_account(&account_pub_key).unwrap_err();
-        assert!(matches!(result, AccountError::Creation(_)));
+        let result: GDEXError = orderbook_interface.create_account(&account_pub_key).unwrap_err();
+        assert!(matches!(result, GDEXError::AccountCreation(_)));
     }
 
     #[test]

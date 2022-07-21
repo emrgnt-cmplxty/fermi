@@ -86,8 +86,6 @@ mod tests {
     #[test]
     fn test_clock() {
         let clock: &mut HashClock = &mut HashClock::default();
-        println!("init clock = {:?}", clock);
         clock.tick_for_interval(1);
-        println!("final clock = {:?}", clock);
     }
 }

@@ -15,23 +15,18 @@ mod test {
     use engine::orders::new_limit_order_request;
     use gdex_crypto::{
         hash::{CryptoHash, HashValue},
-        SigningKey, Uniform,
+        SigningKey,
     };
+    use proc::account::generate_key_pair;
     use std::time;
-    use types::{
-        account::{AccountPrivKey, AccountPubKey, AccountSignature},
-        orderbook::OrderSide,
-        spot::DiemCryptoMessage,
-    };
+    use types::{account::AccountSignature, orderbook::OrderSide, spot::DiemCryptoMessage};
 
     const BASE_ASSET_ID: u64 = 0;
     const QUOTE_ASSET_ID: u64 = 1;
 
     #[test]
     fn create_signed_order_transaction() {
-        let mut rng = rand::thread_rng();
-        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-        let account_pub_key: AccountPubKey = (&private_key).into();
+        let (account_pub_key, private_key) = generate_key_pair();
 
         let price = 1;
         let quantity = 10;
@@ -53,11 +48,8 @@ mod test {
 
     #[test]
     fn create_signed_payment_transaction() {
-        let mut rng = rand::thread_rng();
-        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-        let sender_pub_key: AccountPubKey = (&private_key).into();
-        let receiver_private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-        let receiver_pub_key: AccountPubKey = (&receiver_private_key).into();
+        let (sender_pub_key, private_key) = generate_key_pair();
+        let (receiver_pub_key, _receiver_private_key) = generate_key_pair();
 
         let transaction: PaymentRequest = PaymentRequest::new(sender_pub_key, receiver_pub_key, BASE_ASSET_ID, 10);
 
@@ -70,9 +62,7 @@ mod test {
 
     #[test]
     fn create_asset_transaction() {
-        let mut rng = rand::thread_rng();
-        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-        let sender_pub_key: AccountPubKey = (&private_key).into();
+        let (sender_pub_key, private_key) = generate_key_pair();
 
         let transaction: CreateAssetRequest = CreateAssetRequest {};
 
@@ -85,11 +75,8 @@ mod test {
 
     #[test]
     fn block_hash_test() {
-        let mut rng = rand::thread_rng();
-        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-        let account_pub_key: AccountPubKey = (&private_key).into();
-        let receiver_private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-        let receiver_pub_key: AccountPubKey = (&receiver_private_key).into();
+        let (account_pub_key, private_key) = generate_key_pair();
+        let (receiver_pub_key, _receiver_private_key) = generate_key_pair();
 
         let mut transactions: Vec<TransactionRequest<TransactionVariant>> = Vec::new();
 

@@ -13,9 +13,8 @@ use core::{
     transaction::{TransactionRequest, TransactionVariant},
     vote_cert::VoteCert,
 };
-use gdex_crypto::{hash::HashValue, traits::Uniform, SigningKey};
-use proc::{bank::BankController, spot::SpotController, stake::StakeController};
-use rand::rngs::ThreadRng;
+use gdex_crypto::{hash::HashValue, SigningKey};
+use proc::{account::generate_key_pair, bank::BankController, spot::SpotController, stake::StakeController};
 use types::{
     account::{AccountError, AccountPrivKey, AccountPubKey, AccountSignature},
     hash_clock::HashTime,
@@ -37,10 +36,7 @@ pub struct ConsensusManager {
 }
 impl ConsensusManager {
     pub fn new() -> Self {
-        let mut rng: ThreadRng = rand::thread_rng();
-        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-        let account_pub_key: AccountPubKey = (&private_key).into();
-
+        let (account_pub_key, private_key) = generate_key_pair();
         ConsensusManager {
             block_container: BlockContainer::new(),
             bank_controller: BankController::new(),
@@ -230,7 +226,6 @@ mod tests {
         // begin second block where second validator is funded and staked
         let mut transactions: Vec<TransactionRequest<TransactionVariant>> = Vec::new();
         // initialize clock with time at last block
-        println!("creating hash clock");
         let mut hash_clock: HashClock = HashClock::new(genesis_hash_time, primary_validator.get_ticks_per_cycle());
 
         // fund second validator

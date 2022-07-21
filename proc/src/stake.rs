@@ -90,19 +90,14 @@ impl Default for StakeController {
 
 #[cfg(test)]
 mod tests {
+    use super::super::account::generate_key_pair;
     use super::super::bank::{CREATED_ASSET_BALANCE, PRIMARY_ASSET_ID};
     use super::*;
-
-    use gdex_crypto::traits::Uniform;
-    use rand::rngs::ThreadRng;
-    use types::account::{AccountPrivKey, AccountPubKey};
 
     const STAKE_AMOUNT: u64 = 1_000;
     #[test]
     fn stake() {
-        let mut rng: ThreadRng = rand::thread_rng();
-        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-        let account_pub_key: AccountPubKey = (&private_key).into();
+        let (account_pub_key, _private_key) = generate_key_pair();
 
         let mut bank_controller: BankController = BankController::new();
         bank_controller.create_asset(&account_pub_key).unwrap();
@@ -125,9 +120,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn failed_stake() {
-        let mut rng: ThreadRng = rand::thread_rng();
-        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-        let account_pub_key: AccountPubKey = (&private_key).into();
+        let (account_pub_key, _private_key) = generate_key_pair();
 
         let mut bank_controller: BankController = BankController::new();
         bank_controller.create_asset(&account_pub_key).unwrap();
@@ -139,8 +132,7 @@ mod tests {
             0
         );
         // staking without funding should create error
-        let private_key: AccountPrivKey = AccountPrivKey::generate(&mut rng);
-        let second_account_pub_key: AccountPubKey = (&private_key).into();
+        let (second_account_pub_key, _private_key) = generate_key_pair();
         stake_controller
             .stake(&mut bank_controller, &second_account_pub_key, STAKE_AMOUNT)
             .unwrap();

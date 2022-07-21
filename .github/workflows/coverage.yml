@@ -5,6 +5,8 @@ jobs:
   test:
     name:                       coverage
     runs-on:                    ubuntu-latest
+      env:
+        LIBCLANG_PATH: ${{ runner.temp }}/llvm-${{ matrix.clang[0] }}/lib
     container:
       image:                    xd009642/tarpaulin:develop-nightly
       options:                  --security-opt seccomp=unconfined
@@ -14,7 +16,7 @@ jobs:
 
       - name:                   Generate code coverage
         run: |
-          cargo +nightly tarpaulin --verbose --workspace --timeout 120 --out Xml --exclude curve25519-dalek
+          cargo +nightly tarpaulin --verbose --workspace --timeout 120 --out Xml
 
       - name:                   Upload to codecov.io
         uses:                   codecov/codecov-action@v2

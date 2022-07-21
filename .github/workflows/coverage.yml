@@ -5,11 +5,11 @@ jobs:
   test:
     name:                       coverage
     runs-on:                    ubuntu-latest
-      env:
-        LIBCLANG_PATH: ${{ runner.temp }}/llvm-${{ matrix.clang[0] }}/lib
     container:
       image:                    xd009642/tarpaulin:develop-nightly
       options:                  --security-opt seccomp=unconfined
+    env:
+      LIBCLANG_PATH: ${{ runner.temp }}/llvm-${{ matrix.clang[0] }}/lib
     steps:
       - name:                   Checkout repository
         uses:                   actions/checkout@v2

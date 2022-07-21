@@ -45,12 +45,13 @@ impl BankController {
         }
     }
 
-    pub fn check_account_exists(&self, account_pub_key: &AccountPubKey) -> Result<(), AccountError> {
+    fn check_account_exists(&self, account_pub_key: &AccountPubKey) -> Result<(), AccountError> {
         self.bank_accounts
             .get(account_pub_key)
             .ok_or_else(|| AccountError::Lookup("Failed to find account".to_string()))?;
         Ok(())
     }
+
     // TODO #0  //
     pub fn create_asset(&mut self, owner_pub_key: &AccountPubKey) -> Result<u64, AccountError> {
         // special handling for genesis

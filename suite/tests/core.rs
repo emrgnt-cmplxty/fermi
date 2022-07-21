@@ -139,6 +139,7 @@ mod test {
             transactions,
             account_pub_key,
             block_hash,
+            0,
             hash_clock.get_hash_time(),
             dummy_vote_cert,
         );

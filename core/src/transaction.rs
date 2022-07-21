@@ -8,7 +8,12 @@ use gdex_crypto::{
 };
 use gdex_crypto_derive::{BCSCryptoHash, CryptoHasher};
 use serde::{Deserialize, Serialize};
-use std::{fmt::Debug, time::SystemTime};
+use std::{
+    fmt::Debug,
+    sync::{Arc, Mutex, MutexGuard},
+    thread::{spawn, JoinHandle},
+    time::SystemTime,
+};
 use types::{
     account::{AccountPubKey, AccountSignature},
     asset::AssetId,
@@ -184,20 +189,73 @@ where
 }
 
 #[cfg(feature = "batch")]
-pub fn verify_transaction_batch(
-    transaction_requests: &[TransactionRequest<TransactionVariant>],
-) -> Result<(), gdex_crypto::error::Error> {
-    let mut messages: Vec<DiemCryptoMessage> = Vec::new();
-    let mut keys_and_signatures: Vec<(AccountPubKey, AccountSignature)> = Vec::new();
+pub mod batch_functions {
+    use super::*;
 
-    for transaction_request in transaction_requests.iter() {
-        let transaction_hash: HashValue = transaction_request.transaction.hash();
-        messages.push(DiemCryptoMessage(transaction_hash.to_string()));
-        keys_and_signatures.push((
-            *transaction_request.get_sender(),
-            transaction_request.get_transaction_signature().clone(),
-        ));
+    // leverage dalek batch transaction calculation speedup
+    pub fn verify_transaction_batch(
+        transaction_requests: &[TransactionRequest<TransactionVariant>],
+    ) -> Result<(), gdex_crypto::error::Error> {
+        let mut messages: Vec<DiemCryptoMessage> = Vec::new();
+        let mut keys_and_signatures: Vec<(AccountPubKey, AccountSignature)> = Vec::new();
+
+        for transaction_request in transaction_requests.iter() {
+            let transaction_hash: HashValue = transaction_request.transaction.hash();
+            messages.push(DiemCryptoMessage(transaction_hash.to_string()));
+            keys_and_signatures.push((
+                *transaction_request.get_sender(),
+                transaction_request.get_transaction_signature().clone(),
+            ));
+        }
+        Signature::batch_verify_distinct(&messages, keys_and_signatures)?;
+        Ok(())
     }
-    Signature::batch_verify_distinct(&messages, keys_and_signatures)?;
-    Ok(())
+
+    fn get_verification_handler(
+        transaction_requests: Vec<TransactionRequest<TransactionVariant>>,
+    ) -> JoinHandle<Result<(), gdex_crypto::error::Error>> {
+        let transaction_requests = Arc::new(Mutex::new(transaction_requests));
+        spawn(move || {
+            let transaction_requests: MutexGuard<Vec<TransactionRequest<TransactionVariant>>> =
+                transaction_requests.lock().unwrap();
+            verify_transaction_batch_multithread(transaction_requests)
+        })
+    }
+
+    // combine batch transactions with multithreading
+    fn verify_transaction_batch_multithread(
+        transaction_requests: MutexGuard<Vec<TransactionRequest<TransactionVariant>>>,
+    ) -> Result<(), gdex_crypto::error::Error> {
+        let mut messages: Vec<DiemCryptoMessage> = Vec::new();
+        let mut keys_and_signatures: Vec<(AccountPubKey, AccountSignature)> = Vec::new();
+
+        for transaction_request in transaction_requests.iter() {
+            let transaction_hash: HashValue = transaction_request.transaction.hash();
+            messages.push(DiemCryptoMessage(transaction_hash.to_string()));
+            keys_and_signatures.push((
+                *transaction_request.get_sender(),
+                transaction_request.get_transaction_signature().clone(),
+            ));
+        }
+        Signature::batch_verify_distinct(&messages, keys_and_signatures)?;
+        Ok(())
+    }
+
+    pub fn verify_transaction_batch_multithreaded(
+        transaction_requests: Vec<TransactionRequest<TransactionVariant>>,
+        n_threads: u64,
+    ) -> Result<(), gdex_crypto::error::Error> {
+        let mut transaction_handlers: Vec<JoinHandle<Result<(), gdex_crypto::error::Error>>> = Vec::new();
+        // use chunk to evenly split and spawn processes over the allotted threads
+        for chunk in transaction_requests.chunks(transaction_requests.len() / (n_threads as usize)) {
+            let transaction_handler: JoinHandle<Result<(), gdex_crypto::error::Error>> =
+                get_verification_handler(chunk.to_vec());
+            transaction_handlers.push(transaction_handler);
+        }
+        // verify success in turn
+        for transaction_handler in transaction_handlers.into_iter() {
+            transaction_handler.join().unwrap()?;
+        }
+        Ok(())
+    }
 }

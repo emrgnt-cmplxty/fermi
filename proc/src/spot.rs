@@ -71,6 +71,13 @@ impl OrderbookInterface {
         quantity: u64,
         price: u64,
     ) -> Result<OrderProcessingResult, AccountError> {
+        // for now the orderbook creates an account if it is missing
+        // in the future more robust handling is necessary to protect
+        // the blockchain from spam
+        if !self.accounts.contains_key(account_pub_key) {
+            self.create_account(account_pub_key)?
+        }
+
         let balance = bank_controller.get_balance(account_pub_key, self.base_asset_id)?;
         // check balances before placing order
         if matches!(side, OrderSide::Ask) {

@@ -8,11 +8,12 @@ jobs:
     container:
       image:                    xd009642/tarpaulin:develop-nightly
       options:                  --security-opt seccomp=unconfined
-    env:
-      LIBCLANG_PATH: ${{ runner.temp }}/llvm-${{ matrix.clang[0] }}/lib
     steps:
       - name:                   Checkout repository
         uses:                   actions/checkout@v2
+        
+      - name: Set LIBCLANG_PATH
+        run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
 
       - name:                   Generate code coverage
         run: |

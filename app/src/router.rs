@@ -128,20 +128,34 @@ pub fn route_transaction(
     execute_transaction(consensus_manager, transaction_request)
 }
 
-#[cfg(feature = "batch")]
-use core::transaction::verify_transaction_batch;
-
-#[cfg(feature = "batch")]
 // take a vector of transaction requests and batch verify before routing appropriate controller function(s)
-pub fn route_transaction_batch(
-    consensus_manager: &mut ConsensusManager,
-    transaction_requests: &[TransactionRequest<TransactionVariant>],
-) -> Result<(), AccountError> {
-    verify_transaction_batch(transaction_requests).unwrap();
-    for order_transaction in transaction_requests.iter() {
-        execute_transaction(consensus_manager, order_transaction)?;
+#[cfg(feature = "batch")]
+pub mod batch_functions {
+    use super::*;
+    use core::transaction::batch_functions::{verify_transaction_batch, verify_transaction_batch_multithreaded};
+
+    pub fn route_transaction_batch(
+        consensus_manager: &mut ConsensusManager,
+        transaction_requests: &[TransactionRequest<TransactionVariant>],
+    ) -> Result<(), AccountError> {
+        verify_transaction_batch(transaction_requests).unwrap();
+        for order_transaction in transaction_requests.iter() {
+            execute_transaction(consensus_manager, order_transaction)?;
+        }
+        Ok(())
     }
-    Ok(())
+
+    pub fn route_transaction_batch_multithreaded(
+        consensus_manager: &mut ConsensusManager,
+        transaction_requests: &[TransactionRequest<TransactionVariant>],
+        n_threads: u64,
+    ) -> Result<(), AccountError> {
+        verify_transaction_batch_multithreaded(transaction_requests.to_vec(), n_threads).unwrap();
+        for order_transaction in transaction_requests.iter() {
+            execute_transaction(consensus_manager, order_transaction)?;
+        }
+        Ok(())
+    }
 }
 
 fn execute_transaction(

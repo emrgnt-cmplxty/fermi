@@ -43,6 +43,7 @@ where
     transactions: Vec<TransactionRequest<Variant>>,
     proposer: AccountPubKey,
     block_hash: HashValue,
+    block_number: u64,
     hash_time: HashTime,
     vote_cert: VoteCert,
 }
@@ -54,6 +55,7 @@ where
         transactions: Vec<TransactionRequest<Variant>>,
         proposer: AccountPubKey,
         block_hash: HashValue,
+        block_number: u64,
         hash_time: HashValue,
         vote_cert: VoteCert,
     ) -> Self {
@@ -61,6 +63,7 @@ where
             transactions,
             proposer,
             block_hash,
+            block_number,
             hash_time,
             vote_cert,
         }
@@ -84,6 +87,10 @@ where
 
     pub fn get_vote_cert(&self) -> &VoteCert {
         &self.vote_cert
+    }
+
+    pub fn get_block_number(&self) -> u64 {
+        self.block_number
     }
 }
 

@@ -98,6 +98,7 @@ impl ConsensusManager {
             transactions,
             self.validator_pub_key,
             block_hash,
+            self.block_container.get_blocks().len() as u64 + 1,
             time,
             vote_cert,
         ))
@@ -145,8 +146,8 @@ impl ConsensusManager {
         &mut self.spot_controller
     }
 
-    pub fn get_block_container(&mut self) -> &mut BlockContainer<TransactionVariant> {
-        &mut self.block_container
+    pub fn get_block_container(&self) -> &BlockContainer<TransactionVariant> {
+        &self.block_container
     }
 
     pub fn get_validator_pub_key(&self) -> AccountPubKey {

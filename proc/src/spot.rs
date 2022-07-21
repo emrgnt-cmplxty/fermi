@@ -48,7 +48,7 @@ impl OrderbookInterface {
 
     pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
         if self.accounts.contains_key(account_pub_key) {
-            Err(GDEXError::Creation("Account already exists!".to_string()))
+            Err(GDEXError::AccountCreation("Account already exists!".to_string()))
         } else {
             self.accounts
                 .insert(*account_pub_key, OrderAccount::new(*account_pub_key));
@@ -60,7 +60,7 @@ impl OrderbookInterface {
         let account: &OrderAccount = self
             .accounts
             .get(account_pub_key)
-            .ok_or_else(|| GDEXError::Lookup("Failed to find account".to_string()))?;
+            .ok_or_else(|| GDEXError::AccountLookup("Failed to find account".to_string()))?;
         Ok(account)
     }
 
@@ -130,7 +130,7 @@ impl OrderbookInterface {
                     let existing_pub_key: AccountPubKey = *self
                         .order_to_account
                         .get(order_id)
-                        .ok_or_else(|| GDEXError::Lookup("Failed to find account".to_string()))?;
+                        .ok_or_else(|| GDEXError::AccountLookup("Failed to find account".to_string()))?;
                     self.proc_order_fill(bank_controller, &existing_pub_key, *side, *price, *quantity)?;
                 }
                 Ok(Success::Filled {
@@ -143,7 +143,7 @@ impl OrderbookInterface {
                     let existing_pub_key: AccountPubKey = *self
                         .order_to_account
                         .get(order_id)
-                        .ok_or_else(|| GDEXError::Lookup("Failed to find account".to_string()))?;
+                        .ok_or_else(|| GDEXError::AccountLookup("Failed to find account".to_string()))?;
                     self.proc_order_fill(bank_controller, &existing_pub_key, *side, *price, *quantity)?;
                     // erase existing order
                     self.order_to_account
@@ -234,7 +234,7 @@ impl SpotController {
         let orderbook: &mut OrderbookInterface = self
             .orderbooks
             .get_mut(&orderbook_lookup)
-            .ok_or_else(|| GDEXError::Lookup("Failed to find orderbook".to_string()))?;
+            .ok_or_else(|| GDEXError::AccountLookup("Failed to find orderbook".to_string()))?;
         Ok(orderbook)
     }
 

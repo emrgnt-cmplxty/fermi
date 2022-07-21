@@ -26,7 +26,7 @@ impl StakeController {
 
     pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
         if self.stake_accounts.contains_key(account_pub_key) {
-            Err(GDEXError::Creation("Account already exists!".to_string()))
+            Err(GDEXError::AccountCreation("Account already exists!".to_string()))
         } else {
             self.stake_accounts
                 .insert(*account_pub_key, StakeAccount::new(*account_pub_key));
@@ -38,7 +38,7 @@ impl StakeController {
         let stake_account: &StakeAccount = self
             .stake_accounts
             .get(account_pub_key)
-            .ok_or_else(|| GDEXError::Lookup("Failed to find account".to_string()))?;
+            .ok_or_else(|| GDEXError::AccountLookup("Failed to find account".to_string()))?;
         Ok(stake_account.get_staked_amount())
     }
 
@@ -76,7 +76,7 @@ impl StakeController {
         let stake_account: &mut StakeAccount = self
             .stake_accounts
             .get_mut(account_pub_key)
-            .ok_or_else(|| GDEXError::Lookup("Failed to find account".to_string()))?;
+            .ok_or_else(|| GDEXError::AccountLookup("Failed to find account".to_string()))?;
         stake_account.set_staked_amount(stake_account.get_staked_amount() - amount);
         Ok(())
     }

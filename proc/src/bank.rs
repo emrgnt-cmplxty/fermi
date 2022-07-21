@@ -38,7 +38,7 @@ impl BankController {
     pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
         // do not allow double-creation of a single account
         if self.bank_accounts.contains_key(account_pub_key) {
-            Err(GDEXError::Creation("Account already exists!".to_string()))
+            Err(GDEXError::AccountCreation("Account already exists!".to_string()))
         } else {
             self.bank_accounts
                 .insert(*account_pub_key, BankAccount::new(*account_pub_key));
@@ -49,7 +49,7 @@ impl BankController {
     fn check_account_exists(&self, account_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
         self.bank_accounts
             .get(account_pub_key)
-            .ok_or_else(|| GDEXError::Lookup("Failed to find account".to_string()))?;
+            .ok_or_else(|| GDEXError::AccountLookup("Failed to find account".to_string()))?;
         Ok(())
     }
 
@@ -82,7 +82,7 @@ impl BankController {
         let bank_account: &BankAccount = self
             .bank_accounts
             .get(account_pub_key)
-            .ok_or_else(|| GDEXError::Lookup("Failed to find account".to_string()))?;
+            .ok_or_else(|| GDEXError::AccountLookup("Failed to find account".to_string()))?;
         Ok(*bank_account.get_balances().get(&asset_id).unwrap_or(&0))
     }
 
@@ -95,7 +95,7 @@ impl BankController {
         let bank_account: &mut BankAccount = self
             .bank_accounts
             .get_mut(account_pub_key)
-            .ok_or_else(|| GDEXError::Lookup("Failed to find account".to_string()))?;
+            .ok_or_else(|| GDEXError::AccountLookup("Failed to find account".to_string()))?;
         let prev_amount: i64 = *bank_account.get_balances().get(&asset_id).unwrap_or(&0) as i64;
         // return error if insufficient user balance
         if (prev_amount + amount) < 0 {

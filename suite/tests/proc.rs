@@ -102,7 +102,7 @@ mod tests {
         let orderbook_interface: OrderbookInterface = OrderbookInterface::new(base_asset_id, quote_asset_id);
         let result: GDEXError = orderbook_interface.get_account(&account_pub_key).unwrap_err();
 
-        assert!(matches!(result, GDEXError::Lookup(_)));
+        assert!(matches!(result, GDEXError::AccountLookup(_)));
     }
 
     #[test]
@@ -116,7 +116,7 @@ mod tests {
         let mut orderbook_interface: OrderbookInterface = OrderbookInterface::new(base_asset_id, quote_asset_id);
         orderbook_interface.create_account(&account_pub_key).unwrap();
         let result: GDEXError = orderbook_interface.create_account(&account_pub_key).unwrap_err();
-        assert!(matches!(result, GDEXError::Creation(_)));
+        assert!(matches!(result, GDEXError::AccountCreation(_)));
     }
 
     #[test]

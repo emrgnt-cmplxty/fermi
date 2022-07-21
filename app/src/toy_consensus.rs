@@ -213,7 +213,7 @@ mod tests {
 
         // initiate new consensus by creating the genesis block from perspective of primary validator
         let genesis_block: Block<TransactionVariant> = primary_validator.build_genesis_block().unwrap();
-        let genesis_hash_time: HashValue = genesis_block.get_hash_time();
+        let genesis_hash_time: HashTime = genesis_block.get_hash_time();
 
         // check genesis block has expected number of transactions
         assert!(

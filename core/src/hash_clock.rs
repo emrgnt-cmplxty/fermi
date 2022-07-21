@@ -3,8 +3,8 @@
 //! to be constructed trivially
 //!
 use gdex_crypto::hash::CryptoHash;
+use std::fmt::Debug;
 use std::time::{Duration, Instant};
-use std::{fmt::Debug};
 use types::{hash_clock::HashTime, spot::DiemCryptoMessage};
 
 pub const TICKS_PER_CYCLE: u64 = 1_000;

@@ -16,7 +16,8 @@ use core::{
 use gdex_crypto::{hash::HashValue, SigningKey};
 use proc::{account::generate_key_pair, bank::BankController, spot::SpotController, stake::StakeController};
 use types::{
-    account::{AccountError, AccountPrivKey, AccountPubKey, AccountSignature},
+    account::{AccountPrivKey, AccountPubKey, AccountSignature},
+    error::GDEXError,
     hash_clock::HashTime,
 };
 
@@ -54,14 +55,14 @@ impl ConsensusManager {
     fn process_and_store_transaction(
         &mut self,
         signed_transaction: TransactionRequest<TransactionVariant>,
-    ) -> Result<(), AccountError> {
+    ) -> Result<(), GDEXError> {
         route_transaction(self, &signed_transaction)?;
         self.latest_block_transactions.push(signed_transaction);
         Ok(())
     }
 
     // build the genesis block by creating the base asset and staking some funds
-    pub fn build_genesis_block(&mut self) -> Result<Block<TransactionVariant>, AccountError> {
+    pub fn build_genesis_block(&mut self) -> Result<Block<TransactionVariant>, GDEXError> {
         // create and tick the initial hash clock
         let mut hash_clock: HashClock = HashClock::default();
         hash_clock.cycle();
@@ -69,17 +70,17 @@ impl ConsensusManager {
         // GENESIS transaction #0 -> create the base asset of the blockhain
         // <-- there is some hair on this process as we currently issue all tokens at genesis to the initial generator -->
         // --> however, this can be alleviated by extending the functionality of the bank module <--
-        let signed_transaction: TransactionRequest<TransactionVariant> =
-            asset_creation_transaction(self.validator_pub_key, &self.validator_private_key)?;
-        self.process_and_store_transaction(signed_transaction)?;
+        self.process_and_store_transaction(asset_creation_transaction(
+            self.validator_pub_key,
+            &self.validator_private_key,
+        )?)?;
 
         // GENESIS transaction 1 -> stake some manager funds to allow consensus to begin
-        let signed_transaction: TransactionRequest<TransactionVariant> = stake_transaction(
+        self.process_and_store_transaction(stake_transaction(
             self.validator_pub_key,
             &self.validator_private_key,
             GENESIS_STAKE_AMOUNT,
-        )?;
-        self.process_and_store_transaction(signed_transaction)?;
+        )?)?;
 
         // return the initial genesis block
         self.propose_block(self.latest_block_transactions.clone(), hash_clock.get_hash_time())
@@ -89,8 +90,8 @@ impl ConsensusManager {
     pub fn propose_block(
         &self,
         transactions: Vec<TransactionRequest<TransactionVariant>>,
-        time: HashValue,
-    ) -> Result<Block<TransactionVariant>, AccountError> {
+        block_hash_time: HashTime,
+    ) -> Result<Block<TransactionVariant>, GDEXError> {
         let block_hash: HashValue = generate_block_hash(&transactions);
         let mut vote_cert: VoteCert =
             VoteCert::new(self.stake_controller.get_staked(&self.validator_pub_key)?, block_hash);
@@ -102,14 +103,14 @@ impl ConsensusManager {
             transactions,
             self.validator_pub_key,
             block_hash,
-            self.block_container.get_blocks().len() as u64 + 1,
-            time,
+            self.block_container.get_blocks().len() as u64,
+            block_hash_time,
             vote_cert,
         ))
     }
 
     // cast a vote on a given block and append a valid signature
-    pub fn cast_vote(&self, vote_cert: &mut VoteCert, vote_response: bool) -> Result<(), AccountError> {
+    pub fn cast_vote(&self, vote_cert: &mut VoteCert, vote_response: bool) -> Result<(), GDEXError> {
         // validator signs the block hash appended to their vote response
         let validator_signature: AccountSignature = self
             .validator_private_key
@@ -127,7 +128,7 @@ impl ConsensusManager {
         &mut self,
         block: Block<TransactionVariant>,
         prev_hash_time: HashTime,
-    ) -> Result<(), AccountError> {
+    ) -> Result<(), GDEXError> {
         let mut hash_clock: HashClock = HashClock::new(prev_hash_time, self.ticks_per_cycle);
         hash_clock.cycle();
         if block.get_vote_cert().vote_has_passed() && block.get_hash_time() == hash_clock.get_hash_time() {
@@ -137,7 +138,7 @@ impl ConsensusManager {
             self.latest_block_transactions = Vec::new();
             Ok(())
         } else {
-            Err(AccountError::BlockValidation("Validation failed".to_string()))
+            Err(GDEXError::BlockValidation("Validation failed".to_string()))
         }
     }
 

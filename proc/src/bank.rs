@@ -13,8 +13,9 @@ extern crate types;
 use super::account::BankAccount;
 use std::collections::HashMap;
 use types::{
-    account::{AccountError, AccountPubKey},
+    account::AccountPubKey,
     asset::{Asset, AssetId},
+    error::GDEXError,
 };
 
 // TODO #0 //
@@ -34,10 +35,10 @@ impl BankController {
             n_assets: 0,
         }
     }
-    pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), AccountError> {
+    pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
         // do not allow double-creation of a single account
         if self.bank_accounts.contains_key(account_pub_key) {
-            Err(AccountError::Creation("Account already exists!".to_string()))
+            Err(GDEXError::Creation("Account already exists!".to_string()))
         } else {
             self.bank_accounts
                 .insert(*account_pub_key, BankAccount::new(*account_pub_key));
@@ -45,15 +46,15 @@ impl BankController {
         }
     }
 
-    fn check_account_exists(&self, account_pub_key: &AccountPubKey) -> Result<(), AccountError> {
+    fn check_account_exists(&self, account_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
         self.bank_accounts
             .get(account_pub_key)
-            .ok_or_else(|| AccountError::Lookup("Failed to find account".to_string()))?;
+            .ok_or_else(|| GDEXError::Lookup("Failed to find account".to_string()))?;
         Ok(())
     }
 
     // TODO #0  //
-    pub fn create_asset(&mut self, owner_pub_key: &AccountPubKey) -> Result<u64, AccountError> {
+    pub fn create_asset(&mut self, owner_pub_key: &AccountPubKey) -> Result<u64, GDEXError> {
         // special handling for genesis
         // an account must be created in this instance
         // since account creation is gated by receipt and balance of primary blockchain asset
@@ -77,11 +78,11 @@ impl BankController {
         Ok(self.n_assets - 1)
     }
 
-    pub fn get_balance(&self, account_pub_key: &AccountPubKey, asset_id: AssetId) -> Result<u64, AccountError> {
+    pub fn get_balance(&self, account_pub_key: &AccountPubKey, asset_id: AssetId) -> Result<u64, GDEXError> {
         let bank_account: &BankAccount = self
             .bank_accounts
             .get(account_pub_key)
-            .ok_or_else(|| AccountError::Lookup("Failed to find account".to_string()))?;
+            .ok_or_else(|| GDEXError::Lookup("Failed to find account".to_string()))?;
         Ok(*bank_account.get_balances().get(&asset_id).unwrap_or(&0))
     }
 
@@ -90,15 +91,15 @@ impl BankController {
         account_pub_key: &AccountPubKey,
         asset_id: AssetId,
         amount: i64,
-    ) -> Result<(), AccountError> {
+    ) -> Result<(), GDEXError> {
         let bank_account: &mut BankAccount = self
             .bank_accounts
             .get_mut(account_pub_key)
-            .ok_or_else(|| AccountError::Lookup("Failed to find account".to_string()))?;
+            .ok_or_else(|| GDEXError::Lookup("Failed to find account".to_string()))?;
         let prev_amount: i64 = *bank_account.get_balances().get(&asset_id).unwrap_or(&0) as i64;
         // return error if insufficient user balance
         if (prev_amount + amount) < 0 {
-            return Err(AccountError::PaymentRequest("Insufficent balance".to_string()));
+            return Err(GDEXError::PaymentRequest("Insufficent balance".to_string()));
         };
 
         bank_account.set_balance(asset_id, (prev_amount + amount) as u64);
@@ -111,18 +112,18 @@ impl BankController {
         account_pub_key_to: &AccountPubKey,
         asset_id: AssetId,
         amount: u64,
-    ) -> Result<(), AccountError> {
+    ) -> Result<(), GDEXError> {
         // return error if insufficient user balance
         let balance = self.get_balance(account_pub_key_from, asset_id)?;
         if balance < amount {
-            return Err(AccountError::PaymentRequest("Insufficent balance".to_string()));
+            return Err(GDEXError::PaymentRequest("Insufficent balance".to_string()));
         };
 
         if self.check_account_exists(account_pub_key_to).is_err() {
             if asset_id == 0 {
                 self.create_account(account_pub_key_to)?
             } else {
-                return Err(AccountError::PaymentRequest("First create account".to_string()));
+                return Err(GDEXError::PaymentRequest("First create account".to_string()));
             }
         }
 

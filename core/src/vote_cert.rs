@@ -12,7 +12,8 @@
 use gdex_crypto::{hash::HashValue, Signature};
 use std::collections::HashMap;
 use types::{
-    account::{AccountError, AccountPubKey, AccountSignature},
+    account::{AccountPubKey, AccountSignature},
+    error::GDEXError,
     spot::DiemCryptoMessage,
 };
 
@@ -76,7 +77,7 @@ impl VoteCert {
         validator_signature: AccountSignature,
         vote_response: bool,
         stake: u64,
-    ) -> Result<(), AccountError> {
+    ) -> Result<(), GDEXError> {
         let vote_msg: &DiemCryptoMessage = &self.compute_vote_msg(vote_response);
         // verify validator signed this block with submitted response
         match validator_signature.verify(vote_msg, &valdator_pub_key) {
@@ -91,10 +92,10 @@ impl VoteCert {
                     self.total_votes_for += if vote_response { stake } else { 0 };
                     Ok(())
                 } else {
-                    Err(AccountError::Vote("Vote already exists!".to_string()))
+                    Err(GDEXError::Vote("Vote already exists!".to_string()))
                 }
             }
-            Err(_) => Err(AccountError::Vote("Failed to verify signature".to_string())),
+            Err(_) => Err(GDEXError::Vote("Failed to verify signature".to_string())),
         }
     }
 

@@ -18,8 +18,9 @@ use gdex_crypto::{
 use proc::bank::BankController;
 use std::time::SystemTime;
 use types::{
-    account::{AccountError, AccountPrivKey, AccountPubKey, AccountSignature},
+    account::{AccountPrivKey, AccountPubKey, AccountSignature},
     asset::AssetId,
+    error::GDEXError,
     orderbook::OrderSide,
     spot::DiemCryptoMessage,
 };
@@ -28,7 +29,7 @@ use types::{
 pub fn asset_creation_transaction(
     sender_pub_key: AccountPubKey,
     sender_private_key: &AccountPrivKey,
-) -> Result<TransactionRequest<TransactionVariant>, AccountError> {
+) -> Result<TransactionRequest<TransactionVariant>, GDEXError> {
     let transaction: TransactionVariant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest {});
     let transaction_hash: HashValue = transaction.hash();
     let signed_hash: AccountSignature = (*sender_private_key).sign(&DiemCryptoMessage(transaction_hash.to_string()));
@@ -44,7 +45,7 @@ pub fn orderbook_creation_transaction(
     sender_private_key: &AccountPrivKey,
     base_asset_id: AssetId,
     quote_asset_id: AssetId,
-) -> Result<TransactionRequest<TransactionVariant>, AccountError> {
+) -> Result<TransactionRequest<TransactionVariant>, GDEXError> {
     let transaction: TransactionVariant =
         TransactionVariant::CreateOrderbookTransaction(CreateOrderbookRequest::new(base_asset_id, quote_asset_id));
     let transaction_hash: HashValue = transaction.hash();
@@ -64,7 +65,7 @@ pub fn order_transaction(
     order_side: OrderSide,
     price: u64,
     quantity: u64,
-) -> Result<TransactionRequest<TransactionVariant>, AccountError> {
+) -> Result<TransactionRequest<TransactionVariant>, GDEXError> {
     // order construction & submission
     let order: OrderRequest = new_limit_order_request(
         base_asset_id,
@@ -89,7 +90,7 @@ pub fn stake_transaction(
     validator_pub_key: AccountPubKey,
     validator_private_key: &AccountPrivKey,
     amount: u64,
-) -> Result<TransactionRequest<TransactionVariant>, AccountError> {
+) -> Result<TransactionRequest<TransactionVariant>, GDEXError> {
     let transaction: TransactionVariant = TransactionVariant::StakeAsset(StakeRequest::new(validator_pub_key, amount));
     let transaction_hash: HashValue = transaction.hash();
     let signed_hash: AccountSignature = (*validator_private_key).sign(&DiemCryptoMessage(transaction_hash.to_string()));
@@ -106,7 +107,7 @@ pub fn payment_transaction(
     receiver_pub_key: AccountPubKey,
     asset_id: u64,
     amount: u64,
-) -> Result<TransactionRequest<TransactionVariant>, AccountError> {
+) -> Result<TransactionRequest<TransactionVariant>, GDEXError> {
     let transaction: TransactionVariant =
         TransactionVariant::PaymentTransaction(PaymentRequest::new(sender_pub_key, receiver_pub_key, asset_id, amount));
     let transaction_hash: HashValue = transaction.hash();
@@ -122,7 +123,7 @@ pub fn payment_transaction(
 pub fn route_transaction(
     consensus_manager: &mut ConsensusManager,
     transaction_request: &TransactionRequest<TransactionVariant>,
-) -> Result<(), AccountError> {
+) -> Result<(), GDEXError> {
     // TODO #0 //
     transaction_request.verify_transaction().unwrap();
     execute_transaction(consensus_manager, transaction_request)
@@ -137,7 +138,7 @@ pub mod batch_functions {
     pub fn route_transaction_batch(
         consensus_manager: &mut ConsensusManager,
         transaction_requests: &[TransactionRequest<TransactionVariant>],
-    ) -> Result<(), AccountError> {
+    ) -> Result<(), GDEXError> {
         verify_transaction_batch(transaction_requests).unwrap();
         for order_transaction in transaction_requests.iter() {
             execute_transaction(consensus_manager, order_transaction)?;
@@ -149,7 +150,7 @@ pub mod batch_functions {
         consensus_manager: &mut ConsensusManager,
         transaction_requests: &[TransactionRequest<TransactionVariant>],
         n_threads: u64,
-    ) -> Result<(), AccountError> {
+    ) -> Result<(), GDEXError> {
         verify_transaction_batch_multithreaded(transaction_requests.to_vec(), n_threads).unwrap();
         for order_transaction in transaction_requests.iter() {
             execute_transaction(consensus_manager, order_transaction)?;
@@ -161,7 +162,7 @@ pub mod batch_functions {
 fn execute_transaction(
     consensus_manager: &mut ConsensusManager,
     transaction_request: &TransactionRequest<TransactionVariant>,
-) -> Result<(), AccountError> {
+) -> Result<(), GDEXError> {
     match transaction_request.get_transaction() {
         TransactionVariant::OrderTransaction(_order) => {
             let (bank_controller, _stake_controller, spot_controller) = consensus_manager.get_all_controllers();

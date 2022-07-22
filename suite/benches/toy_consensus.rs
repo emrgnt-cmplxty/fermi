@@ -11,20 +11,18 @@ use app::{
 };
 use core::{
     block::Block,
-    hash_clock::{HashClock, HASH_TIME_INIT_MSG},
+    hash_clock::HashClock,
     transaction::{TransactionRequest, TransactionVariant},
 };
 use criterion::{criterion_group, criterion_main, Criterion, Throughput};
-use gdex_crypto::{hash::CryptoHash, HashValue};
+use gdex_crypto::HashValue;
 use proc::{account::generate_key_pair, bank::PRIMARY_ASSET_ID};
 use rand::{rngs::ThreadRng, Rng};
 use std::{
     sync::{Arc, Mutex, MutexGuard},
     thread::{spawn, JoinHandle},
 };
-use types::{
-    account::AccountPubKey, asset::AssetId, hash_clock::HashTime, orderbook::OrderSide, spot::DiemCryptoMessage,
-};
+use types::{account::AccountPubKey, asset::AssetId, hash_clock::HashTime, orderbook::OrderSide};
 
 const N_ORDERS_BENCH: u64 = 2_000;
 const N_ACCOUNTS: u64 = 2_000;
@@ -72,7 +70,7 @@ fn place_orders_consensus(
     let new_hash_time: HashTime = hash_time_handler.join().unwrap();
     let new_block: Block<TransactionVariant> = consensus_manager.propose_block(transactions, new_hash_time).unwrap();
     consensus_manager
-        .validate_and_store_block(new_block, last_block.get_hash_time())
+        .validate_and_store_block(new_block, last_block)
         .unwrap();
 }
 
@@ -101,7 +99,7 @@ mod batch_benches {
         let new_block: Block<TransactionVariant> =
             consensus_manager.propose_block(transactions, new_hash_time).unwrap();
         consensus_manager
-            .validate_and_store_block(new_block, last_block.get_hash_time())
+            .validate_and_store_block(new_block, last_block)
             .unwrap();
     }
 
@@ -126,7 +124,7 @@ mod batch_benches {
         let new_block: Block<TransactionVariant> =
             consensus_manager.propose_block(transactions, new_hash_time).unwrap();
         consensus_manager
-            .validate_and_store_block(new_block, last_block.get_hash_time())
+            .validate_and_store_block(new_block, last_block)
             .unwrap();
     }
 }
@@ -136,29 +134,27 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     // initialize consensus manager
     let mut consensus_manager: ConsensusManager = ConsensusManager::new();
-    let validator_pub_key: AccountPubKey = consensus_manager.get_validator_pub_key();
+    let pub_key: AccountPubKey = consensus_manager.get_pub_key();
 
     // initiate new consensus instances by creating the genesis block from perspective of primary validator
     let genesis_block: Block<TransactionVariant> = consensus_manager.build_genesis_block().unwrap();
 
     // validate block immediately as genesis proposer is only staked validator
-    consensus_manager
-        .validate_and_store_block(genesis_block, DiemCryptoMessage(HASH_TIME_INIT_MSG.to_string()).hash())
-        .unwrap();
+    consensus_manager.store_genesis_block(genesis_block);
 
     let signed_transaction: TransactionRequest<TransactionVariant> =
-        asset_creation_transaction(validator_pub_key, consensus_manager.get_validator_private_key()).unwrap();
+        asset_creation_transaction(pub_key, consensus_manager.get_private_key()).unwrap();
     route_transaction(&mut consensus_manager, &signed_transaction).unwrap();
 
     // create quote asset, this is asset #1 of the blockchain
     let signed_transaction: TransactionRequest<TransactionVariant> =
-        asset_creation_transaction(validator_pub_key, consensus_manager.get_validator_private_key()).unwrap();
+        asset_creation_transaction(pub_key, consensus_manager.get_private_key()).unwrap();
     route_transaction(&mut consensus_manager, &signed_transaction).unwrap();
 
     // create orderbook, the base asset for this orderbook will be the primary asset (# 0) created at genesis
     let signed_transaction: TransactionRequest<TransactionVariant> = orderbook_creation_transaction(
-        validator_pub_key,
-        consensus_manager.get_validator_private_key(),
+        pub_key,
+        consensus_manager.get_private_key(),
         BASE_ASSET_ID,
         QUOTE_ASSET_ID,
     )
@@ -175,8 +171,8 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
         // fund new account with base asset
         let signed_transaction: TransactionRequest<TransactionVariant> = payment_transaction(
-            validator_pub_key,
-            consensus_manager.get_validator_private_key(),
+            pub_key,
+            consensus_manager.get_private_key(),
             account_pub_key,
             BASE_ASSET_ID,
             TRANSFER_AMOUNT,
@@ -186,8 +182,8 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
         // fund new account with quote asset
         let signed_transaction: TransactionRequest<TransactionVariant> = payment_transaction(
-            validator_pub_key,
-            consensus_manager.get_validator_private_key(),
+            pub_key,
+            consensus_manager.get_private_key(),
             account_pub_key,
             QUOTE_ASSET_ID,
             TRANSFER_AMOUNT,

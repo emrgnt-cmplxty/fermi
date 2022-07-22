@@ -2,13 +2,13 @@
 //! the hashclock is a blockchain primitive that enables a vdf
 //! to be constructed trivially
 //!
-use gdex_crypto::hash::CryptoHash;
+use gdex_crypto::hash::{CryptoHash, HashValue};
 use std::fmt::Debug;
 use std::time::{Duration, Instant};
 use types::{hash_clock::HashTime, spot::DiemCryptoMessage};
 
-pub const TICKS_PER_CYCLE: u64 = 1_000;
-pub const HASH_TIME_INIT_MSG: &str = "HashClock";
+pub const DEFAULT_TICKS_PER_CYCLE: u64 = 1_000;
+pub const DEFAULT_HASH_TIME_INIT_MSG: &str = "HashClock";
 
 #[derive(Debug)]
 pub struct HashClock {
@@ -38,9 +38,9 @@ impl HashClock {
         self.n_ticks += 1;
     }
 
-    pub fn tick_for_interval(&mut self, time_in_secs: u64) {
+    pub fn tick_for_interval(&mut self, time_in_milis: u64) {
         let start: Instant = Instant::now();
-        let wait: Duration = Duration::from_secs(time_in_secs);
+        let wait: Duration = Duration::from_millis(time_in_milis);
         loop {
             self.tick();
             if start.elapsed() >= wait {
@@ -61,8 +61,8 @@ impl HashClock {
         self.n_ticks
     }
 
-    pub fn update_hash_time(&mut self, new_time: HashTime) {
-        self.time = new_time;
+    pub fn update_hash_time(&mut self, prev_block_hash_time: HashTime, prev_block_hash: HashValue) {
+        self.time = DiemCryptoMessage(format!("{}{}", prev_block_hash_time, prev_block_hash)).hash();
     }
 
     pub fn update_ticks_per_cycle(&mut self, new_ticks_per_cycle: u64) {
@@ -73,8 +73,8 @@ impl HashClock {
 impl Default for HashClock {
     fn default() -> Self {
         Self::new(
-            DiemCryptoMessage(HASH_TIME_INIT_MSG.to_string()).hash(),
-            TICKS_PER_CYCLE,
+            DiemCryptoMessage(DEFAULT_HASH_TIME_INIT_MSG.to_string()).hash(),
+            DEFAULT_TICKS_PER_CYCLE,
         )
     }
 }
@@ -85,7 +85,58 @@ mod tests {
 
     #[test]
     fn test_clock() {
-        let clock: &mut HashClock = &mut HashClock::default();
-        clock.tick_for_interval(1);
+        let clock_0: &mut HashClock = &mut HashClock::default();
+        assert!(
+            clock_0.get_ticks_per_cycle() == DEFAULT_TICKS_PER_CYCLE,
+            "default clock does not match expectations"
+        );
+        clock_0.cycle();
+
+        clock_0.update_ticks_per_cycle(2 * DEFAULT_TICKS_PER_CYCLE);
+        assert!(
+            clock_0.get_ticks_per_cycle() == 2 * DEFAULT_TICKS_PER_CYCLE,
+            "clock did not update"
+        );
+        clock_0.cycle();
+
+        // verify clock has now ticked 3 cycles
+        assert!(
+            clock_0.get_n_ticks() == 3 * DEFAULT_TICKS_PER_CYCLE,
+            "clock has not ticked as expected"
+        );
+
+        let clock_1: &mut HashClock = &mut HashClock::new(
+            DiemCryptoMessage(DEFAULT_HASH_TIME_INIT_MSG.to_string()).hash(),
+            3 * DEFAULT_TICKS_PER_CYCLE,
+        );
+        // tick new clock 3 cycles
+        clock_1.cycle();
+
+        assert!(
+            clock_0.get_hash_time() == clock_1.get_hash_time(),
+            "clock hashes do not match after equal cycles"
+        );
+
+        // simulate updating the hash time
+        clock_0.update_hash_time(
+            DiemCryptoMessage(DEFAULT_HASH_TIME_INIT_MSG.to_string()).hash(),
+            DiemCryptoMessage(DEFAULT_HASH_TIME_INIT_MSG.to_string()).hash(),
+        );
+        clock_1.update_hash_time(
+            DiemCryptoMessage(DEFAULT_HASH_TIME_INIT_MSG.to_string()).hash(),
+            DiemCryptoMessage(DEFAULT_HASH_TIME_INIT_MSG.to_string()).hash(),
+        );
+
+        assert!(
+            clock_0.get_hash_time() == clock_1.get_hash_time(),
+            "clock hashes do not match after reset"
+        );
+
+        // tick clock for 1 mili
+        clock_0.tick_for_interval(1);
+        assert!(
+            clock_0.get_hash_time() != clock_1.get_hash_time(),
+            "assert clocks do not match after ticking clock 0 for 1 mili"
+        );
     }
 }

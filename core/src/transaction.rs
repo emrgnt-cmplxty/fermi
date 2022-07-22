@@ -259,3 +259,77 @@ pub mod batch_functions {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    use super::super::transaction::{CreateAssetRequest, PaymentRequest, TransactionRequest};
+    use gdex_crypto::{
+        hash::{CryptoHash, HashValue},
+        SigningKey, Uniform,
+    };
+    use types::account::{AccountPrivKey, AccountSignature};
+
+    const PRIMARY_ASSET_ID: u64 = 0;
+
+    #[test]
+    fn create_signed_payment_transaction() {
+        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing();
+        let sender_pub_key: AccountPubKey = (&private_key).into();
+
+        let receiver_private_key: AccountPrivKey = AccountPrivKey::generate_for_testing();
+        let receiver_pub_key: AccountPubKey = (&receiver_private_key).into();
+
+        let transaction: PaymentRequest = PaymentRequest::new(sender_pub_key, receiver_pub_key, PRIMARY_ASSET_ID, 10);
+
+        let transaction_hash: HashValue = transaction.hash();
+        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
+        let signed_transaction: TransactionRequest<PaymentRequest> =
+            TransactionRequest::<PaymentRequest>::new(transaction, sender_pub_key, signed_hash);
+        signed_transaction.verify_transaction().unwrap();
+    }
+
+    #[test]
+    fn create_signed_stake_transaction() {
+        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing();
+        let sender_pub_key: AccountPubKey = (&private_key).into();
+
+        let transaction: StakeRequest = StakeRequest::new(sender_pub_key, 10);
+
+        let transaction_hash: HashValue = transaction.hash();
+        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
+        let signed_transaction: TransactionRequest<StakeRequest> =
+            TransactionRequest::<StakeRequest>::new(transaction, sender_pub_key, signed_hash);
+        signed_transaction.verify_transaction().unwrap();
+    }
+
+    #[test]
+    fn create_asset_transaction() {
+        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing();
+        let sender_pub_key: AccountPubKey = (&private_key).into();
+
+        let transaction: CreateAssetRequest = CreateAssetRequest {};
+
+        let transaction_hash: HashValue = transaction.hash();
+        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
+        let signed_transaction: TransactionRequest<CreateAssetRequest> =
+            TransactionRequest::<CreateAssetRequest>::new(transaction, sender_pub_key, signed_hash);
+        signed_transaction.verify_transaction().unwrap();
+    }
+
+    #[test]
+    fn create_orderbook_transaction() {
+        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing();
+        let sender_pub_key: AccountPubKey = (&private_key).into();
+        let dummy_asset_id = 1;
+
+        let transaction: CreateOrderbookRequest = CreateOrderbookRequest::new(PRIMARY_ASSET_ID, dummy_asset_id);
+
+        let transaction_hash: HashValue = transaction.hash();
+        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
+        let signed_transaction: TransactionRequest<CreateOrderbookRequest> =
+            TransactionRequest::<CreateOrderbookRequest>::new(transaction, sender_pub_key, signed_hash);
+        signed_transaction.verify_transaction().unwrap();
+    }
+}

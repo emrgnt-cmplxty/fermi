@@ -128,7 +128,7 @@ mod tests {
 
     #[test]
     fn test_block_functionality() {
-        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing();
+        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing(0);
         let account_pub_key: AccountPubKey = (&private_key).into();
         let mut transactions: Vec<TransactionRequest<TransactionVariant>> = Vec::new();
 

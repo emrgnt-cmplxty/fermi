@@ -265,11 +265,16 @@ pub trait Uniform {
         R: RngCore + CryptoRng;
 
     /// Generate a random key using the shared TEST_SEED
-    fn generate_for_testing() -> Self
+    fn generate_for_testing(n_warmups: u64) -> Self
     where
         Self: Sized,
     {
         let mut rng: StdRng = SeedableRng::from_seed(crate::test_utils::TEST_SEED);
+        let mut i_warm = 0;
+        while i_warm < n_warmups {
+            Self::generate(&mut rng);
+            i_warm += 1;
+        }
         Self::generate(&mut rng)
     }
 }

@@ -275,33 +275,50 @@ mod test {
 
     #[test]
     fn create_signed_payment_transaction() {
-        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing();
+        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing(0);
         let sender_pub_key: AccountPubKey = (&private_key).into();
 
-        let receiver_private_key: AccountPrivKey = AccountPrivKey::generate_for_testing();
+        let receiver_private_key: AccountPrivKey = AccountPrivKey::generate_for_testing(1);
         let receiver_pub_key: AccountPubKey = (&receiver_private_key).into();
 
         let transaction: PaymentRequest = PaymentRequest::new(sender_pub_key, receiver_pub_key, PRIMARY_ASSET_ID, 10);
 
-        
         let transaction_hash: HashValue = transaction.hash();
         let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
         let signed_transaction: TransactionRequest<PaymentRequest> =
             TransactionRequest::<PaymentRequest>::new(transaction, sender_pub_key, signed_hash.clone());
         signed_transaction.verify_transaction().unwrap();
 
-        assert!(signed_transaction.get_sender().clone() == sender_pub_key, "transaction sender does not match transaction input");
-        assert!(signed_transaction.get_transaction_signature().clone() == signed_hash, "transaction sender does not match transaction input");
+        assert!(
+            signed_transaction.get_sender().clone() == sender_pub_key,
+            "transaction sender does not match transaction input"
+        );
+        assert!(
+            signed_transaction.get_transaction_signature().clone() == signed_hash,
+            "transaction sender does not match transaction input"
+        );
 
-        assert!(signed_transaction.get_transaction().get_amount() == 10, "transaction amount does not match transaction input");
-        assert!(signed_transaction.get_transaction().get_asset_id() == PRIMARY_ASSET_ID, "transaction asset id does not match transaction input");
-        assert!(signed_transaction.get_transaction().get_from().clone() == sender_pub_key, "transaction from does not match transction input");
-        assert!(signed_transaction.get_transaction().get_to().clone() == receiver_pub_key, "transaction to does not match transction input");
+        assert!(
+            signed_transaction.get_transaction().get_amount() == 10,
+            "transaction amount does not match transaction input"
+        );
+        assert!(
+            signed_transaction.get_transaction().get_asset_id() == PRIMARY_ASSET_ID,
+            "transaction asset id does not match transaction input"
+        );
+        assert!(
+            signed_transaction.get_transaction().get_from().clone() == sender_pub_key,
+            "transaction from does not match transction input"
+        );
+        assert!(
+            signed_transaction.get_transaction().get_to().clone() == receiver_pub_key,
+            "transaction to does not match transction input"
+        );
     }
 
     #[test]
     fn create_signed_stake_transaction() {
-        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing();
+        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing(0);
         let sender_pub_key: AccountPubKey = (&private_key).into();
 
         let transaction: StakeRequest = StakeRequest::new(sender_pub_key, 10);
@@ -312,16 +329,28 @@ mod test {
             TransactionRequest::<StakeRequest>::new(transaction, sender_pub_key, signed_hash.clone());
         signed_transaction.verify_transaction().unwrap();
 
-        assert!(signed_transaction.get_sender().clone() == sender_pub_key, "transaction sender does not match transaction input");
-        assert!(signed_transaction.get_transaction_signature().clone() == signed_hash, "transaction signature does not match transaction input");
+        assert!(
+            signed_transaction.get_sender().clone() == sender_pub_key,
+            "transaction sender does not match transaction input"
+        );
+        assert!(
+            signed_transaction.get_transaction_signature().clone() == signed_hash,
+            "transaction signature does not match transaction input"
+        );
 
-        assert!(signed_transaction.get_transaction().get_amount() == 10, "transaction amount does not match transaction input");
-        assert!(signed_transaction.get_transaction().get_from().clone() == sender_pub_key, "transaction from does not match transction input");
+        assert!(
+            signed_transaction.get_transaction().get_amount() == 10,
+            "transaction amount does not match transaction input"
+        );
+        assert!(
+            signed_transaction.get_transaction().get_from().clone() == sender_pub_key,
+            "transaction from does not match transction input"
+        );
     }
 
     #[test]
     fn create_asset_transaction() {
-        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing();
+        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing(0);
         let sender_pub_key: AccountPubKey = (&private_key).into();
 
         let transaction: CreateAssetRequest = CreateAssetRequest {};
@@ -332,13 +361,19 @@ mod test {
             TransactionRequest::<CreateAssetRequest>::new(transaction, sender_pub_key, signed_hash.clone());
         signed_transaction.verify_transaction().unwrap();
 
-        assert!(signed_transaction.get_sender().clone() == sender_pub_key, "transaction sender does not match transaction input");
-        assert!(signed_transaction.get_transaction_signature().clone() == signed_hash, "transaction signature does not match transaction input");
+        assert!(
+            signed_transaction.get_sender().clone() == sender_pub_key,
+            "transaction sender does not match transaction input"
+        );
+        assert!(
+            signed_transaction.get_transaction_signature().clone() == signed_hash,
+            "transaction signature does not match transaction input"
+        );
     }
 
     #[test]
     fn create_orderbook_transaction() {
-        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing();
+        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing(0);
         let sender_pub_key: AccountPubKey = (&private_key).into();
         let dummy_asset_id = 1;
 
@@ -350,11 +385,22 @@ mod test {
             TransactionRequest::<CreateOrderbookRequest>::new(transaction, sender_pub_key, signed_hash.clone());
         signed_transaction.verify_transaction().unwrap();
 
-        assert!(signed_transaction.get_sender().clone() == sender_pub_key, "transaction sender does not match transaction input");
-        assert!(signed_transaction.get_transaction_signature().clone() == signed_hash, "transaction signature does not match transaction input");
+        assert!(
+            signed_transaction.get_sender().clone() == sender_pub_key,
+            "transaction sender does not match transaction input"
+        );
+        assert!(
+            signed_transaction.get_transaction_signature().clone() == signed_hash,
+            "transaction signature does not match transaction input"
+        );
 
-        assert!(signed_transaction.get_transaction().get_base_asset_id() == PRIMARY_ASSET_ID, "transaction base asset does not match transaction input");
-        assert!(signed_transaction.get_transaction().get_quote_asset_id() == dummy_asset_id, "transaction quote asset does not match transction input");
-
+        assert!(
+            signed_transaction.get_transaction().get_base_asset_id() == PRIMARY_ASSET_ID,
+            "transaction base asset does not match transaction input"
+        );
+        assert!(
+            signed_transaction.get_transaction().get_quote_asset_id() == dummy_asset_id,
+            "transaction quote asset does not match transction input"
+        );
     }
 }

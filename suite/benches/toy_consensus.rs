@@ -22,9 +22,7 @@ use std::{
     sync::{Arc, Mutex, MutexGuard},
     thread::{spawn, JoinHandle},
 };
-use types::{
-    account::AccountPubKey, asset::AssetId, hash_clock::HashTime, orderbook::OrderSide,
-};
+use types::{account::AccountPubKey, asset::AssetId, hash_clock::HashTime, orderbook::OrderSide};
 
 const N_ORDERS_BENCH: u64 = 2_000;
 const N_ACCOUNTS: u64 = 2_000;
@@ -142,10 +140,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     let genesis_block: Block<TransactionVariant> = consensus_manager.build_genesis_block().unwrap();
 
     // validate block immediately as genesis proposer is only staked validator
-    consensus_manager
-        .store_genesis_block(
-            genesis_block,
-        );
+    consensus_manager.store_genesis_block(genesis_block);
 
     let signed_transaction: TransactionRequest<TransactionVariant> =
         asset_creation_transaction(validator_pub_key, consensus_manager.get_validator_private_key()).unwrap();

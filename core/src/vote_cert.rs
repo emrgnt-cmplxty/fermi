@@ -118,6 +118,10 @@ impl VoteCert {
     pub fn compute_vote_msg(&self, vote_response: bool) -> DiemCryptoMessage {
         DiemCryptoMessage(self.block_hash.to_string() + &vote_response.to_string())
     }
+
+    pub fn get_block_hash(&self) -> HashValue {
+        self.block_hash
+    }
 }
 
 #[cfg(test)]

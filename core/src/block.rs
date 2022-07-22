@@ -5,9 +5,9 @@
 //! TODO
 //! 0.) RELOCATE APPROPRIATE TESTS FROM SUITE/CORE TO HERE
 extern crate types;
-use super::transaction::{TransactionRequest, TransactionVariant};
-use super::vote_cert::VoteCert;
-use gdex_crypto::{hash::{CryptoHash, HashValue}, ed25519::Ed25519PrivateKey, Uniform};
+use crate::transaction::{TransactionRequest, TransactionVariant};
+use crate::vote_cert::VoteCert;
+use gdex_crypto::hash::{CryptoHash, HashValue};
 use std::fmt::Debug;
 use types::{account::AccountPubKey, hash_clock::HashTime, spot::DiemCryptoMessage};
 
@@ -112,15 +112,90 @@ pub fn generate_block_hash(transactions: &Vec<TransactionRequest<TransactionVari
     DiemCryptoMessage(hash_string).hash()
 }
 
+#[cfg(test)]
 mod tests {
-
-    use types::account::{AccountPrivKey};
+    use super::super::hash_clock::HashClock;
+    use super::super::transaction::{
+        CreateAssetRequest, TransactionRequest, TransactionVariant, TransactionVariant::CreateAssetTransaction,
+    };
+    use super::super::vote_cert::VoteCert;
     use super::*;
-    // use crate::block::gdex_crypto::{ed25519::Ed25519PrivateKey, Uniform};
-    use gdex_crypto::{hash::{CryptoHash, HashValue}, Uniform};
+    use gdex_crypto::{
+        hash::{CryptoHash, HashValue},
+        SigningKey, Uniform,
+    };
+    use types::account::{AccountPrivKey, AccountSignature};
 
-    fn block_hash_test() {
+    #[test]
+    fn test_block_functionality() {
+        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing();
+        let account_pub_key: AccountPubKey = (&private_key).into();
+        let mut transactions: Vec<TransactionRequest<TransactionVariant>> = Vec::new();
 
-        let key = AccountPrivKey::generate_for_testing();
+        let transaction: TransactionVariant = CreateAssetTransaction(CreateAssetRequest {});
+        let transaction_hash: HashValue = transaction.hash();
+        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
+        let signed_transaction: TransactionRequest<TransactionVariant> =
+            TransactionRequest::<TransactionVariant>::new(transaction, account_pub_key, signed_hash);
+        signed_transaction.verify_transaction().unwrap();
+        transactions.push(signed_transaction);
+
+        let block_hash: HashValue = generate_block_hash(&transactions);
+        let hash_clock: HashClock = HashClock::default();
+        let dummy_vote_cert: VoteCert = VoteCert::new(0, block_hash);
+
+        let block: Block<TransactionVariant> = Block::<TransactionVariant>::new(
+            transactions.clone(),
+            account_pub_key,
+            block_hash,
+            0,
+            hash_clock.get_hash_time(),
+            dummy_vote_cert.clone(),
+        );
+        assert!(
+            block.get_proposer() == &account_pub_key,
+            "block validator does not match input"
+        );
+        assert!(block.get_block_hash() == block_hash, "block hash does not match input");
+        assert!(
+            block.get_transactions().len() == transactions.len(),
+            "block transaction length does not match input"
+        );
+        assert!(
+            block.get_hash_time() == hash_clock.get_hash_time(),
+            "block hash time does not match input"
+        );
+        assert!(
+            block.get_vote_cert().get_block_hash() == dummy_vote_cert.get_block_hash(),
+            "block vote cert block hash does not match input"
+        );
+
+        let mut block_container: BlockContainer<TransactionVariant> = BlockContainer::new();
+        block_container.append_block(block.clone());
+        assert!(
+            block_container.get_blocks().len() == 1,
+            "Incorrect length of blocks in container"
+        );
+
+        assert!(
+            block_container.get_blocks()[0].get_proposer() == block.get_proposer(),
+            "block container 0th block validator does not match input"
+        );
+        assert!(
+            block_container.get_blocks()[0].get_block_hash() == block.get_block_hash(),
+            "block container 0th block hash does not match input"
+        );
+        assert!(
+            block_container.get_blocks()[0].get_transactions().len() == block.get_transactions().len(),
+            "block transaction length does not match input"
+        );
+        assert!(
+            block_container.get_blocks()[0].get_hash_time() == block.get_hash_time(),
+            "block container 0th block hash time does not match input"
+        );
+        assert!(
+            block_container.get_blocks()[0].get_vote_cert().get_block_hash() == block.get_vote_cert().get_block_hash(),
+            "block container 0th block vote cert block hash does not match input"
+        );
     }
 }

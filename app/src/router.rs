@@ -5,7 +5,7 @@
 //! TODO
 //! 0.) fix premature unwraps
 //!
-use super::toy_consensus::ConsensusManager;
+use crate::toy_consensus::ConsensusManager;
 use core::transaction::{
     CreateAssetRequest, CreateOrderbookRequest, OrderRequest, PaymentRequest, StakeRequest, TransactionRequest,
     TransactionVariant,

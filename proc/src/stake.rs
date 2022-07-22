@@ -16,11 +16,13 @@ use types::{account::AccountPubKey, error::GDEXError};
 // The stake controller is responsible for accessing & modifying user balances
 pub struct StakeController {
     stake_accounts: HashMap<AccountPubKey, StakeAccount>,
+    total_staked: u64,
 }
 impl StakeController {
     pub fn new() -> Self {
         StakeController {
             stake_accounts: HashMap::new(),
+            total_staked: 0,
         }
     }
 
@@ -50,6 +52,7 @@ impl StakeController {
         amount: u64,
     ) -> Result<(), GDEXError> {
         bank_controller.update_balance(account_pub_key, PRIMARY_ASSET_ID, -(amount as i64))?;
+        self.total_staked += amount;
         let lookup: Option<&mut StakeAccount> = self.stake_accounts.get_mut(account_pub_key);
         match lookup {
             Some(stake_account) => {
@@ -72,6 +75,7 @@ impl StakeController {
         account_pub_key: &AccountPubKey,
         amount: u64,
     ) -> Result<(), GDEXError> {
+        self.total_staked -= amount;
         bank_controller.update_balance(account_pub_key, PRIMARY_ASSET_ID, amount as i64)?;
         let stake_account: &mut StakeAccount = self
             .stake_accounts
@@ -79,6 +83,10 @@ impl StakeController {
             .ok_or_else(|| GDEXError::AccountLookup("Failed to find account".to_string()))?;
         stake_account.set_staked_amount(stake_account.get_staked_amount() - amount);
         Ok(())
+    }
+
+    pub fn get_total_staked(&self) -> u64 {
+        self.total_staked
     }
 }
 
@@ -114,6 +122,7 @@ mod tests {
             CREATED_ASSET_BALANCE - STAKE_AMOUNT
         );
         assert_eq!(stake_controller.get_staked(&account_pub_key).unwrap(), STAKE_AMOUNT);
+        assert_eq!(stake_controller.get_total_staked(), STAKE_AMOUNT);
     }
 
     // TODO #0 //

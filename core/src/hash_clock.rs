@@ -61,8 +61,8 @@ impl HashClock {
         self.n_ticks
     }
 
-    pub fn update_hash_time(&mut self, prev_hash_time: HashTime, prev_block_hash: HashValue) {
-        self.time = DiemCryptoMessage(format!("{}{}", prev_hash_time, prev_block_hash)).hash();
+    pub fn update_hash_time(&mut self, prev_block_hash_time: HashTime, prev_block_hash: HashValue) {
+        self.time = DiemCryptoMessage(format!("{}{}", prev_block_hash_time, prev_block_hash)).hash();
     }
 
     pub fn update_ticks_per_cycle(&mut self, new_ticks_per_cycle: u64) {

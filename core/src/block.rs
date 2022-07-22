@@ -9,7 +9,12 @@ use crate::transaction::{TransactionRequest, TransactionVariant};
 use crate::vote_cert::VoteCert;
 use gdex_crypto::hash::{CryptoHash, HashValue};
 use std::fmt::Debug;
-use types::{account::AccountPubKey, hash_clock::HashTime, spot::DiemCryptoMessage};
+use types::{
+    account::{AccountPubKey, AccountSignature},
+    error::GDEXError,
+    hash_clock::HashTime,
+    spot::DiemCryptoMessage,
+};
 
 #[derive(Clone, Debug)]
 pub struct BlockContainer<Variant>
@@ -91,6 +96,17 @@ where
 
     pub fn get_block_number(&self) -> u64 {
         self.block_number
+    }
+
+    pub fn append_vote(
+        &mut self,
+        valdator_pub_key: AccountPubKey,
+        validator_signature: AccountSignature,
+        vote_response: bool,
+        stake: u64,
+    ) -> Result<(), GDEXError> {
+        self.vote_cert
+            .append_vote(valdator_pub_key, validator_signature, vote_response, stake)
     }
 }
 

@@ -87,16 +87,16 @@ pub fn order_transaction(
 }
 
 pub fn stake_transaction(
-    validator_pub_key: AccountPubKey,
+    pub_key: AccountPubKey,
     validator_private_key: &AccountPrivKey,
     amount: u64,
 ) -> Result<TransactionRequest<TransactionVariant>, GDEXError> {
-    let transaction: TransactionVariant = TransactionVariant::StakeAsset(StakeRequest::new(validator_pub_key, amount));
+    let transaction: TransactionVariant = TransactionVariant::StakeAsset(StakeRequest::new(pub_key, amount));
     let transaction_hash: HashValue = transaction.hash();
     let signed_hash: AccountSignature = (*validator_private_key).sign(&DiemCryptoMessage(transaction_hash.to_string()));
     Ok(TransactionRequest::<TransactionVariant>::new(
         transaction,
-        validator_pub_key,
+        pub_key,
         signed_hash,
     ))
 }
@@ -211,12 +211,12 @@ mod tests {
         let mut consensus_manager: ConsensusManager = ConsensusManager::new();
         consensus_manager.build_genesis_block().unwrap();
 
-        let sender_pub_key: AccountPubKey = consensus_manager.get_validator_pub_key();
+        let sender_pub_key: AccountPubKey = consensus_manager.get_pub_key();
         let asset_id: u64 = 0;
         let send_amount: u64 = STAKE_TRANSACTION_AMOUNT + 10;
         let signed_transaction: TransactionRequest<TransactionVariant> = payment_transaction(
             sender_pub_key,
-            consensus_manager.get_validator_private_key(),
+            consensus_manager.get_private_key(),
             receiver_pub_key,
             asset_id,
             send_amount,
@@ -234,7 +234,7 @@ mod tests {
         );
 
         let signed_transaction: TransactionRequest<TransactionVariant> =
-            asset_creation_transaction(sender_pub_key, consensus_manager.get_validator_private_key()).unwrap();
+            asset_creation_transaction(sender_pub_key, consensus_manager.get_private_key()).unwrap();
         route_transaction(&mut consensus_manager, &signed_transaction).unwrap();
         let new_asset_id: u64 = 1;
         assert!(

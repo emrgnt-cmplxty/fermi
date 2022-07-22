@@ -134,7 +134,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     // initialize consensus manager
     let mut consensus_manager: ConsensusManager = ConsensusManager::new();
-    let validator_pub_key: AccountPubKey = consensus_manager.get_validator_pub_key();
+    let pub_key: AccountPubKey = consensus_manager.get_pub_key();
 
     // initiate new consensus instances by creating the genesis block from perspective of primary validator
     let genesis_block: Block<TransactionVariant> = consensus_manager.build_genesis_block().unwrap();
@@ -143,18 +143,18 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     consensus_manager.store_genesis_block(genesis_block);
 
     let signed_transaction: TransactionRequest<TransactionVariant> =
-        asset_creation_transaction(validator_pub_key, consensus_manager.get_validator_private_key()).unwrap();
+        asset_creation_transaction(pub_key, consensus_manager.get_private_key()).unwrap();
     route_transaction(&mut consensus_manager, &signed_transaction).unwrap();
 
     // create quote asset, this is asset #1 of the blockchain
     let signed_transaction: TransactionRequest<TransactionVariant> =
-        asset_creation_transaction(validator_pub_key, consensus_manager.get_validator_private_key()).unwrap();
+        asset_creation_transaction(pub_key, consensus_manager.get_private_key()).unwrap();
     route_transaction(&mut consensus_manager, &signed_transaction).unwrap();
 
     // create orderbook, the base asset for this orderbook will be the primary asset (# 0) created at genesis
     let signed_transaction: TransactionRequest<TransactionVariant> = orderbook_creation_transaction(
-        validator_pub_key,
-        consensus_manager.get_validator_private_key(),
+        pub_key,
+        consensus_manager.get_private_key(),
         BASE_ASSET_ID,
         QUOTE_ASSET_ID,
     )
@@ -171,8 +171,8 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
         // fund new account with base asset
         let signed_transaction: TransactionRequest<TransactionVariant> = payment_transaction(
-            validator_pub_key,
-            consensus_manager.get_validator_private_key(),
+            pub_key,
+            consensus_manager.get_private_key(),
             account_pub_key,
             BASE_ASSET_ID,
             TRANSFER_AMOUNT,
@@ -182,8 +182,8 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
         // fund new account with quote asset
         let signed_transaction: TransactionRequest<TransactionVariant> = payment_transaction(
-            validator_pub_key,
-            consensus_manager.get_validator_private_key(),
+            pub_key,
+            consensus_manager.get_private_key(),
             account_pub_key,
             QUOTE_ASSET_ID,
             TRANSFER_AMOUNT,

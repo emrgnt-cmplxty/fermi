@@ -4,10 +4,10 @@
 //!
 //! TODO
 //! 0.) RELOCATE APPROPRIATE TESTS FROM SUITE/CORE TO HERE
-//!
+extern crate types;
 use super::transaction::{TransactionRequest, TransactionVariant};
 use super::vote_cert::VoteCert;
-use gdex_crypto::hash::{CryptoHash, HashValue};
+use gdex_crypto::{hash::{CryptoHash, HashValue}, ed25519::Ed25519PrivateKey, Uniform};
 use std::fmt::Debug;
 use types::{account::AccountPubKey, hash_clock::HashTime, spot::DiemCryptoMessage};
 
@@ -110,4 +110,17 @@ pub fn generate_block_hash(transactions: &Vec<TransactionRequest<TransactionVari
         hash_string += &transaction.get_transaction().hash().to_string();
     }
     DiemCryptoMessage(hash_string).hash()
+}
+
+mod tests {
+
+    use types::account::{AccountPrivKey};
+    use super::*;
+    // use crate::block::gdex_crypto::{ed25519::Ed25519PrivateKey, Uniform};
+    use gdex_crypto::{hash::{CryptoHash, HashValue}, Uniform};
+
+    fn block_hash_test() {
+
+        let key = AccountPrivKey::generate_for_testing();
+    }
 }

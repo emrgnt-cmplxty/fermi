@@ -2,7 +2,7 @@
 //! the hashclock is a blockchain primitive that enables a vdf
 //! to be constructed trivially
 //!
-use gdex_crypto::hash::CryptoHash;
+use gdex_crypto::hash::{CryptoHash, HashValue};
 use std::fmt::Debug;
 use std::time::{Duration, Instant};
 use types::{hash_clock::HashTime, spot::DiemCryptoMessage};
@@ -61,8 +61,8 @@ impl HashClock {
         self.n_ticks
     }
 
-    pub fn update_hash_time(&mut self, new_time: HashTime) {
-        self.time = new_time;
+    pub fn update_hash_time(&mut self, prev_hash_time: HashTime, prev_block_hash: HashValue) {
+        self.time = DiemCryptoMessage(format!("{}{}", prev_hash_time, prev_block_hash)).hash();
     }
 
     pub fn update_ticks_per_cycle(&mut self, new_ticks_per_cycle: u64) {
@@ -117,9 +117,15 @@ mod tests {
             "clock hashes do not match after equal cycles"
         );
 
-        // reset the clocks
-        clock_0.update_hash_time(DiemCryptoMessage(DEFAULT_HASH_TIME_INIT_MSG.to_string()).hash());
-        clock_1.update_hash_time(DiemCryptoMessage(DEFAULT_HASH_TIME_INIT_MSG.to_string()).hash());
+        // simulate updating the hash time
+        clock_0.update_hash_time(
+            DiemCryptoMessage(DEFAULT_HASH_TIME_INIT_MSG.to_string()).hash(),
+            DiemCryptoMessage(DEFAULT_HASH_TIME_INIT_MSG.to_string()).hash(),
+        );
+        clock_1.update_hash_time(
+            DiemCryptoMessage(DEFAULT_HASH_TIME_INIT_MSG.to_string()).hash(),
+            DiemCryptoMessage(DEFAULT_HASH_TIME_INIT_MSG.to_string()).hash(),
+        );
 
         assert!(
             clock_0.get_hash_time() == clock_1.get_hash_time(),

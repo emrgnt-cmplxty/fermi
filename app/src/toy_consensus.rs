@@ -63,7 +63,7 @@ impl ConsensusManager {
 
     // build the genesis block by creating the base asset and staking some funds
     pub fn build_genesis_block(&mut self) -> Result<Block<TransactionVariant>, GDEXError> {
-        // create and tick the initial hash clock
+        // create and synchronously tick the initial hash clock
         let mut hash_clock: HashClock = HashClock::default();
         hash_clock.cycle();
 
@@ -86,7 +86,7 @@ impl ConsensusManager {
         self.propose_block(self.latest_block_transactions.clone(), hash_clock.get_hash_time())
     }
 
-    // take a list of transactions and create a valid Block w/ the managers vote included
+    // take a list of transactions and create a new block w/ the managers vote included
     pub fn propose_block(
         &self,
         transactions: Vec<TransactionRequest<TransactionVariant>>,
@@ -96,6 +96,7 @@ impl ConsensusManager {
         let mut vote_cert: VoteCert =
             VoteCert::new(self.stake_controller.get_staked(&self.validator_pub_key)?, block_hash);
 
+        // create signature and append true response to the vote certificate
         let vote_response: bool = true;
         self.cast_vote(&mut vote_cert, vote_response)?;
 
@@ -124,14 +125,27 @@ impl ConsensusManager {
         Ok(())
     }
 
+    pub fn store_genesis_block(&mut self, block: Block<TransactionVariant>) {
+        // save block
+        self.block_container.append_block(block);
+        // overwrite latest block transactions
+        self.latest_block_transactions = Vec::new();
+    }
+
     pub fn validate_and_store_block(
         &mut self,
         block: Block<TransactionVariant>,
-        prev_hash_time: HashTime,
+        prev_block: Block<TransactionVariant>,
     ) -> Result<(), GDEXError> {
-        let mut hash_clock: HashClock = HashClock::new(prev_hash_time, self.ticks_per_cycle);
+        let mut hash_clock: HashClock = HashClock::default();
+        // mix hash time with trailing block
+        hash_clock.update_hash_time(prev_block.get_hash_time(), prev_block.get_block_hash());
         hash_clock.cycle();
-        if block.get_vote_cert().vote_has_passed() && block.get_hash_time() == hash_clock.get_hash_time() {
+
+        if block.get_vote_cert().vote_has_passed()
+            && block.get_hash_time() == hash_clock.get_hash_time()
+            && block.get_block_number() == prev_block.get_block_number() + 1
+        {
             // save block
             self.block_container.append_block(block);
             // overwrite latest block transactions
@@ -194,10 +208,8 @@ impl Default for ConsensusManager {
 mod tests {
     use super::super::router::{order_transaction, orderbook_creation_transaction, payment_transaction};
     use super::*;
-    use core::hash_clock::DEFAULT_HASH_TIME_INIT_MSG;
-    use gdex_crypto::hash::CryptoHash;
     use proc::bank::{CREATED_ASSET_BALANCE, PRIMARY_ASSET_ID};
-    use types::{asset::AssetId, orderbook::OrderSide, spot::DiemCryptoMessage};
+    use types::{asset::AssetId, orderbook::OrderSide};
     // specify the number of tokens sent to second validator
     const SECONDARY_SEED_PAYMENT: u64 = 100_000;
     const QUOTE_ASSET_ID: AssetId = 1;
@@ -222,12 +234,7 @@ mod tests {
         );
 
         // validate block immediately as genesis proposer is only staked validator
-        primary_validator
-            .validate_and_store_block(
-                genesis_block,
-                DiemCryptoMessage(DEFAULT_HASH_TIME_INIT_MSG.to_string()).hash(),
-            )
-            .unwrap();
+        primary_validator.store_genesis_block(genesis_block.clone());
 
         // check validator has clean transaction slate after processing genesis block
         assert!(
@@ -256,8 +263,9 @@ mod tests {
 
         // begin second block where second validator is funded and staked
 
-        // initialize clock with time at last block
-        let mut hash_clock: HashClock = HashClock::new(genesis_hash_time, primary_validator.get_ticks_per_cycle());
+        // initialize clock with mixed time as of the last block
+        let mut hash_clock: HashClock = HashClock::default();
+        hash_clock.update_hash_time(genesis_hash_time, genesis_block.get_block_hash());
 
         // fund second validator
         let signed_transaction: TransactionRequest<TransactionVariant> = payment_transaction(
@@ -314,10 +322,9 @@ mod tests {
             second_block.get_transactions().len() == 2,
             "Wrong block transaction length after second block"
         );
-        let second_block_hash_time: HashTime = second_block.get_hash_time();
         // second validator does not need to vote as staked amount remains significantly less than primary
         primary_validator
-            .validate_and_store_block(second_block, genesis_hash_time)
+            .validate_and_store_block(second_block.clone(), genesis_block)
             .unwrap();
 
         // check that block has been stored and transactions whipted
@@ -327,6 +334,8 @@ mod tests {
         );
 
         // begin third block - here a second asset will be made and an orderbook inistantiated
+        hash_clock.update_hash_time(hash_clock.get_hash_time(), second_block.get_block_hash());
+
         let signed_transaction: TransactionRequest<TransactionVariant> =
             asset_creation_transaction(secondary_pub_key, secondary_validator.get_validator_private_key()).unwrap();
         primary_validator
@@ -383,7 +392,7 @@ mod tests {
 
         // second validator does not need to vote as staked amount remains significantly less than primary
         primary_validator
-            .validate_and_store_block(third_block, second_block_hash_time)
+            .validate_and_store_block(third_block, second_block)
             .unwrap();
 
         // check that block has been stored and transactions whipted

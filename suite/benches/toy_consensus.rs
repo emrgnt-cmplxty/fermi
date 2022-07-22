@@ -11,11 +11,11 @@ use app::{
 };
 use core::{
     block::Block,
-    hash_clock::{HashClock, DEFAULT_HASH_TIME_INIT_MSG},
+    hash_clock::HashClock,
     transaction::{TransactionRequest, TransactionVariant},
 };
 use criterion::{criterion_group, criterion_main, Criterion, Throughput};
-use gdex_crypto::{hash::CryptoHash, HashValue};
+use gdex_crypto::HashValue;
 use proc::{account::generate_key_pair, bank::PRIMARY_ASSET_ID};
 use rand::{rngs::ThreadRng, Rng};
 use std::{
@@ -23,7 +23,7 @@ use std::{
     thread::{spawn, JoinHandle},
 };
 use types::{
-    account::AccountPubKey, asset::AssetId, hash_clock::HashTime, orderbook::OrderSide, spot::DiemCryptoMessage,
+    account::AccountPubKey, asset::AssetId, hash_clock::HashTime, orderbook::OrderSide,
 };
 
 const N_ORDERS_BENCH: u64 = 2_000;
@@ -72,7 +72,7 @@ fn place_orders_consensus(
     let new_hash_time: HashTime = hash_time_handler.join().unwrap();
     let new_block: Block<TransactionVariant> = consensus_manager.propose_block(transactions, new_hash_time).unwrap();
     consensus_manager
-        .validate_and_store_block(new_block, last_block.get_hash_time())
+        .validate_and_store_block(new_block, last_block)
         .unwrap();
 }
 
@@ -101,7 +101,7 @@ mod batch_benches {
         let new_block: Block<TransactionVariant> =
             consensus_manager.propose_block(transactions, new_hash_time).unwrap();
         consensus_manager
-            .validate_and_store_block(new_block, last_block.get_hash_time())
+            .validate_and_store_block(new_block, last_block)
             .unwrap();
     }
 
@@ -126,7 +126,7 @@ mod batch_benches {
         let new_block: Block<TransactionVariant> =
             consensus_manager.propose_block(transactions, new_hash_time).unwrap();
         consensus_manager
-            .validate_and_store_block(new_block, last_block.get_hash_time())
+            .validate_and_store_block(new_block, last_block)
             .unwrap();
     }
 }
@@ -143,11 +143,9 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     // validate block immediately as genesis proposer is only staked validator
     consensus_manager
-        .validate_and_store_block(
+        .store_genesis_block(
             genesis_block,
-            DiemCryptoMessage(DEFAULT_HASH_TIME_INIT_MSG.to_string()).hash(),
-        )
-        .unwrap();
+        );
 
     let signed_transaction: TransactionRequest<TransactionVariant> =
         asset_creation_transaction(validator_pub_key, consensus_manager.get_validator_private_key()).unwrap();

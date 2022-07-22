@@ -9,7 +9,7 @@ extern crate types;
 use super::router::{asset_creation_transaction, route_transaction, stake_transaction};
 use core::{
     block::{generate_block_hash, Block, BlockContainer},
-    hash_clock::{HashClock, TICKS_PER_CYCLE},
+    hash_clock::{HashClock, DEFAULT_TICKS_PER_CYCLE},
     transaction::{TransactionRequest, TransactionVariant},
     vote_cert::VoteCert,
 };
@@ -45,7 +45,7 @@ impl ConsensusManager {
             bank_controller: BankController::new(),
             spot_controller: SpotController::new(),
             stake_controller: StakeController::new(),
-            ticks_per_cycle: TICKS_PER_CYCLE,
+            ticks_per_cycle: DEFAULT_TICKS_PER_CYCLE,
             validator_pub_key: account_pub_key,
             validator_private_key: private_key,
         }
@@ -194,7 +194,7 @@ impl Default for ConsensusManager {
 mod tests {
     use super::super::router::{order_transaction, orderbook_creation_transaction, payment_transaction};
     use super::*;
-    use core::hash_clock::HASH_TIME_INIT_MSG;
+    use core::hash_clock::DEFAULT_HASH_TIME_INIT_MSG;
     use gdex_crypto::hash::CryptoHash;
     use proc::bank::{CREATED_ASSET_BALANCE, PRIMARY_ASSET_ID};
     use types::{asset::AssetId, orderbook::OrderSide, spot::DiemCryptoMessage};
@@ -223,7 +223,10 @@ mod tests {
 
         // validate block immediately as genesis proposer is only staked validator
         primary_validator
-            .validate_and_store_block(genesis_block, DiemCryptoMessage(HASH_TIME_INIT_MSG.to_string()).hash())
+            .validate_and_store_block(
+                genesis_block,
+                DiemCryptoMessage(DEFAULT_HASH_TIME_INIT_MSG.to_string()).hash(),
+            )
             .unwrap();
 
         // check validator has clean transaction slate after processing genesis block

@@ -169,6 +169,7 @@ mod tests {
             block.get_vote_cert().get_block_hash() == dummy_vote_cert.get_block_hash(),
             "block vote cert block hash does not match input"
         );
+        assert!(block.get_block_number() == 0, "block number does not match input");
 
         let mut block_container: BlockContainer<TransactionVariant> = BlockContainer::new();
         block_container.append_block(block.clone());
@@ -196,6 +197,17 @@ mod tests {
         assert!(
             block_container.get_blocks()[0].get_vote_cert().get_block_hash() == block.get_vote_cert().get_block_hash(),
             "block container 0th block vote cert block hash does not match input"
+        );
+        assert!(
+            block_container.get_blocks()[0].get_block_number() == block.get_block_number(),
+            "block container 0th block number does not match input"
+        );
+
+        let mut default_block_container = BlockContainer::default();
+        default_block_container.append_block(block.clone());
+        assert!(
+            default_block_container.get_blocks()[0].get_block_number() == block.get_block_number(),
+            "default block container 0th block number does not match input"
         );
     }
 }

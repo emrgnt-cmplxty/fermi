@@ -11,7 +11,7 @@ use app::{
 };
 use core::{
     block::Block,
-    hash_clock::{HashClock, HASH_TIME_INIT_MSG},
+    hash_clock::{HashClock, DEFAULT_HASH_TIME_INIT_MSG},
     transaction::{TransactionRequest, TransactionVariant},
 };
 use criterion::{criterion_group, criterion_main, Criterion, Throughput};
@@ -143,7 +143,10 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     // validate block immediately as genesis proposer is only staked validator
     consensus_manager
-        .validate_and_store_block(genesis_block, DiemCryptoMessage(HASH_TIME_INIT_MSG.to_string()).hash())
+        .validate_and_store_block(
+            genesis_block,
+            DiemCryptoMessage(DEFAULT_HASH_TIME_INIT_MSG.to_string()).hash(),
+        )
         .unwrap();
 
     let signed_transaction: TransactionRequest<TransactionVariant> =

@@ -1,3 +1,6 @@
+[![codecov](https://codecov.io/gh/gdexorg/gdex-core/branch/main/graph/badge.svg?token=1LV5N5F8Q1)](https://codecov.io/gh/gdexorg/gdex-core)
+[![Rust](https://github.com/gdexorg/gdex-core/actions/workflows/rust.yml/badge.svg)](https://github.com/gdexorg/gdex-core/actions/workflows/rust.yml)
+
 # Introducing GDEX-CORE
 
 GDEX-CORE hosts ongoing work on the GDEX order book blockchain.  The goal of this initial work is to successively approximate the functionality of a blockchain via a ground-up approach. The project is currently in an infant stage.  

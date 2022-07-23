@@ -1,22 +1,24 @@
-on: [push]
 name: Lines
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
   build:
 
     runs-on: ubuntu-latest
 
-    name: Calc Lines
     steps:
-      - name: Checkout
-      - uses: actions/checkout@v3
-
-      - name: Make Code Badge
-        uses: shadowmoose/GHA-LoC-Badge@1.0.0
-        id: badge
-        with:
-          debug: true
-          directory: ./
-          badge: ./output/badge.svg
-          patterns: '*.rs'  # Patterns in the format of a '.gitignore' file, separated by pipes.
-          ignore: 'node_modules'
+    - uses: actions/checkout@v3
+    - name: Install tokei
+      run: cargo install tokei --features all
+    - name: Run tokei
+      run: tokei
+    - name: Run tokei no crypto
+      run: tokei --exclude crypto crypto-derive

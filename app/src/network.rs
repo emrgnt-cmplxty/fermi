@@ -40,6 +40,5 @@ mod tests {
         validator_one
             .validate_and_store_block(second_block, genesis_block)
             .unwrap();
-
     }
 }

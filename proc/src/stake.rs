@@ -85,6 +85,10 @@ impl StakeController {
         Ok(())
     }
 
+    pub fn get_accounts(&self) -> &HashMap<AccountPubKey, StakeAccount> {
+        &self.stake_accounts
+    }
+
     pub fn get_total_staked(&self) -> u64 {
         self.total_staked
     }

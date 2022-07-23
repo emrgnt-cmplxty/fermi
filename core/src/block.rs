@@ -40,6 +40,15 @@ where
     }
 }
 
+impl<Variant> Default for BlockContainer<Variant>
+where
+    Variant: Debug + Clone + CryptoHash + Copy,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Block<Variant>
 where
@@ -98,6 +107,10 @@ where
         self.block_number
     }
 
+    pub fn push_transaction(&mut self, transaction: TransactionRequest<Variant>) {
+        self.transactions.push(transaction);
+    }
+
     pub fn append_vote(
         &mut self,
         valdator_pub_key: AccountPubKey,
@@ -108,14 +121,9 @@ where
         self.vote_cert
             .append_vote(valdator_pub_key, validator_signature, vote_response, stake)
     }
-}
 
-impl<Variant> Default for BlockContainer<Variant>
-where
-    Variant: Debug + Clone + CryptoHash + Copy,
-{
-    fn default() -> Self {
-        Self::new()
+    pub fn update_hash_time(&mut self, hash_time: HashTime) {
+        self.hash_time = hash_time;
     }
 }
 

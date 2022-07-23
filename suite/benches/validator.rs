@@ -69,6 +69,9 @@ fn place_orders_validator(
     // begin ticking hash clock in async thread
     let hash_time_handler = get_clock_handler(validator_controller, &last_block);
 
+    // begin new block
+    validator_controller.initialize_next_block();
+
     // verify transactions and update state
     for order_transaction in transactions.iter() {
         route_transaction(validator_controller, order_transaction).unwrap();
@@ -76,7 +79,7 @@ fn place_orders_validator(
 
     // propose & validate new block
     let new_hash_time = hash_time_handler.join().unwrap();
-    let new_block = validator_controller.propose_block(transactions, new_hash_time).unwrap();
+    let new_block = validator_controller.propose_block(new_hash_time).unwrap();
     validator_controller
         .validate_and_store_block(new_block, last_block)
         .unwrap();
@@ -97,6 +100,9 @@ mod batch_benches {
         // begin ticking hash clock in async thread
         let hash_time_handler = get_clock_handler(validator_controller, &last_block);
 
+        // begin new block
+        validator_controller.initialize_next_block();
+
         // verify transactions and update state
         route_transaction_batch(validator_controller, &transactions).unwrap();
 
@@ -104,7 +110,7 @@ mod batch_benches {
         let new_hash_time = hash_time_handler.join().unwrap();
 
         // propose and validate new block
-        let new_block = validator_controller.propose_block(transactions, new_hash_time).unwrap();
+        let new_block = validator_controller.propose_block(new_hash_time).unwrap();
         validator_controller
             .validate_and_store_block(new_block, last_block)
             .unwrap();
@@ -121,6 +127,9 @@ mod batch_benches {
         // begin ticking hash clock in async thread
         let hash_time_handler = get_clock_handler(validator_controller, &last_block);
 
+        // begin new block
+        validator_controller.initialize_next_block();
+
         // verify transactions and update state
         route_transaction_batch_multithreaded(validator_controller, &transactions, n_threads).unwrap();
 
@@ -128,7 +137,7 @@ mod batch_benches {
         let new_hash_time = hash_time_handler.join().unwrap();
 
         // propose and validate new block
-        let new_block = validator_controller.propose_block(transactions, new_hash_time).unwrap();
+        let new_block = validator_controller.propose_block(new_hash_time).unwrap();
         validator_controller
             .validate_and_store_block(new_block, last_block)
             .unwrap();

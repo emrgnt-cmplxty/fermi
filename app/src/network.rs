@@ -1,55 +1,45 @@
 #[cfg(test)]
-// extern crate core;
-// use core::transaction::TransactionRequest;
-// use core::transaction::TransactionVariant;
-
-// fn propagate_message(_transaction: Vec<TransactionRequest<TransactionVariant>>) {}
-#[cfg(test)]
 mod tests {
-    use super::super::router::payment_transaction;
-    use super::super::validator::{ValidatorController, GENESIS_STAKE_AMOUNT};
-    use proc::bank::PRIMARY_ASSET_ID;
+    use super::super::rotation::get_next_validator;
+    use super::super::validator::{
+        get_next_block_hash_time, tests::fund_and_stake_validator, ValidatorController, GENESIS_STAKE_AMOUNT,
+    };
 
     const SECONDARY_SEED_PAYMENT: u64 = (0.33 * GENESIS_STAKE_AMOUNT as f64) as u64;
 
     #[test]
-    fn test_network() {
+    fn test_validator_rotation() {
         let mut validator_one = ValidatorController::new();
-        // initialize
-        let validator_two = ValidatorController::new();
-        let validator_three = ValidatorController::new();
+        let mut validator_two = ValidatorController::new();
+        let mut validator_three = ValidatorController::new();
         let genesis_block = validator_one.build_genesis_block().unwrap();
 
-        // fund validator two
-        let fund_two_transaction = payment_transaction(
-            validator_one.get_pub_key(),
-            validator_one.get_private_key(),
-            validator_two.get_pub_key(),
-            PRIMARY_ASSET_ID,
-            SECONDARY_SEED_PAYMENT,
-        )
-        .unwrap();
+        validator_one.store_genesis_block(genesis_block.clone());
+        validator_two.store_genesis_block(genesis_block.clone());
+        validator_three.store_genesis_block(genesis_block.clone());
 
-        // fund validator two
-        let fund_three_transaction = payment_transaction(
-            validator_one.get_pub_key(),
-            validator_one.get_private_key(),
-            validator_three.get_pub_key(),
-            PRIMARY_ASSET_ID,
-            SECONDARY_SEED_PAYMENT,
-        )
-        .unwrap();
+        // get next validator after finalizing block
+        let next_validator = get_next_validator(&mut validator_one);
+        assert!(next_validator == validator_one.get_pub_key());
 
-        let validators = vec![validator_one, validator_two, validator_three];
+        // begin second block where other validators are funded and staked
+        validator_one.initialize_next_block();
 
-        for mut validator in validators {
-            validator.store_genesis_block(genesis_block.clone());
-        }
+        // begin second block where second validator is funded and staked
+        fund_and_stake_validator(&mut validator_one, &validator_two, SECONDARY_SEED_PAYMENT);
+        fund_and_stake_validator(&mut validator_one, &validator_three, SECONDARY_SEED_PAYMENT);
 
-        let _transactions = vec![fund_two_transaction, fund_three_transaction];
+        let second_block = validator_one
+            .propose_block(get_next_block_hash_time(
+                genesis_block.get_hash_time(),
+                genesis_block.get_block_hash(),
+            ))
+            .unwrap();
 
-        // let block_transactions = validator_one.get_latest_transactions().clone();
-        // let block_hash = get_next_block_hash_time(genesis_block.get_hash_time(), genesis_block.get_block_hash());
-        // let _block_proposal = validator_one.propose_block(block_transactions, block_hash).unwrap();
+        // finalize second block
+        validator_one
+            .validate_and_store_block(second_block, genesis_block)
+            .unwrap();
+
     }
 }

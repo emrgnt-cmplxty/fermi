@@ -13,7 +13,7 @@ use core::{
     transaction::{TransactionRequest, TransactionVariant},
     vote_cert::VoteCert,
 };
-use gdex_crypto::SigningKey;
+use gdex_crypto::{hash::HashValue, SigningKey};
 use proc::{account::generate_key_pair, bank::BankController, spot::SpotController, stake::StakeController};
 use types::{
     account::{AccountPrivKey, AccountPubKey},
@@ -27,7 +27,7 @@ pub const GENESIS_STAKE_AMOUNT: u64 = 1_000_000;
 // the consensus manager owns all Controllers and is responsible for
 // processing transactions, updating state, and reaching consensus in "toy" conditions
 pub struct ValidatorController {
-    latest_block_transactions: Vec<TransactionRequest<TransactionVariant>>,
+    pending_block: Option<Block<TransactionVariant>>,
     block_container: BlockContainer<TransactionVariant>,
     bank_controller: BankController,
     spot_controller: SpotController,
@@ -40,7 +40,7 @@ impl ValidatorController {
     pub fn new() -> Self {
         let (pub_key, private_key) = generate_key_pair();
         ValidatorController {
-            latest_block_transactions: Vec::new(),
+            pending_block: None,
             block_container: BlockContainer::new(),
             bank_controller: BankController::new(),
             spot_controller: SpotController::new(),
@@ -51,77 +51,107 @@ impl ValidatorController {
         }
     }
 
-    // append transaction to latest block transactions after successful verification
+    // append transaction to latest block transactions
+    // note that routåe transaction gaurentees successful
+    // signature verification and transaction execution
     fn process_and_store_transaction(
         &mut self,
         signed_transaction: TransactionRequest<TransactionVariant>,
     ) -> Result<(), GDEXError> {
         route_transaction(self, &signed_transaction)?;
-        self.latest_block_transactions.push(signed_transaction);
-        Ok(())
+        match &mut self.pending_block {
+            Some(block) => {
+                block.push_transaction(signed_transaction);
+                Ok(())
+            }
+            None => Err(GDEXError::PendingBlock(
+                "This validator has no pending block".to_string(),
+            )),
+        }
     }
 
-    // build the genesis block by creating the base asset and staking some funds
+    // this function creates and internalizes the genesis block of a new chain
+    // it begins by creating primary asset of the blockchain which defaults ownership
+    // to the local validator, it then stakes some balance from the validators perspective
+    // staking of funds allows consensus to formally begin, however it should be defined
     pub fn build_genesis_block(&mut self) -> Result<Block<TransactionVariant>, GDEXError> {
+        // initialize a block for later proposal
+        self.initialize_next_block();
+        // GENESIS transaction #0 -> create the base asset of the blockhain
+        // <-- there is some hair on this process as we currently issue all tokens at genesis to the initial generator -->
+        // --> however, this can be alleviated by extending the functionality of the bank module <--
+        let genesis_token_transaction = asset_creation_transaction(self.pub_key, &self.private_key)?;
+        self.process_and_store_transaction(genesis_token_transaction)?;
+        // GENESIS transaction 1 -> stake some manager funds to allow consensus to begin
+        let genesis_stake_transaction = stake_transaction(self.pub_key, &self.private_key, GENESIS_STAKE_AMOUNT)?;
+        self.process_and_store_transaction(genesis_stake_transaction)?;
+
         // create and synchronously tick the initial hash clock
         let mut hash_clock = HashClock::default();
         hash_clock.cycle();
 
-        // GENESIS transaction #0 -> create the base asset of the blockhain
-        // <-- there is some hair on this process as we currently issue all tokens at genesis to the initial generator -->
-        // --> however, this can be alleviated by extending the functionality of the bank module <--
-        self.process_and_store_transaction(asset_creation_transaction(self.pub_key, &self.private_key)?)?;
-
-        // GENESIS transaction 1 -> stake some manager funds to allow consensus to begin
-        self.process_and_store_transaction(stake_transaction(
-            self.pub_key,
-            &self.private_key,
-            GENESIS_STAKE_AMOUNT,
-        )?)?;
-
         // return the initial genesis block
-        self.propose_block(self.latest_block_transactions.clone(), hash_clock.get_hash_time())
+        self.propose_block(hash_clock.get_hash_time())
     }
 
-    // take a list of transactions and create a new block w/ the managers vote included
-    pub fn propose_block(
-        &self,
-        transactions: Vec<TransactionRequest<TransactionVariant>>,
-        block_hash_time: HashTime,
-    ) -> Result<Block<TransactionVariant>, GDEXError> {
+    // initialized blocks have an incorrect block hash and an incomplete vote certficiate
+    // the initialized block has a dummy hash time initially
+    // this likely should be replaced by an Option at some point in the new future
+    pub fn initialize_next_block(&mut self) {
+        let transactions: Vec<TransactionRequest<TransactionVariant>> = Vec::new();
         let block_hash = generate_block_hash(&transactions);
-        let mut vote_cert = VoteCert::new(self.stake_controller.get_total_staked(), block_hash);
-
-        // validator signs the block hash appended to their vote response
-        let validator_signature = self.private_key.sign(&vote_cert.compute_vote_msg(true));
-
-        vote_cert.append_vote(
-            self.pub_key,
-            validator_signature,
-            true,
-            self.stake_controller.get_staked(&self.pub_key)?,
-        )?;
-
-        Ok(Block::<TransactionVariant>::new(
+        let vote_cert = VoteCert::new(self.stake_controller.get_total_staked(), block_hash);
+        self.pending_block = Some(Block::<TransactionVariant>::new(
             transactions,
             self.pub_key,
             block_hash,
             self.block_container.get_blocks().len() as u64,
-            block_hash_time,
+            block_hash, // append a dummy hash time, TODO - change to option to remove need of this
             vote_cert,
-        ))
+        ));
     }
 
+    // this function assumes a successfully initialized block
+    // proposal is done from the perspective of the validator and includes
+    // the validators vote as well as the included proposed block
+    // lastly, the validator stores this into state as the latest pending block
+    pub fn propose_block(&mut self, proposed_hash_time: HashTime) -> Result<Block<TransactionVariant>, GDEXError> {
+        match &mut self.pending_block {
+            Some(pending_block) => {
+                let vote_cert = VoteCert::new(self.stake_controller.get_total_staked(), pending_block.get_block_hash());
+                // validator signs the block hash appended to their vote response
+                let validator_signature = self.private_key.sign(&vote_cert.compute_vote_msg(true));
+                pending_block.append_vote(
+                    self.pub_key,
+                    validator_signature,
+                    true,
+                    self.stake_controller.get_staked(&self.pub_key)?,
+                )?;
+
+                pending_block.update_hash_time(proposed_hash_time);
+
+                Ok(pending_block.clone())
+            }
+            None => Err(GDEXError::PendingBlock(
+                "This validator has no pending block".to_string(),
+            )),
+        }
+    }
+
+    // this method allows unprotected saving of a block
+    // unprocted saving of a block should only occur at genesis
     pub fn store_genesis_block(&mut self, block: Block<TransactionVariant>) {
         // save block
         self.block_container.append_block(block);
-        // overwrite latest block transactions
-        self.latest_block_transactions = Vec::new();
+        // erase the pending block
+        self.pending_block = None;
     }
 
+    // this method validates a propsed block and stores into validator state
+    // the validation of a pending block is still quite nascent in the code below
     pub fn validate_and_store_block(
         &mut self,
-        block: Block<TransactionVariant>,
+        pending_block: Block<TransactionVariant>,
         prev_block: Block<TransactionVariant>,
     ) -> Result<(), GDEXError> {
         let mut hash_clock = HashClock::default();
@@ -129,22 +159,49 @@ impl ValidatorController {
         hash_clock.update_hash_time(prev_block.get_hash_time(), prev_block.get_block_hash());
         hash_clock.cycle();
 
-        if block.get_vote_cert().vote_has_passed()
-            && block.get_hash_time() == hash_clock.get_hash_time()
-            && block.get_block_number() == prev_block.get_block_number() + 1
+        if pending_block.get_vote_cert().vote_has_passed()
+            && pending_block.get_hash_time() == hash_clock.get_hash_time()
+            && pending_block.get_block_number() == prev_block.get_block_number() + 1
         {
             // save block
-            self.block_container.append_block(block);
+            self.block_container.append_block(pending_block);
             // overwrite latest block transactions
-            self.latest_block_transactions = Vec::new();
+            self.pending_block = None;
             Ok(())
         } else {
             Err(GDEXError::BlockValidation("Validation failed".to_string()))
         }
     }
 
-    pub fn get_latest_transactions(&self) -> &Vec<TransactionRequest<TransactionVariant>> {
-        &self.latest_block_transactions
+    pub fn process_external_vote(
+        &mut self,
+        external_validator: &ValidatorController,
+        pending_block: &mut Block<TransactionVariant>,
+        vote_response: bool,
+    ) {
+        let external_validator_pub_key = external_validator.get_pub_key();
+        let external_validator_signature = external_validator
+            .get_private_key()
+            .sign(&pending_block.get_vote_cert().compute_vote_msg(true));
+        let validator_stake = self.stake_controller.get_staked(&external_validator_pub_key).unwrap();
+
+        pending_block
+            .append_vote(
+                external_validator_pub_key,
+                external_validator_signature,
+                vote_response,
+                validator_stake,
+            )
+            .unwrap();
+    }
+
+    pub fn get_latest_transactions(&self) -> Result<&Vec<TransactionRequest<TransactionVariant>>, GDEXError> {
+        match &self.pending_block {
+            Some(pending_block) => Ok(pending_block.get_transactions()),
+            None => Err(GDEXError::PendingBlock(
+                "This validator has no pending block".to_string(),
+            )),
+        }
     }
 
     pub fn get_bank_controller(&mut self) -> &mut BankController {
@@ -191,21 +248,19 @@ impl Default for ValidatorController {
     }
 }
 
+pub fn get_next_block_hash_time(prev_block_hash_time: HashTime, prev_block_hash: HashValue) -> HashTime {
+    let mut hash_clock = HashClock::default();
+    hash_clock.update_hash_time(prev_block_hash_time, prev_block_hash);
+    hash_clock.cycle();
+    hash_clock.get_hash_time()
+}
 #[cfg(test)]
 pub mod tests {
     use super::super::router::{order_transaction, orderbook_creation_transaction, payment_transaction};
     use super::*;
-    use gdex_crypto::HashValue;
     use proc::bank::{CREATED_ASSET_BALANCE, PRIMARY_ASSET_ID};
     use types::{asset::AssetId, orderbook::OrderSide};
     const QUOTE_ASSET_ID: AssetId = 1;
-
-    pub fn get_next_block_hash_time(prev_block_hash_time: HashTime, prev_block_hash: HashValue) -> HashTime {
-        let mut hash_clock = HashClock::default();
-        hash_clock.update_hash_time(prev_block_hash_time, prev_block_hash);
-        hash_clock.cycle();
-        hash_clock.get_hash_time()
-    }
 
     pub fn fund_and_stake_validator(
         validator_a: &mut ValidatorController,
@@ -243,11 +298,11 @@ pub mod tests {
         // validate block immediately as genesis proposer is only staked validator
         primary_validator.store_genesis_block(genesis_block);
 
-        // check validator has clean transaction slate after processing genesis block
-        assert!(
-            primary_validator.get_latest_transactions().is_empty(),
-            "Wrong transaction length after processing genesis block"
-        );
+        // check validator has no pending block after storing the genesis block
+        assert!(matches!(
+            primary_validator.get_latest_transactions(),
+            Err(GDEXError::PendingBlock(_))
+        ));
 
         // check that the initial funding was successful by checking state of controllers
         let primary_pub_key = primary_validator.get_pub_key();
@@ -280,23 +335,42 @@ pub mod tests {
         primary_validator.store_genesis_block(genesis_block.clone());
 
         // begin second block where second validator is funded and staked
+        primary_validator.initialize_next_block();
 
         // fund and stake second validator
         fund_and_stake_validator(&mut primary_validator, &secondary_validator, SECONDARY_SEED_PAYMENT);
 
-        let block_transactions = primary_validator.get_latest_transactions().clone();
-        let block_hash = get_next_block_hash_time(genesis_block.get_hash_time(), genesis_block.get_block_hash());
-        let second_block = primary_validator.propose_block(block_transactions, block_hash).unwrap();
+        let block_hash_time = get_next_block_hash_time(genesis_block.get_hash_time(), genesis_block.get_block_hash());
+        let second_block = primary_validator.propose_block(block_hash_time).unwrap();
 
         // second validator does not need to vote as staked amount remains significantly less than primary
         primary_validator
             .validate_and_store_block(second_block, genesis_block)
             .unwrap();
 
-        // check that block has been stored and transactions whipted
+        // check validator has no pending block after validating the second block
+        assert!(matches!(
+            primary_validator.get_latest_transactions(),
+            Err(GDEXError::PendingBlock(_))
+        ));
+
+        let secondary_balance = primary_validator
+            .get_bank_controller()
+            .get_balance(&secondary_validator.get_pub_key(), PRIMARY_ASSET_ID)
+            .unwrap();
+
+        let secondary_staked = primary_validator
+            .get_stake_controller()
+            .get_staked(&secondary_validator.get_pub_key())
+            .unwrap();
         assert!(
-            primary_validator.get_latest_transactions().is_empty(),
-            "Wrong transaction length after processing second block"
+            secondary_balance == 0,
+            "Unexpected balance after staking second validator"
+        );
+
+        assert!(
+            secondary_staked == SECONDARY_SEED_PAYMENT,
+            "Unexpected stake after staking second validator"
         );
     }
 
@@ -312,15 +386,36 @@ pub mod tests {
         primary_validator.store_genesis_block(genesis_block.clone());
 
         // begin second block where second validator is funded and staked
+        primary_validator.initialize_next_block();
+
         fund_and_stake_validator(&mut primary_validator, &secondary_validator, SECONDARY_SEED_PAYMENT);
+        let second_block = primary_validator
+            .propose_block(get_next_block_hash_time(
+                genesis_block.get_hash_time(),
+                genesis_block.get_block_hash(),
+            ))
+            .unwrap();
 
-        let block_transactions = primary_validator.get_latest_transactions().clone();
-        let block_hash = get_next_block_hash_time(genesis_block.get_hash_time(), genesis_block.get_block_hash());
-        let second_block = primary_validator.propose_block(block_transactions, block_hash).unwrap();
-
-        // validate block should fail since secondary validator has large share of staked
+        // second block should pass since staked amount is computed at beginning of block
         primary_validator
-            .validate_and_store_block(second_block, genesis_block)
+            .validate_and_store_block(second_block.clone(), genesis_block)
+            .unwrap();
+
+        // begin third block where failure should occur
+        primary_validator.initialize_next_block();
+
+        // 0 value payment transaction to test for failure
+        fund_and_stake_validator(&mut primary_validator, &secondary_validator, 0);
+        let third_block = primary_validator
+            .propose_block(get_next_block_hash_time(
+                second_block.get_hash_time(),
+                second_block.get_block_hash(),
+            ))
+            .unwrap();
+
+        // third block should now fail since second validator stake is accounted for and not voting
+        primary_validator
+            .validate_and_store_block(third_block, second_block)
             .unwrap();
     }
 
@@ -335,24 +430,17 @@ pub mod tests {
         primary_validator.store_genesis_block(genesis_block.clone());
 
         // begin second block where second validator is funded and staked
+        primary_validator.initialize_next_block();
+
         fund_and_stake_validator(&mut primary_validator, &secondary_validator, SECONDARY_SEED_PAYMENT);
-
-        let block_transactions = primary_validator.get_latest_transactions().clone();
-        let block_hash = get_next_block_hash_time(genesis_block.get_hash_time(), genesis_block.get_block_hash());
-        let mut second_block = primary_validator.propose_block(block_transactions, block_hash).unwrap();
-
-        let validator_pub_key = secondary_validator.get_pub_key();
-        let validator_signature = secondary_validator
-            .get_private_key()
-            .sign(&second_block.get_vote_cert().compute_vote_msg(true));
-        let validator_stake = primary_validator
-            .stake_controller
-            .get_staked(&validator_pub_key)
+        let mut second_block = primary_validator
+            .propose_block(get_next_block_hash_time(
+                genesis_block.get_hash_time(),
+                genesis_block.get_block_hash(),
+            ))
             .unwrap();
 
-        second_block
-            .append_vote(validator_pub_key, validator_signature, true, validator_stake)
-            .unwrap();
+        primary_validator.process_external_vote(&secondary_validator, &mut second_block, true);
 
         // consensus will now pass since second validator has cast an affirmative vote
         primary_validator

@@ -22,7 +22,8 @@ pub fn get_valid_validators(stake_controller: &StakeController) -> Vec<AccountPu
 pub fn get_next_validator(validator: &mut ValidatorController) -> AccountPubKey {
     let valid_validators = get_valid_validators(validator.get_stake_controller());
     let blocks = validator.get_block_container().get_blocks();
-    let last_block_hash = blocks[blocks.len() - 1].get_block_hash();
+    let last_block_hash = blocks[blocks.len() - 1].get_hash_time();
     let mut rng: StdRng = SeedableRng::from_seed(last_block_hash.to_vec().try_into().unwrap());
-    valid_validators[rng.gen_range(0, valid_validators.len())]
+    let selection = rng.gen_range(0, valid_validators.len());
+    valid_validators[selection]
 }

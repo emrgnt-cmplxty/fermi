@@ -1,5 +1,9 @@
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
+    use types::account::AccountPubKey;
+
     use super::super::rotation::get_next_validator;
     use super::super::validator::{
         get_next_block_hash_time, tests::fund_and_stake_validator, ValidatorController, GENESIS_STAKE_AMOUNT,
@@ -36,9 +40,46 @@ mod tests {
             ))
             .unwrap();
 
+        let mut i_step = 0;
+        let mut next_block = second_block.clone();
+
         // finalize second block
         validator_one
             .validate_and_store_block(second_block, genesis_block)
             .unwrap();
+
+        let mut validator_map: HashMap<AccountPubKey, u64> = HashMap::new();
+
+        while i_step < 25 {
+            let prev_block = next_block.clone();
+            let next_validator = get_next_validator(&mut validator_one);
+
+            validator_one.initialize_next_block();
+
+            // begin block w/ dummy zero value transaction
+            fund_and_stake_validator(&mut validator_one, &validator_two, 0);
+            next_block = validator_one
+                .propose_block(get_next_block_hash_time(
+                    next_block.get_hash_time(),
+                    next_block.get_block_hash(),
+                ))
+                .unwrap();
+
+            validator_one.process_external_vote(&validator_two, &mut next_block, true);
+            validator_one.process_external_vote(&validator_three, &mut next_block, true);
+            // finalize second block
+            validator_one
+                .validate_and_store_block(next_block.clone(), prev_block)
+                .unwrap();
+            let count = validator_map.get(&next_validator).unwrap_or(&0);
+            validator_map.insert(next_validator, count + 1);
+            i_step += 1;
+        }
+        let mut i_count = 0;
+        for (_addr, _count) in &validator_map {
+            i_count += 1
+        }
+        // this test should pass w/ probability ~1/3^20
+        assert!(i_count==3, "Failed to loop over 3 validators, please check")
     }
 }

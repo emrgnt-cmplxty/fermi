@@ -80,6 +80,6 @@ mod tests {
             i_count += 1
         }
         // this test should pass w/ probability ~1/3^20
-        assert!(i_count==3, "Failed to loop over 3 validators, please check")
+        assert!(i_count == 3, "Failed to loop over 3 validators, please check")
     }
 }

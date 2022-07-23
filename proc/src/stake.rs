@@ -122,12 +122,22 @@ mod tests {
             .stake(&mut bank_controller, &account_pub_key, STAKE_AMOUNT)
             .unwrap();
         assert!(
-            bank_controller.get_balance(&account_pub_key, PRIMARY_ASSET_ID).unwrap() ==
-            CREATED_ASSET_BALANCE - STAKE_AMOUNT, "unexpected balance"
+            bank_controller.get_balance(&account_pub_key, PRIMARY_ASSET_ID).unwrap()
+                == CREATED_ASSET_BALANCE - STAKE_AMOUNT,
+            "unexpected balance"
         );
-        assert!(stake_controller.get_accounts().keys().len() == 1, "unexpected number of accounts");
-        assert!(stake_controller.get_staked(&account_pub_key).unwrap() == STAKE_AMOUNT, "unexpected stake amount");
-        assert!(stake_controller.get_total_staked() == STAKE_AMOUNT, "unexpected total staked amount");
+        assert!(
+            stake_controller.get_accounts().keys().len() == 1,
+            "unexpected number of accounts"
+        );
+        assert!(
+            stake_controller.get_staked(&account_pub_key).unwrap() == STAKE_AMOUNT,
+            "unexpected stake amount"
+        );
+        assert!(
+            stake_controller.get_total_staked() == STAKE_AMOUNT,
+            "unexpected total staked amount"
+        );
     }
 
     // TODO #0 //
@@ -142,8 +152,8 @@ mod tests {
 
         let mut stake_controller = StakeController::new();
         assert!(
-            bank_controller.get_balance(&account_pub_key, PRIMARY_ASSET_ID).unwrap() ==
-            0, "unexpected balance"
+            bank_controller.get_balance(&account_pub_key, PRIMARY_ASSET_ID).unwrap() == 0,
+            "unexpected balance"
         );
         // staking without funding should create error
         let (second_account_pub_key, _private_key) = generate_key_pair();

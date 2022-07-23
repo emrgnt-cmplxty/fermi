@@ -79,7 +79,7 @@ mod tests {
         for (_addr, _count) in &validator_map {
             i_count += 1
         }
-        // this test should pass w/ probability ~1/3^20
-        assert!(i_count == 3, "Failed to loop over 3 validators, please check")
+        // this test is probabilistic and should pass w/ probability ~1 - 1/3^20
+        assert!(i_count == 3, "Failed to loop over 3 unique validators")
     }
 }

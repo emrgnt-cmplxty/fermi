@@ -5,6 +5,7 @@
 //! TODO
 //! 0.) RELOCATE APPROPRIATE TESTS FROM SUITE/CORE TO HERE
 extern crate types;
+use crate::merkle::compute_root_hash_naive;
 use crate::transaction::{TransactionRequest, TransactionVariant};
 use crate::vote_cert::VoteCert;
 use gdex_crypto::hash::{CryptoHash, HashValue};
@@ -13,7 +14,6 @@ use types::{
     account::{AccountPubKey, AccountSignature},
     error::GDEXError,
     hash_clock::HashTime,
-    spot::DiemCryptoMessage,
 };
 
 #[derive(Clone, Debug)]
@@ -127,13 +127,10 @@ where
     }
 }
 
-// generate a unique block hash by appending all the hashes transactions inside the block
-pub fn generate_block_hash(transactions: &Vec<TransactionRequest<TransactionVariant>>) -> HashValue {
-    let mut hash_string = String::from("");
-    for transaction in transactions {
-        hash_string += &transaction.get_transaction().hash().to_string();
-    }
-    DiemCryptoMessage(hash_string).hash()
+// generate the merkle hash root hash of the block
+pub fn generate_block_hash(transactions: &[TransactionRequest<TransactionVariant>]) -> HashValue {
+    let transaction_hashes: Vec<HashValue> = transactions.iter().map(|x| x.get_transaction().hash()).collect();
+    compute_root_hash_naive(&transaction_hashes[..])
 }
 
 #[cfg(test)]
@@ -145,7 +142,7 @@ mod tests {
     use super::super::vote_cert::VoteCert;
     use super::*;
     use gdex_crypto::{hash::CryptoHash, SigningKey, Uniform};
-    use types::account::AccountPrivKey;
+    use types::{account::AccountPrivKey, spot::DiemCryptoMessage};
 
     #[test]
     fn test_block_functionality() {

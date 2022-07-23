@@ -20,11 +20,11 @@ mod tests {
     // testing basic verification
     #[test]
     fn test_basic_verification() {
-        let mut csprng: ThreadRng = thread_rng();
+        let mut csprng = thread_rng();
         let priv_key = Ed25519PrivateKey::generate(&mut csprng);
-        let pub_key: Ed25519PublicKey = (&priv_key).into();
+        let pub_key = (&priv_key).into();
         let msg = DiemCryptoMessage("".to_string());
-        let sig: Ed25519Signature = priv_key.sign(&msg);
+        let sig = priv_key.sign(&msg);
         // gives us 1 if it was verified and 0 if it wasn't
         let result = match sig.verify(&msg, &pub_key) {
             Ok(_) => 1,
@@ -37,11 +37,11 @@ mod tests {
     // testing batch verification
     #[test]
     fn test_batch_verification() {
-        let mut csprng: ThreadRng = thread_rng();
+        let mut csprng = thread_rng();
         let priv_key = Ed25519PrivateKey::generate(&mut csprng);
-        let pub_key: Ed25519PublicKey = (&priv_key).into();
+        let pub_key = (&priv_key).into();
         let msg = DiemCryptoMessage("".to_string());
-        let sig: Ed25519Signature = priv_key.sign(&msg);
+        let sig = priv_key.sign(&msg);
         let mut keys_and_signatures: Vec<(Ed25519PublicKey, Ed25519Signature)> = Vec::new();
         keys_and_signatures.push((pub_key, sig));
 
@@ -57,14 +57,14 @@ mod tests {
     // testing incorrect message verification fail
     #[test]
     fn test_incorrect_message_verification_fail() {
-        let mut csprng: ThreadRng = thread_rng();
+        let mut csprng = thread_rng();
         let priv_key = Ed25519PrivateKey::generate(&mut csprng);
-        let pub_key: Ed25519PublicKey = (&priv_key).into();
+        let pub_key = (&priv_key).into();
         let msg = DiemCryptoMessage("".to_string());
         // making a different message than what was encoded
         let faulty_message = DiemCryptoMessage("a".to_string());
         // signing correct message but verifying with faulty message
-        let sig: Ed25519Signature = priv_key.sign(&msg);
+        let sig = priv_key.sign(&msg);
         let result = match sig.verify(&faulty_message, &pub_key) {
             Ok(_) => 1,
             Err(_) => 0,
@@ -77,16 +77,16 @@ mod tests {
     #[test]
     fn test_incorrect_key_failure() {
         // first set of private and public keys that it will sign with
-        let mut csprng: ThreadRng = thread_rng();
+        let mut csprng = thread_rng();
         let priv_key = Ed25519PrivateKey::generate(&mut csprng);
         // making a new public key
-        let mut csprng_2: ThreadRng = thread_rng();
+        let mut csprng_2 = thread_rng();
         let priv_key_2 = Ed25519PrivateKey::generate(&mut csprng_2);
-        let pub_key_2: Ed25519PublicKey = (&priv_key_2).into();
+        let pub_key_2 = (&priv_key_2).into();
         // creating and signing the msg
         let msg = DiemCryptoMessage("".to_string());
         // making a different message than what was encoded
-        let sig: Ed25519Signature = priv_key.sign(&msg);
+        let sig = priv_key.sign(&msg);
         let result = match sig.verify(&msg, &pub_key_2) {
             Ok(_) => 1,
             Err(_) => 0,

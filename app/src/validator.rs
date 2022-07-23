@@ -13,20 +13,20 @@ use core::{
     transaction::{TransactionRequest, TransactionVariant},
     vote_cert::VoteCert,
 };
-use gdex_crypto::{hash::HashValue, SigningKey};
+use gdex_crypto::SigningKey;
 use proc::{account::generate_key_pair, bank::BankController, spot::SpotController, stake::StakeController};
 use types::{
-    account::{AccountPrivKey, AccountPubKey, AccountSignature},
+    account::{AccountPrivKey, AccountPubKey},
     error::GDEXError,
     hash_clock::HashTime,
 };
 
 // specify the number of tokens creator stakes during genesis
-const GENESIS_STAKE_AMOUNT: u64 = 1_000_000;
+pub const GENESIS_STAKE_AMOUNT: u64 = 1_000_000;
 
 // the consensus manager owns all Controllers and is responsible for
 // processing transactions, updating state, and reaching consensus in "toy" conditions
-pub struct ConsensusManager {
+pub struct ValidatorController {
     latest_block_transactions: Vec<TransactionRequest<TransactionVariant>>,
     block_container: BlockContainer<TransactionVariant>,
     bank_controller: BankController,
@@ -36,10 +36,10 @@ pub struct ConsensusManager {
     pub_key: AccountPubKey,
     private_key: AccountPrivKey,
 }
-impl ConsensusManager {
+impl ValidatorController {
     pub fn new() -> Self {
         let (pub_key, private_key) = generate_key_pair();
-        ConsensusManager {
+        ValidatorController {
             latest_block_transactions: Vec::new(),
             block_container: BlockContainer::new(),
             bank_controller: BankController::new(),
@@ -64,7 +64,7 @@ impl ConsensusManager {
     // build the genesis block by creating the base asset and staking some funds
     pub fn build_genesis_block(&mut self) -> Result<Block<TransactionVariant>, GDEXError> {
         // create and synchronously tick the initial hash clock
-        let mut hash_clock: HashClock = HashClock::default();
+        let mut hash_clock = HashClock::default();
         hash_clock.cycle();
 
         // GENESIS transaction #0 -> create the base asset of the blockhain
@@ -89,11 +89,11 @@ impl ConsensusManager {
         transactions: Vec<TransactionRequest<TransactionVariant>>,
         block_hash_time: HashTime,
     ) -> Result<Block<TransactionVariant>, GDEXError> {
-        let block_hash: HashValue = generate_block_hash(&transactions);
-        let mut vote_cert: VoteCert = VoteCert::new(self.stake_controller.get_total_staked(), block_hash);
+        let block_hash = generate_block_hash(&transactions);
+        let mut vote_cert = VoteCert::new(self.stake_controller.get_total_staked(), block_hash);
 
         // validator signs the block hash appended to their vote response
-        let validator_signature: AccountSignature = self.private_key.sign(&vote_cert.compute_vote_msg(true));
+        let validator_signature = self.private_key.sign(&vote_cert.compute_vote_msg(true));
 
         vote_cert.append_vote(
             self.pub_key,
@@ -124,7 +124,7 @@ impl ConsensusManager {
         block: Block<TransactionVariant>,
         prev_block: Block<TransactionVariant>,
     ) -> Result<(), GDEXError> {
-        let mut hash_clock: HashClock = HashClock::default();
+        let mut hash_clock = HashClock::default();
         // mix hash time with trailing block
         hash_clock.update_hash_time(prev_block.get_hash_time(), prev_block.get_block_hash());
         hash_clock.cycle();
@@ -185,27 +185,55 @@ impl ConsensusManager {
     }
 }
 
-impl Default for ConsensusManager {
+impl Default for ValidatorController {
     fn default() -> Self {
         Self::new()
     }
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::super::router::{order_transaction, orderbook_creation_transaction, payment_transaction};
     use super::*;
+    use gdex_crypto::HashValue;
     use proc::bank::{CREATED_ASSET_BALANCE, PRIMARY_ASSET_ID};
     use types::{asset::AssetId, orderbook::OrderSide};
     const QUOTE_ASSET_ID: AssetId = 1;
 
+    pub fn get_next_block_hash_time(prev_block_hash_time: HashTime, prev_block_hash: HashValue) -> HashTime {
+        let mut hash_clock = HashClock::default();
+        hash_clock.update_hash_time(prev_block_hash_time, prev_block_hash);
+        hash_clock.cycle();
+        hash_clock.get_hash_time()
+    }
+
+    pub fn fund_and_stake_validator(
+        validator_a: &mut ValidatorController,
+        validator_b: &ValidatorController,
+        amount: u64,
+    ) {
+        // fund and stake second validator
+        let signed_transaction = payment_transaction(
+            validator_a.get_pub_key(),
+            validator_a.get_private_key(),
+            validator_b.get_pub_key(),
+            PRIMARY_ASSET_ID,
+            amount,
+        )
+        .unwrap();
+        validator_a.process_and_store_transaction(signed_transaction).unwrap();
+        let signed_transaction =
+            stake_transaction(validator_b.get_pub_key(), validator_b.get_private_key(), amount).unwrap();
+        validator_a.process_and_store_transaction(signed_transaction).unwrap();
+    }
+
     #[test]
     fn test_build_genesis_block() {
         // start w/ a two-validator setup
-        let mut primary_validator: ConsensusManager = ConsensusManager::new();
+        let mut primary_validator = ValidatorController::new();
 
         // initiate new consensus by creating the genesis block from perspective of primary validator
-        let genesis_block: Block<TransactionVariant> = primary_validator.build_genesis_block().unwrap();
+        let genesis_block = primary_validator.build_genesis_block().unwrap();
 
         // check genesis block has expected number of transactions before storing
         assert!(
@@ -213,17 +241,17 @@ mod tests {
             "Wrong block transaction length after creating genesis block"
         );
         // validate block immediately as genesis proposer is only staked validator
-        primary_validator.store_genesis_block(genesis_block.clone());
+        primary_validator.store_genesis_block(genesis_block);
 
         // check validator has clean transaction slate after processing genesis block
         assert!(
-            primary_validator.get_latest_transactions().len() == 0,
+            primary_validator.get_latest_transactions().is_empty(),
             "Wrong transaction length after processing genesis block"
         );
 
         // check that the initial funding was successful by checking state of controllers
-        let primary_pub_key: AccountPubKey = primary_validator.get_pub_key();
-        let primary_balance: u64 = primary_validator
+        let primary_pub_key = primary_validator.get_pub_key();
+        let primary_balance = primary_validator
             .get_bank_controller()
             .get_balance(&primary_pub_key, PRIMARY_ASSET_ID)
             .unwrap();
@@ -231,7 +259,7 @@ mod tests {
             primary_balance == CREATED_ASSET_BALANCE - GENESIS_STAKE_AMOUNT,
             "Unexpected balance after token genesis & stake"
         );
-        let primary_staked: u64 = primary_validator
+        let primary_staked = primary_validator
             .get_stake_controller()
             .get_staked(&primary_pub_key)
             .unwrap();
@@ -244,126 +272,86 @@ mod tests {
     #[test]
     fn test_two_validator_one_vote() {
         const SECONDARY_SEED_PAYMENT: u64 = 1_000;
-        let mut primary_validator: ConsensusManager = ConsensusManager::new();
-        let secondary_validator: ConsensusManager = ConsensusManager::new();
+        let mut primary_validator = ValidatorController::new();
+        let secondary_validator = ValidatorController::new();
 
         // repeat genesis setup
-        let genesis_block: Block<TransactionVariant> = primary_validator.build_genesis_block().unwrap();
+        let genesis_block = primary_validator.build_genesis_block().unwrap();
         primary_validator.store_genesis_block(genesis_block.clone());
 
         // begin second block where second validator is funded and staked
 
-        // initialize and cycle hashclock
-        let mut hash_clock: HashClock = HashClock::default();
-        hash_clock.update_hash_time(genesis_block.get_hash_time(), genesis_block.get_block_hash());
-        hash_clock.cycle();
-
         // fund and stake second validator
         fund_and_stake_validator(&mut primary_validator, &secondary_validator, SECONDARY_SEED_PAYMENT);
 
-        let second_block: Block<TransactionVariant> = primary_validator
-            .propose_block(
-                primary_validator.get_latest_transactions().clone(),
-                hash_clock.get_hash_time(),
-            )
-            .unwrap();
+        let block_transactions = primary_validator.get_latest_transactions().clone();
+        let block_hash = get_next_block_hash_time(genesis_block.get_hash_time(), genesis_block.get_block_hash());
+        let second_block = primary_validator.propose_block(block_transactions, block_hash).unwrap();
 
         // second validator does not need to vote as staked amount remains significantly less than primary
         primary_validator
-            .validate_and_store_block(second_block.clone(), genesis_block)
+            .validate_and_store_block(second_block, genesis_block)
             .unwrap();
 
         // check that block has been stored and transactions whipted
         assert!(
-            primary_validator.get_latest_transactions().len() == 0,
+            primary_validator.get_latest_transactions().is_empty(),
             "Wrong transaction length after processing second block"
         );
-    }
-
-    fn fund_and_stake_validator(validator_a: &mut ConsensusManager, validator_b: &ConsensusManager, amount: u64) {
-        // fund and stake second validator
-        let signed_transaction: TransactionRequest<TransactionVariant> = payment_transaction(
-            validator_a.get_pub_key(),
-            validator_a.get_private_key(),
-            validator_b.get_pub_key(),
-            PRIMARY_ASSET_ID,
-            amount,
-        )
-        .unwrap();
-        validator_a.process_and_store_transaction(signed_transaction).unwrap();
-        let signed_transaction: TransactionRequest<TransactionVariant> =
-            stake_transaction(validator_b.get_pub_key(), validator_b.get_private_key(), amount).unwrap();
-        validator_a.process_and_store_transaction(signed_transaction).unwrap();
-    }
-
-    fn get_next_block_hash_time(prev_block_hash_time: HashTime, prev_block_hash: HashValue) -> HashTime {
-        let mut hash_clock: HashClock = HashClock::default();
-        hash_clock.update_hash_time(prev_block_hash_time, prev_block_hash);
-        hash_clock.cycle();
-        hash_clock.get_hash_time()
     }
 
     #[test]
     #[should_panic]
     fn test_two_validator_one_vote_fails() {
         const SECONDARY_SEED_PAYMENT: u64 = (0.5 * (CREATED_ASSET_BALANCE as f64)) as u64;
-        let mut primary_validator: ConsensusManager = ConsensusManager::new();
-        let secondary_validator: ConsensusManager = ConsensusManager::new();
+        let mut primary_validator = ValidatorController::new();
+        let secondary_validator = ValidatorController::new();
 
         // initiate new consensus by creating the genesis block from perspective of primary validator
-        let genesis_block: Block<TransactionVariant> = primary_validator.build_genesis_block().unwrap();
+        let genesis_block = primary_validator.build_genesis_block().unwrap();
         primary_validator.store_genesis_block(genesis_block.clone());
 
         // begin second block where second validator is funded and staked
         fund_and_stake_validator(&mut primary_validator, &secondary_validator, SECONDARY_SEED_PAYMENT);
 
-        let second_block: Block<TransactionVariant> = primary_validator
-            .propose_block(
-                primary_validator.get_latest_transactions().clone(),
-                get_next_block_hash_time(genesis_block.get_hash_time(), genesis_block.get_block_hash()),
-            )
-            .unwrap();
+        let block_transactions = primary_validator.get_latest_transactions().clone();
+        let block_hash = get_next_block_hash_time(genesis_block.get_hash_time(), genesis_block.get_block_hash());
+        let second_block = primary_validator.propose_block(block_transactions, block_hash).unwrap();
 
         // validate block should fail since secondary validator has large share of staked
         primary_validator
-            .validate_and_store_block(second_block.clone(), genesis_block)
+            .validate_and_store_block(second_block, genesis_block)
             .unwrap();
     }
 
     #[test]
     fn test_two_validator_two_votes() {
         const SECONDARY_SEED_PAYMENT: u64 = (0.5 * (CREATED_ASSET_BALANCE as f64)) as u64;
-        let mut primary_validator: ConsensusManager = ConsensusManager::new();
-        let secondary_validator: ConsensusManager = ConsensusManager::new();
+        let mut primary_validator = ValidatorController::new();
+        let secondary_validator = ValidatorController::new();
 
         // initiate new consensus by creating the genesis block from perspective of primary validator
-        let genesis_block: Block<TransactionVariant> = primary_validator.build_genesis_block().unwrap();
+        let genesis_block = primary_validator.build_genesis_block().unwrap();
         primary_validator.store_genesis_block(genesis_block.clone());
 
         // begin second block where second validator is funded and staked
         fund_and_stake_validator(&mut primary_validator, &secondary_validator, SECONDARY_SEED_PAYMENT);
 
-        let mut second_block: Block<TransactionVariant> = primary_validator
-            .propose_block(
-                primary_validator.get_latest_transactions().clone(),
-                get_next_block_hash_time(genesis_block.get_hash_time(), genesis_block.get_block_hash()),
-            )
-            .unwrap();
+        let block_transactions = primary_validator.get_latest_transactions().clone();
+        let block_hash = get_next_block_hash_time(genesis_block.get_hash_time(), genesis_block.get_block_hash());
+        let mut second_block = primary_validator.propose_block(block_transactions, block_hash).unwrap();
 
-        let validator_signature: AccountSignature = secondary_validator
+        let validator_pub_key = secondary_validator.get_pub_key();
+        let validator_signature = secondary_validator
             .get_private_key()
             .sign(&second_block.get_vote_cert().compute_vote_msg(true));
+        let validator_stake = primary_validator
+            .stake_controller
+            .get_staked(&validator_pub_key)
+            .unwrap();
 
         second_block
-            .append_vote(
-                secondary_validator.get_pub_key(),
-                validator_signature,
-                true,
-                primary_validator
-                    .stake_controller
-                    .get_staked(&secondary_validator.get_pub_key())
-                    .unwrap(),
-            )
+            .append_vote(validator_pub_key, validator_signature, true, validator_stake)
             .unwrap();
 
         // consensus will now pass since second validator has cast an affirmative vote
@@ -374,17 +362,17 @@ mod tests {
 
     #[test]
     fn test_orderbook_workflow() {
-        let mut primary_validator: ConsensusManager = ConsensusManager::new();
+        let mut primary_validator = ValidatorController::new();
         // initialize
         primary_validator.build_genesis_block().unwrap();
 
-        let signed_transaction: TransactionRequest<TransactionVariant> =
+        let signed_transaction =
             asset_creation_transaction(primary_validator.get_pub_key(), primary_validator.get_private_key()).unwrap();
         primary_validator
             .process_and_store_transaction(signed_transaction)
             .unwrap();
 
-        let signed_transaction: TransactionRequest<TransactionVariant> = orderbook_creation_transaction(
+        let signed_transaction = orderbook_creation_transaction(
             primary_validator.get_pub_key(),
             primary_validator.get_private_key(),
             PRIMARY_ASSET_ID,
@@ -394,7 +382,7 @@ mod tests {
         primary_validator
             .process_and_store_transaction(signed_transaction)
             .unwrap();
-        let signed_transaction: TransactionRequest<TransactionVariant> = order_transaction(
+        let signed_transaction = order_transaction(
             primary_validator.get_pub_key(),
             primary_validator.get_private_key(),
             PRIMARY_ASSET_ID,

@@ -2,10 +2,7 @@
 //! transactions are the base unit fed into the blockchain
 //! to trigger state transitions
 //!
-use gdex_crypto::{
-    hash::{CryptoHash, HashValue},
-    Signature,
-};
+use gdex_crypto::{hash::CryptoHash, Signature};
 use gdex_crypto_derive::{BCSCryptoHash, CryptoHasher};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -182,7 +179,7 @@ where
     }
 
     pub fn verify_transaction(&self) -> Result<(), gdex_crypto::error::Error> {
-        let transaction_hash: HashValue = self.transaction.hash();
+        let transaction_hash = self.transaction.hash();
         self.transaction_signature
             .verify(&DiemCryptoMessage(transaction_hash.to_string()), &self.sender)
     }
@@ -200,7 +197,7 @@ pub mod batch_functions {
         let mut keys_and_signatures: Vec<(AccountPubKey, AccountSignature)> = Vec::new();
 
         for transaction_request in transaction_requests.iter() {
-            let transaction_hash: HashValue = transaction_request.transaction.hash();
+            let transaction_hash = transaction_request.transaction.hash();
             messages.push(DiemCryptoMessage(transaction_hash.to_string()));
             keys_and_signatures.push((
                 *transaction_request.get_sender(),
@@ -216,21 +213,20 @@ pub mod batch_functions {
     ) -> JoinHandle<Result<(), gdex_crypto::error::Error>> {
         let transaction_requests = Arc::new(Mutex::new(transaction_requests));
         spawn(move || {
-            let transaction_requests: MutexGuard<Vec<TransactionRequest<TransactionVariant>>> =
-                transaction_requests.lock().unwrap();
-            verify_transaction_batch_multithread(transaction_requests)
+            let transaction_requests = transaction_requests.lock().unwrap();
+            verify_transaction_batch_thread(transaction_requests)
         })
     }
 
     // combine batch transactions with multithreading
-    fn verify_transaction_batch_multithread(
+    fn verify_transaction_batch_thread(
         transaction_requests: MutexGuard<Vec<TransactionRequest<TransactionVariant>>>,
     ) -> Result<(), gdex_crypto::error::Error> {
         let mut messages: Vec<DiemCryptoMessage> = Vec::new();
         let mut keys_and_signatures: Vec<(AccountPubKey, AccountSignature)> = Vec::new();
 
         for transaction_request in transaction_requests.iter() {
-            let transaction_hash: HashValue = transaction_request.transaction.hash();
+            let transaction_hash = transaction_request.transaction.hash();
             messages.push(DiemCryptoMessage(transaction_hash.to_string()));
             keys_and_signatures.push((
                 *transaction_request.get_sender(),
@@ -245,11 +241,10 @@ pub mod batch_functions {
         transaction_requests: Vec<TransactionRequest<TransactionVariant>>,
         n_threads: u64,
     ) -> Result<(), gdex_crypto::error::Error> {
-        let mut transaction_handlers: Vec<JoinHandle<Result<(), gdex_crypto::error::Error>>> = Vec::new();
+        let mut transaction_handlers = Vec::new();
         // use chunk to evenly split and spawn processes over the allotted threads
         for chunk in transaction_requests.chunks(transaction_requests.len() / (n_threads as usize)) {
-            let transaction_handler: JoinHandle<Result<(), gdex_crypto::error::Error>> =
-                get_verification_handler(chunk.to_vec());
+            let transaction_handler = get_verification_handler(chunk.to_vec());
             transaction_handlers.push(transaction_handler);
         }
         // verify success in turn
@@ -265,32 +260,29 @@ mod test {
     use super::*;
 
     use super::super::transaction::{CreateAssetRequest, PaymentRequest, TransactionRequest};
-    use gdex_crypto::{
-        hash::{CryptoHash, HashValue},
-        SigningKey, Uniform,
-    };
-    use types::account::{AccountPrivKey, AccountSignature};
+    use gdex_crypto::{hash::CryptoHash, SigningKey, Uniform};
+    use types::account::AccountPrivKey;
 
     const PRIMARY_ASSET_ID: u64 = 0;
 
     #[test]
     fn create_signed_payment_transaction() {
-        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing(0);
-        let sender_pub_key: AccountPubKey = (&private_key).into();
+        let private_key = AccountPrivKey::generate_for_testing(0);
+        let sender_pub_key = (&private_key).into();
 
-        let receiver_private_key: AccountPrivKey = AccountPrivKey::generate_for_testing(1);
-        let receiver_pub_key: AccountPubKey = (&receiver_private_key).into();
+        let receiver_private_key = AccountPrivKey::generate_for_testing(1);
+        let receiver_pub_key = (&receiver_private_key).into();
 
-        let transaction: PaymentRequest = PaymentRequest::new(sender_pub_key, receiver_pub_key, PRIMARY_ASSET_ID, 10);
+        let transaction = PaymentRequest::new(sender_pub_key, receiver_pub_key, PRIMARY_ASSET_ID, 10);
 
-        let transaction_hash: HashValue = transaction.hash();
-        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
-        let signed_transaction: TransactionRequest<PaymentRequest> =
+        let transaction_hash = transaction.hash();
+        let signed_hash = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
+        let signed_transaction =
             TransactionRequest::<PaymentRequest>::new(transaction, sender_pub_key, signed_hash.clone());
         signed_transaction.verify_transaction().unwrap();
 
         assert!(
-            signed_transaction.get_sender().clone() == sender_pub_key,
+            *signed_transaction.get_sender() == sender_pub_key,
             "transaction sender does not match transaction input"
         );
         assert!(
@@ -307,30 +299,30 @@ mod test {
             "transaction asset id does not match transaction input"
         );
         assert!(
-            signed_transaction.get_transaction().get_from().clone() == sender_pub_key,
+            *signed_transaction.get_transaction().get_from() == sender_pub_key,
             "transaction from does not match transction input"
         );
         assert!(
-            signed_transaction.get_transaction().get_to().clone() == receiver_pub_key,
+            *signed_transaction.get_transaction().get_to() == receiver_pub_key,
             "transaction to does not match transction input"
         );
     }
 
     #[test]
     fn create_signed_stake_transaction() {
-        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing(0);
-        let sender_pub_key: AccountPubKey = (&private_key).into();
+        let private_key = AccountPrivKey::generate_for_testing(0);
+        let sender_pub_key = (&private_key).into();
 
-        let transaction: StakeRequest = StakeRequest::new(sender_pub_key, 10);
+        let transaction = StakeRequest::new(sender_pub_key, 10);
 
-        let transaction_hash: HashValue = transaction.hash();
-        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
-        let signed_transaction: TransactionRequest<StakeRequest> =
+        let transaction_hash = transaction.hash();
+        let signed_hash = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
+        let signed_transaction =
             TransactionRequest::<StakeRequest>::new(transaction, sender_pub_key, signed_hash.clone());
         signed_transaction.verify_transaction().unwrap();
 
         assert!(
-            signed_transaction.get_sender().clone() == sender_pub_key,
+            *signed_transaction.get_sender() == sender_pub_key,
             "transaction sender does not match transaction input"
         );
         assert!(
@@ -343,26 +335,26 @@ mod test {
             "transaction amount does not match transaction input"
         );
         assert!(
-            signed_transaction.get_transaction().get_from().clone() == sender_pub_key,
+            *signed_transaction.get_transaction().get_from() == sender_pub_key,
             "transaction from does not match transction input"
         );
     }
 
     #[test]
     fn create_asset_transaction() {
-        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing(0);
-        let sender_pub_key: AccountPubKey = (&private_key).into();
+        let private_key = AccountPrivKey::generate_for_testing(0);
+        let sender_pub_key = (&private_key).into();
 
-        let transaction: CreateAssetRequest = CreateAssetRequest {};
+        let transaction = CreateAssetRequest {};
 
-        let transaction_hash: HashValue = transaction.hash();
-        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
-        let signed_transaction: TransactionRequest<CreateAssetRequest> =
+        let transaction_hash = transaction.hash();
+        let signed_hash = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
+        let signed_transaction =
             TransactionRequest::<CreateAssetRequest>::new(transaction, sender_pub_key, signed_hash.clone());
         signed_transaction.verify_transaction().unwrap();
 
         assert!(
-            signed_transaction.get_sender().clone() == sender_pub_key,
+            *signed_transaction.get_sender() == sender_pub_key,
             "transaction sender does not match transaction input"
         );
         assert!(
@@ -373,20 +365,20 @@ mod test {
 
     #[test]
     fn create_orderbook_transaction() {
-        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing(0);
-        let sender_pub_key: AccountPubKey = (&private_key).into();
+        let private_key = AccountPrivKey::generate_for_testing(0);
+        let sender_pub_key = (&private_key).into();
         let dummy_asset_id = 1;
 
-        let transaction: CreateOrderbookRequest = CreateOrderbookRequest::new(PRIMARY_ASSET_ID, dummy_asset_id);
+        let transaction = CreateOrderbookRequest::new(PRIMARY_ASSET_ID, dummy_asset_id);
 
-        let transaction_hash: HashValue = transaction.hash();
-        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
-        let signed_transaction: TransactionRequest<CreateOrderbookRequest> =
+        let transaction_hash = transaction.hash();
+        let signed_hash = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
+        let signed_transaction =
             TransactionRequest::<CreateOrderbookRequest>::new(transaction, sender_pub_key, signed_hash.clone());
         signed_transaction.verify_transaction().unwrap();
 
         assert!(
-            signed_transaction.get_sender().clone() == sender_pub_key,
+            *signed_transaction.get_sender() == sender_pub_key,
             "transaction sender does not match transaction input"
         );
         assert!(
@@ -402,5 +394,56 @@ mod test {
             signed_transaction.get_transaction().get_quote_asset_id() == dummy_asset_id,
             "transaction quote asset does not match transction input"
         );
+    }
+
+    #[cfg(feature = "batch")]
+    mod batch_functions {
+        use super::super::batch_functions;
+        use super::*;
+        fn get_transaction_vec() -> Vec<TransactionRequest<TransactionVariant>> {
+            let private_key = AccountPrivKey::generate_for_testing(0);
+            let sender_pub_key = (&private_key).into();
+
+            let receiver_private_key = AccountPrivKey::generate_for_testing(1);
+            let receiver_pub_key = (&receiver_private_key).into();
+
+            let transaction_0 = TransactionVariant::PaymentTransaction(PaymentRequest::new(
+                sender_pub_key,
+                receiver_pub_key,
+                PRIMARY_ASSET_ID,
+                10,
+            ));
+            let transaction_1 = TransactionVariant::PaymentTransaction(PaymentRequest::new(
+                sender_pub_key,
+                receiver_pub_key,
+                PRIMARY_ASSET_ID,
+                100,
+            ));
+
+            let transaction_hash = transaction_0.hash();
+            let signed_hash = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
+            let signed_transaction_0 =
+                TransactionRequest::<TransactionVariant>::new(transaction_0, sender_pub_key, signed_hash);
+
+            let transaction_hash = transaction_1.hash();
+            let signed_hash = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
+            let signed_transaction_1 =
+                TransactionRequest::<TransactionVariant>::new(transaction_1, sender_pub_key, signed_hash);
+
+            let mut signed_transactions: Vec<TransactionRequest<TransactionVariant>> = Vec::new();
+
+            signed_transactions.push(signed_transaction_0);
+            signed_transactions.push(signed_transaction_1);
+            signed_transactions
+        }
+
+        #[test]
+        fn test_verify_transaction_batch() {
+            batch_functions::verify_transaction_batch(&get_transaction_vec()).unwrap();
+        }
+        #[test]
+        fn test_verify_transaction_batch_multithreaded() {
+            batch_functions::verify_transaction_batch_multithreaded(get_transaction_vec(), 2).unwrap();
+        }
     }
 }

@@ -1,2 +1,3 @@
+pub mod network;
 pub mod router;
-pub mod toy_consensus;
+pub mod validator;

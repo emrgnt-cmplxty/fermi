@@ -40,9 +40,9 @@ fn batch_sig_verify(keys_and_signatures: &Vec<(Ed25519PublicKey, Ed25519Signatur
 fn criterion_benchmark(c: &mut Criterion) {
     let messages_per_account = NUMBER_OF_MESSAGES / NUMBER_OF_ACCOUNTS;
     // getting list of possible raw messages
-    let messages_pre_format: Vec<i32> = (0..messages_per_account).collect();
+    let messages_pre_format = (0..messages_per_account).collect();
     // getting formatted list of possible messages
-    let mut messages: Vec<DiemCryptoMessage> = messages_pre_format
+    let mut messages = messages_pre_format
         .iter()
         .map(|&_| DiemCryptoMessage("dummy".to_string()))
         .collect();
@@ -57,13 +57,13 @@ fn criterion_benchmark(c: &mut Criterion) {
 
     // looping through accounts
     for _i in 0..NUMBER_OF_ACCOUNTS {
-        let mut csprng: ThreadRng = thread_rng();
-        let private_key: Ed25519PrivateKey = Ed25519PrivateKey::generate(&mut csprng);
-        let public_key: Ed25519PublicKey = (&private_key).into();
+        let mut csprng = thread_rng();
+        let private_key = Ed25519PrivateKey::generate(&mut csprng);
+        let public_key = (&private_key).into();
         // pushing transactions
         for _ in 0..messages_per_account {
-            let msg: DiemCryptoMessage = DiemCryptoMessage("dummy".to_string());
-            let sig: Ed25519Signature = private_key.sign(&msg);
+            let msg = DiemCryptoMessage("dummy".to_string());
+            let sig = private_key.sign(&msg);
             sigs.push(sig.clone());
             keys_and_signatures.push((public_key, sig));
         }

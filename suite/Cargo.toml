@@ -36,7 +36,7 @@ name = "orderbook"
 harness = false
 
 [[bench]]
-name = "toy_consensus"
+name = "validator"
 harness = false
 
 [features]

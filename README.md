@@ -1,5 +1,7 @@
 [![codecov](https://codecov.io/gh/gdexorg/gdex-core/branch/main/graph/badge.svg?token=1LV5N5F8Q1)](https://codecov.io/gh/gdexorg/gdex-core)
-[![Rust](https://github.com/gdexorg/gdex-core/actions/workflows/rust.yml/badge.svg)](https://github.com/gdexorg/gdex-core/actions/workflows/rust.yml)
+[![Tests](https://github.com/gdexorg/gdex-core/actions/workflows/test.yml/badge.svg)](https://github.com/gdexorg/gdex-core/actions/workflows/test.yml)
+[![Lints](https://github.com/gdexorg/gdex-core/actions/workflows/lint.yml/badge.svg)](https://github.com/gdexorg/gdex-core/actions/workflows/lint.yml)
+[![Coverage](https://github.com/gdexorg/gdex-core/actions/workflows/coverage.yml/badge.svg)](https://github.com/gdexorg/gdex-core/actions/workflows/coverage.yml)
 
 # Introducing GDEX-CORE
 

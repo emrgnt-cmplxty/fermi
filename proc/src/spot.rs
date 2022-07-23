@@ -20,7 +20,7 @@ use types::{
     account::AccountPubKey,
     asset::{AssetId, AssetPairKey},
     error::GDEXError,
-    orderbook::{Failed, OrderProcessingResult, OrderSide, Success},
+    orderbook::{OrderProcessingResult, OrderSide, Success},
     spot::OrderId,
 };
 
@@ -36,7 +36,7 @@ impl OrderbookInterface {
     // TODO #4 //
     pub fn new(base_asset_id: AssetId, quote_asset_id: AssetId) -> Self {
         assert!(base_asset_id != quote_asset_id);
-        let orderbook: Orderbook = Orderbook::new(base_asset_id, quote_asset_id);
+        let orderbook = Orderbook::new(base_asset_id, quote_asset_id);
         OrderbookInterface {
             base_asset_id,
             quote_asset_id,
@@ -57,7 +57,7 @@ impl OrderbookInterface {
     }
 
     pub fn get_account(&self, account_pub_key: &AccountPubKey) -> Result<&OrderAccount, GDEXError> {
-        let account: &OrderAccount = self
+        let account = self
             .accounts
             .get(account_pub_key)
             .ok_or_else(|| GDEXError::AccountLookup("Failed to find account".to_string()))?;
@@ -89,7 +89,7 @@ impl OrderbookInterface {
             assert!(balance > quantity * price);
         }
         // create and process limit order
-        let order: OrderRequest = new_limit_order_request(
+        let order = new_limit_order_request(
             self.base_asset_id,
             self.quote_asset_id,
             side,
@@ -97,7 +97,7 @@ impl OrderbookInterface {
             quantity,
             SystemTime::now(),
         );
-        let res: Vec<Result<Success, Failed>> = self.orderbook.process_order(order);
+        let res = self.orderbook.process_order(order);
         self.proc_limit_result(bank_controller, account_pub_key, side, price, quantity, res)
     }
 
@@ -127,7 +127,7 @@ impl OrderbookInterface {
                     quantity,
                     ..
                 }) => {
-                    let existing_pub_key: AccountPubKey = *self
+                    let existing_pub_key = *self
                         .order_to_account
                         .get(order_id)
                         .ok_or_else(|| GDEXError::AccountLookup("Failed to find account".to_string()))?;
@@ -140,7 +140,7 @@ impl OrderbookInterface {
                     quantity,
                     ..
                 }) => {
-                    let existing_pub_key: AccountPubKey = *self
+                    let existing_pub_key = *self
                         .order_to_account
                         .get(order_id)
                         .ok_or_else(|| GDEXError::AccountLookup("Failed to find account".to_string()))?;
@@ -229,9 +229,9 @@ impl SpotController {
         base_asset_id: AssetId,
         quote_asset_id: AssetId,
     ) -> Result<&mut OrderbookInterface, GDEXError> {
-        let orderbook_lookup: AssetPairKey = self.get_orderbook_key(base_asset_id, quote_asset_id);
+        let orderbook_lookup = self.get_orderbook_key(base_asset_id, quote_asset_id);
 
-        let orderbook: &mut OrderbookInterface = self
+        let orderbook = self
             .orderbooks
             .get_mut(&orderbook_lookup)
             .ok_or_else(|| GDEXError::AccountLookup("Failed to find orderbook".to_string()))?;
@@ -239,7 +239,7 @@ impl SpotController {
     }
 
     pub fn create_orderbook(&mut self, base_asset_id: AssetId, quote_asset_id: AssetId) -> Result<(), GDEXError> {
-        let orderbook_lookup: AssetPairKey = self.get_orderbook_key(base_asset_id, quote_asset_id);
+        let orderbook_lookup = self.get_orderbook_key(base_asset_id, quote_asset_id);
         if let std::collections::hash_map::Entry::Vacant(e) = self.orderbooks.entry(orderbook_lookup) {
             e.insert(OrderbookInterface::new(base_asset_id, quote_asset_id));
             Ok(())

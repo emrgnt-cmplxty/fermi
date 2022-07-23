@@ -136,31 +136,28 @@ mod tests {
     };
     use super::super::vote_cert::VoteCert;
     use super::*;
-    use gdex_crypto::{
-        hash::{CryptoHash, HashValue},
-        SigningKey, Uniform,
-    };
-    use types::account::{AccountPrivKey, AccountSignature};
+    use gdex_crypto::{hash::CryptoHash, SigningKey, Uniform};
+    use types::account::AccountPrivKey;
 
     #[test]
     fn test_block_functionality() {
-        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing(0);
-        let account_pub_key: AccountPubKey = (&private_key).into();
+        let private_key = AccountPrivKey::generate_for_testing(0);
+        let account_pub_key = (&private_key).into();
         let mut transactions: Vec<TransactionRequest<TransactionVariant>> = Vec::new();
 
-        let transaction: TransactionVariant = CreateAssetTransaction(CreateAssetRequest {});
-        let transaction_hash: HashValue = transaction.hash();
-        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
-        let signed_transaction: TransactionRequest<TransactionVariant> =
+        let transaction = CreateAssetTransaction(CreateAssetRequest {});
+        let transaction_hash = transaction.hash();
+        let signed_hash = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
+        let signed_transaction =
             TransactionRequest::<TransactionVariant>::new(transaction, account_pub_key, signed_hash);
         signed_transaction.verify_transaction().unwrap();
         transactions.push(signed_transaction);
 
-        let block_hash: HashValue = generate_block_hash(&transactions);
-        let hash_clock: HashClock = HashClock::default();
-        let dummy_vote_cert: VoteCert = VoteCert::new(0, block_hash);
+        let block_hash = generate_block_hash(&transactions);
+        let hash_clock = HashClock::default();
+        let dummy_vote_cert = VoteCert::new(0, block_hash);
 
-        let block: Block<TransactionVariant> = Block::<TransactionVariant>::new(
+        let block = Block::<TransactionVariant>::new(
             transactions.clone(),
             account_pub_key,
             block_hash,

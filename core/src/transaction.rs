@@ -241,7 +241,7 @@ pub mod batch_functions {
         transaction_requests: Vec<TransactionRequest<TransactionVariant>>,
         n_threads: u64,
     ) -> Result<(), gdex_crypto::error::Error> {
-        let mut transaction_handlers = Vec::new();
+        let mut transaction_handlers: Vec<JoinHandle<Result<(), gdex_crypto::error::Error>>> = Vec::new();
         // use chunk to evenly split and spawn processes over the allotted threads
         for chunk in transaction_requests.chunks(transaction_requests.len() / (n_threads as usize)) {
             let transaction_handler = get_verification_handler(chunk.to_vec());

@@ -6,7 +6,7 @@ use gdex_crypto::{
     ed25519::{Ed25519PrivateKey, Ed25519PublicKey, Ed25519Signature},
     traits::{Signature, SigningKey, Uniform},
 };
-use rand::{prelude::ThreadRng, thread_rng};
+use rand::thread_rng;
 use types::spot::DiemCryptoMessage;
 
 const NUMBER_OF_MESSAGES: i32 = 1024;
@@ -40,7 +40,7 @@ fn batch_sig_verify(keys_and_signatures: &Vec<(Ed25519PublicKey, Ed25519Signatur
 fn criterion_benchmark(c: &mut Criterion) {
     let messages_per_account = NUMBER_OF_MESSAGES / NUMBER_OF_ACCOUNTS;
     // getting list of possible raw messages
-    let messages_pre_format = (0..messages_per_account).collect();
+    let messages_pre_format: Vec<i32> = (0..messages_per_account).collect();
     // getting formatted list of possible messages
     let mut messages = messages_pre_format
         .iter()

@@ -17,7 +17,7 @@ use core::{
 use criterion::{criterion_group, criterion_main, Criterion, Throughput};
 use gdex_crypto::HashValue;
 use proc::{account::generate_key_pair, bank::PRIMARY_ASSET_ID};
-use rand::{Rng};
+use rand::Rng;
 use std::{
     sync::{Arc, Mutex},
     thread::{spawn, JoinHandle},

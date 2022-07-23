@@ -2,7 +2,6 @@ extern crate engine;
 extern crate rocksdb;
 extern crate types;
 
-
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use engine::{orderbook::Orderbook, orders::new_limit_order_request};
 use proc::{account::generate_key_pair, bank::BankController, spot::OrderbookInterface};

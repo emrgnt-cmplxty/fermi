@@ -4,13 +4,10 @@ mod test {
 
     use core::transaction::{CreateAssetRequest, OrderRequest, PaymentRequest, TransactionRequest};
     use engine::orders::new_limit_order_request;
-    use gdex_crypto::{
-        hash::{CryptoHash, HashValue},
-        SigningKey,
-    };
+    use gdex_crypto::{hash::CryptoHash, SigningKey};
     use proc::account::generate_key_pair;
     use std::time;
-    use types::{account::AccountSignature, orderbook::OrderSide, spot::DiemCryptoMessage};
+    use types::{orderbook::OrderSide, spot::DiemCryptoMessage};
 
     const BASE_ASSET_ID: u64 = 0;
     const QUOTE_ASSET_ID: u64 = 1;
@@ -45,8 +42,7 @@ mod test {
 
         let transaction_hash = transaction.hash();
         let signed_hash = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
-        let signed_transaction =
-            TransactionRequest::<PaymentRequest>::new(transaction, sender_pub_key, signed_hash);
+        let signed_transaction = TransactionRequest::<PaymentRequest>::new(transaction, sender_pub_key, signed_hash);
         signed_transaction.verify_transaction().unwrap();
     }
 

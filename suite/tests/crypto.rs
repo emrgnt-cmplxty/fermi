@@ -6,7 +6,7 @@ mod tests {
         traits::{Signature, SigningKey, Uniform},
     };
     use gdex_crypto_derive::{BCSCryptoHash, CryptoHasher};
-    use rand::{prelude::ThreadRng, thread_rng};
+    use rand::thread_rng;
     use serde::{Deserialize, Serialize};
     use types::spot::DiemCryptoMessage;
 

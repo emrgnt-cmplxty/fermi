@@ -4,12 +4,11 @@
 // use core::transaction::TransactionVariant;
 
 // fn propagate_message(_transaction: Vec<TransactionRequest<TransactionVariant>>) {}
-
 #[cfg(test)]
 mod tests {
+    use super::super::router::payment_transaction;
     use super::super::validator::{ValidatorController, GENESIS_STAKE_AMOUNT};
-    use super::super::router::{payment_transaction};
-    use proc::bank::{PRIMARY_ASSET_ID};
+    use proc::bank::PRIMARY_ASSET_ID;
 
     const SECONDARY_SEED_PAYMENT: u64 = (0.33 * GENESIS_STAKE_AMOUNT as f64) as u64;
 

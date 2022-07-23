@@ -1,24 +1,20 @@
 //!
 //! router holds functions responsible for taking incoming transactions
-//! and relaying to appropriate Controllers contained in the ConsensusManager
+//! and relaying to appropriate Controllers contained in the ValidatorController
 //!
 //! TODO
 //! 0.) fix premature unwraps
 //!
-use crate::toy_consensus::ConsensusManager;
+use crate::validator::ValidatorController;
 use core::transaction::{
     CreateAssetRequest, CreateOrderbookRequest, OrderRequest, PaymentRequest, StakeRequest, TransactionRequest,
     TransactionVariant,
 };
 use engine::orders::new_limit_order_request;
-use gdex_crypto::{
-    hash::{CryptoHash, HashValue},
-    SigningKey,
-};
-use proc::bank::BankController;
+use gdex_crypto::{hash::CryptoHash, SigningKey};
 use std::time::SystemTime;
 use types::{
-    account::{AccountPrivKey, AccountPubKey, AccountSignature},
+    account::{AccountPrivKey, AccountPubKey},
     asset::AssetId,
     error::GDEXError,
     orderbook::OrderSide,
@@ -30,9 +26,9 @@ pub fn asset_creation_transaction(
     sender_pub_key: AccountPubKey,
     sender_private_key: &AccountPrivKey,
 ) -> Result<TransactionRequest<TransactionVariant>, GDEXError> {
-    let transaction: TransactionVariant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest {});
-    let transaction_hash: HashValue = transaction.hash();
-    let signed_hash: AccountSignature = (*sender_private_key).sign(&DiemCryptoMessage(transaction_hash.to_string()));
+    let transaction = TransactionVariant::CreateAssetTransaction(CreateAssetRequest {});
+    let transaction_hash = transaction.hash();
+    let signed_hash = (*sender_private_key).sign(&DiemCryptoMessage(transaction_hash.to_string()));
     Ok(TransactionRequest::<TransactionVariant>::new(
         transaction,
         sender_pub_key,
@@ -46,10 +42,10 @@ pub fn orderbook_creation_transaction(
     base_asset_id: AssetId,
     quote_asset_id: AssetId,
 ) -> Result<TransactionRequest<TransactionVariant>, GDEXError> {
-    let transaction: TransactionVariant =
+    let transaction =
         TransactionVariant::CreateOrderbookTransaction(CreateOrderbookRequest::new(base_asset_id, quote_asset_id));
-    let transaction_hash: HashValue = transaction.hash();
-    let signed_hash: AccountSignature = (*sender_private_key).sign(&DiemCryptoMessage(transaction_hash.to_string()));
+    let transaction_hash = transaction.hash();
+    let signed_hash = (*sender_private_key).sign(&DiemCryptoMessage(transaction_hash.to_string()));
     Ok(TransactionRequest::<TransactionVariant>::new(
         transaction,
         sender_pub_key,
@@ -76,9 +72,9 @@ pub fn order_transaction(
         SystemTime::now(),
     );
 
-    let transaction: TransactionVariant = TransactionVariant::OrderTransaction(order);
-    let transaction_hash: HashValue = transaction.hash();
-    let signed_hash: AccountSignature = (*sender_private_key).sign(&DiemCryptoMessage(transaction_hash.to_string()));
+    let transaction = TransactionVariant::OrderTransaction(order);
+    let transaction_hash = transaction.hash();
+    let signed_hash = (*sender_private_key).sign(&DiemCryptoMessage(transaction_hash.to_string()));
     Ok(TransactionRequest::<TransactionVariant>::new(
         transaction,
         sender_pub_key,
@@ -91,9 +87,9 @@ pub fn stake_transaction(
     validator_private_key: &AccountPrivKey,
     amount: u64,
 ) -> Result<TransactionRequest<TransactionVariant>, GDEXError> {
-    let transaction: TransactionVariant = TransactionVariant::StakeAsset(StakeRequest::new(pub_key, amount));
-    let transaction_hash: HashValue = transaction.hash();
-    let signed_hash: AccountSignature = (*validator_private_key).sign(&DiemCryptoMessage(transaction_hash.to_string()));
+    let transaction = TransactionVariant::StakeAsset(StakeRequest::new(pub_key, amount));
+    let transaction_hash = transaction.hash();
+    let signed_hash = (*validator_private_key).sign(&DiemCryptoMessage(transaction_hash.to_string()));
     Ok(TransactionRequest::<TransactionVariant>::new(
         transaction,
         pub_key,
@@ -108,10 +104,10 @@ pub fn payment_transaction(
     asset_id: u64,
     amount: u64,
 ) -> Result<TransactionRequest<TransactionVariant>, GDEXError> {
-    let transaction: TransactionVariant =
+    let transaction =
         TransactionVariant::PaymentTransaction(PaymentRequest::new(sender_pub_key, receiver_pub_key, asset_id, amount));
-    let transaction_hash: HashValue = transaction.hash();
-    let signed_hash: AccountSignature = (*sender_private_key).sign(&DiemCryptoMessage(transaction_hash.to_string()));
+    let transaction_hash = transaction.hash();
+    let signed_hash = (*sender_private_key).sign(&DiemCryptoMessage(transaction_hash.to_string()));
     Ok(TransactionRequest::<TransactionVariant>::new(
         transaction,
         sender_pub_key,
@@ -121,7 +117,7 @@ pub fn payment_transaction(
 
 // take a transaction request and route into appropriate controller function(s)
 pub fn route_transaction(
-    consensus_manager: &mut ConsensusManager,
+    consensus_manager: &mut ValidatorController,
     transaction_request: &TransactionRequest<TransactionVariant>,
 ) -> Result<(), GDEXError> {
     // TODO #0 //
@@ -136,7 +132,7 @@ pub mod batch_functions {
     use core::transaction::batch_functions::{verify_transaction_batch, verify_transaction_batch_multithreaded};
 
     pub fn route_transaction_batch(
-        consensus_manager: &mut ConsensusManager,
+        consensus_manager: &mut ValidatorController,
         transaction_requests: &[TransactionRequest<TransactionVariant>],
     ) -> Result<(), GDEXError> {
         verify_transaction_batch(transaction_requests).unwrap();
@@ -147,7 +143,7 @@ pub mod batch_functions {
     }
 
     pub fn route_transaction_batch_multithreaded(
-        consensus_manager: &mut ConsensusManager,
+        consensus_manager: &mut ValidatorController,
         transaction_requests: &[TransactionRequest<TransactionVariant>],
         n_threads: u64,
     ) -> Result<(), GDEXError> {
@@ -160,7 +156,7 @@ pub mod batch_functions {
 }
 
 fn execute_transaction(
-    consensus_manager: &mut ConsensusManager,
+    consensus_manager: &mut ValidatorController,
     transaction_request: &TransactionRequest<TransactionVariant>,
 ) -> Result<(), GDEXError> {
     match transaction_request.get_transaction() {
@@ -169,7 +165,7 @@ fn execute_transaction(
             spot_controller.parse_limit_order_transaction(bank_controller, transaction_request)?;
         }
         TransactionVariant::PaymentTransaction(payment) => {
-            let bank_controller: &mut BankController = consensus_manager.get_bank_controller();
+            let bank_controller = consensus_manager.get_bank_controller();
             bank_controller.transfer(
                 payment.get_from(),
                 payment.get_to(),
@@ -178,7 +174,7 @@ fn execute_transaction(
             )?;
         }
         TransactionVariant::CreateAssetTransaction(_creation) => {
-            let bank_controller: &mut BankController = consensus_manager.get_bank_controller();
+            let bank_controller = consensus_manager.get_bank_controller();
             bank_controller.create_asset(transaction_request.get_sender())?;
         }
         TransactionVariant::StakeAsset(stake) => {
@@ -201,20 +197,19 @@ mod tests {
     use super::*;
 
     use proc::{account::generate_key_pair, bank::CREATED_ASSET_BALANCE};
-    use types::account::AccountPubKey;
 
     const STAKE_TRANSACTION_AMOUNT: u64 = 1_000_000;
     #[test]
     fn test_router() {
         let (receiver_pub_key, receiver_private_key) = generate_key_pair();
 
-        let mut consensus_manager: ConsensusManager = ConsensusManager::new();
+        let mut consensus_manager = ValidatorController::new();
         consensus_manager.build_genesis_block().unwrap();
 
-        let sender_pub_key: AccountPubKey = consensus_manager.get_pub_key();
-        let asset_id: u64 = 0;
-        let send_amount: u64 = STAKE_TRANSACTION_AMOUNT + 10;
-        let signed_transaction: TransactionRequest<TransactionVariant> = payment_transaction(
+        let sender_pub_key = consensus_manager.get_pub_key();
+        let asset_id = 0;
+        let send_amount = STAKE_TRANSACTION_AMOUNT + 10;
+        let signed_transaction = payment_transaction(
             sender_pub_key,
             consensus_manager.get_private_key(),
             receiver_pub_key,
@@ -233,10 +228,10 @@ mod tests {
             "Unexpected balance after making payment"
         );
 
-        let signed_transaction: TransactionRequest<TransactionVariant> =
+        let signed_transaction =
             asset_creation_transaction(sender_pub_key, consensus_manager.get_private_key()).unwrap();
         route_transaction(&mut consensus_manager, &signed_transaction).unwrap();
-        let new_asset_id: u64 = 1;
+        let new_asset_id = 1;
         assert!(
             consensus_manager
                 .get_bank_controller()
@@ -246,7 +241,7 @@ mod tests {
             "Unexpected balance after token creation"
         );
 
-        let signed_transaction: TransactionRequest<TransactionVariant> =
+        let signed_transaction =
             stake_transaction(receiver_pub_key, &receiver_private_key, STAKE_TRANSACTION_AMOUNT).unwrap();
         route_transaction(&mut consensus_manager, &signed_transaction).unwrap();
         assert!(

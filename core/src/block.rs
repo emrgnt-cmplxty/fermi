@@ -40,6 +40,15 @@ where
     }
 }
 
+impl<Variant> Default for BlockContainer<Variant>
+where
+    Variant: Debug + Clone + CryptoHash + Copy,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Block<Variant>
 where
@@ -98,6 +107,10 @@ where
         self.block_number
     }
 
+    pub fn push_transaction(&mut self, transaction: TransactionRequest<Variant>) {
+        self.transactions.push(transaction);
+    }
+
     pub fn append_vote(
         &mut self,
         valdator_pub_key: AccountPubKey,
@@ -108,14 +121,9 @@ where
         self.vote_cert
             .append_vote(valdator_pub_key, validator_signature, vote_response, stake)
     }
-}
 
-impl<Variant> Default for BlockContainer<Variant>
-where
-    Variant: Debug + Clone + CryptoHash + Copy,
-{
-    fn default() -> Self {
-        Self::new()
+    pub fn update_hash_time(&mut self, hash_time: HashTime) {
+        self.hash_time = hash_time;
     }
 }
 
@@ -136,31 +144,28 @@ mod tests {
     };
     use super::super::vote_cert::VoteCert;
     use super::*;
-    use gdex_crypto::{
-        hash::{CryptoHash, HashValue},
-        SigningKey, Uniform,
-    };
-    use types::account::{AccountPrivKey, AccountSignature};
+    use gdex_crypto::{hash::CryptoHash, SigningKey, Uniform};
+    use types::account::AccountPrivKey;
 
     #[test]
     fn test_block_functionality() {
-        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing(0);
-        let account_pub_key: AccountPubKey = (&private_key).into();
+        let private_key = AccountPrivKey::generate_for_testing(0);
+        let account_pub_key = (&private_key).into();
         let mut transactions: Vec<TransactionRequest<TransactionVariant>> = Vec::new();
 
-        let transaction: TransactionVariant = CreateAssetTransaction(CreateAssetRequest {});
-        let transaction_hash: HashValue = transaction.hash();
-        let signed_hash: AccountSignature = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
-        let signed_transaction: TransactionRequest<TransactionVariant> =
+        let transaction = CreateAssetTransaction(CreateAssetRequest {});
+        let transaction_hash = transaction.hash();
+        let signed_hash = private_key.sign(&DiemCryptoMessage(transaction_hash.to_string()));
+        let signed_transaction =
             TransactionRequest::<TransactionVariant>::new(transaction, account_pub_key, signed_hash);
         signed_transaction.verify_transaction().unwrap();
         transactions.push(signed_transaction);
 
-        let block_hash: HashValue = generate_block_hash(&transactions);
-        let hash_clock: HashClock = HashClock::default();
-        let dummy_vote_cert: VoteCert = VoteCert::new(0, block_hash);
+        let block_hash = generate_block_hash(&transactions);
+        let hash_clock = HashClock::default();
+        let dummy_vote_cert = VoteCert::new(0, block_hash);
 
-        let block: Block<TransactionVariant> = Block::<TransactionVariant>::new(
+        let block = Block::<TransactionVariant>::new(
             transactions.clone(),
             account_pub_key,
             block_hash,

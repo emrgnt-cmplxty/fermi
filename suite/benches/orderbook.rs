@@ -2,7 +2,6 @@ extern crate engine;
 extern crate rocksdb;
 extern crate types;
 
-use core::transaction::OrderRequest;
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use engine::{orderbook::Orderbook, orders::new_limit_order_request};
 use proc::{account::generate_key_pair, bank::BankController, spot::OrderbookInterface};
@@ -47,21 +46,21 @@ fn place_orders_engine(
     persist: bool,
 ) {
     // initialize orderbook
-    let mut orderbook: Orderbook = Orderbook::new(base_asset_id, quote_asset_id);
+    let mut orderbook = Orderbook::new(base_asset_id, quote_asset_id);
 
     // bench
-    let mut i_order: u64 = 0;
+    let mut i_order = 0;
     while i_order < n_orders {
-        let order_type: OrderSide = if i_order % 2 == 0 {
+        let order_type = if i_order % 2 == 0 {
             OrderSide::Bid
         } else {
             OrderSide::Ask
         };
-        let quantity: u64 = rng.gen_range(1, 100);
-        let price: u64 = rng.gen_range(1, 100);
+        let quantity = rng.gen_range(1, 100);
+        let price = rng.gen_range(1, 100);
 
         // order construction & submission
-        let order: OrderRequest = new_limit_order_request(
+        let order = new_limit_order_request(
             base_asset_id,
             quote_asset_id,
             order_type,
@@ -69,7 +68,7 @@ fn place_orders_engine(
             quantity,
             SystemTime::now(),
         );
-        let res: OrderProcessingResult = orderbook.process_order(order);
+        let res = orderbook.process_order(order);
         if persist {
             persist_result(db, &res);
         }
@@ -89,15 +88,15 @@ fn place_orders_engine_account(
     persist: bool,
 ) {
     // initialize orderbook
-    let orderbook: Orderbook = Orderbook::new(base_asset_id, quote_asset_id);
+    let orderbook = Orderbook::new(base_asset_id, quote_asset_id);
 
     // clean market controller orderbook to keep from getting clogged
     orderbook_controller.overwrite_orderbook(orderbook);
 
     // bench
-    let mut i_order: u64 = 0;
+    let mut i_order = 0;
     while i_order < n_orders {
-        let order_type: OrderSide = if i_order % 2 == 0 {
+        let order_type = if i_order % 2 == 0 {
             OrderSide::Bid
         } else {
             OrderSide::Ask
@@ -106,7 +105,7 @@ fn place_orders_engine_account(
         let quantity = rng.gen_range(1, 100);
         let price = rng.gen_range(1, 100);
         // generate a random integer between 0 and 100
-        let account_pub_key: AccountPubKey = account_to_pub_key[rng.gen_range(1, 100)];
+        let account_pub_key = account_to_pub_key[rng.gen_range(1, 100)];
 
         let res = orderbook_controller
             .place_limit_order(bank_controller, &account_pub_key, order_type, quantity, price)
@@ -119,29 +118,29 @@ fn place_orders_engine_account(
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {
-    let mut rng: ThreadRng = rand::thread_rng();
+    let mut rng = rand::thread_rng();
 
     // generate creator details
     let (creator_key, _private_key) = generate_key_pair();
 
     // initialize market controller
     let mut account_to_pub_key: Vec<AccountPubKey> = Vec::new();
-    let mut bank_controller: BankController = BankController::new();
+    let mut bank_controller = BankController::new();
     let base_asset_id = bank_controller.create_asset(&creator_key).unwrap();
     let quote_asset_id = bank_controller.create_asset(&creator_key).unwrap();
 
-    let mut orderbook_controller: OrderbookInterface = OrderbookInterface::new(base_asset_id, quote_asset_id);
+    let mut orderbook_controller = OrderbookInterface::new(base_asset_id, quote_asset_id);
     orderbook_controller.create_account(&creator_key).unwrap();
     // other helpers
-    let mut i_account: u64 = 0;
-    let path: &str = "./db.rocks";
-    let mut cf_opts: Options = Options::default();
+    let mut i_account = 0;
+    let path = "./db.rocks";
+    let mut cf_opts = Options::default();
     cf_opts.set_max_write_buffer_number(16);
-    let cf: ColumnFamilyDescriptor = ColumnFamilyDescriptor::new("cf1", cf_opts);
+    let cf = ColumnFamilyDescriptor::new("cf1", cf_opts);
     let mut db_opts = Options::default();
     db_opts.create_missing_column_families(true);
     db_opts.create_if_missing(true);
-    let db: DBWithThreadMode<SingleThreaded> = DB::open_cf_descriptors(&db_opts, path, vec![cf]).unwrap();
+    let db = DB::open_cf_descriptors(&db_opts, path, vec![cf]).unwrap();
 
     // generate N_ACCOUNTS accounts to transact w/ orderbook
     while i_account < N_ACCOUNTS - 1 {

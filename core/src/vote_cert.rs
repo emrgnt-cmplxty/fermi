@@ -141,14 +141,14 @@ mod tests {
 
     #[test]
     fn valid_vote() {
-        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing(0);
-        let account_pub_key: AccountPubKey = (&private_key).into();
+        let private_key = AccountPrivKey::generate_for_testing(0);
+        let account_pub_key = (&private_key).into();
 
         let block_hash = DiemCryptoMessage("".to_string()).hash();
         let mut vote_cert = VoteCert::new(TOTAL_STAKED, block_hash);
 
-        let vote_response: bool = true;
-        let signed_hash: AccountSignature = private_key.sign(&vote_cert.compute_vote_msg(vote_response));
+        let vote_response = true;
+        let signed_hash = private_key.sign(&vote_cert.compute_vote_msg(vote_response));
         vote_cert
             .append_vote(account_pub_key, signed_hash.clone(), true, FIRST_STAKED)
             .unwrap();
@@ -176,11 +176,11 @@ mod tests {
             "signature in vote cert does not match input"
         );
 
-        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing(1);
-        let account_pub_key: AccountPubKey = (&private_key).into();
+        let private_key = AccountPrivKey::generate_for_testing(1);
+        let account_pub_key = (&private_key).into();
         println!("new account pub key = {}", account_pub_key);
-        let vote_response: bool = true;
-        let signed_hash: AccountSignature = private_key.sign(&vote_cert.compute_vote_msg(vote_response));
+        let vote_response = true;
+        let signed_hash = private_key.sign(&vote_cert.compute_vote_msg(vote_response));
         vote_cert
             .append_vote(account_pub_key, signed_hash, vote_response, SECOND_STAKED)
             .unwrap();
@@ -197,19 +197,19 @@ mod tests {
     #[test]
     #[should_panic]
     fn double_vote_failure() {
-        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing(0);
-        let account_pub_key: AccountPubKey = (&private_key).into();
+        let private_key = AccountPrivKey::generate_for_testing(0);
+        let account_pub_key = (&private_key).into();
 
         let block_hash = DiemCryptoMessage("".to_string()).hash();
         let mut vote_cert = VoteCert::new(TOTAL_STAKED, block_hash);
 
-        let vote_response: bool = true;
-        let signed_hash: AccountSignature = private_key.sign(&vote_cert.compute_vote_msg(vote_response));
+        let vote_response = true;
+        let signed_hash = private_key.sign(&vote_cert.compute_vote_msg(vote_response));
         vote_cert
             .append_vote(account_pub_key, signed_hash, true, FIRST_STAKED)
             .unwrap();
         // attempt to re-append same vote
-        let signed_hash: AccountSignature = private_key.sign(&vote_cert.compute_vote_msg(vote_response));
+        let signed_hash = private_key.sign(&vote_cert.compute_vote_msg(vote_response));
         vote_cert
             .append_vote(account_pub_key, signed_hash, true, FIRST_STAKED)
             .unwrap();
@@ -218,16 +218,16 @@ mod tests {
     #[test]
     #[should_panic]
     fn invalid_signature_failure() {
-        let private_key: AccountPrivKey = AccountPrivKey::generate_for_testing(0);
-        let private_key_2: AccountPrivKey = AccountPrivKey::generate_for_testing(1);
-        let account_pub_key: AccountPubKey = (&private_key).into();
+        let private_key = AccountPrivKey::generate_for_testing(0);
+        let private_key_2 = AccountPrivKey::generate_for_testing(1);
+        let account_pub_key = (&private_key).into();
 
         let block_hash = DiemCryptoMessage("".to_string()).hash();
         let mut vote_cert = VoteCert::new(TOTAL_STAKED, block_hash);
 
         let vote_response: bool = true;
         // sign with incorrect signature
-        let signed_hash: AccountSignature = private_key_2.sign(&vote_cert.compute_vote_msg(vote_response));
+        let signed_hash = private_key_2.sign(&vote_cert.compute_vote_msg(vote_response));
         vote_cert
             .append_vote(account_pub_key, signed_hash, true, FIRST_STAKED)
             .unwrap();

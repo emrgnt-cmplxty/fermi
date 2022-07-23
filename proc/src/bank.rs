@@ -79,7 +79,7 @@ impl BankController {
     }
 
     pub fn get_balance(&self, account_pub_key: &AccountPubKey, asset_id: AssetId) -> Result<u64, GDEXError> {
-        let bank_account: &BankAccount = self
+        let bank_account = self
             .bank_accounts
             .get(account_pub_key)
             .ok_or_else(|| GDEXError::AccountLookup("Failed to find account".to_string()))?;
@@ -92,7 +92,7 @@ impl BankController {
         asset_id: AssetId,
         amount: i64,
     ) -> Result<(), GDEXError> {
-        let bank_account: &mut BankAccount = self
+        let bank_account = self
             .bank_accounts
             .get_mut(account_pub_key)
             .ok_or_else(|| GDEXError::AccountLookup("Failed to find account".to_string()))?;

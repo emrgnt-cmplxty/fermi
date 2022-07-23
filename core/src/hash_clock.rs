@@ -85,7 +85,7 @@ mod tests {
 
     #[test]
     fn test_clock() {
-        let clock_0: &mut HashClock = &mut HashClock::default();
+        let mut clock_0 = HashClock::default();
         assert!(
             clock_0.get_ticks_per_cycle() == DEFAULT_TICKS_PER_CYCLE,
             "default clock does not match expectations"
@@ -105,7 +105,7 @@ mod tests {
             "clock has not ticked as expected"
         );
 
-        let clock_1: &mut HashClock = &mut HashClock::new(
+        let mut clock_1 = HashClock::new(
             DiemCryptoMessage(DEFAULT_HASH_TIME_INIT_MSG.to_string()).hash(),
             3 * DEFAULT_TICKS_PER_CYCLE,
         );

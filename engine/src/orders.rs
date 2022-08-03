@@ -1,7 +1,5 @@
-extern crate core;
-use core::transaction::OrderRequest;
 use std::time::SystemTime;
-use types::{asset::AssetId, orderbook::OrderSide};
+use types::{AssetId, OrderRequest, OrderSide};
 
 /* Constructors */
 

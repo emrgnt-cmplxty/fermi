@@ -13,16 +13,16 @@ extern crate engine;
 extern crate types;
 
 use super::{account::OrderAccount, bank::BankController};
-use core::transaction::{OrderRequest, TransactionRequest, TransactionVariant};
 use engine::{orderbook::Orderbook, orders::new_limit_order_request};
 use std::{collections::HashMap, time::SystemTime};
 use types::{
-    account::AccountPubKey,
-    asset::{AssetId, AssetPairKey},
-    error::GDEXError,
-    orderbook::{OrderProcessingResult, OrderSide, Success},
-    spot::OrderId,
+    AccountPubKey,
+    AssetId, AssetPairKey,
+    GDEXError,
+    OrderProcessingResult, OrderSide, Success,
 };
+
+pub type OrderId = u64;
 
 // The spot controller is responsible for accessing & modifying user orders
 pub struct OrderbookInterface {
@@ -48,10 +48,10 @@ impl OrderbookInterface {
 
     pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
         if self.accounts.contains_key(account_pub_key) {
-            Err(GDEXError::AccountCreation("Account already exists!".to_string()))
+            Err(GDEXError::AccountCreation)
         } else {
             self.accounts
-                .insert(*account_pub_key, OrderAccount::new(*account_pub_key));
+                .insert(account_pub_key.clone(), OrderAccount::new(account_pub_key.clone()));
             Ok(())
         }
     }
@@ -60,7 +60,7 @@ impl OrderbookInterface {
         let account = self
             .accounts
             .get(account_pub_key)
-            .ok_or_else(|| GDEXError::AccountLookup("Failed to find account".to_string()))?;
+            .ok_or_else(|| GDEXError::AccountLookup)?;
         Ok(account)
     }
 
@@ -117,7 +117,7 @@ impl OrderbookInterface {
                 Ok(Success::Accepted { order_id, .. }) => {
                     self.proc_order_init(bank_controller, account_pub_key, sub_side, sub_price, sub_qty)?;
                     // insert new order to map
-                    self.order_to_account.insert(*order_id, *account_pub_key);
+                    self.order_to_account.insert(*order_id, account_pub_key.clone());
                 }
                 // subsequent orders are expected to be an PartialFill or Fill results
                 Ok(Success::PartiallyFilled {
@@ -127,10 +127,10 @@ impl OrderbookInterface {
                     quantity,
                     ..
                 }) => {
-                    let existing_pub_key = *self
+                    let existing_pub_key = self
                         .order_to_account
                         .get(order_id)
-                        .ok_or_else(|| GDEXError::AccountLookup("Failed to find account".to_string()))?;
+                        .ok_or_else(|| GDEXError::AccountLookup)?.clone();
                     self.proc_order_fill(bank_controller, &existing_pub_key, *side, *price, *quantity)?;
                 }
                 Ok(Success::Filled {
@@ -140,15 +140,15 @@ impl OrderbookInterface {
                     quantity,
                     ..
                 }) => {
-                    let existing_pub_key = *self
+                    let existing_pub_key = self
                         .order_to_account
                         .get(order_id)
-                        .ok_or_else(|| GDEXError::AccountLookup("Failed to find account".to_string()))?;
+                        .ok_or_else(|| GDEXError::AccountLookup)?.clone();
                     self.proc_order_fill(bank_controller, &existing_pub_key, *side, *price, *quantity)?;
                     // erase existing order
                     self.order_to_account
                         .remove(order_id)
-                        .ok_or_else(|| GDEXError::OrderProc("Failed to find order".to_string()))?;
+                        .ok_or_else(|| GDEXError::OrderRequest)?;
                 }
                 Ok(Success::Amended { .. }) => {
                     panic!("This needs to be implemented...")
@@ -156,11 +156,8 @@ impl OrderbookInterface {
                 Ok(Success::Cancelled { .. }) => {
                     panic!("This needs to be implemented...")
                 }
-                Err(failure) => {
-                    return Err(GDEXError::OrderProc(format!(
-                        "Order failed to process with {:?}",
-                        failure
-                    )));
+                Err(_failure) => {
+                    return Err(GDEXError::OrderRequest);
                 }
             }
         }
@@ -224,19 +221,19 @@ impl SpotController {
         format!("{}_{}", base_asset_id, quote_asset_id)
     }
 
-    fn get_orderbook(
-        &mut self,
-        base_asset_id: AssetId,
-        quote_asset_id: AssetId,
-    ) -> Result<&mut OrderbookInterface, GDEXError> {
-        let orderbook_lookup = self.get_orderbook_key(base_asset_id, quote_asset_id);
+    // fn get_orderbook(
+    //     &mut self,
+    //     base_asset_id: AssetId,
+    //     quote_asset_id: AssetId,
+    // ) -> Result<&mut OrderbookInterface, GDEXError> {
+    //     let orderbook_lookup = self.get_orderbook_key(base_asset_id, quote_asset_id);
 
-        let orderbook = self
-            .orderbooks
-            .get_mut(&orderbook_lookup)
-            .ok_or_else(|| GDEXError::AccountLookup("Failed to find orderbook".to_string()))?;
-        Ok(orderbook)
-    }
+    //     let orderbook = self
+    //         .orderbooks
+    //         .get_mut(&orderbook_lookup)
+    //         .ok_or_else(|| GDEXError::AccountLookup)?;
+    //     Ok(orderbook)
+    // }
 
     pub fn create_orderbook(&mut self, base_asset_id: AssetId, quote_asset_id: AssetId) -> Result<(), GDEXError> {
         let orderbook_lookup = self.get_orderbook_key(base_asset_id, quote_asset_id);
@@ -244,44 +241,44 @@ impl SpotController {
             e.insert(OrderbookInterface::new(base_asset_id, quote_asset_id));
             Ok(())
         } else {
-            Err(GDEXError::OrderBookCreation("Orderbook already edxists!".to_string()))
+            Err(GDEXError::OrderBookCreation)
         }
     }
 
-    pub fn parse_limit_order_transaction(
-        &mut self,
-        bank_controller: &mut BankController,
-        signed_transaction: &TransactionRequest<TransactionVariant>,
-    ) -> Result<OrderProcessingResult, GDEXError> {
-        // verify transaction is an order
-        if let TransactionVariant::OrderTransaction(order) = &signed_transaction.get_transaction() {
-            // verify and place a limit order
-            if let OrderRequest::Limit {
-                side,
-                price,
-                quantity,
-                base_asset,
-                quote_asset,
-                ..
-            } = order
-            {
-                let orderbook: &mut OrderbookInterface = self.get_orderbook(*base_asset, *quote_asset)?;
+    // pub fn parse_limit_order_transaction(
+    //     &mut self,
+    //     bank_controller: &mut BankController,
+    //     signed_transaction: &TransactionRequest<TransactionVariant>,
+    // ) -> Result<OrderProcessingResult, GDEXError> {
+    //     // verify transaction is an order
+    //     if let TransactionVariant::OrderTransaction(order) = &signed_transaction.get_transaction() {
+    //         // verify and place a limit order
+    //         if let OrderRequest::Limit {
+    //             side,
+    //             price,
+    //             quantity,
+    //             base_asset,
+    //             quote_asset,
+    //             ..
+    //         } = order
+    //         {
+    //             let orderbook: &mut OrderbookInterface = self.get_orderbook(*base_asset, *quote_asset)?;
 
-                return orderbook.place_limit_order(
-                    bank_controller,
-                    signed_transaction.get_sender(),
-                    *side,
-                    *quantity,
-                    *price,
-                );
-            } else {
-                return Err(GDEXError::OrderProc("Only limit orders supported".to_string()));
-            }
-        }
-        Err(GDEXError::OrderProc(
-            "Only order transactions are supported".to_string(),
-        ))
-    }
+    //             return orderbook.place_limit_order(
+    //                 bank_controller,
+    //                 signed_transaction.get_sender(),
+    //                 *side,
+    //                 *quantity,
+    //                 *price,
+    //             );
+    //         } else {
+    //             return Err(GDEXError::OrderProc("Only limit orders supported".to_string()));
+    //         }
+    //     }
+    //     Err(GDEXError::OrderProc(
+    //         "Only order transactions are supported".to_string(),
+    //     ))
+    // }
 }
 
 impl Default for SpotController {

@@ -1,13 +1,18 @@
+use crate::AssetId;
+
 use serde::{Deserialize, Serialize};
 use std::{fmt::Debug, time::SystemTime};
 
-use super::asset::AssetId;
-use gdex_crypto_derive::{BCSCryptoHash, CryptoHasher};
-
-#[derive(Copy, Clone, Debug, Serialize, Deserialize, CryptoHasher, BCSCryptoHash)]
+#[derive(Copy, Clone, Deserialize, Serialize, Debug)]
 pub enum OrderSide {
     Bid,
     Ask,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum OrderType {
+    Market,
+    Limit,
 }
 
 #[derive(Debug, Clone)]
@@ -18,12 +23,6 @@ pub struct Order {
     pub side: OrderSide,
     pub price: u64,
     pub quantity: u64,
-}
-
-#[derive(Eq, PartialEq, Debug, Copy, Clone)]
-pub enum OrderType {
-    Market,
-    Limit,
 }
 
 #[derive(Debug)]
@@ -72,4 +71,5 @@ pub enum Failed {
     NoMatch(u64),
     OrderNotFound(u64),
 }
+
 pub type OrderProcessingResult = Vec<Result<Success, Failed>>;

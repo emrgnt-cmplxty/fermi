@@ -1,8 +1,7 @@
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
 use std::time;
-
-use types::orderbook::OrderSide;
+use types::OrderSide;
 
 #[derive(Clone)]
 struct OrderIndex {

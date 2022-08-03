@@ -5,15 +5,14 @@
 //! this uniqueness check in the orderbook is seems potentially incorrect, or strange, as it includes the timestamp of the order
 //! we should include some sort of random noise to ensure that every order that touches the book gets inserted
 //! as upstream checks will robustly ensure no duplicates
-extern crate core;
 use super::order_queues::OrderQueue;
 use super::sequence;
 use super::validation::OrderRequestValidator;
-use core::transaction::OrderRequest;
 use std::time::SystemTime;
 use types::{
-    asset::AssetId,
-    orderbook::{Failed, Order, OrderProcessingResult, OrderSide, OrderType, Success},
+    AssetId,
+    Failed, Order, OrderProcessingResult, OrderSide, OrderType, Success,
+    OrderRequest
 };
 
 const MIN_SEQUENCE_ID: u64 = 1;

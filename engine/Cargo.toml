@@ -5,12 +5,6 @@ authors = []
 edition = "2018"
 
 [dependencies]
-bcs = "0.1.2"
-core = { path = "../core" }
 criterion = "0.3"
-diem-workspace-hack = { path = "../workspace-hack" }
-gdex-crypto = { path = "../crypto", features = ["batch"] }
-gdex-crypto-derive = { path = "../crypto-derive", version = "0.0.2" }
 rand = "0.8.4"
-serde = { version = "1.0.124", features = ["derive"] }
 types = { path = "../types" }

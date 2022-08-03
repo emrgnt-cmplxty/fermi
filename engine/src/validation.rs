@@ -1,5 +1,4 @@
-use core::transaction::OrderRequest;
-use types::asset::AssetId;
+use types::{AssetId, OrderRequest};
 
 /// Validation errors
 const ERR_BAD_BASE_ASSET: &str = "bad order asset";

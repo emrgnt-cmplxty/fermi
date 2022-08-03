@@ -5,10 +5,13 @@ authors = []
 edition = "2018"
 
 [dependencies]
-bcs = "0.1.2"
-serde = { version = "1.0.124", features = ["derive"] }
-gdex-crypto = { path = "../crypto" }
-gdex-crypto-derive = { path = "../crypto-derive", version = "0.0.2" }
+base64 = "0.13.0"
+bincode = "1.3.3"
+blake2 = "0.9"
+narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "crypto", features=["copy_key"]}
+narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "types" }
+serde = { version = "1.0.139", features = ["derive"] }
+thiserror = "1.0.31"
 
-[features]
-batch = []
+[dev-dependencies]
+rand = { version = "0.7.3" }

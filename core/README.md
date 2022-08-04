@@ -3,11 +3,7 @@
 This directory contains an efficient orderbook implementation.
 
 ```
-    engine/src
+    core/src
     ├── lib.rs
-    ├── order_queues.rs     # Efficient queues for order book
-    ├── orderbook.rs        # Main orderbook implementation
-    ├── orders.rs
-    ├── sequence.rs
-    ├── validation.rs
+    ├── config              # A directory for generating genesis certificates
 ```

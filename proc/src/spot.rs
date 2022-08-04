@@ -14,7 +14,9 @@
 use super::bank::BankController;
 use core::cell::RefCell;
 use gdex_engine::{order_book::Orderbook, orders::new_limit_order_request};
-use gdex_types::{AccountPubKey, AssetId, AssetPairKey, OrderAccount, OrderProcessingResult, OrderSide, ProcError, Success};
+use gdex_types::{
+    AccountPubKey, AssetId, AssetPairKey, OrderAccount, OrderProcessingResult, OrderSide, ProcError, Success,
+};
 use std::{collections::HashMap, rc::Rc, time::SystemTime};
 
 pub type OrderId = u64;

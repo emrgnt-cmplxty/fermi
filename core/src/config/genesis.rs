@@ -1,6 +1,5 @@
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-use arc_swap::ArcSwap;
 use anyhow::{bail, Context, Result};
 use camino::Utf8Path;
 use move_binary_format::CompiledModule;
@@ -9,8 +8,8 @@ use move_core_types::language_storage::ModuleId;
 use move_vm_runtime::native_functions::NativeFunctionTable;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::BTreeMap;
-use std::{fs, path::Path};
 use std::convert::TryInto;
+use std::{fs, path::Path};
 use sui_adapter::adapter;
 use sui_adapter::adapter::MoveVM;
 use sui_adapter::in_memory_storage::InMemoryStorage;
@@ -55,10 +54,7 @@ impl Genesis {
     }
 
     pub fn committee(&self) -> SuiResult<Committee> {
-        Committee::new(
-            self.epoch(),
-            ValidatorInfo::voting_rights(self.validator_set()),
-        )
+        Committee::new(self.epoch(), ValidatorInfo::voting_rights(self.validator_set()))
     }
 
     pub fn narwhal_committee(&self) -> narwhal_config::SharedCommittee {
@@ -66,10 +62,7 @@ impl Genesis {
             .validator_set
             .iter()
             .map(|validator| {
-                let name = validator
-                    .public_key()
-                    .try_into()
-                    .expect("Can't get narwhal public key");
+                let name = validator.public_key().try_into().expect("Can't get narwhal public key");
                 let primary = narwhal_config::PrimaryAddresses {
                     primary_to_primary: validator.narwhal_primary_to_primary.clone(),
                     worker_to_primary: validator.narwhal_worker_to_primary.clone(),
@@ -121,8 +114,7 @@ impl Genesis {
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, anyhow::Error> {
         let path = path.as_ref();
         trace!("Reading Genesis from {}", path.display());
-        let bytes = fs::read(path)
-            .with_context(|| format!("Unable to load Genesis from {}", path.display()))?;
+        let bytes = fs::read(path).with_context(|| format!("Unable to load Genesis from {}", path.display()))?;
         Ok(bcs::from_bytes(&bytes)?)
     }
 
@@ -130,8 +122,7 @@ impl Genesis {
         let path = path.as_ref();
         trace!("Writing Genesis to {}", path.display());
         let bytes = bcs::to_bytes(&self)?;
-        fs::write(path, bytes)
-            .with_context(|| format!("Unable to save Genesis to {}", path.display()))?;
+        fs::write(path, bytes).with_context(|| format!("Unable to save Genesis to {}", path.display()))?;
         Ok(())
     }
 
@@ -190,8 +181,7 @@ impl<'de> Deserialize<'de> for Genesis {
             data
         };
 
-        let raw_genesis: RawGeneis =
-            bcs::from_bytes(&bytes).map_err(|e| Error::custom(e.to_string()))?;
+        let raw_genesis: RawGeneis = bcs::from_bytes(&bytes).map_err(|e| Error::custom(e.to_string()))?;
 
         Ok(Genesis {
             objects: raw_genesis.objects,
@@ -240,17 +230,10 @@ impl Builder {
         let mut genesis_ctx = sui_adapter::genesis::get_genesis_context();
 
         // Get Move and Sui Framework
-        let modules = [
-            sui_framework::get_move_stdlib(),
-            sui_framework::get_sui_framework(),
-        ];
+        let modules = [sui_framework::get_move_stdlib(), sui_framework::get_sui_framework()];
 
         let objects = self.objects.into_iter().map(|(_, o)| o).collect::<Vec<_>>();
-        let validators = self
-            .validators
-            .into_iter()
-            .map(|(_, v)| v)
-            .collect::<Vec<_>>();
+        let validators = self.validators.into_iter().map(|(_, v)| v).collect::<Vec<_>>();
         let objects = create_genesis_objects(&mut genesis_ctx, &modules, &objects, &validators);
 
         let genesis = Genesis {
@@ -367,19 +350,11 @@ fn create_genesis_objects(
 ) -> Vec<Object> {
     let mut store = InMemoryStorage::new(Vec::new());
 
-    let native_functions =
-        sui_framework::natives::all_natives(MOVE_STDLIB_ADDRESS, SUI_FRAMEWORK_ADDRESS);
-    let move_vm = adapter::new_move_vm(native_functions.clone())
-        .expect("We defined natives to not fail here");
+    let native_functions = sui_framework::natives::all_natives(MOVE_STDLIB_ADDRESS, SUI_FRAMEWORK_ADDRESS);
+    let move_vm = adapter::new_move_vm(native_functions.clone()).expect("We defined natives to not fail here");
 
     for modules in modules {
-        process_package(
-            &mut store,
-            &native_functions,
-            genesis_ctx,
-            modules.to_owned(),
-        )
-        .unwrap();
+        process_package(&mut store, &native_functions, genesis_ctx, modules.to_owned()).unwrap();
     }
 
     for object in input_objects {
@@ -388,11 +363,7 @@ fn create_genesis_objects(
 
     generate_genesis_system_object(&mut store, &move_vm, validators, genesis_ctx).unwrap();
 
-    store
-        .into_inner()
-        .into_iter()
-        .map(|(_id, object)| object)
-        .collect()
+    store.into_inner().into_iter().map(|(_id, object)| object).collect()
 }
 
 fn process_package(
@@ -412,17 +383,13 @@ fn process_package(
     #[cfg(debug_assertions)]
     {
         use std::collections::HashSet;
-        let to_be_published_addresses: HashSet<_> = modules
-            .iter()
-            .map(|module| *module.self_id().address())
-            .collect();
+        let to_be_published_addresses: HashSet<_> = modules.iter().map(|module| *module.self_id().address()).collect();
         assert!(
             // An object either exists on-chain, or is one of the packages to be published.
             inputs
                 .iter()
                 .zip(input_objects.iter())
-                .all(|(kind, obj_opt)| obj_opt.is_some()
-                    || to_be_published_addresses.contains(&kind.object_id()))
+                .all(|(kind, obj_opt)| obj_opt.is_some() || to_be_published_addresses.contains(&kind.object_id()))
         );
     }
     let filtered = inputs
@@ -432,29 +399,14 @@ fn process_package(
         .collect::<Vec<_>>();
 
     debug_assert!(ctx.digest() == TransactionDigest::genesis());
-    let mut temporary_store =
-        TemporaryStore::new(&*store, InputObjects::new(filtered), ctx.digest());
+    let mut temporary_store = TemporaryStore::new(&*store, InputObjects::new(filtered), ctx.digest());
     let package_id = ObjectID::from(*modules[0].self_id().address());
     let natives = native_functions.clone();
     let mut gas_status = SuiGasStatus::new_unmetered();
-    let vm = adapter::verify_and_link(
-        &temporary_store,
-        &modules,
-        package_id,
-        natives,
-        &mut gas_status,
-    )?;
-    adapter::store_package_and_init_modules(
-        &mut temporary_store,
-        &vm,
-        modules,
-        ctx,
-        &mut gas_status,
-    )?;
+    let vm = adapter::verify_and_link(&temporary_store, &modules, package_id, natives, &mut gas_status)?;
+    adapter::store_package_and_init_modules(&mut temporary_store, &vm, modules, ctx, &mut gas_status)?;
 
-    let InnerTemporaryStore {
-        written, deleted, ..
-    } = temporary_store.into_inner();
+    let InnerTemporaryStore { written, deleted, .. } = temporary_store.into_inner();
 
     store.finish(written, deleted);
 
@@ -468,8 +420,7 @@ pub fn generate_genesis_system_object(
     genesis_ctx: &mut TxContext,
 ) -> Result<()> {
     let genesis_digest = genesis_ctx.digest();
-    let mut temporary_store =
-        TemporaryStore::new(&*store, InputObjects::new(vec![]), genesis_digest);
+    let mut temporary_store = TemporaryStore::new(&*store, InputObjects::new(vec![]), genesis_digest);
 
     let mut pubkeys = Vec::new();
     let mut sui_addresses = Vec::new();
@@ -502,9 +453,7 @@ pub fn generate_genesis_system_object(
         genesis_ctx,
     )?;
 
-    let InnerTemporaryStore {
-        written, deleted, ..
-    } = temporary_store.into_inner();
+    let InnerTemporaryStore { written, deleted, .. } = temporary_store.into_inner();
 
     store.finish(written, deleted);
 
@@ -516,10 +465,10 @@ const GENESIS_BUILDER_COMMITTEE_DIR: &str = "committee";
 
 #[cfg(test)]
 mod test {
-    use super::Builder;
     use super::super::genesis_config::GenesisConfig;
-    use sui_config::{utils, ValidatorInfo};
+    use super::Builder;
     use narwhal_crypto::traits::KeyPair;
+    use sui_config::{utils, ValidatorInfo};
     use sui_types::crypto::{get_key_pair_from_rng, AuthorityKeyPair};
 
     #[test]
@@ -536,9 +485,7 @@ mod test {
         let dir = tempfile::TempDir::new().unwrap();
 
         let genesis_config = GenesisConfig::for_local_testing();
-        let (_account_keys, objects) = genesis_config
-            .generate_accounts(&mut rand::rngs::OsRng)
-            .unwrap();
+        let (_account_keys, objects) = genesis_config.generate_accounts(&mut rand::rngs::OsRng).unwrap();
 
         let key: AuthorityKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
         let validator = ValidatorInfo {

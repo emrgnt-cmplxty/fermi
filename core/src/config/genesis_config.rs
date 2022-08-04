@@ -61,9 +61,7 @@ impl GenesisConfig {
                     let ids = ObjectID::in_range(rg.offset, rg.count)?;
 
                     for obj_id in ids {
-                        if !preload_objects_map.contains_key(&obj_id)
-                            && !all_preload_objects_set.contains(&obj_id)
-                        {
+                        if !preload_objects_map.contains_key(&obj_id) && !all_preload_objects_set.contains(&obj_id) {
                             preload_objects_map.insert(obj_id, rg.gas_value);
                             all_preload_objects_set.insert(obj_id);
                         }
@@ -143,15 +141,8 @@ impl GenesisConfig {
         )
     }
 
-    pub fn custom_genesis(
-        num_authorities: usize,
-        num_accounts: usize,
-        num_objects_per_account: usize,
-    ) -> Self {
-        assert!(
-            num_authorities > 0,
-            "num_authorities should be larger than 0"
-        );
+    pub fn custom_genesis(num_authorities: usize, num_accounts: usize, num_objects_per_account: usize) -> Self {
+        assert!(num_authorities > 0, "num_authorities should be larger than 0");
 
         let mut accounts = Vec::new();
         for _ in 0..num_accounts {

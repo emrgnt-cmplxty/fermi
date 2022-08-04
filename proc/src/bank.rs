@@ -9,8 +9,8 @@
 //! 1.) MAKE ROBUST ERROR HANDLING FOR ALL FUNCTIONS ~~ DONE
 //! 2.) ADD OWNER FUNCTIONS
 //! 3.) BETTER BANK ACCOUNT PUB KEY HANDLING SYSTEM & ADDRESS
-use std::collections::HashMap;
 use gdex_types::{AccountPubKey, Asset, AssetId, BankAccount, ProcError};
+use std::collections::HashMap;
 
 // TODO #0 //
 pub const PRIMARY_ASSET_ID: u64 = 0;

@@ -1,19 +1,18 @@
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+use super::genesis::{Builder, Genesis};
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Parser;
 use multiaddr::Multiaddr;
 use signature::{Signer, Verifier};
-use std::{fs, path::PathBuf};
 use std::convert::{TryFrom, TryInto};
-use super::genesis::{Builder, Genesis};
+use std::{fs, path::PathBuf};
 use sui_types::{
     base_types::{decode_bytes_hex, encode_bytes_hex, ObjectID, SuiAddress},
     crypto::{
-        AuthorityKeyPair, AuthorityPublicKey, AuthorityPublicKeyBytes, AuthoritySignature,
-        KeypairTraits, ToFromBytes,
+        AuthorityKeyPair, AuthorityPublicKey, AuthorityPublicKeyBytes, AuthoritySignature, KeypairTraits, ToFromBytes,
     },
     object::Object,
 };
@@ -154,14 +153,14 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             let built_genesis_bytes = built_genesis.to_bytes();
 
             if built_genesis != loaded_genesis || built_genesis_bytes != loaded_genesis_bytes {
-                return Err(anyhow::anyhow!(
-                    "loaded genesis does not match built genesis"
-                ));
+                return Err(anyhow::anyhow!("loaded genesis does not match built genesis"));
             }
 
-            if !built_genesis.validator_set().iter().any(|validator| {
-                validator.public_key() == AuthorityPublicKeyBytes::from(keypair.public())
-            }) {
+            if !built_genesis
+                .validator_set()
+                .iter()
+                .any(|validator| validator.public_key() == AuthorityPublicKeyBytes::from(keypair.public()))
+            {
                 return Err(anyhow::anyhow!(
                     "provided keypair does not correspond to a validator in the validator set"
                 ));
@@ -191,29 +190,23 @@ pub fn run(cmd: Ceremony) -> Result<()> {
 
                 let path = entry.path();
                 let signature_bytes = fs::read(path)?;
-                let signature: AuthoritySignature =
-                    AuthoritySignature::from_bytes(&signature_bytes)?;
+                let signature: AuthoritySignature = AuthoritySignature::from_bytes(&signature_bytes)?;
                 let name = path
                     .file_name()
                     .ok_or_else(|| anyhow::anyhow!("Invalid signature file"))?;
-                let public_key =
-                    AuthorityPublicKeyBytes::from_bytes(&decode_bytes_hex::<Vec<u8>>(name)?[..])?;
+                let public_key = AuthorityPublicKeyBytes::from_bytes(&decode_bytes_hex::<Vec<u8>>(name)?[..])?;
                 signatures.insert(public_key, signature);
             }
 
             for validator in genesis.validator_set() {
-                let signature = signatures.remove(&validator.public_key()).ok_or_else(|| {
-                    anyhow::anyhow!("missing signature for validator {}", validator.name())
-                })?;
+                let signature = signatures
+                    .remove(&validator.public_key())
+                    .ok_or_else(|| anyhow::anyhow!("missing signature for validator {}", validator.name()))?;
 
                 let pk: AuthorityPublicKey = validator.public_key().try_into()?;
 
-                pk.verify(&genesis_bytes, &signature).with_context(|| {
-                    format!(
-                        "failed to validate signature for validator {}",
-                        validator.name()
-                    )
-                })?;
+                pk.verify(&genesis_bytes, &signature)
+                    .with_context(|| format!("failed to validate signature for validator {}", validator.name()))?;
             }
 
             if !signatures.is_empty() {
@@ -230,8 +223,8 @@ pub fn run(cmd: Ceremony) -> Result<()> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use sui::keytool::write_keypair_to_file;
     use anyhow::Result;
+    use sui::keytool::write_keypair_to_file;
     use sui_config::{utils, ValidatorInfo};
     use sui_types::crypto::{get_key_pair_from_rng, AuthorityKeyPair};
 
@@ -296,9 +289,7 @@ mod test {
         for (key, _validator) in &validators {
             let command = Ceremony {
                 path: Some(dir.path().into()),
-                command: CeremonyCommand::VerifyAndSign {
-                    key_file: key.into(),
-                },
+                command: CeremonyCommand::VerifyAndSign { key_file: key.into() },
             };
             command.run()?;
         }

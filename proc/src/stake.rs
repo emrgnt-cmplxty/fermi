@@ -10,8 +10,8 @@
 //! 0.) ADD SIZE CHECKS ON TRANSACTIONS
 //!
 use super::bank::{BankController, PRIMARY_ASSET_ID};
-use std::collections::HashMap;
 use gdex_types::{AccountPubKey, ProcError, StakeAccount};
+use std::collections::HashMap;
 
 /// The stake controller is responsible for accessing & modifying user balances
 pub struct StakeController {

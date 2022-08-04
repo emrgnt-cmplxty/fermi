@@ -697,7 +697,7 @@ dependencies = [
  "serde_json",
  "thiserror",
  "tracing",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/narwhal?rev=259a37b487570763575e6b28f8b8057b16b3e916)",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -896,7 +896,7 @@ dependencies = [
  "serde_with",
  "signature",
  "tokio",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/narwhal?rev=259a37b487570763575e6b28f8b8057b16b3e916)",
+ "workspace-hack",
  "zeroize",
 ]
 
@@ -991,7 +991,7 @@ dependencies = [
  "rayon",
  "serde",
  "thiserror",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/narwhal?rev=259a37b487570763575e6b28f8b8057b16b3e916)",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -1433,6 +1433,10 @@ dependencies = [
  "thiserror",
  "types",
 ]
+
+[[package]]
+name = "gdex-workspace-hack"
+version = "0.1.0"
 
 [[package]]
 name = "generic-array"
@@ -3947,7 +3951,7 @@ dependencies = [
  "tokio-util",
  "tonic",
  "typed-store",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/narwhal?rev=259a37b487570763575e6b28f8b8057b16b3e916)",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -4249,10 +4253,6 @@ name = "windows_x86_64_msvc"
 version = "0.36.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c811ca4a8c853ef420abd8592ba53ddbbac90410fab6903b3e79972a631f7680"
-
-[[package]]
-name = "workspace-hack"
-version = "0.1.0"
 
 [[package]]
 name = "workspace-hack"

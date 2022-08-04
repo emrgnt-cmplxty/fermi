@@ -13,9 +13,9 @@
 //!
 use super::bank::BankController;
 use core::cell::RefCell;
-use engine::{order_book::Orderbook, orders::new_limit_order_request};
+use gdex_engine::{order_book::Orderbook, orders::new_limit_order_request};
+use gdex_types::{AccountPubKey, AssetId, AssetPairKey, OrderAccount, OrderProcessingResult, OrderSide, ProcError, Success};
 use std::{collections::HashMap, rc::Rc, time::SystemTime};
-use types::{AccountPubKey, AssetId, AssetPairKey, OrderAccount, OrderProcessingResult, OrderSide, ProcError, Success};
 
 pub type OrderId = u64;
 
@@ -319,8 +319,8 @@ pub mod spot_tests {
         bank::{BankController, CREATED_ASSET_BALANCE},
         spot::OrderbookInterface,
     };
+    use gdex_types::{account_test_functions::generate_keypair_vec, OrderSide};
     use narwhal_crypto::traits::KeyPair;
-    use types::{account_test_functions::generate_keypair_vec, OrderSide};
 
     const BASE_ASSET_ID: AssetId = 0;
     const QUOTE_ASSET_ID: AssetId = 1;

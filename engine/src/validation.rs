@@ -1,6 +1,6 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
-use types::{AssetId, OrderRequest};
+use gdex_types::{AssetId, OrderRequest};
 
 /// Validation errors
 const ERR_BAD_BASE_ASSET: &str = "bad order asset";

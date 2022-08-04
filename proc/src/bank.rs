@@ -10,7 +10,7 @@
 //! 2.) ADD OWNER FUNCTIONS
 //! 3.) BETTER BANK ACCOUNT PUB KEY HANDLING SYSTEM & ADDRESS
 use std::collections::HashMap;
-use types::{AccountPubKey, Asset, AssetId, BankAccount, ProcError};
+use gdex_types::{AccountPubKey, Asset, AssetId, BankAccount, ProcError};
 
 // TODO #0 //
 pub const PRIMARY_ASSET_ID: u64 = 0;

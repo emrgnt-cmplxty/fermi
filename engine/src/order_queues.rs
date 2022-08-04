@@ -1,11 +1,11 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
+use gdex_types::OrderSide;
 use std::{
     cmp::Ordering,
     collections::{BinaryHeap, HashMap},
     time,
 };
-use types::OrderSide;
 
 #[derive(Clone)]
 struct OrderIndex {

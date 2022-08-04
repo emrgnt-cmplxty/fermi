@@ -697,7 +697,7 @@ dependencies = [
  "serde_json",
  "thiserror",
  "tracing",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/narwhal?rev=259a37b487570763575e6b28f8b8057b16b3e916)",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -896,7 +896,7 @@ dependencies = [
  "serde_with",
  "signature",
  "tokio",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/narwhal?rev=259a37b487570763575e6b28f8b8057b16b3e916)",
+ "workspace-hack",
  "zeroize",
 ]
 
@@ -991,7 +991,7 @@ dependencies = [
  "rayon",
  "serde",
  "thiserror",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/narwhal?rev=259a37b487570763575e6b28f8b8057b16b3e916)",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -1223,15 +1223,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a357d28ed41a50f9c765dbfe56cbc04a64e53e5fc58ba79fbc34c10ef3df831f"
 
 [[package]]
-name = "engine"
-version = "0.1.0"
-dependencies = [
- "criterion",
- "rand 0.8.5",
- "types 0.1.0",
-]
-
-[[package]]
 name = "env_logger"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1407,6 +1398,45 @@ dependencies = [
  "pin-utils",
  "slab",
 ]
+
+[[package]]
+name = "gdex-engine"
+version = "0.1.0"
+dependencies = [
+ "criterion",
+ "gdex-types",
+ "rand 0.8.5",
+]
+
+[[package]]
+name = "gdex-proc"
+version = "0.1.0"
+dependencies = [
+ "assert_approx_eq",
+ "criterion",
+ "crypto",
+ "gdex-engine",
+ "gdex-types",
+ "rand 0.7.3",
+]
+
+[[package]]
+name = "gdex-types"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "bincode",
+ "blake2",
+ "crypto",
+ "rand 0.7.3",
+ "serde",
+ "thiserror",
+ "types",
+]
+
+[[package]]
+name = "gdex-workspace-hack"
+version = "0.1.0"
 
 [[package]]
 name = "generic-array"
@@ -2452,18 +2482,6 @@ checksum = "697ae720ee02011f439e0701db107ffe2916d83f718342d65d7f8bf7b8a5fee9"
 dependencies = [
  "proc-macro2 1.0.43",
  "syn 1.0.99",
-]
-
-[[package]]
-name = "proc"
-version = "0.1.0"
-dependencies = [
- "assert_approx_eq",
- "criterion",
- "crypto",
- "engine",
- "rand 0.7.3",
- "types 0.1.0",
 ]
 
 [[package]]
@@ -3910,20 +3928,6 @@ checksum = "dcf81ac59edc17cc8697ff311e8f5ef2d99fcbd9817b34cec66f90b6c3dfd987"
 [[package]]
 name = "types"
 version = "0.1.0"
-dependencies = [
- "base64",
- "bincode",
- "blake2",
- "crypto",
- "rand 0.7.3",
- "serde",
- "thiserror",
- "types 0.1.0 (git+https://github.com/MystenLabs/narwhal?rev=259a37b487570763575e6b28f8b8057b16b3e916)",
-]
-
-[[package]]
-name = "types"
-version = "0.1.0"
 source = "git+https://github.com/MystenLabs/narwhal?rev=259a37b487570763575e6b28f8b8057b16b3e916#259a37b487570763575e6b28f8b8057b16b3e916"
 dependencies = [
  "base64",
@@ -3947,7 +3951,7 @@ dependencies = [
  "tokio-util",
  "tonic",
  "typed-store",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/narwhal?rev=259a37b487570763575e6b28f8b8057b16b3e916)",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -4249,10 +4253,6 @@ name = "windows_x86_64_msvc"
 version = "0.36.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c811ca4a8c853ef420abd8592ba53ddbbac90410fab6903b3e79972a631f7680"
-
-[[package]]
-name = "workspace-hack"
-version = "0.1.0"
 
 [[package]]
 name = "workspace-hack"

@@ -20,5 +20,3 @@ jobs:
       run: cargo install tokei --features all
     - name: Run tokei
       run: tokei
-    - name: Run tokei with crypto excluded
-      run: tokei --exclude crypto crypto-derive

@@ -34,14 +34,11 @@ Tests reside in suite/test, benchmarks reside in suite/benches
 ### How is the repo organized?
 
     gdex-core 
-    ├── app                        # Toy consensus implementation
-    ├── core                       # Blockchain primitives (i.e. block, transaction, vote_cert)
-    ├── crypto                     # Cryptographic primitives (i.e. Ed25519 signature schema)
-    ├── crypto-derive              # Cryptographic support functions
+    ├── core                       # Blockchain primitives (i.e. block, transaction, vote_cert), not crrently implemented
     ├── engine                     # Orderbook processing logic 
     ├── proc                       # Blockchain modules and support (i.e. bank, stake, ..) 
     ├── type                       # Internal type definitions
-    └── suite                      # Bulk testing and benching
+    └── suite                      # Bulk testing and benching, not crrently implemented
 
 ## Walkthrough 
 

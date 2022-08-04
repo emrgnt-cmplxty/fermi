@@ -1,5 +1,5 @@
 [package]
-name = "proc"
+name = "gdex-proc"
 version = "0.1.0"
 authors = []
 edition = "2018"
@@ -7,7 +7,8 @@ edition = "2018"
 [dependencies]
 assert_approx_eq = "1.1.0"
 criterion = "0.3.4"
-engine = { path = "../engine" }
 narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "crypto", features=["copy_key"]}
 rand = "0.7.0"
-types = { path = "../types", features=["testing"] }
+
+gdex-engine = { path = "../engine" }
+gdex-types = { path = "../types", features=["testing"] }

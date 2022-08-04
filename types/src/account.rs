@@ -5,6 +5,11 @@ use narwhal_crypto::ed25519::{Ed25519KeyPair, Ed25519PrivateKey, Ed25519PublicKe
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt::Debug};
 
+pub type AuthorityPubKey = Ed25519PublicKey;
+pub type AuthorityPrivKey = Ed25519PrivateKey;
+pub type AuthoritySignature = Ed25519Signature;
+pub type AuthorityKeyPair = Ed25519KeyPair;
+
 pub type AccountPubKey = Ed25519PublicKey;
 pub type AccountPrivKey = Ed25519PrivateKey;
 pub type AccountSignature = Ed25519Signature;

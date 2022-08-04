@@ -9,7 +9,6 @@ use std::collections::BTreeMap;
 use std::convert::TryInto;
 use std::rc::Rc;
 use std::{fs, path::Path};
-use sui_config::ValidatorInfo;
 use sui_types::crypto::AuthorityPublicKeyBytes;
 use sui_types::sui_serde::{Base64, Encoding};
 use sui_types::{
@@ -17,6 +16,7 @@ use sui_types::{
     committee::{Committee, EpochId},
     error::SuiResult,
 };
+use gdex_types::ValidatorInfo;
 use tracing::trace;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -297,8 +297,8 @@ const GENESIS_BUILDER_COMMITTEE_DIR: &str = "committee";
 mod test {
     use super::super::genesis_config::GenesisConfig;
     use super::*;
+    use gdex_types::{utils, ValidatorInfo};
     use narwhal_crypto::traits::KeyPair;
-    use sui_config::{utils, ValidatorInfo};
     use sui_types::crypto::{get_key_pair_from_rng, AuthorityKeyPair};
 
     #[test]

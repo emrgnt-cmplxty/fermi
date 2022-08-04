@@ -1,23 +1,21 @@
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-
 use super::genesis::{Builder, Genesis, MasterController};
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Parser;
+use gdex_types::ValidatorInfo;
 use multiaddr::Multiaddr;
 use signature::{Signer, Verifier};
 use std::convert::{TryFrom, TryInto};
 use std::{fs, path::PathBuf};
 use sui_types::{
-    base_types::{decode_bytes_hex, encode_bytes_hex, ObjectID, SuiAddress},
+    base_types::{decode_bytes_hex, encode_bytes_hex},
     crypto::{
         AuthorityKeyPair, AuthorityPublicKey, AuthorityPublicKeyBytes, AuthoritySignature, KeypairTraits, ToFromBytes,
     },
 };
-
 use sui::keytool::read_keypair_from_file;
-
 pub const SUI_GENESIS_FILENAME: &str = "genesis.blob";
 const GENESIS_BUILDER_SIGNATURE_DIR: &str = "signatures";
 
@@ -59,14 +57,7 @@ pub enum CeremonyCommand {
         narwhal_consensus_address: Multiaddr,
     },
 
-    AddControllers {
-        #[clap(long)]
-        address: SuiAddress,
-        #[clap(long)]
-        object_id: Option<ObjectID>,
-        #[clap(long)]
-        value: u64,
-    },
+    AddControllers,
 
     Build,
 
@@ -104,7 +95,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
         } => {
             let mut builder = Builder::load(&dir)?;
             let keypair: AuthorityKeyPair = read_keypair_from_file(key_file)?;
-            builder = builder.add_validator(sui_config::ValidatorInfo {
+            builder = builder.add_validator(ValidatorInfo {
                 name,
                 public_key: keypair.public().into(),
                 stake: 1,
@@ -119,18 +110,12 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             builder.save(dir)?;
         }
 
-        CeremonyCommand::AddControllers {
-            address,
-            object_id,
-            value,
-        } => {
-            let mut builder = Builder::load(&dir)?;
+        CeremonyCommand::AddControllers => {
+            let builder = Builder::load(&dir)?;
 
             // TODO - implement state setting logic
             let master_controller = MasterController::default();
-            let builder = Builder::new().set_master_controller(master_controller);
-
-            builder.save(dir)?;
+            builder.set_master_controller(master_controller).save(dir)?;
         }
 
         CeremonyCommand::Build => {
@@ -224,8 +209,8 @@ mod test {
     use super::*;
     use anyhow::Result;
     use sui::keytool::write_keypair_to_file;
-    use sui_config::{utils, ValidatorInfo};
     use sui_types::crypto::{get_key_pair_from_rng, AuthorityKeyPair};
+    use gdex_types::{utils, ValidatorInfo};
 
     #[test]
     fn ceremony() -> Result<()> {

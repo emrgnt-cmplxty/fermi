@@ -379,7 +379,7 @@ pub mod transaction_tests {
         let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest {});
 
         let transaction = Transaction::new(kp_sender.public().clone(), dummy_batch_digest, transaction_variant);
-        let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
+        let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
 
         let signed_transaction =
             SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest.clone());

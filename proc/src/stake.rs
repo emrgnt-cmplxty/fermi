@@ -1,19 +1,19 @@
+//! Copyright (c) 2022, BTI
+//! SPDX-License-Identifier: Apache-2.0
+//! 
 //!
-//! this controller is responsible for managing user staking
+//! This controller is responsible for managing user staking
 //! it relies on BankController and only accesses the 0th (first) created asset
 //!
 //!
 //! TODO
 //! 0.) ADD SIZE CHECKS ON TRANSACTIONS
 //!
-extern crate types;
-
-use super::account::StakeAccount;
 use super::bank::{BankController, PRIMARY_ASSET_ID};
 use std::collections::HashMap;
-use types::{AccountPubKey, ProcError};
+use types::{AccountPubKey, ProcError, StakeAccount};
 
-// The stake controller is responsible for accessing & modifying user balances
+/// The stake controller is responsible for accessing & modifying user balances
 pub struct StakeController {
     stake_accounts: HashMap<AccountPubKey, StakeAccount>,
     total_staked: u64,

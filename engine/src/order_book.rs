@@ -1,5 +1,7 @@
+//! Copyright (c) 2022, BTI
+//! SPDX-License-Identifier: Apache-2.0
 //!
-//! orderbook holds functions responsible for running an orderbook application
+//! The orderbook holds functions responsible for running an orderbook application
 //!
 //! note, orderbook has commented out line 390 to avoid random failures when submitting transasctions in quick succession
 //! this uniqueness check in the orderbook is seems potentially incorrect, or strange, as it includes the timestamp of the order

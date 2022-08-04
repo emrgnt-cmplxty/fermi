@@ -1,6 +1,6 @@
-use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashMap};
-use std::time;
+//! Copyright (c) 2022, BTI
+//! SPDX-License-Identifier: Apache-2.0
+use std::{collections::{BinaryHeap, HashMap}, cmp::Ordering, time};
 use types::OrderSide;
 
 #[derive(Clone)]
@@ -11,7 +11,7 @@ struct OrderIndex {
     order_side: OrderSide,
 }
 
-// Arrange at first by price and after that by time
+/// Arrange at first by price and after that by time
 impl Ord for OrderIndex {
     fn cmp(&self, other: &Self) -> Ordering {
         match self.price {

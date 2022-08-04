@@ -15,7 +15,7 @@ use config::{Committee, Import, Parameters, WorkerId};
 use crypto::{generate_production_keypair, traits::KeyPair as _, KeyPair};
 use executor::{SerializedTransaction, SubscriberResult};
 use futures::future::join_all;
-use node::{
+use narwhal_node::{
     execution_state::SimpleExecutionState,
     metrics::{primary_metrics_registry, start_prometheus_server, worker_metrics_registry},
     Node, NodeStorage,

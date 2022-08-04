@@ -1,5 +1,5 @@
 [package]
-name = "node"
+name = "gdex-node"
 version = "0.1.0"
 license = "Apache-2.0"
 authors = ["Mysten Labs <build@mystenlabs.com>"]
@@ -27,6 +27,7 @@ telemetry-subscribers = { git = "https://github.com/mystenlabs/mysten-infra.git"
 url = "2.2.2"
 dhat = { version = "0.3.0", optional = true }
 
+narwhal-node = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "node" }
 config = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "config" }
 consensus = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "consensus" }
 crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "crypto" }
@@ -56,9 +57,4 @@ dhat-heap = ["dhat"]    # if you are doing heap profiling
 [[bin]]         
 name = "benchmark_client"   
 path = "src/benchmark_client.rs" 
-required-features = ["benchmark"] 
-
-[[example]]
-name = "generate-format"
-path = "src/generate_format.rs"
-test = false
+required-features = ["benchmark"]

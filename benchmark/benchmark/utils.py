@@ -23,7 +23,7 @@ class PathMaker:
 
     @staticmethod
     def node_crate_path():
-        return join('..', 'node')
+        return join('..', 'gdex-node')
 
     @staticmethod
     def examples_crate_path():

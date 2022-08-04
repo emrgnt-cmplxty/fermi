@@ -8,7 +8,7 @@ use crypto::{traits::KeyPair as _, KeyPair, PublicKey};
 use executor::{ExecutionIndices, ExecutionState, ExecutionStateError};
 use futures::future::join_all;
 use network::{PrimaryToWorkerNetwork, ReliableNetwork, UnreliableNetwork, WorkerToPrimaryNetwork};
-use node::{restarter::NodeRestarter, Node, NodeStorage};
+use narwhal_node::{restarter::NodeRestarter, Node, NodeStorage};
 use primary::PrimaryWorkerMessage;
 use prometheus::Registry;
 use std::{

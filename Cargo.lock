@@ -1465,6 +1465,52 @@ dependencies = [
 ]
 
 [[package]]
+name = "gdex-node"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "arc-swap",
+ "async-trait",
+ "axum",
+ "bincode",
+ "bytes",
+ "cfg-if",
+ "clap 2.34.0",
+ "config",
+ "consensus",
+ "crypto",
+ "dhat",
+ "ed25519-dalek",
+ "executor",
+ "futures",
+ "hex",
+ "mysten-network 0.1.0 (git+https://github.com/mystenlabs/mysten-infra.git?rev=c6dc7a23a40b3517f138d122a76d3bc15f844f67)",
+ "network",
+ "node",
+ "pretty_assertions",
+ "primary",
+ "prometheus",
+ "rand 0.7.3",
+ "serde-reflection",
+ "serde_yaml",
+ "structopt",
+ "telemetry-subscribers",
+ "test_utils",
+ "thiserror",
+ "tokio",
+ "tokio-stream",
+ "tokio-util",
+ "tracing",
+ "tracing-log",
+ "tracing-subscriber 0.3.15",
+ "typed-store",
+ "types 0.1.0 (git+https://github.com/MystenLabs/narwhal?rev=259a37b487570763575e6b28f8b8057b16b3e916)",
+ "url",
+ "worker",
+ "workspace-hack 0.1.0",
+]
+
+[[package]]
 name = "generic-array"
 version = "0.14.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2152,51 +2198,6 @@ dependencies = [
  "tracing",
  "types 0.1.0 (git+https://github.com/MystenLabs/narwhal?rev=259a37b487570763575e6b28f8b8057b16b3e916)",
  "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/narwhal?rev=259a37b487570763575e6b28f8b8057b16b3e916)",
-]
-
-[[package]]
-name = "node"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "arc-swap",
- "async-trait",
- "axum",
- "bincode",
- "bytes",
- "cfg-if",
- "clap 2.34.0",
- "config",
- "consensus",
- "crypto",
- "dhat",
- "ed25519-dalek",
- "executor",
- "futures",
- "hex",
- "mysten-network 0.1.0 (git+https://github.com/mystenlabs/mysten-infra.git?rev=c6dc7a23a40b3517f138d122a76d3bc15f844f67)",
- "network",
- "pretty_assertions",
- "primary",
- "prometheus",
- "rand 0.7.3",
- "serde-reflection",
- "serde_yaml",
- "structopt",
- "telemetry-subscribers",
- "test_utils",
- "thiserror",
- "tokio",
- "tokio-stream",
- "tokio-util",
- "tracing",
- "tracing-log",
- "tracing-subscriber 0.3.15",
- "typed-store",
- "types 0.1.0 (git+https://github.com/MystenLabs/narwhal?rev=259a37b487570763575e6b28f8b8057b16b3e916)",
- "url",
- "worker",
- "workspace-hack 0.1.0",
 ]
 
 [[package]]
@@ -3626,7 +3627,7 @@ dependencies = [
  "futures",
  "multiaddr",
  "mysten-network 0.1.0 (git+https://github.com/mystenlabs/mysten-infra.git?rev=123c9e40b529315e1c1d91a54fb717111c3e349c)",
- "node 0.1.0 (git+https://github.com/MystenLabs/narwhal?rev=259a37b487570763575e6b28f8b8057b16b3e916)",
+ "node",
  "prometheus",
  "rand 0.7.3",
  "serde",

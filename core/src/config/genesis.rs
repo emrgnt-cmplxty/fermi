@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 use anyhow::{bail, Context, Result};
 use camino::Utf8Path;
+use core::cell::RefCell;
+use gdex_proc::{BankController, SpotController, StakeController};
 use move_binary_format::CompiledModule;
 use move_core_types::ident_str;
 use move_core_types::language_storage::ModuleId;
@@ -9,6 +11,7 @@ use move_vm_runtime::native_functions::NativeFunctionTable;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::BTreeMap;
 use std::convert::TryInto;
+use std::rc::Rc;
 use std::{fs, path::Path};
 use sui_adapter::adapter;
 use sui_adapter::adapter::MoveVM;
@@ -23,26 +26,46 @@ use sui_types::messages::CallArg;
 use sui_types::messages::InputObjects;
 use sui_types::messages::Transaction;
 use sui_types::sui_serde::{Base64, Encoding};
-use sui_types::sui_system_state::SuiSystemState;
 use sui_types::MOVE_STDLIB_ADDRESS;
 use sui_types::SUI_FRAMEWORK_ADDRESS;
 use sui_types::{
     base_types::{encode_bytes_hex, TxContext},
     committee::{Committee, EpochId},
     error::SuiResult,
-    object::Object,
+    // object::Object,
 };
 use tracing::trace;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct MasterController {
+    bank_controller: BankController,
+    stake_controller: StakeController,
+    spot_controller: SpotController,
+}
+
+impl Default for MasterController {
+    fn default() -> Self {
+        let bank_controller = BankController::default();
+        let stake_controller = StakeController::default();
+        let bank_controller_ref = Rc::new(RefCell::new(bank_controller.clone()));
+        let spot_controller = SpotController::new(bank_controller_ref);
+        Self {
+            bank_controller,
+            stake_controller,
+            spot_controller,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct Genesis {
-    objects: Vec<Object>,
+    master_controller: MasterController,
     validator_set: Vec<ValidatorInfo>,
 }
 
 impl Genesis {
-    pub fn objects(&self) -> &[Object] {
-        &self.objects
+    pub fn master_controller(&self) -> &MasterController {
+        &self.master_controller
     }
 
     pub fn epoch(&self) -> EpochId {
@@ -92,21 +115,6 @@ impl Genesis {
         }))
     }
 
-    pub fn sui_system_object(&self) -> SuiSystemState {
-        let sui_system_object = self
-            .objects()
-            .iter()
-            .find(|o| o.id() == sui_types::SUI_SYSTEM_STATE_OBJECT_ID)
-            .expect("Sui System State object must always exist");
-        let move_object = sui_system_object
-            .data
-            .try_as_move()
-            .expect("Sui System State object must be a Move object");
-        let result = bcs::from_bytes::<SuiSystemState>(move_object.contents())
-            .expect("Sui System State object deserialization cannot fail");
-        result
-    }
-
     pub fn get_default_genesis() -> Self {
         Builder::new().build()
     }
@@ -131,6 +139,12 @@ impl Genesis {
     }
 }
 
+impl PartialEq for Genesis {
+    fn eq(&self, other: &Genesis) -> bool {
+        self.to_bytes() == other.to_bytes()
+    }
+}
+
 impl Serialize for Genesis {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -140,12 +154,12 @@ impl Serialize for Genesis {
 
         #[derive(Serialize)]
         struct RawGeneis<'a> {
-            objects: &'a [Object],
+            master_controller: &'a MasterController,
             validator_set: &'a [ValidatorInfo],
         }
 
         let raw_genesis = RawGeneis {
-            objects: &self.objects,
+            master_controller: &self.master_controller,
             validator_set: &self.validator_set,
         };
 
@@ -169,7 +183,7 @@ impl<'de> Deserialize<'de> for Genesis {
 
         #[derive(Deserialize)]
         struct RawGeneis {
-            objects: Vec<Object>,
+            master_controller: MasterController,
             validator_set: Vec<ValidatorInfo>,
         }
 
@@ -184,14 +198,14 @@ impl<'de> Deserialize<'de> for Genesis {
         let raw_genesis: RawGeneis = bcs::from_bytes(&bytes).map_err(|e| Error::custom(e.to_string()))?;
 
         Ok(Genesis {
-            objects: raw_genesis.objects,
+            master_controller: raw_genesis.master_controller,
             validator_set: raw_genesis.validator_set,
         })
     }
 }
 
 pub struct Builder {
-    objects: BTreeMap<ObjectID, Object>,
+    master_controller: MasterController,
     validators: BTreeMap<AuthorityPublicKeyBytes, ValidatorInfo>,
 }
 
@@ -204,21 +218,9 @@ impl Default for Builder {
 impl Builder {
     pub fn new() -> Self {
         Self {
-            objects: Default::default(),
+            master_controller: Default::default(),
             validators: Default::default(),
         }
-    }
-
-    pub fn add_object(mut self, object: Object) -> Self {
-        self.objects.insert(object.id(), object);
-        self
-    }
-
-    pub fn add_objects(mut self, objects: Vec<Object>) -> Self {
-        for object in objects {
-            self.objects.insert(object.id(), object);
-        }
-        self
     }
 
     pub fn add_validator(mut self, validator: ValidatorInfo) -> Self {
@@ -226,45 +228,19 @@ impl Builder {
         self
     }
 
+    pub fn set_master_controller(mut self, master_controller: MasterController) -> Self {
+        self.master_controller = master_controller;
+        self
+    }
+
     pub fn build(self) -> Genesis {
-        let mut genesis_ctx = sui_adapter::genesis::get_genesis_context();
-
-        // Get Move and Sui Framework
-        let modules = [sui_framework::get_move_stdlib(), sui_framework::get_sui_framework()];
-
-        let objects = self.objects.into_iter().map(|(_, o)| o).collect::<Vec<_>>();
         let validators = self.validators.into_iter().map(|(_, v)| v).collect::<Vec<_>>();
-        let objects = create_genesis_objects(&mut genesis_ctx, &modules, &objects, &validators);
+        let master_controller = create_genesis_objects(&validators);
 
         let genesis = Genesis {
-            objects,
+            master_controller,
             validator_set: validators,
         };
-
-        // Verify that all the validators were properly created onchain
-        let system_object = genesis.sui_system_object();
-        assert_eq!(system_object.epoch, 0);
-
-        for (validator, onchain_validator) in genesis
-            .validator_set()
-            .iter()
-            .zip(system_object.validators.active_validators.iter())
-        {
-            assert_eq!(validator.stake(), onchain_validator.stake_amount);
-            assert_eq!(
-                validator.sui_address().to_vec(),
-                onchain_validator.metadata.sui_address.to_vec(),
-            );
-            assert_eq!(
-                validator.public_key().as_ref().to_vec(),
-                onchain_validator.metadata.pubkey_bytes,
-            );
-            assert_eq!(validator.name().as_bytes(), onchain_validator.metadata.name);
-            assert_eq!(
-                validator.network_address().to_vec(),
-                onchain_validator.metadata.net_address
-            );
-        }
 
         genesis
     }
@@ -278,19 +254,9 @@ impl Builder {
             bail!("path must be a directory");
         }
 
-        // Load Objects
-        let mut objects = BTreeMap::new();
-        for entry in path.join(GENESIS_BUILDER_OBJECT_DIR).read_dir_utf8()? {
-            let entry = entry?;
-            if entry.file_name().starts_with('.') {
-                continue;
-            }
-
-            let path = entry.path();
-            let object_bytes = fs::read(path)?;
-            let object: Object = serde_yaml::from_slice(&object_bytes)?;
-            objects.insert(object.id(), object);
-        }
+        // Load MasterController
+        let master_controller_bytes = fs::read(path.join(GENESIS_BUILDER_CONTROLLER_OUT))?;
+        let master_controller: MasterController = serde_yaml::from_slice(&master_controller_bytes)?;
 
         // Load validator infos
         let mut committee = BTreeMap::new();
@@ -307,7 +273,7 @@ impl Builder {
         }
 
         Ok(Self {
-            objects,
+            master_controller,
             validators: committee,
         })
     }
@@ -319,14 +285,9 @@ impl Builder {
         std::fs::create_dir_all(path)?;
 
         // Write Objects
-        let object_dir = path.join(GENESIS_BUILDER_OBJECT_DIR);
-        std::fs::create_dir_all(&object_dir)?;
-
-        for (_id, object) in self.objects {
-            let object_bytes = serde_yaml::to_vec(&object)?;
-            let hex_digest = encode_bytes_hex(&object.digest());
-            fs::write(object_dir.join(hex_digest), object_bytes)?;
-        }
+        let master_controller_dir = path.join(GENESIS_BUILDER_CONTROLLER_OUT);
+        let master_controller_bytes = serde_yaml::to_vec(&self.master_controller)?;
+        fs::write(master_controller_dir, master_controller_bytes)?;
 
         // Write validator infos
         let committee_dir = path.join(GENESIS_BUILDER_COMMITTEE_DIR);
@@ -342,28 +303,8 @@ impl Builder {
     }
 }
 
-fn create_genesis_objects(
-    genesis_ctx: &mut TxContext,
-    modules: &[Vec<CompiledModule>],
-    input_objects: &[Object],
-    validators: &[ValidatorInfo],
-) -> Vec<Object> {
-    let mut store = InMemoryStorage::new(Vec::new());
-
-    let native_functions = sui_framework::natives::all_natives(MOVE_STDLIB_ADDRESS, SUI_FRAMEWORK_ADDRESS);
-    let move_vm = adapter::new_move_vm(native_functions.clone()).expect("We defined natives to not fail here");
-
-    for modules in modules {
-        process_package(&mut store, &native_functions, genesis_ctx, modules.to_owned()).unwrap();
-    }
-
-    for object in input_objects {
-        store.insert_object(object.to_owned());
-    }
-
-    generate_genesis_system_object(&mut store, &move_vm, validators, genesis_ctx).unwrap();
-
-    store.into_inner().into_iter().map(|(_id, object)| object).collect()
+fn create_genesis_objects(validators: &Vec<ValidatorInfo>) -> MasterController {
+    MasterController::default()
 }
 
 fn process_package(
@@ -460,13 +401,13 @@ pub fn generate_genesis_system_object(
     Ok(())
 }
 
-const GENESIS_BUILDER_OBJECT_DIR: &str = "objects";
+const GENESIS_BUILDER_CONTROLLER_OUT: &str = "master_controller";
 const GENESIS_BUILDER_COMMITTEE_DIR: &str = "committee";
 
 #[cfg(test)]
 mod test {
     use super::super::genesis_config::GenesisConfig;
-    use super::Builder;
+    use super::*;
     use narwhal_crypto::traits::KeyPair;
     use sui_config::{utils, ValidatorInfo};
     use sui_types::crypto::{get_key_pair_from_rng, AuthorityKeyPair};
@@ -476,7 +417,7 @@ mod test {
         let genesis = Builder::new().build();
 
         let s = serde_yaml::to_string(&genesis).unwrap();
-        let from_s = serde_yaml::from_str(&s).unwrap();
+        let from_s: Genesis = serde_yaml::from_str(&s).unwrap();
         assert_eq!(genesis, from_s);
     }
 
@@ -485,7 +426,9 @@ mod test {
         let dir = tempfile::TempDir::new().unwrap();
 
         let genesis_config = GenesisConfig::for_local_testing();
-        let (_account_keys, objects) = genesis_config.generate_accounts(&mut rand::rngs::OsRng).unwrap();
+        let (_account_keys, _objects) = genesis_config.generate_accounts(&mut rand::rngs::OsRng).unwrap();
+
+        let master_controller = MasterController::default();
 
         let key: AuthorityKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
         let validator = ValidatorInfo {
@@ -501,7 +444,9 @@ mod test {
             narwhal_consensus_address: utils::new_network_address(),
         };
 
-        let builder = Builder::new().add_objects(objects).add_validator(validator);
+        let builder = Builder::new()
+            .set_master_controller(master_controller)
+            .add_validator(validator);
         builder.save(dir.path()).unwrap();
         Builder::load(dir.path()).unwrap();
     }

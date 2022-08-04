@@ -1,7 +1,7 @@
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use super::genesis::{Builder, Genesis};
+use super::genesis::{Builder, Genesis, MasterController};
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Parser;
@@ -60,7 +60,7 @@ pub enum CeremonyCommand {
         narwhal_consensus_address: Multiaddr,
     },
 
-    AddGasObject {
+    AddControllers {
         #[clap(long)]
         address: SuiAddress,
         #[clap(long)]
@@ -120,16 +120,16 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             builder.save(dir)?;
         }
 
-        CeremonyCommand::AddGasObject {
+        CeremonyCommand::AddControllers {
             address,
             object_id,
             value,
         } => {
             let mut builder = Builder::load(&dir)?;
 
-            let object_id = object_id.unwrap_or_else(ObjectID::random);
-            let object = Object::with_id_owner_gas_for_testing(object_id, address, value);
-            builder = builder.add_object(object);
+            // TODO - implement state setting logic
+            let master_controller = MasterController::default();
+            let builder = Builder::new().set_master_controller(master_controller);
 
             builder.save(dir)?;
         }

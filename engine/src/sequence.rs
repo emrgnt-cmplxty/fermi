@@ -1,6 +1,9 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 /// Rotating index sequence
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TradeSequence {
     min_id: u64,
     max_id: u64,

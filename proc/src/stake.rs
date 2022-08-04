@@ -11,9 +11,11 @@
 //!
 use super::bank::{BankController, PRIMARY_ASSET_ID};
 use gdex_types::{AccountPubKey, ProcError, StakeAccount};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// The stake controller is responsible for accessing & modifying user balances
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct StakeController {
     stake_accounts: HashMap<AccountPubKey, StakeAccount>,
     total_staked: u64,

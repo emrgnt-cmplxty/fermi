@@ -2236,6 +2236,7 @@ dependencies = [
  "clap 3.2.2",
  "config 0.1.0",
  "crypto",
+ "gdex-proc",
  "move-binary-format",
  "move-bytecode-utils",
  "move-core-types",
@@ -2266,6 +2267,7 @@ dependencies = [
  "criterion",
  "gdex-types",
  "rand 0.8.5",
+ "serde 1.0.142",
 ]
 
 [[package]]
@@ -2278,6 +2280,7 @@ dependencies = [
  "gdex-engine",
  "gdex-types",
  "rand 0.7.3",
+ "serde 1.0.142",
 ]
 
 [[package]]

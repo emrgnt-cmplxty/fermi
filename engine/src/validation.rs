@@ -1,6 +1,7 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 use gdex_types::{AssetId, OrderRequest};
+use serde::{Deserialize, Serialize};
 
 /// Validation errors
 const ERR_BAD_BASE_ASSET: &str = "bad order asset";
@@ -11,6 +12,7 @@ const ERR_BAD_SEQ_ID: &str = "order ID out of range";
 
 /* Validators */
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct OrderRequestValidator {
     orderbook_base_asset: AssetId,
     orderbook_quote_asset: AssetId,

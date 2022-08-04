@@ -10,12 +10,14 @@
 //! 2.) ADD OWNER FUNCTIONS
 //! 3.) BETTER BANK ACCOUNT PUB KEY HANDLING SYSTEM & ADDRESS
 use gdex_types::{AccountPubKey, Asset, AssetId, BankAccount, ProcError};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 // TODO #0 //
 pub const PRIMARY_ASSET_ID: u64 = 0;
 pub const CREATED_ASSET_BALANCE: u64 = 1_000_000_000_000_000_000;
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BankController {
     asset_id_to_asset: HashMap<AssetId, Asset>,
     bank_accounts: HashMap<AccountPubKey, BankAccount>,

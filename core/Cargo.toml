@@ -33,3 +33,5 @@ sui-json-rpc-types = { git = "https://github.com/MystenLabs/sui", rev = "41a1798
 signature = "1.5.0"
 tracing = "0.1.36"
 tempfile = "3.3.0"
+
+gdex-proc = { path = "../proc" }

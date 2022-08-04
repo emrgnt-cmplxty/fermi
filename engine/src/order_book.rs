@@ -11,6 +11,7 @@ use super::order_queues::OrderQueue;
 use super::sequence;
 use super::validation::OrderRequestValidator;
 use gdex_types::{AssetId, Failed, Order, OrderProcessingResult, OrderRequest, OrderSide, OrderType, Success};
+use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 
 const MIN_SEQUENCE_ID: u64 = 1;
@@ -18,6 +19,7 @@ const MAX_SEQUENCE_ID: u64 = 1_000_000;
 const MAX_STALLED_INDICES_IN_QUEUE: u64 = 10;
 const ORDER_QUEUE_INIT_CAPACITY: usize = 500;
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Orderbook {
     base_asset: AssetId,
     quote_asset: AssetId,

@@ -17,11 +17,13 @@ use gdex_engine::{order_book::Orderbook, orders::new_limit_order_request};
 use gdex_types::{
     AccountPubKey, AssetId, AssetPairKey, OrderAccount, OrderProcessingResult, OrderSide, ProcError, Success,
 };
+use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, rc::Rc, time::SystemTime};
 
 pub type OrderId = u64;
 
 // The spot controller is responsible for accessing & modifying user orders
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct OrderbookInterface {
     base_asset_id: AssetId,
     quote_asset_id: AssetId,
@@ -216,6 +218,8 @@ impl OrderbookInterface {
         self.orderbook = new_orderbook;
     }
 }
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpotController {
     orderbooks: HashMap<AssetPairKey, OrderbookInterface>,
     bank_controller: Rc<RefCell<BankController>>,

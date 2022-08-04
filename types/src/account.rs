@@ -2,6 +2,7 @@
 //! SPDX-License-Identifier: Apache-2.0
 use crate::AssetId;
 use narwhal_crypto::ed25519::{Ed25519KeyPair, Ed25519PrivateKey, Ed25519PublicKey, Ed25519Signature};
+use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt::Debug};
 
 pub type AccountPubKey = Ed25519PublicKey;
@@ -11,7 +12,7 @@ pub type AccountKeyPair = Ed25519KeyPair;
 pub type AccountBalance = u64;
 
 /// BankAccount is consumed by the BankController
-#[derive(Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BankAccount {
     account_pub_key: AccountPubKey,
     balances: HashMap<AssetId, AccountBalance>,
@@ -42,7 +43,7 @@ impl BankAccount {
 }
 
 /// OrderAccount is consumed by the SpotController
-#[derive(Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct OrderAccount {
     account_pub_key: AccountPubKey,
 }
@@ -57,7 +58,7 @@ impl OrderAccount {
 }
 
 /// StakeAccount is consumed by the StakeController
-#[derive(Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct StakeAccount {
     account_pub_key: AccountPubKey,
     staked_amount: u64,

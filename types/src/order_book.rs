@@ -17,7 +17,7 @@ pub enum OrderType {
     Limit,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Order {
     pub order_id: u64,
     pub base_asset: AssetId,

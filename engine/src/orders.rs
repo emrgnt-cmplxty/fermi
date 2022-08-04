@@ -43,7 +43,13 @@ pub fn new_limit_order_request(
 ///
 /// Note: do not change order side!
 /// Instead cancel existing order and create a new one.
-pub fn amend_order_request(id: u64, side: OrderSide, price: u64, quantity: u64, ts: SystemTime) -> OrderRequest {
+pub fn amend_order_request(
+    id: u64,
+    side: OrderSide,
+    price: u64,
+    quantity: u64,
+    ts: SystemTime,
+) -> OrderRequest {
     OrderRequest::Amend {
         id,
         side,

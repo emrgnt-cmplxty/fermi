@@ -10,9 +10,7 @@ use super::sequence;
 use super::validation::OrderRequestValidator;
 use std::time::SystemTime;
 use types::{
-    AssetId,
-    Failed, Order, OrderProcessingResult, OrderSide, OrderType, Success,
-    OrderRequest
+    AssetId, Failed, Order, OrderProcessingResult, OrderRequest, OrderSide, OrderType, Success,
 };
 
 const MIN_SEQUENCE_ID: u64 = 1;
@@ -45,10 +43,23 @@ impl Orderbook {
         Orderbook {
             base_asset,
             quote_asset,
-            bid_queue: OrderQueue::new(OrderSide::Bid, MAX_STALLED_INDICES_IN_QUEUE, ORDER_QUEUE_INIT_CAPACITY),
-            ask_queue: OrderQueue::new(OrderSide::Ask, MAX_STALLED_INDICES_IN_QUEUE, ORDER_QUEUE_INIT_CAPACITY),
+            bid_queue: OrderQueue::new(
+                OrderSide::Bid,
+                MAX_STALLED_INDICES_IN_QUEUE,
+                ORDER_QUEUE_INIT_CAPACITY,
+            ),
+            ask_queue: OrderQueue::new(
+                OrderSide::Ask,
+                MAX_STALLED_INDICES_IN_QUEUE,
+                ORDER_QUEUE_INIT_CAPACITY,
+            ),
             seq: sequence::new_sequence_gen(MIN_SEQUENCE_ID, MAX_SEQUENCE_ID),
-            order_validator: OrderRequestValidator::new(base_asset, quote_asset, MIN_SEQUENCE_ID, MAX_SEQUENCE_ID),
+            order_validator: OrderRequestValidator::new(
+                base_asset,
+                quote_asset,
+                MIN_SEQUENCE_ID,
+                MAX_SEQUENCE_ID,
+            ),
         }
     }
 
@@ -78,7 +89,14 @@ impl Orderbook {
                     ts: SystemTime::now(),
                 }));
 
-                self.process_market_order(&mut proc_result, order_id, base_asset, quote_asset, side, quantity);
+                self.process_market_order(
+                    &mut proc_result,
+                    order_id,
+                    base_asset,
+                    quote_asset,
+                    side,
+                    quantity,
+                );
             }
 
             OrderRequest::Limit {
@@ -240,10 +258,28 @@ impl Orderbook {
                 }
             } else {
                 // just insert new order in queue
-                self.store_new_limit_order(results, order_id, base_asset, quote_asset, side, price, quantity, ts);
+                self.store_new_limit_order(
+                    results,
+                    order_id,
+                    base_asset,
+                    quote_asset,
+                    side,
+                    price,
+                    quantity,
+                    ts,
+                );
             }
         } else {
-            self.store_new_limit_order(results, order_id, base_asset, quote_asset, side, price, quantity, ts);
+            self.store_new_limit_order(
+                results,
+                order_id,
+                base_asset,
+                quote_asset,
+                side,
+                price,
+                quantity,
+                ts,
+            );
         }
     }
 
@@ -285,7 +321,12 @@ impl Orderbook {
         }
     }
 
-    fn process_order_cancel(&mut self, results: &mut OrderProcessingResult, order_id: u64, side: OrderSide) {
+    fn process_order_cancel(
+        &mut self,
+        results: &mut OrderProcessingResult,
+        order_id: u64,
+        side: OrderSide,
+    ) {
         let order_queue = match side {
             OrderSide::Bid => &mut self.bid_queue,
             OrderSide::Ask => &mut self.ask_queue,

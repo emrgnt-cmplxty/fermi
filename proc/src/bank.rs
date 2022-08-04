@@ -13,7 +13,7 @@ extern crate types;
 
 use super::account::BankAccount;
 use std::collections::HashMap;
-use types::{AccountPubKey, Asset, AssetId, GDEXError};
+use types::{AccountPubKey, Asset, AssetId, ProcError};
 
 // TODO #0 //
 pub const PRIMARY_ASSET_ID: u64 = 0;
@@ -34,10 +34,10 @@ impl BankController {
         }
     }
 
-    pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
+    pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), ProcError> {
         // do not allow double-creation of a single account
         if self.bank_accounts.contains_key(account_pub_key) {
-            Err(GDEXError::AccountCreation)
+            Err(ProcError::AccountCreation)
         } else {
             self.bank_accounts.insert(
                 account_pub_key.clone(),
@@ -47,15 +47,15 @@ impl BankController {
         }
     }
 
-    fn check_account_exists(&self, account_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
+    fn check_account_exists(&self, account_pub_key: &AccountPubKey) -> Result<(), ProcError> {
         self.bank_accounts
             .get(account_pub_key)
-            .ok_or(GDEXError::AccountLookup)?;
+            .ok_or(ProcError::AccountLookup)?;
         Ok(())
     }
 
     // TODO #0  //
-    pub fn create_asset(&mut self, owner_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
+    pub fn create_asset(&mut self, owner_pub_key: &AccountPubKey) -> Result<(), ProcError> {
         // special handling for genesis
         // an account must be created in this instance
         // since account creation is gated by receipt and balance of primary blockchain asset
@@ -83,12 +83,12 @@ impl BankController {
         &self,
         account_pub_key: &AccountPubKey,
         asset_id: AssetId,
-    ) -> Result<u64, GDEXError> {
+    ) -> Result<&u64, ProcError> {
         let bank_account = self
             .bank_accounts
             .get(account_pub_key)
-            .ok_or(GDEXError::AccountLookup)?;
-        Ok(*bank_account.get_balances().get(&asset_id).unwrap_or(&0))
+            .ok_or(ProcError::AccountLookup)?;
+        Ok(bank_account.get_balances().get(&asset_id).unwrap_or(&0))
     }
 
     pub fn update_balance(
@@ -96,15 +96,15 @@ impl BankController {
         account_pub_key: &AccountPubKey,
         asset_id: AssetId,
         amount: i64,
-    ) -> Result<(), GDEXError> {
+    ) -> Result<(), ProcError> {
         let bank_account = self
             .bank_accounts
             .get_mut(account_pub_key)
-            .ok_or(GDEXError::AccountLookup)?;
+            .ok_or(ProcError::AccountLookup)?;
         let prev_amount: i64 = *bank_account.get_balances().get(&asset_id).unwrap_or(&0) as i64;
         // return error if insufficient user balance
         if (prev_amount + amount) < 0 {
-            return Err(GDEXError::PaymentRequest);
+            return Err(ProcError::PaymentRequest);
         };
 
         bank_account.set_balance(asset_id, (prev_amount + amount) as u64);
@@ -117,18 +117,18 @@ impl BankController {
         account_pub_key_to: &AccountPubKey,
         asset_id: AssetId,
         amount: u64,
-    ) -> Result<(), GDEXError> {
+    ) -> Result<(), ProcError> {
         // return error if insufficient user balance
-        let balance = self.get_balance(account_pub_key_from, asset_id)?;
+        let balance = *self.get_balance(account_pub_key_from, asset_id)?;
         if balance < amount {
-            return Err(GDEXError::PaymentRequest);
+            return Err(ProcError::PaymentRequest);
         };
 
         if self.check_account_exists(account_pub_key_to).is_err() {
             if asset_id == 0 {
                 self.create_account(account_pub_key_to)?
             } else {
-                return Err(GDEXError::AccountLookup);
+                return Err(ProcError::AccountLookup);
             }
         }
 

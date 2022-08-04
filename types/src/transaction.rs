@@ -249,16 +249,10 @@ impl SignedTransaction {
 pub mod transaction_tests {
     use super::*;
 
-    use crate::AccountKeyPair;
+    use crate::{account_test_functions::generate_keypair_vec, AccountKeyPair};
     use narwhal_crypto::traits::{KeyPair, Signer};
-    use rand::{rngs::StdRng, SeedableRng};
 
     const PRIMARY_ASSET_ID: u64 = 0;
-
-    pub fn keys(seed: [u8; 32]) -> Vec<AccountKeyPair> {
-        let mut rng = StdRng::from_seed(seed);
-        (0..4).map(|_| AccountKeyPair::generate(&mut rng)).collect()
-    }
 
     pub fn generate_signed_payment_transaction(
         kp_sender: &AccountKeyPair,
@@ -286,8 +280,8 @@ pub mod transaction_tests {
     // test that transaction returns expected fields, validates a good signature, and has deterministic hashing
     fn fails_bad_signature() {
         // generating a signed transaction payload
-        let kp_sender = keys([0; 32]).pop().unwrap();
-        let kp_receiver = keys([1; 32]).pop().unwrap();
+        let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
+        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
 
         let dummy_batch_digest = BatchDigest::new([0; DIGEST_LEN]);
         let transaction_variant = TransactionVariant::PaymentTransaction(PaymentRequest::new(
@@ -324,8 +318,8 @@ pub mod transaction_tests {
     #[test]
     // test that transaction returns expected fields, validates a good signature, and has deterministic hashing
     fn transaction_properties() {
-        let kp_sender = keys([0; 32]).pop().unwrap();
-        let kp_receiver = keys([1; 32]).pop().unwrap();
+        let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
+        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
         let signed_transaction = generate_signed_payment_transaction(&kp_sender, &kp_receiver);
         let transaction = signed_transaction.get_transaction_payload();
         let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
@@ -363,8 +357,8 @@ pub mod transaction_tests {
     #[test]
     // test that a signed payment transaction behaves as expected
     fn signed_payment_transaction() {
-        let kp_sender = keys([0; 32]).pop().unwrap();
-        let kp_receiver = keys([1; 32]).pop().unwrap();
+        let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
+        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
         let signed_transaction = generate_signed_payment_transaction(&kp_sender, &kp_receiver);
 
         let payment = match signed_transaction.get_transaction_payload().get_variant() {
@@ -390,7 +384,7 @@ pub mod transaction_tests {
 
     #[test]
     fn create_asset_transaction() {
-        let kp_sender = keys([0; 32]).pop().unwrap();
+        let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
 
         let dummy_batch_digest = BatchDigest::new([0; DIGEST_LEN]);
 
@@ -423,8 +417,8 @@ pub mod transaction_tests {
 
     #[test]
     fn test_serialize_deserialize() {
-        let kp_sender = keys([0; 32]).pop().unwrap();
-        let kp_receiver = keys([1; 32]).pop().unwrap();
+        let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
+        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
         let signed_transaction = generate_signed_payment_transaction(&kp_sender, &kp_receiver);
 
         // perform transaction checks

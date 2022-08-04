@@ -1,6 +1,6 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
-//! 
+//!
 //!
 //! This controller is responsible for managing user staking
 //! it relies on BankController and only accesses the 0th (first) created asset

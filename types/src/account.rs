@@ -12,7 +12,6 @@ pub type AccountSignature = Ed25519Signature;
 pub type AccountKeyPair = Ed25519KeyPair;
 pub type AccountBalance = u64;
 
-
 /// BankAccount is consumed by the BankController
 #[derive(Debug)]
 pub struct BankAccount {
@@ -102,9 +101,9 @@ pub mod account_test_functions {
 /// Begin the testing suite for account
 #[cfg(test)]
 pub mod account_tests {
+    use super::account_test_functions::generate_keypair_vec;
     use super::*;
     use narwhal_crypto::traits::KeyPair;
-    use super::account_test_functions::generate_keypair_vec;
 
     #[test]
     pub fn create_bank_account() {

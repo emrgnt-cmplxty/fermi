@@ -1,6 +1,10 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
-use std::{collections::{BinaryHeap, HashMap}, cmp::Ordering, time};
+use std::{
+    cmp::Ordering,
+    collections::{BinaryHeap, HashMap},
+    time,
+};
 use types::OrderSide;
 
 #[derive(Clone)]

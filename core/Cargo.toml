@@ -1,0 +1,35 @@
+[package]
+name = "gdex-core"
+version = "0.1.0"
+authors = []
+edition = "2021"
+
+[dependencies]
+anyhow = { version = "1.0.58", features = ["backtrace"] }
+arc-swap = "1.5.1"
+bcs = "0.1.3"
+camino = "1.0.9"
+clap = { version = "3.1.17", features = ["derive"] }
+move-binary-format = { git = "https://github.com/move-language/move", rev = "79071528524f08b12e9abb84c1094d8e976aa17a" }
+move-bytecode-utils = { git = "https://github.com/move-language/move", rev = "79071528524f08b12e9abb84c1094d8e976aa17a" }
+move-core-types = { git = "https://github.com/move-language/move", rev = "79071528524f08b12e9abb84c1094d8e976aa17a", features = ["address20"] }
+move-vm-runtime = { git = "https://github.com/move-language/move", rev = "79071528524f08b12e9abb84c1094d8e976aa17a" }
+multiaddr = "0.14.0"
+narwhal-config = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "config" }
+narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "crypto" }
+rand = "0.7.3"
+serde = { version = "1.0.141", features = ["derive"] }
+serde_yaml = "0.8.26"
+serde_with = { version = "1.14.0", features = ["hex"] }
+sui = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b" }
+sui-adapter = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b" }
+sui-framework = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b" }
+sui-network = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b" }
+sui-types = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b" }
+sui-storage = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b" }
+sui-config = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b" }
+sui-json = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b" }
+sui-json-rpc-types = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b" }
+signature = "1.5.0"
+tracing = "0.1.36"
+tempfile = "3.3.0"

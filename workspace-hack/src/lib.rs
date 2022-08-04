@@ -1,4 +1,1 @@
-// Copyright (c) The GDEX Core Contributors
-// SPDX-License-Identifier: Apache-2.0
-
-// intentionally left blank
+// This is a stub lib.rs.

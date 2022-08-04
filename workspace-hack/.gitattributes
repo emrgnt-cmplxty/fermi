@@ -1,3 +1,4 @@
-# Avoid putting conflict markers in the generated Cargo.toml file since it gets in the way of compiling
-# anything.
-Cargo.toml merge=binary
+# Avoid putting conflict markers in the generated Cargo.toml file, since their presence breaks
+# Cargo.
+# Also do not check out the file as CRLF on Windows, as that's what hakari needs.
+Cargo.toml merge=binary -crlf

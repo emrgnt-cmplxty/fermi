@@ -10,8 +10,8 @@
 use super::order_queues::OrderQueue;
 use super::sequence;
 use super::validation::OrderRequestValidator;
+use gdex_types::{AssetId, Failed, Order, OrderProcessingResult, OrderRequest, OrderSide, OrderType, Success};
 use std::time::SystemTime;
-use types::{AssetId, Failed, Order, OrderProcessingResult, OrderRequest, OrderSide, OrderType, Success};
 
 const MIN_SEQUENCE_ID: u64 = 1;
 const MAX_SEQUENCE_ID: u64 = 1_000_000;

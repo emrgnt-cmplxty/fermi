@@ -1,6 +1,10 @@
-use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashMap};
-use std::time;
+//! Copyright (c) 2022, BTI
+//! SPDX-License-Identifier: Apache-2.0
+use std::{
+    cmp::Ordering,
+    collections::{BinaryHeap, HashMap},
+    time,
+};
 use types::OrderSide;
 
 #[derive(Clone)]
@@ -11,7 +15,7 @@ struct OrderIndex {
     order_side: OrderSide,
 }
 
-// Arrange at first by price and after that by time
+/// Arrange at first by price and after that by time
 impl Ord for OrderIndex {
     fn cmp(&self, other: &Self) -> Ordering {
         match self.price {
@@ -144,8 +148,7 @@ impl<T> OrderQueue<T> {
     /// Note: do not modify price or time, cause index doesn't change!
     pub fn modify_current_order(&mut self, new_order: T) -> bool {
         if let Some(order_id) = self.get_current_order_id() {
-            if let std::collections::hash_map::Entry::Occupied(mut e) = self.orders.entry(order_id)
-            {
+            if let std::collections::hash_map::Entry::Occupied(mut e) = self.orders.entry(order_id) {
                 e.insert(new_order);
                 return true;
             }
@@ -215,20 +218,8 @@ mod test {
     fn get_queue_bids() -> OrderQueue<TestOrder> {
         let mut bid_queue = get_queue_empty(OrderSide::Bid);
 
-        assert!(bid_queue.insert(
-            1,
-            101,
-            time::SystemTime::now(),
-            TestOrder { name: "low bid" },
-        ));
-        assert!(bid_queue.insert(
-            2,
-            102,
-            time::SystemTime::now(),
-            TestOrder {
-                name: "high bid first"
-            },
-        ));
+        assert!(bid_queue.insert(1, 101, time::SystemTime::now(), TestOrder { name: "low bid" },));
+        assert!(bid_queue.insert(2, 102, time::SystemTime::now(), TestOrder { name: "high bid first" },));
         // same price but later
         assert!(bid_queue.insert(
             3,
@@ -245,28 +236,9 @@ mod test {
 
     fn get_queue_asks() -> OrderQueue<TestOrder> {
         let mut ask_queue = get_queue_empty(OrderSide::Ask);
-        assert!(ask_queue.insert(
-            1,
-            101,
-            time::SystemTime::now(),
-            TestOrder {
-                name: "low ask first"
-            },
-        ));
-        assert!(ask_queue.insert(
-            2,
-            102,
-            time::SystemTime::now(),
-            TestOrder { name: "high ask" },
-        ));
-        assert!(ask_queue.insert(
-            3,
-            101,
-            time::SystemTime::now(),
-            TestOrder {
-                name: "low ask second"
-            },
-        ));
+        assert!(ask_queue.insert(1, 101, time::SystemTime::now(), TestOrder { name: "low ask first" },));
+        assert!(ask_queue.insert(2, 102, time::SystemTime::now(), TestOrder { name: "high ask" },));
+        assert!(ask_queue.insert(3, 101, time::SystemTime::now(), TestOrder { name: "low ask second" },));
         assert_eq!(ask_queue.peek().unwrap().name, "low ask first");
 
         ask_queue
@@ -278,12 +250,7 @@ mod test {
         assert_eq!(bid_queue.peek(), None);
 
         // insert unique
-        assert!(bid_queue.insert(
-            1,
-            101,
-            time::SystemTime::now(),
-            TestOrder { name: "first bid" },
-        ));
+        assert!(bid_queue.insert(1, 101, time::SystemTime::now(), TestOrder { name: "first bid" },));
 
         // discard order with existing ID
         assert!(!bid_queue.insert(
@@ -322,10 +289,7 @@ mod test {
             name: "current bid partially matched"
         },));
 
-        assert_eq!(
-            bid_queue.pop().unwrap().name,
-            "current bid partially matched"
-        );
+        assert_eq!(bid_queue.pop().unwrap().name, "current bid partially matched");
         assert_eq!(bid_queue.pop().unwrap().name, "high bid second");
         assert_eq!(bid_queue.pop().unwrap().name, "low bid");
     }
@@ -335,27 +299,10 @@ mod test {
         let mut ask_queue = get_queue_asks();
 
         // amend two orders in the queue
-        assert!(ask_queue.amend(
-            2,
-            99,
-            time::SystemTime::now(),
-            TestOrder { name: "new first" },
-        ));
-        assert!(ask_queue.amend(
-            1,
-            101,
-            time::SystemTime::now(),
-            TestOrder { name: "new last" },
-        ));
+        assert!(ask_queue.amend(2, 99, time::SystemTime::now(), TestOrder { name: "new first" },));
+        assert!(ask_queue.amend(1, 101, time::SystemTime::now(), TestOrder { name: "new last" },));
         // non-exist order
-        assert!(!ask_queue.amend(
-            4,
-            303,
-            time::SystemTime::now(),
-            TestOrder {
-                name: "nonexistent"
-            },
-        ));
+        assert!(!ask_queue.amend(4, 303, time::SystemTime::now(), TestOrder { name: "nonexistent" },));
 
         assert_eq!(ask_queue.pop().unwrap().name, "new first");
         assert_eq!(ask_queue.pop().unwrap().name, "low ask second");

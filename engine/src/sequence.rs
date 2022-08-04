@@ -1,4 +1,6 @@
-// Rotating index sequence
+//! Copyright (c) 2022, BTI
+//! SPDX-License-Identifier: Apache-2.0
+/// Rotating index sequence
 pub struct TradeSequence {
     min_id: u64,
     max_id: u64,

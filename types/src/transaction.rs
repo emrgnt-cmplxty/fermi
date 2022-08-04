@@ -1,9 +1,10 @@
-// Copyright (c) 2022, BTI
-// SPDX-License-Identifier: Apache-2.0
-// The transaction class is responsible for parsing client interactions
-// each valid transaction corresponds to a unique state transition within
-// the space of allowable blockchain transitions
-//
+//! Copyright (c) 2022, BTI
+//! SPDX-License-Identifier: Apache-2.0
+//!
+//! The transaction class is responsible for parsing client interactions
+//! each valid transaction corresponds to a unique state transition within
+//! the space of allowable blockchain transitions
+//!
 use crate::{AccountPubKey, AccountSignature, AssetId, OrderSide, SignedTransactionError};
 use blake2::{digest::Update, VarBlake2b};
 use narwhal_crypto::{Digest, Hash, Verifier, DIGEST_LEN};
@@ -104,11 +105,7 @@ pub struct Transaction {
 }
 
 impl Transaction {
-    pub fn new(
-        sender: AccountPubKey,
-        recent_batch_digest: BatchDigest,
-        variant: TransactionVariant,
-    ) -> Self {
+    pub fn new(sender: AccountPubKey, recent_batch_digest: BatchDigest, variant: TransactionVariant) -> Self {
         Transaction {
             sender,
             recent_batch_digest,
@@ -265,11 +262,7 @@ pub mod transaction_tests {
             10,
         ));
 
-        let transaction = Transaction::new(
-            kp_sender.public().clone(),
-            dummy_batch_digest,
-            transaction_variant,
-        );
+        let transaction = Transaction::new(kp_sender.public().clone(), dummy_batch_digest, transaction_variant);
 
         let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
 
@@ -290,17 +283,12 @@ pub mod transaction_tests {
             10,
         ));
 
-        let transaction = Transaction::new(
-            kp_sender.public().clone(),
-            dummy_batch_digest,
-            transaction_variant,
-        );
+        let transaction = Transaction::new(kp_sender.public().clone(), dummy_batch_digest, transaction_variant);
 
         // sign the wrong payload
         let signed_digest = kp_sender.sign(dummy_batch_digest.to_string().as_bytes());
 
-        let signed_transaction =
-            SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
+        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
         let verify_result = signed_transaction.verify();
 
         // check that verification fails
@@ -390,18 +378,11 @@ pub mod transaction_tests {
 
         let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest {});
 
-        let transaction = Transaction::new(
-            kp_sender.public().clone(),
-            dummy_batch_digest,
-            transaction_variant,
-        );
+        let transaction = Transaction::new(kp_sender.public().clone(), dummy_batch_digest, transaction_variant);
         let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
 
-        let signed_transaction = SignedTransaction::new(
-            kp_sender.public().clone(),
-            transaction.clone(),
-            signed_digest.clone(),
-        );
+        let signed_transaction =
+            SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest.clone());
 
         // check valid signature
         signed_transaction.verify().unwrap();
@@ -425,8 +406,7 @@ pub mod transaction_tests {
 
         let serialized = signed_transaction.serialize().unwrap();
         // check valid signature
-        let signed_transaction_deserialized: SignedTransaction =
-            SignedTransaction::deserialize(serialized).unwrap();
+        let signed_transaction_deserialized: SignedTransaction = SignedTransaction::deserialize(serialized).unwrap();
 
         // verify signed transaction matches previous values
         assert!(

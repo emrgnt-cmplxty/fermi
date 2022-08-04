@@ -2,6 +2,7 @@
     types/src
     ├── account.rs
     ├── asset.rs
-    ├── orderbook.rs
-    ├── spot.rs
+    ├── error.rs
+    ├── order_book.rs
+    ├── transaction.rs
 ```

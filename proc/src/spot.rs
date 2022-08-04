@@ -13,7 +13,7 @@ extern crate engine;
 extern crate types;
 
 use super::{account::OrderAccount, bank::BankController};
-use engine::{orderbook::Orderbook, orders::new_limit_order_request};
+use engine::{order_book::Orderbook, orders::new_limit_order_request};
 use std::{collections::HashMap, time::SystemTime};
 use types::{
     AccountPubKey, AssetId, AssetPairKey, OrderProcessingResult, OrderSide, ProcError, Success,

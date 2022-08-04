@@ -53,7 +53,7 @@ class LocalBench:
 
             # Recompile the latest code.
             cmd = CommandMaker.compile(mem_profiling=self.mem_profile)
-            Print.info(f"Running compilation command {cmd}...")
+            Print.info(f"About to run {cmd}...")
             subprocess.run(cmd, check=True, cwd=PathMaker.node_crate_path())
 
             # Create alias for the client and nodes binary.
@@ -83,10 +83,8 @@ class LocalBench:
                         address,
                         self.tx_size,
                         rate_share,
-                        self.node_parameters.json['execution'],
                         [x for y in workers_addresses for _, x in y]
                     )
-                    Print.info(f'Starting benchmark client with cmd={cmd}')
                     log_file = PathMaker.client_log_file(i, id)
                     self._background_run(cmd, log_file)
 
@@ -97,10 +95,8 @@ class LocalBench:
                     PathMaker.committee_file(),
                     PathMaker.db_path(i),
                     PathMaker.parameters_file(),
-                    self.node_parameters.json['execution'],
                     debug=debug
                 )
-                Print.info(f'Starting Primary with cmd={cmd}')
                 log_file = PathMaker.primary_log_file(i)
                 self._background_run(cmd, log_file)
 
@@ -112,12 +108,10 @@ class LocalBench:
                         PathMaker.committee_file(),
                         PathMaker.db_path(i, id),
                         PathMaker.parameters_file(),
-                        self.node_parameters.json['execution'],
                         id,  # The worker's id.
                         debug=debug
                     )
                     log_file = PathMaker.worker_log_file(i, id)
-                    Print.info(f'Starting Worker with cmd={cmd}')
                     self._background_run(cmd, log_file)
 
             # Wait for all transactions to be processed.

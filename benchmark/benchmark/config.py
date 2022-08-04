@@ -177,7 +177,6 @@ class NodeParameters:
             inputs += [json['batch_size']]
             inputs += [json['max_batch_delay']]
             inputs += [json['max_concurrent_requests']]
-            inputs += [json['execution']]
         except KeyError as e:
             raise ConfigError(f'Malformed parameters: missing key {e}')
 

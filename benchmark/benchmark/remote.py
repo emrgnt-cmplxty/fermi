@@ -211,7 +211,7 @@ class Bench:
 
         return committee
 
-    def _run_single(self, rate, committee, node_parameters, bench_parameters, debug=False):
+    def _run_single(self, rate, committee, bench_parameters, debug=False):
         faults = bench_parameters.faults
 
         # Kill any potentially unfinished run and delete logs.
@@ -231,7 +231,6 @@ class Bench:
                     address,
                     bench_parameters.tx_size,
                     rate_share,
-                    self.node_parameters.json['execution'],
                     [x for y in workers_addresses for _, x in y]
                 )
                 log_file = PathMaker.client_log_file(i, id)
@@ -246,7 +245,6 @@ class Bench:
                 PathMaker.committee_file(),
                 PathMaker.db_path(i),
                 PathMaker.parameters_file(),
-                self.node_parameters.json['execution'],
                 debug=debug
             )
             log_file = PathMaker.primary_log_file(i)
@@ -262,7 +260,6 @@ class Bench:
                     PathMaker.committee_file(),
                     PathMaker.db_path(i, id),
                     PathMaker.parameters_file(),
-                    self.node_parameters.json['execution'],
                     id,  # The worker's id.
                     debug=debug
                 )
@@ -354,7 +351,7 @@ class Bench:
                     Print.heading(f'Run {i+1}/{bench_parameters.runs}')
                     try:
                         self._run_single(
-                            r, committee_copy, node_parameters, bench_parameters, debug
+                            r, committee_copy, bench_parameters, debug
                         )
 
                         faults = bench_parameters.faults

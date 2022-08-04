@@ -1,2 +1,2 @@
 [workspace]
-members = ["engine", "proc", "types", "workspace-hack"]
+members = ["engine", "proc", "types", "gdex-node", "workspace-hack"]

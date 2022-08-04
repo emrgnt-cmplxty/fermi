@@ -36,10 +36,8 @@ impl BankController {
         if self.bank_accounts.contains_key(account_pub_key) {
             Err(ProcError::AccountCreation)
         } else {
-            self.bank_accounts.insert(
-                account_pub_key.clone(),
-                BankAccount::new(account_pub_key.clone()),
-            );
+            self.bank_accounts
+                .insert(account_pub_key.clone(), BankAccount::new(account_pub_key.clone()));
             Ok(())
         }
     }
@@ -76,11 +74,7 @@ impl BankController {
         Ok(())
     }
 
-    pub fn get_balance(
-        &self,
-        account_pub_key: &AccountPubKey,
-        asset_id: AssetId,
-    ) -> Result<&u64, ProcError> {
+    pub fn get_balance(&self, account_pub_key: &AccountPubKey, asset_id: AssetId) -> Result<&u64, ProcError> {
         let bank_account = self
             .bank_accounts
             .get(account_pub_key)

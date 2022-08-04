@@ -66,12 +66,7 @@ impl OrderRequestValidator {
 
     /* Internal validators */
 
-    fn validate_market(
-        &self,
-        base_asset: AssetId,
-        quote_asset: AssetId,
-        quantity: u64,
-    ) -> Result<(), &str> {
+    fn validate_market(&self, base_asset: AssetId, quote_asset: AssetId, quantity: u64) -> Result<(), &str> {
         if self.orderbook_base_asset != base_asset {
             return Err(ERR_BAD_BASE_ASSET);
         }
@@ -87,13 +82,7 @@ impl OrderRequestValidator {
         Ok(())
     }
 
-    fn validate_limit(
-        &self,
-        base_asset: AssetId,
-        quote_asset: AssetId,
-        price: u64,
-        quantity: u64,
-    ) -> Result<(), &str> {
+    fn validate_limit(&self, base_asset: AssetId, quote_asset: AssetId, price: u64, quantity: u64) -> Result<(), &str> {
         if self.orderbook_base_asset != base_asset {
             return Err(ERR_BAD_BASE_ASSET);
         }

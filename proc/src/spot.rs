@@ -15,10 +15,7 @@ use super::bank::BankController;
 use core::cell::RefCell;
 use engine::{order_book::Orderbook, orders::new_limit_order_request};
 use std::{collections::HashMap, rc::Rc, time::SystemTime};
-use types::{
-    AccountPubKey, AssetId, AssetPairKey, OrderAccount, OrderProcessingResult, OrderSide,
-    ProcError, Success,
-};
+use types::{AccountPubKey, AssetId, AssetPairKey, OrderAccount, OrderProcessingResult, OrderSide, ProcError, Success};
 
 pub type OrderId = u64;
 
@@ -33,11 +30,7 @@ pub struct OrderbookInterface {
 }
 impl OrderbookInterface {
     // TODO #4 //
-    pub fn new(
-        base_asset_id: AssetId,
-        quote_asset_id: AssetId,
-        bank_controller: Rc<RefCell<BankController>>,
-    ) -> Self {
+    pub fn new(base_asset_id: AssetId, quote_asset_id: AssetId, bank_controller: Rc<RefCell<BankController>>) -> Self {
         assert!(base_asset_id != quote_asset_id);
         let orderbook = Orderbook::new(base_asset_id, quote_asset_id);
         OrderbookInterface {
@@ -54,19 +47,14 @@ impl OrderbookInterface {
         if self.accounts.contains_key(account_pub_key) {
             Err(ProcError::AccountCreation)
         } else {
-            self.accounts.insert(
-                account_pub_key.clone(),
-                OrderAccount::new(account_pub_key.clone()),
-            );
+            self.accounts
+                .insert(account_pub_key.clone(), OrderAccount::new(account_pub_key.clone()));
             Ok(())
         }
     }
 
     pub fn get_account(&self, account_pub_key: &AccountPubKey) -> Result<&OrderAccount, ProcError> {
-        let account = self
-            .accounts
-            .get(account_pub_key)
-            .ok_or(ProcError::AccountLookup)?;
+        let account = self.accounts.get(account_pub_key).ok_or(ProcError::AccountLookup)?;
         Ok(account)
     }
 
@@ -124,8 +112,7 @@ impl OrderbookInterface {
                 Ok(Success::Accepted { order_id, .. }) => {
                     self.proc_order_init(account_pub_key, sub_side, sub_price, sub_qty)?;
                     // insert new order to map
-                    self.order_to_account
-                        .insert(*order_id, account_pub_key.clone());
+                    self.order_to_account.insert(*order_id, account_pub_key.clone());
                 }
                 // subsequent orders are expected to be an PartialFill or Fill results
                 Ok(Success::PartiallyFilled {
@@ -156,9 +143,7 @@ impl OrderbookInterface {
                         .clone();
                     self.proc_order_fill(&existing_pub_key, *side, *price, *quantity)?;
                     // erase existing order
-                    self.order_to_account
-                        .remove(order_id)
-                        .ok_or(ProcError::OrderRequest)?;
+                    self.order_to_account.remove(order_id).ok_or(ProcError::OrderRequest)?;
                 }
                 Ok(Success::Amended { .. }) => {
                     panic!("This needs to be implemented...")
@@ -217,11 +202,9 @@ impl OrderbookInterface {
             )?;
         } else {
             // E.g. fill bid 1 BTC @ 20k adds 1 BTC (base) to bal, subtracts 20k USD (quote) from escrow
-            self.bank_controller.borrow_mut().update_balance(
-                account_pub_key,
-                self.base_asset_id,
-                quantity as i64,
-            )?;
+            self.bank_controller
+                .borrow_mut()
+                .update_balance(account_pub_key, self.base_asset_id, quantity as i64)?;
         }
         Ok(())
     }
@@ -261,15 +244,9 @@ impl SpotController {
         Ok(orderbook)
     }
 
-    pub fn create_orderbook(
-        &mut self,
-        base_asset_id: AssetId,
-        quote_asset_id: AssetId,
-    ) -> Result<(), ProcError> {
+    pub fn create_orderbook(&mut self, base_asset_id: AssetId, quote_asset_id: AssetId) -> Result<(), ProcError> {
         let orderbook_lookup = self.get_orderbook_key(base_asset_id, quote_asset_id);
-        if let std::collections::hash_map::Entry::Vacant(e) =
-            self.orderbooks.entry(orderbook_lookup)
-        {
+        if let std::collections::hash_map::Entry::Vacant(e) = self.orderbooks.entry(orderbook_lookup) {
             e.insert(OrderbookInterface::new(
                 base_asset_id,
                 quote_asset_id,
@@ -358,11 +335,8 @@ pub mod spot_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Rc::new(RefCell::new(bank_controller));
 
-        let mut orderbook_interface = OrderbookInterface::new(
-            BASE_ASSET_ID,
-            QUOTE_ASSET_ID,
-            Rc::clone(&bank_controller_ref),
-        );
+        let mut orderbook_interface =
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Rc::clone(&bank_controller_ref));
 
         let bid_size = 100;
         let bid_price = 100;
@@ -397,9 +371,7 @@ pub mod spot_tests {
 
         let mut spot_controller = SpotController::new(Rc::clone(&bank_controller_ref));
 
-        spot_controller
-            .create_orderbook(BASE_ASSET_ID, QUOTE_ASSET_ID)
-            .unwrap();
+        spot_controller.create_orderbook(BASE_ASSET_ID, QUOTE_ASSET_ID).unwrap();
 
         let bid_size = 100;
         let bid_price = 100;
@@ -439,11 +411,8 @@ pub mod spot_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Rc::new(RefCell::new(bank_controller));
 
-        let mut orderbook_interface = OrderbookInterface::new(
-            BASE_ASSET_ID,
-            QUOTE_ASSET_ID,
-            Rc::clone(&bank_controller_ref),
-        );
+        let mut orderbook_interface =
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Rc::clone(&bank_controller_ref));
 
         let bid_size = 100;
         let bid_price = 100;
@@ -476,15 +445,10 @@ pub mod spot_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Rc::new(RefCell::new(bank_controller));
 
-        let orderbook_interface = OrderbookInterface::new(
-            BASE_ASSET_ID,
-            QUOTE_ASSET_ID,
-            Rc::clone(&bank_controller_ref),
-        );
+        let orderbook_interface =
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Rc::clone(&bank_controller_ref));
 
-        let result = orderbook_interface
-            .get_account(account.public())
-            .unwrap_err();
+        let result = orderbook_interface.get_account(account.public()).unwrap_err();
 
         assert!(matches!(result, ProcError::AccountLookup));
     }
@@ -498,18 +462,11 @@ pub mod spot_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Rc::new(RefCell::new(bank_controller));
 
-        let mut orderbook_interface = OrderbookInterface::new(
-            BASE_ASSET_ID,
-            QUOTE_ASSET_ID,
-            Rc::clone(&bank_controller_ref),
-        );
+        let mut orderbook_interface =
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Rc::clone(&bank_controller_ref));
 
-        orderbook_interface
-            .create_account(account.public())
-            .unwrap();
-        let result = orderbook_interface
-            .create_account(account.public())
-            .unwrap_err();
+        orderbook_interface.create_account(account.public()).unwrap();
+        let result = orderbook_interface.create_account(account.public()).unwrap_err();
         assert!(matches!(result, ProcError::AccountCreation));
     }
 
@@ -523,29 +480,16 @@ pub mod spot_tests {
         bank_controller.create_asset(account_0.public()).unwrap();
         bank_controller.create_asset(account_0.public()).unwrap();
         bank_controller
-            .transfer(
-                account_0.public(),
-                account_1.public(),
-                BASE_ASSET_ID,
-                TRANSFER_AMOUNT,
-            )
+            .transfer(account_0.public(), account_1.public(), BASE_ASSET_ID, TRANSFER_AMOUNT)
             .unwrap();
         bank_controller
-            .transfer(
-                account_0.public(),
-                account_1.public(),
-                QUOTE_ASSET_ID,
-                TRANSFER_AMOUNT,
-            )
+            .transfer(account_0.public(), account_1.public(), QUOTE_ASSET_ID, TRANSFER_AMOUNT)
             .unwrap();
 
         let bank_controller_ref = Rc::new(RefCell::new(bank_controller));
 
-        let mut orderbook_interface = OrderbookInterface::new(
-            BASE_ASSET_ID,
-            QUOTE_ASSET_ID,
-            Rc::clone(&bank_controller_ref),
-        );
+        let mut orderbook_interface =
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Rc::clone(&bank_controller_ref));
 
         let bid_size_0: u64 = 100;
         let bid_price_0: u64 = 100;
@@ -600,29 +544,16 @@ pub mod spot_tests {
         bank_controller.create_asset(account_0.public()).unwrap();
         bank_controller.create_asset(account_0.public()).unwrap();
         bank_controller
-            .transfer(
-                account_0.public(),
-                account_1.public(),
-                BASE_ASSET_ID,
-                TRANSFER_AMOUNT,
-            )
+            .transfer(account_0.public(), account_1.public(), BASE_ASSET_ID, TRANSFER_AMOUNT)
             .unwrap();
         bank_controller
-            .transfer(
-                account_0.public(),
-                account_1.public(),
-                QUOTE_ASSET_ID,
-                TRANSFER_AMOUNT,
-            )
+            .transfer(account_0.public(), account_1.public(), QUOTE_ASSET_ID, TRANSFER_AMOUNT)
             .unwrap();
 
         let bank_controller_ref = Rc::new(RefCell::new(bank_controller));
 
-        let mut orderbook_interface = OrderbookInterface::new(
-            BASE_ASSET_ID,
-            QUOTE_ASSET_ID,
-            Rc::clone(&bank_controller_ref),
-        );
+        let mut orderbook_interface =
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Rc::clone(&bank_controller_ref));
 
         let bid_size_0: u64 = 95;
         let bid_price_0: u64 = 200;

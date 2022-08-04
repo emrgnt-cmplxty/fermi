@@ -1,9 +1,7 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 use crate::AssetId;
-use narwhal_crypto::ed25519::{
-    Ed25519KeyPair, Ed25519PrivateKey, Ed25519PublicKey, Ed25519Signature,
-};
+use narwhal_crypto::ed25519::{Ed25519KeyPair, Ed25519PrivateKey, Ed25519PublicKey, Ed25519Signature};
 use std::{collections::HashMap, fmt::Debug};
 
 pub type AccountPubKey = Ed25519PublicKey;

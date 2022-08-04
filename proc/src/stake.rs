@@ -30,10 +30,8 @@ impl StakeController {
         if self.stake_accounts.contains_key(account_pub_key) {
             Err(ProcError::AccountCreation)
         } else {
-            self.stake_accounts.insert(
-                account_pub_key.clone(),
-                StakeAccount::new(account_pub_key.clone()),
-            );
+            self.stake_accounts
+                .insert(account_pub_key.clone(), StakeAccount::new(account_pub_key.clone()));
             Ok(())
         }
     }
@@ -64,8 +62,7 @@ impl StakeController {
             None => {
                 let mut new_stake_account = StakeAccount::new(account_pub_key.clone());
                 new_stake_account.set_staked_amount(amount);
-                self.stake_accounts
-                    .insert(account_pub_key.clone(), new_stake_account);
+                self.stake_accounts.insert(account_pub_key.clone(), new_stake_account);
                 Ok(())
             }
         }
@@ -127,9 +124,7 @@ pub mod stake_tests {
             .stake(&mut bank_controller, sender.public(), STAKE_AMOUNT)
             .unwrap();
         assert!(
-            *bank_controller
-                .get_balance(sender.public(), PRIMARY_ASSET_ID)
-                .unwrap()
+            *bank_controller.get_balance(sender.public(), PRIMARY_ASSET_ID).unwrap()
                 == CREATED_ASSET_BALANCE - STAKE_AMOUNT,
             "unexpected balance"
         );
@@ -159,10 +154,7 @@ pub mod stake_tests {
 
         let mut stake_controller = StakeController::new();
         assert!(
-            *bank_controller
-                .get_balance(sender.public(), PRIMARY_ASSET_ID)
-                .unwrap()
-                == 0,
+            *bank_controller.get_balance(sender.public(), PRIMARY_ASSET_ID).unwrap() == 0,
             "unexpected balance"
         );
         // staking without funding should create error

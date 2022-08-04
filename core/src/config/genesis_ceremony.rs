@@ -14,7 +14,6 @@ use sui_types::{
     crypto::{
         AuthorityKeyPair, AuthorityPublicKey, AuthorityPublicKeyBytes, AuthoritySignature, KeypairTraits, ToFromBytes,
     },
-    object::Object,
 };
 
 use sui::keytool::read_keypair_from_file;

@@ -5,14 +5,10 @@ use anyhow::Result;
 use multiaddr::Multiaddr;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use std::collections::{BTreeMap, BTreeSet};
-use sui_types::base_types::{ObjectID, SuiAddress};
+use sui_types::base_types::{SuiAddress};
 use sui_types::committee::StakeUnit;
 use sui_types::crypto::{get_key_pair_from_rng, AccountKeyPair, AuthorityKeyPair};
-use sui_types::object::Object;
 use sui_types::sui_serde::KeyPairBase64;
-use tracing::info;
-
 use sui_config::Config;
 
 #[derive(Serialize, Deserialize)]
@@ -28,54 +24,13 @@ impl GenesisConfig {
     pub fn generate_accounts<R: ::rand::RngCore + ::rand::CryptoRng>(
         &self,
         mut rng: R,
-    ) -> Result<(Vec<AccountKeyPair>, Vec<Object>)> {
-        let mut addresses = Vec::new();
-        let mut preload_objects = Vec::new();
-        let mut all_preload_objects_set = BTreeSet::new();
-
-        info!("Creating accounts and gas objects...");
-
+    ) -> Result<Vec<AccountKeyPair>> {
         let mut keys = Vec::new();
         for account in &self.accounts {
-            let address = if let Some(address) = account.address {
-                address
-            } else {
-                let (address, keypair) = get_key_pair_from_rng(&mut rng);
-                keys.push(keypair);
-                address
-            };
-
-            addresses.push(address);
-            let mut preload_objects_map = BTreeMap::new();
-
-            // Populate gas itemized objects
-            account.gas_objects.iter().for_each(|q| {
-                if !all_preload_objects_set.contains(&q.object_id) {
-                    preload_objects_map.insert(q.object_id, q.gas_value);
-                }
-            });
-
-            // Populate ranged gas objects
-            if let Some(ranges) = &account.gas_object_ranges {
-                for rg in ranges {
-                    let ids = ObjectID::in_range(rg.offset, rg.count)?;
-
-                    for obj_id in ids {
-                        if !preload_objects_map.contains_key(&obj_id) && !all_preload_objects_set.contains(&obj_id) {
-                            preload_objects_map.insert(obj_id, rg.gas_value);
-                            all_preload_objects_set.insert(obj_id);
-                        }
-                    }
-                }
-            }
-
-            for (object_id, value) in preload_objects_map {
-                let new_object = Object::with_id_owner_gas_for_testing(object_id, address, value);
-                preload_objects.push(new_object);
-            }
+            let (address, keypair) = get_key_pair_from_rng(&mut rng);
+            keys.push(keypair);
         }
-
-        Ok((keys, preload_objects))
+        Ok(keys)
     }
 }
 
@@ -101,33 +56,8 @@ pub struct AccountConfig {
         deserialize_with = "SuiAddress::optional_address_from_hex"
     )]
     pub address: Option<SuiAddress>,
-    pub gas_objects: Vec<ObjectConfig>,
-    pub gas_object_ranges: Option<Vec<ObjectConfigRange>>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ObjectConfigRange {
-    /// Starting object id
-    pub offset: ObjectID,
-    /// Number of object ids
-    pub count: u64,
-    /// Gas value per object id
-    pub gas_value: u64,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ObjectConfig {
-    #[serde(default = "ObjectID::random")]
-    pub object_id: ObjectID,
-    #[serde(default = "default_gas_value")]
-    pub gas_value: u64,
-}
-
-fn default_gas_value() -> u64 {
-    DEFAULT_GAS_AMOUNT
-}
-
-const DEFAULT_GAS_AMOUNT: u64 = 100000000;
 const DEFAULT_NUMBER_OF_AUTHORITIES: usize = 4;
 const DEFAULT_NUMBER_OF_ACCOUNT: usize = 5;
 const DEFAULT_NUMBER_OF_OBJECT_PER_ACCOUNT: usize = 5;
@@ -146,17 +76,8 @@ impl GenesisConfig {
 
         let mut accounts = Vec::new();
         for _ in 0..num_accounts {
-            let mut objects = Vec::new();
-            for _ in 0..num_objects_per_account {
-                objects.push(ObjectConfig {
-                    object_id: ObjectID::random(),
-                    gas_value: DEFAULT_GAS_AMOUNT,
-                })
-            }
             accounts.push(AccountConfig {
                 address: None,
-                gas_objects: objects,
-                gas_object_ranges: Some(Vec::new()),
             })
         }
 

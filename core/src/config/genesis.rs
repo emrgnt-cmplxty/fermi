@@ -4,35 +4,18 @@ use anyhow::{bail, Context, Result};
 use camino::Utf8Path;
 use core::cell::RefCell;
 use gdex_proc::{BankController, SpotController, StakeController};
-use move_binary_format::CompiledModule;
-use move_core_types::ident_str;
-use move_core_types::language_storage::ModuleId;
-use move_vm_runtime::native_functions::NativeFunctionTable;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::BTreeMap;
 use std::convert::TryInto;
 use std::rc::Rc;
 use std::{fs, path::Path};
-use sui_adapter::adapter;
-use sui_adapter::adapter::MoveVM;
-use sui_adapter::in_memory_storage::InMemoryStorage;
-use sui_adapter::temporary_store::{InnerTemporaryStore, TemporaryStore};
 use sui_config::ValidatorInfo;
-use sui_types::base_types::ObjectID;
-use sui_types::base_types::TransactionDigest;
 use sui_types::crypto::AuthorityPublicKeyBytes;
-use sui_types::gas::SuiGasStatus;
-use sui_types::messages::CallArg;
-use sui_types::messages::InputObjects;
-use sui_types::messages::Transaction;
 use sui_types::sui_serde::{Base64, Encoding};
-use sui_types::MOVE_STDLIB_ADDRESS;
-use sui_types::SUI_FRAMEWORK_ADDRESS;
 use sui_types::{
-    base_types::{encode_bytes_hex, TxContext},
+    base_types::{encode_bytes_hex},
     committee::{Committee, EpochId},
     error::SuiResult,
-    // object::Object,
 };
 use tracing::trace;
 
@@ -235,7 +218,7 @@ impl Builder {
 
     pub fn build(self) -> Genesis {
         let validators = self.validators.into_iter().map(|(_, v)| v).collect::<Vec<_>>();
-        let master_controller = create_genesis_objects(&validators);
+        let master_controller = create_genesis_objects();
 
         let genesis = Genesis {
             master_controller,
@@ -303,102 +286,8 @@ impl Builder {
     }
 }
 
-fn create_genesis_objects(validators: &Vec<ValidatorInfo>) -> MasterController {
+fn create_genesis_objects() -> MasterController {
     MasterController::default()
-}
-
-fn process_package(
-    store: &mut InMemoryStorage,
-    // mv: &MoveVM,
-    native_functions: &NativeFunctionTable,
-    ctx: &mut TxContext,
-    modules: Vec<CompiledModule>,
-) -> Result<()> {
-    let inputs = Transaction::input_objects_in_compiled_modules(&modules);
-    let ids: Vec<_> = inputs.iter().map(|kind| kind.object_id()).collect();
-    let input_objects = store.get_objects(&ids[..]);
-    // When publishing genesis packages, since the std framework packages all have
-    // non-zero addresses, [`Transaction::input_objects_in_compiled_modules`] will consider
-    // them as dependencies even though they are not. Hence input_objects contain objects
-    // that don't exist on-chain because they are yet to be published.
-    #[cfg(debug_assertions)]
-    {
-        use std::collections::HashSet;
-        let to_be_published_addresses: HashSet<_> = modules.iter().map(|module| *module.self_id().address()).collect();
-        assert!(
-            // An object either exists on-chain, or is one of the packages to be published.
-            inputs
-                .iter()
-                .zip(input_objects.iter())
-                .all(|(kind, obj_opt)| obj_opt.is_some() || to_be_published_addresses.contains(&kind.object_id()))
-        );
-    }
-    let filtered = inputs
-        .into_iter()
-        .zip(input_objects.into_iter())
-        .filter_map(|(input, object_opt)| object_opt.map(|object| (input, object.to_owned())))
-        .collect::<Vec<_>>();
-
-    debug_assert!(ctx.digest() == TransactionDigest::genesis());
-    let mut temporary_store = TemporaryStore::new(&*store, InputObjects::new(filtered), ctx.digest());
-    let package_id = ObjectID::from(*modules[0].self_id().address());
-    let natives = native_functions.clone();
-    let mut gas_status = SuiGasStatus::new_unmetered();
-    let vm = adapter::verify_and_link(&temporary_store, &modules, package_id, natives, &mut gas_status)?;
-    adapter::store_package_and_init_modules(&mut temporary_store, &vm, modules, ctx, &mut gas_status)?;
-
-    let InnerTemporaryStore { written, deleted, .. } = temporary_store.into_inner();
-
-    store.finish(written, deleted);
-
-    Ok(())
-}
-
-pub fn generate_genesis_system_object(
-    store: &mut InMemoryStorage,
-    move_vm: &MoveVM,
-    committee: &[ValidatorInfo],
-    genesis_ctx: &mut TxContext,
-) -> Result<()> {
-    let genesis_digest = genesis_ctx.digest();
-    let mut temporary_store = TemporaryStore::new(&*store, InputObjects::new(vec![]), genesis_digest);
-
-    let mut pubkeys = Vec::new();
-    let mut sui_addresses = Vec::new();
-    let mut network_addresses = Vec::new();
-    let mut names = Vec::new();
-    let mut stakes = Vec::new();
-
-    for validator in committee {
-        pubkeys.push(validator.public_key());
-        sui_addresses.push(validator.sui_address());
-        network_addresses.push(validator.network_address());
-        names.push(validator.name().to_owned().into_bytes());
-        stakes.push(validator.stake());
-    }
-
-    adapter::execute(
-        move_vm,
-        &mut temporary_store,
-        ModuleId::new(SUI_FRAMEWORK_ADDRESS, ident_str!("genesis").to_owned()),
-        &ident_str!("create").to_owned(),
-        vec![],
-        vec![
-            CallArg::Pure(bcs::to_bytes(&pubkeys).unwrap()),
-            CallArg::Pure(bcs::to_bytes(&sui_addresses).unwrap()),
-            CallArg::Pure(bcs::to_bytes(&names).unwrap()),
-            CallArg::Pure(bcs::to_bytes(&network_addresses).unwrap()),
-            CallArg::Pure(bcs::to_bytes(&stakes).unwrap()),
-        ],
-        &mut SuiGasStatus::new_unmetered(),
-        genesis_ctx,
-    )?;
-
-    let InnerTemporaryStore { written, deleted, .. } = temporary_store.into_inner();
-
-    store.finish(written, deleted);
-
-    Ok(())
 }
 
 const GENESIS_BUILDER_CONTROLLER_OUT: &str = "master_controller";
@@ -426,7 +315,6 @@ mod test {
         let dir = tempfile::TempDir::new().unwrap();
 
         let genesis_config = GenesisConfig::for_local_testing();
-        let (_account_keys, _objects) = genesis_config.generate_accounts(&mut rand::rngs::OsRng).unwrap();
 
         let master_controller = MasterController::default();
 

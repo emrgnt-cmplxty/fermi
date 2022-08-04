@@ -21,15 +21,9 @@ rand = "0.7.3"
 serde = { version = "1.0.141", features = ["derive"] }
 serde_yaml = "0.8.26"
 serde_with = { version = "1.14.0", features = ["hex"] }
-sui = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b" }
-sui-adapter = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b" }
-sui-framework = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b" }
-sui-network = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b" }
-sui-types = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b" }
-sui-storage = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b" }
-sui-config = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b" }
-sui-json = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b" }
-sui-json-rpc-types = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b" }
+sui = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b", package = "sui"  }
+sui-types = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b", package = "sui-types" }
+sui-config = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b", package = "sui-config" }
 signature = "1.5.0"
 tracing = "0.1.36"
 tempfile = "3.3.0"

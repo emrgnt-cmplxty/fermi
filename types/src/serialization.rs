@@ -51,6 +51,13 @@ pub mod serialization_tests {
     use super::*;
 
     #[test]
+    pub fn serialize_deserialize_string() {
+        let input_string = String::from("input");
+        let bytes = input_string.as_bytes();
+        let _encoded_string: String = Base64::encode(&bytes);
+    }
+
+    #[test]
     pub fn serialize_deserialize_vec() {
         let vec = vec![0, 1, 2, 3, 4, 5];
         let bytes = Base64::encode(&vec);

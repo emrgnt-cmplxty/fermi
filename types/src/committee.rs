@@ -41,13 +41,6 @@ impl Committee {
         let mut voting_rights: Vec<(AuthorityName, StakeUnit)> = voting_rights.iter().map(|(a, s)| (*a, *s)).collect();
 
         fp_ensure!(
-            // Actual committee size is enforced in sui_system.move.
-            // This is just to ensure that choose_multiple_weighted can't fail.
-            voting_rights.len() < u32::MAX.try_into().unwrap(),
-            GDEXError::InvalidCommittee("committee has too many members".into())
-        );
-
-        fp_ensure!(
             !voting_rights.is_empty(),
             GDEXError::InvalidCommittee("committee has 0 members".into())
         );
@@ -261,6 +254,81 @@ mod test {
     use super::*;
     use crate::account::AuthorityKeyPair;
     use crate::crypto::{get_key_pair, KeypairTraits};
+
+    #[test]
+    #[should_panic]
+    fn empty_committee_fail() {
+        let authorities = BTreeMap::new();
+        let _committee = Committee::new(0, authorities).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn unstaked_committee() {
+        let mut authorities = BTreeMap::new();
+        let (_, sec1): (_, AuthorityKeyPair) = get_key_pair();
+        let a1: AuthorityName = sec1.public().into();
+        authorities.insert(a1, 0);
+
+        let _committee = Committee::new(0, authorities).unwrap();
+    }
+
+    #[test]
+    fn single_committee_workflow() {
+        let mut authorities = BTreeMap::new();
+        let (_, sec1): (_, AuthorityKeyPair) = get_key_pair();
+        let a1: AuthorityName = sec1.public().into();
+        authorities.insert(a1, 1);
+
+        let mut committee = Committee::new(0, authorities.clone()).unwrap();
+        // check we can reload fields
+        committee.reload_fields();
+
+        // check authority index functionality
+        let index = committee.authority_index(&a1);
+        assert!(index.unwrap()==0);
+
+        let authority = committee.sample();
+        // sample should only return the single input authority
+        assert!(*authority == AuthorityPubKeyBytes::from(a1.clone()));
+
+        assert!(committee.num_members()==1);
+
+        let mut members = committee.members();
+        let member = members.next();
+        // assert that members first returns the initial authority
+        assert!(member.unwrap().0.clone() == AuthorityPubKeyBytes::from(a1.clone()));
+        let member = members.next();
+        // assert that members returns None
+        assert!(member == None);
+
+        let mut names = committee.names();
+        let name = names.next();
+        // assert that names first returns the initial authority
+        assert!(name.unwrap().clone() == AuthorityPubKeyBytes::from(a1.clone()));
+        let name = names.next();
+        // assert that names next returns None
+        assert!(name == None);
+
+        let mut stakes = committee.stakes();
+        let stake = stakes.next();
+        // assert that stakes first returns the initial authority staked (1)
+        assert!(stake.unwrap().clone() == 1);
+        let stake = names.next();
+        // assert that stakes next returns None
+        assert!(stake == None);
+
+        // check authority exists workflow
+        assert!(committee.authority_exists(&a1));
+        let (_, sec2): (_, AuthorityKeyPair) = get_key_pair();
+        let a2: AuthorityName = sec2.public().into();
+        
+        assert!(!committee.authority_exists(&a2));
+
+        // check equality workflow
+        let committee_copy = Committee::new(0, authorities).unwrap();
+        assert!(committee == committee_copy);
+    }
 
     #[test]
     fn test_shuffle_by_weight() {

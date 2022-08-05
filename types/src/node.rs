@@ -2,10 +2,10 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 
+use crate::crypto::GDEXAddress;
 use multiaddr::Multiaddr;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use sui_types::base_types::SuiAddress;
 use sui_types::committee::StakeUnit;
 use sui_types::crypto::AuthorityPublicKeyBytes;
 
@@ -34,7 +34,7 @@ impl ValidatorInfo {
         &self.name
     }
 
-    pub fn sui_address(&self) -> SuiAddress {
+    pub fn gdex_address(&self) -> GDEXAddress {
         (&self.public_key()).into()
     }
 
@@ -59,5 +59,45 @@ impl ValidatorInfo {
             .iter()
             .map(|validator| (validator.public_key(), validator.stake() + validator.delegation()))
             .collect()
+    }
+}
+
+/// Begin the testing suite for transactions
+#[cfg(test)]
+pub mod node_tests {
+    use super::*;
+
+    use crate::account::account_test_functions::generate_keypair_vec;
+    use crate::crypto::KeypairTraits;
+    use crate::utils;
+
+    #[test]
+    pub fn validator_info() {
+        let kp = generate_keypair_vec([0; 32]).pop().unwrap();
+
+        let name = "0";
+        let stake = 1;
+        let delegation = 0;
+        let network_address = utils::new_network_address();
+        let validator = ValidatorInfo {
+            name: name.into(),
+            public_key: kp.public().into(),
+            stake,
+            delegation,
+            network_address: network_address.clone(),
+            narwhal_primary_to_primary: utils::new_network_address(),
+            narwhal_worker_to_primary: utils::new_network_address(),
+            narwhal_primary_to_worker: utils::new_network_address(),
+            narwhal_worker_to_worker: utils::new_network_address(),
+            narwhal_consensus_address: utils::new_network_address(),
+        };
+
+        assert!(name == validator.name());
+        assert!(GDEXAddress::from(kp.public()) == validator.gdex_address());
+        assert!(validator.stake() == stake);
+        assert!(validator.delegation() == delegation);
+        assert!(validator.network_address().to_vec() == network_address.to_vec());
+
+        let _ = ValidatorInfo::voting_rights(&[validator]);
     }
 }

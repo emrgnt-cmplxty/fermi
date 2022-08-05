@@ -9,6 +9,8 @@ use crate::{
     account::{AccountPubKey, AccountSignature},
     asset::AssetId,
     error::GDEXError,
+    serialization::Base64,
+    serialization::Encoding,
     order_book::OrderSide,
 };
 use blake2::{digest::Update, VarBlake2b};
@@ -135,7 +137,7 @@ pub struct TransactionDigest([u8; DIGEST_LEN]);
 
 impl fmt::Display for TransactionDigest {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "{}", base64::encode(&self.0).get(0..16).unwrap())
+        write!(f, "{}", Base64::encode(&self.0).get(0..16).unwrap())
     }
 }
 

@@ -2,6 +2,7 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 
+use crate::account::{AuthorityPubKey, AuthorityPubKeyBytes};
 use crate::error::GDEXError;
 use crate::utils;
 use digest::Digest;
@@ -24,10 +25,10 @@ pub use sui_types::crypto::ToFromBytes;
 /// Default to 16 bytes, can be set to 20 bytes with address20 feature.
 pub const ADDRESS_LENGTH: usize = if cfg!(feature = "address20") {
     20
-} else if cfg!(feature = "address32") {
-    32
-} else {
+} else if cfg!(feature = "address16") {
     16
+} else {
+    32
 };
 
 /// This is a reduced scope use of the SuiPublicKey
@@ -100,6 +101,20 @@ impl AsRef<[u8]> for GDEXAddress {
     }
 }
 
+/// From trait is necessary to convert AuthorityPubKeyBytes into a GDEXAddress
+impl From<&AuthorityPubKeyBytes> for GDEXAddress {
+    fn from(pkb: &AuthorityPubKeyBytes) -> Self {
+        let mut hasher = Sha3_256::default();
+        hasher.update(&[AuthorityPubKey::FLAG]);
+        hasher.update(pkb);
+        let g_arr = hasher.finalize();
+
+        let mut res = [0u8; ADDRESS_LENGTH];
+        res.copy_from_slice(&AsRef::<[u8]>::as_ref(&g_arr)[..ADDRESS_LENGTH]);
+        GDEXAddress(res)
+    }
+}
+
 /// This function is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-types/src/crypto.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 // TODO: get_key_pair() and get_key_pair_from_bytes() should return KeyPair only.
 // TODO: rename to random_key_pair
@@ -119,4 +134,28 @@ where
 {
     let kp = KP::generate(csprng);
     (kp.public().into(), kp)
+}
+
+
+/// Begin the testing suite for serialization
+#[cfg(test)]
+pub mod crypto_tests {
+    use super::*;
+    use crate::account::AuthorityKeyPair;
+    
+    #[test]
+    pub fn get_keypairs() {
+        let _key1: AuthorityKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let (_, _key2): (_, AuthorityKeyPair) = get_key_pair();
+    }
+
+
+    #[test]
+    pub fn to_and_from_bytes() {
+        let key: AuthorityKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let gdex_addr = GDEXAddress::from(key.public());
+        let key_bytes = gdex_addr.as_ref();
+        let gdex_addr_from_bytes: GDEXAddress = GDEXAddress::try_from(key_bytes).unwrap();
+        assert!(gdex_addr == gdex_addr_from_bytes);
+    }
 }

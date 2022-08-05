@@ -2272,7 +2272,6 @@ name = "gdex-types"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "base64",
  "base64ct",
  "bincode",
  "blake2",

@@ -5,8 +5,7 @@
 
 use anyhow::{bail, Context, Result};
 use camino::Utf8Path;
-use core::cell::RefCell;
-use gdex_proc::{BankController, SpotController, StakeController};
+use gdex_proc::MasterController;
 use gdex_types::{
     account::AuthorityPubKeyBytes,
     committee::{Committee, EpochId},
@@ -18,30 +17,8 @@ use gdex_types::{
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::BTreeMap;
 use std::convert::TryInto;
-use std::rc::Rc;
 use std::{fs, path::Path};
 use tracing::trace;
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct MasterController {
-    pub bank_controller: Rc<RefCell<BankController>>,
-    pub stake_controller: StakeController,
-    pub spot_controller: SpotController,
-}
-
-impl Default for MasterController {
-    fn default() -> Self {
-        let bank_controller = BankController::default();
-        let bank_controller_ref = Rc::new(RefCell::new(bank_controller.clone()));
-        let stake_controller = StakeController::new(Rc::clone(&bank_controller_ref));
-        let spot_controller = SpotController::new(Rc::clone(&bank_controller_ref));
-        Self {
-            bank_controller: bank_controller_ref,
-            stake_controller,
-            spot_controller,
-        }
-    }
-}
 
 #[derive(Clone, Debug)]
 pub struct Genesis {

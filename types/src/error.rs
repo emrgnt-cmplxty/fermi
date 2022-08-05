@@ -1,28 +1,40 @@
+//! Copyright (c) 2022, Mysten Labs, Inc.
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
+
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-#[derive(Debug, Error)]
-pub enum ProcError {
+#[derive(Eq, PartialEq, Clone, Debug, Serialize, Deserialize, Error, Hash)]
+pub enum GDEXError {
+    // committee associated errors
+    #[error("Invalid committee composition")]
+    InvalidCommittee(String),
+    #[error("Invalid address")]
+    InvalidAddress,
+
+    // controller associated errors
     #[error("Account already exists")]
     AccountCreation,
     #[error("Failed to find account")]
     AccountLookup,
-    #[error("Payment request failed")]
-    PaymentRequest,
+
+    // transaction associated errors
+    #[error("Sender, payload and signature are not consistent")]
+    FailedVerification,
     #[error("Order request failed")]
     OrderRequest,
     #[error("Orderbook creation failed")]
     OrderBookCreation,
+    #[error("Payment request failed")]
+    PaymentRequest,
+    #[error("Failed to serialize the signed transaction")]
+    TransactionSerialization,
+    #[error("Failed to deserialize into a signed transaction")]
+    TransactionDeserialization,
 }
 
-#[derive(Debug)]
-pub enum SignedTransactionError {
-    FailedVerification(narwhal_crypto::traits::Error),
-    Serialization(Box<bincode::ErrorKind>),
-    Deserialization(Box<bincode::ErrorKind>),
-}
-
+/// This function is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-types/src/error.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 #[macro_export]
 macro_rules! fp_bail {
     ($e:expr) => {
@@ -30,6 +42,7 @@ macro_rules! fp_bail {
     };
 }
 
+/// This function is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-types/src/error.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 #[macro_export(local_inner_macros)]
 macro_rules! fp_ensure {
     ($cond:expr, $e:expr) => {
@@ -39,5 +52,4 @@ macro_rules! fp_ensure {
     };
 }
 
-pub type SuiError = sui_types::error::SuiError;
-pub type SuiResult<T = ()> = Result<T, SuiError>;
+pub type GDEXResult<T = ()> = Result<T, GDEXError>;

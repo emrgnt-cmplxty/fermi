@@ -9,15 +9,14 @@
 //! 2.) RESTRICT overwrite_orderbook TO BENCH ONLY MODE
 //! 3.) CONSIDER ADDITIONAL FEATURES, LIKE ESCROW IMPLEMENTATION OR ORDER LIMITS
 //! 4.) CHECK PASSED ASSETS EXIST IN BANK MODULE
-//!
-//!
+
 use super::bank::BankController;
 use core::cell::RefCell;
 use gdex_engine::{order_book::Orderbook, orders::new_limit_order_request};
 use gdex_types::{
     account::{AccountPubKey, OrderAccount},
     asset::{AssetId, AssetPairKey},
-    error::ProcError,
+    error::GDEXError,
     order_book::{OrderProcessingResult, OrderSide, Success},
 };
 use serde::{Deserialize, Serialize};
@@ -50,9 +49,9 @@ impl OrderbookInterface {
         }
     }
 
-    pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), ProcError> {
+    pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
         if self.accounts.contains_key(account_pub_key) {
-            Err(ProcError::AccountCreation)
+            Err(GDEXError::AccountCreation)
         } else {
             self.accounts
                 .insert(account_pub_key.clone(), OrderAccount::new(account_pub_key.clone()));
@@ -60,8 +59,8 @@ impl OrderbookInterface {
         }
     }
 
-    pub fn get_account(&self, account_pub_key: &AccountPubKey) -> Result<&OrderAccount, ProcError> {
-        let account = self.accounts.get(account_pub_key).ok_or(ProcError::AccountLookup)?;
+    pub fn get_account(&self, account_pub_key: &AccountPubKey) -> Result<&OrderAccount, GDEXError> {
+        let account = self.accounts.get(account_pub_key).ok_or(GDEXError::AccountLookup)?;
         Ok(account)
     }
 
@@ -71,7 +70,7 @@ impl OrderbookInterface {
         side: OrderSide,
         quantity: u64,
         price: u64,
-    ) -> Result<OrderProcessingResult, ProcError> {
+    ) -> Result<OrderProcessingResult, GDEXError> {
         // for now the orderbook creates an account if it is missing
         // in the future more robust handling is necessary to protect
         // the blockchain from spam
@@ -112,7 +111,7 @@ impl OrderbookInterface {
         sub_price: u64,
         sub_qty: u64,
         res: OrderProcessingResult,
-    ) -> Result<OrderProcessingResult, ProcError> {
+    ) -> Result<OrderProcessingResult, GDEXError> {
         for order in &res {
             match order {
                 // first order is expected to be an Accepted result
@@ -132,7 +131,7 @@ impl OrderbookInterface {
                     let existing_pub_key = self
                         .order_to_account
                         .get(order_id)
-                        .ok_or(ProcError::AccountLookup)?
+                        .ok_or(GDEXError::AccountLookup)?
                         .clone();
                     self.proc_order_fill(&existing_pub_key, *side, *price, *quantity)?;
                 }
@@ -146,11 +145,11 @@ impl OrderbookInterface {
                     let existing_pub_key = self
                         .order_to_account
                         .get(order_id)
-                        .ok_or(ProcError::AccountLookup)?
+                        .ok_or(GDEXError::AccountLookup)?
                         .clone();
                     self.proc_order_fill(&existing_pub_key, *side, *price, *quantity)?;
                     // erase existing order
-                    self.order_to_account.remove(order_id).ok_or(ProcError::OrderRequest)?;
+                    self.order_to_account.remove(order_id).ok_or(GDEXError::OrderRequest)?;
                 }
                 Ok(Success::Amended { .. }) => {
                     panic!("This needs to be implemented...")
@@ -159,7 +158,7 @@ impl OrderbookInterface {
                     panic!("This needs to be implemented...")
                 }
                 Err(_failure) => {
-                    return Err(ProcError::OrderRequest);
+                    return Err(GDEXError::OrderRequest);
                 }
             }
         }
@@ -173,7 +172,7 @@ impl OrderbookInterface {
         side: OrderSide,
         price: u64,
         quantity: u64,
-    ) -> Result<(), ProcError> {
+    ) -> Result<(), GDEXError> {
         if matches!(side, OrderSide::Ask) {
             // E.g. ask 1 BTC @ $20k moves 1 BTC (base) from balance to escrow
             self.bank_controller.borrow_mut().update_balance(
@@ -199,7 +198,7 @@ impl OrderbookInterface {
         side: OrderSide,
         price: u64,
         quantity: u64,
-    ) -> Result<(), ProcError> {
+    ) -> Result<(), GDEXError> {
         if matches!(side, OrderSide::Ask) {
             // E.g. fill ask 1 BTC @ 20k adds 20k USD (quote) to bal, subtracts 1 BTC (base) from escrow
             self.bank_controller.borrow_mut().update_balance(
@@ -243,17 +242,17 @@ impl SpotController {
         &mut self,
         base_asset_id: AssetId,
         quote_asset_id: AssetId,
-    ) -> Result<&mut OrderbookInterface, ProcError> {
+    ) -> Result<&mut OrderbookInterface, GDEXError> {
         let orderbook_lookup = self.get_orderbook_key(base_asset_id, quote_asset_id);
 
         let orderbook = self
             .orderbooks
             .get_mut(&orderbook_lookup)
-            .ok_or(ProcError::AccountLookup)?;
+            .ok_or(GDEXError::AccountLookup)?;
         Ok(orderbook)
     }
 
-    pub fn create_orderbook(&mut self, base_asset_id: AssetId, quote_asset_id: AssetId) -> Result<(), ProcError> {
+    pub fn create_orderbook(&mut self, base_asset_id: AssetId, quote_asset_id: AssetId) -> Result<(), GDEXError> {
         let orderbook_lookup = self.get_orderbook_key(base_asset_id, quote_asset_id);
         if let std::collections::hash_map::Entry::Vacant(e) = self.orderbooks.entry(orderbook_lookup) {
             e.insert(OrderbookInterface::new(
@@ -263,14 +262,14 @@ impl SpotController {
             ));
             Ok(())
         } else {
-            Err(ProcError::OrderBookCreation)
+            Err(GDEXError::OrderBookCreation)
         }
     }
 
     // pub fn parse_limit_order_transaction(
     //     &mut self,
     //     signed_transaction: &SignedTransaction,
-    // ) -> Result<OrderProcessingResult, ProcError> {
+    // ) -> Result<OrderProcessingResult, GDEXError> {
     //     // verify transaction is an order
     //     if let TransactionVariant::OrderTransaction(order) = &signed_transaction.get_transaction() {
     //         // verify and place a limit order
@@ -292,10 +291,10 @@ impl SpotController {
     //                 *price,
     //             );
     //         } else {
-    //             return Err(ProcError::OrderProc("Only limit orders supported".to_string()));
+    //             return Err(GDEXError::OrderProc("Only limit orders supported".to_string()));
     //         }
     //     }
-    //     Err(ProcError::OrderProc(
+    //     Err(GDEXError::OrderProc(
     //         "Only order transactions are supported".to_string(),
     //     ))
     // }
@@ -309,7 +308,7 @@ impl SpotController {
         side: OrderSide,
         quantity: u64,
         price: u64,
-    ) -> Result<OrderProcessingResult, ProcError> {
+    ) -> Result<OrderProcessingResult, GDEXError> {
         self.get_orderbook(base_asset_id, quote_asset_id)?
             .place_limit_order(account_pub_key, side, quantity, price)
     }
@@ -459,7 +458,7 @@ pub mod spot_tests {
 
         let result = orderbook_interface.get_account(account.public()).unwrap_err();
 
-        assert!(matches!(result, ProcError::AccountLookup));
+        assert!(matches!(result, GDEXError::AccountLookup));
     }
 
     #[test]
@@ -476,7 +475,7 @@ pub mod spot_tests {
 
         orderbook_interface.create_account(account.public()).unwrap();
         let result = orderbook_interface.create_account(account.public()).unwrap_err();
-        assert!(matches!(result, ProcError::AccountCreation));
+        assert!(matches!(result, GDEXError::AccountCreation));
     }
 
     #[test]

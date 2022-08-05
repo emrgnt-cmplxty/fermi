@@ -1,5 +1,7 @@
-// Copyright (c) 2022, Mysten Labs, Inc.
-// SPDX-License-Identifier: Apache-2.0
+//! Copyright (c) 2022, Mysten Labs, Inc.
+//! Copyright (c) 2022, BTI
+//! SPDX-License-Identifier: Apache-2.0
+
 use super::Config;
 use gdex_types::{account::AuthorityKeyPair, committee::StakeUnit, crypto::GDEXAddress, serialization::KeyPairBase64};
 use multiaddr::Multiaddr;

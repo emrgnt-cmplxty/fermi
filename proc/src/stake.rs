@@ -8,11 +8,11 @@
 //!
 //! TODO
 //! 0.) ADD SIZE CHECKS ON TRANSACTIONS
-//!
+
 use super::bank::{BankController, PRIMARY_ASSET_ID};
 use gdex_types::{
     account::{AccountPubKey, StakeAccount},
-    error::ProcError,
+    error::GDEXError,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -31,9 +31,9 @@ impl StakeController {
         }
     }
 
-    pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), ProcError> {
+    pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
         if self.stake_accounts.contains_key(account_pub_key) {
-            Err(ProcError::AccountCreation)
+            Err(GDEXError::AccountCreation)
         } else {
             self.stake_accounts
                 .insert(account_pub_key.clone(), StakeAccount::new(account_pub_key.clone()));
@@ -41,11 +41,11 @@ impl StakeController {
         }
     }
 
-    pub fn get_staked(&self, account_pub_key: &AccountPubKey) -> Result<&u64, ProcError> {
+    pub fn get_staked(&self, account_pub_key: &AccountPubKey) -> Result<&u64, GDEXError> {
         let stake_account = self
             .stake_accounts
             .get(account_pub_key)
-            .ok_or(ProcError::AccountLookup)?;
+            .ok_or(GDEXError::AccountLookup)?;
         Ok(stake_account.get_staked_amount())
     }
 
@@ -55,7 +55,7 @@ impl StakeController {
         bank_controller: &mut BankController,
         account_pub_key: &AccountPubKey,
         amount: u64,
-    ) -> Result<(), ProcError> {
+    ) -> Result<(), GDEXError> {
         bank_controller.update_balance(account_pub_key, PRIMARY_ASSET_ID, -(amount as i64))?;
         self.total_staked += amount;
         let lookup = self.stake_accounts.get_mut(account_pub_key);
@@ -79,13 +79,13 @@ impl StakeController {
         bank_controller: &mut BankController,
         account_pub_key: &AccountPubKey,
         amount: u64,
-    ) -> Result<(), ProcError> {
+    ) -> Result<(), GDEXError> {
         self.total_staked -= amount;
         bank_controller.update_balance(account_pub_key, PRIMARY_ASSET_ID, amount as i64)?;
         let stake_account = self
             .stake_accounts
             .get_mut(account_pub_key)
-            .ok_or(ProcError::AccountLookup)?;
+            .ok_or(GDEXError::AccountLookup)?;
         stake_account.set_staked_amount(stake_account.get_staked_amount() - amount);
         Ok(())
     }

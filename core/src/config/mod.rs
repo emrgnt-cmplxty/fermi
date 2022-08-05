@@ -1,3 +1,7 @@
+//! Copyright (c) 2022, Mysten Labs, Inc.
+//! Copyright (c) 2022, BTI
+//! SPDX-License-Identifier: Apache-2.0
+
 use anyhow::Context;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -9,8 +13,6 @@ pub mod genesis;
 pub mod genesis_ceremony;
 pub mod genesis_config;
 
-// Copyright (c) 2022, Mysten Labs, Inc.
-// SPDX-License-Identifier: Apache-2.0
 pub trait Config
 where
     Self: DeserializeOwned + Serialize,

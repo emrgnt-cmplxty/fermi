@@ -1,5 +1,7 @@
+//! Copyright (c) 2018 Anton Dort-Golts
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
+
 use gdex_types::order_book::OrderSide;
 use serde::{Deserialize, Serialize};
 use std::{

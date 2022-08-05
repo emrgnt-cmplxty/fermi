@@ -1,10 +1,12 @@
-// Copyright (c) 2021, Facebook, Inc. and its affiliates
-// Copyright (c) 2022, Mysten Labs, Inc.
-// SPDX-License-Identifier: Apache-2.0
+//! Copyright (c) 2021, Facebook, Inc. and its affiliates
+//! Copyright (c) 2022, Mysten Labs, Inc.
+//! Copyright (c) 2022, BTI
+//! SPDX-License-Identifier: Apache-2.0
+//! Note, the code in this file is taken almost directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-types/src/committee.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 
 use crate::{
     account::{AuthorityPubKey, AuthorityPubKeyBytes},
-    error::{SuiError, SuiResult},
+    error::{GDEXError, GDEXResult},
     fp_ensure,
 };
 use itertools::Itertools;
@@ -35,24 +37,24 @@ pub struct Committee {
 }
 
 impl Committee {
-    pub fn new(epoch: EpochId, voting_rights: BTreeMap<AuthorityName, StakeUnit>) -> SuiResult<Self> {
+    pub fn new(epoch: EpochId, voting_rights: BTreeMap<AuthorityName, StakeUnit>) -> GDEXResult<Self> {
         let mut voting_rights: Vec<(AuthorityName, StakeUnit)> = voting_rights.iter().map(|(a, s)| (*a, *s)).collect();
 
         fp_ensure!(
             // Actual committee size is enforced in sui_system.move.
             // This is just to ensure that choose_multiple_weighted can't fail.
             voting_rights.len() < u32::MAX.try_into().unwrap(),
-            SuiError::InvalidCommittee("committee has too many members".into())
+            GDEXError::InvalidCommittee("committee has too many members".into())
         );
 
         fp_ensure!(
             !voting_rights.is_empty(),
-            SuiError::InvalidCommittee("committee has 0 members".into())
+            GDEXError::InvalidCommittee("committee has 0 members".into())
         );
 
         fp_ensure!(
             voting_rights.iter().any(|(_, s)| *s != 0),
-            SuiError::InvalidCommittee("at least one committee member must have non-zero stake.".into())
+            GDEXError::InvalidCommittee("at least one committee member must have non-zero stake.".into())
         );
 
         voting_rights.sort_by_key(|(a, _)| *a);
@@ -115,13 +117,13 @@ impl Committee {
         self.epoch
     }
 
-    pub fn public_key(&self, authority: &AuthorityName) -> SuiResult<AuthorityPubKey> {
+    pub fn public_key(&self, authority: &AuthorityName) -> GDEXResult<AuthorityPubKey> {
         match self.expanded_keys.get(authority) {
             // TODO: Check if this is unnecessary copying.
             Some(v) => Ok(v.clone()),
             None => (*authority)
                 .try_into()
-                .map_err(|_| SuiError::InvalidCommittee(format!("Authority #{} not found", authority))),
+                .map_err(|_| GDEXError::InvalidCommittee(format!("Authority #{} not found", authority))),
         }
     }
 

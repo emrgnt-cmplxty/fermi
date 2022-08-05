@@ -4,11 +4,11 @@
 //! The transaction class is responsible for parsing client interactions
 //! each valid transaction corresponds to a unique state transition within
 //! the space of allowable blockchain transitions
-//!
+
 use crate::{
     account::{AccountPubKey, AccountSignature},
     asset::AssetId,
-    error::SignedTransactionError,
+    error::GDEXError,
     order_book::OrderSide,
 };
 use blake2::{digest::Update, VarBlake2b};
@@ -205,23 +205,23 @@ impl SignedTransaction {
         }
     }
 
-    pub fn deserialize(byte_vec: Vec<u8>) -> Result<Self, SignedTransactionError> {
+    pub fn deserialize(byte_vec: Vec<u8>) -> Result<Self, GDEXError> {
         match bincode::deserialize(&byte_vec[..]) {
             Ok(result) => Ok(result),
-            Err(err) => Err(SignedTransactionError::Deserialization(err)),
+            Err(..) => Err(GDEXError::TransactionDeserialization),
         }
     }
 
-    pub fn deserialize_and_verify(byte_vec: Vec<u8>) -> Result<Self, SignedTransactionError> {
+    pub fn deserialize_and_verify(byte_vec: Vec<u8>) -> Result<Self, GDEXError> {
         let deserialized_transaction = Self::deserialize(byte_vec)?;
         deserialized_transaction.verify()?;
         Ok(deserialized_transaction)
     }
 
-    pub fn serialize(&self) -> Result<Vec<u8>, SignedTransactionError> {
+    pub fn serialize(&self) -> Result<Vec<u8>, GDEXError> {
         match bincode::serialize(&self) {
             Ok(result) => Ok(result),
-            Err(err) => Err(SignedTransactionError::Serialization(err)),
+            Err(..) => Err(GDEXError::TransactionSerialization),
         }
     }
 
@@ -233,15 +233,15 @@ impl SignedTransaction {
         &self.transaction_signature
     }
 
-    pub fn verify(&self) -> Result<(), SignedTransactionError> {
+    pub fn verify(&self) -> Result<(), GDEXError> {
         let transaction_digest_array = self.transaction_payload.digest().get_array();
         match self
             .transaction_payload
             .get_sender()
             .verify(&transaction_digest_array[..], &self.transaction_signature)
         {
-            Ok(_) => Ok(()),
-            Err(err) => Err(SignedTransactionError::FailedVerification(err)),
+            Ok(..) => Ok(()),
+            Err(..) => Err(GDEXError::FailedVerification),
         }
     }
 }
@@ -298,10 +298,10 @@ pub mod transaction_tests {
 
         // check that verification fails
         match verify_result {
-            Ok(_) => {
+            Ok(..) => {
                 panic!("An error is expected.");
             }
-            Err(SignedTransactionError::FailedVerification(_)) => { /* do nothing */ }
+            Err(GDEXError::FailedVerification) => { /* do nothing */ }
             _ => {
                 panic!("An unexpected error occurred.")
             }

@@ -1,5 +1,7 @@
-// Copyright (c) 2022, Mysten Labs, Inc.
-// SPDX-License-Identifier: Apache-2.0
+//! Copyright (c) 2022, Mysten Labs, Inc.
+//! Copyright (c) 2022, BTI
+//! SPDX-License-Identifier: Apache-2.0
+ 
 use multiaddr::Multiaddr;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -7,6 +9,7 @@ use sui_types::base_types::SuiAddress;
 use sui_types::committee::StakeUnit;
 use sui_types::crypto::AuthorityPublicKeyBytes;
 
+/// This class is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/node.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 /// Publicly known information about a validator
 /// TODO read most of this from on-chain
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]

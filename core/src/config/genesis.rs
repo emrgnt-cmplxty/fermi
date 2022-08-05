@@ -1,5 +1,7 @@
-// Copyright (c) 2022, Mysten Labs, Inc.
-// SPDX-License-Identifier: Apache-2.0
+//!Copyright (c) 2022, Mysten Labs, Inc.
+//! Copyright (c) 2022, BTI
+//! SPDX-License-Identifier: Apache-2.0
+
 use anyhow::{bail, Context, Result};
 use camino::Utf8Path;
 use core::cell::RefCell;
@@ -7,7 +9,7 @@ use gdex_proc::{BankController, SpotController, StakeController};
 use gdex_types::{
     account::AuthorityPubKeyBytes,
     committee::{Committee, EpochId},
-    error::SuiResult,
+    error::GDEXResult,
     node::ValidatorInfo,
     serialization::{Base64, Encoding},
     utils,
@@ -59,7 +61,7 @@ impl Genesis {
         &self.validator_set
     }
 
-    pub fn committee(&self) -> SuiResult<Committee> {
+    pub fn committee(&self) -> GDEXResult<Committee> {
         Committee::new(self.epoch(), ValidatorInfo::voting_rights(self.validator_set()))
     }
 

@@ -1,9 +1,14 @@
+//! Copyright (c) 2022, Mysten Labs, Inc.
+//! Copyright (c) 2022, BTI
+//! SPDX-License-Identifier: Apache-2.0
+
 use anyhow::anyhow;
 use base64ct::Encoding as _;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use serde::Serialize;
 
+/// This class is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-types/src/sui_serde.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 pub type KeyPairBase64 = sui_types::sui_serde::KeyPairBase64;
 
 impl Encoding for Base64 {
@@ -16,6 +21,7 @@ impl Encoding for Base64 {
     }
 }
 
+/// This class is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-types/src/sui_serde.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq, JsonSchema)]
 #[serde(try_from = "String")]
 pub struct Base64(String);

@@ -1,5 +1,7 @@
+//! Copyright (c) 2018 Anton Dort-Golts
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
+
 /// Rotating index sequence
 use serde::{Deserialize, Serialize};
 

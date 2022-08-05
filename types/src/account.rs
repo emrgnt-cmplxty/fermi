@@ -1,10 +1,15 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
+
 use crate::asset::AssetId;
 use crate::crypto::GDEXPublicKey;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt::Debug};
 
+/// The account key logic is fully configurable to allow for agile changes throughout the
+/// codebase, by simply changing the specified type here
+/// for now we are leveraging the Sui crypto library and only form a local implementations
+/// when it gives a clear reduction in overhead and enhanced consistency
 pub type AuthorityPubKey = Ed25519PublicKey;
 pub type AuthorityPrivKey = sui_types::crypto::AuthorityPrivateKey;
 pub type AuthoritySignature = sui_types::crypto::AuthoritySignature;
@@ -18,6 +23,8 @@ pub type AccountKeyPair = sui_types::crypto::AccountKeyPair;
 pub type AccountBalance = u64;
 
 /// create a local representation of the Ed25519PublicKey in order to implement necessary traits
+/// such a change is necessary in order to implement the GDEXPublicKey locally, rather than utilize
+/// the exposed SuiPublicKey
 pub type Ed25519PublicKey = sui_types::crypto::AuthorityPublicKey;
 
 impl GDEXPublicKey for Ed25519PublicKey {

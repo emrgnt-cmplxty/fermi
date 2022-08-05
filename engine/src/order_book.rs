@@ -1,3 +1,4 @@
+//! Copyright (c) 2018 Anton Dort-Golts
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //!
@@ -7,6 +8,7 @@
 //! this uniqueness check in the orderbook is seems potentially incorrect, or strange, as it includes the timestamp of the order
 //! we should include some sort of random noise to ensure that every order that touches the book gets inserted
 //! as upstream checks will robustly ensure no duplicates
+
 use super::order_queues::OrderQueue;
 use super::sequence;
 use super::validation::OrderRequestValidator;

@@ -1,4 +1,8 @@
-use crate::error::SuiError;
+//! Copyright (c) 2022, Mysten Labs, Inc.
+//! Copyright (c) 2022, BTI
+//! SPDX-License-Identifier: Apache-2.0
+
+use crate::error::GDEXError;
 use crate::utils;
 use digest::Digest;
 use rand::rngs::OsRng;
@@ -8,13 +12,14 @@ use serde_with::serde_as;
 use sha3::Sha3_256;
 use sui_types::sui_serde::{Hex, Readable};
 
-// declare traits
+// declare public traits for external consumption
 pub use signature::Signer;
 pub use signature::Verifier;
 pub use narwhal_crypto::traits::VerifyingKey;
-
+pub use narwhal_crypto::traits::Error;
 pub use sui_types::crypto::KeypairTraits;
 pub use sui_types::crypto::ToFromBytes;
+
 
 /// The number of bytes in an address.
 /// Default to 16 bytes, can be set to 20 bytes with address20 feature.
@@ -26,10 +31,14 @@ pub const ADDRESS_LENGTH: usize = if cfg!(feature = "address20") {
     16
 };
 
+/// This is a reduced scope use of the SuiPublicKey 
+/// https://github.com/MystenLabs/sui/blob/main/crates/sui-types/src/crypto.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 pub trait GDEXPublicKey: VerifyingKey {
     const FLAG: u8;
 }
 
+/// This is a reduced scope use of the SuiAddress
+/// https://github.com/MystenLabs/sui/blob/main/crates/sui-types/src/base_types.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 #[serde_as]
 #[derive(Eq, Debug, Default, PartialEq, Ord, PartialOrd, Copy, Clone, Hash, Serialize, Deserialize, JsonSchema)]
 pub struct GDEXAddress(
@@ -77,10 +86,10 @@ impl<T: GDEXPublicKey> From<&T> for GDEXAddress {
 }
 /// TryFrom trait is necessary for utils::decode_bytes_hex in optional_address_from_hex
 impl TryFrom<&[u8]> for GDEXAddress {
-    type Error = SuiError;
+    type Error = GDEXError;
 
-    fn try_from(bytes: &[u8]) -> Result<Self, SuiError> {
-        let arr: [u8; ADDRESS_LENGTH] = bytes.try_into().map_err(|_| SuiError::InvalidAddress)?;
+    fn try_from(bytes: &[u8]) -> Result<Self, GDEXError> {
+        let arr: [u8; ADDRESS_LENGTH] = bytes.try_into().map_err(|_| GDEXError::InvalidAddress)?;
         Ok(Self(arr))
     }
 }
@@ -92,6 +101,7 @@ impl AsRef<[u8]> for GDEXAddress {
     }
 }
 
+/// This function is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-types/src/crypto.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 // TODO: get_key_pair() and get_key_pair_from_bytes() should return KeyPair only.
 // TODO: rename to random_key_pair
 pub fn get_key_pair<KP: KeypairTraits>() -> (GDEXAddress, KP)
@@ -101,6 +111,7 @@ where
     get_key_pair_from_rng(&mut OsRng)
 }
 
+/// This function is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-types/src/crypto.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 /// Generate a keypair from the specified RNG (useful for testing with seedable rngs).
 pub fn get_key_pair_from_rng<KP: KeypairTraits, R>(csprng: &mut R) -> (GDEXAddress, KP)
 where
@@ -111,6 +122,7 @@ where
     (kp.public().into(), kp)
 }
 
+/// This function is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui/src/keytool.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 pub fn write_keypair_to_file<K: KeypairTraits, P: AsRef<std::path::Path>>(keypair: &K, path: P) -> anyhow::Result<()> {
     let contents = keypair.encode_base64();
     std::fs::write(path, contents)?;

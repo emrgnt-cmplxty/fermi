@@ -1,8 +1,10 @@
-// Copyright (c) 2022, Mysten Labs, Inc.
-// SPDX-License-Identifier: Apache-2.0
+//! Copyright (c) 2022, Mysten Labs, Inc.
+//! SPDX-License-Identifier: Apache-2.0
+
 use crate::crypto::KeypairTraits;
 use anyhow::anyhow;
 use std::net::{TcpListener, TcpStream};
+
 /// Return an ephemeral, available port. On unix systems, the port returned will be in the
 /// TIME_WAIT state ensuring that the OS won't hand out this port for some grace period.
 /// Callers should be able to bind to this port given they use SO_REUSEADDR.

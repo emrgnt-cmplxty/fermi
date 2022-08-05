@@ -11,9 +11,9 @@
 use anyhow::{Context, Result};
 use arc_swap::ArcSwap;
 use clap::{crate_name, crate_version, App, AppSettings, ArgMatches, SubCommand};
-use config::{Committee, Import, Parameters, WorkerId};
-use crypto::{generate_production_keypair, traits::KeyPair as _, KeyPair};
-use executor::{SerializedTransaction, SubscriberResult};
+use narwhal_config::{Committee, Import, Parameters, WorkerId};
+use narwhal_crypto::{generate_production_keypair, traits::KeyPair as _, KeyPair};
+use narwhal_executor::{SerializedTransaction, SubscriberResult};
 use futures::future::join_all;
 use narwhal_node::{
     execution_state::SimpleExecutionState,
@@ -116,7 +116,7 @@ async fn main() -> Result<()> {
     match matches.subcommand() {
         ("generate_keys", Some(sub_matches)) => {
             let kp = generate_production_keypair::<KeyPair>();
-            config::Export::export(&kp, sub_matches.value_of("filename").unwrap())
+            narwhal_config::Export::export(&kp, sub_matches.value_of("filename").unwrap())
                 .context("Failed to generate key pair")?
         }
         ("run", Some(sub_matches)) => run(sub_matches).await?,

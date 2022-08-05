@@ -6,6 +6,7 @@ authors = ["Mysten Labs <build@mystenlabs.com>"]
 edition = "2021"
 
 [dependencies]
+# generic crates
 anyhow = "1.0.58"
 arc-swap = { version = "1.5.0", features = ["serde"] }
 async-trait = "0.1.56"
@@ -26,19 +27,20 @@ tracing-subscriber = { version = "0.3.15", features = ["time", "env-filter"] }
 telemetry-subscribers = { git = "https://github.com/mystenlabs/mysten-infra.git", rev = "123c9e40b529315e1c1d91a54fb717111c3e349c" }
 url = "2.2.2"
 dhat = { version = "0.3.0", optional = true }
-
-narwhal-node = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "node" }
-config = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "config" }
-consensus = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "consensus" }
-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "crypto" }
-executor = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "executor" }
-primary = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "primary" }
-types = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "types" }
-worker = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "worker" }
-network = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "network" }
 axum = "0.5.13"
 prometheus = "0.13.1"
 workspace-hack = { version = "0.1", path = "../workspace-hack" }
+
+# narwhal crates
+narwhal-node = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "node" }
+narwhal-config = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "config" }
+narwhal-consensus = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "consensus" }
+narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "crypto" }
+narwhal-executor = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "executor" }
+narwhal-primary = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "primary" }
+narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "types" }
+narwhal-worker = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "worker" }
+narwhal-network = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "network" }
 
 [dev-dependencies]
 ed25519-dalek = "1.0.1"
@@ -51,7 +53,7 @@ test_utils = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b4875
 mysten-network = { git = "https://github.com/mystenlabs/mysten-infra.git", rev = "c6dc7a23a40b3517f138d122a76d3bc15f844f67" }
 
 [features]
-benchmark = ["worker/benchmark", "primary/benchmark", "consensus/benchmark"]
+benchmark = ["narwhal-worker/benchmark", "narwhal-primary/benchmark", "narwhal-consensus/benchmark"]
 dhat-heap = ["dhat"]    # if you are doing heap profiling
 
 [[bin]]         

@@ -1,9 +1,9 @@
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 use async_trait::async_trait;
-use config::Committee;
-use consensus::ConsensusOutput;
-use executor::{ExecutionIndices, ExecutionState, ExecutionStateError};
+use narwhal_config::Committee;
+use narwhal_consensus::ConsensusOutput;
+use narwhal_executor::{ExecutionIndices, ExecutionState, ExecutionStateError};
 use thiserror::Error;
 
 /// A simple/dumb execution engine.

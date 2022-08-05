@@ -12,7 +12,7 @@ use tokio::{
 };
 use tracing::{info, subscriber::set_global_default, warn};
 use tracing_subscriber::filter::EnvFilter;
-use types::{TransactionProto, TransactionsClient};
+use narwhal_types::{TransactionProto, TransactionsClient};
 use url::Url;
 
 #[tokio::main]

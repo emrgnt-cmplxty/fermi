@@ -9,7 +9,11 @@
 //! 1.) MAKE ROBUST ERROR HANDLING FOR ALL FUNCTIONS ~~ DONE
 //! 2.) ADD OWNER FUNCTIONS
 //! 3.) BETTER BANK ACCOUNT PUB KEY HANDLING SYSTEM & ADDRESS
-use gdex_types::{AccountPubKey, Asset, AssetId, BankAccount, ProcError};
+use gdex_types::{
+    account::{AccountPubKey, BankAccount},
+    asset::{Asset, AssetId},
+    error::ProcError,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

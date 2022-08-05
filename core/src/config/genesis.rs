@@ -4,19 +4,19 @@ use anyhow::{bail, Context, Result};
 use camino::Utf8Path;
 use core::cell::RefCell;
 use gdex_proc::{BankController, SpotController, StakeController};
+use gdex_types::{
+    account::AuthorityPubKeyBytes,
+    committee::{Committee, EpochId},
+    error::SuiResult,
+    node::ValidatorInfo,
+    serialization::{Base64, Encoding},
+    utils,
+};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::BTreeMap;
 use std::convert::TryInto;
 use std::rc::Rc;
 use std::{fs, path::Path};
-use sui_types::crypto::AuthorityPublicKeyBytes;
-use sui_types::sui_serde::{Base64, Encoding};
-use sui_types::{
-    base_types::{encode_bytes_hex},
-    committee::{Committee, EpochId},
-    error::SuiResult,
-};
-use gdex_types::ValidatorInfo;
 use tracing::trace;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -189,7 +189,7 @@ impl<'de> Deserialize<'de> for Genesis {
 
 pub struct Builder {
     master_controller: MasterController,
-    validators: BTreeMap<AuthorityPublicKeyBytes, ValidatorInfo>,
+    validators: BTreeMap<AuthorityPubKeyBytes, ValidatorInfo>,
 }
 
 impl Default for Builder {
@@ -278,7 +278,7 @@ impl Builder {
 
         for (_pubkey, validator) in self.validators {
             let validator_info_bytes = serde_yaml::to_vec(&validator)?;
-            let hex_name = encode_bytes_hex(&validator.public_key());
+            let hex_name = utils::encode_bytes_hex(&validator.public_key());
             fs::write(committee_dir.join(hex_name), validator_info_bytes)?;
         }
 
@@ -297,10 +297,8 @@ const GENESIS_BUILDER_COMMITTEE_DIR: &str = "committee";
 mod test {
     use super::super::genesis_config::GenesisConfig;
     use super::*;
-    use gdex_types::{utils, ValidatorInfo};
-    use narwhal_crypto::traits::KeyPair;
-    use sui_types::crypto::{get_key_pair_from_rng, AuthorityKeyPair};
-
+    use gdex_types::{account::AuthorityKeyPair, crypto::{get_key_pair_from_rng, KeypairTraits}, node::ValidatorInfo, utils};
+    
     #[test]
     fn roundtrip() {
         let genesis = Builder::new().build();

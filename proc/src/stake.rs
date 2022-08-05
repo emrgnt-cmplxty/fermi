@@ -10,7 +10,10 @@
 //! 0.) ADD SIZE CHECKS ON TRANSACTIONS
 //!
 use super::bank::{BankController, PRIMARY_ASSET_ID};
-use gdex_types::{AccountPubKey, ProcError, StakeAccount};
+use gdex_types::{
+    account::{AccountPubKey, StakeAccount},
+    error::ProcError,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -107,8 +110,8 @@ impl Default for StakeController {
 pub mod stake_tests {
     use super::*;
     use crate::bank::{CREATED_ASSET_BALANCE, PRIMARY_ASSET_ID};
-    use gdex_types::account_test_functions::generate_keypair_vec;
-    use narwhal_crypto::traits::KeyPair;
+    use gdex_types::account::account_test_functions::generate_keypair_vec;
+    use gdex_types::crypto::KeypairTraits;
 
     const STAKE_AMOUNT: u64 = 1_000;
     #[test]

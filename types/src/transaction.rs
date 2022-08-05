@@ -5,7 +5,12 @@
 //! each valid transaction corresponds to a unique state transition within
 //! the space of allowable blockchain transitions
 //!
-use crate::{AccountPubKey, AccountSignature, AssetId, OrderSide, SignedTransactionError};
+use crate::{
+    account::{AccountPubKey, AccountSignature},
+    asset::AssetId,
+    error::SignedTransactionError,
+    order_book::OrderSide,
+};
 use blake2::{digest::Update, VarBlake2b};
 use narwhal_crypto::{Digest, Hash, Verifier, DIGEST_LEN};
 use narwhal_types::BatchDigest;
@@ -246,8 +251,8 @@ impl SignedTransaction {
 pub mod transaction_tests {
     use super::*;
 
-    use crate::{account_test_functions::generate_keypair_vec, AccountKeyPair};
-    use narwhal_crypto::traits::{KeyPair, Signer};
+    use crate::account::{account_test_functions::generate_keypair_vec, AccountKeyPair};
+    use crate::crypto::{KeypairTraits, Signer};
 
     const PRIMARY_ASSET_ID: u64 = 0;
 

@@ -1,20 +1,28 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
-use crate::AssetId;
-use narwhal_crypto::ed25519::{Ed25519KeyPair, Ed25519PrivateKey, Ed25519PublicKey, Ed25519Signature};
+use crate::asset::AssetId;
+use crate::crypto::GDEXPublicKey;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt::Debug};
 
 pub type AuthorityPubKey = Ed25519PublicKey;
-pub type AuthorityPrivKey = Ed25519PrivateKey;
-pub type AuthoritySignature = Ed25519Signature;
-pub type AuthorityKeyPair = Ed25519KeyPair;
+pub type AuthorityPrivKey = sui_types::crypto::AuthorityPrivateKey;
+pub type AuthoritySignature = sui_types::crypto::AuthoritySignature;
+pub type AuthorityKeyPair = sui_types::crypto::AuthorityKeyPair;
+pub type AuthorityPubKeyBytes = sui_types::crypto::AuthorityPublicKeyBytes;
 
-pub type AccountPubKey = Ed25519PublicKey;
-pub type AccountPrivKey = Ed25519PrivateKey;
-pub type AccountSignature = Ed25519Signature;
-pub type AccountKeyPair = Ed25519KeyPair;
+pub type AccountPubKey = sui_types::crypto::AccountPublicKey;
+pub type AccountPrivKey = sui_types::crypto::AccountPrivateKey;
+pub type AccountSignature = sui_types::crypto::AccountSignature;
+pub type AccountKeyPair = sui_types::crypto::AccountKeyPair;
 pub type AccountBalance = u64;
+
+/// create a local representation of the Ed25519PublicKey in order to implement necessary traits
+pub type Ed25519PublicKey = sui_types::crypto::AuthorityPublicKey;
+
+impl GDEXPublicKey for Ed25519PublicKey {
+    const FLAG: u8 = 0x00;
+}
 
 /// BankAccount is consumed by the BankController
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -93,7 +101,7 @@ impl StakeAccount {
 #[cfg(any(test, feature = "testing"))]
 pub mod account_test_functions {
     use super::*;
-    use narwhal_crypto::traits::KeyPair;
+    use crate::crypto::KeypairTraits;
     use rand::{rngs::StdRng, SeedableRng};
 
     pub fn generate_keypair_vec(seed: [u8; 32]) -> Vec<AccountKeyPair> {
@@ -105,9 +113,9 @@ pub mod account_test_functions {
 /// Begin the testing suite for account
 #[cfg(test)]
 pub mod account_tests {
-    use super::account_test_functions::generate_keypair_vec;
     use super::*;
-    use narwhal_crypto::traits::KeyPair;
+    use crate::crypto::KeypairTraits;
+    use super::account_test_functions::generate_keypair_vec;
 
     #[test]
     pub fn create_bank_account() {

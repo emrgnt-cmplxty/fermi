@@ -1,6 +1,6 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
-use gdex_types::OrderSide;
+use gdex_types::order_book::OrderSide;
 use serde::{Deserialize, Serialize};
 use std::{
     cmp::Ordering,

@@ -7,7 +7,6 @@ edition = "2021"
 [dependencies]
 assert_approx_eq = "1.1.0"
 criterion = "0.3.4"
-narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "crypto", features=["copy_key"]}
 rand = "0.7.0"
 serde = { version = "1.0.141", features = ["derive"] }
 

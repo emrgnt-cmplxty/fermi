@@ -2110,12 +2110,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "85dcb89d2b10c5f6133de2efd8c11959ce9dbb46a2f7a4cab208c4eeda6ce1ab"
 
 [[package]]
-name = "fs_extra"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2022715d62ab30faffd124d40b76f4134a550a87792276512b18d63272333394"
-
-[[package]]
 name = "futures"
 version = "0.3.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2235,7 +2229,6 @@ dependencies = [
  "camino",
  "clap 3.2.2",
  "config 0.1.0",
- "crypto",
  "gdex-proc",
  "gdex-types",
  "move-binary-format",
@@ -2247,9 +2240,6 @@ dependencies = [
  "serde 1.0.142",
  "serde_with 1.14.0",
  "serde_yaml",
- "signature",
- "sui",
- "sui-types",
  "tempfile",
  "tracing",
 ]
@@ -2270,7 +2260,6 @@ version = "0.1.0"
 dependencies = [
  "assert_approx_eq",
  "criterion",
- "crypto",
  "gdex-engine",
  "gdex-types",
  "rand 0.7.3",
@@ -2281,13 +2270,23 @@ dependencies = [
 name = "gdex-types"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "base64",
+ "base64ct",
  "bincode",
  "blake2",
  "crypto",
+ "digest 0.10.3",
+ "hex",
+ "itertools",
  "multiaddr",
  "rand 0.7.3",
+ "rand 0.8.5",
+ "schemars",
  "serde 1.0.142",
+ "serde_with 1.14.0",
+ "sha3 0.10.2",
+ "signature",
  "sui-types",
  "thiserror",
  "types",
@@ -2920,38 +2919,6 @@ name = "itoa"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c8af84674fe1f223a982c933a0ee1086ac4d4052aa0fb8060c12c6ad838e754"
-
-[[package]]
-name = "jemalloc-ctl"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1891c671f3db85d8ea8525dd43ab147f9977041911d24a03e5a36187a7bfde9"
-dependencies = [
- "jemalloc-sys",
- "libc",
- "paste",
-]
-
-[[package]]
-name = "jemalloc-sys"
-version = "0.5.1+5.3.0-patched"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7c2b313609b95939cb0c5a5c6917fb9b7c9394562aa3ef44eb66ffa51736432"
-dependencies = [
- "cc",
- "fs_extra",
- "libc",
-]
-
-[[package]]
-name = "jemallocator"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "16c2514137880c52b0b4822b563fadd38257c1f380858addb74a400889696ea6"
-dependencies = [
- "jemalloc-sys",
- "libc",
-]
 
 [[package]]
 name = "jobserver"
@@ -6740,405 +6707,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6bdef32e8150c2a081110b42772ffe7d7c9032b606bc226c8260fd97e0976601"
 
 [[package]]
-name = "sui"
-version = "0.6.2"
-source = "git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b#41a1798708717ed44f88fdd800bb95dae0209a4b"
-dependencies = [
- "anyhow",
- "async-trait",
- "base64ct",
- "bcs",
- "camino",
- "clap 3.2.2",
- "colored",
- "executor",
- "jemalloc-ctl",
- "jemallocator",
- "move-cli",
- "move-core-types",
- "move-package",
- "move-prover",
- "move-prover-boogie-backend",
- "move-unit-test",
- "multiaddr",
- "rocksdb",
- "rustyline",
- "rustyline-derive",
- "serde 1.0.142",
- "serde_json",
- "serde_with 1.14.0",
- "shell-words",
- "signature",
- "sui-config",
- "sui-core",
- "sui-framework",
- "sui-json",
- "sui-json-rpc-types",
- "sui-sdk",
- "sui-swarm",
- "sui-types",
- "telemetry-subscribers 0.1.0 (git+https://github.com/MystenLabs/mysten-infra?rev=a4c2cae59d823533061a5d8fe28771629819c43f)",
- "tempfile",
- "tokio",
- "tracing",
- "typed-store 0.1.0 (git+https://github.com/MystenLabs/mysten-infra?rev=a4c2cae59d823533061a5d8fe28771629819c43f)",
- "typed-store-macros",
- "unescape",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b)",
-]
-
-[[package]]
-name = "sui-adapter"
-version = "0.1.0"
-source = "git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b#41a1798708717ed44f88fdd800bb95dae0209a4b"
-dependencies = [
- "anyhow",
- "bcs",
- "move-binary-format",
- "move-core-types",
- "move-vm-runtime",
- "once_cell",
- "sui-framework",
- "sui-types",
- "sui-verifier",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b)",
-]
-
-[[package]]
-name = "sui-config"
-version = "0.0.0"
-source = "git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b#41a1798708717ed44f88fdd800bb95dae0209a4b"
-dependencies = [
- "anyhow",
- "arc-swap",
- "bcs",
- "camino",
- "config 0.1.0",
- "crypto",
- "dirs",
- "move-binary-format",
- "move-core-types",
- "move-package",
- "move-vm-runtime",
- "multiaddr",
- "once_cell",
- "rand 0.7.3",
- "serde 1.0.142",
- "serde_with 1.14.0",
- "serde_yaml",
- "sui-adapter",
- "sui-framework",
- "sui-types",
- "tracing",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b)",
-]
-
-[[package]]
-name = "sui-core"
-version = "0.1.0"
-source = "git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b#41a1798708717ed44f88fdd800bb95dae0209a4b"
-dependencies = [
- "anyhow",
- "arc-swap",
- "async-trait",
- "bcs",
- "bincode",
- "bytes",
- "chrono",
- "config 0.1.0",
- "consensus",
- "crypto",
- "executor",
- "futures",
- "move-binary-format",
- "move-bytecode-utils",
- "move-core-types",
- "move-vm-runtime",
- "multiaddr",
- "mysten-network 0.1.0 (git+https://github.com/MystenLabs/mysten-infra?rev=a4c2cae59d823533061a5d8fe28771629819c43f)",
- "node",
- "once_cell",
- "parking_lot 0.12.1",
- "prometheus",
- "rocksdb",
- "scopeguard",
- "serde 1.0.142",
- "serde_json",
- "serde_with 1.14.0",
- "signature",
- "sui-adapter",
- "sui-config",
- "sui-framework",
- "sui-json",
- "sui-json-rpc-types",
- "sui-network",
- "sui-storage",
- "sui-types",
- "tap",
- "tempfile",
- "tokio",
- "tokio-retry",
- "tokio-stream",
- "tracing",
- "typed-store 0.1.0 (git+https://github.com/MystenLabs/mysten-infra?rev=a4c2cae59d823533061a5d8fe28771629819c43f)",
- "typed-store-macros",
- "types",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b)",
-]
-
-[[package]]
-name = "sui-framework"
-version = "0.1.0"
-source = "git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b#41a1798708717ed44f88fdd800bb95dae0209a4b"
-dependencies = [
- "anyhow",
- "bcs",
- "linked-hash-map",
- "move-binary-format",
- "move-cli",
- "move-core-types",
- "move-package",
- "move-stdlib",
- "move-unit-test",
- "move-vm-runtime",
- "move-vm-types",
- "num_enum",
- "once_cell",
- "smallvec",
- "sui-framework-build",
- "sui-types",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b)",
-]
-
-[[package]]
-name = "sui-framework-build"
-version = "0.0.0"
-source = "git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b#41a1798708717ed44f88fdd800bb95dae0209a4b"
-dependencies = [
- "move-binary-format",
- "move-bytecode-verifier",
- "move-compiler",
- "move-core-types",
- "move-package",
- "sui-types",
- "sui-verifier",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b)",
-]
-
-[[package]]
-name = "sui-json"
-version = "0.0.0"
-source = "git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b#41a1798708717ed44f88fdd800bb95dae0209a4b"
-dependencies = [
- "anyhow",
- "bcs",
- "hex",
- "move-binary-format",
- "move-core-types",
- "schemars",
- "serde 1.0.142",
- "serde_json",
- "sui-types",
- "sui-verifier",
-]
-
-[[package]]
-name = "sui-json-rpc"
-version = "0.0.0"
-source = "git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b#41a1798708717ed44f88fdd800bb95dae0209a4b"
-dependencies = [
- "anyhow",
- "async-trait",
- "futures",
- "jsonrpsee",
- "jsonrpsee-core",
- "jsonrpsee-proc-macros",
- "prometheus",
- "serde 1.0.142",
- "signature",
- "sui-core",
- "sui-json",
- "sui-json-rpc-types",
- "sui-open-rpc",
- "sui-open-rpc-macros",
- "sui-types",
- "tokio",
- "tracing",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b)",
-]
-
-[[package]]
-name = "sui-json-rpc-types"
-version = "0.0.0"
-source = "git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b#41a1798708717ed44f88fdd800bb95dae0209a4b"
-dependencies = [
- "anyhow",
- "async-trait",
- "colored",
- "either",
- "itertools",
- "move-bytecode-utils",
- "move-core-types",
- "schemars",
- "serde 1.0.142",
- "serde_json",
- "serde_with 1.14.0",
- "sui-json",
- "sui-types",
- "tracing",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b)",
-]
-
-[[package]]
-name = "sui-network"
-version = "0.0.0"
-source = "git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b#41a1798708717ed44f88fdd800bb95dae0209a4b"
-dependencies = [
- "async-trait",
- "mysten-network 0.1.0 (git+https://github.com/MystenLabs/mysten-infra?rev=a4c2cae59d823533061a5d8fe28771629819c43f)",
- "sui-types",
- "tonic",
- "tonic-build 0.7.2 (git+https://github.com/hyperium/tonic.git?rev=de2e4ac077c076736dc451f3415ea7da1a61a560)",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b)",
-]
-
-[[package]]
-name = "sui-node"
-version = "0.6.2"
-source = "git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b#41a1798708717ed44f88fdd800bb95dae0209a4b"
-dependencies = [
- "anyhow",
- "axum",
- "clap 3.2.2",
- "futures",
- "jemalloc-ctl",
- "jemallocator",
- "multiaddr",
- "mysten-network 0.1.0 (git+https://github.com/MystenLabs/mysten-infra?rev=a4c2cae59d823533061a5d8fe28771629819c43f)",
- "parking_lot 0.12.1",
- "prometheus",
- "sui-config",
- "sui-core",
- "sui-json-rpc",
- "sui-network",
- "sui-storage",
- "sui-telemetry",
- "sui-types",
- "telemetry-subscribers 0.1.0 (git+https://github.com/MystenLabs/mysten-infra?rev=a4c2cae59d823533061a5d8fe28771629819c43f)",
- "tokio",
- "tracing",
- "typed-store 0.1.0 (git+https://github.com/MystenLabs/mysten-infra?rev=a4c2cae59d823533061a5d8fe28771629819c43f)",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b)",
-]
-
-[[package]]
-name = "sui-open-rpc"
-version = "0.6.1"
-source = "git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b#41a1798708717ed44f88fdd800bb95dae0209a4b"
-dependencies = [
- "schemars",
- "serde 1.0.142",
- "serde_json",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b)",
-]
-
-[[package]]
-name = "sui-open-rpc-macros"
-version = "0.1.0"
-source = "git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b#41a1798708717ed44f88fdd800bb95dae0209a4b"
-dependencies = [
- "derive-syn-parse",
- "itertools",
- "proc-macro2 1.0.43",
- "quote 1.0.21",
- "syn 1.0.99",
- "unescape",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b)",
-]
-
-[[package]]
-name = "sui-sdk"
-version = "0.0.0"
-source = "git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b#41a1798708717ed44f88fdd800bb95dae0209a4b"
-dependencies = [
- "anyhow",
- "async-trait",
- "futures",
- "futures-core",
- "jsonrpsee",
- "serde 1.0.142",
- "serde_json",
- "signature",
- "sui-config",
- "sui-core",
- "sui-json",
- "sui-json-rpc",
- "sui-json-rpc-types",
- "sui-types",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b)",
-]
-
-[[package]]
-name = "sui-storage"
-version = "0.1.0"
-source = "git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b#41a1798708717ed44f88fdd800bb95dae0209a4b"
-dependencies = [
- "anyhow",
- "async-trait",
- "enum_dispatch",
- "fdlimit",
- "flexstr",
- "futures",
- "move-core-types",
- "rocksdb",
- "serde 1.0.142",
- "serde_json",
- "sqlx",
- "strum",
- "strum_macros",
- "sui-types",
- "tempfile",
- "tokio",
- "tokio-stream",
- "tracing",
- "typed-store 0.1.0 (git+https://github.com/MystenLabs/mysten-infra?rev=a4c2cae59d823533061a5d8fe28771629819c43f)",
- "typed-store-macros",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b)",
-]
-
-[[package]]
-name = "sui-swarm"
-version = "0.0.0"
-source = "git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b#41a1798708717ed44f88fdd800bb95dae0209a4b"
-dependencies = [
- "anyhow",
- "futures",
- "mysten-network 0.1.0 (git+https://github.com/MystenLabs/mysten-infra?rev=a4c2cae59d823533061a5d8fe28771629819c43f)",
- "rand 0.7.3",
- "sui-config",
- "sui-node",
- "sui-types",
- "tap",
- "tempfile",
- "tokio",
- "tonic-health",
- "tracing",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b)",
-]
-
-[[package]]
-name = "sui-telemetry"
-version = "0.1.0"
-source = "git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b#41a1798708717ed44f88fdd800bb95dae0209a4b"
-dependencies = [
- "reqwest",
- "serde 1.0.142",
- "tokio",
- "tracing",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b)",
-]
-
-[[package]]
 name = "sui-types"
 version = "0.1.0"
 source = "git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b#41a1798708717ed44f88fdd800bb95dae0209a4b"
@@ -7185,18 +6753,6 @@ dependencies = [
  "typed-store-macros",
  "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b)",
  "zeroize",
-]
-
-[[package]]
-name = "sui-verifier"
-version = "0.1.0"
-source = "git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b#41a1798708717ed44f88fdd800bb95dae0209a4b"
-dependencies = [
- "move-binary-format",
- "move-bytecode-verifier",
- "move-core-types",
- "sui-types",
- "workspace-hack 0.1.0 (git+https://github.com/MystenLabs/sui?rev=41a1798708717ed44f88fdd800bb95dae0209a4b)",
 ]
 
 [[package]]

@@ -10,7 +10,11 @@
 use super::order_queues::OrderQueue;
 use super::sequence;
 use super::validation::OrderRequestValidator;
-use gdex_types::{AssetId, Failed, Order, OrderProcessingResult, OrderRequest, OrderSide, OrderType, Success};
+use gdex_types::{
+    asset::AssetId,
+    order_book::{Failed, Order, OrderProcessingResult, OrderSide, OrderType, Success},
+    transaction::OrderRequest,
+};
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 

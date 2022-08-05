@@ -1,13 +1,10 @@
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
+use super::Config;
+use gdex_types::{account::AuthorityKeyPair, committee::StakeUnit, crypto::GDEXAddress, serialization::KeyPairBase64};
 use multiaddr::Multiaddr;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use sui_types::base_types::{SuiAddress};
-use sui_types::committee::StakeUnit;
-use sui_types::crypto::AuthorityKeyPair;
-use sui_types::sui_serde::KeyPairBase64;
-use super::Config;
 
 #[derive(Serialize, Deserialize)]
 pub struct GenesisConfig {
@@ -36,10 +33,10 @@ pub struct ValidatorGenesisInfo {
 pub struct AccountConfig {
     #[serde(
         skip_serializing_if = "Option::is_none",
-        serialize_with = "SuiAddress::optional_address_as_hex",
-        deserialize_with = "SuiAddress::optional_address_from_hex"
+        serialize_with = "GDEXAddress::optional_address_as_hex",
+        deserialize_with = "GDEXAddress::optional_address_from_hex"
     )]
-    pub address: Option<SuiAddress>,
+    pub address: Option<GDEXAddress>,
 }
 
 const DEFAULT_NUMBER_OF_AUTHORITIES: usize = 4;
@@ -47,10 +44,7 @@ const DEFAULT_NUMBER_OF_ACCOUNT: usize = 5;
 
 impl GenesisConfig {
     pub fn for_local_testing() -> Self {
-        Self::custom_genesis(
-            DEFAULT_NUMBER_OF_AUTHORITIES,
-            DEFAULT_NUMBER_OF_ACCOUNT,
-        )
+        Self::custom_genesis(DEFAULT_NUMBER_OF_AUTHORITIES, DEFAULT_NUMBER_OF_ACCOUNT)
     }
 
     pub fn custom_genesis(num_authorities: usize, num_accounts: usize) -> Self {
@@ -58,9 +52,7 @@ impl GenesisConfig {
 
         let mut accounts = Vec::new();
         for _ in 0..num_accounts {
-            accounts.push(AccountConfig {
-                address: None,
-            })
+            accounts.push(AccountConfig { address: None })
         }
 
         Self {

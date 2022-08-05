@@ -1,14 +1,13 @@
 use anyhow::Context;
-use std::path::{Path, PathBuf};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use tracing::trace;
 use std::fs;
+use std::path::{Path, PathBuf};
+use tracing::trace;
 
 pub mod genesis;
 pub mod genesis_ceremony;
 pub mod genesis_config;
-
 
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
@@ -26,8 +25,7 @@ where
     fn load<P: AsRef<Path>>(path: P) -> Result<Self, anyhow::Error> {
         let path = path.as_ref();
         trace!("Reading config from {}", path.display());
-        let reader = fs::File::open(path)
-            .with_context(|| format!("Unable to load config from {}", path.display()))?;
+        let reader = fs::File::open(path).with_context(|| format!("Unable to load config from {}", path.display()))?;
         Ok(serde_yaml::from_reader(reader)?)
     }
 
@@ -35,8 +33,7 @@ where
         let path = path.as_ref();
         trace!("Writing config to {}", path.display());
         let config = serde_yaml::to_string(&self)?;
-        fs::write(path, config)
-            .with_context(|| format!("Unable to save config to {}", path.display()))?;
+        fs::write(path, config).with_context(|| format!("Unable to save config to {}", path.display()))?;
         Ok(())
     }
 }

@@ -4,18 +4,15 @@ use super::genesis::{Builder, Genesis, MasterController};
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Parser;
-use gdex_types::ValidatorInfo;
+use gdex_types::account::{AccountPubKey, AuthorityKeyPair, AuthorityPubKeyBytes, AuthoritySignature};
+use gdex_types::{
+    crypto::{KeypairTraits, Signer, ToFromBytes, Verifier},
+    node::ValidatorInfo,
+    utils,
+};
 use multiaddr::Multiaddr;
-use signature::{Signer, Verifier};
 use std::convert::{TryFrom, TryInto};
 use std::{fs, path::PathBuf};
-use sui_types::{
-    base_types::{decode_bytes_hex, encode_bytes_hex},
-    crypto::{
-        AuthorityKeyPair, AuthorityPublicKey, AuthorityPublicKeyBytes, AuthoritySignature, KeypairTraits, ToFromBytes,
-    },
-};
-use sui::keytool::read_keypair_from_file;
 pub const SUI_GENESIS_FILENAME: &str = "genesis.blob";
 const GENESIS_BUILDER_SIGNATURE_DIR: &str = "signatures";
 
@@ -94,7 +91,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             narwhal_consensus_address,
         } => {
             let mut builder = Builder::load(&dir)?;
-            let keypair: AuthorityKeyPair = read_keypair_from_file(key_file)?;
+            let keypair: AuthorityKeyPair = utils::read_keypair_from_file(key_file)?;
             builder = builder.add_validator(ValidatorInfo {
                 name,
                 public_key: keypair.public().into(),
@@ -127,7 +124,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
         }
 
         CeremonyCommand::VerifyAndSign { key_file } => {
-            let keypair: AuthorityKeyPair = read_keypair_from_file(key_file)?;
+            let keypair: AuthorityKeyPair = utils::read_keypair_from_file(key_file)?;
             let loaded_genesis = Genesis::load(dir.join(SUI_GENESIS_FILENAME))?;
             let loaded_genesis_bytes = loaded_genesis.to_bytes();
 
@@ -143,7 +140,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             if !built_genesis
                 .validator_set()
                 .iter()
-                .any(|validator| validator.public_key() == AuthorityPublicKeyBytes::from(keypair.public()))
+                .any(|validator| validator.public_key() == AuthorityPubKeyBytes::from(keypair.public()))
             {
                 return Err(anyhow::anyhow!(
                     "provided keypair does not correspond to a validator in the validator set"
@@ -156,7 +153,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             let signature_dir = dir.join(GENESIS_BUILDER_SIGNATURE_DIR);
             std::fs::create_dir_all(&signature_dir)?;
 
-            let hex_name = encode_bytes_hex(&AuthorityPublicKeyBytes::from(keypair.public()));
+            let hex_name = utils::encode_bytes_hex(&AuthorityPubKeyBytes::from(keypair.public()));
             fs::write(signature_dir.join(hex_name), signature)?;
         }
 
@@ -178,7 +175,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
                 let name = path
                     .file_name()
                     .ok_or_else(|| anyhow::anyhow!("Invalid signature file"))?;
-                let public_key = AuthorityPublicKeyBytes::from_bytes(&decode_bytes_hex::<Vec<u8>>(name)?[..])?;
+                let public_key = AuthorityPubKeyBytes::from_bytes(&utils::decode_bytes_hex::<Vec<u8>>(name)?[..])?;
                 signatures.insert(public_key, signature);
             }
 
@@ -187,7 +184,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
                     .remove(&validator.public_key())
                     .ok_or_else(|| anyhow::anyhow!("missing signature for validator {}", validator.name()))?;
 
-                let pk: AuthorityPublicKey = validator.public_key().try_into()?;
+                let pk: AccountPubKey = validator.public_key().try_into()?;
 
                 pk.verify(&genesis_bytes, &signature)
                     .with_context(|| format!("failed to validate signature for validator {}", validator.name()))?;
@@ -208,9 +205,12 @@ pub fn run(cmd: Ceremony) -> Result<()> {
 mod test {
     use super::*;
     use anyhow::Result;
-    use sui::keytool::write_keypair_to_file;
-    use sui_types::crypto::{get_key_pair_from_rng, AuthorityKeyPair};
-    use gdex_types::{utils, ValidatorInfo};
+    use gdex_types::{
+        account::AuthorityKeyPair,
+        crypto::{get_key_pair_from_rng, write_keypair_to_file, KeypairTraits},
+        node::ValidatorInfo,
+        utils,
+    };
 
     #[test]
     fn ceremony() -> Result<()> {
@@ -221,7 +221,7 @@ mod test {
                 let keypair: AuthorityKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
                 let info = ValidatorInfo {
                     name: format!("validator-{i}"),
-                    public_key: AuthorityPublicKeyBytes::from(keypair.public()),
+                    public_key: AuthorityPubKeyBytes::from(keypair.public()),
                     stake: 1,
                     delegation: 0,
                     network_address: utils::new_network_address(),

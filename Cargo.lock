@@ -2241,6 +2241,7 @@ dependencies = [
  "serde 1.0.142",
  "serde_with 1.14.0",
  "serde_yaml",
+ "signature",
  "tempfile",
  "tracing",
 ]

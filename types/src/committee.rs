@@ -286,13 +286,13 @@ mod test {
 
         // check authority index functionality
         let index = committee.authority_index(&a1);
-        assert!(index.unwrap()==0);
+        assert!(index.unwrap() == 0);
 
         let authority = committee.sample();
         // sample should only return the single input authority
         assert!(*authority == AuthorityPubKeyBytes::from(a1.clone()));
 
-        assert!(committee.num_members()==1);
+        assert!(committee.num_members() == 1);
 
         let mut members = committee.members();
         let member = members.next();
@@ -322,7 +322,7 @@ mod test {
         assert!(committee.authority_exists(&a1));
         let (_, sec2): (_, AuthorityKeyPair) = get_key_pair();
         let a2: AuthorityName = sec2.public().into();
-        
+
         assert!(!committee.authority_exists(&a2));
 
         // check equality workflow

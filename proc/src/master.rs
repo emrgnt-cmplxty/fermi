@@ -16,7 +16,7 @@ pub struct MasterController {
 impl Default for MasterController {
     fn default() -> Self {
         let bank_controller = BankController::default();
-        let bank_controller_ref = Rc::new(RefCell::new(bank_controller.clone()));
+        let bank_controller_ref = Rc::new(RefCell::new(bank_controller));
         let stake_controller = StakeController::new(Rc::clone(&bank_controller_ref));
         let spot_controller = SpotController::new(Rc::clone(&bank_controller_ref));
         Self {

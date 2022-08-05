@@ -272,7 +272,7 @@ const GENESIS_BUILDER_CONTROLLER_OUT: &str = "master_controller";
 const GENESIS_BUILDER_COMMITTEE_DIR: &str = "committee";
 
 #[cfg(test)]
-mod test {
+mod genesis_test {
     use super::super::genesis_config::GenesisConfig;
     use super::*;
     use gdex_types::{

@@ -7,7 +7,7 @@ use super::genesis::{Builder, Genesis};
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Parser;
-use gdex_proc::MasterController;
+use gdex_proc::master::MasterController;
 use gdex_types::account::{AccountPubKey, AuthorityKeyPair, AuthorityPubKey, AuthorityPubKeyBytes, AuthoritySignature};
 use gdex_types::{
     asset::PRIMARY_ASSET_ID,

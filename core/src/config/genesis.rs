@@ -5,7 +5,7 @@
 
 use anyhow::{bail, Context, Result};
 use camino::Utf8Path;
-use gdex_proc::MasterController;
+use gdex_proc::master::MasterController;
 use gdex_types::{
     account::AuthorityPubKeyBytes,
     committee::{Committee, EpochId},

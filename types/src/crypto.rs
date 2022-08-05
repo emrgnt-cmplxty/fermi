@@ -121,10 +121,3 @@ where
     let kp = KP::generate(csprng);
     (kp.public().into(), kp)
 }
-
-/// This function is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui/src/keytool.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
-pub fn write_keypair_to_file<K: KeypairTraits, P: AsRef<std::path::Path>>(keypair: &K, path: P) -> anyhow::Result<()> {
-    let contents = keypair.encode_base64();
-    std::fs::write(path, contents)?;
-    Ok(())
-}

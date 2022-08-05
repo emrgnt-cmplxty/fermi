@@ -1,6 +1,7 @@
-//!Copyright (c) 2022, Mysten Labs, Inc.
+//! Copyright (c) 2022, Mysten Labs, Inc.
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
+//! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/genesis.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 
 use anyhow::{bail, Context, Result};
 use camino::Utf8Path;
@@ -314,7 +315,7 @@ mod test {
     fn ceremony() {
         let dir = tempfile::TempDir::new().unwrap();
 
-        let genesis_config = GenesisConfig::for_local_testing();
+        let _genesis_config = GenesisConfig::for_local_testing();
 
         let master_controller = MasterController::default();
 

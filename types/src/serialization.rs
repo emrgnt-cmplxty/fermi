@@ -35,6 +35,7 @@ impl TryFrom<String> for Base64 {
     }
 }
 
+/// This trait is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-types/src/sui_serde.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 pub trait Encoding {
     fn decode(s: &str) -> Result<Vec<u8>, anyhow::Error>;
     fn encode<T: AsRef<[u8]>>(data: T) -> String;

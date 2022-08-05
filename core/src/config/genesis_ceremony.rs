@@ -1,6 +1,7 @@
 //! Copyright (c) 2022, Mysten Labs, Inc.
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
+//! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui/src/genesis_ceremony.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 
 use super::genesis::{Builder, Genesis, MasterController};
 use anyhow::{Context, Result};
@@ -17,10 +18,9 @@ use std::convert::{TryFrom, TryInto};
 use std::{fs, path::PathBuf};
 pub const SUI_GENESIS_FILENAME: &str = "genesis.blob";
 const GENESIS_BUILDER_SIGNATURE_DIR: &str = "signatures";
-
 #[derive(Parser)]
 pub struct Ceremony {
-    #[clap(long)]
+    #[clap(value_parser, long)]
     path: Option<PathBuf>,
 
     #[clap(subcommand)]
@@ -38,21 +38,21 @@ pub enum CeremonyCommand {
     Init,
 
     AddValidator {
-        #[clap(long)]
+        #[clap(value_parser, long)]
         name: String,
-        #[clap(long)]
+        #[clap(value_parser, long)]
         key_file: PathBuf,
-        #[clap(long)]
+        #[clap(value_parser, long)]
         network_address: Multiaddr,
-        #[clap(long)]
+        #[clap(value_parser, long)]
         narwhal_primary_to_primary: Multiaddr,
-        #[clap(long)]
+        #[clap(value_parser, long)]
         narwhal_worker_to_primary: Multiaddr,
-        #[clap(long)]
+        #[clap(value_parser, long)]
         narwhal_primary_to_worker: Multiaddr,
-        #[clap(long)]
+        #[clap(value_parser, long)]
         narwhal_worker_to_worker: Multiaddr,
-        #[clap(long)]
+        #[clap(value_parser, long)]
         narwhal_consensus_address: Multiaddr,
     },
 
@@ -61,7 +61,7 @@ pub enum CeremonyCommand {
     Build,
 
     VerifyAndSign {
-        #[clap(long)]
+        #[clap(value_parser, long)]
         key_file: PathBuf,
     },
 
@@ -209,7 +209,7 @@ mod test {
     use anyhow::Result;
     use gdex_types::{
         account::AuthorityKeyPair,
-        crypto::{get_key_pair_from_rng, write_keypair_to_file, KeypairTraits},
+        crypto::{get_key_pair_from_rng, KeypairTraits},
         node::ValidatorInfo,
         utils,
     };
@@ -234,7 +234,7 @@ mod test {
                     narwhal_consensus_address: utils::new_network_address(),
                 };
                 let key_file = dir.path().join(format!("{}.key", info.name));
-                write_keypair_to_file(&keypair, &key_file).unwrap();
+                utils::write_keypair_to_file(&keypair, &key_file).unwrap();
                 (key_file, info)
             })
             .collect::<Vec<_>>();

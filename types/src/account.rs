@@ -120,9 +120,9 @@ pub mod account_test_functions {
 /// Begin the testing suite for account
 #[cfg(test)]
 pub mod account_tests {
+    use super::account_test_functions::generate_keypair_vec;
     use super::*;
     use crate::crypto::KeypairTraits;
-    use super::account_test_functions::generate_keypair_vec;
 
     #[test]
     pub fn create_bank_account() {

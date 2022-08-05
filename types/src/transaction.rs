@@ -88,10 +88,9 @@ pub enum OrderRequest {
     },
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[allow(clippy::large_enum_variant)]
 pub enum TransactionVariant {
-    #[allow(clippy::large_enum_variant)]
     PaymentTransaction(PaymentRequest),
-    #[allow(clippy::large_enum_variant)]
     CreateAssetTransaction(CreateAssetRequest),
 }
 

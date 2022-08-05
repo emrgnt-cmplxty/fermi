@@ -49,7 +49,6 @@ pub fn available_local_socket_address() -> std::net::SocketAddr {
     format!("127.0.0.1:{}", get_available_port()).parse().unwrap()
 }
 
-
 /// This function is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-types/src/base_types.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 pub fn encode_bytes_hex<B: AsRef<[u8]>>(bytes: B) -> String {
     hex::encode(bytes.as_ref())
@@ -61,7 +60,6 @@ pub fn decode_bytes_hex<T: for<'a> TryFrom<&'a [u8]>>(s: &str) -> Result<T, anyh
     let value = hex::decode(s)?;
     T::try_from(&value[..]).map_err(|_| anyhow::anyhow!("byte deserialization failed"))
 }
-
 
 /// This function is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui/src/keytool.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 pub fn read_keypair_from_file<K: KeypairTraits, P: AsRef<std::path::Path>>(path: P) -> anyhow::Result<K> {

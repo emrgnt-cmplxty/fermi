@@ -1,6 +1,6 @@
 # Genesis Ceremony
 
-This document lays out the step-by-step process for orchestrating a Sui Genesis Ceremony.
+This document lays out the step-by-step process for orchestrating a GDEX Genesis Ceremony.
 
 ## Prerequisites 
 
@@ -17,7 +17,6 @@ Each validator participating in the ceremony will need the following:
 Note:
 - Network addresses should be Multiaddrs in the form of `/dns/{dns name}/tcp/{port}/http` and
 only the addresses marked WAN need to be publicly accessible by the wider internet.
-- An Ed25519 key can be created using `sui keytool generate`
 
 ## Ceremony
 
@@ -43,7 +42,7 @@ Once the shared workspace has been initialized, each validator can contribute th
 
 ```
 $ git clone <url to genesis repo> && cd genesis
-$ sui genesis-ceremony add-validator \
+$ gdex genesis-ceremony add-validator \
     --name <human-readable validator name> \
     --key-file <path to key file> \
     --network-address <multiaddr> \
@@ -58,21 +57,7 @@ $ git commit -m "add validator <name>'s information"
 $ git push # either to the shared workspace or another branch followed by a PR
 ```
 
-3. Add Initial Gas Objects
-
-Add configuration for any initial gas objects that should be created at genesis.
-
-```
-$ git genesis-ceremony add-gas-object \
-    --address <SuiAddress> \
-    --object-id <ObjectId> \
-    --valud <# of sui coins>
-$ git add .
-$ git commit -m "add gas object"
-$ git push
-```
-
-4. Build Genesis
+3. Build Genesis
 
 Once all validators and gas objects have been added, the MC can build the genesis object:
 
@@ -83,7 +68,7 @@ $ git commit -m "build genesis"
 $ git push
 ```
 
-5. Verify and Sign Genesis
+4. Verify and Sign Genesis
 
 Once genesis is built each validator will need to verify and sign genesis:
 
@@ -95,7 +80,7 @@ $ git commit -m "sign genesis"
 $ git push
 ```
 
-6. Finalize Genesis
+5. Finalize Genesis
 
 Once all validators have successfully verified and signed genesis, the MC can finalize the ceremony
 and then the genesis state can be distributed:

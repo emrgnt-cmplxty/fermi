@@ -13,13 +13,12 @@ use sha3::Sha3_256;
 use sui_types::sui_serde::{Hex, Readable};
 
 // declare public traits for external consumption
+pub use narwhal_crypto::traits::Error;
+pub use narwhal_crypto::traits::VerifyingKey;
 pub use signature::Signer;
 pub use signature::Verifier;
-pub use narwhal_crypto::traits::VerifyingKey;
-pub use narwhal_crypto::traits::Error;
 pub use sui_types::crypto::KeypairTraits;
 pub use sui_types::crypto::ToFromBytes;
-
 
 /// The number of bytes in an address.
 /// Default to 16 bytes, can be set to 20 bytes with address20 feature.
@@ -31,7 +30,7 @@ pub const ADDRESS_LENGTH: usize = if cfg!(feature = "address20") {
     16
 };
 
-/// This is a reduced scope use of the SuiPublicKey 
+/// This is a reduced scope use of the SuiPublicKey
 /// https://github.com/MystenLabs/sui/blob/main/crates/sui-types/src/crypto.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 pub trait GDEXPublicKey: VerifyingKey {
     const FLAG: u8;

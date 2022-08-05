@@ -223,12 +223,10 @@ impl Builder {
         let validators = self.validators.into_iter().map(|(_, v)| v).collect::<Vec<_>>();
         let master_controller = create_genesis_objects();
 
-        let genesis = Genesis {
+        Genesis {
             master_controller,
             validator_set: validators,
-        };
-
-        genesis
+        }
     }
 
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, anyhow::Error> {
@@ -300,8 +298,13 @@ const GENESIS_BUILDER_COMMITTEE_DIR: &str = "committee";
 mod test {
     use super::super::genesis_config::GenesisConfig;
     use super::*;
-    use gdex_types::{account::AuthorityKeyPair, crypto::{get_key_pair_from_rng, KeypairTraits}, node::ValidatorInfo, utils};
-    
+    use gdex_types::{
+        account::AuthorityKeyPair,
+        crypto::{get_key_pair_from_rng, KeypairTraits},
+        node::ValidatorInfo,
+        utils,
+    };
+
     #[test]
     fn roundtrip() {
         let genesis = Builder::new().build();

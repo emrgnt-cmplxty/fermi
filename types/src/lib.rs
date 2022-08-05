@@ -6,7 +6,7 @@ pub use account::*;
 mod asset;
 pub use asset::*;
 
-mod error;
+pub mod error;
 pub use error::*;
 
 mod order_book;

@@ -25,7 +25,7 @@ use tokio::sync::mpsc::{channel, Receiver};
 use tracing::info;
 
 // IMPORT BESPOKE EXECUTION STATE
-use gdex_node::execution_state::{SimpleExecutionState};
+use gdex_node::execution_state::{SimpleExecutionState, AdvancedExecutionState};
 
 #[cfg(feature = "benchmark")]
 use tracing::subscriber::set_global_default;
@@ -171,7 +171,7 @@ async fn run(matches: &ArgMatches<'_>) -> Result<()> {
                 &store,
                 parameters.clone(),
                 /* consensus */ !sub_matches.is_present("consensus-disabled"),
-                /* execution_state */ Arc::new(SimpleExecutionState::default()),
+                /* execution_state */ Arc::new(AdvancedExecutionState::default()),
                 tx_transaction_confirmation,
                 &registry,
             )

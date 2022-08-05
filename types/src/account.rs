@@ -10,7 +10,7 @@ use std::{collections::HashMap, fmt::Debug};
 /// codebase, by simply changing the specified type here
 /// for now we are leveraging the Sui crypto library and only form a local implementations
 /// when it gives a clear reduction in overhead and enhanced consistency
-pub type AuthorityPubKey = Ed25519PublicKey;
+pub type AuthorityPubKey = Ed25519PublicKeyLocal;
 pub type AuthorityPrivKey = sui_types::crypto::AuthorityPrivateKey;
 pub type AuthoritySignature = sui_types::crypto::AuthoritySignature;
 pub type AuthorityKeyPair = sui_types::crypto::AuthorityKeyPair;
@@ -25,9 +25,9 @@ pub type AccountBalance = u64;
 /// create a local representation of the Ed25519PublicKey in order to implement necessary traits
 /// such a change is necessary in order to implement the GDEXPublicKey locally, rather than utilize
 /// the exposed SuiPublicKey
-pub type Ed25519PublicKey = sui_types::crypto::AuthorityPublicKey;
+pub type Ed25519PublicKeyLocal = sui_types::crypto::AuthorityPublicKey;
 
-impl GDEXPublicKey for Ed25519PublicKey {
+impl GDEXPublicKey for Ed25519PublicKeyLocal {
     const FLAG: u8 = 0x00;
 }
 

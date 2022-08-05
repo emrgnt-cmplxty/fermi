@@ -34,8 +34,7 @@ impl Encoding for Base64 {
     }
 }
 
-
-/// allow conversions of bytes like 
+/// allow conversions of bytes like
 /// let s: String = Base64::encode(&bytes);
 impl TryFrom<String> for Base64 {
     type Error = anyhow::Error;
@@ -53,9 +52,9 @@ pub mod serialization_tests {
 
     #[test]
     pub fn serialize_deserialize_vec() {
-        let vec = vec![0,1,2,3,4,5];
+        let vec = vec![0, 1, 2, 3, 4, 5];
         let bytes = Base64::encode(&vec);
         let deserialized_vec = Base64::decode(&bytes).unwrap();
-        assert!(vec==deserialized_vec);
+        assert!(vec == deserialized_vec);
     }
 }

@@ -7,8 +7,9 @@ use super::genesis::{Builder, Genesis, MasterController};
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Parser;
-use gdex_types::account::{AccountPubKey, AuthorityKeyPair, AuthorityPubKeyBytes, AuthoritySignature};
+use gdex_types::account::{AccountPubKey, AuthorityKeyPair, AuthorityPubKey, AuthorityPubKeyBytes, AuthoritySignature};
 use gdex_types::{
+    asset::PRIMARY_ASSET_ID,
     crypto::{KeypairTraits, Signer, ToFromBytes, Verifier},
     node::ValidatorInfo,
     utils,
@@ -16,8 +17,10 @@ use gdex_types::{
 use multiaddr::Multiaddr;
 use std::convert::{TryFrom, TryInto};
 use std::{fs, path::PathBuf};
-pub const SUI_GENESIS_FILENAME: &str = "genesis.blob";
+pub const GENESIS_FILENAME: &str = "genesis.blob";
 const GENESIS_BUILDER_SIGNATURE_DIR: &str = "signatures";
+const VALIDATOR_FUNDING_AMOUNT: u64 = 1_000_000;
+
 #[derive(Parser)]
 pub struct Ceremony {
     #[clap(value_parser, long)]
@@ -112,8 +115,30 @@ pub fn run(cmd: Ceremony) -> Result<()> {
         CeremonyCommand::AddControllers => {
             let builder = Builder::load(&dir)?;
 
-            // TODO - implement state setting logic
-            let master_controller = MasterController::default();
+            // initialize controllers to default state
+            let mut master_controller = MasterController::default();
+
+            // create base asset of the blockchain with the null address as the owner
+            let null_creator = AuthorityPubKey::try_from(AuthorityPubKeyBytes::from_bytes(&[0; 32])?)?;
+            master_controller
+                .bank_controller
+                .borrow_mut()
+                .create_asset(&null_creator)?;
+
+            // fund and stake the validators with the VALIDATOR_FUNDING_AMOUNT
+            for (_key, validator) in builder.validators.iter() {
+                let validator_key = AuthorityPubKey::try_from(validator.public_key).unwrap();
+                master_controller.bank_controller.borrow_mut().transfer(
+                    &null_creator,
+                    &validator_key,
+                    PRIMARY_ASSET_ID,
+                    VALIDATOR_FUNDING_AMOUNT,
+                )?;
+                master_controller
+                    .stake_controller
+                    .stake(&validator_key, VALIDATOR_FUNDING_AMOUNT)?;
+            }
+
             builder.set_master_controller(master_controller).save(dir)?;
         }
 
@@ -122,12 +147,12 @@ pub fn run(cmd: Ceremony) -> Result<()> {
 
             let genesis = builder.build();
 
-            genesis.save(dir.join(SUI_GENESIS_FILENAME))?;
+            genesis.save(dir.join(GENESIS_FILENAME))?;
         }
 
         CeremonyCommand::VerifyAndSign { key_file } => {
             let keypair: AuthorityKeyPair = utils::read_keypair_from_file(key_file)?;
-            let loaded_genesis = Genesis::load(dir.join(SUI_GENESIS_FILENAME))?;
+            let loaded_genesis = Genesis::load(dir.join(GENESIS_FILENAME))?;
             let loaded_genesis_bytes = loaded_genesis.to_bytes();
 
             let builder = Builder::load(&dir)?;
@@ -160,7 +185,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
         }
 
         CeremonyCommand::Finalize => {
-            let genesis = Genesis::load(dir.join(SUI_GENESIS_FILENAME))?;
+            let genesis = Genesis::load(dir.join(GENESIS_FILENAME))?;
             let genesis_bytes = genesis.to_bytes();
 
             let mut signatures = std::collections::BTreeMap::new();
@@ -263,6 +288,13 @@ mod test {
             };
             command.run()?;
         }
+
+        let command = Ceremony {
+            path: Some(dir.path().into()),
+            command: CeremonyCommand::AddControllers,
+        };
+
+        command.run()?;
 
         // Build the Genesis object
         let command = Ceremony {

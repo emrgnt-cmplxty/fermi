@@ -19,7 +19,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 // TODO #0 //
-pub const PRIMARY_ASSET_ID: u64 = 0;
 pub const CREATED_ASSET_BALANCE: u64 = 1_000_000_000_000_000_000;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

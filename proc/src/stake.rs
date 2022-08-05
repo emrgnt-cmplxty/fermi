@@ -9,23 +9,28 @@
 //! TODO
 //! 0.) ADD SIZE CHECKS ON TRANSACTIONS
 
-use super::bank::{BankController, PRIMARY_ASSET_ID};
+use super::bank::BankController;
+use core::cell::RefCell;
 use gdex_types::{
     account::{AccountPubKey, StakeAccount},
+    asset::PRIMARY_ASSET_ID,
     error::GDEXError,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::rc::Rc;
 
 /// The stake controller is responsible for accessing & modifying user balances
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct StakeController {
     stake_accounts: HashMap<AccountPubKey, StakeAccount>,
+    bank_controller: Rc<RefCell<BankController>>,
     total_staked: u64,
 }
 impl StakeController {
-    pub fn new() -> Self {
+    pub fn new(bank_controller: Rc<RefCell<BankController>>) -> Self {
         StakeController {
+            bank_controller,
             stake_accounts: HashMap::new(),
             total_staked: 0,
         }
@@ -41,6 +46,13 @@ impl StakeController {
         }
     }
 
+    fn check_account_exists(&self, account_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
+        self.stake_accounts
+            .get(account_pub_key)
+            .ok_or(GDEXError::AccountLookup)?;
+        Ok(())
+    }
+
     pub fn get_staked(&self, account_pub_key: &AccountPubKey) -> Result<&u64, GDEXError> {
         let stake_account = self
             .stake_accounts
@@ -50,13 +62,14 @@ impl StakeController {
     }
 
     // stake funds to participate in consensus
-    pub fn stake(
-        &mut self,
-        bank_controller: &mut BankController,
-        account_pub_key: &AccountPubKey,
-        amount: u64,
-    ) -> Result<(), GDEXError> {
-        bank_controller.update_balance(account_pub_key, PRIMARY_ASSET_ID, -(amount as i64))?;
+    pub fn stake(&mut self, account_pub_key: &AccountPubKey, amount: u64) -> Result<(), GDEXError> {
+        if self.check_account_exists(account_pub_key).is_err() {
+            self.create_account(account_pub_key)?
+        }
+
+        self.bank_controller
+            .borrow_mut()
+            .update_balance(account_pub_key, PRIMARY_ASSET_ID, -(amount as i64))?;
         self.total_staked += amount;
         let lookup = self.stake_accounts.get_mut(account_pub_key);
         match lookup {
@@ -74,14 +87,11 @@ impl StakeController {
     }
 
     // TODO #0 //
-    pub fn unstake(
-        &mut self,
-        bank_controller: &mut BankController,
-        account_pub_key: &AccountPubKey,
-        amount: u64,
-    ) -> Result<(), GDEXError> {
+    pub fn unstake(&mut self, account_pub_key: &AccountPubKey, amount: u64) -> Result<(), GDEXError> {
         self.total_staked -= amount;
-        bank_controller.update_balance(account_pub_key, PRIMARY_ASSET_ID, amount as i64)?;
+        self.bank_controller
+            .borrow_mut()
+            .update_balance(account_pub_key, PRIMARY_ASSET_ID, amount as i64)?;
         let stake_account = self
             .stake_accounts
             .get_mut(account_pub_key)
@@ -101,7 +111,8 @@ impl StakeController {
 
 impl Default for StakeController {
     fn default() -> Self {
-        Self::new()
+        let bank_controller = BankController::new();
+        Self::new(Rc::new(RefCell::new(bank_controller)))
     }
 }
 
@@ -109,7 +120,7 @@ impl Default for StakeController {
 #[cfg(test)]
 pub mod stake_tests {
     use super::*;
-    use crate::bank::{CREATED_ASSET_BALANCE, PRIMARY_ASSET_ID};
+    use crate::bank::CREATED_ASSET_BALANCE;
     use gdex_types::account::account_test_functions::generate_keypair_vec;
     use gdex_types::crypto::KeypairTraits;
 
@@ -121,15 +132,15 @@ pub mod stake_tests {
         let mut bank_controller = BankController::new();
         bank_controller.create_asset(sender.public()).unwrap();
         bank_controller.create_asset(sender.public()).unwrap();
+        let bank_controller_ref = Rc::new(RefCell::new(bank_controller));
+        let mut stake_controller = StakeController::new(Rc::clone(&bank_controller_ref));
 
-        let mut stake_controller = StakeController::new();
-        stake_controller.create_account(sender.public()).unwrap();
-
-        stake_controller
-            .stake(&mut bank_controller, sender.public(), STAKE_AMOUNT)
-            .unwrap();
+        stake_controller.stake(sender.public(), STAKE_AMOUNT).unwrap();
         assert!(
-            *bank_controller.get_balance(sender.public(), PRIMARY_ASSET_ID).unwrap()
+            *bank_controller_ref
+                .borrow()
+                .get_balance(sender.public(), PRIMARY_ASSET_ID)
+                .unwrap()
                 == CREATED_ASSET_BALANCE - STAKE_AMOUNT,
             "unexpected balance"
         );
@@ -156,16 +167,19 @@ pub mod stake_tests {
         let mut bank_controller = BankController::new();
         bank_controller.create_asset(sender.public()).unwrap();
         bank_controller.create_asset(sender.public()).unwrap();
+        let bank_controller_ref = Rc::new(RefCell::new(bank_controller));
+        let mut stake_controller = StakeController::new(Rc::clone(&bank_controller_ref));
 
-        let mut stake_controller = StakeController::new();
         assert!(
-            *bank_controller.get_balance(sender.public(), PRIMARY_ASSET_ID).unwrap() == 0,
+            *bank_controller_ref
+                .borrow()
+                .get_balance(sender.public(), PRIMARY_ASSET_ID)
+                .unwrap()
+                == 0,
             "unexpected balance"
         );
         // staking without funding should create error
         let second = generate_keypair_vec([0; 32]).pop().unwrap();
-        stake_controller
-            .stake(&mut bank_controller, &second.public(), STAKE_AMOUNT)
-            .unwrap();
+        stake_controller.stake(&second.public(), STAKE_AMOUNT).unwrap();
     }
 }

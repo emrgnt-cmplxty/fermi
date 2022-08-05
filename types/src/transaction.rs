@@ -9,9 +9,9 @@ use crate::{
     account::{AccountPubKey, AccountSignature},
     asset::AssetId,
     error::GDEXError,
+    order_book::OrderSide,
     serialization::Base64,
     serialization::Encoding,
-    order_book::OrderSide,
 };
 use blake2::{digest::Update, VarBlake2b};
 use narwhal_crypto::{Digest, Hash, Verifier, DIGEST_LEN};

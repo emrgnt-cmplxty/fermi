@@ -2,12 +2,12 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 
+use crate::account::AuthorityPubKeyBytes;
 use crate::crypto::GDEXAddress;
 use multiaddr::Multiaddr;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use sui_types::committee::StakeUnit;
-use sui_types::crypto::AuthorityPublicKeyBytes;
 
 /// This class is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/node.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 /// Publicly known information about a validator
@@ -16,7 +16,7 @@ use sui_types::crypto::AuthorityPublicKeyBytes;
 #[serde(rename_all = "kebab-case")]
 pub struct ValidatorInfo {
     pub name: String,
-    pub public_key: AuthorityPublicKeyBytes,
+    pub public_key: AuthorityPubKeyBytes,
     pub stake: StakeUnit,
     pub delegation: StakeUnit,
     pub network_address: Multiaddr,
@@ -38,7 +38,7 @@ impl ValidatorInfo {
         (&self.public_key()).into()
     }
 
-    pub fn public_key(&self) -> AuthorityPublicKeyBytes {
+    pub fn public_key(&self) -> AuthorityPubKeyBytes {
         self.public_key
     }
 
@@ -54,7 +54,7 @@ impl ValidatorInfo {
         &self.network_address
     }
 
-    pub fn voting_rights(validator_set: &[Self]) -> BTreeMap<AuthorityPublicKeyBytes, u64> {
+    pub fn voting_rights(validator_set: &[Self]) -> BTreeMap<AuthorityPubKeyBytes, u64> {
         validator_set
             .iter()
             .map(|validator| (validator.public_key(), validator.stake() + validator.delegation()))

@@ -24,19 +24,19 @@ use tracing::trace;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MasterController {
-    bank_controller: BankController,
-    stake_controller: StakeController,
-    spot_controller: SpotController,
+    pub bank_controller: Rc<RefCell<BankController>>,
+    pub stake_controller: StakeController,
+    pub spot_controller: SpotController,
 }
 
 impl Default for MasterController {
     fn default() -> Self {
         let bank_controller = BankController::default();
-        let stake_controller = StakeController::default();
         let bank_controller_ref = Rc::new(RefCell::new(bank_controller.clone()));
-        let spot_controller = SpotController::new(bank_controller_ref);
+        let stake_controller = StakeController::new(Rc::clone(&bank_controller_ref));
+        let spot_controller = SpotController::new(Rc::clone(&bank_controller_ref));
         Self {
-            bank_controller,
+            bank_controller: bank_controller_ref,
             stake_controller,
             spot_controller,
         }
@@ -191,8 +191,8 @@ impl<'de> Deserialize<'de> for Genesis {
 }
 
 pub struct Builder {
-    master_controller: MasterController,
-    validators: BTreeMap<AuthorityPubKeyBytes, ValidatorInfo>,
+    pub master_controller: MasterController,
+    pub validators: BTreeMap<AuthorityPubKeyBytes, ValidatorInfo>,
 }
 
 impl Default for Builder {

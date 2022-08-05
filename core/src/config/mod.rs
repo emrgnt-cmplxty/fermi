@@ -71,14 +71,14 @@ pub mod config {
 
     #[derive(Serialize, Deserialize)]
     pub struct TestGenesisConfig {
-        dummy: u64
+        dummy: u64,
     }
     impl Config for TestGenesisConfig {}
-    
+
     #[test]
     pub fn create_save_read_config() {
         let dir = tempfile::TempDir::new().unwrap();
-        let config = TestGenesisConfig{dummy: 1_000};
+        let config = TestGenesisConfig { dummy: 1_000 };
 
         config.save(dir.path().join("test.conf")).unwrap();
         let config_load = TestGenesisConfig::load(dir.path().join("test.conf")).unwrap();
@@ -89,7 +89,10 @@ pub mod config {
     #[test]
     pub fn create_persisted_config_save_read() {
         let dir = tempfile::TempDir::new().unwrap();
-        let persisted_config = PersistedConfig{ path: dir.path().join("test.conf").into(), inner: TestGenesisConfig{dummy: 1_000}};
+        let persisted_config = PersistedConfig {
+            path: dir.path().join("test.conf").into(),
+            inner: TestGenesisConfig { dummy: 1_000 },
+        };
 
         persisted_config.save().unwrap();
 
@@ -97,6 +100,4 @@ pub mod config {
 
         assert!(persisted_config.into_inner().dummy == config_loaded.dummy);
     }
-
-
 }

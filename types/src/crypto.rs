@@ -136,19 +136,17 @@ where
     (kp.public().into(), kp)
 }
 
-
 /// Begin the testing suite for serialization
 #[cfg(test)]
 pub mod crypto_tests {
     use super::*;
     use crate::account::AuthorityKeyPair;
-    
+
     #[test]
     pub fn get_keypairs() {
         let _key1: AuthorityKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
         let (_, _key2): (_, AuthorityKeyPair) = get_key_pair();
     }
-
 
     #[test]
     pub fn to_and_from_bytes() {

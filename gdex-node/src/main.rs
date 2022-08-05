@@ -16,13 +16,17 @@ use narwhal_crypto::{generate_production_keypair, traits::KeyPair as _, KeyPair}
 use narwhal_executor::{SerializedTransaction, SubscriberResult};
 use futures::future::join_all;
 use narwhal_node::{
-    execution_state::SimpleExecutionState,
+    //execution_state::SimpleExecutionState,
     metrics::{primary_metrics_registry, start_prometheus_server, worker_metrics_registry},
     Node, NodeStorage,
 };
 use std::sync::Arc;
 use tokio::sync::mpsc::{channel, Receiver};
 use tracing::info;
+
+// IMPORT BESPOKE EXECUTION STATE
+use gdex_node::execution_state::{SimpleExecutionState};
+
 #[cfg(feature = "benchmark")]
 use tracing::subscriber::set_global_default;
 #[cfg(feature = "benchmark")]

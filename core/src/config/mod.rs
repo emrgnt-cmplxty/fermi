@@ -63,16 +63,40 @@ where
     }
 }
 
-impl<C> std::ops::Deref for PersistedConfig<C> {
-    type Target = C;
+/// Begin the testing suite for account
+#[cfg(test)]
+pub mod config {
+    use super::*;
+    use serde::Deserialize;
 
-    fn deref(&self) -> &Self::Target {
-        &self.inner
+    #[derive(Serialize, Deserialize)]
+    pub struct TestGenesisConfig {
+        dummy: u64
     }
-}
+    impl Config for TestGenesisConfig {}
+    
+    #[test]
+    pub fn create_save_read_config() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let config = TestGenesisConfig{dummy: 1_000};
 
-impl<C> std::ops::DerefMut for PersistedConfig<C> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.inner
+        config.save(dir.path().join("test.conf")).unwrap();
+        let config_load = TestGenesisConfig::load(dir.path().join("test.conf")).unwrap();
+
+        assert!(config.dummy == config_load.dummy);
     }
+
+    #[test]
+    pub fn create_persisted_config_save_read() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let persisted_config = PersistedConfig{ path: dir.path().join("test.conf").into(), inner: TestGenesisConfig{dummy: 1_000}};
+
+        persisted_config.save().unwrap();
+
+        let config_loaded: TestGenesisConfig = PersistedConfig::read(&dir.path().join("test.conf")).unwrap();
+
+        assert!(persisted_config.into_inner().dummy == config_loaded.dummy);
+    }
+
+
 }

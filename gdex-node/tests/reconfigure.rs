@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 use arc_swap::ArcSwap;
 use bytes::Bytes;
-use config::{Committee, Parameters};
-use consensus::ConsensusOutput;
-use crypto::{traits::KeyPair as _, KeyPair, PublicKey};
-use executor::{ExecutionIndices, ExecutionState, ExecutionStateError};
+use narwhal_config::{Committee, Parameters};
+use narwhal_consensus::ConsensusOutput;
+use narwhal_crypto::{traits::KeyPair as _, KeyPair, PublicKey};
+use narwhal_executor::{ExecutionIndices, ExecutionState, ExecutionStateError};
 use futures::future::join_all;
-use network::{PrimaryToWorkerNetwork, ReliableNetwork, UnreliableNetwork, WorkerToPrimaryNetwork};
+use narwhal_network::{PrimaryToWorkerNetwork, ReliableNetwork, UnreliableNetwork, WorkerToPrimaryNetwork};
 use narwhal_node::{restarter::NodeRestarter, Node, NodeStorage};
-use primary::PrimaryWorkerMessage;
+use narwhal_primary::PrimaryWorkerMessage;
 use prometheus::Registry;
 use std::{
     fmt::Debug,
@@ -20,7 +20,7 @@ use tokio::{
     sync::mpsc::{channel, Receiver, Sender},
     time::{interval, sleep, Duration, MissedTickBehavior},
 };
-use types::{ReconfigureNotification, TransactionProto, TransactionsClient, WorkerPrimaryMessage};
+use narwhal_types::{ReconfigureNotification, TransactionProto, TransactionsClient, WorkerPrimaryMessage};
 
 /// A simple/dumb execution engine.
 struct SimpleExecutionState {

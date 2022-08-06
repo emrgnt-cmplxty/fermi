@@ -7,7 +7,7 @@ use anyhow::{bail, Context, Result};
 use camino::Utf8Path;
 use gdex_proc::master::MasterController;
 use gdex_types::{
-    account::AuthorityPubKeyBytes,
+    account::ValidatorPubKeyBytes,
     committee::{Committee, EpochId},
     error::GDEXResult,
     node::ValidatorInfo,
@@ -63,13 +63,13 @@ impl Genesis {
                 )]
                 .into_iter()
                 .collect();
-                let authority = narwhal_config::Authority {
+                let validator = narwhal_config::Authority {
                     stake: validator.stake as narwhal_config::Stake, //TODO this should at least be the same size integer
                     primary,
                     workers,
                 };
 
-                (name, authority)
+                (name, validator)
             })
             .collect();
         std::sync::Arc::new(arc_swap::ArcSwap::from_pointee(narwhal_config::Committee {
@@ -169,7 +169,7 @@ impl<'de> Deserialize<'de> for Genesis {
 
 pub struct Builder {
     pub master_controller: MasterController,
-    pub validators: BTreeMap<AuthorityPubKeyBytes, ValidatorInfo>,
+    pub validators: BTreeMap<ValidatorPubKeyBytes, ValidatorInfo>,
 }
 
 impl Default for Builder {
@@ -276,7 +276,7 @@ mod genesis_test {
     use super::super::genesis_config::GenesisConfig;
     use super::*;
     use gdex_types::{
-        account::AuthorityKeyPair,
+        account::ValidatorKeyPair,
         crypto::{get_key_pair_from_rng, KeypairTraits},
         node::ValidatorInfo,
         utils,
@@ -299,7 +299,7 @@ mod genesis_test {
 
         let master_controller = MasterController::default();
 
-        let key: AuthorityKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
         let validator = ValidatorInfo {
             name: "0".into(),
             public_key: key.public().into(),

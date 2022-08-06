@@ -4,7 +4,7 @@
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/genesis_config.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 
 use super::Config;
-use gdex_types::{account::AuthorityKeyPair, committee::StakeUnit, crypto::GDEXAddress, serialization::KeyPairBase64};
+use gdex_types::{account::ValidatorKeyPair, committee::StakeUnit, crypto::GDEXAddress, serialization::KeyPairBase64};
 use multiaddr::Multiaddr;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
@@ -22,7 +22,7 @@ impl Config for GenesisConfig {}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ValidatorGenesisInfo {
     #[serde_as(as = "KeyPairBase64")]
-    pub key_pair: AuthorityKeyPair,
+    pub key_pair: ValidatorKeyPair,
     pub network_address: Multiaddr,
     pub stake: StakeUnit,
     pub narwhal_primary_to_primary: Multiaddr,

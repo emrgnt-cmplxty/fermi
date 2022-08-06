@@ -2,7 +2,7 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 
-use crate::account::{AuthorityPubKey, AuthorityPubKeyBytes};
+use crate::account::{ValidatorPubKey, ValidatorPubKeyBytes};
 use crate::error::GDEXError;
 use crate::utils;
 use digest::Digest;
@@ -101,11 +101,11 @@ impl AsRef<[u8]> for GDEXAddress {
     }
 }
 
-/// From trait is necessary to convert AuthorityPubKeyBytes into a GDEXAddress
-impl From<&AuthorityPubKeyBytes> for GDEXAddress {
-    fn from(pkb: &AuthorityPubKeyBytes) -> Self {
+/// From trait is necessary to convert ValidatorPubKeyBytes into a GDEXAddress
+impl From<&ValidatorPubKeyBytes> for GDEXAddress {
+    fn from(pkb: &ValidatorPubKeyBytes) -> Self {
         let mut hasher = Sha3_256::default();
-        hasher.update(&[AuthorityPubKey::FLAG]);
+        hasher.update(&[ValidatorPubKey::FLAG]);
         hasher.update(pkb);
         let g_arr = hasher.finalize();
 
@@ -140,17 +140,17 @@ where
 #[cfg(test)]
 pub mod crypto_tests {
     use super::*;
-    use crate::account::AuthorityKeyPair;
+    use crate::account::ValidatorKeyPair;
 
     #[test]
     pub fn get_keypairs() {
-        let _key1: AuthorityKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
-        let (_, _key2): (_, AuthorityKeyPair) = get_key_pair();
+        let _key1: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let (_, _key2): (_, ValidatorKeyPair) = get_key_pair();
     }
 
     #[test]
     pub fn to_and_from_bytes() {
-        let key: AuthorityKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
         let gdex_addr = GDEXAddress::from(key.public());
         let key_bytes = gdex_addr.as_ref();
         let gdex_addr_from_bytes: GDEXAddress = GDEXAddress::try_from(key_bytes).unwrap();

@@ -2237,12 +2237,14 @@ dependencies = [
  "move-core-types",
  "move-vm-runtime",
  "multiaddr",
+ "once_cell",
  "rand 0.7.3",
  "serde 1.0.142",
  "serde_with 1.14.0",
  "serde_yaml",
  "signature",
  "tempfile",
+ "tokio",
  "tracing",
 ]
 

@@ -10,11 +10,11 @@ use std::{collections::HashMap, fmt::Debug};
 /// codebase, by simply changing the specified type here
 /// for now we are leveraging the Sui crypto library and only form a local implementations
 /// when it gives a clear reduction in overhead and enhanced consistency
-pub type AuthorityPubKey = Ed25519PublicKeyLocal;
-pub type AuthorityPrivKey = sui_types::crypto::AuthorityPrivateKey;
-pub type AuthoritySignature = sui_types::crypto::AuthoritySignature;
-pub type AuthorityKeyPair = sui_types::crypto::AuthorityKeyPair;
-pub type AuthorityPubKeyBytes = sui_types::crypto::AuthorityPublicKeyBytes;
+pub type ValidatorPubKey = Ed25519PublicKeyLocal;
+pub type ValidatorPrivKey = sui_types::crypto::AuthorityPrivateKey;
+pub type ValidatorSignature = sui_types::crypto::AuthoritySignature;
+pub type ValidatorKeyPair = sui_types::crypto::AuthorityKeyPair;
+pub type ValidatorPubKeyBytes = sui_types::crypto::AuthorityPublicKeyBytes;
 
 pub type AccountPubKey = sui_types::crypto::AccountPublicKey;
 pub type AccountPrivKey = sui_types::crypto::AccountPrivateKey;

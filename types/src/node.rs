@@ -2,7 +2,7 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 
-use crate::account::AuthorityPubKeyBytes;
+use crate::account::ValidatorPubKeyBytes;
 use crate::crypto::GDEXAddress;
 use multiaddr::Multiaddr;
 use serde::{Deserialize, Serialize};
@@ -16,7 +16,7 @@ use sui_types::committee::StakeUnit;
 #[serde(rename_all = "kebab-case")]
 pub struct ValidatorInfo {
     pub name: String,
-    pub public_key: AuthorityPubKeyBytes,
+    pub public_key: ValidatorPubKeyBytes,
     pub stake: StakeUnit,
     pub delegation: StakeUnit,
     pub network_address: Multiaddr,
@@ -38,7 +38,7 @@ impl ValidatorInfo {
         (&self.public_key()).into()
     }
 
-    pub fn public_key(&self) -> AuthorityPubKeyBytes {
+    pub fn public_key(&self) -> ValidatorPubKeyBytes {
         self.public_key
     }
 
@@ -54,7 +54,7 @@ impl ValidatorInfo {
         &self.network_address
     }
 
-    pub fn voting_rights(validator_set: &[Self]) -> BTreeMap<AuthorityPubKeyBytes, u64> {
+    pub fn voting_rights(validator_set: &[Self]) -> BTreeMap<ValidatorPubKeyBytes, u64> {
         validator_set
             .iter()
             .map(|validator| (validator.public_key(), validator.stake() + validator.delegation()))

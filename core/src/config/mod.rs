@@ -3,7 +3,7 @@
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/lib.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 
-use anyhow::Context;
+use anyhow::{Context, Result};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::fs;
@@ -82,7 +82,6 @@ pub mod config {
 
         config.save(dir.path().join("test.conf")).unwrap();
         let config_load = TestGenesisConfig::load(dir.path().join("test.conf")).unwrap();
-
         assert!(config.dummy == config_load.dummy);
     }
 

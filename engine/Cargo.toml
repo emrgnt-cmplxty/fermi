@@ -10,3 +10,4 @@ rand = "0.8.4"
 serde = { version = "1.0.141", features = ["derive"] }
 
 gdex-types = { path = "../types" }
+gdex-workspace-hack = { path = "../workspace-hack" }

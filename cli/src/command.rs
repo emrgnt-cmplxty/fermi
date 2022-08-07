@@ -16,14 +16,9 @@ use gdex_core::config::{
 };
 use gdex_types::{
     account::AccountKeyPair,
-    crypto::{get_key_pair_from_rng, KeypairTraits, ToFromBytes}
+    crypto::{get_key_pair_from_rng, KeypairTraits, ToFromBytes},
 };
-use std::{
-    io::Write,
-    fs,
-    num::NonZeroUsize,
-    path::PathBuf
-};
+use std::{fs, io::Write, num::NonZeroUsize, path::PathBuf};
 use tracing::info;
 
 /// Note, the code in this file is taken almost directly from https://github.com/MystenLabs/sui/blob/main/crates/sui/src/sui_commands.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
@@ -54,7 +49,7 @@ pub enum GDEXCommand {
     },
     GenesisCeremony(Ceremony),
     /// keytooling
-    GenerateKeystore{
+    GenerateKeystore {
         #[clap(value_parser, help = "Specify a path for the keystore")]
         keystore_path: Option<PathBuf>,
         #[clap(value_parser, help = "Specify a name for the keystore")]
@@ -230,16 +225,19 @@ impl GDEXCommand {
                 Ok(())
             }
             GDEXCommand::GenesisCeremony(cmd) => run(cmd),
-            GDEXCommand::GenerateKeystore{ keystore_path, keystore_name } => {
+            GDEXCommand::GenerateKeystore {
+                keystore_path,
+                keystore_name,
+            } => {
                 let kp_sender: AccountKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
                 let private_keys = kp_sender.private().as_bytes().to_vec();
                 let keystore_path = keystore_path.unwrap_or(gdex_config_dir()?);
-                let keystore_name = keystore_name.unwrap_or(String::from(GDEX_KEYSTORE_FILENAME));
+                let keystore_name = keystore_name.unwrap_or_else(|| String::from(GDEX_KEYSTORE_FILENAME));
 
-                if !keystore_path.exists(){
+                if !keystore_path.exists() {
                     fs::create_dir_all(&keystore_path)?;
                 }
-                
+
                 let file_result = fs::File::create(&keystore_path.join(&keystore_name));
                 match file_result {
                     Ok(mut file) => {
@@ -251,7 +249,7 @@ impl GDEXCommand {
                 }
 
                 Ok(())
-            },
+            }
         }
     }
 }

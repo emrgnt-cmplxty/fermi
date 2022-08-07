@@ -16,6 +16,7 @@ tracing = "0.1.36"
 
 gdex-core = { path = "../core" }
 gdex-types = { path = "../types" }
+gdex-workspace-hack = { path = "../workspace-hack" }
 
 [[bin]]
 name = "gdex"

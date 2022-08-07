@@ -12,3 +12,4 @@ serde = { version = "1.0.141", features = ["derive"] }
 
 gdex-engine = { path = "../engine" }
 gdex-types = { path = "../types", features=["testing"] }
+gdex-workspace-hack = { path = "../workspace-hack" }

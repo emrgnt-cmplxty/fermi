@@ -2229,6 +2229,7 @@ dependencies = [
  "colored",
  "gdex-core",
  "gdex-types",
+ "gdex-workspace-hack",
  "rand 0.7.3",
  "telemetry-subscribers 0.1.0 (git+https://github.com/MystenLabs/mysten-infra?rev=a4c2cae59d823533061a5d8fe28771629819c43f)",
  "tempfile",
@@ -2249,6 +2250,7 @@ dependencies = [
  "dirs",
  "gdex-proc",
  "gdex-types",
+ "gdex-workspace-hack",
  "move-binary-format",
  "move-bytecode-utils",
  "move-core-types",
@@ -2271,6 +2273,7 @@ version = "0.1.0"
 dependencies = [
  "criterion",
  "gdex-types",
+ "gdex-workspace-hack",
  "rand 0.8.5",
  "serde 1.0.142",
 ]
@@ -2283,8 +2286,27 @@ dependencies = [
  "criterion",
  "gdex-engine",
  "gdex-types",
+ "gdex-workspace-hack",
  "rand 0.7.3",
  "serde 1.0.142",
+]
+
+[[package]]
+name = "gdex-tests"
+version = "0.1.0"
+dependencies = [
+ "assert_approx_eq",
+ "bcs",
+ "criterion",
+ "gdex-engine",
+ "gdex-proc",
+ "gdex-types",
+ "gdex-workspace-hack",
+ "rand 0.7.3",
+ "rocksdb",
+ "serde 1.0.142",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]
@@ -2297,6 +2319,7 @@ dependencies = [
  "blake2",
  "crypto",
  "digest 0.10.3",
+ "gdex-workspace-hack",
  "hex",
  "itertools",
  "multiaddr",

@@ -4,6 +4,7 @@ members = [
     "cli",
     "engine",
     "proc",
+    "suite",
     "types",
     "workspace-hack"
 ]

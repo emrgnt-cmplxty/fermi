@@ -237,19 +237,19 @@ impl SpotController {
         format!("{}_{}", base_asset_id, quote_asset_id)
     }
 
-    fn get_orderbook(
-        &mut self,
-        base_asset_id: AssetId,
-        quote_asset_id: AssetId,
-    ) -> Result<&mut OrderbookInterface, GDEXError> {
-        let orderbook_lookup = self.get_orderbook_key(base_asset_id, quote_asset_id);
+    // fn get_orderbook(
+    //     &mut self,
+    //     base_asset_id: AssetId,
+    //     quote_asset_id: AssetId,
+    // ) -> Result<&mut OrderbookInterface, GDEXError> {
+    //     let orderbook_lookup = self.get_orderbook_key(base_asset_id, quote_asset_id);
 
-        let orderbook = self
-            .orderbooks
-            .get_mut(&orderbook_lookup)
-            .ok_or(GDEXError::AccountLookup)?;
-        Ok(orderbook)
-    }
+    //     let orderbook = self
+    //         .orderbooks
+    //         .get_mut(&orderbook_lookup)
+    //         .ok_or(GDEXError::AccountLookup)?;
+    //     Ok(orderbook)
+    // }
 
     pub fn create_orderbook(&mut self, base_asset_id: AssetId, quote_asset_id: AssetId) -> Result<(), GDEXError> {
         let orderbook_lookup = self.get_orderbook_key(base_asset_id, quote_asset_id);

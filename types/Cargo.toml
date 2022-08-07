@@ -25,5 +25,7 @@ serde_with = { version = "1.14.0", features = ["hex"] }
 sui-types = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b", package = "sui-types" }
 thiserror = "1.0.31"
 
+gdex-workspace-hack = { path = "../workspace-hack" }
+
 [features]
 testing = []

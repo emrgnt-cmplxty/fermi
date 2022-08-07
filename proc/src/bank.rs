@@ -18,7 +18,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 // TODO #0 //
-pub const CREATED_ASSET_BALANCE: u64 = 1_000_000_000_000_000_000;
+// 10 billion w/ 6 decimals, e.g. ALGO creation specs.
+pub const CREATED_ASSET_BALANCE: u64 = 10_000_000_000_000_000;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BankController {
@@ -98,6 +99,7 @@ impl BankController {
             .get_mut(account_pub_key)
             .ok_or(GDEXError::AccountLookup)?;
         let prev_amount: i64 = *bank_account.get_balances().get(&asset_id).unwrap_or(&0) as i64;
+
         // return error if insufficient user balance
         if (prev_amount + amount) < 0 {
             return Err(GDEXError::PaymentRequest);

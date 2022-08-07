@@ -74,14 +74,12 @@ async fn test_genesis() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-
 #[tokio::test]
 async fn test_build_keystore() -> Result<(), anyhow::Error> {
-
     let temp_dir = tempfile::tempdir()?;
     let working_dir = temp_dir.path();
 
-   // Genesis
+    // Genesis
     GDEXCommand::GenerateKeystore {
         keystore_path: Some(working_dir.to_path_buf()),
         keystore_name: Some(String::from("test.conf")),

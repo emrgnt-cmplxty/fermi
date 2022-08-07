@@ -5,14 +5,32 @@
 
 use anyhow::{Context, Result};
 use serde::de::DeserializeOwned;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 use tracing::trace;
 
+pub mod builder;
+pub mod consensus;
+pub mod gateway;
 pub mod genesis;
 pub mod genesis_ceremony;
 pub mod genesis_config;
+pub mod network;
+pub mod node;
+
+pub const GDEX_NETWORK_CONFIG: &str = "network.yaml";
+pub const GDEX_FULLNODE_CONFIG: &str = "fullnode.yaml";
+pub const GDEX_CLIENT_CONFIG: &str = "client.yaml";
+pub const GDEX_KEYSTORE_FILENAME: &str = "sui.keystore";
+pub const GDEX_GATEWAY_CONFIG: &str = "gateway.yaml";
+pub const GDEX_GENESIS_FILENAME: &str = "genesis.blob";
+pub const GDEX_DEV_NET_URL: &str = "https://gateway.devnet.sui.io:443";
+
+pub const AUTHORITIES_DB_NAME: &str = "authorities_db";
+pub const CONSENSUS_DB_NAME: &str = "consensus_db";
+pub const FULL_NODE_DB_PATH: &str = "full_node_db";
+const DEFAULT_STAKE: u64 = 1;
 
 pub trait Config
 where
@@ -61,6 +79,73 @@ where
     pub fn into_inner(self) -> C {
         self.inner
     }
+}
+
+// This class is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/genesis.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(untagged)]
+enum GenesisLocation {
+    InPlace {
+        genesis: genesis::Genesis,
+    },
+    File {
+        #[serde(rename = "genesis-file-location")]
+        genesis_file_location: PathBuf,
+    },
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Genesis {
+    #[serde(flatten)]
+    location: GenesisLocation,
+
+    #[serde(skip)]
+    genesis: once_cell::sync::OnceCell<genesis::Genesis>,
+}
+
+impl Genesis {
+    pub fn new(genesis: genesis::Genesis) -> Self {
+        Self {
+            location: GenesisLocation::InPlace { genesis },
+            genesis: Default::default(),
+        }
+    }
+
+    pub fn new_from_file<P: Into<PathBuf>>(path: P) -> Self {
+        Self {
+            location: GenesisLocation::File {
+                genesis_file_location: path.into(),
+            },
+            genesis: Default::default(),
+        }
+    }
+
+    fn genesis(&self) -> Result<&genesis::Genesis> {
+        match &self.location {
+            GenesisLocation::InPlace { genesis } => Ok(genesis),
+            GenesisLocation::File { genesis_file_location } => self
+                .genesis
+                .get_or_try_init(|| genesis::Genesis::load(&genesis_file_location)),
+        }
+    }
+}
+
+const GDEX_DIR: &str = ".sui";
+const GDEX_CONFIG_DIR: &str = "sui_config";
+pub fn gdex_config_dir() -> Result<PathBuf, anyhow::Error> {
+    match std::env::var_os("GDEX_CONFIG_DIR") {
+        Some(config_env) => Ok(config_env.into()),
+        None => match dirs::home_dir() {
+            Some(v) => Ok(v.join(GDEX_DIR).join(GDEX_CONFIG_DIR)),
+            None => anyhow::bail!("Cannot obtain home directory path"),
+        },
+    }
+    .and_then(|dir| {
+        if !dir.exists() {
+            std::fs::create_dir_all(dir.clone())?;
+        }
+        Ok(dir)
+    })
 }
 
 /// Begin the testing suite for account

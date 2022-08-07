@@ -2221,6 +2221,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "gdex-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap 3.2.2",
+ "colored",
+ "gdex-core",
+ "gdex-types",
+ "telemetry-subscribers 0.1.0 (git+https://github.com/MystenLabs/mysten-infra?rev=a4c2cae59d823533061a5d8fe28771629819c43f)",
+ "tempfile",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "gdex-core"
 version = "0.1.0"
 dependencies = [
@@ -2230,6 +2245,7 @@ dependencies = [
  "camino",
  "clap 3.2.2",
  "config 0.1.0",
+ "dirs",
  "gdex-proc",
  "gdex-types",
  "move-binary-format",

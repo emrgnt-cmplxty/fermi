@@ -2,12 +2,18 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/genesis_config.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
-
 use super::Config;
-use gdex_types::{account::ValidatorKeyPair, committee::StakeUnit, crypto::GDEXAddress, serialization::KeyPairBase64};
+use anyhow::Result;
+use gdex_types::{
+    account::{AccountKeyPair, ValidatorKeyPair},
+    committee::StakeUnit,
+    crypto::{get_key_pair_from_rng, GDEXAddress},
+    serialization::KeyPairBase64,
+};
 use multiaddr::Multiaddr;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
+use tracing::info;
 
 #[derive(Serialize, Deserialize)]
 pub struct GenesisConfig {
@@ -62,6 +68,29 @@ impl GenesisConfig {
             accounts,
             ..Default::default()
         }
+    }
+}
+
+impl GenesisConfig {
+    pub fn generate_accounts<R: ::rand::RngCore + ::rand::CryptoRng>(&self, mut rng: R) -> Result<Vec<AccountKeyPair>> {
+        let mut addresses = Vec::new();
+
+        info!("Creating accounts and gas objects...");
+
+        let mut keys = Vec::new();
+        for account in &self.accounts {
+            let address = if let Some(address) = account.address {
+                address
+            } else {
+                let (address, keypair) = get_key_pair_from_rng(&mut rng);
+                keys.push(keypair);
+                address
+            };
+
+            addresses.push(address);
+        }
+
+        Ok(keys)
     }
 }
 

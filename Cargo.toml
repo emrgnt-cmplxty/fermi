@@ -1,2 +1,9 @@
 [workspace]
-members = ["core", "engine", "proc", "types", "workspace-hack"]
+members = [
+    "core",
+    "cli",
+    "engine",
+    "proc",
+    "types",
+    "workspace-hack"
+]

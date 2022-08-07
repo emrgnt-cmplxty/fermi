@@ -9,7 +9,6 @@
 //! 2.) RESTRICT overwrite_orderbook TO BENCH ONLY MODE
 //! 3.) CONSIDER ADDITIONAL FEATURES, LIKE ESCROW IMPLEMENTATION OR ORDER LIMITS
 //! 4.) CHECK PASSED ASSETS EXIST IN BANK MODULE
-
 use super::bank::BankController;
 use core::cell::RefCell;
 use gdex_engine::{order_book::Orderbook, orders::new_limit_order_request};

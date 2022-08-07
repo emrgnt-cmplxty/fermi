@@ -3,7 +3,6 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //! Note, the code in this file is taken almost directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-types/src/committee.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
-
 use crate::{
     account::{ValidatorPubKey, ValidatorPubKeyBytes},
     error::{GDEXError, GDEXResult},

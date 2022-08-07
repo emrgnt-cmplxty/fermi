@@ -1,6 +1,5 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
-
 use crate::asset::AssetId;
 use serde::{Deserialize, Serialize};
 use std::{fmt::Debug, time::SystemTime};

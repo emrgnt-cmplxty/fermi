@@ -8,7 +8,6 @@
 //!
 //! TODO
 //! 0.) ADD SIZE CHECKS ON TRANSACTIONS
-
 use super::bank::BankController;
 use core::cell::RefCell;
 use gdex_types::{

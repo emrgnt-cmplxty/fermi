@@ -1,6 +1,5 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
-//!
 use crate::{bank::BankController, spot::SpotController, stake::StakeController};
 use core::cell::RefCell;
 use serde::{Deserialize, Serialize};

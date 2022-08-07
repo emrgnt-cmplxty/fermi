@@ -2229,6 +2229,7 @@ dependencies = [
  "colored",
  "gdex-core",
  "gdex-types",
+ "rand 0.7.3",
  "telemetry-subscribers 0.1.0 (git+https://github.com/MystenLabs/mysten-infra?rev=a4c2cae59d823533061a5d8fe28771629819c43f)",
  "tempfile",
  "tokio",

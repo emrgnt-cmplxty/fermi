@@ -1,6 +1,7 @@
 //! Copyright (c) 2022, Mysten Labs, Inc.
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
+//! Note, the code in this file is taken almost directly from https://github.com/MystenLabs/sui/blob/main/crates/sui/src/unit_tests/cli_tests.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 use gdex_cli::command::GDEXCommand;
 use gdex_core::config::{
     network::NetworkConfig, PersistedConfig, GDEX_FULLNODE_CONFIG, GDEX_GATEWAY_CONFIG, GDEX_GENESIS_FILENAME,
@@ -70,5 +71,23 @@ async fn test_genesis() -> Result<(), anyhow::Error> {
     assert!(matches!(result, Err(..)));
 
     temp_dir.close()?;
+    Ok(())
+}
+
+
+#[tokio::test]
+async fn test_build_keystore() -> Result<(), anyhow::Error> {
+
+    let temp_dir = tempfile::tempdir()?;
+    let working_dir = temp_dir.path();
+
+   // Genesis
+    GDEXCommand::GenerateKeystore {
+        keystore_path: Some(working_dir.to_path_buf()),
+        keystore_name: Some(String::from("test.conf")),
+    }
+    .execute()
+    .await?;
+
     Ok(())
 }

@@ -22,7 +22,7 @@ pub mod node;
 pub const GDEX_NETWORK_CONFIG: &str = "network.yaml";
 pub const GDEX_FULLNODE_CONFIG: &str = "fullnode.yaml";
 pub const GDEX_CLIENT_CONFIG: &str = "client.yaml";
-pub const GDEX_KEYSTORE_FILENAME: &str = "sui.keystore";
+pub const GDEX_KEYSTORE_FILENAME: &str = "gdex.keystore";
 pub const GDEX_GATEWAY_CONFIG: &str = "gateway.yaml";
 pub const GDEX_GENESIS_FILENAME: &str = "genesis.blob";
 pub const GDEX_DEV_NET_URL: &str = "https://gateway.devnet.sui.io:443";
@@ -130,8 +130,8 @@ impl Genesis {
     }
 }
 
-const GDEX_DIR: &str = ".sui";
-const GDEX_CONFIG_DIR: &str = "sui_config";
+const GDEX_DIR: &str = ".gdex";
+const GDEX_CONFIG_DIR: &str = "gdex_config";
 pub fn gdex_config_dir() -> Result<PathBuf, anyhow::Error> {
     match std::env::var_os("GDEX_CONFIG_DIR") {
         Some(config_env) => Ok(config_env.into()),

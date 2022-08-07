@@ -14,13 +14,22 @@ use gdex_core::config::{
     Config, PersistedConfig, GDEX_CLIENT_CONFIG, GDEX_FULLNODE_CONFIG, GDEX_GATEWAY_CONFIG, GDEX_GENESIS_FILENAME,
     GDEX_KEYSTORE_FILENAME, GDEX_NETWORK_CONFIG,
 };
-use std::fs;
-use std::num::NonZeroUsize;
-use std::path::PathBuf;
+use gdex_types::{
+    account::AccountKeyPair,
+    crypto::{get_key_pair_from_rng, KeypairTraits, ToFromBytes}
+};
+use std::{
+    io::Write,
+    fs,
+    num::NonZeroUsize,
+    path::PathBuf
+};
 use tracing::info;
 
+/// Note, the code in this file is taken almost directly from https://github.com/MystenLabs/sui/blob/main/crates/sui/src/sui_commands.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 #[derive(Parser)]
 pub enum GDEXCommand {
+    /// GDEX networking
     /// Start GDEX network.
     #[clap(name = "start")]
     Start {
@@ -44,6 +53,13 @@ pub enum GDEXCommand {
         force: bool,
     },
     GenesisCeremony(Ceremony),
+    /// keytooling
+    GenerateKeystore{
+        #[clap(value_parser, help = "Specify a path for the keystore")]
+        keystore_path: Option<PathBuf>,
+        #[clap(value_parser, help = "Specify a name for the keystore")]
+        keystore_name: Option<String>,
+    },
 }
 
 impl GDEXCommand {
@@ -214,6 +230,28 @@ impl GDEXCommand {
                 Ok(())
             }
             GDEXCommand::GenesisCeremony(cmd) => run(cmd),
+            GDEXCommand::GenerateKeystore{ keystore_path, keystore_name } => {
+                let kp_sender: AccountKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+                let private_keys = kp_sender.private().as_bytes().to_vec();
+                let keystore_path = keystore_path.unwrap_or(gdex_config_dir()?);
+                let keystore_name = keystore_name.unwrap_or(String::from(GDEX_KEYSTORE_FILENAME));
+
+                if !keystore_path.exists(){
+                    fs::create_dir_all(&keystore_path)?;
+                }
+                
+                let file_result = fs::File::create(&keystore_path.join(&keystore_name));
+                match file_result {
+                    Ok(mut file) => {
+                        file.write_all(&private_keys)?;
+                    }
+                    Err(..) => {
+                        println!("A keystore already exists at {:?}.", &keystore_path);
+                    }
+                }
+
+                Ok(())
+            },
         }
     }
 }

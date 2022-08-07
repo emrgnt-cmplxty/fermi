@@ -1,7 +1,6 @@
 //! Copyright (c) 2022, Mysten Labs, Inc.
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
-
 use crate::crypto::KeypairTraits;
 use anyhow::anyhow;
 use std::net::{TcpListener, TcpStream};

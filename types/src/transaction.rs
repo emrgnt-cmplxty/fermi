@@ -4,7 +4,6 @@
 //! The transaction class is responsible for parsing client interactions
 //! each valid transaction corresponds to a unique state transition within
 //! the space of allowable blockchain transitions
-
 use crate::{
     account::{AccountPubKey, AccountSignature},
     asset::AssetId,

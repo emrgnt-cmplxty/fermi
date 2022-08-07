@@ -2,7 +2,6 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //! This package appears to give us a flexible and easy to implement serialization standard for conversion into bytes and back
-
 use anyhow::anyhow;
 use base64ct::Encoding as _;
 use schemars::JsonSchema;

@@ -1,9 +1,10 @@
 //! Copyright (c) 2022, Mysten Labs, Inc.
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
+use async_trait::async_trait;
+use narwhal_executor::ExecutionStateError;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-
 #[derive(Eq, PartialEq, Clone, Debug, Serialize, Deserialize, Error, Hash)]
 pub enum GDEXError {
     // committee associated errors
@@ -31,6 +32,19 @@ pub enum GDEXError {
     TransactionSerialization,
     #[error("Failed to deserialize into a signed transaction")]
     TransactionDeserialization,
+}
+
+#[async_trait]
+impl ExecutionStateError for GDEXError {
+    // TODO - implement
+    fn node_error(&self) -> bool {
+        false
+    }
+
+    fn to_string(&self) -> String {
+        ToString::to_string(&self)
+    }
+
 }
 
 /// This function is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-types/src/error.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc

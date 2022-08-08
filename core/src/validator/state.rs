@@ -1,5 +1,6 @@
 use crate::config::genesis::Genesis;
 use arc_swap::ArcSwap;
+use async_trait::async_trait;
 use gdex_proc::master::MasterController;
 use gdex_types::transaction::SignedTransaction;
 use gdex_types::{
@@ -16,7 +17,9 @@ use std::{
         Arc, Mutex,
     },
 };
-
+use narwhal_executor::ExecutionStateError;
+use narwhal_executor::{ExecutionState};
+use narwhal_executor::ExecutionIndices;
 pub struct ValidatorStore {
     pub tranasaction_map: Mutex<HashSet<TransactionDigest>>,
 }
@@ -72,7 +75,7 @@ impl ValidatorState {
 
 impl ValidatorState {
     /// Initiate a new transaction.
-    pub async fn handle_transaction(&self, transaction: SignedTransaction) -> Result<(), GDEXError> {
+    pub async fn handle_transaction(&self, transaction: &SignedTransaction) -> Result<(), GDEXError> {
         Ok(())
         // self.metrics.tx_orders.inc();
         // // Check the sender's signature.
@@ -139,5 +142,32 @@ mod test_validator {
 
         validator.halt_validator();
         validator.unhalt_validator();
+    }
+}
+
+
+#[async_trait]
+impl ExecutionState for ValidatorState {
+    type Transaction = u64;
+    type Error = GDEXError;
+    type Outcome = Vec<u8>;
+
+    async fn handle_consensus_transaction(
+        &self,
+        _consensus_output: &narwhal_consensus::ConsensusOutput,
+        _execution_indices: ExecutionIndices,
+        _transaction: Self::Transaction,
+    ) -> Result<(Self::Outcome, Option<narwhal_config::Committee>), Self::Error>  {
+        Ok((Vec::default(), None))
+    }
+
+    fn ask_consensus_write_lock(&self) -> bool {
+        true
+    }
+
+    fn release_consensus_write_lock(&self) {}
+
+    async fn load_execution_indices(&self) -> Result<ExecutionIndices, Self::Error> {
+        Ok(ExecutionIndices::default())
     }
 }

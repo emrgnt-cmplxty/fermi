@@ -12,7 +12,7 @@ use std::{collections::HashMap, fmt::Debug};
 pub type ValidatorPubKey = Ed25519PublicKeyLocal;
 pub type ValidatorPrivKey = sui_types::crypto::AuthorityPrivateKey;
 pub type ValidatorSignature = sui_types::crypto::AuthoritySignature;
-pub type ValidatorKeyPair = sui_types::crypto::AuthorityKeyPair;
+pub type ValidatorKeyPair = ValidatorKeyPairLocal;
 pub type ValidatorPubKeyBytes = sui_types::crypto::AuthorityPublicKeyBytes;
 
 pub type AccountPubKey = sui_types::crypto::AccountPublicKey;
@@ -29,6 +29,8 @@ pub type Ed25519PublicKeyLocal = sui_types::crypto::AuthorityPublicKey;
 impl GDEXPublicKey for Ed25519PublicKeyLocal {
     const FLAG: u8 = 0x00;
 }
+
+pub type ValidatorKeyPairLocal = sui_types::crypto::AuthorityKeyPair;
 
 /// BankAccount is consumed by the BankController
 #[derive(Clone, Debug, Serialize, Deserialize)]

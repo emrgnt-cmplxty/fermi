@@ -1,8 +1,6 @@
-use core::cell::RefCell;
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use gdex_engine::{order_book::Orderbook, orders::new_limit_order_request};
 use gdex_proc::{bank::BankController, spot::OrderbookInterface};
-use gdex_types::account::AccountKeyPair;
 use gdex_types::transaction::OrderRequest;
 use gdex_types::{
     account::{account_test_functions::generate_keypair_vec, AccountPubKey},
@@ -11,7 +9,7 @@ use gdex_types::{
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use rocksdb::{ColumnFamilyDescriptor, DBWithThreadMode, MultiThreaded, Options, DB};
-use std::{sync::Arc, time::SystemTime};
+use std::{sync::{Arc, Mutex}, time::SystemTime};
 
 const N_ORDERS_BENCH: u64 = 1_024;
 const N_ACCOUNTS: u64 = 1_024;
@@ -126,7 +124,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     bank_controller.create_asset(&primary.public()).unwrap();
     let quote_asset_id = 1;
 
-    let bank_controller_ref = Rc::new(RefCell::new(bank_controller));
+    let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
     let mut orderbook_interface =
         OrderbookInterface::new(base_asset_id, quote_asset_id, Arc::clone(&bank_controller_ref));
@@ -149,13 +147,13 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         let receiver = generate_keypair_vec([1; 32]).pop().unwrap();
 
         bank_controller_ref
-            .get_mut()
-            .unlock()
+            .lock()
+            .unwrap()
             .transfer(&primary.public(), &receiver.public(), base_asset_id, TRANSFER_AMOUNT)
             .unwrap();
         bank_controller_ref
-            .get_mut()
-            .unlock()
+            .lock()
+            .unwrap()
             .transfer(&primary.public(), &receiver.public(), quote_asset_id, TRANSFER_AMOUNT)
             .unwrap();
 

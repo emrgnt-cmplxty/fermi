@@ -1,14 +1,18 @@
+//! Copyright (c) 2022, Mysten Labs, Inc.
+//! Copyright (c) 2022, BTI
+//! SPDX-License-Identifier: Apache-2.0
+//! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-core/src/authority.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bcuse super::state::ValidatorState;
 use crate::config::genesis::Genesis;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
 use gdex_proc::master::MasterController;
-use gdex_types::transaction::SignedTransaction;
 use gdex_types::{
     account::ValidatorKeyPair,
     committee::{Committee, ValidatorName},
     error::GDEXError,
-    transaction::TransactionDigest,
+    transaction::{SignedTransaction, TransactionDigest},
 };
+use narwhal_executor::{ExecutionIndices, ExecutionState};
 use std::{
     collections::HashSet,
     pin::Pin,
@@ -17,9 +21,6 @@ use std::{
         Arc, Mutex,
     },
 };
-use narwhal_executor::ExecutionStateError;
-use narwhal_executor::{ExecutionState};
-use narwhal_executor::ExecutionIndices;
 pub struct ValidatorStore {
     pub tranasaction_map: Mutex<HashSet<TransactionDigest>>,
 }
@@ -75,7 +76,7 @@ impl ValidatorState {
 
 impl ValidatorState {
     /// Initiate a new transaction.
-    pub async fn handle_transaction(&self, transaction: &SignedTransaction) -> Result<(), GDEXError> {
+    pub async fn handle_transaction(&self, _transaction: &SignedTransaction) -> Result<(), GDEXError> {
         Ok(())
         // self.metrics.tx_orders.inc();
         // // Check the sender's signature.
@@ -145,7 +146,6 @@ mod test_validator {
     }
 }
 
-
 #[async_trait]
 impl ExecutionState for ValidatorState {
     type Transaction = u64;
@@ -157,7 +157,7 @@ impl ExecutionState for ValidatorState {
         _consensus_output: &narwhal_consensus::ConsensusOutput,
         _execution_indices: ExecutionIndices,
         _transaction: Self::Transaction,
-    ) -> Result<(Self::Outcome, Option<narwhal_config::Committee>), Self::Error>  {
+    ) -> Result<(Self::Outcome, Option<narwhal_config::Committee>), Self::Error> {
         Ok((Vec::default(), None))
     }
 

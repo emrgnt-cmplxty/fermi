@@ -9,7 +9,10 @@ use gdex_types::{
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use rocksdb::{ColumnFamilyDescriptor, DBWithThreadMode, MultiThreaded, Options, DB};
-use std::{sync::{Arc, Mutex}, time::SystemTime};
+use std::{
+    sync::{Arc, Mutex},
+    time::SystemTime,
+};
 
 const N_ORDERS_BENCH: u64 = 1_024;
 const N_ACCOUNTS: u64 = 1_024;

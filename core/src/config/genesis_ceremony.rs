@@ -2,7 +2,6 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui/src/genesis_ceremony.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
-
 use super::genesis::{Builder, Genesis};
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;

@@ -1,6 +1,7 @@
-// Copyright (c) 2022, Mysten Labs, Inc.
-// SPDX-License-Identifier: Apache-2.0
-
+//! Copyright (c) 2022, Mysten Labs, Inc.
+//! Copyright (c) 2022, BTI
+//! SPDX-License-Identifier: Apache-2.0
+//! This file is largely inspired by https://github.com/MystenLabs/mysten-infra/blob/main/crates/mysten-network/src/multiaddr.rs, commit #0f0f01b87f2c8ebbfdbab575070d4c5abfbaa7f8
 use anyhow::{anyhow, Result};
 use multiaddr::{Multiaddr, Protocol};
 use std::{

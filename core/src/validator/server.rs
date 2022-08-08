@@ -1,17 +1,17 @@
-use super::state::ValidatorState;
-use crate::config::node::NodeConfig;
+//! Copyright (c) 2022, Mysten Labs, Inc.
+//! Copyright (c) 2022, BTI
+//! SPDX-License-Identifier: Apache-2.0
+//! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-core/src/authority_server.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bcuse super::state::ValidatorState;
+use crate::{config::node::NodeConfig, validator::state::ValidatorState};
 use anyhow::anyhow;
 use async_trait::async_trait;
 use gdex_server::api::{ValidatorAPI, ValidatorAPIServer};
-use gdex_types::{transaction::SignedTransaction, error::GDEXError};
+use gdex_types::{crypto::KeypairTraits, transaction::SignedTransaction};
 use multiaddr::Multiaddr;
 use prometheus::Registry;
 use std::{io, sync::Arc, time::Duration};
 use tokio::sync::mpsc::channel;
-use tracing::{info, Instrument};
-use gdex_types::crypto::KeypairTraits;
-// use gdex_types::transaction::Hash;
-use narwhal_crypto::Hash;
+use tracing::info;
 
 const MIN_BATCH_SIZE: u64 = 1000;
 const MAX_DELAY_MILLIS: u64 = 5_000; // 5 sec
@@ -54,7 +54,7 @@ pub struct ValidatorServer {
 }
 
 impl ValidatorServer {
-    pub fn new(address: Multiaddr, state: Arc<ValidatorState>, consensus_address: Multiaddr) -> Self {
+    pub fn new(address: Multiaddr, state: Arc<ValidatorState>) -> Self {
         Self {
             address,
             state,
@@ -94,8 +94,12 @@ pub struct ValidatorService {
 impl ValidatorService {
     /// Spawn all the subsystems run by a Sui authority: a consensus node, a sui authority server,
     /// and a consensus listener bridging the consensus node and the sui authority.
-    pub async fn new(config: &NodeConfig, state: Arc<ValidatorState>, prometheus_registry: &Registry) -> anyhow::Result<Self> {
-        let (tx_consensus_to_sui, rx_consensus_to_sui) = channel(1_000);
+    pub async fn new(
+        config: &NodeConfig,
+        state: Arc<ValidatorState>,
+        prometheus_registry: &Registry,
+    ) -> anyhow::Result<Self> {
+        let (tx_consensus_to_sui, _rx_consensus_to_sui) = channel(1_000);
         // let (tx_sui_to_consensus, rx_sui_to_consensus) = channel(1_000);
 
         // Spawn the consensus node of this authority.
@@ -140,12 +144,12 @@ impl ValidatorService {
         //TODO This is really really bad, we should have different types for signature-verified transactions
         // transaction.is_verified = true;
 
-        let tx_digest = transaction.get_transaction_payload().digest();
+        // let tx_digest = transaction.get_transaction_payload().digest();
 
         // Enable Trace Propagation across spans/processes using tx_digest
         // let span = tracing::debug_span!("process_tx", ?tx_digest, tx_kind = transaction.data.kind_as_str());
 
-        let info = state
+        state
             .handle_transaction(&transaction)
             // .instrument(span)
             .await

@@ -2,6 +2,7 @@ use core::cell::RefCell;
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use gdex_engine::{order_book::Orderbook, orders::new_limit_order_request};
 use gdex_proc::{bank::BankController, spot::OrderbookInterface};
+use gdex_types::account::AccountKeyPair;
 use gdex_types::transaction::OrderRequest;
 use gdex_types::{
     account::{account_test_functions::generate_keypair_vec, AccountPubKey},
@@ -79,6 +80,7 @@ fn place_orders_engine_account(
     n_orders: u64,
     base_asset_id: u64,
     quote_asset_id: u64,
+    primary: &AccountPubKey,
     orderbook_controller: &mut OrderbookInterface,
     rng: &mut StdRng,
     db: &DBWithThreadMode<MultiThreaded>,
@@ -101,10 +103,9 @@ fn place_orders_engine_account(
         // generate two random a number between 0.001 and 10 w/ interval of 0.001
         let quantity = rng.gen_range(1, 100);
         let price = rng.gen_range(1, 100);
-        let primary = generate_keypair_vec([0; 32]).pop().unwrap();
 
         let res = orderbook_controller
-            .place_limit_order(&primary.public(), order_type, quantity, price)
+            .place_limit_order(primary, order_type, quantity, price)
             .unwrap();
         if persist {
             persist_result(db, &res);
@@ -184,6 +185,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                 black_box(N_ORDERS_BENCH),
                 base_asset_id,
                 quote_asset_id,
+                primary.public(),
                 &mut orderbook_interface,
                 &mut rng,
                 &db,
@@ -212,6 +214,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                 black_box(N_ORDERS_BENCH),
                 base_asset_id,
                 quote_asset_id,
+                primary.public(),
                 &mut orderbook_interface,
                 &mut rng,
                 &db,

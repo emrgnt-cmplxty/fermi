@@ -6,9 +6,10 @@ use colored::Colorize;
 use gdex_cli::command::GDEXCommand;
 use gdex_types::exit_main;
 #[cfg(test)]
-#[path = "unit_tests/cli_tests.rs"]
+#[path = "cli_tests.rs"]
 mod cli_tests;
 
+#[cfg(not(tarpaulin))]
 #[tokio::main]
 async fn main() {
     #[cfg(windows)]

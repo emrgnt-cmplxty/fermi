@@ -1,16 +1,17 @@
 //! Copyright (c) 2022, Mysten Labs, Inc.
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
-use super::consensus::ConsensusConfig;
-use super::genesis;
-use super::genesis_config::{GenesisConfig, ValidatorGenesisInfo};
-use super::network::NetworkConfig;
-use super::node::NodeConfig;
-use super::{AUTHORITIES_DB_NAME, CONSENSUS_DB_NAME, DEFAULT_STAKE};
-use gdex_types::crypto::KeypairTraits;
+use crate::config::{
+    consensus::ConsensusConfig,
+    genesis,
+    genesis_config::{GenesisConfig, ValidatorGenesisInfo},
+    network::NetworkConfig,
+    node::NodeConfig,
+    {AUTHORITIES_DB_NAME, CONSENSUS_DB_NAME, DEFAULT_STAKE},
+};
 use gdex_types::{
     account::{ValidatorKeyPair, ValidatorPubKeyBytes},
-    crypto::get_key_pair_from_rng,
+    crypto::{get_key_pair_from_rng, KeypairTraits},
     node::ValidatorInfo,
     utils,
 };
@@ -160,7 +161,7 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> ConfigBuilder<R> {
                     enable_event_processing: false,
                     enable_gossip: true,
                     enable_reconfig: false,
-                    genesis: super::Genesis::new(genesis.clone()),
+                    genesis: crate::config::Genesis::new(genesis.clone()),
                 }
             })
             .collect();

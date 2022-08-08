@@ -10,7 +10,6 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use tracing::trace;
 
-pub mod builder;
 pub mod consensus;
 pub mod gateway;
 pub mod genesis;
@@ -18,6 +17,7 @@ pub mod genesis_ceremony;
 pub mod genesis_config;
 pub mod network;
 pub mod node;
+pub mod server;
 
 pub const GDEX_NETWORK_CONFIG: &str = "network.yaml";
 pub const GDEX_FULLNODE_CONFIG: &str = "fullnode.yaml";
@@ -30,7 +30,7 @@ pub const GDEX_DEV_NET_URL: &str = "https://gateway.devnet.sui.io:443";
 pub const AUTHORITIES_DB_NAME: &str = "authorities_db";
 pub const CONSENSUS_DB_NAME: &str = "consensus_db";
 pub const FULL_NODE_DB_PATH: &str = "full_node_db";
-const DEFAULT_STAKE: u64 = 1;
+pub const DEFAULT_STAKE: u64 = 1;
 
 pub trait Config
 where

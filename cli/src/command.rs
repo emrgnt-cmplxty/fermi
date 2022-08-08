@@ -3,8 +3,8 @@
 //! SPDX-License-Identifier: Apache-2.0
 use anyhow::{anyhow, bail};
 use clap::Parser;
+use gdex_core::builder::config::ConfigBuilder;
 use gdex_core::config::{
-    builder::ConfigBuilder,
     gateway::GatewayConfig,
     gdex_config_dir,
     genesis_ceremony::{run, Ceremony},
@@ -106,8 +106,8 @@ impl GDEXCommand {
 
                 // if GDEX config dir is not empty then either clean it
                 // up (if --force/-f option was specified or report an
-                // error
                 if write_config.is_none()
+                // error
                     && gdex_config_dir
                         .read_dir()
                         .map_err(|err| {

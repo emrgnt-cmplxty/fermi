@@ -1,7 +1,8 @@
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use super::{builder, genesis, node::NodeConfig, Config, FULL_NODE_DB_PATH};
+use super::{genesis, node::NodeConfig, Config, FULL_NODE_DB_PATH};
+use crate::builder::config::ConfigBuilder;
 use gdex_types::{
     account::{AccountKeyPair, ValidatorKeyPair},
     committee::Committee,
@@ -52,7 +53,7 @@ impl NetworkConfig {
         quorum_size: usize,
         rng: R,
     ) -> Self {
-        builder::ConfigBuilder::new(config_dir)
+        ConfigBuilder::new(config_dir)
             .committee_size(NonZeroUsize::new(quorum_size).unwrap())
             .rng(rng)
             .build()

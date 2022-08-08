@@ -10,7 +10,6 @@
 //! 3.) CONSIDER ADDITIONAL FEATURES, LIKE ESCROW IMPLEMENTATION OR ORDER LIMITS
 //! 4.) CHECK PASSED ASSETS EXIST IN BANK MODULE
 use super::bank::BankController;
-use core::cell::RefCell;
 use gdex_engine::{order_book::Orderbook, orders::new_limit_order_request};
 use gdex_types::{
     account::{AccountPubKey, OrderAccount},
@@ -19,7 +18,8 @@ use gdex_types::{
     order_book::{OrderProcessingResult, OrderSide, Success},
 };
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, rc::Rc, time::SystemTime};
+use std::sync::{Arc, Mutex};
+use std::{collections::HashMap, time::SystemTime};
 
 pub type OrderId = u64;
 
@@ -31,11 +31,11 @@ pub struct OrderbookInterface {
     orderbook: Orderbook,
     accounts: HashMap<AccountPubKey, OrderAccount>,
     order_to_account: HashMap<OrderId, AccountPubKey>,
-    bank_controller: Rc<RefCell<BankController>>,
+    bank_controller: Arc<Mutex<BankController>>,
 }
 impl OrderbookInterface {
     // TODO #4 //
-    pub fn new(base_asset_id: AssetId, quote_asset_id: AssetId, bank_controller: Rc<RefCell<BankController>>) -> Self {
+    pub fn new(base_asset_id: AssetId, quote_asset_id: AssetId, bank_controller: Arc<Mutex<BankController>>) -> Self {
         assert!(base_asset_id != quote_asset_id);
         let orderbook = Orderbook::new(base_asset_id, quote_asset_id);
         OrderbookInterface {
@@ -79,7 +79,8 @@ impl OrderbookInterface {
 
         let balance = *self
             .bank_controller
-            .borrow()
+            .lock()
+            .unwrap()
             .get_balance(account_pub_key, self.base_asset_id)?;
         // check balances before placing order
         if matches!(side, OrderSide::Ask) {
@@ -174,14 +175,14 @@ impl OrderbookInterface {
     ) -> Result<(), GDEXError> {
         if matches!(side, OrderSide::Ask) {
             // E.g. ask 1 BTC @ $20k moves 1 BTC (base) from balance to escrow
-            self.bank_controller.borrow_mut().update_balance(
+            self.bank_controller.lock().unwrap().update_balance(
                 account_pub_key,
                 self.base_asset_id,
                 -(quantity as i64),
             )?;
         } else {
             // E.g. bid 1 BTC @ $20k moves 20k USD (quote) from balance to escrow
-            self.bank_controller.borrow_mut().update_balance(
+            self.bank_controller.lock().unwrap().update_balance(
                 account_pub_key,
                 self.quote_asset_id,
                 -((quantity * price) as i64),
@@ -200,16 +201,18 @@ impl OrderbookInterface {
     ) -> Result<(), GDEXError> {
         if matches!(side, OrderSide::Ask) {
             // E.g. fill ask 1 BTC @ 20k adds 20k USD (quote) to bal, subtracts 1 BTC (base) from escrow
-            self.bank_controller.borrow_mut().update_balance(
+            self.bank_controller.lock().unwrap().update_balance(
                 account_pub_key,
                 self.quote_asset_id,
                 (quantity * price) as i64,
             )?;
         } else {
             // E.g. fill bid 1 BTC @ 20k adds 1 BTC (base) to bal, subtracts 20k USD (quote) from escrow
-            self.bank_controller
-                .borrow_mut()
-                .update_balance(account_pub_key, self.base_asset_id, quantity as i64)?;
+            self.bank_controller.lock().unwrap().update_balance(
+                account_pub_key,
+                self.base_asset_id,
+                quantity as i64,
+            )?;
         }
         Ok(())
     }
@@ -223,10 +226,10 @@ impl OrderbookInterface {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpotController {
     orderbooks: HashMap<AssetPairKey, OrderbookInterface>,
-    bank_controller: Rc<RefCell<BankController>>,
+    bank_controller: Arc<Mutex<BankController>>,
 }
 impl SpotController {
-    pub fn new(bank_controller: Rc<RefCell<BankController>>) -> Self {
+    pub fn new(bank_controller: Arc<Mutex<BankController>>) -> Self {
         SpotController {
             orderbooks: HashMap::new(),
             bank_controller,
@@ -257,7 +260,7 @@ impl SpotController {
             e.insert(OrderbookInterface::new(
                 base_asset_id,
                 quote_asset_id,
-                Rc::clone(&self.bank_controller),
+                Arc::clone(&self.bank_controller),
             ));
             Ok(())
         } else {
@@ -339,10 +342,10 @@ pub mod spot_tests {
         let mut bank_controller = BankController::new();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
-        let bank_controller_ref = Rc::new(RefCell::new(bank_controller));
+        let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
         let mut orderbook_interface =
-            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Rc::clone(&bank_controller_ref));
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
 
         let bid_size = 100;
         let bid_price = 100;
@@ -352,14 +355,16 @@ pub mod spot_tests {
 
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account.public(), BASE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE
         );
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - bid_size * bid_price
@@ -373,9 +378,9 @@ pub mod spot_tests {
         let mut bank_controller = BankController::new();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
-        let bank_controller_ref = Rc::new(RefCell::new(bank_controller));
+        let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
-        let mut spot_controller = SpotController::new(Rc::clone(&bank_controller_ref));
+        let mut spot_controller = SpotController::new(Arc::clone(&bank_controller_ref));
 
         spot_controller.create_orderbook(BASE_ASSET_ID, QUOTE_ASSET_ID).unwrap();
 
@@ -394,14 +399,16 @@ pub mod spot_tests {
 
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account.public(), BASE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE
         );
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - bid_size * bid_price
@@ -415,10 +422,10 @@ pub mod spot_tests {
         let mut bank_controller = BankController::new();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
-        let bank_controller_ref = Rc::new(RefCell::new(bank_controller));
+        let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
         let mut orderbook_interface =
-            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Rc::clone(&bank_controller_ref));
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
 
         let bid_size = 100;
         let bid_price = 100;
@@ -428,14 +435,16 @@ pub mod spot_tests {
 
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE
         );
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account.public(), BASE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - bid_size
@@ -449,10 +458,10 @@ pub mod spot_tests {
         let mut bank_controller = BankController::new();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
-        let bank_controller_ref = Rc::new(RefCell::new(bank_controller));
+        let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
         let orderbook_interface =
-            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Rc::clone(&bank_controller_ref));
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
 
         let result = orderbook_interface.get_account(account.public()).unwrap_err();
 
@@ -466,10 +475,10 @@ pub mod spot_tests {
         let mut bank_controller: BankController = BankController::new();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
-        let bank_controller_ref = Rc::new(RefCell::new(bank_controller));
+        let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
         let mut orderbook_interface =
-            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Rc::clone(&bank_controller_ref));
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
 
         orderbook_interface.create_account(account.public()).unwrap();
         let result = orderbook_interface.create_account(account.public()).unwrap_err();
@@ -492,10 +501,10 @@ pub mod spot_tests {
             .transfer(account_0.public(), account_1.public(), QUOTE_ASSET_ID, TRANSFER_AMOUNT)
             .unwrap();
 
-        let bank_controller_ref = Rc::new(RefCell::new(bank_controller));
+        let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
         let mut orderbook_interface =
-            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Rc::clone(&bank_controller_ref));
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
 
         let bid_size_0: u64 = 100;
         let bid_price_0: u64 = 100;
@@ -511,14 +520,16 @@ pub mod spot_tests {
 
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account_0.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0
         );
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(&account_0.public(), BASE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT
@@ -526,14 +537,16 @@ pub mod spot_tests {
 
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account_1.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             TRANSFER_AMOUNT - bid_size_1 * bid_price_1
         );
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account_1.public(), BASE_ASSET_ID)
                 .unwrap(),
             TRANSFER_AMOUNT
@@ -556,10 +569,10 @@ pub mod spot_tests {
             .transfer(account_0.public(), account_1.public(), QUOTE_ASSET_ID, TRANSFER_AMOUNT)
             .unwrap();
 
-        let bank_controller_ref = Rc::new(RefCell::new(bank_controller));
+        let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
         let mut orderbook_interface =
-            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Rc::clone(&bank_controller_ref));
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
 
         let bid_size_0: u64 = 95;
         let bid_price_0: u64 = 200;
@@ -575,14 +588,16 @@ pub mod spot_tests {
 
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account_0.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0
         );
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account_0.public(), BASE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT
@@ -590,14 +605,16 @@ pub mod spot_tests {
 
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account_1.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             TRANSFER_AMOUNT - bid_size_1 * bid_price_1
         );
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account_1.public(), BASE_ASSET_ID)
                 .unwrap(),
             TRANSFER_AMOUNT
@@ -616,14 +633,16 @@ pub mod spot_tests {
         // received bid_size_0 in base asset from settled trade
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account_0.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0
         );
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account_0.public(), BASE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT + bid_size_0
@@ -636,14 +655,16 @@ pub mod spot_tests {
         // paid bid_size_0 in base asset from balance
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account_1.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             TRANSFER_AMOUNT - bid_size_1 * bid_price_1 + bid_size_0 * bid_price_0
         );
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account_1.public(), BASE_ASSET_ID)
                 .unwrap(),
             TRANSFER_AMOUNT - bid_size_0
@@ -660,14 +681,16 @@ pub mod spot_tests {
         // state should remain unchanged from prior
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account_0.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0
         );
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account_0.public(), BASE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT + bid_size_0
@@ -677,14 +700,16 @@ pub mod spot_tests {
         // additional trade should act to move bid_size_1 * bid_price_1 in quote from escrow to balance
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account_1.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             TRANSFER_AMOUNT + bid_size_0 * bid_price_0
         );
         assert_eq!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(account_1.public(), BASE_ASSET_ID)
                 .unwrap(),
             TRANSFER_AMOUNT - bid_size_0

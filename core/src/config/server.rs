@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::metrics::{DefaultMetricsCallbackProvider, MetricsCallbackProvider};
 use crate::{
-    client::{connect_lazy_with_config, connect_with_config},
     builder::server::ServerBuilder,
+    client::{connect_lazy_with_config, connect_with_config},
 };
 use anyhow::Result;
 use multiaddr::Multiaddr;

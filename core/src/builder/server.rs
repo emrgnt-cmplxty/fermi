@@ -1,8 +1,7 @@
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 use crate::metrics::{
-    DefaultMetricsCallbackProvider, MetricsCallbackProvider, MetricsHandler,
-    GRPC_ENDPOINT_PATH_HEADER,
+    DefaultMetricsCallbackProvider, MetricsCallbackProvider, MetricsHandler, GRPC_ENDPOINT_PATH_HEADER,
 };
 use crate::{
     config::server::ServerConfig,
@@ -57,10 +56,7 @@ type WrapperService<M> = Stack<
             >,
             Stack<
                 SetRequestHeaderLayer<AddPathToHeaderFunction>,
-                Stack<
-                    Either<LoadShedLayer, Identity>,
-                    Stack<Either<GlobalConcurrencyLimitLayer, Identity>, Identity>,
-                >,
+                Stack<Either<LoadShedLayer, Identity>, Stack<Either<GlobalConcurrencyLimitLayer, Identity>, Identity>>,
             >,
         >,
     >,
@@ -160,32 +156,20 @@ impl<M: MetricsCallbackProvider> ServerBuilder<M> {
                 Protocol::Dns(_) => {
                     let (dns_name, tcp_port, _http_or_https) = parse_dns(addr)?;
                     let (local_addr, incoming) =
-                        tcp_listener_and_update_multiaddr(addr, (dns_name.as_ref(), tcp_port))
-                            .await?;
-                    let server = Box::pin(
-                        self.router
-                            .serve_with_incoming_shutdown(incoming, rx_cancellation),
-                    );
+                        tcp_listener_and_update_multiaddr(addr, (dns_name.as_ref(), tcp_port)).await?;
+                    let server = Box::pin(self.router.serve_with_incoming_shutdown(incoming, rx_cancellation));
                     (local_addr, server)
                 }
                 Protocol::Ip4(_) => {
                     let (socket_addr, _http_or_https) = parse_ip4(addr)?;
-                    let (local_addr, incoming) =
-                        tcp_listener_and_update_multiaddr(addr, socket_addr).await?;
-                    let server = Box::pin(
-                        self.router
-                            .serve_with_incoming_shutdown(incoming, rx_cancellation),
-                    );
+                    let (local_addr, incoming) = tcp_listener_and_update_multiaddr(addr, socket_addr).await?;
+                    let server = Box::pin(self.router.serve_with_incoming_shutdown(incoming, rx_cancellation));
                     (local_addr, server)
                 }
                 Protocol::Ip6(_) => {
                     let (socket_addr, _http_or_https) = parse_ip6(addr)?;
-                    let (local_addr, incoming) =
-                        tcp_listener_and_update_multiaddr(addr, socket_addr).await?;
-                    let server = Box::pin(
-                        self.router
-                            .serve_with_incoming_shutdown(incoming, rx_cancellation),
-                    );
+                    let (local_addr, incoming) = tcp_listener_and_update_multiaddr(addr, socket_addr).await?;
+                    let server = Box::pin(self.router.serve_with_incoming_shutdown(incoming, rx_cancellation));
                     (local_addr, server)
                 }
                 // Protocol::Memory(_) => todo!(),
@@ -195,10 +179,7 @@ impl<M: MetricsCallbackProvider> ServerBuilder<M> {
                     let uds = tokio::net::UnixListener::bind(path.as_ref())?;
                     let uds_stream = tokio_stream::wrappers::UnixListenerStream::new(uds);
                     let local_addr = addr.to_owned();
-                    let server = Box::pin(
-                        self.router
-                            .serve_with_incoming_shutdown(uds_stream, rx_cancellation),
-                    );
+                    let server = Box::pin(self.router.serve_with_incoming_shutdown(uds_stream, rx_cancellation));
                     (local_addr, server)
                 }
                 unsupported => return Err(anyhow!("unsupported protocol {unsupported}")),
@@ -303,13 +284,7 @@ mod test {
                 assert_eq!(path, "/grpc.health.v1.Health/Check");
             }
 
-            fn on_response(
-                &self,
-                path: String,
-                _latency: Duration,
-                status: u16,
-                grpc_status_code: Code,
-            ) {
+            fn on_response(&self, path: String, _latency: Duration, status: u16, grpc_status_code: Code) {
                 assert_eq!(path, "/grpc.health.v1.Health/Check");
                 assert_eq!(status, 200);
                 assert_eq!(grpc_status_code, Code::Ok);
@@ -338,9 +313,7 @@ mod test {
         let mut client = HealthClient::new(channel);
 
         client
-            .check(HealthCheckRequest {
-                service: "".to_owned(),
-            })
+            .check(HealthCheckRequest { service: "".to_owned() })
             .await
             .unwrap();
 
@@ -364,13 +337,7 @@ mod test {
                 assert_eq!(path, "/grpc.health.v1.Health/Check");
             }
 
-            fn on_response(
-                &self,
-                path: String,
-                _latency: Duration,
-                status: u16,
-                grpc_status_code: Code,
-            ) {
+            fn on_response(&self, path: String, _latency: Duration, status: u16, grpc_status_code: Code) {
                 assert_eq!(path, "/grpc.health.v1.Health/Check");
                 assert_eq!(status, 200);
                 // According to https://github.com/grpc/grpc/blob/master/doc/statuscodes.md#status-codes-and-their-use-in-grpc
@@ -425,9 +392,7 @@ mod test {
         let mut client = HealthClient::new(channel);
 
         client
-            .check(HealthCheckRequest {
-                service: "".to_owned(),
-            })
+            .check(HealthCheckRequest { service: "".to_owned() })
             .await
             .unwrap();
 

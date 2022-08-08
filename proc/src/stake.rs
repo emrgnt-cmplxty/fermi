@@ -9,7 +9,6 @@
 //! TODO
 //! 0.) ADD SIZE CHECKS ON TRANSACTIONS
 use super::bank::BankController;
-use core::cell::RefCell;
 use gdex_types::{
     account::{AccountPubKey, StakeAccount},
     asset::PRIMARY_ASSET_ID,
@@ -17,17 +16,17 @@ use gdex_types::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 /// The stake controller is responsible for accessing & modifying user balances
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct StakeController {
     stake_accounts: HashMap<AccountPubKey, StakeAccount>,
-    bank_controller: Rc<RefCell<BankController>>,
+    bank_controller: Arc<Mutex<BankController>>,
     total_staked: u64,
 }
 impl StakeController {
-    pub fn new(bank_controller: Rc<RefCell<BankController>>) -> Self {
+    pub fn new(bank_controller: Arc<Mutex<BankController>>) -> Self {
         StakeController {
             bank_controller,
             stake_accounts: HashMap::new(),
@@ -67,7 +66,8 @@ impl StakeController {
         }
 
         self.bank_controller
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .update_balance(account_pub_key, PRIMARY_ASSET_ID, -(amount as i64))?;
         self.total_staked += amount;
         let lookup = self.stake_accounts.get_mut(account_pub_key);
@@ -89,7 +89,8 @@ impl StakeController {
     pub fn unstake(&mut self, account_pub_key: &AccountPubKey, amount: u64) -> Result<(), GDEXError> {
         self.total_staked -= amount;
         self.bank_controller
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .update_balance(account_pub_key, PRIMARY_ASSET_ID, amount as i64)?;
         let stake_account = self
             .stake_accounts
@@ -111,7 +112,7 @@ impl StakeController {
 impl Default for StakeController {
     fn default() -> Self {
         let bank_controller = BankController::new();
-        Self::new(Rc::new(RefCell::new(bank_controller)))
+        Self::new(Arc::new(Mutex::new(bank_controller)))
     }
 }
 
@@ -131,13 +132,14 @@ pub mod stake_tests {
         let mut bank_controller = BankController::new();
         bank_controller.create_asset(sender.public()).unwrap();
         bank_controller.create_asset(sender.public()).unwrap();
-        let bank_controller_ref = Rc::new(RefCell::new(bank_controller));
-        let mut stake_controller = StakeController::new(Rc::clone(&bank_controller_ref));
+        let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
+        let mut stake_controller = StakeController::new(Arc::clone(&bank_controller_ref));
 
         stake_controller.stake(sender.public(), STAKE_AMOUNT).unwrap();
         assert!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(sender.public(), PRIMARY_ASSET_ID)
                 .unwrap()
                 == CREATED_ASSET_BALANCE - STAKE_AMOUNT,
@@ -166,12 +168,13 @@ pub mod stake_tests {
         let mut bank_controller = BankController::new();
         bank_controller.create_asset(sender.public()).unwrap();
         bank_controller.create_asset(sender.public()).unwrap();
-        let bank_controller_ref = Rc::new(RefCell::new(bank_controller));
-        let mut stake_controller = StakeController::new(Rc::clone(&bank_controller_ref));
+        let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
+        let mut stake_controller = StakeController::new(Arc::clone(&bank_controller_ref));
 
         assert!(
             *bank_controller_ref
-                .borrow()
+                .lock()
+                .unwrap()
                 .get_balance(sender.public(), PRIMARY_ASSET_ID)
                 .unwrap()
                 == 0,

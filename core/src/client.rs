@@ -20,17 +20,12 @@ pub fn connect_lazy(address: &Multiaddr) -> Result<Channel> {
 }
 
 pub(crate) async fn connect_with_config(address: &Multiaddr, config: &ServerConfig) -> Result<Channel> {
-    let channel = endpoint_from_multiaddr(address)?
-        .apply_config(config)
-        .connect()
-        .await?;
+    let channel = endpoint_from_multiaddr(address)?.apply_config(config).connect().await?;
     Ok(channel)
 }
 
 pub(crate) fn connect_lazy_with_config(address: &Multiaddr, config: &ServerConfig) -> Result<Channel> {
-    let channel = endpoint_from_multiaddr(address)?
-        .apply_config(config)
-        .connect_lazy();
+    let channel = endpoint_from_multiaddr(address)?.apply_config(config).connect_lazy();
     Ok(channel)
 }
 

@@ -11,7 +11,7 @@ use gdex_types::{
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use rocksdb::{ColumnFamilyDescriptor, DBWithThreadMode, MultiThreaded, Options, DB};
-use std::{rc::Rc, time::SystemTime};
+use std::{sync::Arc, time::SystemTime};
 
 const N_ORDERS_BENCH: u64 = 1_024;
 const N_ACCOUNTS: u64 = 1_024;
@@ -129,7 +129,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     let bank_controller_ref = Rc::new(RefCell::new(bank_controller));
 
     let mut orderbook_interface =
-        OrderbookInterface::new(base_asset_id, quote_asset_id, Rc::clone(&bank_controller_ref));
+        OrderbookInterface::new(base_asset_id, quote_asset_id, Arc::clone(&bank_controller_ref));
 
     orderbook_interface.create_account(&primary.public()).unwrap();
     // other helpers
@@ -149,11 +149,13 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         let receiver = generate_keypair_vec([1; 32]).pop().unwrap();
 
         bank_controller_ref
-            .borrow_mut()
+            .get_mut()
+            .unlock()
             .transfer(&primary.public(), &receiver.public(), base_asset_id, TRANSFER_AMOUNT)
             .unwrap();
         bank_controller_ref
-            .borrow_mut()
+            .get_mut()
+            .unlock()
             .transfer(&primary.public(), &receiver.public(), quote_asset_id, TRANSFER_AMOUNT)
             .unwrap();
 

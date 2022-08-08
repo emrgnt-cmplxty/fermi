@@ -1,9 +1,11 @@
 use crate::config::genesis::Genesis;
 use arc_swap::ArcSwap;
 use gdex_proc::master::MasterController;
+use gdex_types::transaction::SignedTransaction;
 use gdex_types::{
     account::ValidatorKeyPair,
     committee::{Committee, ValidatorName},
+    error::GDEXError,
     transaction::TransactionDigest,
 };
 use std::{
@@ -67,6 +69,35 @@ impl ValidatorState {
         self.halted.store(false, Ordering::Relaxed);
     }
 }
+
+impl ValidatorState {
+    /// Initiate a new transaction.
+    pub async fn handle_transaction(&self, transaction: SignedTransaction) -> Result<(), GDEXError> {
+        Ok(())
+        // self.metrics.tx_orders.inc();
+        // // Check the sender's signature.
+        // transaction.verify().map_err(|e| {
+        //     self.metrics.signature_errors.inc();
+        //     e
+        // })?;
+        // let transaction_digest = *transaction.digest();
+
+        // let response = self.handle_transaction_impl(transaction).await;
+        // match response {
+        //     Ok(r) => Ok(()),
+        //     // If we see an error, it is possible that a certificate has already been processed.
+        //     // In that case, we could still return Ok to avoid showing confusing errors.
+        //     Err(err) => {
+        //         if self.database.effects_exists(&transaction_digest)? {
+        //             Ok(())
+        //         } else {
+        //             Err(err)
+        //         }
+        //     }
+        // }
+    }
+}
+
 #[cfg(test)]
 mod test_validator {
     use super::*;

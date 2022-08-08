@@ -123,13 +123,14 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             let null_creator = ValidatorPubKey::try_from(ValidatorPubKeyBytes::from_bytes(&[0; 32])?)?;
             master_controller
                 .bank_controller
-                .borrow_mut()
+                .lock()
+                .unwrap()
                 .create_asset(&null_creator)?;
 
             // fund and stake the validators with the VALIDATOR_FUNDING_AMOUNT
             for (_key, validator) in builder.validators.iter() {
                 let validator_key = ValidatorPubKey::try_from(validator.public_key).unwrap();
-                master_controller.bank_controller.borrow_mut().transfer(
+                master_controller.bank_controller.lock().unwrap().transfer(
                     &null_creator,
                     &validator_key,
                     PRIMARY_ASSET_ID,

@@ -33,5 +33,6 @@ tracing = "0.1.36"
 tempfile = "3.3.0"
 
 gdex-proc = { path = "../proc" }
+gdex-server = { path = "../server" }
 gdex-types = { path = "../types" }
 gdex-workspace-hack = { path = "../workspace-hack" }

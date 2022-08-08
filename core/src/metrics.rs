@@ -35,14 +35,7 @@ pub struct DefaultMetricsCallbackProvider {}
 impl MetricsCallbackProvider for DefaultMetricsCallbackProvider {
     fn on_request(&self, _path: String) {}
 
-    fn on_response(
-        &self,
-        _path: String,
-        _latency: Duration,
-        _status: u16,
-        _grpc_status_code: Code,
-    ) {
-    }
+    fn on_response(&self, _path: String, _latency: Duration, _status: u16, _grpc_status_code: Code) {}
 }
 
 #[derive(Clone)]
@@ -61,11 +54,7 @@ impl<B, M: MetricsCallbackProvider> OnResponse<B> for MetricsHandler<M> {
         let grpc_status = Status::from_header_map(response.headers());
         let grpc_status_code = grpc_status.map_or(Code::Ok, |s| s.code());
 
-        let path: HeaderValue = response
-            .headers()
-            .get(&GRPC_ENDPOINT_PATH_HEADER)
-            .unwrap()
-            .clone();
+        let path: HeaderValue = response.headers().get(&GRPC_ENDPOINT_PATH_HEADER).unwrap().clone();
 
         self.metrics_provider.on_response(
             path.to_str().unwrap().to_string(),
@@ -78,18 +67,12 @@ impl<B, M: MetricsCallbackProvider> OnResponse<B> for MetricsHandler<M> {
 
 impl<B, M: MetricsCallbackProvider> OnRequest<B> for MetricsHandler<M> {
     fn on_request(&mut self, request: &Request<B>, _span: &Span) {
-        self.metrics_provider
-            .on_request(request.uri().path().to_string());
+        self.metrics_provider.on_request(request.uri().path().to_string());
     }
 }
 
 impl<M: MetricsCallbackProvider> OnFailure<GrpcFailureClass> for MetricsHandler<M> {
-    fn on_failure(
-        &mut self,
-        _failure_classification: GrpcFailureClass,
-        _latency: Duration,
-        _span: &Span,
-    ) {
+    fn on_failure(&mut self, _failure_classification: GrpcFailureClass, _latency: Duration, _span: &Span) {
         // just do nothing for now so we avoid printing unnecessary logs
     }
 }

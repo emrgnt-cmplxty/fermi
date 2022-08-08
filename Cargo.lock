@@ -2251,6 +2251,7 @@ dependencies = [
  "dirs",
  "futures",
  "gdex-proc",
+ "gdex-server",
  "gdex-types",
  "gdex-workspace-hack",
  "multiaddr",
@@ -2294,6 +2295,29 @@ dependencies = [
  "gdex-workspace-hack",
  "rand 0.7.3",
  "serde 1.0.142",
+]
+
+[[package]]
+name = "gdex-server"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "bincode",
+ "bytes",
+ "futures",
+ "gdex-types",
+ "gdex-workspace-hack",
+ "http",
+ "multiaddr",
+ "serde 1.0.142",
+ "tokio",
+ "tokio-stream",
+ "tonic",
+ "tonic-build 0.7.2 (git+https://github.com/hyperium/tonic.git?rev=de2e4ac077c076736dc451f3415ea7da1a61a560)",
+ "tonic-health",
+ "tower",
+ "tower-http",
 ]
 
 [[package]]

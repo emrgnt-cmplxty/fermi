@@ -65,8 +65,8 @@ impl ExecutionStateError for SimpleExecutionError {
     }
 }
 
+use narwhal_crypto::ed25519::Ed25519KeyPair;
 use narwhal_crypto::traits::KeyPair;
-use narwhal_crypto::{ed25519::Ed25519KeyPair};
 use proc::bank::BankController;
 use std::{fmt, fmt::Display, path::Path, sync::Mutex};
 use store::{

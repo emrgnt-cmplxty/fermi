@@ -135,8 +135,7 @@ async fn run(matches: &ArgMatches<'_>) -> Result<()> {
     let committee_file = matches.value_of("committee").unwrap();
     let parameters_file = matches.value_of("parameters");
     let store_path = matches.value_of("store").unwrap();
-    let is_advanced_execution: bool =
-        matches.value_of("execution").unwrap_or("advanced") == "advanced";
+    let is_advanced_execution: bool = matches.value_of("execution").unwrap_or("advanced") == "advanced";
 
     // Read the committee and node's keypair from file.
     let keypair = KeyPair::import(key_file).context("Failed to load the node's keypair")?;

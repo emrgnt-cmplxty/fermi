@@ -4,11 +4,12 @@
 use anyhow::{Context, Result};
 use bytes::{BufMut as _, BytesMut};
 use clap::{crate_name, crate_version, App, AppSettings};
+use futures::{future::join_all, StreamExt};
 use narwhal_crypto::{
     traits::{KeyPair, Signer},
     Hash, DIGEST_LEN,
 };
-use futures::{future::join_all, StreamExt};
+use narwhal_types::{BatchDigest, TransactionProto, TransactionsClient};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use tokio::{
     net::TcpStream,
@@ -16,12 +17,7 @@ use tokio::{
 };
 use tracing::{info, subscriber::set_global_default, warn};
 use tracing_subscriber::filter::EnvFilter;
-use types::{
-    AccountKeyPair, SignedTransaction, Transaction, PaymentRequest, TransactionVariant
-};
-use narwhal_types::{
-    BatchDigest, TransactionProto, TransactionsClient
-};
+use types::{AccountKeyPair, PaymentRequest, SignedTransaction, Transaction, TransactionVariant};
 use url::Url;
 const PRIMARY_ASSET_ID: u64 = 0;
 
@@ -46,19 +42,11 @@ fn create_signed_padded_transaction(
             PRIMARY_ASSET_ID,
             amount,
         ));
-        let transaction = Transaction::new(
-            kp_sender.public().clone(),
-            dummy_batch_digest,
-            transaction_variant,
-        );
+        let transaction = Transaction::new(kp_sender.public().clone(), dummy_batch_digest, transaction_variant);
 
         // sign digest and create signed transaction
         let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-        let signed_transaction = SignedTransaction::new(
-            kp_sender.public().clone(),
-            transaction.clone(),
-            signed_digest,
-        );
+        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest);
 
         // serialize and resize the transaction for channel distribution
         let mut padded_signed_transaction = signed_transaction.serialize().unwrap();
@@ -127,8 +115,7 @@ async fn main() -> Result<()> {
         .map(|x| x.parse::<Url>())
         .collect::<Result<Vec<_>, _>>()
         .with_context(|| format!("Invalid url format {target_str}"))?;
-    let is_advanced_execution: bool =
-        matches.value_of("execution").unwrap_or("advanced") == "advanced";
+    let is_advanced_execution: bool = matches.value_of("execution").unwrap_or("advanced") == "advanced";
 
     info!("Node address: {target}");
 
@@ -169,9 +156,7 @@ impl Client {
 
         // The transaction size must be at least 16 bytes to ensure all txs are different.
         if self.size < 9 {
-            return Err(anyhow::Error::msg(
-                "Transaction size must be at least 9 bytes",
-            ));
+            return Err(anyhow::Error::msg("Transaction size must be at least 9 bytes"));
         }
 
         // Connect to the mempool.

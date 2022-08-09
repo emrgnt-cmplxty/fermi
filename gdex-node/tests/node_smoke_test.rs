@@ -24,7 +24,7 @@ fn test_primary_no_consensus() {
 
     let mut child = std::process::Command::new("cargo")
         .current_dir("..")
-        .args(&["run", "--bin", "node", "--"])
+        .args(&["run", "--bin", "gdex-node", "--"])
         .args(&[
             "run",
             "--committee",
@@ -33,6 +33,8 @@ fn test_primary_no_consensus() {
             &keys_file_path,
             "--store",
             &db_path,
+            "--execution",
+            "no-advanced", 
             "primary",
             "--consensus-disabled",
         ])
@@ -74,7 +76,7 @@ fn test_primary_with_consensus() {
 
     let mut child = std::process::Command::new("cargo")
         .current_dir("..")
-        .args(&["run", "--bin", "node", "--"])
+        .args(&["run", "--bin", "gdex-node", "--"])
         .args(&[
             "run",
             "--committee",
@@ -83,6 +85,8 @@ fn test_primary_with_consensus() {
             &keys_file_path,
             "--store",
             &db_path,
+            "--execution",
+            "no-advanced",
             "primary",
             //no arg : default of with_consensus
         ])

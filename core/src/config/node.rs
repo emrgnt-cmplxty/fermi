@@ -2,7 +2,10 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/node.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
-use crate::config::{consensus::ConsensusConfig, Config, Genesis};
+use crate::{
+    config::{consensus::ConsensusConfig, Config, Genesis},
+    validator::genesis_state::ValidatorGenesisState,
+};
 use anyhow::Result;
 use gdex_types::account::{ValidatorKeyPair, ValidatorPubKeyBytes};
 use gdex_types::crypto::GDEXAddress;
@@ -106,7 +109,7 @@ impl NodeConfig {
         self.consensus_config.as_ref()
     }
 
-    pub fn genesis(&self) -> Result<&crate::validator::genesis::Genesis> {
+    pub fn genesis(&self) -> Result<&ValidatorGenesisState> {
         self.genesis.genesis()
     }
 }

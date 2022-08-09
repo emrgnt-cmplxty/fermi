@@ -5,7 +5,7 @@
 use crate::{
     builder::network_config::NetworkConfigBuilder,
     config::{node::NodeConfig, Config, FULL_NODE_DB_PATH},
-    validator::genesis,
+    validator::genesis_state::ValidatorGenesisState,
 };
 use gdex_types::{
     account::{AccountKeyPair, ValidatorKeyPair},
@@ -29,7 +29,7 @@ pub struct NetworkConfig {
     pub validator_configs: Vec<NodeConfig>,
     #[serde_as(as = "Vec<KeyPairBase64>")]
     pub account_keys: Vec<AccountKeyPair>,
-    pub genesis: genesis::Genesis,
+    pub genesis: ValidatorGenesisState,
 }
 
 impl Config for NetworkConfig {}

@@ -2,6 +2,7 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/lib.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
+use crate::validator::genesis_state::ValidatorGenesisState;
 use anyhow::{Context, Result};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -83,7 +84,7 @@ where
 #[serde(untagged)]
 enum GenesisLocation {
     InPlace {
-        genesis: crate::validator::genesis::Genesis,
+        genesis: ValidatorGenesisState,
     },
     File {
         #[serde(rename = "genesis-file-location")]
@@ -97,11 +98,11 @@ pub struct Genesis {
     location: GenesisLocation,
 
     #[serde(skip)]
-    genesis: once_cell::sync::OnceCell<crate::validator::genesis::Genesis>,
+    genesis: once_cell::sync::OnceCell<ValidatorGenesisState>,
 }
 
 impl Genesis {
-    pub fn new(genesis: crate::validator::genesis::Genesis) -> Self {
+    pub fn new(genesis: ValidatorGenesisState) -> Self {
         Self {
             location: GenesisLocation::InPlace { genesis },
             genesis: Default::default(),
@@ -117,12 +118,12 @@ impl Genesis {
         }
     }
 
-    fn genesis(&self) -> Result<&crate::validator::genesis::Genesis> {
+    fn genesis(&self) -> Result<&ValidatorGenesisState> {
         match &self.location {
             GenesisLocation::InPlace { genesis } => Ok(genesis),
             GenesisLocation::File { genesis_file_location } => self
                 .genesis
-                .get_or_try_init(|| crate::validator::genesis::Genesis::load(&genesis_file_location)),
+                .get_or_try_init(|| ValidatorGenesisState::load(&genesis_file_location)),
         }
     }
 }

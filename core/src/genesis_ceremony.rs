@@ -2,7 +2,7 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui/src/genesis_ceremony.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
-use crate::validator::genesis::{Builder, Genesis};
+use crate::{builder::genesis_state::GenesisStateBuilder, validator::genesis_state::ValidatorGenesisState};
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Parser;
@@ -87,7 +87,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
     match cmd.command {
         // Initialize the genesis process
         CeremonyCommand::Init => {
-            let builder = Builder::new();
+            let builder = GenesisStateBuilder::new();
             builder.save(dir)?;
         }
 
@@ -102,7 +102,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             narwhal_worker_to_worker,
             narwhal_consensus_address,
         } => {
-            let mut builder = Builder::load(&dir)?;
+            let mut builder = GenesisStateBuilder::load(&dir)?;
             let keypair: ValidatorKeyPair = utils::read_keypair_from_file(key_file)?;
             builder = builder.add_validator(ValidatorInfo {
                 name,
@@ -121,7 +121,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
 
         // Add the order book controllers
         CeremonyCommand::AddControllers => {
-            let builder = Builder::load(&dir)?;
+            let builder = GenesisStateBuilder::load(&dir)?;
 
             // Initialize controllers to default state
             let mut master_controller = MasterController::default();
@@ -153,7 +153,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
 
         // Build the genesis config
         CeremonyCommand::Build => {
-            let builder = Builder::load(&dir)?;
+            let builder = GenesisStateBuilder::load(&dir)?;
 
             let genesis = builder.build();
 
@@ -163,10 +163,10 @@ pub fn run(cmd: Ceremony) -> Result<()> {
         // Participate in the ceremony by verifying and signing the proposed binary
         CeremonyCommand::VerifyAndSign { key_file } => {
             let keypair: ValidatorKeyPair = utils::read_keypair_from_file(key_file)?;
-            let loaded_genesis = Genesis::load(dir.join(GENESIS_FILENAME))?;
+            let loaded_genesis = ValidatorGenesisState::load(dir.join(GENESIS_FILENAME))?;
             let loaded_genesis_bytes = loaded_genesis.to_bytes();
 
-            let builder = Builder::load(&dir)?;
+            let builder = GenesisStateBuilder::load(&dir)?;
 
             let built_genesis = builder.build();
             let built_genesis_bytes = built_genesis.to_bytes();
@@ -197,7 +197,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
 
         // Finalize the genesis ceremony
         CeremonyCommand::Finalize => {
-            let genesis = Genesis::load(dir.join(GENESIS_FILENAME))?;
+            let genesis = ValidatorGenesisState::load(dir.join(GENESIS_FILENAME))?;
             let genesis_bytes = genesis.to_bytes();
 
             let mut signatures = std::collections::BTreeMap::new();
@@ -308,7 +308,7 @@ mod test {
 
         command.run()?;
 
-        // Build the Genesis object
+        // Build the ValidatorGenesisState object
         let command = Ceremony {
             path: Some(dir.path().into()),
             command: CeremonyCommand::Build,

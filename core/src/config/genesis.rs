@@ -19,7 +19,7 @@ use tracing::info;
 #[derive(Serialize, Deserialize)]
 pub struct GenesisConfig {
     /// Validator info for genesis committee
-    pub validator_genesis_info: Option<Vec<ValidatorGenesisInfo>>,
+    pub validator_genesis_info: Option<Vec<ValidatorGenesisStateInfo>>,
     /// Size of initial committee
     pub committee_size: usize,
     /// Account config for committee
@@ -31,7 +31,7 @@ impl Config for GenesisConfig {}
 /// Specifies the validator info at genesis
 #[serde_as]
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ValidatorGenesisInfo {
+pub struct ValidatorGenesisStateInfo {
     /// TODO - how can a keypair be stored for other validators on network?
     #[serde_as(as = "KeyPairBase64")]
     pub key_pair: ValidatorKeyPair,

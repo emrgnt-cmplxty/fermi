@@ -3,14 +3,14 @@
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/builder.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 use crate::{
+    builder::genesis_state::GenesisStateBuilder,
     config::{
         consensus::ConsensusConfig,
-        genesis::{GenesisConfig, ValidatorGenesisInfo},
+        genesis::{GenesisConfig, ValidatorGenesisStateInfo},
         network::NetworkConfig,
         node::NodeConfig,
         {AUTHORITIES_DB_NAME, CONSENSUS_DB_NAME, DEFAULT_STAKE},
     },
-    validator::genesis,
 };
 use gdex_types::{
     account::{ValidatorKeyPair, ValidatorPubKeyBytes},
@@ -89,7 +89,7 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
     pub fn build(mut self) -> NetworkConfig {
         let validators = (0..self.committee_size.get())
             .map(|_| get_key_pair_from_rng(&mut self.rng).1)
-            .map(|key_pair: ValidatorKeyPair| ValidatorGenesisInfo {
+            .map(|key_pair: ValidatorKeyPair| ValidatorGenesisStateInfo {
                 key_pair,
                 network_address: utils::new_network_address(),
                 stake: DEFAULT_STAKE,
@@ -105,7 +105,7 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
     }
 
     /// Given a set of validators this returns a network config
-    pub fn build_with_validators(mut self, validators: Vec<ValidatorGenesisInfo>) -> NetworkConfig {
+    pub fn build_with_validators(mut self, validators: Vec<ValidatorGenesisStateInfo>) -> NetworkConfig {
         let validator_set = validators
             .iter()
             .enumerate()
@@ -136,7 +136,7 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
         let account_keys = initial_accounts_config.generate_accounts(&mut self.rng).unwrap();
 
         let genesis = {
-            let mut builder = genesis::Builder::new();
+            let mut builder = GenesisStateBuilder::new();
 
             for validator in validator_set {
                 builder = builder.add_validator(validator);

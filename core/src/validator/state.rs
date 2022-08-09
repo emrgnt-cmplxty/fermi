@@ -2,7 +2,7 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-core/src/authority.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bcuse super::state::ValidatorState;
-use super::genesis::Genesis;
+use super::genesis_state::ValidatorGenesisState;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
 use gdex_controller::master::MasterController;
@@ -58,7 +58,7 @@ pub struct ValidatorState {
 impl ValidatorState {
     // TODO: This function takes both committee and genesis as parameter.
     // Technically genesis already contains committee information. Could consider merging them.
-    pub async fn new(name: ValidatorName, secret: StableSyncValidatorSigner, genesis: &Genesis) -> Self {
+    pub async fn new(name: ValidatorName, secret: StableSyncValidatorSigner, genesis: &ValidatorGenesisState) -> Self {
         ValidatorState {
             name,
             secret,
@@ -109,7 +109,7 @@ impl ValidatorState {
 #[cfg(test)]
 mod test_validator {
     use super::*;
-    use crate::{genesis_ceremony::VALIDATOR_FUNDING_AMOUNT, validator::genesis::Builder};
+    use crate::{builder::genesis_state::GenesisStateBuilder, genesis_ceremony::VALIDATOR_FUNDING_AMOUNT};
     use gdex_types::{
         account::ValidatorPubKeyBytes,
         crypto::{get_key_pair_from_rng, KeypairTraits},
@@ -138,7 +138,7 @@ mod test_validator {
             narwhal_consensus_address: utils::new_network_address(),
         };
 
-        let builder = Builder::new()
+        let builder = GenesisStateBuilder::new()
             .set_master_controller(master_controller)
             .add_validator(validator);
 

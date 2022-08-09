@@ -4,7 +4,6 @@
 //! TODO - How do we test this codec? It seems impossible to test directly given that EncodeBuf does not have a public constructor.
 //! further, I could not find any peripheral objects that publicly exposed this struct in the codebase https://github.com/hyperium/tonic/search?q=EncodeBuf
 //! Note, the code in this file is inspired by https://github.com/MystenLabs/mysten-infra/blob/main/crates/mysten-network/src/codec.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
-#[cfg(not(tarpaulin))]
 use bytes::{Buf, BufMut};
 use std::marker::PhantomData;
 use tonic::{

@@ -246,17 +246,18 @@ impl SignedTransaction {
     }
 }
 
-/// Begin the testing suite for transactions
-#[cfg(test)]
-pub mod transaction_tests {
+/// Begin externally available testing functions
+#[cfg(any(test, feature = "testing"))]
+pub mod transaction_test_functions {
     use super::*;
+    use crate::{
+        account::AccountKeyPair,
+        crypto::{KeypairTraits, Signer}
+    };
 
-    use crate::account::{account_test_functions::generate_keypair_vec, AccountKeyPair};
-    use crate::crypto::{KeypairTraits, Signer};
+    pub const PRIMARY_ASSET_ID: u64 = 0;
 
-    const PRIMARY_ASSET_ID: u64 = 0;
-
-    pub fn generate_signed_payment_transaction(
+    pub fn generate_signed_test_transaction(
         kp_sender: &AccountKeyPair,
         kp_receiver: &AccountKeyPair,
     ) -> SignedTransaction {
@@ -273,6 +274,15 @@ pub mod transaction_tests {
 
         SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest)
     }
+}
+
+/// Begin the testing suite for transactions
+#[cfg(test)]
+pub mod transaction_tests {
+    use super::*;
+    use super::transaction_test_functions::*;
+    use crate::account::account_test_functions::generate_keypair_vec;
+    use crate::crypto::{KeypairTraits, Signer};
 
     #[test]
     // test that transaction returns expected fields, validates a good signature, and has deterministic hashing
@@ -313,7 +323,7 @@ pub mod transaction_tests {
     fn transaction_properties() {
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_payment_transaction(&kp_sender, &kp_receiver);
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
         let transaction = signed_transaction.get_transaction_payload();
         let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
 
@@ -352,7 +362,7 @@ pub mod transaction_tests {
     fn signed_payment_transaction() {
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_payment_transaction(&kp_sender, &kp_receiver);
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
 
         let payment = match signed_transaction.get_transaction_payload().get_variant() {
             TransactionVariant::PaymentTransaction(r) => r,
@@ -405,7 +415,7 @@ pub mod transaction_tests {
     fn test_serialize_deserialize() {
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_payment_transaction(&kp_sender, &kp_receiver);
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
 
         // perform transaction checks
 

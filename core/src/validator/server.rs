@@ -186,18 +186,18 @@ mod test_validator_server {
     use super::*;
 
     // use crate::validator::state::*;
-    use gdex_controller::master::MasterController;
     use crate::{builder::genesis_state::GenesisStateBuilder, genesis_ceremony::VALIDATOR_FUNDING_AMOUNT};
-    use gdex_types::account::ValidatorKeyPair;
-
+    use crate::{client};
+    use gdex_controller::master::MasterController;
     use gdex_types::{
-        account::ValidatorPubKeyBytes,
+        account::{ValidatorKeyPair, ValidatorPubKeyBytes, account_test_functions::generate_keypair_vec},
         crypto::{get_key_pair_from_rng, KeypairTraits},
         node::ValidatorInfo,
+        transaction::transaction_test_functions::generate_signed_test_transaction,
         utils,
     };
 
-    async fn spawn_validator_server() -> Multiaddr {
+    async fn spawn_validator_server() -> Result<ValidatorServerHandle, io::Error> {
         let master_controller = MasterController::default();
 
         let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
@@ -225,19 +225,26 @@ mod test_validator_server {
         let validator_state = ValidatorState::new(public_key, secret, &genesis).await;
         let new_addr = utils::new_network_address();
         let validator_server = ValidatorServer::new(new_addr.clone(), Arc::new(validator_state));
-        validator_server.spawn().await.unwrap();
-        new_addr
+        validator_server.spawn().await
     }
 
     #[tokio::test]
     pub async fn server_init() {
-        spawn_validator_server().await;
+        spawn_validator_server().await.unwrap();
     }
 
 
     #[tokio::test]
     pub async fn server_process_transaction() {
-        let server_addr = spawn_validator_server().await;
+        let handle_result = spawn_validator_server().await;
+        let handle = handle_result.unwrap();
+        let server_channel = client::connect(&handle.address()).await.unwrap();
+        let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
+        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
+
+        // let send_txn = server_channel.send(signed_transaction);
+
         // let proc_result = transaction
     }
 

@@ -37,11 +37,11 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-#[cfg(test)]
-mod build_tests {
-    use super::*;
-    #[test]
-    pub fn server_main() {
-        main();
-    }
-}
+// #[cfg(test)]
+// mod build_tests {
+//     use super::*;
+//     #[test]
+//     pub fn server_main() {
+//         main();
+//     }
+// }

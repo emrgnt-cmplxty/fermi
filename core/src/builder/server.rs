@@ -218,7 +218,7 @@ async fn tcp_listener<T: ToSocketAddrs>(address: T) -> Result<(SocketAddr, TcpLi
     Ok((local_addr, incoming))
 }
 
-/// A tonic server with helper handles 
+/// A tonic server with helper handles
 pub struct Server {
     server: BoxFuture<(), tonic::transport::Error>,
     cancel_handle: Option<tokio::sync::oneshot::Sender<()>>,
@@ -227,7 +227,7 @@ pub struct Server {
 }
 
 impl Server {
-    /// Start the server 
+    /// Start the server
     pub async fn serve(self) -> Result<(), tonic::transport::Error> {
         self.server.await
     }

@@ -180,17 +180,16 @@ impl ValidatorAPI for ValidatorService {
     }
 }
 
-
 #[cfg(test)]
 mod test_validator_server {
     use super::*;
 
     // use crate::validator::state::*;
+    use crate::client;
     use crate::{builder::genesis_state::GenesisStateBuilder, genesis_ceremony::VALIDATOR_FUNDING_AMOUNT};
-    use crate::{client};
     use gdex_controller::master::MasterController;
     use gdex_types::{
-        account::{ValidatorKeyPair, ValidatorPubKeyBytes, account_test_functions::generate_keypair_vec},
+        account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair, ValidatorPubKeyBytes},
         crypto::{get_key_pair_from_rng, KeypairTraits},
         node::ValidatorInfo,
         transaction::transaction_test_functions::generate_signed_test_transaction,
@@ -233,7 +232,6 @@ mod test_validator_server {
         spawn_validator_server().await.unwrap();
     }
 
-
     #[tokio::test]
     pub async fn server_process_transaction() {
         let handle_result = spawn_validator_server().await;
@@ -247,7 +245,6 @@ mod test_validator_server {
 
         // let proc_result = transaction
     }
-
 
     #[tokio::test]
     pub async fn multiple_server_init() {
@@ -263,7 +260,7 @@ mod test_validator_server {
 
         println!("public_key_0={:?}", public_key_0);
         println!("public_key_1={:?}", public_key_1);
-        
+
         let validator_0 = ValidatorInfo {
             name: "0".into(),
             public_key: public_key_0.clone(),
@@ -277,7 +274,7 @@ mod test_validator_server {
             narwhal_consensus_address: utils::new_network_address(),
         };
 
-        let validator_1= ValidatorInfo {
+        let validator_1 = ValidatorInfo {
             name: "1".into(),
             public_key: public_key_1.clone(),
             stake: VALIDATOR_FUNDING_AMOUNT,
@@ -304,7 +301,5 @@ mod test_validator_server {
 
         validator_server_0.spawn().await.unwrap();
         validator_server_1.spawn().await.unwrap();
-
     }
-
 }

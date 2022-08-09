@@ -252,7 +252,7 @@ pub mod transaction_test_functions {
     use super::*;
     use crate::{
         account::AccountKeyPair,
-        crypto::{KeypairTraits, Signer}
+        crypto::{KeypairTraits, Signer},
     };
 
     pub const PRIMARY_ASSET_ID: u64 = 0;
@@ -279,8 +279,8 @@ pub mod transaction_test_functions {
 /// Begin the testing suite for transactions
 #[cfg(test)]
 pub mod transaction_tests {
-    use super::*;
     use super::transaction_test_functions::*;
+    use super::*;
     use crate::account::account_test_functions::generate_keypair_vec;
     use crate::crypto::{KeypairTraits, Signer};
 

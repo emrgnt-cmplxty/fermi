@@ -2366,6 +2366,7 @@ dependencies = [
  "signature",
  "sui-types",
  "thiserror",
+ "tonic",
  "types",
 ]
 

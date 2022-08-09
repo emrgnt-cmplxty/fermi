@@ -32,6 +32,17 @@ pub enum GDEXError {
     TransactionSerialization,
     #[error("Failed to deserialize into a signed transaction")]
     TransactionDeserialization,
+
+    // server errors
+    #[error("Failed to process the inbound transaction")]
+    RpcFailure(String),
+
+}
+
+impl From<tonic::Status> for GDEXError {
+    fn from(status: tonic::Status) -> Self {
+        Self::RpcFailure(status.message().to_owned())
+    }
 }
 
 #[async_trait]

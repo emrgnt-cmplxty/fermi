@@ -183,10 +183,11 @@ impl ValidatorAPI for ValidatorService {
 #[cfg(test)]
 mod test_validator_server {
     use super::*;
-
-    // use crate::validator::state::*;
-    use crate::client;
-    use crate::{builder::genesis_state::GenesisStateBuilder, genesis_ceremony::VALIDATOR_FUNDING_AMOUNT};
+    use crate::{
+        builder::genesis_state::GenesisStateBuilder, client::NetworkValidatorClient,
+        genesis_ceremony::VALIDATOR_FUNDING_AMOUNT,
+        client::ClientAPI
+    };
     use gdex_controller::master::MasterController;
     use gdex_types::{
         account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair, ValidatorPubKeyBytes},
@@ -236,14 +237,16 @@ mod test_validator_server {
     pub async fn server_process_transaction() {
         let handle_result = spawn_validator_server().await;
         let handle = handle_result.unwrap();
-        let _server_channel = client::connect(&handle.address()).await.unwrap();
+        let client = NetworkValidatorClient::connect_lazy(&handle.address()).unwrap();
+
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let _signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
 
-        // let send_txn = server_channel.send(signed_transaction);
-
-        // let proc_result = transaction
+        let resp1 = client
+            .handle_transaction(signed_transaction)
+            .await
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e));
     }
 
     #[tokio::test]

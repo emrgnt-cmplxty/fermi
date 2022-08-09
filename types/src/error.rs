@@ -22,13 +22,3 @@ pub enum SignedTransactionError {
     Serialization(Box<bincode::ErrorKind>),
     Deserialization(Box<bincode::ErrorKind>),
 }
-
-#[derive(Debug, Error)]
-pub enum BankError {
-    #[error("Account already exists")]
-    AccountCreation,
-    #[error("Failed to find account")]
-    AccountLookup,
-    #[error("Insufficent balance")]
-    PaymentRequest,
-}

@@ -6,11 +6,11 @@ pub use account::*;
 mod asset;
 pub use asset::*;
 
-pub mod error;
+mod error;
 pub use error::*;
 
 mod order_book;
 pub use order_book::*;
 
-pub mod transaction;
+mod transaction;
 pub use transaction::*;

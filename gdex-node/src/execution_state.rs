@@ -77,8 +77,7 @@ use store::{
 pub type AccountKeyPair = Ed25519KeyPair;
 use futures::executor::block_on;
 use rand::{rngs::StdRng, SeedableRng};
-use types::ProcError;
-use types::{GDEXSignedTransaction, TransactionVariant};
+use types::{ProcError, SignedTransaction, TransactionVariant};
 
 #[async_trait]
 impl ExecutionStateError for AdvancedExecutionStateError {
@@ -112,7 +111,7 @@ pub struct AdvancedExecutionState {
 
 #[async_trait]
 impl ExecutionState for AdvancedExecutionState {
-    type Transaction = GDEXSignedTransaction;
+    type Transaction = SignedTransaction;
     type Error = AdvancedExecutionStateError;
     type Outcome = Vec<u8>;
 

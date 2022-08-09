@@ -17,7 +17,7 @@ use tokio::{
 use tracing::{info, subscriber::set_global_default, warn};
 use tracing_subscriber::filter::EnvFilter;
 use types::{
-    AccountKeyPair, GDEXSignedTransaction, GDEXTransaction, PaymentRequest, TransactionVariant
+    AccountKeyPair, SignedTransaction, Transaction, PaymentRequest, TransactionVariant
 };
 use narwhal_types::{
     BatchDigest, TransactionProto, TransactionsClient
@@ -46,7 +46,7 @@ fn create_signed_padded_transaction(
             PRIMARY_ASSET_ID,
             amount,
         ));
-        let transaction = GDEXTransaction::new(
+        let transaction = Transaction::new(
             kp_sender.public().clone(),
             dummy_batch_digest,
             transaction_variant,
@@ -54,7 +54,7 @@ fn create_signed_padded_transaction(
 
         // sign digest and create signed transaction
         let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-        let signed_transaction = GDEXSignedTransaction::new(
+        let signed_transaction = SignedTransaction::new(
             kp_sender.public().clone(),
             transaction.clone(),
             signed_digest,

@@ -236,10 +236,10 @@ mod test_validator_server {
     pub async fn server_process_transaction() {
         let handle_result = spawn_validator_server().await;
         let handle = handle_result.unwrap();
-        let server_channel = client::connect(&handle.address()).await.unwrap();
+        let _server_channel = client::connect(&handle.address()).await.unwrap();
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
+        let _signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
 
         // let send_txn = server_channel.send(signed_transaction);
 

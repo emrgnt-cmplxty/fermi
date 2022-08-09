@@ -19,6 +19,7 @@ use std::convert::TryInto;
 use std::{fs, path::Path};
 use tracing::trace;
 
+/// Creates a genesis object which contains the validator set and the master controller
 #[derive(Clone, Debug)]
 pub struct Genesis {
     master_controller: MasterController,
@@ -166,6 +167,7 @@ impl<'de> Deserialize<'de> for Genesis {
     }
 }
 
+/// Creates a builder object which facilitates the genesis construction
 pub struct Builder {
     pub master_controller: MasterController,
     pub validators: BTreeMap<ValidatorPubKeyBytes, ValidatorInfo>,

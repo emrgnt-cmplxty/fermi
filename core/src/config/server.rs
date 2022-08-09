@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tonic::transport::Channel;
 
+/// The server communication settings control outside communication parameters
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct ServerConfig {
     /// Set the concurrency limit applied to on requests inbound per connection.

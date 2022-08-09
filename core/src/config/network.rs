@@ -19,8 +19,7 @@ use std::num::NonZeroUsize;
 use std::path::Path;
 use std::sync::Arc;
 
-/// This is a config that is used for testing or local use as it contains the config and keys for
-/// all validators
+/// Contains all the validator configs, account keys, and genesis info for the network
 #[serde_as]
 #[derive(Debug, Deserialize, Serialize)]
 pub struct NetworkConfig {

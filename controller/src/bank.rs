@@ -1,21 +1,26 @@
-//! Copyright (c) 2022, BTI
-//! SPDX-License-Identifier: Apache-2.0
-//!
-//! This controller is responsible for managing user balances
-//! note, other controllers that rely on balance info will consume this
+//! Creates new assets and manages user balances
 //!
 //! TODO
 //! 0.) ADD MISSING FEATURES TO ASSET WORKFLOW, LIKE OWNER TOKEN MINTING, VARIABLE INITIAL MINT AMT., ...
 //! 1.) MAKE ROBUST ERROR HANDLING FOR ALL FUNCTIONS ~~ DONE
 //! 2.) ADD OWNER FUNCTIONS
 //! 3.) BETTER BANK ACCOUNT PUB KEY HANDLING SYSTEM & ADDRESS
+//!
+//! Copyright (c) 2022, BTI
+//! SPDX-License-Identifier: Apache-2.0
+use gdex_types::{
+    account::{AccountPubKey, BankAccount},
+    asset::{Asset, AssetId},
+    error::GDEXError,
+};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use gdex_types::{AccountPubKey, Asset, AssetId, BankAccount, ProcError};
 
 // TODO #0 //
-pub const PRIMARY_ASSET_ID: u64 = 0;
-pub const CREATED_ASSET_BALANCE: u64 = 1_000_000_000_000_000_000;
+// 10 billion w/ 6 decimals, e.g. ALGO creation specs.
+pub const CREATED_ASSET_BALANCE: u64 = 10_000_000_000_000_000;
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BankController {
     asset_id_to_asset: HashMap<AssetId, Asset>,
     bank_accounts: HashMap<AccountPubKey, BankAccount>,
@@ -31,10 +36,10 @@ impl BankController {
         }
     }
 
-    pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), ProcError> {
+    pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
         // do not allow double-creation of a single account
         if self.bank_accounts.contains_key(account_pub_key) {
-            Err(ProcError::AccountCreation)
+            Err(GDEXError::AccountCreation)
         } else {
             self.bank_accounts
                 .insert(account_pub_key.clone(), BankAccount::new(account_pub_key.clone()));
@@ -42,15 +47,15 @@ impl BankController {
         }
     }
 
-    fn check_account_exists(&self, account_pub_key: &AccountPubKey) -> Result<(), ProcError> {
+    fn check_account_exists(&self, account_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
         self.bank_accounts
             .get(account_pub_key)
-            .ok_or(ProcError::AccountLookup)?;
+            .ok_or(GDEXError::AccountLookup)?;
         Ok(())
     }
 
     // TODO #0  //
-    pub fn create_asset(&mut self, owner_pub_key: &AccountPubKey) -> Result<(), ProcError> {
+    pub fn create_asset(&mut self, owner_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
         // special handling for genesis
         // an account must be created in this instance
         // since account creation is gated by receipt and balance of primary blockchain asset
@@ -74,11 +79,11 @@ impl BankController {
         Ok(())
     }
 
-    pub fn get_balance(&self, account_pub_key: &AccountPubKey, asset_id: AssetId) -> Result<&u64, ProcError> {
+    pub fn get_balance(&self, account_pub_key: &AccountPubKey, asset_id: AssetId) -> Result<&u64, GDEXError> {
         let bank_account = self
             .bank_accounts
             .get(account_pub_key)
-            .ok_or(ProcError::AccountLookup)?;
+            .ok_or(GDEXError::AccountLookup)?;
         Ok(bank_account.get_balances().get(&asset_id).unwrap_or(&0))
     }
 
@@ -87,15 +92,16 @@ impl BankController {
         account_pub_key: &AccountPubKey,
         asset_id: AssetId,
         amount: i64,
-    ) -> Result<(), ProcError> {
+    ) -> Result<(), GDEXError> {
         let bank_account = self
             .bank_accounts
             .get_mut(account_pub_key)
-            .ok_or(ProcError::AccountLookup)?;
+            .ok_or(GDEXError::AccountLookup)?;
         let prev_amount: i64 = *bank_account.get_balances().get(&asset_id).unwrap_or(&0) as i64;
+
         // return error if insufficient user balance
         if (prev_amount + amount) < 0 {
-            return Err(ProcError::PaymentRequest);
+            return Err(GDEXError::PaymentRequest);
         };
 
         bank_account.set_balance(asset_id, (prev_amount + amount) as u64);
@@ -108,18 +114,18 @@ impl BankController {
         account_pub_key_to: &AccountPubKey,
         asset_id: AssetId,
         amount: u64,
-    ) -> Result<(), ProcError> {
+    ) -> Result<(), GDEXError> {
         // return error if insufficient user balance
         let balance = *self.get_balance(account_pub_key_from, asset_id)?;
         if balance < amount {
-            return Err(ProcError::PaymentRequest);
+            return Err(GDEXError::PaymentRequest);
         };
 
         if self.check_account_exists(account_pub_key_to).is_err() {
             if asset_id == 0 {
                 self.create_account(account_pub_key_to)?
             } else {
-                return Err(ProcError::AccountLookup);
+                return Err(GDEXError::AccountLookup);
             }
         }
 

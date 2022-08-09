@@ -2,10 +2,12 @@
 name = "gdex-engine"
 version = "0.1.0"
 authors = []
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 criterion = "0.3"
 rand = "0.8.4"
+serde = { version = "1.0.141", features = ["derive"] }
 
 gdex-types = { path = "../types" }
+gdex-workspace-hack = { path = "../workspace-hack" }

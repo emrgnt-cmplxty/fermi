@@ -1,7 +1,6 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
-use crate::AssetId;
-
+use crate::asset::AssetId;
 use serde::{Deserialize, Serialize};
 use std::{fmt::Debug, time::SystemTime};
 
@@ -17,7 +16,7 @@ pub enum OrderType {
     Limit,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Order {
     pub order_id: u64,
     pub base_asset: AssetId,

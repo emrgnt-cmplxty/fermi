@@ -1,13 +1,16 @@
+//! Copyright (c) 2018 Anton Dort-Golts
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
-use gdex_types::OrderSide;
+
+use gdex_types::order_book::OrderSide;
+use serde::{Deserialize, Serialize};
 use std::{
     cmp::Ordering,
     collections::{BinaryHeap, HashMap},
     time,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 struct OrderIndex {
     id: u64,
     price: u64,
@@ -54,6 +57,7 @@ impl PartialEq for OrderIndex {
 impl Eq for OrderIndex {}
 
 /// Public methods
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct OrderQueue<T> {
     // use Option in order to replace heap in mutable borrow
     idx_queue: Option<BinaryHeap<OrderIndex>>,
@@ -133,7 +137,7 @@ impl<T> OrderQueue<T> {
 
     pub fn cancel(&mut self, id: u64) -> bool {
         match self.orders.remove(&id) {
-            Some(_) => {
+            Some(..) => {
                 self.clean_check();
                 true
             }

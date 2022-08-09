@@ -1,3 +1,4 @@
+//! Copyright (c) 2018 Anton Dort-Golts
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //!
@@ -7,10 +8,16 @@
 //! this uniqueness check in the orderbook is seems potentially incorrect, or strange, as it includes the timestamp of the order
 //! we should include some sort of random noise to ensure that every order that touches the book gets inserted
 //! as upstream checks will robustly ensure no duplicates
+
 use super::order_queues::OrderQueue;
 use super::sequence;
 use super::validation::OrderRequestValidator;
-use gdex_types::{AssetId, Failed, Order, OrderProcessingResult, OrderRequest, OrderSide, OrderType, Success};
+use gdex_types::{
+    asset::AssetId,
+    order_book::{Failed, Order, OrderProcessingResult, OrderSide, OrderType, Success},
+    transaction::OrderRequest,
+};
+use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 
 const MIN_SEQUENCE_ID: u64 = 1;
@@ -18,6 +25,7 @@ const MAX_SEQUENCE_ID: u64 = 1_000_000;
 const MAX_STALLED_INDICES_IN_QUEUE: u64 = 10;
 const ORDER_QUEUE_INIT_CAPACITY: usize = 500;
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Orderbook {
     base_asset: AssetId,
     quote_asset: AssetId,
@@ -460,24 +468,92 @@ impl Orderbook {
 }
 
 #[cfg(test)]
-mod test {
+mod test_order_book {
 
-    use super::super::orders;
     use super::*;
+    use crate::orders::{
+        amend_order_request, limit_order_cancel_request, new_limit_order_request, new_market_order_request,
+    };
 
-    const USD: u64 = 0;
-    const BTC: u64 = 1;
+    const BASE_ASSET: u64 = 0;
+    const QUOTE_ASSET: u64 = 1;
 
     #[test]
-    fn cancel_nonexisting() {
-        let mut orderbook = Orderbook::new(BTC, USD);
-        let request = orders::limit_order_cancel_request(1, OrderSide::Bid);
+    fn failed_cancel() {
+        let mut orderbook = Orderbook::new(BASE_ASSET, QUOTE_ASSET);
+        let request = limit_order_cancel_request(1, OrderSide::Bid);
         let mut result = orderbook.process_order(request);
 
         assert_eq!(result.len(), 1);
         match result.pop().unwrap() {
-            Err(_) => (),
-            _ => panic!("unexpected events"),
+            Err(..) => (),
+            _ => panic!("unexpected success"),
+        }
+    }
+
+    #[should_panic]
+    #[test]
+    pub fn failed_match() {
+        let mut order_book = Orderbook::new(BASE_ASSET, QUOTE_ASSET);
+
+        // create and process limit order
+        let order = new_limit_order_request(BASE_ASSET, QUOTE_ASSET + 1, OrderSide::Ask, 10, 1, SystemTime::now());
+        let results = order_book.process_order(order);
+        for result in results {
+            result.unwrap();
+        }
+    }
+
+    #[test]
+    pub fn successful_match() {
+        let mut order_book = Orderbook::new(BASE_ASSET, QUOTE_ASSET);
+
+        // create and process limit order
+        let order = new_limit_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Bid, 10, 100, SystemTime::now());
+        order_book.process_order(order);
+
+        // create and process limit order
+        let order = new_market_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Ask, 10, SystemTime::now());
+        let results = order_book.process_order(order);
+        for result in results {
+            result.unwrap();
+        }
+    }
+
+    #[test]
+    pub fn successful_amend() {
+        let mut order_book = Orderbook::new(BASE_ASSET, QUOTE_ASSET);
+
+        // create and process limit order
+        let order = new_limit_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Bid, 10, 100, SystemTime::now());
+        let mut results = order_book.process_order(order);
+
+        let order_result = results.pop().unwrap().unwrap();
+
+        match order_result {
+            Success::Accepted { order_id, .. } => {
+                let amend_order = amend_order_request(order_id, OrderSide::Bid, 100, 100, SystemTime::now());
+                order_book.process_order(amend_order).pop().unwrap().unwrap();
+            }
+            _ => {
+                panic!("unexpected match result");
+            }
+        }
+    }
+
+    #[test]
+    pub fn partial_match_limits() {
+        let mut order_book = Orderbook::new(BASE_ASSET, QUOTE_ASSET);
+
+        // create and process limit order
+        let order = new_limit_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Bid, 10, 100, SystemTime::now());
+        order_book.process_order(order);
+
+        let order = new_limit_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Ask, 5, 10, SystemTime::now());
+        let results = order_book.process_order(order);
+
+        for result in results {
+            result.unwrap();
         }
     }
 }

@@ -4,8 +4,14 @@
 //! The transaction class is responsible for parsing client interactions
 //! each valid transaction corresponds to a unique state transition within
 //! the space of allowable blockchain transitions
-//!
-use crate::{AccountPubKey, AccountSignature, AssetId, OrderSide, SignedTransactionError};
+use crate::{
+    account::{AccountPubKey, AccountSignature},
+    asset::AssetId,
+    error::GDEXError,
+    order_book::OrderSide,
+    serialization::Base64,
+    serialization::Encoding,
+};
 use blake2::{digest::Update, VarBlake2b};
 use narwhal_crypto::{Digest, Hash, Verifier, DIGEST_LEN};
 use narwhal_types::BatchDigest;
@@ -83,10 +89,9 @@ pub enum OrderRequest {
     },
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[allow(clippy::large_enum_variant)]
 pub enum TransactionVariant {
-    #[allow(clippy::large_enum_variant)]
     PaymentTransaction(PaymentRequest),
-    #[allow(clippy::large_enum_variant)]
     CreateAssetTransaction(CreateAssetRequest),
 }
 
@@ -131,7 +136,7 @@ pub struct TransactionDigest([u8; DIGEST_LEN]);
 
 impl fmt::Display for TransactionDigest {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "{}", base64::encode(&self.0).get(0..16).unwrap())
+        write!(f, "{}", Base64::encode(&self.0).get(0..16).unwrap())
     }
 }
 
@@ -200,23 +205,23 @@ impl SignedTransaction {
         }
     }
 
-    pub fn deserialize(byte_vec: Vec<u8>) -> Result<Self, SignedTransactionError> {
+    pub fn deserialize(byte_vec: Vec<u8>) -> Result<Self, GDEXError> {
         match bincode::deserialize(&byte_vec[..]) {
             Ok(result) => Ok(result),
-            Err(err) => Err(SignedTransactionError::Deserialization(err)),
+            Err(..) => Err(GDEXError::TransactionDeserialization),
         }
     }
 
-    pub fn deserialize_and_verify(byte_vec: Vec<u8>) -> Result<Self, SignedTransactionError> {
+    pub fn deserialize_and_verify(byte_vec: Vec<u8>) -> Result<Self, GDEXError> {
         let deserialized_transaction = Self::deserialize(byte_vec)?;
         deserialized_transaction.verify()?;
         Ok(deserialized_transaction)
     }
 
-    pub fn serialize(&self) -> Result<Vec<u8>, SignedTransactionError> {
+    pub fn serialize(&self) -> Result<Vec<u8>, GDEXError> {
         match bincode::serialize(&self) {
             Ok(result) => Ok(result),
-            Err(err) => Err(SignedTransactionError::Serialization(err)),
+            Err(..) => Err(GDEXError::TransactionSerialization),
         }
     }
 
@@ -228,30 +233,31 @@ impl SignedTransaction {
         &self.transaction_signature
     }
 
-    pub fn verify(&self) -> Result<(), SignedTransactionError> {
+    pub fn verify(&self) -> Result<(), GDEXError> {
         let transaction_digest_array = self.transaction_payload.digest().get_array();
         match self
             .transaction_payload
             .get_sender()
             .verify(&transaction_digest_array[..], &self.transaction_signature)
         {
-            Ok(_) => Ok(()),
-            Err(err) => Err(SignedTransactionError::FailedVerification(err)),
+            Ok(..) => Ok(()),
+            Err(..) => Err(GDEXError::FailedVerification),
         }
     }
 }
 
-/// Begin the testing suite for transactions
-#[cfg(test)]
-pub mod transaction_tests {
+/// Begin externally available testing functions
+#[cfg(any(test, feature = "testing"))]
+pub mod transaction_test_functions {
     use super::*;
+    use crate::{
+        account::AccountKeyPair,
+        crypto::{KeypairTraits, Signer},
+    };
 
-    use crate::{account_test_functions::generate_keypair_vec, AccountKeyPair};
-    use narwhal_crypto::traits::{KeyPair, Signer};
+    pub const PRIMARY_ASSET_ID: u64 = 0;
 
-    const PRIMARY_ASSET_ID: u64 = 0;
-
-    pub fn generate_signed_payment_transaction(
+    pub fn generate_signed_test_transaction(
         kp_sender: &AccountKeyPair,
         kp_receiver: &AccountKeyPair,
     ) -> SignedTransaction {
@@ -268,6 +274,15 @@ pub mod transaction_tests {
 
         SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest)
     }
+}
+
+/// Begin the testing suite for transactions
+#[cfg(test)]
+pub mod transaction_tests {
+    use super::transaction_test_functions::*;
+    use super::*;
+    use crate::account::account_test_functions::generate_keypair_vec;
+    use crate::crypto::{KeypairTraits, Signer};
 
     #[test]
     // test that transaction returns expected fields, validates a good signature, and has deterministic hashing
@@ -293,10 +308,10 @@ pub mod transaction_tests {
 
         // check that verification fails
         match verify_result {
-            Ok(_) => {
+            Ok(..) => {
                 panic!("An error is expected.");
             }
-            Err(SignedTransactionError::FailedVerification(_)) => { /* do nothing */ }
+            Err(GDEXError::FailedVerification) => { /* do nothing */ }
             _ => {
                 panic!("An unexpected error occurred.")
             }
@@ -308,7 +323,7 @@ pub mod transaction_tests {
     fn transaction_properties() {
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_payment_transaction(&kp_sender, &kp_receiver);
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
         let transaction = signed_transaction.get_transaction_payload();
         let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
 
@@ -347,7 +362,7 @@ pub mod transaction_tests {
     fn signed_payment_transaction() {
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_payment_transaction(&kp_sender, &kp_receiver);
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
 
         let payment = match signed_transaction.get_transaction_payload().get_variant() {
             TransactionVariant::PaymentTransaction(r) => r,
@@ -379,7 +394,7 @@ pub mod transaction_tests {
         let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest {});
 
         let transaction = Transaction::new(kp_sender.public().clone(), dummy_batch_digest, transaction_variant);
-        let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
+        let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
 
         let signed_transaction =
             SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest.clone());
@@ -400,7 +415,7 @@ pub mod transaction_tests {
     fn test_serialize_deserialize() {
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_payment_transaction(&kp_sender, &kp_receiver);
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
 
         // perform transaction checks
 

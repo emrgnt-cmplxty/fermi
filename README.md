@@ -27,6 +27,10 @@ Tests reside in suite/test, benchmarks reside in suite/benches
     # delete the suite/db.rocks before running to make a clean db
     rm -rf suite/db.rocks && cargo bench place_orders
 
+    # using command line tool
+    ./setup.sh
+    gdex generate_keypair
+
 
 # Overview 
 

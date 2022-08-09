@@ -2,17 +2,33 @@
 name = "gdex-types"
 version = "0.1.0"
 authors = []
-edition = "2018"
+edition = "2021"
 
 [dependencies]
-base64 = "0.13.0"
+anyhow = { version = "1.0.58", features = ["backtrace"] }
+async-trait = "0.1.57"
+base64ct = { version = "1.5.1", features = ["std", "alloc"] }
 bincode = "1.3.3"
 blake2 = "0.9"
+digest = "0.10.3"
+hex = "0.4.3"
+itertools = "0.10.3"
+multiaddr = "0.14.0"
 narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "crypto", features=["copy_key"]}
+narwhal-executor = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "executor" }
 narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "types" }
 rand = { version = "0.7.3" }
+rand_latest = { version = "0.8.5", package = "rand" }
+signature = "1.5.0"
+schemars = "0.8.10"
+sha3 = "0.10.2"
 serde = { version = "1.0.139", features = ["derive"] }
+serde_with = { version = "1.14.0", features = ["hex"] }
+sui-types = { git = "https://github.com/MystenLabs/sui", rev = "41a1798708717ed44f88fdd800bb95dae0209a4b", package = "sui-types" }
 thiserror = "1.0.31"
+tonic = "0.7"
+
+gdex-workspace-hack = { path = "../workspace-hack" }
 
 [features]
 testing = []

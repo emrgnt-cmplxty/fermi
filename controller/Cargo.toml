@@ -1,0 +1,15 @@
+[package]
+name = "gdex-controller"
+version = "0.1.0"
+authors = []
+edition = "2021"
+
+[dependencies]
+assert_approx_eq = "1.1.0"
+criterion = "0.3.4"
+rand = "0.7.0"
+serde = { version = "1.0.141", features = ["derive"] }
+
+gdex-engine = { path = "../engine" }
+gdex-types = { path = "../types", features=["testing"] }
+gdex-workspace-hack = { path = "../workspace-hack" }

@@ -21,6 +21,7 @@ impl ExecutionState for SimpleExecutionState {
         _execution_indices: ExecutionIndices,
         _transaction: Self::Transaction,
     ) -> Result<(Self::Outcome, Option<Committee>), Self::Error> {
+        debug!("transaction is being handled");
         Ok((Vec::default(), None))
     }
 
@@ -65,20 +66,20 @@ impl ExecutionStateError for SimpleExecutionError {
     }
 }
 
+use narwhal_crypto::traits::KeyPair;
+use narwhal_crypto::{ed25519::Ed25519KeyPair, Hash};
+use proc::bank::BankController;
+use std::{fmt, fmt::Display, path::Path, sync::Mutex};
 use store::{
     reopen,
     rocks::{open_cf, DBMap},
     Store,
 };
-use std::{fmt, fmt::Display, path::Path, sync::Mutex};
-use proc::bank::BankController;
-use narwhal_crypto::ed25519::{Ed25519KeyPair};
-use narwhal_crypto::traits::{KeyPair};
 pub type AccountKeyPair = Ed25519KeyPair;
 use futures::executor::block_on;
-use types::{GDEXSignedTransaction, TransactionVariant};
-use types::{ProcError};
 use rand::{rngs::StdRng, SeedableRng};
+use types::ProcError;
+use types::{GDEXSignedTransaction, TransactionVariant};
 
 #[async_trait]
 impl ExecutionStateError for AdvancedExecutionStateError {
@@ -103,6 +104,8 @@ impl Display for AdvancedExecutionStateError {
     }
 }
 
+use log::debug;
+
 /// A more advanced execution state for testing.
 pub struct AdvancedExecutionState {
     store: Store<u64, ExecutionIndices>,
@@ -122,12 +125,11 @@ impl ExecutionState for AdvancedExecutionState {
         execution_indices: ExecutionIndices,
         signed_transaction: Self::Transaction,
     ) -> Result<(Self::Outcome, Option<Committee>), Self::Error> {
+        println!("transaction is being handled");
         let transaction = signed_transaction.get_transaction_payload();
         let execution = match transaction.get_variant() {
             TransactionVariant::PaymentTransaction(payment) => {
-                self.store
-                    .write(Self::INDICES_ADDRESS, execution_indices)
-                    .await;
+                self.store.write(Self::INDICES_ADDRESS, execution_indices).await;
                 self.bank_controller.lock().unwrap().transfer(
                     transaction.get_sender(),
                     payment.get_receiver(),
@@ -176,8 +178,7 @@ impl AdvancedExecutionState {
         let bank_controller: Mutex<BankController> = Mutex::new(BankController::default());
 
         let mut rng = StdRng::from_seed([0; 32]);
-        let mut keys: Vec<AccountKeyPair> =
-            (0..4).map(|_| AccountKeyPair::generate(&mut rng)).collect();
+        let mut keys: Vec<AccountKeyPair> = (0..4).map(|_| AccountKeyPair::generate(&mut rng)).collect();
         let primary_manager = keys.pop().unwrap();
 
         bank_controller

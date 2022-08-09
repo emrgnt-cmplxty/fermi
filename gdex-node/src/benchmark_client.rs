@@ -5,6 +5,7 @@ use anyhow::{Context, Result};
 use bytes::{BufMut as _, BytesMut};
 use clap::{crate_name, crate_version, App, AppSettings};
 use futures::{future::join_all, StreamExt};
+use narwhal_types::{TransactionProto, TransactionsClient};
 use rand::Rng;
 use tokio::{
     net::TcpStream,
@@ -12,7 +13,6 @@ use tokio::{
 };
 use tracing::{info, subscriber::set_global_default, warn};
 use tracing_subscriber::filter::EnvFilter;
-use narwhal_types::{TransactionProto, TransactionsClient};
 use url::Url;
 
 #[tokio::main]
@@ -101,9 +101,7 @@ impl Client {
 
         // The transaction size must be at least 16 bytes to ensure all txs are different.
         if self.size < 9 {
-            return Err(anyhow::Error::msg(
-                "Transaction size must be at least 9 bytes",
-            ));
+            return Err(anyhow::Error::msg("Transaction size must be at least 9 bytes"));
         }
 
         // Connect to the mempool.

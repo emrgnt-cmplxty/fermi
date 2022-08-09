@@ -256,11 +256,7 @@ pub struct GDEXTransaction {
 }
 
 impl GDEXTransaction {
-    pub fn new(
-        sender: AccountPubKey,
-        recent_batch_digest: BatchDigest,
-        variant: TransactionVariant,
-    ) -> Self {
+    pub fn new(sender: AccountPubKey, recent_batch_digest: BatchDigest, variant: TransactionVariant) -> Self {
         GDEXTransaction {
             sender,
             recent_batch_digest,

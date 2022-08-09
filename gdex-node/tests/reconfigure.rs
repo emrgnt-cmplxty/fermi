@@ -2,14 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 use arc_swap::ArcSwap;
 use bytes::Bytes;
+use futures::future::join_all;
 use narwhal_config::{Committee, Parameters};
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::{traits::KeyPair as _, KeyPair, PublicKey};
 use narwhal_executor::{ExecutionIndices, ExecutionState, ExecutionStateError};
-use futures::future::join_all;
 use narwhal_network::{PrimaryToWorkerNetwork, ReliableNetwork, UnreliableNetwork, WorkerToPrimaryNetwork};
 use narwhal_node::{restarter::NodeRestarter, Node, NodeStorage};
 use narwhal_primary::PrimaryWorkerMessage;
+use narwhal_types::{ReconfigureNotification, TransactionProto, TransactionsClient, WorkerPrimaryMessage};
 use prometheus::Registry;
 use std::{
     fmt::Debug,
@@ -20,7 +21,6 @@ use tokio::{
     sync::mpsc::{channel, Receiver, Sender},
     time::{interval, sleep, Duration, MissedTickBehavior},
 };
-use narwhal_types::{ReconfigureNotification, TransactionProto, TransactionsClient, WorkerPrimaryMessage};
 
 /// A simple/dumb execution engine.
 struct SimpleExecutionState {
@@ -30,11 +30,7 @@ struct SimpleExecutionState {
 }
 
 impl SimpleExecutionState {
-    pub fn new(
-        index: usize,
-        committee: Committee,
-        tx_reconfigure: Sender<(KeyPair, Committee)>,
-    ) -> Self {
+    pub fn new(index: usize, committee: Committee, tx_reconfigure: Sender<(KeyPair, Committee)>) -> Self {
         Self {
             index,
             committee: Arc::new(Mutex::new(committee)),
@@ -74,10 +70,7 @@ impl ExecutionState for SimpleExecutionState {
                 .pop()
                 .unwrap();
             let new_committee = self.committee.lock().unwrap().clone();
-            self.tx_reconfigure
-                .send((keypair, new_committee))
-                .await
-                .unwrap();
+            self.tx_reconfigure.send((keypair, new_committee)).await.unwrap();
         }
 
         Ok((epoch, None))
@@ -170,11 +163,7 @@ async fn restart() {
         let (tx_output, rx_output) = channel(10);
         let (tx_node_reconfigure, rx_node_reconfigure) = channel(10);
 
-        let execution_state = Arc::new(SimpleExecutionState::new(
-            i,
-            committee.clone(),
-            tx_node_reconfigure,
-        ));
+        let execution_state = Arc::new(SimpleExecutionState::new(i, committee.clone(), tx_node_reconfigure));
         states.push(execution_state.clone());
 
         let committee = committee.clone();
@@ -207,9 +196,7 @@ async fn restart() {
 
         let name = keypair.public().clone();
         let committee = committee.clone();
-        tokio::spawn(
-            async move { run_client(name, committee.clone(), rx_client_reconfigure).await },
-        );
+        tokio::spawn(async move { run_client(name, committee.clone(), rx_client_reconfigure).await });
     }
 
     // Listen to the outputs.
@@ -252,11 +239,7 @@ async fn epoch_change() {
         let name = keypair.public().clone();
         let store = NodeStorage::reopen(test_utils::temp_dir());
 
-        let execution_state = Arc::new(SimpleExecutionState::new(
-            i,
-            committee.clone(),
-            tx_node_reconfigure,
-        ));
+        let execution_state = Arc::new(SimpleExecutionState::new(i, committee.clone(), tx_node_reconfigure));
         states.push(execution_state.clone());
 
         // Start a task that will broadcast the committee change signal.
@@ -270,9 +253,8 @@ async fn epoch_change() {
                     .primary(&name_clone)
                     .expect("Our key is not in the committee")
                     .primary_to_primary;
-                let message = WorkerPrimaryMessage::Reconfigure(
-                    ReconfigureNotification::NewCommittee(committee.clone()),
-                );
+                let message =
+                    WorkerPrimaryMessage::Reconfigure(ReconfigureNotification::NewCommittee(committee.clone()));
                 let primary_cancel_handle = primary_network.send(address, &message).await;
 
                 let addresses = committee
@@ -281,12 +263,9 @@ async fn epoch_change() {
                     .into_iter()
                     .map(|x| x.primary_to_worker)
                     .collect();
-                let message = PrimaryWorkerMessage::Reconfigure(
-                    ReconfigureNotification::NewCommittee(committee.clone()),
-                );
-                let worker_cancel_handles = worker_network
-                    .unreliable_broadcast(addresses, &message)
-                    .await;
+                let message =
+                    PrimaryWorkerMessage::Reconfigure(ReconfigureNotification::NewCommittee(committee.clone()));
+                let worker_cancel_handles = worker_network.unreliable_broadcast(addresses, &message).await;
 
                 // Ensure the message has been received.
                 primary_cancel_handle.await.unwrap();
@@ -330,9 +309,7 @@ async fn epoch_change() {
 
         let name = keypair.public().clone();
         let committee = committee.clone();
-        tokio::spawn(
-            async move { run_client(name, committee.clone(), rx_client_reconfigure).await },
-        );
+        tokio::spawn(async move { run_client(name, committee.clone(), rx_client_reconfigure).await });
     }
 
     // Listen to the outputs.

@@ -1,31 +1,27 @@
 // Copyright (c) 2021, Facebook, Inc. and its affiliates
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-#![warn(
-    future_incompatible,
-    nonstandard_style,
-    rust_2018_idioms,
-    rust_2021_compatibility
-)]
+#![warn(future_incompatible, nonstandard_style, rust_2018_idioms, rust_2021_compatibility)]
 
 use anyhow::{Context, Result};
 use arc_swap::ArcSwap;
 use clap::{crate_name, crate_version, App, AppSettings, ArgMatches, SubCommand};
+use futures::future::join_all;
 use narwhal_config::{Committee, Import, Parameters, WorkerId};
 use narwhal_crypto::{generate_production_keypair, traits::KeyPair as _, KeyPair};
 use narwhal_executor::{SerializedTransaction, SubscriberResult};
-use futures::future::join_all;
 use narwhal_node::{
     //execution_state::SimpleExecutionState,
     metrics::{primary_metrics_registry, start_prometheus_server, worker_metrics_registry},
-    Node, NodeStorage,
+    Node,
+    NodeStorage,
 };
 use std::sync::Arc;
 use tokio::sync::mpsc::{channel, Receiver};
 use tracing::info;
 
 // IMPORT BESPOKE EXECUTION STATE
-use gdex_node::execution_state::{SimpleExecutionState, AdvancedExecutionState};
+use gdex_node::execution_state::{AdvancedExecutionState, SimpleExecutionState};
 
 #[cfg(feature = "benchmark")]
 use tracing::subscriber::set_global_default;
@@ -54,9 +50,12 @@ async fn main() -> Result<()> {
                 .args_from_usage("--committee=<FILE> 'The file containing committee information'")
                 .args_from_usage("--parameters=[FILE] 'The file containing the node parameters'")
                 .args_from_usage("--store=<PATH> 'The path where to create the data store'")
-                .subcommand(SubCommand::with_name("primary")
-                    .about("Run a single primary")
-                    .args_from_usage("-d, --consensus-disabled 'Provide this flag to run a primary node without Tusk'")
+                .subcommand(
+                    SubCommand::with_name("primary")
+                        .about("Run a single primary")
+                        .args_from_usage(
+                            "-d, --consensus-disabled 'Provide this flag to run a primary node without Tusk'",
+                        ),
                 )
                 .subcommand(
                     SubCommand::with_name("worker")
@@ -136,6 +135,8 @@ async fn run(matches: &ArgMatches<'_>) -> Result<()> {
     let parameters_file = matches.value_of("parameters");
     let store_path = matches.value_of("store").unwrap();
 
+    log::debug!("DEBUGGER IS WORKING");
+
     // Read the committee and node's keypair from file.
     let keypair = KeyPair::import(key_file).context("Failed to load the node's keypair")?;
     let committee = Arc::new(ArcSwap::from_pointee(
@@ -144,9 +145,7 @@ async fn run(matches: &ArgMatches<'_>) -> Result<()> {
 
     // Load default parameters if none are specified.
     let parameters = match parameters_file {
-        Some(filename) => {
-            Parameters::import(filename).context("Failed to load the node's parameters")?
-        }
+        Some(filename) => Parameters::import(filename).context("Failed to load the node's parameters")?,
         None => Parameters::default(),
     };
 
@@ -154,8 +153,7 @@ async fn run(matches: &ArgMatches<'_>) -> Result<()> {
     let store = NodeStorage::reopen(store_path);
 
     // The channel returning the result for each transaction's execution.
-    let (tx_transaction_confirmation, rx_transaction_confirmation) =
-        channel(Node::CHANNEL_CAPACITY);
+    let (tx_transaction_confirmation, rx_transaction_confirmation) = channel(Node::CHANNEL_CAPACITY);
 
     let registry;
 
@@ -165,13 +163,16 @@ async fn run(matches: &ArgMatches<'_>) -> Result<()> {
         ("primary", Some(sub_matches)) => {
             registry = primary_metrics_registry(keypair.public().clone());
 
+            let r = AdvancedExecutionState::default();
+            log::debug!("THE ADVANCED EXECUTION STATE {r:?}");
+
             Node::spawn_primary(
                 keypair,
                 committee,
                 &store,
                 parameters.clone(),
                 /* consensus */ !sub_matches.is_present("consensus-disabled"),
-                /* execution_state */ Arc::new(AdvancedExecutionState::default()),
+                /* execution_state */ Arc::new(SimpleExecutionState::default()),
                 tx_transaction_confirmation,
                 &registry,
             )
@@ -203,10 +204,7 @@ async fn run(matches: &ArgMatches<'_>) -> Result<()> {
 
     // spin up prometheus server exporter
     let prom_address = parameters.prometheus_metrics.socket_addr;
-    info!(
-        "Starting Prometheus HTTP metrics endpoint at {}",
-        prom_address
-    );
+    info!("Starting Prometheus HTTP metrics endpoint at {}", prom_address);
     let _metrics_server_handle = start_prometheus_server(prom_address, &registry);
 
     // Analyze the consensus' output.

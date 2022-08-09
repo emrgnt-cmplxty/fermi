@@ -36,6 +36,7 @@ use tower_http::propagate_header::PropagateHeaderLayer;
 use tower_http::set_header::SetRequestHeaderLayer;
 use tower_http::trace::{DefaultMakeSpan, DefaultOnBodyChunk, DefaultOnEos, TraceLayer};
 
+/// Builds the server processes necessary for validator operations   
 pub struct ServerBuilder<M: MetricsCallbackProvider = DefaultMetricsCallbackProvider> {
     router: Router<WrapperService<M>>,
     health_reporter: tonic_health::server::HealthReporter,
@@ -66,6 +67,7 @@ type WrapperService<M> = Stack<
 >;
 
 impl<M: MetricsCallbackProvider> ServerBuilder<M> {
+    /// Creates a new server from a provided server config and returns an updated ServerBuilder
     pub fn from_config(config: &ServerConfig, metrics_provider: M) -> Self {
         let mut builder = tonic::transport::server::Server::builder();
 
@@ -130,6 +132,7 @@ impl<M: MetricsCallbackProvider> ServerBuilder<M> {
         }
     }
 
+    /// Returns a copy of the server health reporter
     pub fn health_reporter(&self) -> tonic_health::server::HealthReporter {
         self.health_reporter.clone()
     }
@@ -148,6 +151,7 @@ impl<M: MetricsCallbackProvider> ServerBuilder<M> {
         self
     }
 
+    /// Binds the server to a newly provided address
     pub async fn bind(self, addr: &Multiaddr) -> Result<Server> {
         let mut iter = addr.iter();
 
@@ -155,28 +159,28 @@ impl<M: MetricsCallbackProvider> ServerBuilder<M> {
         let rx_cancellation = rx_cancellation.map(|_| ());
         let (local_addr, server): (Multiaddr, BoxFuture<(), tonic::transport::Error>) =
             match iter.next().ok_or_else(|| anyhow!("malformed addr"))? {
-                Protocol::Dns(_) => {
+                Protocol::Dns(..) => {
                     let (dns_name, tcp_port, _http_or_https) = parse_dns(addr)?;
                     let (local_addr, incoming) =
                         tcp_listener_and_update_multiaddr(addr, (dns_name.as_ref(), tcp_port)).await?;
                     let server = Box::pin(self.router.serve_with_incoming_shutdown(incoming, rx_cancellation));
                     (local_addr, server)
                 }
-                Protocol::Ip4(_) => {
+                Protocol::Ip4(..) => {
                     let (socket_addr, _http_or_https) = parse_ip4(addr)?;
                     let (local_addr, incoming) = tcp_listener_and_update_multiaddr(addr, socket_addr).await?;
                     let server = Box::pin(self.router.serve_with_incoming_shutdown(incoming, rx_cancellation));
                     (local_addr, server)
                 }
-                Protocol::Ip6(_) => {
+                Protocol::Ip6(..) => {
                     let (socket_addr, _http_or_https) = parse_ip6(addr)?;
                     let (local_addr, incoming) = tcp_listener_and_update_multiaddr(addr, socket_addr).await?;
                     let server = Box::pin(self.router.serve_with_incoming_shutdown(incoming, rx_cancellation));
                     (local_addr, server)
                 }
-                // Protocol::Memory(_) => todo!(),
+                // Protocol::Memory(..) => todo!(),
                 #[cfg(unix)]
-                Protocol::Unix(_) => {
+                Protocol::Unix(..) => {
                     let (path, _http_or_https) = crate::multiaddr::parse_unix(addr)?;
                     let uds = tokio::net::UnixListener::bind(path.as_ref())?;
                     let uds_stream = tokio_stream::wrappers::UnixListenerStream::new(uds);
@@ -196,6 +200,7 @@ impl<M: MetricsCallbackProvider> ServerBuilder<M> {
     }
 }
 
+/// Reurns a tcp listener and updates the server to point to passed address
 async fn tcp_listener_and_update_multiaddr<T: ToSocketAddrs>(
     address: &Multiaddr,
     socket_addr: T,
@@ -205,6 +210,7 @@ async fn tcp_listener_and_update_multiaddr<T: ToSocketAddrs>(
     Ok((local_addr, incoming))
 }
 
+/// Reurns a tcp listener to the given address
 async fn tcp_listener<T: ToSocketAddrs>(address: T) -> Result<(SocketAddr, TcpListenerStream)> {
     let listener = TcpListener::bind(address).await?;
     let local_addr = listener.local_addr()?;
@@ -212,6 +218,7 @@ async fn tcp_listener<T: ToSocketAddrs>(address: T) -> Result<(SocketAddr, TcpLi
     Ok((local_addr, incoming))
 }
 
+/// A tonic server with helper handles 
 pub struct Server {
     server: BoxFuture<(), tonic::transport::Error>,
     cancel_handle: Option<tokio::sync::oneshot::Sender<()>>,
@@ -220,6 +227,7 @@ pub struct Server {
 }
 
 impl Server {
+    /// Start the server 
     pub async fn serve(self) -> Result<(), tonic::transport::Error> {
         self.server.await
     }
@@ -237,9 +245,10 @@ impl Server {
     }
 }
 
+/// Updates the server to point to passed address
 fn update_tcp_port_in_multiaddr(addr: &Multiaddr, port: u16) -> Multiaddr {
     addr.replace(1, |protocol| {
-        if let Protocol::Tcp(_) = protocol {
+        if let Protocol::Tcp(..) = protocol {
             Some(Protocol::Tcp(port))
         } else {
             panic!("expected tcp protocol at index 1");

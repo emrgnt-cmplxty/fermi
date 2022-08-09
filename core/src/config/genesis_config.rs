@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use tracing::info;
 
+/// Created in the genesis ceremony and specifies the parameters for the initial committee
 #[derive(Serialize, Deserialize)]
 pub struct GenesisConfig {
     pub validator_genesis_info: Option<Vec<ValidatorGenesisInfo>>,
@@ -24,6 +25,7 @@ pub struct GenesisConfig {
 
 impl Config for GenesisConfig {}
 
+/// Specifies the validator info at genesis
 #[serde_as]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ValidatorGenesisInfo {
@@ -69,9 +71,7 @@ impl GenesisConfig {
             ..Default::default()
         }
     }
-}
 
-impl GenesisConfig {
     pub fn generate_accounts<R: ::rand::RngCore + ::rand::CryptoRng>(&self, mut rng: R) -> Result<Vec<AccountKeyPair>> {
         let mut addresses = Vec::new();
 

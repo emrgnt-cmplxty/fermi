@@ -137,7 +137,7 @@ impl<T> OrderQueue<T> {
 
     pub fn cancel(&mut self, id: u64) -> bool {
         match self.orders.remove(&id) {
-            Some(_) => {
+            Some(..) => {
                 self.clean_check();
                 true
             }

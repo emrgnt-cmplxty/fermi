@@ -68,7 +68,7 @@ macro_rules! fp_ensure {
 macro_rules! exit_main {
     ($result:expr) => {
         match $result {
-            Ok(_) => (),
+            Ok(..) => (),
             Err(err) => {
                 println!("{}", err.to_string().bold().red());
                 std::process::exit(1);

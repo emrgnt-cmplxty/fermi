@@ -7,12 +7,12 @@ use narwhal_config::Parameters as ConsensusParameters;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
+/// Configuration file for consensus which is created at genesis
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct ConsensusConfig {
     pub consensus_address: Multiaddr,
     pub consensus_db_path: PathBuf,
-
     pub narwhal_config: ConsensusParameters,
 }
 

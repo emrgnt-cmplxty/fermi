@@ -173,7 +173,7 @@ impl Committee {
 
     pub fn weight(&self, author: &ValidatorName) -> StakeUnit {
         match self.voting_rights.binary_search_by_key(author, |(a, _)| *a) {
-            Err(_) => 0,
+            Err(..) => 0,
             Ok(idx) => self.voting_rights[idx].1,
         }
     }

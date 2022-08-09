@@ -9,6 +9,7 @@ use serde::Serialize;
 use std::path::PathBuf;
 use std::time::Duration;
 
+/// Configuration file for network gateway which is created at genesis
 #[derive(Serialize, Deserialize)]
 pub struct GatewayConfig {
     pub epoch: EpochId,

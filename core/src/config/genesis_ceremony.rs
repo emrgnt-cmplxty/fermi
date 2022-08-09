@@ -7,8 +7,8 @@ use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Parser;
 use gdex_proc::master::MasterController;
-use gdex_types::account::{AccountPubKey, ValidatorKeyPair, ValidatorPubKey, ValidatorPubKeyBytes, ValidatorSignature};
 use gdex_types::{
+    account::{AccountPubKey, ValidatorKeyPair, ValidatorPubKey, ValidatorPubKeyBytes, ValidatorSignature},
     asset::PRIMARY_ASSET_ID,
     crypto::{KeypairTraits, Signer, ToFromBytes, Verifier},
     node::ValidatorInfo,
@@ -21,6 +21,7 @@ pub const GENESIS_FILENAME: &str = "genesis.blob";
 const GENESIS_BUILDER_SIGNATURE_DIR: &str = "signatures";
 const VALIDATOR_FUNDING_AMOUNT: u64 = 1_000_000;
 
+/// The genesis ceremony creates the genesis configuration file for the network
 #[derive(Parser)]
 pub struct Ceremony {
     #[clap(value_parser, long)]
@@ -36,6 +37,8 @@ impl Ceremony {
     }
 }
 
+/// The command actions which facilitate the genesis process
+/// the commands are input from the command line
 #[derive(Parser)]
 pub enum CeremonyCommand {
     Init,
@@ -71,6 +74,7 @@ pub enum CeremonyCommand {
     Finalize,
 }
 
+/// Running the command induces a genesis action
 pub fn run(cmd: Ceremony) -> Result<()> {
     let dir = if let Some(path) = cmd.path {
         path
@@ -80,11 +84,13 @@ pub fn run(cmd: Ceremony) -> Result<()> {
     let dir = Utf8PathBuf::try_from(dir)?;
 
     match cmd.command {
+        // initialize the genesis process
         CeremonyCommand::Init => {
             let builder = Builder::new();
             builder.save(dir)?;
         }
 
+        // add a validator to the genesis config
         CeremonyCommand::AddValidator {
             name,
             key_file,
@@ -112,6 +118,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             builder.save(dir)?;
         }
 
+        // add the order book controllers
         CeremonyCommand::AddControllers => {
             let builder = Builder::load(&dir)?;
 
@@ -143,6 +150,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             builder.set_master_controller(master_controller).save(dir)?;
         }
 
+        // build the genesis config
         CeremonyCommand::Build => {
             let builder = Builder::load(&dir)?;
 
@@ -151,6 +159,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             genesis.save(dir.join(GENESIS_FILENAME))?;
         }
 
+        // participate in the ceremony by verifying and signing the proposed binary
         CeremonyCommand::VerifyAndSign { key_file } => {
             let keypair: ValidatorKeyPair = utils::read_keypair_from_file(key_file)?;
             let loaded_genesis = Genesis::load(dir.join(GENESIS_FILENAME))?;
@@ -185,6 +194,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             fs::write(signature_dir.join(hex_name), signature)?;
         }
 
+        // finalize the genesis ceremony
         CeremonyCommand::Finalize => {
             let genesis = Genesis::load(dir.join(GENESIS_FILENAME))?;
             let genesis_bytes = genesis.to_bytes();

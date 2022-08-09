@@ -54,11 +54,11 @@ class LocalBench:
             # Recompile the latest code.
             cmd = CommandMaker.compile(mem_profiling=self.mem_profile)
             Print.info(f"About to run {cmd}...")
-            #import pdb; pdb.set_trace()
             subprocess.run(cmd, check=True, cwd=PathMaker.node_crate_path())
 
             # Create alias for the client and nodes binary.
             cmd = CommandMaker.alias_binaries(PathMaker.binary_path())
+            print(cmd)
             subprocess.run([cmd], shell=True)
 
             # Generate configuration files.

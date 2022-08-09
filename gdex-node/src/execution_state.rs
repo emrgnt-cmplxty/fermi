@@ -9,8 +9,6 @@ use thiserror::Error;
 /// A simple/dumb execution engine.
 pub struct SimpleExecutionState;
 
-use log::debug;
-
 #[async_trait]
 impl ExecutionState for SimpleExecutionState {
     type Transaction = String;
@@ -23,7 +21,6 @@ impl ExecutionState for SimpleExecutionState {
         _execution_indices: ExecutionIndices,
         _transaction: Self::Transaction,
     ) -> Result<(Self::Outcome, Option<Committee>), Self::Error> {
-        debug!("handling transaction {_transaction:?}");
         Ok((Vec::default(), None))
     }
 
@@ -126,7 +123,6 @@ impl ExecutionState for AdvancedExecutionState {
         signed_transaction: Self::Transaction,
     ) -> Result<(Self::Outcome, Option<Committee>), Self::Error> {
         let transaction = signed_transaction.get_transaction_payload();
-        debug!("handling transaction {transaction:?}");
         let execution = match transaction.get_variant() {
             TransactionVariant::PaymentTransaction(payment) => {
                 self.store.write(Self::INDICES_ADDRESS, execution_indices).await;

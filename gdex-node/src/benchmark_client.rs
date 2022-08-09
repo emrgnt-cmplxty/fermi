@@ -4,16 +4,78 @@
 use anyhow::{Context, Result};
 use bytes::{BufMut as _, BytesMut};
 use clap::{crate_name, crate_version, App, AppSettings};
+use narwhal_crypto::{
+    traits::{KeyPair, Signer},
+    Hash, DIGEST_LEN,
+};
 use futures::{future::join_all, StreamExt};
-use narwhal_types::{TransactionProto, TransactionsClient};
-use rand::Rng;
+use rand::{rngs::StdRng, Rng, SeedableRng};
 use tokio::{
     net::TcpStream,
     time::{interval, sleep, Duration, Instant},
 };
 use tracing::{info, subscriber::set_global_default, warn};
 use tracing_subscriber::filter::EnvFilter;
+use types::{
+    AccountKeyPair, GDEXSignedTransaction, GDEXTransaction, PaymentRequest, TransactionVariant
+};
+use narwhal_types::{
+    BatchDigest, TransactionProto, TransactionsClient
+};
 use url::Url;
+const PRIMARY_ASSET_ID: u64 = 0;
+
+fn keys(seed: [u8; 32]) -> Vec<AccountKeyPair> {
+    let mut rng = StdRng::from_seed(seed);
+    (0..4).map(|_| AccountKeyPair::generate(&mut rng)).collect()
+}
+
+fn create_signed_padded_transaction(
+    kp_sender: &AccountKeyPair,
+    kp_receiver: &AccountKeyPair,
+    amount: u64,
+    transmission_size: usize,
+    is_advanced_execution: bool,
+) -> Vec<u8> {
+    if is_advanced_execution {
+        // use a dummy batch digest for initial benchmarking
+        let dummy_batch_digest = BatchDigest::new([0; DIGEST_LEN]);
+
+        let transaction_variant = TransactionVariant::PaymentTransaction(PaymentRequest::new(
+            kp_receiver.public().clone(),
+            PRIMARY_ASSET_ID,
+            amount,
+        ));
+        let transaction = GDEXTransaction::new(
+            kp_sender.public().clone(),
+            dummy_batch_digest,
+            transaction_variant,
+        );
+
+        // sign digest and create signed transaction
+        let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
+        let signed_transaction = GDEXSignedTransaction::new(
+            kp_sender.public().clone(),
+            transaction.clone(),
+            signed_digest,
+        );
+
+        // serialize and resize the transaction for channel distribution
+        let mut padded_signed_transaction = signed_transaction.serialize().unwrap();
+        assert!(
+            padded_signed_transaction.len() <= transmission_size,
+            "please resize to a larger expected byte length"
+        );
+        padded_signed_transaction.resize(transmission_size, 0);
+        padded_signed_transaction
+    } else {
+        let mut tx = BytesMut::with_capacity(transmission_size);
+        tx.put_u8(0u8); // Sample txs start with 0.
+        tx.put_u64(amount); // This counter identifies the tx.
+        tx.resize(transmission_size, 0u8);
+        tx.into()
+    }
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -23,6 +85,7 @@ async fn main() -> Result<()> {
         .args_from_usage("<ADDR> 'The network address of the node where to send txs'")
         .args_from_usage("--size=<INT> 'The size of each transaction in bytes'")
         .args_from_usage("--rate=<INT> 'The rate (txs/s) at which to send the transactions'")
+        .args_from_usage("--execution=<EXECUTION> 'The rate (txs/s) at which to send the transactions'")
         .args_from_usage("--nodes=[ADDR]... 'Network addresses that must be reachable before starting the benchmark.'")
         .setting(AppSettings::ArgRequiredElseHelp)
         .get_matches();
@@ -64,6 +127,8 @@ async fn main() -> Result<()> {
         .map(|x| x.parse::<Url>())
         .collect::<Result<Vec<_>, _>>()
         .with_context(|| format!("Invalid url format {target_str}"))?;
+    let is_advanced_execution: bool =
+        matches.value_of("execution").unwrap_or("advanced") == "advanced";
 
     info!("Node address: {target}");
 
@@ -78,6 +143,7 @@ async fn main() -> Result<()> {
         size,
         rate,
         nodes,
+        is_advanced_execution,
     };
 
     // Wait for all nodes to be online and synchronized.
@@ -87,11 +153,13 @@ async fn main() -> Result<()> {
     client.send().await.context("Failed to submit transactions")
 }
 
+/// TODO - add do_real_transaction as boolean field on client
 struct Client {
     target: Url,
     size: usize,
     rate: u64,
     nodes: Vec<Url>,
+    is_advanced_execution: bool,
 }
 
 impl Client {
@@ -101,7 +169,9 @@ impl Client {
 
         // The transaction size must be at least 16 bytes to ensure all txs are different.
         if self.size < 9 {
-            return Err(anyhow::Error::msg("Transaction size must be at least 9 bytes"));
+            return Err(anyhow::Error::msg(
+                "Transaction size must be at least 9 bytes",
+            ));
         }
 
         // Connect to the mempool.
@@ -112,7 +182,9 @@ impl Client {
         // Submit all transactions.
         let burst = self.rate / PRECISION;
         let mut counter = 0;
-        let mut r = rand::thread_rng().gen();
+        // select a number from a range that is gaurenteed to be larger than the size of transactions submitted
+        // but, not so large that we can exhaust the primary senders balance
+        let mut r = rand::thread_rng().gen_range(self.size as u64, (2 * self.size) as u64);
         let interval = interval(Duration::from_millis(BURST_DURATION));
         tokio::pin!(interval);
 
@@ -123,24 +195,37 @@ impl Client {
             interval.as_mut().tick().await;
             let now = Instant::now();
 
-            let mut tx = BytesMut::with_capacity(self.size);
+            // generate the keypairs
+            // note that seed [0; 32] is also fed into the Executor where the BankController state is initiated
+            // this means that as long as this keypair is the sender on all transactions there will sufficient balance
+            let kp_sender = keys([0; 32]).pop().unwrap();
+            let kp_receiver = keys([1; 32]).pop().unwrap();
+
+            // copy into a new variablet o avoid we get lifetime errors in the stream
             let size = self.size;
+            let is_advanced_execution = self.is_advanced_execution;
+
             let stream = tokio_stream::iter(0..burst).map(move |x| {
-                if x == counter % burst {
+                let amount = if x == counter % burst {
                     // NOTE: This log entry is used to compute performance.
                     info!("Sending sample transaction {counter}");
-
-                    tx.put_u8(0u8); // Sample txs start with 0.
-                    tx.put_u64(counter); // This counter identifies the tx.
+                    counter
                 } else {
                     r += 1;
-                    tx.put_u8(1u8); // Standard txs start with 1.
-                    tx.put_u64(r); // Ensures all clients send different txs.
+                    r
                 };
 
-                tx.resize(size, 0u8);
-                let bytes = tx.split().freeze();
-                TransactionProto { transaction: bytes }
+                let signed_tranasction = create_signed_padded_transaction(
+                    &kp_sender,
+                    &kp_receiver,
+                    amount,
+                    /* transmission_size */ size,
+                    /* is_advanced_execution */ is_advanced_execution,
+                );
+
+                TransactionProto {
+                    transaction: signed_tranasction.into(),
+                }
             });
 
             if let Err(e) = client.submit_transaction_stream(stream).await {

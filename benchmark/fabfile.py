@@ -46,7 +46,8 @@ def local(ctx, debug=True):
         'max_concurrent_requests': 500_000,
         'prometheus_metrics': {
             "socket_addr": "127.0.0.1:0"
-        }
+        },
+        'execution': 'advanced'
     }
     try:
         ret = LocalBench(bench_params, node_params).run(debug)

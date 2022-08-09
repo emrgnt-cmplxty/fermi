@@ -84,6 +84,7 @@ class LocalBench:
                         address,
                         self.tx_size,
                         rate_share,
+                        self.node_parameters.json['execution'],
                         [x for y in workers_addresses for _, x in y]
                     )
                     print(cmd)
@@ -97,6 +98,7 @@ class LocalBench:
                     PathMaker.committee_file(),
                     PathMaker.db_path(i),
                     PathMaker.parameters_file(),
+                    self.node_parameters.json['execution'],
                     debug=debug
                 )
                 print(cmd)
@@ -111,6 +113,7 @@ class LocalBench:
                         PathMaker.committee_file(),
                         PathMaker.db_path(i, id),
                         PathMaker.parameters_file(),
+                        self.node_parameters.json['execution'],
                         id,  # The worker's id.
                         debug=debug
                     )

@@ -22,7 +22,7 @@ class CommandMaker:
             params = ["--profile", "bench-profiling", "--features", "benchmark dhat-heap"]
         else:
             params = ["--release", "--features", "benchmark"]
-        return ["cargo", "build", "--quiet"] + params
+        return ["cargo", "build"] + params
 
     @staticmethod
     def generate_key(filename):
@@ -30,14 +30,15 @@ class CommandMaker:
         return f'./gdex-node generate_keys --filename {filename}'
 
     @staticmethod
-    def run_primary(keys, committee, store, parameters, debug=False):
+    def run_primary(keys, committee, store, parameters, execution, debug=False):
         assert isinstance(keys, str)
         assert isinstance(committee, str)
         assert isinstance(parameters, str)
+        assert isinstance(execution, str)
         assert isinstance(debug, bool)
         v = '-vvv' if debug else '-vv'
         return (f'./gdex-node {v} run --keys {keys} --committee {committee} '
-                f'--store {store} --parameters {parameters} primary')
+                f'--store {store} --parameters {parameters} --execution {execution} primary')
 
     @staticmethod
     def run_no_consensus_primary(keys, committee, store, parameters, debug=False):
@@ -50,24 +51,26 @@ class CommandMaker:
                 f'--store {store} --parameters {parameters} primary --consensus-disabled')
 
     @staticmethod
-    def run_worker(keys, committee, store, parameters, id, debug=False):
+    def run_worker(keys, committee, store, parameters, execution, id, debug=False):
         assert isinstance(keys, str)
         assert isinstance(committee, str)
         assert isinstance(parameters, str)
+        assert isinstance(execution, str)
         assert isinstance(debug, bool)
         v = '-vvv' if debug else '-vv'
         return (f'./gdex-node {v} run --keys {keys} --committee {committee} '
-                f'--store {store} --parameters {parameters} worker --id {id}')
+                f'--store {store} --parameters {parameters} --execution {execution} worker --id {id}')
 
     @staticmethod
-    def run_client(address, size, rate, nodes):
+    def run_client(address, size, rate, execution, nodes):
         assert isinstance(address, str)
         assert isinstance(size, int) and size > 0
         assert isinstance(rate, int) and rate >= 0
+        assert isinstance(execution, str)
         assert isinstance(nodes, list)
         assert all(isinstance(x, str) for x in nodes)
         nodes = f'--nodes {" ".join(nodes)}' if nodes else ''
-        return f'./benchmark_client {address} --size {size} --rate {rate} {nodes}'
+        return f'./benchmark_client {address} --size {size} --rate {rate} --execution {execution} {nodes}'
 
     @staticmethod
     def alias_demo_binaries(origin):

@@ -13,7 +13,7 @@ const DEFAULT_SEND_TIMEOUT: u64 = 4000000;
 const DEFAULT_RECEIVE_TIMEOUT: u64 = 4000000;
 const DEFAULT_BUFFER_SIZE: usize = 650000;
 
-/// Configuration file for network gateway which is created at genesis
+/// Configures the network gateway for the local validator
 #[derive(Serialize, Deserialize)]
 pub struct GatewayConfig {
     /// Latest epoch of consensus

@@ -5,7 +5,7 @@
 use crate::{
     config::{
         consensus::ConsensusConfig,
-        genesis_config::{GenesisConfig, ValidatorGenesisInfo},
+        genesis::{GenesisConfig, ValidatorGenesisInfo},
         network::NetworkConfig,
         node::NodeConfig,
         {AUTHORITIES_DB_NAME, CONSENSUS_DB_NAME, DEFAULT_STAKE},
@@ -26,7 +26,7 @@ use std::{
 };
 
 /// A config builder class which is used in the genesis process to generate a NetworkConfig
-pub struct ConfigBuilder<R = OsRng> {
+pub struct NetworkConfigBuilder<R = OsRng> {
     /// Associated random number generator
     rng: R,
     /// Directory of created config
@@ -39,7 +39,7 @@ pub struct ConfigBuilder<R = OsRng> {
     initial_accounts_config: Option<GenesisConfig>,
 }
 
-impl ConfigBuilder {
+impl NetworkConfigBuilder {
     pub fn new<P: AsRef<Path>>(config_directory: P) -> Self {
         Self {
             rng: OsRng,
@@ -51,7 +51,7 @@ impl ConfigBuilder {
     }
 }
 
-impl<R> ConfigBuilder<R> {
+impl<R> NetworkConfigBuilder<R> {
     /// Set the randomize the ports and return a new object
     pub fn randomize_ports(mut self, randomize_ports: bool) -> Self {
         self.randomize_ports = randomize_ports;
@@ -71,8 +71,8 @@ impl<R> ConfigBuilder<R> {
     }
 
     /// Set the rng and return a new object
-    pub fn rng<N: ::rand::RngCore + ::rand::CryptoRng>(self, rng: N) -> ConfigBuilder<N> {
-        ConfigBuilder {
+    pub fn rng<N: ::rand::RngCore + ::rand::CryptoRng>(self, rng: N) -> NetworkConfigBuilder<N> {
+        NetworkConfigBuilder {
             rng,
             config_directory: self.config_directory,
             randomize_ports: self.randomize_ports,
@@ -82,7 +82,7 @@ impl<R> ConfigBuilder<R> {
     }
 }
 
-impl<R: ::rand::RngCore + ::rand::CryptoRng> ConfigBuilder<R> {
+impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
     //TODO right now we always randomize ports, we may want to have a default port configuration
     /// Build a config with random validator inputs the networking ports
     /// are randomly selected via utils::new_network_address

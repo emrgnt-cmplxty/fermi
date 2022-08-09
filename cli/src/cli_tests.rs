@@ -119,14 +119,16 @@ mod cli_tests {
 
     #[should_panic]
     #[tokio::test]
-    async fn genesis_no_config() {
-        let temp_dir = tempfile::tempdir().unwrap();
-        let working_dir = temp_dir.path();
-        let config = working_dir.join(GDEX_NETWORK_CONFIG);
-
-        // Start network without authorities
-        let start = GDEXCommand::Start { config: Some(config) }.execute().await;
-        assert!(matches!(start, Err(..))); // Genesis
+    async fn repeat_genesis_no_force() {
+        GDEXCommand::Genesis {
+            working_dir: None,
+            write_config: None,
+            force: false,
+            from_config: None,
+        }
+        .execute()
+        .await
+        .unwrap();
         GDEXCommand::Genesis {
             working_dir: None,
             write_config: None,

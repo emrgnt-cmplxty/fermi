@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use tracing::info;
 
-/// Created in the genesis ceremony and specifies the parameters for the initial committee
+/// Configures the validator information for the initial committee of the blockchain
 #[derive(Serialize, Deserialize)]
 pub struct GenesisConfig {
     /// Validator info for genesis committee

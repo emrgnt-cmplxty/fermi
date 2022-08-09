@@ -5,7 +5,7 @@
 use super::genesis::Genesis;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
-use gdex_proc::master::MasterController;
+use gdex_controller::master::MasterController;
 use gdex_types::{
     account::ValidatorKeyPair,
     committee::{Committee, ValidatorName},
@@ -109,7 +109,7 @@ impl ValidatorState {
 #[cfg(test)]
 mod test_validator {
     use super::*;
-    use crate::{config::genesis_ceremony::VALIDATOR_FUNDING_AMOUNT, validator::genesis::Builder};
+    use crate::{genesis_ceremony::VALIDATOR_FUNDING_AMOUNT, validator::genesis::Builder};
     use gdex_types::{
         account::ValidatorPubKeyBytes,
         crypto::{get_key_pair_from_rng, KeypairTraits},

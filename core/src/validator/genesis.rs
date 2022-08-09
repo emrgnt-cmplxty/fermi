@@ -4,7 +4,7 @@
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/genesis.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 use anyhow::{bail, Context, Result};
 use camino::Utf8Path;
-use gdex_proc::master::MasterController;
+use gdex_controller::master::MasterController;
 use gdex_types::{
     account::ValidatorPubKeyBytes,
     committee::{Committee, EpochId},
@@ -275,7 +275,7 @@ const GENESIS_BUILDER_COMMITTEE_DIR: &str = "committee";
 #[cfg(test)]
 mod genesis_test {
     use super::*;
-    use crate::config::genesis_config::GenesisConfig;
+    use crate::{config::genesis::GenesisConfig, genesis_ceremony::VALIDATOR_FUNDING_AMOUNT};
     use gdex_types::{
         account::ValidatorKeyPair,
         crypto::{get_key_pair_from_rng, KeypairTraits},
@@ -304,7 +304,7 @@ mod genesis_test {
         let validator = ValidatorInfo {
             name: "0".into(),
             public_key: key.public().into(),
-            stake: crate::config::genesis_ceremony::VALIDATOR_FUNDING_AMOUNT,
+            stake: VALIDATOR_FUNDING_AMOUNT,
             delegation: 0,
             network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),

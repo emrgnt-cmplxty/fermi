@@ -4,7 +4,7 @@
 //!
 #[cfg(test)]
 pub mod proc_tests {
-    use gdex_proc::{
+    use gdex_controller::{
         bank::{BankController, CREATED_ASSET_BALANCE},
         spot::OrderbookInterface,
     };

@@ -1,6 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
+use gdex_controller::{bank::BankController, spot::OrderbookInterface};
 use gdex_engine::{order_book::Orderbook, orders::new_limit_order_request};
-use gdex_proc::{bank::BankController, spot::OrderbookInterface};
 use gdex_types::transaction::OrderRequest;
 use gdex_types::{
     account::{account_test_functions::generate_keypair_vec, AccountPubKey},

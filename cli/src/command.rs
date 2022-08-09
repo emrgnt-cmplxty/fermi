@@ -3,16 +3,18 @@
 //! SPDX-License-Identifier: Apache-2.0
 use anyhow::{anyhow, bail};
 use clap::Parser;
-use gdex_core::builder::network_config::ConfigBuilder;
-use gdex_core::config::{
-    gateway::GatewayConfig,
-    gdex_config_dir,
+use gdex_core::{
+    builder::network_config::NetworkConfigBuilder,
+    config::{
+        gateway::GatewayConfig,
+        gdex_config_dir,
+        genesis::GenesisConfig,
+        network::NetworkConfig,
+        node::{default_json_rpc_address, default_websocket_address},
+        Config, PersistedConfig, GDEX_CLIENT_CONFIG, GDEX_FULLNODE_CONFIG, GDEX_GATEWAY_CONFIG, GDEX_GENESIS_FILENAME,
+        GDEX_KEYSTORE_FILENAME, GDEX_NETWORK_CONFIG,
+    },
     genesis_ceremony::{run, Ceremony},
-    genesis_config::GenesisConfig,
-    network::NetworkConfig,
-    node::{default_json_rpc_address, default_websocket_address},
-    Config, PersistedConfig, GDEX_CLIENT_CONFIG, GDEX_FULLNODE_CONFIG, GDEX_GATEWAY_CONFIG, GDEX_GENESIS_FILENAME,
-    GDEX_KEYSTORE_FILENAME, GDEX_NETWORK_CONFIG,
 };
 use gdex_types::{
     account::AccountKeyPair,
@@ -154,11 +156,11 @@ impl GDEXCommand {
 
                 let validator_info = genesis_conf.validator_genesis_info.take();
                 let mut network_config = if let Some(validators) = validator_info {
-                    ConfigBuilder::new(gdex_config_dir)
+                    NetworkConfigBuilder::new(gdex_config_dir)
                         .initial_accounts_config(genesis_conf)
                         .build_with_validators(validators)
                 } else {
-                    ConfigBuilder::new(gdex_config_dir)
+                    NetworkConfigBuilder::new(gdex_config_dir)
                         .committee_size(NonZeroUsize::new(genesis_conf.committee_size).unwrap())
                         .initial_accounts_config(genesis_conf)
                         .build()

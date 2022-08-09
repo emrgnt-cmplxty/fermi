@@ -2238,6 +2238,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "gdex-controller"
+version = "0.1.0"
+dependencies = [
+ "assert_approx_eq",
+ "criterion",
+ "gdex-engine",
+ "gdex-types",
+ "gdex-workspace-hack",
+ "rand 0.7.3",
+ "serde 1.0.142",
+]
+
+[[package]]
 name = "gdex-core"
 version = "0.1.0"
 dependencies = [
@@ -2253,7 +2266,7 @@ dependencies = [
  "dirs",
  "executor",
  "futures",
- "gdex-proc",
+ "gdex-controller",
  "gdex-server",
  "gdex-types",
  "gdex-workspace-hack",
@@ -2288,19 +2301,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gdex-proc"
-version = "0.1.0"
-dependencies = [
- "assert_approx_eq",
- "criterion",
- "gdex-engine",
- "gdex-types",
- "gdex-workspace-hack",
- "rand 0.7.3",
- "serde 1.0.142",
-]
-
-[[package]]
 name = "gdex-server"
 version = "0.0.0"
 dependencies = [
@@ -2330,8 +2330,8 @@ dependencies = [
  "assert_approx_eq",
  "bcs",
  "criterion",
+ "gdex-controller",
  "gdex-engine",
- "gdex-proc",
  "gdex-types",
  "gdex-workspace-hack",
  "rand 0.7.3",

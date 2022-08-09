@@ -50,8 +50,8 @@ impl ValidatorServerHandle {
 pub struct ValidatorServer {
     address: Multiaddr,
     pub state: Arc<ValidatorState>,
-    min_batch_size: u64,
-    max_delay: Duration,
+    pub min_batch_size: u64,
+    pub max_delay: Duration,
 }
 
 impl ValidatorServer {

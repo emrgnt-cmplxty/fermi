@@ -7,7 +7,7 @@ use narwhal_config::Parameters as ConsensusParameters;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
-/// Configuration file for consensus which is created at genesis
+/// Configures the local validators consensus participation
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct ConsensusConfig {

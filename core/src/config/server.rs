@@ -5,7 +5,7 @@
 use crate::{
     builder::server::ServerBuilder,
     client::{connect_lazy_with_config, connect_with_config},
-    metrics::{DefaultMetricsCallbackProvider, MetricsCallbackProvider}
+    metrics::{DefaultMetricsCallbackProvider, MetricsCallbackProvider},
 };
 use anyhow::Result;
 use multiaddr::Multiaddr;

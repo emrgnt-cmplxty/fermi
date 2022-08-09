@@ -34,7 +34,7 @@ use tower_http::propagate_header::PropagateHeaderLayer;
 use tower_http::set_header::SetRequestHeaderLayer;
 use tower_http::trace::{DefaultMakeSpan, DefaultOnBodyChunk, DefaultOnEos, TraceLayer};
 
-/// Builds the server processes necessary for validator operations   
+/// Builds a server object given a server config, extends services of existing servers  
 pub struct ServerBuilder<M: MetricsCallbackProvider = DefaultMetricsCallbackProvider> {
     /// routes incoming transactions to the server
     router: Router<WrapperService<M>>,

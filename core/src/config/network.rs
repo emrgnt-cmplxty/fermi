@@ -3,7 +3,7 @@
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/swarm.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 use crate::{
-    builder::network_config::ConfigBuilder,
+    builder::network_config::NetworkConfigBuilder,
     config::{node::NodeConfig, Config, FULL_NODE_DB_PATH},
     validator::genesis,
 };
@@ -22,7 +22,7 @@ use std::num::NonZeroUsize;
 use std::path::Path;
 use std::sync::Arc;
 
-/// Contains all the validator configs, account keys, and genesis info for the network
+/// Configures the network communications by specifying all validator node configs, account keys, and the genesis state
 #[serde_as]
 #[derive(Debug, Deserialize, Serialize)]
 pub struct NetworkConfig {
@@ -56,7 +56,7 @@ impl NetworkConfig {
         quorum_size: usize,
         rng: R,
     ) -> Self {
-        ConfigBuilder::new(config_dir)
+        NetworkConfigBuilder::new(config_dir)
             .committee_size(NonZeroUsize::new(quorum_size).unwrap())
             .rng(rng)
             .build()

@@ -16,7 +16,7 @@ tokio = { version = "1", features = ["full"] }
 
 
 gdex-engine = { path = "../engine" }
-gdex-proc = { path = "../proc" }
+gdex-controller = { path = "../controller" }
 gdex-types = { path = "../types", features=["testing"] }
 gdex-workspace-hack = { path = "../workspace-hack" }
 

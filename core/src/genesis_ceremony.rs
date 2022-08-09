@@ -6,7 +6,7 @@ use crate::validator::genesis::{Builder, Genesis};
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Parser;
-use gdex_proc::master::MasterController;
+use gdex_controller::master::MasterController;
 use gdex_types::{
     account::{AccountPubKey, ValidatorKeyPair, ValidatorPubKey, ValidatorPubKeyBytes, ValidatorSignature},
     asset::PRIMARY_ASSET_ID,
@@ -17,6 +17,7 @@ use gdex_types::{
 use multiaddr::Multiaddr;
 use std::convert::{TryFrom, TryInto};
 use std::{fs, path::PathBuf};
+
 pub const GENESIS_FILENAME: &str = "genesis.blob";
 pub const GENESIS_BUILDER_SIGNATURE_DIR: &str = "signatures";
 pub const VALIDATOR_FUNDING_AMOUNT: u64 = 1_000_000;

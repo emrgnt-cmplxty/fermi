@@ -6,13 +6,10 @@ use crate::{
     config::server::ServerConfig,
     multiaddr::{parse_dns, parse_ip4, parse_ip6},
 };
-use async_trait::async_trait;
 use anyhow::{anyhow, Context, Result};
+use async_trait::async_trait;
 use gdex_server::api::ValidatorAPIClient;
-use gdex_types::{
-    error::GDEXError,
-    transaction::SignedTransaction
-};
+use gdex_types::{error::GDEXError, transaction::SignedTransaction};
 use multiaddr::{Multiaddr, Protocol};
 use tonic::transport::{Channel, Endpoint, Uri};
 
@@ -94,7 +91,6 @@ impl NetworkValidatorClient {
         self.client.clone()
     }
 }
-
 
 #[async_trait]
 pub trait ClientAPI {

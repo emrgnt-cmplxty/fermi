@@ -3,7 +3,6 @@
 
 use std::{env, path::PathBuf};
 use tonic_build::manual::{Builder, Method, Service};
-// use crate::codec;
 
 type Result<T> = ::std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 

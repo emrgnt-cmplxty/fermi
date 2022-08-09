@@ -22,7 +22,7 @@ pub const GENESIS_FILENAME: &str = "genesis.blob";
 pub const GENESIS_BUILDER_SIGNATURE_DIR: &str = "signatures";
 pub const VALIDATOR_FUNDING_AMOUNT: u64 = 1_000_000;
 
-/// The genesis ceremony creates the genesis configuration file for the network
+/// Specifies the ceremony output path and executes incoming transactions
 #[derive(Parser)]
 pub struct Ceremony {
     #[clap(value_parser, long)]
@@ -38,8 +38,8 @@ impl Ceremony {
     }
 }
 
-/// The command actions which facilitate the genesis process
-/// these are parsed from the command line with CLAP
+/// Executes commands which furthers the genesis process
+/// the commands are input from the command line and parsed with CLAP
 #[derive(Parser)]
 pub enum CeremonyCommand {
     Init,

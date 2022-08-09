@@ -1,14 +1,13 @@
-//! Copyright (c) 2022, BTI
-//! SPDX-License-Identifier: Apache-2.0
-//!
-//! This controller is responsible for managing interactions with a single orderbook
-//! it relies on BankController to verify correctness of balances
+//! Creates orderbooks and manages their interactions
 //!
 //! TODO
 //! 0.) ADD MARKET ORDER SUPPORT
 //! 2.) RESTRICT overwrite_orderbook TO BENCH ONLY MODE
 //! 3.) CONSIDER ADDITIONAL FEATURES, LIKE ESCROW IMPLEMENTATION OR ORDER LIMITS
 //! 4.) CHECK PASSED ASSETS EXIST IN BANK MODULE
+//! 
+//! Copyright (c) 2022, BTI
+//! SPDX-License-Identifier: Apache-2.0
 use super::bank::BankController;
 use gdex_engine::{order_book::Orderbook, orders::new_limit_order_request};
 use gdex_types::{
@@ -23,7 +22,7 @@ use std::{collections::HashMap, time::SystemTime};
 
 pub type OrderId = u64;
 
-// The spot controller is responsible for accessing & modifying user orders
+/// Creates a single orderbook instance and verifies all interactions
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct OrderbookInterface {
     base_asset_id: AssetId,
@@ -48,6 +47,7 @@ impl OrderbookInterface {
         }
     }
 
+    /// Create a new account in the orderbook
     pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
         if self.accounts.contains_key(account_pub_key) {
             Err(GDEXError::AccountCreation)
@@ -58,11 +58,13 @@ impl OrderbookInterface {
         }
     }
 
+    /// Get an account in the orderbook
     pub fn get_account(&self, account_pub_key: &AccountPubKey) -> Result<&OrderAccount, GDEXError> {
         let account = self.accounts.get(account_pub_key).ok_or(GDEXError::AccountLookup)?;
         Ok(account)
     }
 
+    /// Attempt to place a limit order into the orderbook
     pub fn place_limit_order(
         &mut self,
         account_pub_key: &AccountPubKey,
@@ -103,7 +105,7 @@ impl OrderbookInterface {
         self.proc_limit_result(account_pub_key, side, price, quantity, res)
     }
 
-    // loop over and process the output from placing a limit order
+    /// Attempts to loop over and process the outputs from a placed limit order
     fn proc_limit_result(
         &mut self,
         account_pub_key: &AccountPubKey,
@@ -165,7 +167,7 @@ impl OrderbookInterface {
         Ok(res)
     }
 
-    // process an initialized order by modifying the associated account
+    /// Processes an initialized order by modifying the associated account
     fn proc_order_init(
         &mut self,
         account_pub_key: &AccountPubKey,
@@ -191,7 +193,7 @@ impl OrderbookInterface {
         Ok(())
     }
 
-    // process a filled order by modifying the associated account
+    /// Processes a filled order by modifying the associated account
     fn proc_order_fill(
         &mut self,
         account_pub_key: &AccountPubKey,
@@ -236,10 +238,12 @@ impl SpotController {
         }
     }
 
+    /// Gets the order book key for a pair of assets
     fn get_orderbook_key(&self, base_asset_id: AssetId, quote_asset_id: AssetId) -> AssetPairKey {
         format!("{}_{}", base_asset_id, quote_asset_id)
     }
 
+    /// Attempts to retrieve an order book from the controller
     fn get_orderbook(
         &mut self,
         base_asset_id: AssetId,
@@ -301,6 +305,7 @@ impl SpotController {
     //     ))
     // }
 
+    /// Attempts to get an order book and places a limit order
     pub fn place_limit_order(
         &mut self,
         base_asset_id: AssetId,

@@ -1,13 +1,10 @@
-//! Copyright (c) 2022, BTI
-//! SPDX-License-Identifier: Apache-2.0
-//!
-//!
-//! This controller is responsible for managing user staking
-//! it relies on BankController and only accesses the 0th (first) created asset
-//!
+//! Manages the staking of user funds
 //!
 //! TODO
 //! 0.) ADD SIZE CHECKS ON TRANSACTIONS
+//! 
+//! Copyright (c) 2022, BTI
+//! SPDX-License-Identifier: Apache-2.0
 use super::bank::BankController;
 use gdex_types::{
     account::{AccountPubKey, StakeAccount},

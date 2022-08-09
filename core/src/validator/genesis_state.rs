@@ -18,7 +18,7 @@ use std::{
 };
 use tracing::trace;
 
-/// Creates a genesis object which contains the important external parameters for establishing a node
+/// An object with the necessary state to initialize a new node at blockchain genesis 
 #[derive(Clone, Debug)]
 pub struct ValidatorGenesisState {
     master_controller: MasterController,

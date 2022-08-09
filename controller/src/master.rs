@@ -1,3 +1,4 @@
+//! Master controller contains all relevant blockchain controllers
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 use crate::{bank::BankController, spot::SpotController, stake::StakeController};

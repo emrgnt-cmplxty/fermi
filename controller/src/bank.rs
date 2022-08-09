@@ -1,14 +1,13 @@
-//! Copyright (c) 2022, BTI
-//! SPDX-License-Identifier: Apache-2.0
-//!
-//! This controller is responsible for managing user balances
-//! note, other controllers that rely on balance info will consume this
+//! Creates new assets and manages user balances
 //!
 //! TODO
 //! 0.) ADD MISSING FEATURES TO ASSET WORKFLOW, LIKE OWNER TOKEN MINTING, VARIABLE INITIAL MINT AMT., ...
 //! 1.) MAKE ROBUST ERROR HANDLING FOR ALL FUNCTIONS ~~ DONE
 //! 2.) ADD OWNER FUNCTIONS
 //! 3.) BETTER BANK ACCOUNT PUB KEY HANDLING SYSTEM & ADDRESS
+//! 
+//! Copyright (c) 2022, BTI
+//! SPDX-License-Identifier: Apache-2.0
 use gdex_types::{
     account::{AccountPubKey, BankAccount},
     asset::{Asset, AssetId},

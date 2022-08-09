@@ -22,10 +22,10 @@ use std::{
     },
 };
 
-/// The validator store is used to track recently submitted transactions
+/// Tracks recently submitted transactions to eventually implement transaction gating
+// TODO - implement the gating and garbage collection
 pub struct ValidatorStore {
     /// The transaction map tracks recently submitted transactions
-    /// TODO - implement garbage collection
     pub tranasaction_map: Mutex<HashSet<TransactionDigest>>,
 }
 impl Default for ValidatorStore {
@@ -37,7 +37,8 @@ impl Default for ValidatorStore {
 }
 pub type StableSyncValidatorSigner = Pin<Arc<ValidatorKeyPair>>;
 
-/// The validator state encapsulates all state, drives execution, and ensures safety.
+/// Encapsulates all state of the necessary state for a validator
+/// drives execution of transactions and ensures safety
 pub struct ValidatorState {
     // Fixed size, static, identity of the validator
     /// The name of this validator.

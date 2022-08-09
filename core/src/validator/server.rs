@@ -16,7 +16,7 @@ use tracing::info;
 const MIN_BATCH_SIZE: u64 = 1000;
 const MAX_DELAY_MILLIS: u64 = 5_000; // 5 sec
 
-/// The validator server handle spawns a tokio instance of the validator
+/// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
     tx_cancellation: tokio::sync::oneshot::Sender<()>,
     local_addr: Multiaddr,
@@ -47,6 +47,8 @@ impl ValidatorServerHandle {
     }
 }
 
+/// Can spawn a validator server handle at the internal address
+/// the server handle contains a validator api (grpc) that exposes a validator service
 pub struct ValidatorServer {
     address: Multiaddr,
     pub state: Arc<ValidatorState>,
@@ -88,6 +90,7 @@ impl ValidatorServer {
     }
 }
 
+/// Handles communication with consensus and resulting validator state updates
 pub struct ValidatorService {
     state: Arc<ValidatorState>,
 }
@@ -160,6 +163,7 @@ impl ValidatorService {
     }
 }
 
+/// Spawns a tonic grpc which parses incoming transactions and forwards them to the handle_transaction method of ValidatorService
 #[async_trait]
 impl ValidatorAPI for ValidatorService {
     async fn transaction(

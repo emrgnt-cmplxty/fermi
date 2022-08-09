@@ -32,6 +32,7 @@ pub trait MetricsCallbackProvider: Send + Sync + Clone + 'static {
     fn on_response(&self, path: String, latency: Duration, status: u16, grpc_status_code: Code);
 }
 
+/// Defines the functional form of callbacks
 #[derive(Clone, Default)]
 pub struct DefaultMetricsCallbackProvider {}
 impl MetricsCallbackProvider for DefaultMetricsCallbackProvider {

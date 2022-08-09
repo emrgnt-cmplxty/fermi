@@ -30,31 +30,31 @@ pub(crate) fn connect_lazy_with_config(address: &Multiaddr, config: &ServerConfi
     Ok(channel)
 }
 
-fn endpoint_from_multiaddr(addr: &Multiaddr) -> Result<MyEndpoint> {
+fn endpoint_from_multiaddr(addr: &Multiaddr) -> Result<TargetEndpoint> {
     let mut iter = addr.iter();
 
     let channel = match iter.next().ok_or_else(|| anyhow!("address is empty"))? {
         Protocol::Dns(..) => {
             let (dns_name, tcp_port, http_or_https) = parse_dns(addr)?;
             let uri = format!("{http_or_https}://{dns_name}:{tcp_port}");
-            MyEndpoint::try_from_uri(uri)?
+            TargetEndpoint::try_from_uri(uri)?
         }
         Protocol::Ip4(..) => {
             let (socket_addr, http_or_https) = parse_ip4(addr)?;
             let uri = format!("{http_or_https}://{socket_addr}");
-            MyEndpoint::try_from_uri(uri)?
+            TargetEndpoint::try_from_uri(uri)?
         }
         Protocol::Ip6(..) => {
             let (socket_addr, http_or_https) = parse_ip6(addr)?;
             let uri = format!("{http_or_https}://{socket_addr}");
-            MyEndpoint::try_from_uri(uri)?
+            TargetEndpoint::try_from_uri(uri)?
         }
         // Protocol::Memory(..) => todo!(),
         #[cfg(unix)]
         Protocol::Unix(..) => {
             let (path, http_or_https) = crate::multiaddr::parse_unix(addr)?;
             let uri = format!("{http_or_https}://localhost");
-            MyEndpoint::try_from_uri(uri)?.with_uds_connector(path.as_ref().into())
+            TargetEndpoint::try_from_uri(uri)?.with_uds_connector(path.as_ref().into())
         }
         unsupported => return Err(anyhow!("unsupported protocol {unsupported}")),
     };
@@ -62,13 +62,14 @@ fn endpoint_from_multiaddr(addr: &Multiaddr) -> Result<MyEndpoint> {
     Ok(channel)
 }
 
-struct MyEndpoint {
+/// Creates a new endpoint and facilitates connectivity
+struct TargetEndpoint {
     endpoint: Endpoint,
     #[cfg(unix)]
     uds_connector: Option<std::path::PathBuf>,
 }
 
-impl MyEndpoint {
+impl TargetEndpoint {
     fn new(endpoint: Endpoint) -> Self {
         Self {
             endpoint,

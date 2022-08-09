@@ -135,8 +135,6 @@ async fn run(matches: &ArgMatches<'_>) -> Result<()> {
     let parameters_file = matches.value_of("parameters");
     let store_path = matches.value_of("store").unwrap();
 
-    log::debug!("DEBUGGER IS WORKING");
-
     // Read the committee and node's keypair from file.
     let keypair = KeyPair::import(key_file).context("Failed to load the node's keypair")?;
     let committee = Arc::new(ArcSwap::from_pointee(
@@ -162,9 +160,6 @@ async fn run(matches: &ArgMatches<'_>) -> Result<()> {
         // Spawn the primary and consensus core.
         ("primary", Some(sub_matches)) => {
             registry = primary_metrics_registry(keypair.public().clone());
-
-            let r = AdvancedExecutionState::default();
-            log::debug!("THE ADVANCED EXECUTION STATE {r:?}");
 
             Node::spawn_primary(
                 keypair,

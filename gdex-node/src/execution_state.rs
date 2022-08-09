@@ -9,6 +9,8 @@ use thiserror::Error;
 /// A simple/dumb execution engine.
 pub struct SimpleExecutionState;
 
+use log::debug;
+
 #[async_trait]
 impl ExecutionState for SimpleExecutionState {
     type Transaction = String;
@@ -21,7 +23,7 @@ impl ExecutionState for SimpleExecutionState {
         _execution_indices: ExecutionIndices,
         _transaction: Self::Transaction,
     ) -> Result<(Self::Outcome, Option<Committee>), Self::Error> {
-        debug!("transaction is being handled");
+        debug!("handling transaction {_transaction:?}");
         Ok((Vec::default(), None))
     }
 
@@ -67,7 +69,7 @@ impl ExecutionStateError for SimpleExecutionError {
 }
 
 use narwhal_crypto::traits::KeyPair;
-use narwhal_crypto::{ed25519::Ed25519KeyPair, Hash};
+use narwhal_crypto::{ed25519::Ed25519KeyPair};
 use proc::bank::BankController;
 use std::{fmt, fmt::Display, path::Path, sync::Mutex};
 use store::{
@@ -104,8 +106,6 @@ impl Display for AdvancedExecutionStateError {
     }
 }
 
-use log::debug;
-
 /// A more advanced execution state for testing.
 pub struct AdvancedExecutionState {
     store: Store<u64, ExecutionIndices>,
@@ -125,8 +125,8 @@ impl ExecutionState for AdvancedExecutionState {
         execution_indices: ExecutionIndices,
         signed_transaction: Self::Transaction,
     ) -> Result<(Self::Outcome, Option<Committee>), Self::Error> {
-        println!("transaction is being handled");
         let transaction = signed_transaction.get_transaction_payload();
+        debug!("handling transaction {transaction:?}");
         let execution = match transaction.get_variant() {
             TransactionVariant::PaymentTransaction(payment) => {
                 self.store.write(Self::INDICES_ADDRESS, execution_indices).await;

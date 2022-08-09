@@ -21,7 +21,8 @@ class CommandMaker:
         if mem_profiling:
             params = ["--profile", "bench-profiling", "--features", "benchmark dhat-heap"]
         else:
-            params = ["--release", "--features", "benchmark"]
+            # TODO: had to remove the features benchmark flag to see my debug statements. find out why.
+            params = ["--release"]# "--features", "benchmark"]
         return ["cargo", "build", "--quiet"] + params
 
     @staticmethod

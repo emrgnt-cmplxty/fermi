@@ -54,6 +54,7 @@ class LocalBench:
             # Recompile the latest code.
             cmd = CommandMaker.compile(mem_profiling=self.mem_profile)
             Print.info(f"About to run {cmd}...")
+            #import pdb; pdb.set_trace()
             subprocess.run(cmd, check=True, cwd=PathMaker.node_crate_path())
 
             # Create alias for the client and nodes binary.
@@ -85,6 +86,7 @@ class LocalBench:
                         rate_share,
                         [x for y in workers_addresses for _, x in y]
                     )
+                    print(cmd)
                     log_file = PathMaker.client_log_file(i, id)
                     self._background_run(cmd, log_file)
 
@@ -97,6 +99,7 @@ class LocalBench:
                     PathMaker.parameters_file(),
                     debug=debug
                 )
+                print(cmd)
                 log_file = PathMaker.primary_log_file(i)
                 self._background_run(cmd, log_file)
 
@@ -111,6 +114,7 @@ class LocalBench:
                         id,  # The worker's id.
                         debug=debug
                     )
+                    print(cmd)
                     log_file = PathMaker.worker_log_file(i, id)
                     self._background_run(cmd, log_file)
 

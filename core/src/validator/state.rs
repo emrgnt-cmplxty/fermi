@@ -108,7 +108,7 @@ impl ValidatorState {
 }
 
 #[cfg(test)]
-mod test_validator {
+mod test_validator_state {
     use super::*;
     use crate::{builder::genesis_state::GenesisStateBuilder, genesis_ceremony::VALIDATOR_FUNDING_AMOUNT};
     use gdex_types::{

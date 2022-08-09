@@ -179,3 +179,125 @@ impl ValidatorAPI for ValidatorService {
             .unwrap()
     }
 }
+
+
+#[cfg(test)]
+mod test_validator_server {
+    use super::*;
+
+    // use crate::validator::state::*;
+    use gdex_controller::master::MasterController;
+    use crate::{builder::genesis_state::GenesisStateBuilder, genesis_ceremony::VALIDATOR_FUNDING_AMOUNT};
+    use gdex_types::account::ValidatorKeyPair;
+
+    use gdex_types::{
+        account::ValidatorPubKeyBytes,
+        crypto::{get_key_pair_from_rng, KeypairTraits},
+        node::ValidatorInfo,
+        utils,
+    };
+
+    async fn spawn_validator_server() -> Multiaddr {
+        let master_controller = MasterController::default();
+
+        let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let public_key = ValidatorPubKeyBytes::from(key.public());
+        let secret = Arc::pin(key);
+
+        let validator = ValidatorInfo {
+            name: "0".into(),
+            public_key: public_key.clone(),
+            stake: VALIDATOR_FUNDING_AMOUNT,
+            delegation: 0,
+            network_address: utils::new_network_address(),
+            narwhal_primary_to_primary: utils::new_network_address(),
+            narwhal_worker_to_primary: utils::new_network_address(),
+            narwhal_primary_to_worker: utils::new_network_address(),
+            narwhal_worker_to_worker: utils::new_network_address(),
+            narwhal_consensus_address: utils::new_network_address(),
+        };
+
+        let builder = GenesisStateBuilder::new()
+            .set_master_controller(master_controller)
+            .add_validator(validator);
+
+        let genesis = builder.build();
+        let validator_state = ValidatorState::new(public_key, secret, &genesis).await;
+        let new_addr = utils::new_network_address();
+        let validator_server = ValidatorServer::new(new_addr.clone(), Arc::new(validator_state));
+        validator_server.spawn().await.unwrap();
+        new_addr
+    }
+
+    #[tokio::test]
+    pub async fn server_init() {
+        spawn_validator_server().await;
+    }
+
+
+    #[tokio::test]
+    pub async fn server_process_transaction() {
+        let server_addr = spawn_validator_server().await;
+        // let proc_result = transaction
+    }
+
+
+    #[tokio::test]
+    pub async fn multiple_server_init() {
+        let master_controller = MasterController::default();
+
+        let key_0: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let public_key_0 = ValidatorPubKeyBytes::from(key_0.public());
+        let secret_0 = Arc::pin(key_0);
+
+        let key_1: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let public_key_1 = ValidatorPubKeyBytes::from(key_1.public());
+        let secret_1 = Arc::pin(key_1);
+
+        println!("public_key_0={:?}", public_key_0);
+        println!("public_key_1={:?}", public_key_1);
+        
+        let validator_0 = ValidatorInfo {
+            name: "0".into(),
+            public_key: public_key_0.clone(),
+            stake: VALIDATOR_FUNDING_AMOUNT,
+            delegation: 0,
+            network_address: utils::new_network_address(),
+            narwhal_primary_to_primary: utils::new_network_address(),
+            narwhal_worker_to_primary: utils::new_network_address(),
+            narwhal_primary_to_worker: utils::new_network_address(),
+            narwhal_worker_to_worker: utils::new_network_address(),
+            narwhal_consensus_address: utils::new_network_address(),
+        };
+
+        let validator_1= ValidatorInfo {
+            name: "1".into(),
+            public_key: public_key_1.clone(),
+            stake: VALIDATOR_FUNDING_AMOUNT,
+            delegation: 0,
+            network_address: utils::new_network_address(),
+            narwhal_primary_to_primary: utils::new_network_address(),
+            narwhal_worker_to_primary: utils::new_network_address(),
+            narwhal_primary_to_worker: utils::new_network_address(),
+            narwhal_worker_to_worker: utils::new_network_address(),
+            narwhal_consensus_address: utils::new_network_address(),
+        };
+
+        let builder = GenesisStateBuilder::new()
+            .set_master_controller(master_controller)
+            .add_validator(validator_0)
+            .add_validator(validator_1);
+
+        let genesis = builder.build();
+        let validator_state_0 = ValidatorState::new(public_key_0, secret_0, &genesis).await;
+        let validator_state_1 = ValidatorState::new(public_key_1, secret_1, &genesis).await;
+
+        let validator_server_0 = ValidatorServer::new(utils::new_network_address(), Arc::new(validator_state_0));
+        let validator_server_1 = ValidatorServer::new(utils::new_network_address(), Arc::new(validator_state_1));
+
+        validator_server_0.spawn().await.unwrap();
+        validator_server_1.spawn().await.unwrap();
+
+    }
+
+}

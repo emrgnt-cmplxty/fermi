@@ -120,21 +120,21 @@ mod node_tests {
     use super::*;
     use crate::{
         builder::network_config::NetworkConfigBuilder,
-        config::{GDEX_NETWORK_CONFIG, genesis::GenesisConfig}
+        config::{genesis::GenesisConfig, GDEX_NETWORK_CONFIG},
     };
     use std::num::NonZeroUsize;
 
     #[test]
-    pub fn config()  {
+    pub fn config() {
         let temp_dir = tempfile::tempdir().unwrap();
         let working_dir = temp_dir.path();
         let gdex_config_dir = working_dir.join(GDEX_NETWORK_CONFIG);
         let genesis_conf = GenesisConfig::for_local_testing();
-    
+
         let network_config = NetworkConfigBuilder::new(gdex_config_dir)
-                        .committee_size(NonZeroUsize::new(genesis_conf.committee_size).unwrap())
-                        .initial_accounts_config(genesis_conf)
-                        .build();
+            .committee_size(NonZeroUsize::new(genesis_conf.committee_size).unwrap())
+            .initial_accounts_config(genesis_conf)
+            .build();
         let validator_config = network_config.validator_configs()[0].clone();
 
         println!("default_key_pair={:?}", default_key_pair());

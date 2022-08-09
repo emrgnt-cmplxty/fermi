@@ -169,12 +169,11 @@ fn apply_config_to_endpoint(config: &ServerConfig, mut endpoint: Endpoint) -> En
         .tcp_keepalive(config.tcp_keepalive)
 }
 
-
 #[cfg(test)]
 mod client_tests {
     use super::*;
-    use gdex_types::utils;
     use crate::config::server::ServerConfig;
+    use gdex_types::utils;
 
     #[tokio::test]
     async fn basic_functionality() {
@@ -184,6 +183,5 @@ mod client_tests {
         let _basic_conn = connect(&address).await.unwrap();
         let _basic_lazy_conn = connect_lazy(&address).unwrap();
         let _basic_lazy_conn_with_config = connect_lazy_with_config(&address, &config).unwrap();
-
     }
 }

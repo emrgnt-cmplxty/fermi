@@ -95,19 +95,19 @@ impl NetworkConfig {
 #[cfg(test)]
 mod network_tests {
     use super::*;
-    use crate::config::{GDEX_NETWORK_CONFIG, genesis::GenesisConfig};
+    use crate::config::{genesis::GenesisConfig, GDEX_NETWORK_CONFIG};
 
     #[test]
-    pub fn config()  {
+    pub fn config() {
         let temp_dir = tempfile::tempdir().unwrap();
         let working_dir = temp_dir.path();
         let gdex_config_dir = working_dir.join(GDEX_NETWORK_CONFIG);
         let genesis_conf = GenesisConfig::for_local_testing();
 
         let network_config = NetworkConfigBuilder::new(gdex_config_dir)
-                        .committee_size(NonZeroUsize::new(genesis_conf.committee_size).unwrap())
-                        .initial_accounts_config(genesis_conf)
-                        .build();
+            .committee_size(NonZeroUsize::new(genesis_conf.committee_size).unwrap())
+            .initial_accounts_config(genesis_conf)
+            .build();
         let _validator_configs = network_config.validator_configs();
         let _conf_validator_set = network_config.validator_set();
         let _committee = network_config.committee();
@@ -115,10 +115,10 @@ mod network_tests {
     }
 
     #[test]
-    pub fn config_random()  {
+    pub fn config_random() {
         let temp_dir = tempfile::tempdir().unwrap();
         let working_dir = temp_dir.path();
         let gdex_config_dir = working_dir.join(GDEX_NETWORK_CONFIG);
-        let _config = super::NetworkConfig::generate(gdex_config_dir.as_path(), 5); 
+        let _config = super::NetworkConfig::generate(gdex_config_dir.as_path(), 5);
     }
 }

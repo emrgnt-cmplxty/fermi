@@ -21,17 +21,20 @@ use gdex_types::{
 use std::{fs, io::Write, num::NonZeroUsize, path::PathBuf};
 use tracing::info;
 
-/// Note, the code in this file is taken almost directly from https://github.com/MystenLabs/sui/blob/main/crates/sui/src/sui_commands.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
+/// Note, the code in this struct is inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui/src/sui_commands.rs
+/// commit #e91604e0863c86c77ea1def8d9bd116127bee0bc.
+/// This enum is responsible for routing input commands to the GDEX CLI
 #[derive(Parser)]
 pub enum GDEXCommand {
     /// GDEX networking
-    /// Start GDEX network.
+    ///
+    /// Starts a validator node for the GDEX network
     #[clap(name = "start")]
     Start {
         #[clap(value_parser, long = "network.config")]
         config: Option<PathBuf>,
     },
-    /// Bootstrap and initialize a new GDEX network
+    /// Bootstraps and initializes a new GDEX network genesis config
     #[clap(name = "genesis")]
     Genesis {
         #[clap(value_parser, long, help = "Start genesis with a given config file")]
@@ -47,8 +50,10 @@ pub enum GDEXCommand {
         #[clap(value_parser, short, long, help = "Forces overwriting existing configuration")]
         force: bool,
     },
+    /// Participate in the genesis ceremony
     GenesisCeremony(Ceremony),
-    /// keytooling
+
+    /// Generate a persistant keystore for future use
     GenerateKeystore {
         #[clap(value_parser, help = "Specify a path for the keystore")]
         keystore_path: Option<PathBuf>,
@@ -58,6 +63,7 @@ pub enum GDEXCommand {
 }
 
 impl GDEXCommand {
+    /// Execute an input command via a simple match
     pub async fn execute(self) -> Result<(), anyhow::Error> {
         match self {
             GDEXCommand::Start { config } => {

@@ -23,6 +23,7 @@ use std::{
     sync::Arc,
 };
 
+/// A config builder class which is used in the genesis process to generate a NetworkConfig
 pub struct ConfigBuilder<R = OsRng> {
     rng: R,
     config_directory: PathBuf,
@@ -44,21 +45,25 @@ impl ConfigBuilder {
 }
 
 impl<R> ConfigBuilder<R> {
+    /// Set the randomize the ports and return a new object
     pub fn randomize_ports(mut self, randomize_ports: bool) -> Self {
         self.randomize_ports = randomize_ports;
         self
     }
 
+    /// Set the committee size and return a new object
     pub fn committee_size(mut self, committee_size: NonZeroUsize) -> Self {
         self.committee_size = committee_size;
         self
     }
 
+    /// Set initial accounts config and return a new object
     pub fn initial_accounts_config(mut self, initial_accounts_config: GenesisConfig) -> Self {
         self.initial_accounts_config = Some(initial_accounts_config);
         self
     }
 
+    /// Set the rng and return a new object
     pub fn rng<N: ::rand::RngCore + ::rand::CryptoRng>(self, rng: N) -> ConfigBuilder<N> {
         ConfigBuilder {
             rng,
@@ -72,6 +77,8 @@ impl<R> ConfigBuilder<R> {
 
 impl<R: ::rand::RngCore + ::rand::CryptoRng> ConfigBuilder<R> {
     //TODO right now we always randomize ports, we may want to have a default port configuration
+    /// Build a config with random validator inputs the networking ports
+    /// are randomly selected via utils::new_network_address
     pub fn build(mut self) -> NetworkConfig {
         let validators = (0..self.committee_size.get())
             .map(|_| get_key_pair_from_rng(&mut self.rng).1)
@@ -90,6 +97,7 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> ConfigBuilder<R> {
         self.build_with_validators(validators)
     }
 
+    /// Given a set of validators this returns a network config
     pub fn build_with_validators(mut self, validators: Vec<ValidatorGenesisInfo>) -> NetworkConfig {
         let validator_set = validators
             .iter()

@@ -2,8 +2,11 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/swarm.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
-use super::{genesis, node::NodeConfig, Config, FULL_NODE_DB_PATH};
-use crate::builder::config::ConfigBuilder;
+use crate::{
+    builder::network_config::ConfigBuilder,
+    config::{node::NodeConfig, Config, FULL_NODE_DB_PATH},
+    validator::genesis,
+};
 use gdex_types::{
     account::{AccountKeyPair, ValidatorKeyPair},
     committee::Committee,

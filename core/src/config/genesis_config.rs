@@ -2,7 +2,7 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/genesis_config.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
-use super::Config;
+use crate::config::Config;
 use anyhow::Result;
 use gdex_types::{
     account::{AccountKeyPair, ValidatorKeyPair},
@@ -18,8 +18,11 @@ use tracing::info;
 /// Created in the genesis ceremony and specifies the parameters for the initial committee
 #[derive(Serialize, Deserialize)]
 pub struct GenesisConfig {
+    /// Validator info for genesis committee
     pub validator_genesis_info: Option<Vec<ValidatorGenesisInfo>>,
+    /// Size of initial committee
     pub committee_size: usize,
+    /// Account config for committee
     pub accounts: Vec<AccountConfig>,
 }
 
@@ -29,9 +32,12 @@ impl Config for GenesisConfig {}
 #[serde_as]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ValidatorGenesisInfo {
+    /// TODO - how can a keypair be stored for other validators on network?
     #[serde_as(as = "KeyPairBase64")]
     pub key_pair: ValidatorKeyPair,
+    /// network address of validator
     pub network_address: Multiaddr,
+    /// validator stake amount
     pub stake: StakeUnit,
     pub narwhal_primary_to_primary: Multiaddr,
     pub narwhal_worker_to_primary: Multiaddr,

@@ -2,13 +2,15 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/builder.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
-use crate::config::{
-    consensus::ConsensusConfig,
-    genesis,
-    genesis_config::{GenesisConfig, ValidatorGenesisInfo},
-    network::NetworkConfig,
-    node::NodeConfig,
-    {AUTHORITIES_DB_NAME, CONSENSUS_DB_NAME, DEFAULT_STAKE},
+use crate::{
+    config::{
+        consensus::ConsensusConfig,
+        genesis_config::{GenesisConfig, ValidatorGenesisInfo},
+        network::NetworkConfig,
+        node::NodeConfig,
+        {AUTHORITIES_DB_NAME, CONSENSUS_DB_NAME, DEFAULT_STAKE},
+    },
+    validator::genesis,
 };
 use gdex_types::{
     account::{ValidatorKeyPair, ValidatorPubKeyBytes},
@@ -25,10 +27,15 @@ use std::{
 
 /// A config builder class which is used in the genesis process to generate a NetworkConfig
 pub struct ConfigBuilder<R = OsRng> {
+    /// Associated random number generator
     rng: R,
+    /// Directory of created config
     config_directory: PathBuf,
+    /// Boolean parameter to determine port generation process, currently always set to True
     randomize_ports: bool,
+    /// Size of committee
     committee_size: NonZeroUsize,
+    /// Optional initial accounts configuration
     initial_accounts_config: Option<GenesisConfig>,
 }
 

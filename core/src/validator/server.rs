@@ -16,6 +16,7 @@ use tracing::info;
 const MIN_BATCH_SIZE: u64 = 1000;
 const MAX_DELAY_MILLIS: u64 = 5_000; // 5 sec
 
+/// The validator server handle spawns a tokio instance of the validator
 pub struct ValidatorServerHandle {
     tx_cancellation: tokio::sync::oneshot::Sender<()>,
     local_addr: Multiaddr,

@@ -2,7 +2,7 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-core/src/authority.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bcuse super::state::ValidatorState;
-use crate::config::genesis::Genesis;
+use super::genesis::Genesis;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
 use gdex_proc::master::MasterController;
@@ -21,7 +21,11 @@ use std::{
         Arc, Mutex,
     },
 };
+
+/// The validator store is used to track recently submitted transactions
 pub struct ValidatorStore {
+    /// The transaction map tracks recently submitted transactions
+    /// TODO - implement garbage collection
     pub tranasaction_map: Mutex<HashSet<TransactionDigest>>,
 }
 impl Default for ValidatorStore {
@@ -105,7 +109,7 @@ impl ValidatorState {
 #[cfg(test)]
 mod test_validator {
     use super::*;
-    use crate::config::genesis::Builder;
+    use crate::{config::genesis_ceremony::VALIDATOR_FUNDING_AMOUNT, validator::genesis::Builder};
     use gdex_types::{
         account::ValidatorPubKeyBytes,
         crypto::{get_key_pair_from_rng, KeypairTraits},
@@ -124,7 +128,7 @@ mod test_validator {
         let validator = ValidatorInfo {
             name: "0".into(),
             public_key: public_key.clone(),
-            stake: 1,
+            stake: VALIDATOR_FUNDING_AMOUNT,
             delegation: 0,
             network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),

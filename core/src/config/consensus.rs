@@ -11,8 +11,11 @@ use std::path::{Path, PathBuf};
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct ConsensusConfig {
+    /// The address for communicating with other nodes in the network
     pub consensus_address: Multiaddr,
+    /// Path to the consensus database
     pub consensus_db_path: PathBuf,
+    /// Narwhal consensus parameters
     pub narwhal_config: ConsensusParameters,
 }
 

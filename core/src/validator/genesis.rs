@@ -274,8 +274,8 @@ const GENESIS_BUILDER_COMMITTEE_DIR: &str = "committee";
 
 #[cfg(test)]
 mod genesis_test {
-    use super::super::genesis_config::GenesisConfig;
     use super::*;
+    use crate::config::genesis_config::GenesisConfig;
     use gdex_types::{
         account::ValidatorKeyPair,
         crypto::{get_key_pair_from_rng, KeypairTraits},
@@ -304,7 +304,7 @@ mod genesis_test {
         let validator = ValidatorInfo {
             name: "0".into(),
             public_key: key.public().into(),
-            stake: 1,
+            stake: crate::config::genesis_ceremony::VALIDATOR_FUNDING_AMOUNT,
             delegation: 0,
             network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),

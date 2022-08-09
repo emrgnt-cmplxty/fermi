@@ -3,7 +3,7 @@
 //! SPDX-License-Identifier: Apache-2.0
 use anyhow::{anyhow, bail};
 use clap::Parser;
-use gdex_core::builder::config::ConfigBuilder;
+use gdex_core::builder::network_config::ConfigBuilder;
 use gdex_core::config::{
     gateway::GatewayConfig,
     gdex_config_dir,

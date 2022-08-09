@@ -2,10 +2,10 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/mysten-infra/blob/main/crates/mysten-network/src/config.rs, commit #0f0f01b87f2c8ebbfdbab575070d4c5abfbaa7f8
-use crate::metrics::{DefaultMetricsCallbackProvider, MetricsCallbackProvider};
 use crate::{
     builder::server::ServerBuilder,
     client::{connect_lazy_with_config, connect_with_config},
+    metrics::{DefaultMetricsCallbackProvider, MetricsCallbackProvider}
 };
 use anyhow::Result;
 use multiaddr::Multiaddr;

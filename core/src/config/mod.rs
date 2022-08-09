@@ -11,7 +11,6 @@ use tracing::trace;
 
 pub mod consensus;
 pub mod gateway;
-pub mod genesis;
 pub mod genesis_ceremony;
 pub mod genesis_config;
 pub mod network;
@@ -29,7 +28,7 @@ pub const GDEX_DEV_NET_URL: &str = "https://gateway.devnet.sui.io:443";
 pub const AUTHORITIES_DB_NAME: &str = "authorities_db";
 pub const CONSENSUS_DB_NAME: &str = "consensus_db";
 pub const FULL_NODE_DB_PATH: &str = "full_node_db";
-pub const DEFAULT_STAKE: u64 = 1;
+pub const DEFAULT_STAKE: u64 = genesis_ceremony::VALIDATOR_FUNDING_AMOUNT;
 
 pub trait Config
 where
@@ -85,7 +84,7 @@ where
 #[serde(untagged)]
 enum GenesisLocation {
     InPlace {
-        genesis: genesis::Genesis,
+        genesis: crate::validator::genesis::Genesis,
     },
     File {
         #[serde(rename = "genesis-file-location")]
@@ -99,11 +98,11 @@ pub struct Genesis {
     location: GenesisLocation,
 
     #[serde(skip)]
-    genesis: once_cell::sync::OnceCell<genesis::Genesis>,
+    genesis: once_cell::sync::OnceCell<crate::validator::genesis::Genesis>,
 }
 
 impl Genesis {
-    pub fn new(genesis: genesis::Genesis) -> Self {
+    pub fn new(genesis: crate::validator::genesis::Genesis) -> Self {
         Self {
             location: GenesisLocation::InPlace { genesis },
             genesis: Default::default(),
@@ -119,12 +118,12 @@ impl Genesis {
         }
     }
 
-    fn genesis(&self) -> Result<&genesis::Genesis> {
+    fn genesis(&self) -> Result<&crate::validator::genesis::Genesis> {
         match &self.location {
             GenesisLocation::InPlace { genesis } => Ok(genesis),
             GenesisLocation::File { genesis_file_location } => self
                 .genesis
-                .get_or_try_init(|| genesis::Genesis::load(&genesis_file_location)),
+                .get_or_try_init(|| crate::validator::genesis::Genesis::load(&genesis_file_location)),
         }
     }
 }

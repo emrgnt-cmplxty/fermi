@@ -2,7 +2,7 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui/src/genesis_ceremony.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
-use super::genesis::{Builder, Genesis};
+use crate::validator::genesis::{Builder, Genesis};
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Parser;
@@ -18,8 +18,8 @@ use multiaddr::Multiaddr;
 use std::convert::{TryFrom, TryInto};
 use std::{fs, path::PathBuf};
 pub const GENESIS_FILENAME: &str = "genesis.blob";
-const GENESIS_BUILDER_SIGNATURE_DIR: &str = "signatures";
-const VALIDATOR_FUNDING_AMOUNT: u64 = 1_000_000;
+pub const GENESIS_BUILDER_SIGNATURE_DIR: &str = "signatures";
+pub const VALIDATOR_FUNDING_AMOUNT: u64 = 1_000_000;
 
 /// The genesis ceremony creates the genesis configuration file for the network
 #[derive(Parser)]
@@ -38,7 +38,7 @@ impl Ceremony {
 }
 
 /// The command actions which facilitate the genesis process
-/// the commands are input from the command line
+/// these are parsed from the command line with CLAP
 #[derive(Parser)]
 pub enum CeremonyCommand {
     Init,
@@ -84,13 +84,13 @@ pub fn run(cmd: Ceremony) -> Result<()> {
     let dir = Utf8PathBuf::try_from(dir)?;
 
     match cmd.command {
-        // initialize the genesis process
+        // Initialize the genesis process
         CeremonyCommand::Init => {
             let builder = Builder::new();
             builder.save(dir)?;
         }
 
-        // add a validator to the genesis config
+        // Add a validator to the genesis config
         CeremonyCommand::AddValidator {
             name,
             key_file,
@@ -106,7 +106,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             builder = builder.add_validator(ValidatorInfo {
                 name,
                 public_key: keypair.public().into(),
-                stake: 1,
+                stake: VALIDATOR_FUNDING_AMOUNT,
                 delegation: 0,
                 network_address,
                 narwhal_primary_to_primary,
@@ -118,14 +118,14 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             builder.save(dir)?;
         }
 
-        // add the order book controllers
+        // Add the order book controllers
         CeremonyCommand::AddControllers => {
             let builder = Builder::load(&dir)?;
 
-            // initialize controllers to default state
+            // Initialize controllers to default state
             let mut master_controller = MasterController::default();
 
-            // create base asset of the blockchain with the null address as the owner
+            // Create base asset of the blockchain with the null address as the owner
             let null_creator = ValidatorPubKey::try_from(ValidatorPubKeyBytes::from_bytes(&[0; 32])?)?;
             master_controller
                 .bank_controller
@@ -133,7 +133,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
                 .unwrap()
                 .create_asset(&null_creator)?;
 
-            // fund and stake the validators with the VALIDATOR_FUNDING_AMOUNT
+            // Fund and stake the validators with the VALIDATOR_FUNDING_AMOUNT
             for (_key, validator) in builder.validators.iter() {
                 let validator_key = ValidatorPubKey::try_from(validator.public_key).unwrap();
                 master_controller.bank_controller.lock().unwrap().transfer(
@@ -150,7 +150,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             builder.set_master_controller(master_controller).save(dir)?;
         }
 
-        // build the genesis config
+        // Build the genesis config
         CeremonyCommand::Build => {
             let builder = Builder::load(&dir)?;
 
@@ -159,7 +159,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             genesis.save(dir.join(GENESIS_FILENAME))?;
         }
 
-        // participate in the ceremony by verifying and signing the proposed binary
+        // Participate in the ceremony by verifying and signing the proposed binary
         CeremonyCommand::VerifyAndSign { key_file } => {
             let keypair: ValidatorKeyPair = utils::read_keypair_from_file(key_file)?;
             let loaded_genesis = Genesis::load(dir.join(GENESIS_FILENAME))?;
@@ -194,7 +194,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             fs::write(signature_dir.join(hex_name), signature)?;
         }
 
-        // finalize the genesis ceremony
+        // Finalize the genesis ceremony
         CeremonyCommand::Finalize => {
             let genesis = Genesis::load(dir.join(GENESIS_FILENAME))?;
             let genesis_bytes = genesis.to_bytes();
@@ -260,7 +260,7 @@ mod test {
                 let info = ValidatorInfo {
                     name: format!("validator-{i}"),
                     public_key: ValidatorPubKeyBytes::from(keypair.public()),
-                    stake: 1,
+                    stake: VALIDATOR_FUNDING_AMOUNT,
                     delegation: 0,
                     network_address: utils::new_network_address(),
                     narwhal_primary_to_primary: utils::new_network_address(),

@@ -2,11 +2,9 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/mysten-infra/blob/main/crates/mysten-network/src/server.rs, commit #0f0f01b87f2c8ebbfdbab575070d4c5abfbaa7f8
-use crate::metrics::{
-    DefaultMetricsCallbackProvider, MetricsCallbackProvider, MetricsHandler, GRPC_ENDPOINT_PATH_HEADER,
-};
 use crate::{
     config::server::ServerConfig,
+    metrics::{DefaultMetricsCallbackProvider, MetricsCallbackProvider, MetricsHandler, GRPC_ENDPOINT_PATH_HEADER},
     multiaddr::{parse_dns, parse_ip4, parse_ip6},
 };
 use anyhow::{anyhow, Result};
@@ -38,7 +36,9 @@ use tower_http::trace::{DefaultMakeSpan, DefaultOnBodyChunk, DefaultOnEos, Trace
 
 /// Builds the server processes necessary for validator operations   
 pub struct ServerBuilder<M: MetricsCallbackProvider = DefaultMetricsCallbackProvider> {
+    /// routes incoming transactions to the server
     router: Router<WrapperService<M>>,
+    /// node health information
     health_reporter: tonic_health::server::HealthReporter,
 }
 
@@ -221,8 +221,11 @@ async fn tcp_listener<T: ToSocketAddrs>(address: T) -> Result<(SocketAddr, TcpLi
 /// A tonic server with helper handles
 pub struct Server {
     server: BoxFuture<(), tonic::transport::Error>,
+    /// For canceling submitted transactions
     cancel_handle: Option<tokio::sync::oneshot::Sender<()>>,
+    /// The local address of this server
     local_addr: Multiaddr,
+    /// Node health status
     health_reporter: tonic_health::server::HealthReporter,
 }
 
@@ -261,14 +264,14 @@ fn update_tcp_port_in_multiaddr(addr: &Multiaddr, port: u16) -> Multiaddr {
 mod test {
     use super::*;
     use crate::metrics::MetricsCallbackProvider;
-    use multiaddr::multiaddr;
-    use multiaddr::Multiaddr;
-    use std::ops::Deref;
-    use std::sync::{Arc, Mutex};
-    use std::time::Duration;
+    use multiaddr::{multiaddr, Multiaddr};
+    use std::{
+        ops::Deref,
+        sync::{Arc, Mutex},
+        time::Duration,
+    };
     use tonic::Code;
-    use tonic_health::proto::health_client::HealthClient;
-    use tonic_health::proto::HealthCheckRequest;
+    use tonic_health::proto::{health_client::HealthClient, HealthCheckRequest};
 
     #[test]
     fn document_multiaddr_limitation_for_unix_protocol() {

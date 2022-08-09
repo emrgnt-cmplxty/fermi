@@ -241,7 +241,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
 }
 
 #[cfg(test)]
-mod test {
+mod test_genesis_ceremony {
     use super::*;
     use anyhow::Result;
     use gdex_types::{
@@ -252,7 +252,7 @@ mod test {
     };
 
     #[test]
-    fn ceremony() -> Result<()> {
+    fn run() -> Result<()> {
         let dir = tempfile::TempDir::new().unwrap();
 
         let validators = (0..10)

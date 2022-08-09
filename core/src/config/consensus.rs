@@ -32,3 +32,18 @@ impl ConsensusConfig {
         &self.narwhal_config
     }
 }
+
+#[cfg(test)]
+mod consensus_tests {
+    use super::*;
+    use gdex_types::utils;
+    #[test]
+    pub fn config() {
+        let new_address = utils::new_network_address();
+        let new_config = ConsensusConfig{ consensus_address: new_address.clone(), consensus_db_path: PathBuf::from("test.conf"), narwhal_config: Default::default()};
+        // quick checks on newly created config
+        assert!(!new_config.address().is_empty());
+        assert!(new_config.db_path()==PathBuf::from("test.conf"));
+        assert!(new_config.narwhal_config().batch_size > 0);
+    }
+}

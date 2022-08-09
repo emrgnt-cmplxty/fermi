@@ -35,6 +35,12 @@ pub enum GDEXCommand {
     Start {
         #[clap(value_parser, long = "network.config")]
         config: Option<PathBuf>,
+        #[clap(
+            value_parser,
+            long,
+            help = "Specify the maximum number of ticks to run the network for, helpful for testing and debugging."
+        )]
+        debug_max_ticks: Option<u64>,
     },
     /// Bootstraps and initializes a new GDEX network genesis config
     #[clap(name = "genesis")]
@@ -68,7 +74,10 @@ impl GDEXCommand {
     /// Execute an input command via a simple match
     pub async fn execute(self) -> Result<(), anyhow::Error> {
         match self {
-            GDEXCommand::Start { config } => {
+            GDEXCommand::Start {
+                config,
+                debug_max_ticks,
+            } => {
                 // Load the config of the GDEX authority.
                 let network_config_path = config.clone().unwrap_or(gdex_config_dir()?.join(GDEX_NETWORK_CONFIG));
                 let _network_config: NetworkConfig = PersistedConfig::read(&network_config_path).map_err(|err| {
@@ -83,12 +92,17 @@ impl GDEXCommand {
                 //     Swarm::builder().from_network_config(gdex_config_dir()?, network_config);
                 // swarm.launch().await?;
 
-                let mut interval = tokio::time::interval(std::time::Duration::from_secs(5));
+                let mut interval = tokio::time::interval(std::time::Duration::from_secs(1));
+                let mut i_tick: u64 = 0;
+                let debug_max_ticks = debug_max_ticks.unwrap_or(u64::MAX);
                 loop {
                     // for node in swarm.validators_mut() {
                     //     node.health_check().await?;
                     // }
-
+                    i_tick += 1;
+                    if i_tick >= debug_max_ticks {
+                        break Ok(());
+                    }
                     interval.tick().await;
                 }
             }

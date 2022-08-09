@@ -5,7 +5,7 @@
 //! 1.) MAKE ROBUST ERROR HANDLING FOR ALL FUNCTIONS ~~ DONE
 //! 2.) ADD OWNER FUNCTIONS
 //! 3.) BETTER BANK ACCOUNT PUB KEY HANDLING SYSTEM & ADDRESS
-//! 
+//!
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 use gdex_types::{

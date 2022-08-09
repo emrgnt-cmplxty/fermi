@@ -1,6 +1,5 @@
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-
 use std::{env, path::PathBuf};
 use tonic_build::manual::{Builder, Method, Service};
 
@@ -18,7 +17,7 @@ fn main() -> Result<()> {
     let validator_service = Service::builder()
         .name("ValidatorAPI")
         .package("gdex.validator")
-        .comment("The Validator interface")
+        .comment("The Validator API")
         .method(
             Method::builder()
                 .name("transaction")
@@ -36,4 +35,13 @@ fn main() -> Result<()> {
     println!("cargo:rerun-if-env-changed=DUMP_GENERATED_GRPC");
 
     Ok(())
+}
+
+#[cfg(test)]
+mod build_tests {
+    use super::*;
+    #[test]
+    pub fn server_main() {
+        main();
+    }
 }

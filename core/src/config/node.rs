@@ -93,7 +93,7 @@ impl NodeConfig {
         self.key_pair.public().into()
     }
 
-    pub fn sui_address(&self) -> GDEXAddress {
+    pub fn gdex_address(&self) -> GDEXAddress {
         (&self.public_key()).into()
     }
 
@@ -111,5 +111,40 @@ impl NodeConfig {
 
     pub fn genesis(&self) -> Result<&ValidatorGenesisState> {
         self.genesis.genesis()
+    }
+}
+
+#[cfg(test)]
+mod node_tests {
+
+    use super::*;
+    use crate::{
+        builder::network_config::NetworkConfigBuilder,
+        config::{GDEX_NETWORK_CONFIG, genesis::GenesisConfig}
+    };
+    use std::num::NonZeroUsize;
+
+    #[test]
+    pub fn config()  {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let working_dir = temp_dir.path();
+        let gdex_config_dir = working_dir.join(GDEX_NETWORK_CONFIG);
+        let genesis_conf = GenesisConfig::for_local_testing();
+    
+        let network_config = NetworkConfigBuilder::new(gdex_config_dir)
+                        .committee_size(NonZeroUsize::new(genesis_conf.committee_size).unwrap())
+                        .initial_accounts_config(genesis_conf)
+                        .build();
+        let validator_config = network_config.validator_configs()[0].clone();
+
+        println!("default_key_pair={:?}", default_key_pair());
+
+        let _default_key_pair = validator_config.key_pair();
+        let _public_key = validator_config.public_key();
+        let _gdex_address = validator_config.gdex_address();
+        let _db_path = validator_config.db_path();
+        let _network_address = validator_config.network_address();
+        let _consensus_config = validator_config.consensus_config();
+        let _genesis = validator_config.genesis();
     }
 }

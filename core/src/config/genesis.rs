@@ -16,7 +16,7 @@ use serde_with::serde_as;
 use tracing::info;
 
 /// Configures the validator information for the initial committee of the blockchain
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GenesisConfig {
     /// Validator info for genesis committee
     pub validator_genesis_info: Option<Vec<ValidatorGenesisStateInfo>>,

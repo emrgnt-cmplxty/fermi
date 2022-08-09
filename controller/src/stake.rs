@@ -2,7 +2,7 @@
 //!
 //! TODO
 //! 0.) ADD SIZE CHECKS ON TRANSACTIONS
-//! 
+//!
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 use super::bank::BankController;
@@ -41,13 +41,6 @@ impl StakeController {
         }
     }
 
-    fn check_account_exists(&self, account_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
-        self.stake_accounts
-            .get(account_pub_key)
-            .ok_or(GDEXError::AccountLookup)?;
-        Ok(())
-    }
-
     pub fn get_staked(&self, account_pub_key: &AccountPubKey) -> Result<&u64, GDEXError> {
         let stake_account = self
             .stake_accounts
@@ -58,10 +51,6 @@ impl StakeController {
 
     // stake funds to participate in consensus
     pub fn stake(&mut self, account_pub_key: &AccountPubKey, amount: u64) -> Result<(), GDEXError> {
-        if self.check_account_exists(account_pub_key).is_err() {
-            self.create_account(account_pub_key)?
-        }
-
         self.bank_controller
             .lock()
             .unwrap()
@@ -155,7 +144,39 @@ pub mod stake_tests {
             "unexpected total staked amount"
         );
     }
+    #[test]
+    fn stake_empty() {
+        let sender = generate_keypair_vec([0; 32]).pop().unwrap();
 
+        let mut bank_controller = BankController::new();
+        bank_controller.create_asset(sender.public()).unwrap();
+        bank_controller.create_asset(sender.public()).unwrap();
+        let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
+        let mut stake_controller = StakeController::new(Arc::clone(&bank_controller_ref));
+
+        stake_controller.stake(sender.public(), STAKE_AMOUNT).unwrap();
+        assert!(
+            *bank_controller_ref
+                .lock()
+                .unwrap()
+                .get_balance(sender.public(), PRIMARY_ASSET_ID)
+                .unwrap()
+                == CREATED_ASSET_BALANCE - STAKE_AMOUNT,
+            "unexpected balance"
+        );
+        assert!(
+            stake_controller.get_accounts().keys().len() == 1,
+            "unexpected number of accounts"
+        );
+        assert!(
+            *stake_controller.get_staked(sender.public()).unwrap() == STAKE_AMOUNT,
+            "unexpected stake amount"
+        );
+        assert!(
+            stake_controller.get_total_staked() == STAKE_AMOUNT,
+            "unexpected total staked amount"
+        );
+    }
     // TODO #0 //
     #[test]
     #[should_panic]

@@ -168,3 +168,22 @@ fn apply_config_to_endpoint(config: &ServerConfig, mut endpoint: Endpoint) -> En
         .initial_connection_window_size(config.http2_initial_connection_window_size)
         .tcp_keepalive(config.tcp_keepalive)
 }
+
+
+#[cfg(test)]
+mod client_tests {
+    use super::*;
+    use gdex_types::utils;
+    use crate::config::server::ServerConfig;
+
+    #[tokio::test]
+    async fn basic_functionality() {
+        let address = utils::new_network_address();
+        let config = ServerConfig::new();
+        let _server = config.server_builder().bind(&address).await.unwrap();
+        let _basic_conn = connect(&address).await.unwrap();
+        let _basic_lazy_conn = connect_lazy(&address).unwrap();
+        let _basic_lazy_conn_with_config = connect_lazy_with_config(&address, &config).unwrap();
+
+    }
+}

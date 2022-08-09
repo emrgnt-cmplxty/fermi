@@ -18,7 +18,7 @@ use std::{
 };
 use tracing::trace;
 
-/// An object with the necessary state to initialize a new node at blockchain genesis 
+/// An object with the necessary state to initialize a new node at blockchain genesis
 #[derive(Clone, Debug)]
 pub struct ValidatorGenesisState {
     master_controller: MasterController,

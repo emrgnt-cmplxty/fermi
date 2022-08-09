@@ -5,7 +5,7 @@
 //! 2.) RESTRICT overwrite_orderbook TO BENCH ONLY MODE
 //! 3.) CONSIDER ADDITIONAL FEATURES, LIKE ESCROW IMPLEMENTATION OR ORDER LIMITS
 //! 4.) CHECK PASSED ASSETS EXIST IN BANK MODULE
-//! 
+//!
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 use super::bank::BankController;

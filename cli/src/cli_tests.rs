@@ -18,7 +18,12 @@ mod cli_tests {
         let config = working_dir.join(GDEX_NETWORK_CONFIG);
 
         // Start network without authorities
-        let start = GDEXCommand::Start { config: Some(config) }.execute().await;
+        let start = GDEXCommand::Start {
+            config: Some(config.clone()),
+            debug_max_ticks: None,
+        }
+        .execute()
+        .await;
         assert!(matches!(start, Err(..)));
         // Genesis
         GDEXCommand::Genesis {
@@ -72,6 +77,15 @@ mod cli_tests {
         .await;
         assert!(matches!(result, Err(..)));
 
+        // Start the network again, this time with authorities
+        let start = GDEXCommand::Start {
+            config: Some(config),
+            debug_max_ticks: Some(5),
+        }
+        .execute()
+        .await;
+        start.unwrap();
+
         temp_dir.close()?;
         Ok(())
     }
@@ -98,7 +112,13 @@ mod cli_tests {
         let config = PathBuf::from("a_bad_config/test");
 
         // Start network without authorities
-        GDEXCommand::Start { config: Some(config) }.execute().await.unwrap();
+        GDEXCommand::Start {
+            config: Some(config),
+            debug_max_ticks: None,
+        }
+        .execute()
+        .await
+        .unwrap();
     }
 
     #[should_panic]
@@ -144,11 +164,6 @@ mod cli_tests {
     async fn genesis_with_specified_config() -> Result<(), anyhow::Error> {
         let temp_dir = tempfile::tempdir()?;
         let working_dir = temp_dir.path();
-        let config = working_dir.join(GDEX_NETWORK_CONFIG);
-
-        // Start network without authorities
-        let start = GDEXCommand::Start { config: Some(config) }.execute().await;
-        assert!(matches!(start, Err(..)));
 
         // Genesis
         GDEXCommand::Genesis {

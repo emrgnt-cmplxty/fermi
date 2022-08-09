@@ -36,7 +36,6 @@ pub enum GDEXError {
     // server errors
     #[error("Failed to process the inbound transaction")]
     RpcFailure(String),
-
 }
 
 impl From<tonic::Status> for GDEXError {

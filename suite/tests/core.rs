@@ -3,18 +3,20 @@ pub mod suite_core_tests {
     use gdex_controller::master::MasterController;
     use gdex_core::{
         builder::genesis_state::GenesisStateBuilder,
+        client::{ClientAPI, NetworkValidatorClient},
         config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, FULL_NODE_DB_PATH},
         genesis_ceremony::VALIDATOR_FUNDING_AMOUNT,
         metrics::start_prometheus_server,
-        validator::{server::ValidatorService, state::ValidatorState},
+        validator::{server::ValidatorServer, server::ValidatorService, state::ValidatorState},
     };
     use gdex_types::{
         account::{account_test_functions::generate_keypair_vec, ValidatorPubKeyBytes},
         crypto::KeypairTraits,
         node::ValidatorInfo,
+        transaction::transaction_test_functions::generate_signed_test_transaction,
         utils,
     };
-    use std::sync::Arc;
+    use std::{io, sync::Arc};
 
     const VALIDATOR_SEED: [u8; 32] = [0; 32];
 
@@ -79,10 +81,24 @@ pub mod suite_core_tests {
             genesis: genesis,
         };
 
+        // spawn the validator service, e.g. Narwhal consensus
         let prometheus_registry = start_prometheus_server(node_config.metrics_address);
-
-        ValidatorService::new(&node_config, validator_state, &prometheus_registry)
+        let _spawned_service = ValidatorService::new(&node_config, Arc::clone(&validator_state), &prometheus_registry)
             .await
             .unwrap();
+
+        let new_addr = utils::new_network_address();
+        let validator_server = ValidatorServer::new(new_addr.clone(), Arc::clone(&validator_state));
+        let validator_handle = validator_server.spawn().await.unwrap();
+
+        let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
+        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
+
+        let client = NetworkValidatorClient::connect_lazy(&validator_handle.address()).unwrap();
+        let _resp1 = client
+            .handle_transaction(signed_transaction)
+            .await
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e));
     }
 }

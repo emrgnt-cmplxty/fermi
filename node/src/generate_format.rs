@@ -158,7 +158,7 @@ struct Options {
     action: Action,
 }
 
-const FILE_PATH: &str = "gdex-node/tests/staged/narwhal.yaml";
+const FILE_PATH: &str = "node/tests/staged/narwhal.yaml";
 
 fn main() {
     let options = Options::from_args();

@@ -27,7 +27,7 @@ class CommandMaker:
     @staticmethod
     def generate_key(filename):
         assert isinstance(filename, str)
-        return f'./gdex-node generate_keys --filename {filename}'
+        return f'./node generate_keys --filename {filename}'
 
     @staticmethod
     def run_primary(keys, committee, store, parameters, execution, debug=False):
@@ -37,7 +37,7 @@ class CommandMaker:
         assert isinstance(execution, str)
         assert isinstance(debug, bool)
         v = '-vvv' if debug else '-vv'
-        return (f'./gdex-node {v} run --keys {keys} --committee {committee} '
+        return (f'./node {v} run --keys {keys} --committee {committee} '
                 f'--store {store} --parameters {parameters} --execution {execution} primary')
 
     @staticmethod
@@ -47,7 +47,7 @@ class CommandMaker:
         assert isinstance(parameters, str)
         assert isinstance(debug, bool)
         v = '-vvv' if debug else '-vv'
-        return (f'./gdex-node {v} run --keys {keys} --committee {committee} '
+        return (f'./node {v} run --keys {keys} --committee {committee} '
                 f'--store {store} --parameters {parameters} primary --consensus-disabled')
 
     @staticmethod
@@ -58,7 +58,7 @@ class CommandMaker:
         assert isinstance(execution, str)
         assert isinstance(debug, bool)
         v = '-vvv' if debug else '-vv'
-        return (f'./gdex-node {v} run --keys {keys} --committee {committee} '
+        return (f'./node {v} run --keys {keys} --committee {committee} '
                 f'--store {store} --parameters {parameters} --execution {execution} worker --id {id}')
 
     @staticmethod
@@ -93,5 +93,5 @@ class CommandMaker:
     @staticmethod
     def alias_binaries(origin):
         assert isinstance(origin, str)
-        node, client = join(origin, 'gdex-node'), join(origin, 'benchmark_client')
-        return f'rm gdex-node ; rm benchmark_client ; ln -s {node} . ; ln -s {client} .'
+        node, client = join(origin, 'node'), join(origin, 'benchmark_client')
+        return f'rm node ; rm benchmark_client ; ln -s {node} . ; ln -s {client} .'

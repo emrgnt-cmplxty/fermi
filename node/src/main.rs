@@ -21,7 +21,7 @@ use tokio::sync::mpsc::{channel, Receiver};
 use tracing::info;
 
 // IMPORT BESPOKE EXECUTION STATE
-use gdex_node::execution_state::{AdvancedExecutionState, SimpleExecutionState};
+use node::execution_state::{AdvancedExecutionState, SimpleExecutionState};
 
 #[cfg(feature = "benchmark")]
 use tracing::subscriber::set_global_default;

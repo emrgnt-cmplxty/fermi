@@ -63,8 +63,3 @@ dhat-heap = ["dhat"]    # if you are doing heap profiling
 name = "benchmark_client"   
 path = "src/benchmark_client.rs" 
 required-features = ["benchmark"]
-
-[[example]]
-name = "generate-format"
-path = "src/generate_format.rs"
-test = false

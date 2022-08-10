@@ -179,7 +179,8 @@ impl ValidatorAPI for ValidatorService {
 mod test_validator_server {
     use super::*;
     use crate::{
-        builder::genesis_state::GenesisStateBuilder, client::{ClientAPI, NetworkValidatorClient},
+        builder::genesis_state::GenesisStateBuilder,
+        client::{ClientAPI, NetworkValidatorClient},
         genesis_ceremony::VALIDATOR_FUNDING_AMOUNT,
     };
     use gdex_controller::master::MasterController;

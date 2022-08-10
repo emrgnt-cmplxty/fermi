@@ -21,9 +21,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     }
     let bank_controller = Mutex::new(BankController::default());
 
-    c.bench_function("mutex_lock", move |b| {
-        b.iter(|| obtain_mutex_lock(&bank_controller))
-    });
+    c.bench_function("mutex_lock", move |b| b.iter(|| obtain_mutex_lock(&bank_controller)));
 
     // test arc mutex
     fn obtain_arc_mutex_lock(bank_controller: &Arc<Mutex<BankController>>) {
@@ -43,8 +41,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     }
 
     async fn init_channel_512(_bytes_sent: [u8; 512]) {
-        let (_tx, mut _rx): (Sender<[u8; 512]>, Receiver<[u8; 512]>) =
-            channel(DEFAULT_CHANNEL_SIZE);
+        let (_tx, mut _rx): (Sender<[u8; 512]>, Receiver<[u8; 512]>) = channel(DEFAULT_CHANNEL_SIZE);
     }
 
     async fn send_channel_64_1_000(bytes_sent: [u8; 64]) {

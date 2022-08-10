@@ -7,25 +7,22 @@ extern crate bincode;
 extern crate criterion;
 
 use criterion::*;
-use rand::{rngs::StdRng, Rng, SeedableRng};
 use gdex_types::{
-    account::{AccountKeyPair, AccountSignature}, 
+    account::{AccountKeyPair, AccountSignature},
     crypto::{KeypairTraits, Signer},
-    transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant, SERIALIZED_TRANSACTION_LENGTH},
     error::GDEXError,
+    transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant, SERIALIZED_TRANSACTION_LENGTH},
 };
 use narwhal_crypto::{Hash, DIGEST_LEN};
 use narwhal_types::{Batch, BatchDigest, WorkerMessage};
-
+use rand::{rngs::StdRng, Rng, SeedableRng};
 
 pub fn keys(seed: [u8; 32]) -> Vec<AccountKeyPair> {
     let mut rng = StdRng::from_seed(seed);
     (0..4).map(|_| AccountKeyPair::generate(&mut rng)).collect()
 }
 
-fn verify_incoming_transaction(
-    serialized_transaction: Vec<u8>,
-) -> Result<(), GDEXError> {
+fn verify_incoming_transaction(serialized_transaction: Vec<u8>) -> Result<(), GDEXError> {
     // remove trailing zeros & deserialize transaction
     let signed_transaction_result = SignedTransaction::deserialize(serialized_transaction);
 
@@ -46,35 +43,20 @@ fn verify_incoming_transaction(
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-    fn get_signed_transaction(
-        sender_seed: [u8; 32],
-        receiver_seed: [u8; 32],
-        amount: u64,
-    ) -> SignedTransaction {
+    fn get_signed_transaction(sender_seed: [u8; 32], receiver_seed: [u8; 32], amount: u64) -> SignedTransaction {
         let kp_sender = keys(sender_seed).pop().unwrap();
         let kp_receiver = keys(receiver_seed).pop().unwrap();
 
-        let transaction_variant = TransactionVariant::PaymentTransaction(PaymentRequest::new(
-            kp_receiver.public().clone(),
-            0,
-            amount,
-        ));
+        let transaction_variant =
+            TransactionVariant::PaymentTransaction(PaymentRequest::new(kp_receiver.public().clone(), 0, amount));
         let dummy_batch_digest = BatchDigest::new([0; DIGEST_LEN]);
 
-        let transaction = Transaction::new(
-            kp_sender.public().clone(),
-            dummy_batch_digest,
-            transaction_variant,
-        );
+        let transaction = Transaction::new(kp_sender.public().clone(), dummy_batch_digest, transaction_variant);
 
         // generate the signed digest for repeated use
         let signed_digest: AccountSignature = kp_sender.sign(&(transaction.digest().get_array())[..]);
 
-        SignedTransaction::new(
-            kp_sender.public().clone(),
-            transaction.clone(),
-            signed_digest.clone(),
-        )
+        SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest.clone())
     }
 
     // bench serializing singletons
@@ -98,10 +80,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         let mut i = 0;
         while i < 1_000 {
             // wrap signed transaction in black box to protect compiler from advance knowledge
-            let _ = SignedTransaction::deserialize(black_box(
-                signed_transaction_serialized.clone(),
-            ))
-            .unwrap();
+            let _ = SignedTransaction::deserialize(black_box(signed_transaction_serialized.clone())).unwrap();
             i += 1;
         }
     }
@@ -172,10 +151,9 @@ fn criterion_benchmark(c: &mut Criterion) {
     let message = WorkerMessage::Batch(Batch(batch));
     let serialized = bincode::serialize(&message).unwrap();
 
-    c.bench_function(
-        "serialization_deserialize_batch_and_verify_method1_1_000",
-        move |b| b.iter(|| deserialize_batch_and_verify_method1(black_box(&serialized[..]))),
-    );
+    c.bench_function("serialization_deserialize_batch_and_verify_method1_1_000", move |b| {
+        b.iter(|| deserialize_batch_and_verify_method1(black_box(&serialized[..])))
+    });
 }
 
 criterion_group!(benches, criterion_benchmark);

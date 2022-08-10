@@ -96,8 +96,8 @@ pub struct ValidatorService {
 }
 
 impl ValidatorService {
-    /// Spawn all the subsystems run by a Sui authority: a consensus node, a sui authority server,
-    /// and a consensus listener bridging the consensus node and the sui authority.
+    /// Spawn all the subsystems run by a gdex valdiator: a consensus node, a gdex valdiator server,
+    /// and a consensus listener bridging the consensus node and the gdex valdiator.
     pub async fn new(
         config: &NodeConfig,
         state: Arc<ValidatorState>,
@@ -113,6 +113,7 @@ impl ValidatorService {
         let consensus_keypair = config.key_pair().copy();
         let consensus_name = consensus_keypair.public().clone();
         let consensus_store = narwhal_node::NodeStorage::reopen(consensus_config.db_path());
+
         narwhal_node::Node::spawn_primary(
             consensus_keypair,
             config.genesis()?.narwhal_committee(),
@@ -124,6 +125,7 @@ impl ValidatorService {
             prometheus_registry,
         )
         .await?;
+
         narwhal_node::Node::spawn_workers(
             consensus_name,
             /* ids */ vec![0], // We run a single worker with id '0'.
@@ -145,13 +147,6 @@ impl ValidatorService {
         transaction
             .verify()
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
-        //TODO This is really really bad, we should have different types for signature-verified transactions
-        // transaction.is_verified = true;
-
-        // let tx_digest = transaction.get_transaction_payload().digest();
-
-        // Enable Trace Propagation across spans/processes using tx_digest
-        // let span = tracing::debug_span!("process_tx", ?tx_digest, tx_kind = transaction.data.kind_as_str());
 
         state
             .handle_transaction(&transaction)
@@ -184,7 +179,7 @@ impl ValidatorAPI for ValidatorService {
 mod test_validator_server {
     use super::*;
     use crate::{
-        builder::genesis_state::GenesisStateBuilder, client::ClientAPI, client::NetworkValidatorClient,
+        builder::genesis_state::GenesisStateBuilder, client::{ClientAPI, NetworkValidatorClient},
         genesis_ceremony::VALIDATOR_FUNDING_AMOUNT,
     };
     use gdex_controller::master::MasterController;
@@ -242,7 +237,7 @@ mod test_validator_server {
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
         let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
 
-        let resp1 = client
+        let _resp1 = client
             .handle_transaction(signed_transaction)
             .await
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e));

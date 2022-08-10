@@ -50,6 +50,7 @@ pub struct ValidatorState {
     // Epoch related information.
     /// Committee of this GDEX instance.
     pub committee: ArcSwap<Committee>,
+    /// NodeConfig for this node
     /// Controller of various blockchain modules
     pub master_controller: MasterController,
     // A map of transactions which have been seen
@@ -83,27 +84,6 @@ impl ValidatorState {
     /// Initiate a new transaction.
     pub async fn handle_transaction(&self, _transaction: &SignedTransaction) -> Result<(), GDEXError> {
         Ok(())
-        // self.metrics.tx_orders.inc();
-        // // Check the sender's signature.
-        // transaction.verify().map_err(|e| {
-        //     self.metrics.signature_errors.inc();
-        //     e
-        // })?;
-        // let transaction_digest = *transaction.digest();
-
-        // let response = self.handle_transaction_impl(transaction).await;
-        // match response {
-        //     Ok(r) => Ok(()),
-        //     // If we see an error, it is possible that a certificate has already been processed.
-        //     // In that case, we could still return Ok to avoid showing confusing errors.
-        //     Err(err) => {
-        //         if self.database.effects_exists(&transaction_digest)? {
-        //             Ok(())
-        //         } else {
-        //             Err(err)
-        //         }
-        //     }
-        // }
     }
 }
 

@@ -1120,6 +1120,7 @@ dependencies = [
  "clap 2.34.0",
  "criterion-plot",
  "csv",
+ "futures",
  "itertools",
  "lazy_static 1.4.0",
  "num-traits 0.2.15",
@@ -1132,6 +1133,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "tinytemplate",
+ "tokio",
  "walkdir",
 ]
 
@@ -2257,6 +2259,7 @@ dependencies = [
  "anyhow",
  "arc-swap",
  "async-trait",
+ "axum",
  "bcs",
  "camino",
  "clap 3.2.2",
@@ -2329,8 +2332,11 @@ version = "0.1.0"
 dependencies = [
  "assert_approx_eq",
  "bcs",
+ "bincode",
  "criterion",
+ "crypto",
  "gdex-controller",
+ "gdex-core",
  "gdex-engine",
  "gdex-types",
  "gdex-workspace-hack",
@@ -2338,7 +2344,9 @@ dependencies = [
  "rocksdb",
  "serde 1.0.142",
  "serde_json",
+ "tempfile",
  "tokio",
+ "types",
 ]
 
 [[package]]

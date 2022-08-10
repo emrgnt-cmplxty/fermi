@@ -108,6 +108,8 @@ impl ClientAPI for NetworkValidatorClient {
         &self,
         transaction: SignedTransaction,
     ) -> Result<tonic::Response<SignedTransaction>, GDEXError> {
+        println!("handling transaction on the validator client");
+
         self.client()
             .transaction(transaction)
             .await
@@ -228,6 +230,7 @@ mod client_tests {
     use crate::config::server::ServerConfig;
     use gdex_types::utils;
 
+    // TODO - how can we make local unit tests more robust?
     #[tokio::test]
     async fn basic_functionality() {
         let address = utils::new_network_address();

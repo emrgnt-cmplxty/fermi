@@ -61,6 +61,11 @@ impl ValidatorState {
     // TODO: This function takes both committee and genesis as parameter.
     // Technically genesis already contains committee information. Could consider merging them.
     pub async fn new(name: ValidatorName, secret: StableSyncValidatorSigner, genesis: &ValidatorGenesisState) -> Self {
+        // let config =
+        // let consensus_config = config
+        // .consensus_config()
+        // .ok_or_else(|| anyhow!("Validator is missing consensus config"))?;
+
         ValidatorState {
             name,
             secret,
@@ -83,6 +88,7 @@ impl ValidatorState {
 impl ValidatorState {
     /// Initiate a new transaction.
     pub async fn handle_transaction(&self, _transaction: &SignedTransaction) -> Result<(), GDEXError> {
+        println!("handling transaction on the validator state");
         Ok(())
     }
 }
@@ -143,6 +149,7 @@ impl ExecutionState for ValidatorState {
         _execution_indices: ExecutionIndices,
         _transaction: Self::Transaction,
     ) -> Result<(Self::Outcome, Option<narwhal_config::Committee>), Self::Error> {
+        println!("handling a consensus transaction..");
         Ok((Vec::default(), None))
     }
 

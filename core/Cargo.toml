@@ -14,12 +14,14 @@ camino = "1.0.9"
 clap = { version = "3.1.17", features = ["derive"] }
 dirs = "4.0.0"
 futures = "0.3.21"
+http = { version = "0.2.8" }
 multiaddr = "0.14.0"
 narwhal-config = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "config" }
 narwhal-consensus = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "consensus" }
 narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "crypto" }
 narwhal-executor = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "executor" }
 narwhal-node = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "node" }
+narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "types" }
 once_cell = "1.11.0"
 prometheus = "0.13.1"
 rand = "0.7.3"

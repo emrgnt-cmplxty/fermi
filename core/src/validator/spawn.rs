@@ -154,6 +154,7 @@ pub mod suite_spawn_tests {
     use tracing_subscriber::FmtSubscriber;
 
     #[tokio::test]
+    #[ignore]
     pub async fn test() {
         let subscriber = FmtSubscriber::builder()
             // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)

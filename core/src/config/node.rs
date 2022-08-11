@@ -116,8 +116,6 @@ impl NodeConfig {
 
 #[cfg(test)]
 mod node_tests {
-
-    use super::*;
     use crate::{
         builder::network_config::NetworkConfigBuilder,
         config::{genesis::GenesisConfig, GDEX_NETWORK_CONFIG},
@@ -136,8 +134,6 @@ mod node_tests {
             .initial_accounts_config(genesis_conf)
             .build();
         let validator_config = network_config.validator_configs()[0].clone();
-
-        println!("default_key_pair={:?}", default_key_pair());
 
         let _default_key_pair = validator_config.key_pair();
         let _public_key = validator_config.public_key();

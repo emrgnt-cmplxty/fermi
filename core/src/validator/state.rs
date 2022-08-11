@@ -21,6 +21,7 @@ use std::{
         Arc, Mutex,
     },
 };
+use tracing::debug;
 
 /// Tracks recently submitted transactions to eventually implement transaction gating
 // TODO - implement the gating and garbage collection
@@ -50,6 +51,7 @@ pub struct ValidatorState {
     // Epoch related information.
     /// Committee of this GDEX instance.
     pub committee: ArcSwap<Committee>,
+    /// NodeConfig for this node
     /// Controller of various blockchain modules
     pub master_controller: MasterController,
     // A map of transactions which have been seen
@@ -82,28 +84,8 @@ impl ValidatorState {
 impl ValidatorState {
     /// Initiate a new transaction.
     pub async fn handle_transaction(&self, _transaction: &SignedTransaction) -> Result<(), GDEXError> {
+        debug!("Handling a new transaction with the ValidatorState",);
         Ok(())
-        // self.metrics.tx_orders.inc();
-        // // Check the sender's signature.
-        // transaction.verify().map_err(|e| {
-        //     self.metrics.signature_errors.inc();
-        //     e
-        // })?;
-        // let transaction_digest = *transaction.digest();
-
-        // let response = self.handle_transaction_impl(transaction).await;
-        // match response {
-        //     Ok(r) => Ok(()),
-        //     // If we see an error, it is possible that a certificate has already been processed.
-        //     // In that case, we could still return Ok to avoid showing confusing errors.
-        //     Err(err) => {
-        //         if self.database.effects_exists(&transaction_digest)? {
-        //             Ok(())
-        //         } else {
-        //             Err(err)
-        //         }
-        //     }
-        // }
     }
 }
 
@@ -153,24 +135,32 @@ mod test_validator_state {
 
 #[async_trait]
 impl ExecutionState for ValidatorState {
-    type Transaction = u64;
+    type Transaction = SignedTransaction;
     type Error = GDEXError;
     type Outcome = Vec<u8>;
 
     async fn handle_consensus_transaction(
         &self,
-        _consensus_output: &narwhal_consensus::ConsensusOutput,
+        consensus_output: &narwhal_consensus::ConsensusOutput,
         _execution_indices: ExecutionIndices,
-        _transaction: Self::Transaction,
+        transaction: Self::Transaction,
     ) -> Result<(Self::Outcome, Option<narwhal_config::Committee>), Self::Error> {
+        debug!(
+            "Processing transaction = {:?} with consensus output = {:?}",
+            transaction, consensus_output
+        );
+
         Ok((Vec::default(), None))
     }
 
     fn ask_consensus_write_lock(&self) -> bool {
+        println!("asking consensus write lock");
         true
     }
 
-    fn release_consensus_write_lock(&self) {}
+    fn release_consensus_write_lock(&self) {
+        println!("releasing consensus write lock");
+    }
 
     async fn load_execution_indices(&self) -> Result<ExecutionIndices, Self::Error> {
         Ok(ExecutionIndices::default())

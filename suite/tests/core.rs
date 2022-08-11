@@ -21,7 +21,6 @@ pub mod suite_core_tests {
     use narwhal_config::Parameters as ConsensusParameters;
     use std::path::Path;
     use std::{io, sync::Arc, time};
-    use tracing_subscriber::FmtSubscriber;
 
     // Create a genesis config with a single validator seeded by VALIDATOR_SEED
     async fn get_genesis_state(dir: &Path, number_of_validators: usize) -> ValidatorGenesisState {

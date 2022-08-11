@@ -21,7 +21,6 @@ pub mod suite_core_tests {
     use narwhal_config::Parameters as ConsensusParameters;
     use std::path::Path;
     use std::{io, sync::Arc, time};
-    use tracing::Level;
     use tracing_subscriber::FmtSubscriber;
 
     // Create a genesis config with a single validator seeded by VALIDATOR_SEED
@@ -132,7 +131,7 @@ pub mod suite_core_tests {
             // completes the builder.
             .finish();
         tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-    
+
         let temp_dir = tempfile::tempdir().unwrap();
         let working_dir = temp_dir.path();
 

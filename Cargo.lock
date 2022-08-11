@@ -2335,6 +2335,7 @@ dependencies = [
  "assert_approx_eq",
  "bcs",
  "bincode",
+ "config 0.1.0",
  "criterion",
  "crypto",
  "gdex-controller",

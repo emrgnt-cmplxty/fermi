@@ -29,7 +29,6 @@ use tracing::info;
 #[derive(Parser)]
 pub enum GDEXCommand {
     /// GDEX networking
-    ///
     /// Starts a validator node for the GDEX network
     #[clap(name = "start")]
     Start {

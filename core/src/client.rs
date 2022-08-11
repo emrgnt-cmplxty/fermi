@@ -108,8 +108,6 @@ impl ClientAPI for NetworkValidatorClient {
         &self,
         transaction: SignedTransaction,
     ) -> Result<tonic::Response<SignedTransaction>, GDEXError> {
-        println!("handling transaction on the validator client");
-
         self.client()
             .transaction(transaction)
             .await

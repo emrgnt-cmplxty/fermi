@@ -61,11 +61,6 @@ impl ValidatorState {
     // TODO: This function takes both committee and genesis as parameter.
     // Technically genesis already contains committee information. Could consider merging them.
     pub async fn new(name: ValidatorName, secret: StableSyncValidatorSigner, genesis: &ValidatorGenesisState) -> Self {
-        // let config =
-        // let consensus_config = config
-        // .consensus_config()
-        // .ok_or_else(|| anyhow!("Validator is missing consensus config"))?;
-
         ValidatorState {
             name,
             secret,
@@ -88,7 +83,6 @@ impl ValidatorState {
 impl ValidatorState {
     /// Initiate a new transaction.
     pub async fn handle_transaction(&self, _transaction: &SignedTransaction) -> Result<(), GDEXError> {
-        println!("handling transaction on the validator state");
         Ok(())
     }
 }
@@ -139,7 +133,7 @@ mod test_validator_state {
 
 #[async_trait]
 impl ExecutionState for ValidatorState {
-    type Transaction = u64;
+    type Transaction = SignedTransaction;
     type Error = GDEXError;
     type Outcome = Vec<u8>;
 
@@ -149,15 +143,17 @@ impl ExecutionState for ValidatorState {
         _execution_indices: ExecutionIndices,
         _transaction: Self::Transaction,
     ) -> Result<(Self::Outcome, Option<narwhal_config::Committee>), Self::Error> {
-        println!("handling a consensus transaction..");
         Ok((Vec::default(), None))
     }
 
     fn ask_consensus_write_lock(&self) -> bool {
+        println!("asking consensus write lock");
         true
     }
 
-    fn release_consensus_write_lock(&self) {}
+    fn release_consensus_write_lock(&self) {
+        println!("releasing consensus write lock");
+    }
 
     async fn load_execution_indices(&self) -> Result<ExecutionIndices, Self::Error> {
         Ok(ExecutionIndices::default())

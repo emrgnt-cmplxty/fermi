@@ -90,7 +90,10 @@ impl ValidatorServer {
 
     pub async fn spawn(self) -> Result<ValidatorServerHandle, io::Error> {
         let address = self.address.clone();
-        println!("spawning the validator server with address={:?}", address);
+        info!(
+            "Calling spawn to produce a the validator server with port address = {:?}",
+            address
+        );
         self.spawn_with_bind_address(address).await
     }
 

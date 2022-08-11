@@ -71,7 +71,6 @@ pub mod suite_core_tests {
         );
 
         let validator = validators[validator_index].clone();
-        println!("validator={:?}", validator);
         let network_address = validator.network_address.clone();
         let consensus_address = validator.narwhal_consensus_address.clone();
         let pubilc_key = validator.public_key();

@@ -11,6 +11,7 @@ use gdex_types::{node::ValidatorInfo, utils};
 use multiaddr::Multiaddr;
 use narwhal_config::Parameters as ConsensusParameters;
 use std::{path::PathBuf, sync::Arc};
+use tracing::info;
 
 /// Can spawn a validator server handle at the internal address
 /// the server handle contains a validator api (grpc) that exposes a validator service
@@ -59,7 +60,10 @@ impl ValidatorSpawner {
         let key_pair = Arc::pin(utils::read_keypair_from_file(&key_file).unwrap());
         let validator_state = Arc::new(ValidatorState::new(pubilc_key, key_pair, &self.genesis_state).await);
 
-        println!("validator={:?}", self.validator);
+        info!(
+            "Spawning a validator with the initial validator state = {:?}",
+            self.validator
+        );
         // Create a node config with this validators information
         let narwhal_config: ConsensusParameters = ConsensusParameters {
             batch_size: self
@@ -74,7 +78,10 @@ impl ValidatorSpawner {
                 .max_batch_delay,
             ..Default::default()
         };
-        println!("narwhal_config={:?}", narwhal_config);
+        info!(
+            "Spawning a validator with the input narwhal config = {:?}",
+            narwhal_config
+        );
 
         let consensus_config = ConsensusConfig {
             consensus_address,
@@ -98,8 +105,8 @@ impl ValidatorSpawner {
             genesis: Genesis::new(self.genesis_state.clone()),
         };
 
-        // spawn the validator service, e.g. Narwhal consensus
         let prometheus_registry = start_prometheus_server(node_config.metrics_address);
+        // spawn the validator service, e.g. Narwhal consensus
         let spawned_service = ValidatorService::new(&node_config, Arc::clone(&validator_state), &prometheus_registry)
             .await
             .unwrap();
@@ -168,7 +175,6 @@ pub mod suite_spawn_tests {
         let dir = "../.proto";
         let path = Path::new(dir).to_path_buf();
 
-        // let mut validator_handles = Vec::new();
         info!("Spawning validator 0");
         let mut spawner_0 = ValidatorSpawner::new(
             /* path_dir */ path.clone(),
@@ -176,7 +182,6 @@ pub mod suite_spawn_tests {
         );
 
         let handler_0 = spawner_0.spawn().await;
-        // validator_handles.push(spawner_0.spawn().await.handle);
 
         info!("Spawning validator 1");
         let mut spawner_1 = ValidatorSpawner::new(
@@ -206,7 +211,7 @@ pub mod suite_spawn_tests {
         let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
 
         let address = spawner_0.consensus_address.as_ref().unwrap().clone();
-        println!("connecting network client to address={:?}", address);
+        info!("Connecting network client to address={:?}", address);
         let client = NetworkValidatorClient::connect_lazy(&address).unwrap();
         let mut i = 0;
         while i < 1_000 {
@@ -218,6 +223,7 @@ pub mod suite_spawn_tests {
             i += 1;
         }
         let _validator_handles = vec![handler_0.handle, handler_1.handle, handler_2.handle, handler_3.handle];
+        // uncomment to block on execution
         // join_all(validator_handles).await;
     }
 }

@@ -21,6 +21,7 @@ use std::{
         Arc, Mutex,
     },
 };
+use tracing::debug;
 
 /// Tracks recently submitted transactions to eventually implement transaction gating
 // TODO - implement the gating and garbage collection
@@ -83,6 +84,7 @@ impl ValidatorState {
 impl ValidatorState {
     /// Initiate a new transaction.
     pub async fn handle_transaction(&self, _transaction: &SignedTransaction) -> Result<(), GDEXError> {
+        debug!("Handling a new transaction with the ValidatorState",);
         Ok(())
     }
 }
@@ -139,10 +141,15 @@ impl ExecutionState for ValidatorState {
 
     async fn handle_consensus_transaction(
         &self,
-        _consensus_output: &narwhal_consensus::ConsensusOutput,
+        consensus_output: &narwhal_consensus::ConsensusOutput,
         _execution_indices: ExecutionIndices,
-        _transaction: Self::Transaction,
+        transaction: Self::Transaction,
     ) -> Result<(Self::Outcome, Option<narwhal_config::Committee>), Self::Error> {
+        debug!(
+            "Processing transaction = {:?} with consensus output = {:?}",
+            transaction, consensus_output
+        );
+
         Ok((Vec::default(), None))
     }
 

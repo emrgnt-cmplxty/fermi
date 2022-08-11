@@ -19,7 +19,7 @@ use std::{io, sync::Arc, time::Duration};
 use tokio::sync::mpsc::channel;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::Mutex;
-use tracing::info;
+use tracing::{debug, info};
 
 const DEFAULT_MIN_BATCH_SIZE: usize = 1000;
 const DEFAULT_MAX_DELAY_MILLIS: u64 = 5_000; // 5 sec
@@ -139,6 +139,11 @@ impl ValidatorService {
         let consensus_name = consensus_keypair.public().clone();
         let consensus_store = narwhal_node::NodeStorage::reopen(consensus_config.db_path());
 
+        info!(
+            "Creating narwhal with committee ={}",
+            config.genesis()?.narwhal_committee()
+        );
+
         narwhal_node::Node::spawn_primary(
             consensus_keypair,
             config.genesis()?.narwhal_committee(),
@@ -194,6 +199,8 @@ impl ValidatorService {
         state: Arc<ValidatorState>,
         request: tonic::Request<SignedTransaction>,
     ) -> Result<tonic::Response<SignedTransaction>, tonic::Status> {
+        debug!("Handling a new transaction with ValidatorService",);
+
         let transaction = request.into_inner();
 
         transaction
@@ -229,6 +236,8 @@ impl ValidatorAPI for ValidatorService {
         &self,
         request: tonic::Request<SignedTransaction>,
     ) -> Result<tonic::Response<SignedTransaction>, tonic::Status> {
+        debug!("Handling a new transaction with a ValidatorService ValidatorAPI",);
+
         let state = self.state.clone();
         let consensus_adapter = self.consensus_adapter.clone();
 

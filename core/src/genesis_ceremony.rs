@@ -26,10 +26,10 @@ pub const VALIDATOR_FUNDING_AMOUNT: u64 = 1_000_000;
 #[derive(Parser)]
 pub struct Ceremony {
     #[clap(value_parser, long)]
-    path: Option<PathBuf>,
+    pub path: Option<PathBuf>,
 
     #[clap(subcommand)]
-    command: CeremonyCommand,
+    pub command: CeremonyCommand,
 }
 
 impl Ceremony {

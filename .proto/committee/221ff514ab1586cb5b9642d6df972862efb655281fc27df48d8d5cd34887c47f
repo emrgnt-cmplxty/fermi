@@ -1,0 +1,11 @@
+---
+name: validator-3
+public-key: Ih/1FKsVhstblkLW35coYu+2VSgfwn30jY1c00iHxH8=
+stake: 1000000
+delegation: 0
+network-address: /dns/localhost/tcp/62264/http
+narwhal-primary-to-primary: /dns/localhost/tcp/62266/http
+narwhal-worker-to-primary: /dns/localhost/tcp/62268/http
+narwhal-primary-to-worker: /dns/localhost/tcp/62270/http
+narwhal-worker-to-worker: /dns/localhost/tcp/62260/http
+narwhal-consensus-address: /dns/localhost/tcp/62272/http

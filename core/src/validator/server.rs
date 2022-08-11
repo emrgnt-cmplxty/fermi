@@ -21,7 +21,7 @@ use tokio::sync::mpsc::Receiver;
 use tokio::sync::Mutex;
 use tracing::{debug, info};
 
-const DEFAULT_MIN_BATCH_SIZE: usize = 1000;
+const DEFAULT_MIN_BATCH_SIZE: usize = 1_000;
 const DEFAULT_MAX_DELAY_MILLIS: u64 = 5_000; // 5 sec
 
 /// Contains and orchestrates a tokio handle where the validator server runs
@@ -189,6 +189,7 @@ impl ValidatorService {
     async fn analyze(mut rx_output: Receiver<(Result<Vec<u8>, SubscriberError>, Vec<u8>)>) {
         loop {
             while let Some(_message) = rx_output.recv().await {
+                debug!("Received a finalized consensus transaction with analyze",);
                 // NOTE: Notify the user that its transaction has been processed.
             }
         }

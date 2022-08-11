@@ -21,6 +21,8 @@ pub mod suite_core_tests {
     use narwhal_config::Parameters as ConsensusParameters;
     use std::path::Path;
     use std::{io, sync::Arc, time};
+    use tracing::Level;
+    use tracing_subscriber::FmtSubscriber;
 
     // Create a genesis config with a single validator seeded by VALIDATOR_SEED
     async fn get_genesis_state(dir: &Path, number_of_validators: usize) -> ValidatorGenesisState {
@@ -123,14 +125,14 @@ pub mod suite_core_tests {
     const NUMBER_OF_TEST_VALIDATORS: usize = 4;
     #[tokio::test]
     pub async fn four_node_network() {
-        // let subscriber = FmtSubscriber::builder()
-        //     // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
-        //     // will be written to stdout.
-        //     .with_env_filter("gdex_core=debug, gdex_suite=debug")
-        //     // .with_max_level(Level::DEBUG)
-        //     // completes the builder.
-        //     .finish();
-        // tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+        let subscriber = FmtSubscriber::builder()
+            // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
+            // will be written to stdout.
+            .with_env_filter("gdex_core=debug, gdex_suite=debug")
+            // .with_max_level(Level::DEBUG)
+            // completes the builder.
+            .finish();
+        tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
         let temp_dir = tempfile::tempdir().unwrap();
         let working_dir = temp_dir.path();

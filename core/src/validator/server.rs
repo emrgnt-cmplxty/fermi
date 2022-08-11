@@ -26,9 +26,9 @@ const DEFAULT_MAX_DELAY_MILLIS: u64 = 5_000; // 5 sec
 
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
-    tx_cancellation: tokio::sync::oneshot::Sender<()>,
-    local_addr: Multiaddr,
-    handle: tokio::task::JoinHandle<Result<(), tonic::transport::Error>>,
+    pub tx_cancellation: tokio::sync::oneshot::Sender<()>,
+    pub local_addr: Multiaddr,
+    pub handle: tokio::task::JoinHandle<Result<(), tonic::transport::Error>>,
 }
 
 impl ValidatorServerHandle {
@@ -90,6 +90,7 @@ impl ValidatorServer {
 
     pub async fn spawn(self) -> Result<ValidatorServerHandle, io::Error> {
         let address = self.address.clone();
+        println!("spawning the validator server with address={:?}", address);
         self.spawn_with_bind_address(address).await
     }
 

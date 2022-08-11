@@ -84,9 +84,9 @@ impl ValidatorSpawner {
 
         let key_pair = Arc::new(utils::read_keypair_from_file(&key_file).unwrap());
         let node_config = NodeConfig {
-            key_pair: key_pair,
+            key_pair,
             db_path,
-            network_address: network_address,
+            network_address,
             metrics_address: utils::available_local_socket_address(),
             admin_interface_port: utils::get_available_port(),
             json_rpc_address: utils::available_local_socket_address(),

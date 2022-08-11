@@ -123,7 +123,8 @@ pub mod suite_core_tests {
     }
 
     const NUMBER_OF_TEST_VALIDATORS: usize = 4;
-    #[tokio::test] #[ignore] // it fails in remote view
+    #[tokio::test]
+    #[ignore] // it fails in remote view
     pub async fn four_node_network() {
         let subscriber = FmtSubscriber::builder()
             // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)

@@ -159,12 +159,13 @@ impl GDEXCommand {
             }
             GDEXCommand::InitGenesis { path } => {
                 let ceremony = Ceremony {
-                    path: path,
+                    path,
                     command: CeremonyCommand::Init,
                 };
                 ceremony.run().unwrap();
                 Ok(())
             }
+            #[allow(clippy::redundant_closure)]
             GDEXCommand::AddValidatorGenesis {
                 path,
                 name,
@@ -177,16 +178,21 @@ impl GDEXCommand {
                 narwhal_consensus_address,
             } => {
                 let ceremony = Ceremony {
-                    path: path,
+                    path,
                     command: CeremonyCommand::AddValidator {
                         name,
                         key_file,
-                        network_address: network_address.unwrap_or(utils::new_network_address()),
-                        narwhal_primary_to_primary: narwhal_primary_to_primary.unwrap_or(utils::new_network_address()),
-                        narwhal_worker_to_primary: narwhal_worker_to_primary.unwrap_or(utils::new_network_address()),
-                        narwhal_primary_to_worker: narwhal_primary_to_worker.unwrap_or(utils::new_network_address()),
-                        narwhal_worker_to_worker: narwhal_worker_to_worker.unwrap_or(utils::new_network_address()),
-                        narwhal_consensus_address: narwhal_consensus_address.unwrap_or(utils::new_network_address()),
+                        network_address: network_address.unwrap_or_else(|| utils::new_network_address()),
+                        narwhal_primary_to_primary: narwhal_primary_to_primary
+                            .unwrap_or_else(|| utils::new_network_address()),
+                        narwhal_worker_to_primary: narwhal_worker_to_primary
+                            .unwrap_or_else(|| utils::new_network_address()),
+                        narwhal_primary_to_worker: narwhal_primary_to_worker
+                            .unwrap_or_else(|| utils::new_network_address()),
+                        narwhal_worker_to_worker: narwhal_worker_to_worker
+                            .unwrap_or_else(|| utils::new_network_address()),
+                        narwhal_consensus_address: narwhal_consensus_address
+                            .unwrap_or_else(|| utils::new_network_address()),
                     },
                 };
                 ceremony.run().unwrap();
@@ -194,7 +200,7 @@ impl GDEXCommand {
             }
             GDEXCommand::AddControllersGenesis { path } => {
                 let ceremony = Ceremony {
-                    path: path,
+                    path,
                     command: CeremonyCommand::AddControllers,
                 };
                 ceremony.run().unwrap();
@@ -202,7 +208,7 @@ impl GDEXCommand {
             }
             GDEXCommand::BuildGenesis { path } => {
                 let ceremony = Ceremony {
-                    path: path,
+                    path,
                     command: CeremonyCommand::Build,
                 };
                 ceremony.run().unwrap();
@@ -210,7 +216,7 @@ impl GDEXCommand {
             }
             GDEXCommand::VerifyAndSignGenesis { path, key_file } => {
                 let ceremony = Ceremony {
-                    path: path,
+                    path,
                     command: CeremonyCommand::VerifyAndSign { key_file },
                 };
                 ceremony.run().unwrap();
@@ -218,7 +224,7 @@ impl GDEXCommand {
             }
             GDEXCommand::FinalizeGenesis { path } => {
                 let ceremony = Ceremony {
-                    path: path,
+                    path,
                     command: CeremonyCommand::Finalize,
                 };
                 ceremony.run().unwrap();

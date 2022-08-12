@@ -33,6 +33,10 @@ pub enum GDEXError {
     #[error("Failed to deserialize into a signed transaction")]
     TransactionDeserialization,
 
+    // Consensus output errors
+    #[error("Failed to execute transaction")]
+    ExecError,
+
     // server errors
     #[error("Failed to process the inbound transaction")]
     RpcFailure(String),

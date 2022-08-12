@@ -10,16 +10,22 @@ use gdex_types::{
     account::ValidatorKeyPair,
     committee::{Committee, ValidatorName},
     error::GDEXError,
-    transaction::{SignedTransaction, TransactionDigest},
+    transaction::{SignedTransaction, TransactionDigest, TransactionVariant},
 };
 use narwhal_executor::{ExecutionIndices, ExecutionState};
 use std::{
     collections::HashSet,
     pin::Pin,
+    path::Path,
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc, Mutex,
     },
+};
+use store::{
+    reopen,
+    rocks::{open_cf, DBMap},
+    Store,
 };
 use tracing::{debug, info};
 
@@ -56,12 +62,22 @@ pub struct ValidatorState {
     pub master_controller: MasterController,
     // A map of transactions which have been seen
     pub validator_store: ValidatorStore,
+    // rocksdb store for storing execution indices
+    pub store: Store<u64, ExecutionIndices>,
 }
 
 impl ValidatorState {
+
+    // TODO: we will refactor interaction with rocksdb
+    pub const INDICES_ADDRESS: u64 = 14;
+
     // TODO: This function takes both committee and genesis as parameter.
     // Technically genesis already contains committee information. Could consider merging them.
-    pub async fn new(name: ValidatorName, secret: StableSyncValidatorSigner, genesis: &ValidatorGenesisState) -> Self {
+    pub async fn new(name: ValidatorName, secret: StableSyncValidatorSigner, genesis: &ValidatorGenesisState, store_path: &Path) -> Self {
+        const STATE_CF: &str = "test_state";
+        let rocksdb = open_cf(store_path, None, &[STATE_CF]).unwrap();
+        let map = reopen!(&rocksdb, STATE_CF;<u64, ExecutionIndices>);
+
         ValidatorState {
             name,
             secret,
@@ -69,6 +85,7 @@ impl ValidatorState {
             committee: ArcSwap::from(Arc::new(genesis.committee().unwrap())),
             master_controller: genesis.master_controller().clone(),
             validator_store: ValidatorStore::default(),
+            store: Store::new(map)
         }
     }
 
@@ -126,7 +143,7 @@ mod test_validator_state {
             .add_validator(validator);
 
         let genesis = builder.build();
-        let validator = ValidatorState::new(public_key, secret, &genesis).await;
+        let validator = ValidatorState::new(public_key, secret, &genesis, tempfile::tempdir().unwrap().path()).await;
 
         validator.halt_validator();
         validator.unhalt_validator();
@@ -143,14 +160,30 @@ impl ExecutionState for ValidatorState {
         &self,
         consensus_output: &narwhal_consensus::ConsensusOutput,
         _execution_indices: ExecutionIndices,
-        transaction: Self::Transaction,
+        signed_transaction: Self::Transaction,
     ) -> Result<(Self::Outcome, Option<narwhal_config::Committee>), Self::Error> {
-        debug!(
-            "Processing transaction = {:?} with consensus output = {:?}",
-            transaction, consensus_output
-        );
-
-        Ok((Vec::default(), None))
+        let transaction = signed_transaction.get_transaction_payload();
+        let execution = match transaction.get_variant() {
+            TransactionVariant::PaymentTransaction(payment) => {
+                self.store.write(Self::INDICES_ADDRESS, _execution_indices).await;
+                self.master_controller.bank_controller.lock().unwrap().transfer(
+                    transaction.get_sender(),
+                    payment.get_receiver(),
+                    payment.get_asset_id(),
+                    payment.get_amount(),
+                )
+            }
+            TransactionVariant::CreateAssetTransaction(_create_asset) => self
+                .master_controller
+                .bank_controller
+                .lock()
+                .unwrap()
+                .create_asset(transaction.get_sender()),
+        };
+        match execution {
+            Ok(_) => Ok((Vec::default(), None)),
+            Err(err) => Err(err),
+        }
     }
 
     fn ask_consensus_write_lock(&self) -> bool {

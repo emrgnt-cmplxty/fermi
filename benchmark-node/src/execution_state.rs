@@ -5,67 +5,6 @@ use narwhal_config::Committee;
 use narwhal_consensus::ConsensusOutput;
 use narwhal_executor::{ExecutionIndices, ExecutionState, ExecutionStateError};
 use thiserror::Error;
-
-/// A simple/dumb execution engine.
-pub struct SimpleExecutionState;
-
-#[cfg(not(tarpaulin))]
-#[async_trait]
-impl ExecutionState for SimpleExecutionState {
-    type Transaction = String;
-    type Error = SimpleExecutionError;
-    type Outcome = Vec<u8>;
-
-    async fn handle_consensus_transaction(
-        &self,
-        _consensus_output: &ConsensusOutput,
-        _execution_indices: ExecutionIndices,
-        _transaction: Self::Transaction,
-    ) -> Result<(Self::Outcome, Option<Committee>), Self::Error> {
-        Ok((Vec::default(), None))
-    }
-
-    fn ask_consensus_write_lock(&self) -> bool {
-        true
-    }
-
-    fn release_consensus_write_lock(&self) {}
-
-    async fn load_execution_indices(&self) -> Result<ExecutionIndices, Self::Error> {
-        Ok(ExecutionIndices::default())
-    }
-}
-
-impl Default for SimpleExecutionState {
-    fn default() -> Self {
-        Self
-    }
-}
-
-/// A simple/dumb execution error.
-#[derive(Debug, Error)]
-pub enum SimpleExecutionError {
-    #[error("Something went wrong in the authority")]
-    ServerError,
-
-    #[error("The client made something bad")]
-    ClientError,
-}
-
-#[async_trait]
-impl ExecutionStateError for SimpleExecutionError {
-    fn node_error(&self) -> bool {
-        match self {
-            Self::ServerError => true,
-            Self::ClientError => false,
-        }
-    }
-
-    fn to_string(&self) -> String {
-        ToString::to_string(&self)
-    }
-}
-
 use narwhal_crypto::ed25519::Ed25519KeyPair;
 use narwhal_crypto::traits::KeyPair;
 use gdex_controller::bank::BankController;

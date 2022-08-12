@@ -2448,6 +2448,35 @@ dependencies = [
 [[package]]
 name = "gdex-workspace-hack"
 version = "0.1.0"
+dependencies = [
+ "chrono",
+ "clap 2.34.0",
+ "criterion",
+ "either",
+ "futures",
+ "futures-channel",
+ "futures-core",
+ "futures-executor",
+ "futures-io",
+ "futures-sink",
+ "futures-task",
+ "futures-util",
+ "log",
+ "memchr",
+ "num-integer",
+ "num-traits 0.2.15",
+ "proc-macro2 1.0.43",
+ "quote 1.0.21",
+ "regex",
+ "scopeguard",
+ "serde 1.0.143",
+ "serde_json",
+ "syn 1.0.99",
+ "tokio",
+ "tracing",
+ "tracing-log",
+ "tracing-subscriber 0.2.25",
+]
 
 [[package]]
 name = "generic-array"

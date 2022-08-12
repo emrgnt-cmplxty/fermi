@@ -66,9 +66,9 @@ impl ExecutionStateError for SimpleExecutionError {
     }
 }
 
+use gdex_controller::bank::BankController;
 use narwhal_crypto::ed25519::Ed25519KeyPair;
 use narwhal_crypto::traits::KeyPair;
-use gdex_controller::bank::BankController;
 use std::{fmt, fmt::Display, path::Path, sync::Mutex};
 use store::{
     reopen,
@@ -77,11 +77,11 @@ use store::{
 };
 pub type AccountKeyPair = Ed25519KeyPair;
 use futures::executor::block_on;
-use rand::{rngs::StdRng, SeedableRng};
 use gdex_types::{
     error::GDEXError,
-    transaction::{SignedTransaction, TransactionVariant}
+    transaction::{SignedTransaction, TransactionVariant},
 };
+use rand::{rngs::StdRng, SeedableRng};
 
 #[async_trait]
 impl ExecutionStateError for AdvancedExecutionStateError {

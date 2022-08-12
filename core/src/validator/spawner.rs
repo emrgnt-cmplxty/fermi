@@ -1,32 +1,48 @@
-use super::server::ValidatorServerHandle;
 use crate::{
     config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME},
     genesis_ceremony::GENESIS_FILENAME,
     metrics::start_prometheus_server,
     validator::{
-        genesis_state::ValidatorGenesisState, server::ValidatorServer, server::ValidatorService, state::ValidatorState,
+        genesis_state::ValidatorGenesisState, server::ValidatorServer, server::ValidatorServerHandle,
+        server::ValidatorService, state::ValidatorState,
     },
 };
+use anyhow::Result;
 use gdex_types::{node::ValidatorInfo, utils};
 use multiaddr::Multiaddr;
 use narwhal_config::Parameters as ConsensusParameters;
 use std::{path::PathBuf, sync::Arc};
+use tokio::task::JoinHandle;
 use tracing::info;
-
 /// Can spawn a validator server handle at the internal address
 /// the server handle contains a validator api (grpc) that exposes a validator service
 pub struct ValidatorSpawner {
-    path: PathBuf,
+    /// Relative path where databases will be created and written to
+    db_path: PathBuf,
+    /// Relative path where validator keystore lives with convention {validator_name}.key
+    key_path: PathBuf,
+    /// Genesis state of the blockchain
+    /// Note, it must contain corresponding information for this validator until more functionality is onboarded
     genesis_state: ValidatorGenesisState,
-    validator: ValidatorInfo,
-    consensus_address: Option<Multiaddr>,
+    /// Validator which is fetched from the genesis state according to initial name
+    validator_info: ValidatorInfo,
+
+    /// Begin objects initialized after calling spawn_validator_service
+
+    /// Validator state passed to the instances spawned
+    validator_state: Option<Arc<ValidatorState>>,
+
+    /// Begin objects initialized after calling spawn_validator_service
+
+    /// Address for communication to the validator server
+    validator_address: Option<Multiaddr>,
 }
 
 impl ValidatorSpawner {
-    pub fn new(path: PathBuf, validator_name: String) -> Self {
+    pub fn new(db_path: PathBuf, key_path: PathBuf, genesis_path: PathBuf, validator_name: String) -> Self {
         let genesis_state =
-            ValidatorGenesisState::load(path.join(GENESIS_FILENAME)).expect("Could not open the genesis file");
-        let validator = genesis_state
+            ValidatorGenesisState::load(genesis_path.join(GENESIS_FILENAME)).expect("Could not open the genesis file");
+        let validator_info = genesis_state
             .validator_set()
             .iter()
             .filter(|v| v.name == validator_name)
@@ -35,37 +51,69 @@ impl ValidatorSpawner {
             .expect("Could not locate validator")
             .clone();
         Self {
-            path,
+            db_path,
+            key_path,
             genesis_state,
-            validator,
-            consensus_address: None,
+            validator_info,
+            validator_state: None,
+            validator_address: None,
         }
     }
 
-    pub fn set_consensus_address(&mut self, address: Multiaddr) {
-        self.consensus_address = Some(address)
+    pub fn get_validator_address(&self) -> &Option<Multiaddr> {
+        &self.validator_address
     }
 
-    async fn start_validator_service(&self) -> (Arc<ValidatorState>, ValidatorService) {
+    pub fn get_validator_info(&self) -> &ValidatorInfo {
+        &self.validator_info
+    }
+
+    fn set_validator_state(&mut self, validator_state: Arc<ValidatorState>) {
+        self.validator_state = Some(validator_state)
+    }
+    fn set_validator_address(&mut self, address: Multiaddr) {
+        self.validator_address = Some(address)
+    }
+
+    fn is_validator_service_spawned(&self) -> bool {
+        self.validator_state.is_some()
+    }
+
+    fn is_validator_server_spawned(&self) -> bool {
+        self.validator_address.is_some()
+    }
+    pub async fn spawn_validator(&mut self) -> ValidatorServerHandle {
+        self.spawn_validator_service().await.unwrap();
+        self.spawn_validator_server().await
+    }
+
+    async fn spawn_validator_service(&mut self) -> Result<Vec<JoinHandle<()>>> {
+        if self.is_validator_service_spawned() {
+            panic!("The validator service has already been spawned");
+        };
+
         // create config directory
-        let network_address = self.validator.network_address.clone();
-        let consensus_address = self.validator.narwhal_consensus_address.clone();
-        let pubilc_key = self.validator.public_key();
+        let network_address = self.validator_info.network_address.clone();
+        let consensus_address = self.validator_info.narwhal_consensus_address.clone();
+        let pubilc_key = self.validator_info.public_key();
 
         // TODO - can we avoid consuming the private key twice in the network setup?
         // Note, this awkwardness is due to my inferred understanding of Arc pin.
-        let key_file = self.path.join(format!("{}.key", self.validator.name));
-        let db_path = self.path.join(format!("{}-{}", self.validator.name, CONSENSUS_DB_NAME));
+        let key_file = self.key_path.join(format!("{}.key", self.validator_info.name));
+        let db_path = self
+            .db_path
+            .join(format!("{}-{}", self.validator_info.name, CONSENSUS_DB_NAME));
 
         let key_pair = Arc::pin(utils::read_keypair_from_file(&key_file).unwrap());
-        let validator_state = Arc::new(ValidatorState::new(pubilc_key, key_pair, &self.genesis_state).await);
+        let validator_state = Arc::new(ValidatorState::new(pubilc_key, key_pair, &self.genesis_state));
 
         info!(
-            "Spawning a validator with the initial validator state = {:?}",
-            self.validator
+            "Spawning a validator with the initial validator info = {:?}",
+            self.validator_info
         );
+
         // Create a node config with this validators information
-        let narwhal_config: ConsensusParameters = ConsensusParameters {
+        let narwhal_config = ConsensusParameters {
             batch_size: self
                 .genesis_state
                 .master_controller()
@@ -78,6 +126,7 @@ impl ValidatorSpawner {
                 .max_batch_delay,
             ..Default::default()
         };
+
         info!(
             "Spawning a validator with the input narwhal config = {:?}",
             narwhal_config
@@ -88,7 +137,6 @@ impl ValidatorSpawner {
             consensus_db_path: db_path.clone(),
             narwhal_config,
         };
-
         let key_pair = Arc::new(utils::read_keypair_from_file(&key_file).unwrap());
         let node_config = NodeConfig {
             key_pair,
@@ -104,45 +152,33 @@ impl ValidatorSpawner {
             enable_reconfig: false,
             genesis: Genesis::new(self.genesis_state.clone()),
         };
-
         let prometheus_registry = start_prometheus_server(node_config.metrics_address);
         // spawn the validator service, e.g. Narwhal consensus
-        let spawned_service = ValidatorService::new(&node_config, Arc::clone(&validator_state), &prometheus_registry)
-            .await
-            .unwrap();
-        (validator_state, spawned_service)
+        let spawned_service =
+            ValidatorService::spawn_narwhal(&node_config, Arc::clone(&validator_state), &prometheus_registry)
+                .await
+                .unwrap();
+
+        self.set_validator_state(validator_state);
+        Ok(spawned_service)
     }
 
-    pub async fn spawn(&mut self) -> ValidatorServerHandle {
-        let (validator_state, validator_service) = self.start_validator_service().await;
+    pub async fn spawn_validator_server(&mut self) -> ValidatorServerHandle {
+        if self.is_validator_server_spawned() {
+            panic!("The validator server already been spawned");
+        };
 
         let new_addr = utils::new_network_address();
-        let consensus_address = validator_service
-            .consensus_adapter
-            .lock()
-            .await
-            .consensus_address
-            .to_owned();
+        let consensus_address = self.validator_info.narwhal_consensus_address.clone();
 
         let validator_server = ValidatorServer::new(
             new_addr.clone(),
-            Arc::clone(&validator_state),
+            // unwrapping is safe as validator state must have been created in spawn_validator_service
+            Arc::clone(&self.validator_state.as_ref().unwrap()),
             consensus_address,
-            Some(
-                self.genesis_state
-                    .master_controller()
-                    .consensus_controller
-                    .min_batch_size,
-            ),
-            Some(
-                self.genesis_state
-                    .master_controller()
-                    .consensus_controller
-                    .max_batch_delay,
-            ),
         );
         let validator_handle = validator_server.spawn().await.unwrap();
-        self.set_consensus_address(validator_handle.address().clone());
+        self.set_validator_address(validator_handle.address().clone());
         validator_handle
     }
 }
@@ -177,40 +213,48 @@ pub mod suite_spawn_tests {
 
         info!("Spawning validator 0");
         let mut spawner_0 = ValidatorSpawner::new(
-            /* path_dir */ path.clone(),
+            /* db_path */ path.clone(),
+            /* key_path */ path.clone(),
+            /* genesis_path */ path.clone(),
             /* validator_name */ "validator-0".to_string(),
         );
 
-        let handler_0 = spawner_0.spawn().await;
+        let handler_0 = spawner_0.spawn_validator().await;
 
         info!("Spawning validator 1");
         let mut spawner_1 = ValidatorSpawner::new(
-            /* path_dir */ path.clone(),
+            /* db_path */ path.clone(),
+            /* key_path */ path.clone(),
+            /* genesis_path */ path.clone(),
             /* validator_name */ "validator-1".to_string(),
         );
-        let handler_1 = spawner_1.spawn().await;
+        let handler_1 = spawner_1.spawn_validator().await;
 
         info!("Spawning validator 2");
         let mut spawner_2 = ValidatorSpawner::new(
-            /* path_dir */ path.clone(),
+            /* db_path */ path.clone(),
+            /* key_path */ path.clone(),
+            /* genesis_path */ path.clone(),
             /* validator_name */ "validator-2".to_string(),
         );
-        let handler_2 = spawner_2.spawn().await;
+        let handler_2 = spawner_2.spawn_validator().await;
 
         info!("Spawning validator 3");
         let mut spawner_3 = ValidatorSpawner::new(
-            /* path_dir */ path.clone(),
+            /* db_path */ path.clone(),
+            /* key_path */ path.clone(),
+            /* genesis_path */ path.clone(),
             /* validator_name */ "validator-3".to_string(),
         );
-        let handler_3 = spawner_3.spawn().await;
+        let handler_3 = spawner_3.spawn_validator().await;
 
         info!("Sending transactions");
-        let key_file = path.join(format!("{}.key", spawner_0.validator.name));
+        let key_file = path.join(format!("{}.key", spawner_0.get_validator_info().name));
         let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
         let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
 
-        let address = spawner_0.consensus_address.as_ref().unwrap().clone();
+        let address = spawner_0.get_validator_address().as_ref().unwrap().clone();
         info!("Connecting network client to address={:?}", address);
         let client = NetworkValidatorClient::connect_lazy(&address).unwrap();
         let mut i = 0;
@@ -222,7 +266,7 @@ pub mod suite_spawn_tests {
                 .unwrap();
             i += 1;
         }
-        let _validator_handles = vec![handler_0.handle, handler_1.handle, handler_2.handle, handler_3.handle];
+        let _validator_handles = vec![handler_0, handler_1, handler_2, handler_3];
         // uncomment to block on execution
         // join_all(validator_handles).await;
     }

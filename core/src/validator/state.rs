@@ -21,7 +21,7 @@ use std::{
         Arc, Mutex,
     },
 };
-use tracing::debug;
+use tracing::{debug, info};
 
 /// Tracks recently submitted transactions to eventually implement transaction gating
 // TODO - implement the gating and garbage collection
@@ -154,12 +154,12 @@ impl ExecutionState for ValidatorState {
     }
 
     fn ask_consensus_write_lock(&self) -> bool {
-        println!("asking consensus write lock");
+        info!("Asking consensus write lock");
         true
     }
 
     fn release_consensus_write_lock(&self) {
-        println!("releasing consensus write lock");
+        info!("releasing consensus write lock");
     }
 
     async fn load_execution_indices(&self) -> Result<ExecutionIndices, Self::Error> {

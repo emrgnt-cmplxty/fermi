@@ -2232,6 +2232,7 @@ dependencies = [
  "gdex-core",
  "gdex-types",
  "gdex-workspace-hack",
+ "multiaddr",
  "rand 0.7.3",
  "telemetry-subscribers 0.1.0 (git+https://github.com/MystenLabs/mysten-infra?rev=a4c2cae59d823533061a5d8fe28771629819c43f)",
  "tempfile",
@@ -2291,6 +2292,7 @@ dependencies = [
  "tower",
  "tower-http",
  "tracing",
+ "tracing-subscriber 0.2.25",
  "types",
 ]
 
@@ -2329,7 +2331,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "gdex-tests"
+name = "gdex-suite"
 version = "0.1.0"
 dependencies = [
  "assert_approx_eq",

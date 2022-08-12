@@ -21,14 +21,14 @@ use tokio::sync::mpsc::Receiver;
 use tokio::sync::Mutex;
 use tracing::{debug, info};
 
-const DEFAULT_MIN_BATCH_SIZE: usize = 1000;
+const DEFAULT_MIN_BATCH_SIZE: usize = 1_000;
 const DEFAULT_MAX_DELAY_MILLIS: u64 = 5_000; // 5 sec
 
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
-    tx_cancellation: tokio::sync::oneshot::Sender<()>,
-    local_addr: Multiaddr,
-    handle: tokio::task::JoinHandle<Result<(), tonic::transport::Error>>,
+    pub tx_cancellation: tokio::sync::oneshot::Sender<()>,
+    pub local_addr: Multiaddr,
+    pub handle: tokio::task::JoinHandle<Result<(), tonic::transport::Error>>,
 }
 
 impl ValidatorServerHandle {
@@ -90,6 +90,10 @@ impl ValidatorServer {
 
     pub async fn spawn(self) -> Result<ValidatorServerHandle, io::Error> {
         let address = self.address.clone();
+        info!(
+            "Calling spawn to produce a the validator server with port address = {:?}",
+            address
+        );
         self.spawn_with_bind_address(address).await
     }
 
@@ -189,6 +193,7 @@ impl ValidatorService {
     async fn analyze(mut rx_output: Receiver<(Result<Vec<u8>, SubscriberError>, Vec<u8>)>) {
         loop {
             while let Some(_message) = rx_output.recv().await {
+                debug!("Received a finalized consensus transaction with analyze",);
                 // NOTE: Notify the user that its transaction has been processed.
             }
         }

@@ -1,2 +1,3 @@
 .gdex/*
+.proto/*db*/
 suite/db_rocks/*

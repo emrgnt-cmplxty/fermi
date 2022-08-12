@@ -14,12 +14,14 @@ use gdex_core::{
         Config, PersistedConfig, GDEX_CLIENT_CONFIG, GDEX_FULLNODE_CONFIG, GDEX_GATEWAY_CONFIG, GDEX_GENESIS_FILENAME,
         GDEX_KEYSTORE_FILENAME, GDEX_NETWORK_CONFIG,
     },
-    genesis_ceremony::{run, Ceremony},
+    genesis_ceremony::{run, Ceremony, CeremonyCommand},
 };
 use gdex_types::{
     account::AccountKeyPair,
     crypto::{get_key_pair_from_rng, KeypairTraits, ToFromBytes},
+    utils,
 };
+use multiaddr::Multiaddr;
 use std::{fs, io::Write, num::NonZeroUsize, path::PathBuf};
 use tracing::info;
 
@@ -41,6 +43,57 @@ pub enum GDEXCommand {
         )]
         debug_max_ticks: Option<u64>,
     },
+    /// Initialize generation of genesis blob
+    #[clap(name = "init-genesis")]
+    InitGenesis {
+        #[clap(value_parser, long, help = "Path to save genesis blob file")]
+        path: Option<PathBuf>,
+    },
+    /// Add validator to the genesis blob
+    #[clap(name = "add-validator-genesis")]
+    AddValidatorGenesis {
+        #[clap(value_parser, long, help = "Path to save genesis blob file")]
+        path: Option<PathBuf>,
+        #[clap(value_parser, long, help = "validator name")]
+        name: String,
+        #[clap(value_parser, long, help = "Validator keystore path")]
+        key_file: PathBuf,
+        #[clap(value_parser, long, help = "Network address")]
+        network_address: Option<Multiaddr>,
+        #[clap(value_parser, long, help = "Narwhal primary to primary port")]
+        narwhal_primary_to_primary: Option<Multiaddr>,
+        #[clap(value_parser, long, help = "Network worker to primary")]
+        narwhal_worker_to_primary: Option<Multiaddr>,
+        #[clap(value_parser, long, help = "Network primary to worker")]
+        narwhal_primary_to_worker: Option<Multiaddr>,
+        #[clap(value_parser, long, help = "Network worker to worker")]
+        narwhal_worker_to_worker: Option<Multiaddr>,
+        #[clap(value_parser, long, help = "Network consensus address")]
+        narwhal_consensus_address: Option<Multiaddr>,
+    },
+    /// Add controllers to the genesis blob
+    #[clap(name = "add-controllers-genesis")]
+    AddControllersGenesis {
+        #[clap(value_parser, long, help = "Path to save genesis blob file")]
+        path: Option<PathBuf>,
+    },
+    #[clap(name = "build-genesis")]
+    BuildGenesis {
+        #[clap(value_parser, long, help = "Path to save genesis blob file")]
+        path: Option<PathBuf>,
+    },
+    #[clap(name = "verify-and-sign-genesis")]
+    VerifyAndSignGenesis {
+        #[clap(value_parser, long, help = "Path to save genesis blob file")]
+        path: Option<PathBuf>,
+        #[clap(value_parser, long, help = "Validator keystore path")]
+        key_file: PathBuf,
+    },
+    #[clap(name = "finalize-genesis")]
+    FinalizeGenesis {
+        #[clap(value_parser, long, help = "Path to save genesis blob file")]
+        path: Option<PathBuf>,
+    },
     /// Bootstraps and initializes a new GDEX network genesis config
     #[clap(name = "genesis")]
     Genesis {
@@ -59,7 +112,6 @@ pub enum GDEXCommand {
     },
     /// Participate in the genesis ceremony
     GenesisCeremony(Ceremony),
-
     /// Generate a persistant keystore for future use
     GenerateKeystore {
         #[clap(value_parser, help = "Specify a path for the keystore")]
@@ -104,6 +156,79 @@ impl GDEXCommand {
                     }
                     interval.tick().await;
                 }
+            }
+            GDEXCommand::InitGenesis { path } => {
+                let ceremony = Ceremony {
+                    path,
+                    command: CeremonyCommand::Init,
+                };
+                ceremony.run().unwrap();
+                Ok(())
+            }
+            #[allow(clippy::redundant_closure)]
+            GDEXCommand::AddValidatorGenesis {
+                path,
+                name,
+                key_file,
+                network_address,
+                narwhal_primary_to_primary,
+                narwhal_worker_to_primary,
+                narwhal_primary_to_worker,
+                narwhal_worker_to_worker,
+                narwhal_consensus_address,
+            } => {
+                let ceremony = Ceremony {
+                    path,
+                    command: CeremonyCommand::AddValidator {
+                        name,
+                        key_file,
+                        network_address: network_address.unwrap_or_else(|| utils::new_network_address()),
+                        narwhal_primary_to_primary: narwhal_primary_to_primary
+                            .unwrap_or_else(|| utils::new_network_address()),
+                        narwhal_worker_to_primary: narwhal_worker_to_primary
+                            .unwrap_or_else(|| utils::new_network_address()),
+                        narwhal_primary_to_worker: narwhal_primary_to_worker
+                            .unwrap_or_else(|| utils::new_network_address()),
+                        narwhal_worker_to_worker: narwhal_worker_to_worker
+                            .unwrap_or_else(|| utils::new_network_address()),
+                        narwhal_consensus_address: narwhal_consensus_address
+                            .unwrap_or_else(|| utils::new_network_address()),
+                    },
+                };
+                ceremony.run().unwrap();
+                Ok(())
+            }
+            GDEXCommand::AddControllersGenesis { path } => {
+                let ceremony = Ceremony {
+                    path,
+                    command: CeremonyCommand::AddControllers,
+                };
+                ceremony.run().unwrap();
+                Ok(())
+            }
+            GDEXCommand::BuildGenesis { path } => {
+                let ceremony = Ceremony {
+                    path,
+                    command: CeremonyCommand::Build,
+                };
+                ceremony.run().unwrap();
+                Ok(())
+            }
+            GDEXCommand::VerifyAndSignGenesis { path, key_file } => {
+                let ceremony = Ceremony {
+                    path,
+                    command: CeremonyCommand::VerifyAndSign { key_file },
+                };
+                ceremony.run().unwrap();
+                Ok(())
+            }
+            GDEXCommand::FinalizeGenesis { path } => {
+                let ceremony = Ceremony {
+                    path,
+                    command: CeremonyCommand::Finalize,
+                };
+                ceremony.run().unwrap();
+                Ok(())
             }
             GDEXCommand::Genesis {
                 working_dir,

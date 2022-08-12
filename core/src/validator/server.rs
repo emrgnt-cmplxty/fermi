@@ -297,7 +297,7 @@ mod test_validator_server {
             .add_validator(validator);
 
         let genesis = builder.build();
-        let validator_state = ValidatorState::new(public_key, secret, &genesis, tempfile::tempdir().unwrap().path()).await;
+        let validator_state = ValidatorState::new(public_key, secret, &genesis).await;
         let new_addr = utils::new_network_address();
         let validator_server =
             ValidatorServer::new(new_addr.clone(), Arc::new(validator_state), network_address, None, None);
@@ -369,8 +369,8 @@ mod test_validator_server {
             .add_validator(validator_1);
 
         let genesis = builder.build();
-        let validator_state_0 = ValidatorState::new(public_key_0, secret_0, &genesis, tempfile::tempdir().unwrap().path()).await;
-        let validator_state_1 = ValidatorState::new(public_key_1, secret_1, &genesis, tempfile::tempdir().unwrap().path()).await;
+        let validator_state_0 = ValidatorState::new(public_key_0, secret_0, &genesis).await;
+        let validator_state_1 = ValidatorState::new(public_key_1, secret_1, &genesis).await;
 
         let validator_server_0 = ValidatorServer::new(
             utils::new_network_address(),

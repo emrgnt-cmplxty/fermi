@@ -58,7 +58,7 @@ impl ValidatorSpawner {
         let db_path = self.path.join(format!("{}-{}", self.validator.name, CONSENSUS_DB_NAME));
 
         let key_pair = Arc::pin(utils::read_keypair_from_file(&key_file).unwrap());
-        let validator_state = Arc::new(ValidatorState::new(pubilc_key, key_pair, &self.genesis_state, tempfile::tempdir().unwrap().path()).await);
+        let validator_state = Arc::new(ValidatorState::new(pubilc_key, key_pair, &self.genesis_state).await);
 
         info!(
             "Spawning a validator with the initial validator state = {:?}",

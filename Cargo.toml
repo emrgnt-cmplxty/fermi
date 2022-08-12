@@ -7,5 +7,6 @@ members = [
     "server",
     "suite",
     "types",
+    "benchmark-node",
     "workspace-hack"
 ]

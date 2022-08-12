@@ -34,7 +34,7 @@ fn test_primary_no_consensus() {
             "--store",
             &db_path,
             "--execution",
-            "no-advanced", 
+            "no-advanced",
             "primary",
             "--consensus-disabled",
         ])
@@ -86,7 +86,7 @@ fn test_primary_no_consensus_advanced_execution() {
             "--store",
             &db_path,
             "--execution",
-            "advanced", 
+            "advanced",
             "primary",
             "--consensus-disabled",
         ])
@@ -219,7 +219,6 @@ fn test_primary_with_consensus_advanced_execution() {
 
 #[test]
 fn test_benchmark_client() {
-
     let now = Instant::now();
     let duration = TEST_DURATION;
 
@@ -236,7 +235,7 @@ fn test_benchmark_client() {
             "--rate",
             &TXN_RATE.to_string(),
             "--execution",
-            "no-advanced", 
+            "no-advanced",
             "--nodes",
             "http://127.0.0.1:3003/ http://127.0.0.1:3008/ http://127.0.0.1:3013/ http://127.0.0.1:3018/",
         ])

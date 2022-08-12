@@ -21,7 +21,7 @@ use tokio::sync::mpsc::{channel, Receiver};
 use tracing::info;
 
 // IMPORT BESPOKE EXECUTION STATE
-use node::execution_state::{AdvancedExecutionState, SimpleExecutionState};
+use benchmark_node::execution_state::{AdvancedExecutionState, SimpleExecutionState};
 
 #[cfg(feature = "benchmark")]
 use tracing::subscriber::set_global_default;
@@ -32,6 +32,7 @@ use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 #[global_allocator]
 static ALLOC: dhat::Alloc = dhat::Alloc;
 
+#[cfg(not(tarpaulin))]
 #[tokio::main]
 async fn main() -> Result<()> {
     let matches = App::new(crate_name!())

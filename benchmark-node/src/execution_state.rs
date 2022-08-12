@@ -9,6 +9,7 @@ use thiserror::Error;
 /// A simple/dumb execution engine.
 pub struct SimpleExecutionState;
 
+#[cfg(not(tarpaulin))]
 #[async_trait]
 impl ExecutionState for SimpleExecutionState {
     type Transaction = String;

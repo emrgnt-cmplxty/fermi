@@ -21,6 +21,7 @@ use types::{AccountKeyPair, PaymentRequest, SignedTransaction, Transaction, Tran
 use url::Url;
 const PRIMARY_ASSET_ID: u64 = 0;
 
+#[cfg(not(tarpaulin))]
 fn keys(seed: [u8; 32]) -> Vec<AccountKeyPair> {
     let mut rng = StdRng::from_seed(seed);
     (0..4).map(|_| AccountKeyPair::generate(&mut rng)).collect()

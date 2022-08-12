@@ -21,8 +21,8 @@ use tokio::sync::mpsc::{channel, Receiver};
 use tracing::info;
 
 // IMPORT BESPOKE EXECUTION STATE
-use benchmark_node::execution_state::{AdvancedExecutionState};
-use narwhal_node::execution_state::{SimpleExecutionState};
+use benchmark_node::execution_state::AdvancedExecutionState;
+use narwhal_node::execution_state::SimpleExecutionState;
 
 #[cfg(feature = "benchmark")]
 use tracing::subscriber::set_global_default;

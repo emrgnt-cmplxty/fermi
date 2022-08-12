@@ -5,7 +5,10 @@ use anyhow::{Context, Result};
 use bytes::{BufMut as _, BytesMut};
 use clap::{crate_name, crate_version, App, AppSettings};
 use futures::{future::join_all, StreamExt};
-use gdex_types::{AccountKeyPair, PaymentRequest, SignedTransaction, Transaction, TransactionVariant};
+use gdex_types::{
+    account::AccountKeyPair,
+    transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
+};
 use narwhal_crypto::{
     traits::{KeyPair, Signer},
     Hash, DIGEST_LEN,

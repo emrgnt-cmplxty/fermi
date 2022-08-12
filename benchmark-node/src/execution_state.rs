@@ -1,6 +1,7 @@
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 use async_trait::async_trait;
+use gdex_controller::bank::BankController;
 use narwhal_config::Committee;
 use narwhal_consensus::ConsensusOutput;
 use narwhal_executor::{ExecutionIndices, ExecutionState, ExecutionStateError};
@@ -66,7 +67,6 @@ impl ExecutionStateError for SimpleExecutionError {
     }
 }
 
-use gdex_controller::bank::BankController;
 use narwhal_crypto::ed25519::Ed25519KeyPair;
 use narwhal_crypto::traits::KeyPair;
 use std::{fmt, fmt::Display, path::Path, sync::Mutex};

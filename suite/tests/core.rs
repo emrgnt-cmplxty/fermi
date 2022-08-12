@@ -147,7 +147,7 @@ pub mod suite_core_tests {
         let primary_validator_index = 0;
         let validator = genesis_state.validator_set()[primary_validator_index].clone().clone();
 
-        let (validator_state, narwhal_handle) = spawn_validator_service(
+        let (validator_state, _narwhal_handle) = spawn_validator_service(
             working_dir,
             batch_size,
             max_delay,

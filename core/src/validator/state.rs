@@ -59,10 +59,6 @@ pub struct ValidatorState {
 }
 
 impl ValidatorState {
-
-    // TODO: we will refactor interaction with rocksdb
-    pub const INDICES_ADDRESS: u64 = 14;
-
     // TODO: This function takes both committee and genesis as parameter.
     // Technically genesis already contains committee information. Could consider merging them.
     pub async fn new(name: ValidatorName, secret: StableSyncValidatorSigner, genesis: &ValidatorGenesisState) -> Self {
@@ -72,7 +68,7 @@ impl ValidatorState {
             halted: AtomicBool::new(false),
             committee: ArcSwap::from(Arc::new(genesis.committee().unwrap())),
             master_controller: genesis.master_controller().clone(),
-            validator_store: ValidatorStore::default()
+            validator_store: ValidatorStore::default(),
         }
     }
 

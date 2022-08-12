@@ -146,26 +146,23 @@ impl ExecutionState for ValidatorState {
         signed_transaction: Self::Transaction,
     ) -> Result<(Self::Outcome, Option<narwhal_config::Committee>), Self::Error> {
         let transaction = signed_transaction.get_transaction_payload();
-        let execution = match transaction.get_variant() {
+        match transaction.get_variant() {
             TransactionVariant::PaymentTransaction(payment) => {
                 self.master_controller.bank_controller.lock().unwrap().transfer(
                     transaction.get_sender(),
                     payment.get_receiver(),
                     payment.get_asset_id(),
                     payment.get_amount(),
-                )
+                )?
+            },
+            TransactionVariant::CreateAssetTransaction(_create_asset) => {
+                self.master_controller.bank_controller.lock().unwrap().create_asset(
+                    transaction.get_sender()
+                )?
             }
-            TransactionVariant::CreateAssetTransaction(_create_asset) => self
-                .master_controller
-                .bank_controller
-                .lock()
-                .unwrap()
-                .create_asset(transaction.get_sender()),
         };
-        match execution {
-            Ok(_) => Ok((Vec::default(), None)),
-            Err(err) => Err(err),
-        }
+
+        Ok((Vec::default(), None))
     }
 
     fn ask_consensus_write_lock(&self) -> bool {

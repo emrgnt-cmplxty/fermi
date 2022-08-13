@@ -87,6 +87,6 @@ async fn run(matches: &ArgMatches<'_>) {
         /* validator_name */ validator_name.to_string(),
     );
 
-    let (_address, handler) = validator_spawner.spawn_validator().await;
+    let handler = validator_spawner.spawn_validator().await;
     join_all(handler).await;
 }

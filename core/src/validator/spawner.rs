@@ -92,6 +92,8 @@ impl ValidatorSpawner {
         self.validator_address.is_some()
     }
 
+    /// Internal helper function used to spawns the validator service
+    /// note, this function will fail if called twice from the same spawner
     async fn spawn_validator_service(&mut self) -> Result<Vec<JoinHandle<()>>> {
         if self.is_validator_service_spawned() {
             panic!("The validator service has already been spawned");
@@ -168,6 +170,8 @@ impl ValidatorSpawner {
         Ok(spawned_service)
     }
 
+    /// Internal helper function used to spawns the validator server
+    /// note, this function will fail if called twice from the same spawner
     pub async fn spawn_validator_server(&mut self) -> ValidatorServerHandle {
         if self.is_validator_server_spawned() {
             panic!("The validator server already been spawned");
@@ -186,12 +190,11 @@ impl ValidatorSpawner {
         validator_handle
     }
 
-    pub async fn spawn_validator(&mut self) -> (Multiaddr, Vec<JoinHandle<()>>) {
+    pub async fn spawn_validator(&mut self) -> Vec<JoinHandle<()>> {
         let mut join_handles = self.spawn_validator_service().await.unwrap();
         let server_handle = self.spawn_validator_server().await;
-        let address = server_handle.address().to_owned();
         join_handles.push(server_handle.get_handle());
-        (address, join_handles)
+        join_handles
     }
 }
 
@@ -224,49 +227,49 @@ pub mod suite_spawn_tests {
         let path = Path::new(dir).to_path_buf();
 
         info!("Spawning validator 0");
-        let validator_port = utils::new_network_address();
+        let _address_0 = utils::new_network_address();
         let mut spawner_0 = ValidatorSpawner::new(
             /* db_path */ path.clone(),
             /* key_path */ path.clone(),
             /* genesis_path */ path.clone(),
-            /* validator_port */ validator_port,
+            /* validator_port */ _address_0,
             /* validator_name */ "validator-0".to_string(),
         );
 
-        let (_address_0, _handler_0) = spawner_0.spawn_validator().await;
+        let _handler_0 = spawner_0.spawn_validator().await;
 
         info!("Spawning validator 1");
-        let validator_port = utils::new_network_address();
+        let _address_1 = utils::new_network_address();
         let mut spawner_1 = ValidatorSpawner::new(
             /* db_path */ path.clone(),
             /* key_path */ path.clone(),
             /* genesis_path */ path.clone(),
-            /* validator_port */ validator_port,
+            /* validator_port */ _address_1,
             /* validator_name */ "validator-1".to_string(),
         );
-        let (_address_1, _handler_1) = spawner_1.spawn_validator().await;
+        let _handler_1 = spawner_1.spawn_validator().await;
 
         info!("Spawning validator 2");
-        let validator_port = utils::new_network_address();
+        let _address_2 = utils::new_network_address();
         let mut spawner_2 = ValidatorSpawner::new(
             /* db_path */ path.clone(),
             /* key_path */ path.clone(),
             /* genesis_path */ path.clone(),
-            /* validator_port */ validator_port,
+            /* validator_port */ _address_2,
             /* validator_name */ "validator-2".to_string(),
         );
-        let (_address_2, _handler_2) = spawner_2.spawn_validator().await;
+        let _handler_2 = spawner_2.spawn_validator().await;
 
         info!("Spawning validator 3");
-        let validator_port = utils::new_network_address();
+        let _address_3 = utils::new_network_address();
         let mut spawner_3 = ValidatorSpawner::new(
             /* db_path */ path.clone(),
             /* key_path */ path.clone(),
             /* genesis_path */ path.clone(),
-            /* validator_port */ validator_port,
+            /* validator_port */ _address_3,
             /* validator_name */ "validator-3".to_string(),
         );
-        let (_address_3, _handler_3) = spawner_3.spawn_validator().await;
+        let _handler_3 = spawner_3.spawn_validator().await;
 
         info!("Sending transactions");
         let key_file = path.join(format!("{}.key", spawner_0.get_validator_info().name));

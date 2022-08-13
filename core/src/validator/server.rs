@@ -86,7 +86,6 @@ impl ValidatorServer {
         let local_addr = server.local_addr().to_owned();
         info!("Listening to traffic on {local_addr}");
         let handle = ValidatorServerHandle {
-            // tx_cancellation: server.take_cancel_handle().unwrap(),
             local_addr,
             handle: tokio::spawn(server.serve()),
         };

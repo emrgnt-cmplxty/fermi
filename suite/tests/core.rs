@@ -21,7 +21,6 @@ pub mod suite_core_tests {
     use narwhal_config::Parameters as ConsensusParameters;
     use std::path::Path;
     use std::{io, sync::Arc, time};
-    // use tracing::Level;
     use tokio::task::JoinHandle;
     use tracing_subscriber::FmtSubscriber;
 

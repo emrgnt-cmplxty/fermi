@@ -5,7 +5,8 @@ use anyhow::Result;
 use clap::{crate_name, crate_version, App, AppSettings, ArgMatches, SubCommand};
 use futures::future::join_all;
 use gdex_core::validator::spawner::ValidatorSpawner;
-use std::path::Path;
+use multiaddr::Multiaddr;
+use std::{path::Path, str::FromStr};
 use tracing::info;
 
 #[tokio::main]
@@ -17,10 +18,11 @@ async fn main() -> Result<()> {
         .subcommand(
             SubCommand::with_name("run")
                 .about("Run a node")
-                .args_from_usage("--db-dir=<FOLDER> 'The folder containing a the database.'")
-                .args_from_usage("--key-dir=<FOLDER> 'The file containing the node keys.'")
-                .args_from_usage("--genesis-dir=<FOLDER> 'The folder containing the genesis blob.'")
-                .args_from_usage("--validator-name=<STRING> 'The validator name'"),
+                .args_from_usage("--db-dir=<FOLDER> 'The folder containing a the database'")
+                .args_from_usage("--key-dir=<FOLDER> 'The file containing the node keys'")
+                .args_from_usage("--genesis-dir=<FOLDER> 'The folder containing the genesis blob'")
+                .args_from_usage("--validator-name=<NAME> 'The validator name'")
+                .args_from_usage("--validator-port=<PORT> 'The validator port'"),
         )
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .get_matches();
@@ -73,11 +75,15 @@ async fn run(matches: &ArgMatches<'_>) {
 
     let validator_name = matches.value_of("validator-name").unwrap();
 
+    let validator_port = matches.value_of("validator-port").unwrap();
+    let validator_port = Multiaddr::from_str(validator_port).unwrap();
+
     info!("Spawning validator 0");
     let mut validator_spawner = ValidatorSpawner::new(
         /* db_path */ db_path.clone(),
         /* key_path */ key_path.clone(),
         /* genesis_path */ genesis_path.clone(),
+        /* validator_port */ validator_port,
         /* validator_name */ validator_name.to_string(),
     );
 

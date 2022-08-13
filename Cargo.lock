@@ -2368,6 +2368,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "gdex-node"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap 2.34.0",
+ "futures",
+ "gdex-core",
+ "telemetry-subscribers 0.1.0 (git+https://github.com/MystenLabs/mysten-infra?rev=a4c2cae59d823533061a5d8fe28771629819c43f)",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "gdex-server"
 version = "0.0.0"
 dependencies = [
@@ -2400,6 +2413,7 @@ dependencies = [
  "config 0.1.0",
  "criterion",
  "crypto",
+ "futures",
  "gdex-controller",
  "gdex-core",
  "gdex-engine",

@@ -82,9 +82,12 @@ impl ValidatorSpawner {
     fn is_validator_server_spawned(&self) -> bool {
         self.validator_address.is_some()
     }
-    pub async fn spawn_validator(&mut self) -> ValidatorServerHandle {
-        self.spawn_validator_service().await.unwrap();
-        self.spawn_validator_server().await
+    pub async fn spawn_validator(&mut self) -> (Multiaddr, Vec<JoinHandle<()>>) {
+        let mut join_handles = self.spawn_validator_service().await.unwrap();
+        let server_handle = self.spawn_validator_server().await;
+        let address = server_handle.address().to_owned();
+        join_handles.push(server_handle.get_handle());
+        (address, join_handles)
     }
 
     async fn spawn_validator_service(&mut self) -> Result<Vec<JoinHandle<()>>> {
@@ -174,7 +177,7 @@ impl ValidatorSpawner {
         let validator_server = ValidatorServer::new(
             new_addr.clone(),
             // unwrapping is safe as validator state must have been created in spawn_validator_service
-            Arc::clone(&self.validator_state.as_ref().unwrap()),
+            Arc::clone(self.validator_state.as_ref().unwrap()),
             consensus_address,
         );
         let validator_handle = validator_server.spawn().await.unwrap();
@@ -195,7 +198,8 @@ pub mod suite_spawn_tests {
     use std::{io, path::Path};
     use tracing::info;
     use tracing_subscriber::FmtSubscriber;
-
+    use futures::future::join_all;
+    
     #[tokio::test]
     #[ignore]
     pub async fn test() {
@@ -228,7 +232,7 @@ pub mod suite_spawn_tests {
             /* genesis_path */ path.clone(),
             /* validator_name */ "validator-1".to_string(),
         );
-        let handler_1 = spawner_1.spawn_validator().await;
+        let _handler_1 = spawner_1.spawn_validator().await;
 
         info!("Spawning validator 2");
         let mut spawner_2 = ValidatorSpawner::new(
@@ -237,7 +241,7 @@ pub mod suite_spawn_tests {
             /* genesis_path */ path.clone(),
             /* validator_name */ "validator-2".to_string(),
         );
-        let handler_2 = spawner_2.spawn_validator().await;
+        let _handler_2 = spawner_2.spawn_validator().await;
 
         info!("Spawning validator 3");
         let mut spawner_3 = ValidatorSpawner::new(
@@ -246,7 +250,7 @@ pub mod suite_spawn_tests {
             /* genesis_path */ path.clone(),
             /* validator_name */ "validator-3".to_string(),
         );
-        let handler_3 = spawner_3.spawn_validator().await;
+        let _handler_3 = spawner_3.spawn_validator().await;
 
         info!("Sending transactions");
         let key_file = path.join(format!("{}.key", spawner_0.get_validator_info().name));
@@ -266,8 +270,8 @@ pub mod suite_spawn_tests {
                 .unwrap();
             i += 1;
         }
-        let _validator_handles = vec![handler_0, handler_1, handler_2, handler_3];
+        
         // uncomment to block on execution
-        // join_all(validator_handles).await;
+        join_all(handler_0.1).await;
     }
 }

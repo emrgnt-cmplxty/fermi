@@ -27,32 +27,36 @@ use tracing::{debug, info};
 
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
-    tx_cancellation: tokio::sync::oneshot::Sender<()>,
+    // tx_cancellation: tokio::sync::oneshot::Sender<()>,
     local_addr: Multiaddr,
-    handle: JoinHandle<Result<(), tonic::transport::Error>>,
+    handle: JoinHandle<()>,
 }
 
 impl ValidatorServerHandle {
-    pub async fn join(self) -> Result<(), std::io::Error> {
-        // Note that dropping `self.complete` would terminate the server.
-        self.handle
-            .await?
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-        Ok(())
-    }
+    // pub async fn join(self) -> Result<(), std::io::Error> {
+    //     // Note that dropping `self.complete` would terminate the server.
+    //     self.handle
+    //         .await?
+    //         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+    //     Ok(())
+    // }
 
-    pub async fn kill(self) -> Result<(), std::io::Error> {
-        self.tx_cancellation
-            .send(())
-            .map_err(|_e| std::io::Error::new(io::ErrorKind::Other, "could not send cancellation signal!"))?;
-        self.handle
-            .await?
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-        Ok(())
-    }
+    // pub async fn kill(self) -> Result<(), std::io::Error> {
+    //     self.tx_cancellation
+    //         .send(())
+    //         .map_err(|_e| std::io::Error::new(io::ErrorKind::Other, "could not send cancellation signal!"))?;
+    //     self.handle
+    //         .await?
+    //         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+    //     Ok(())
+    // }
 
     pub fn address(&self) -> &Multiaddr {
         &self.local_addr
+    }
+
+    pub fn get_handle(self) -> JoinHandle<()> {
+        self.handle
     }
 }
 
@@ -89,7 +93,7 @@ impl ValidatorServer {
     }
 
     pub async fn spawn_with_bind_address(self, address: Multiaddr) -> Result<ValidatorServerHandle, io::Error> {
-        let mut server = crate::config::server::ServerConfig::new()
+        let server = crate::config::server::ServerConfig::new()
             .server_builder()
             .add_service(ValidatorAPIServer::new(ValidatorService {
                 state: self.state,
@@ -101,7 +105,7 @@ impl ValidatorServer {
         let local_addr = server.local_addr().to_owned();
         info!("Listening to traffic on {local_addr}");
         let handle = ValidatorServerHandle {
-            tx_cancellation: server.take_cancel_handle().unwrap(),
+            // tx_cancellation: server.take_cancel_handle().unwrap(),
             local_addr,
             handle: tokio::spawn(server.serve()),
         };

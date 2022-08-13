@@ -231,8 +231,8 @@ pub struct Server {
 
 impl Server {
     /// Start the server
-    pub async fn serve(self) -> Result<(), tonic::transport::Error> {
-        self.server.await
+    pub async fn serve(self) {
+        self.server.await.unwrap();
     }
 
     pub fn local_addr(&self) -> &Multiaddr {
@@ -332,7 +332,7 @@ mod test {
             .unwrap();
 
         cancel_handle.send(()).unwrap();
-        server_handle.await.unwrap().unwrap();
+        server_handle.await.unwrap();
 
         assert!(metrics.metrics_called.lock().unwrap().deref());
     }
@@ -391,7 +391,7 @@ mod test {
             .await;
 
         cancel_handle.send(()).unwrap();
-        server_handle.await.unwrap().unwrap();
+        server_handle.await.unwrap();
 
         assert!(metrics.metrics_called.lock().unwrap().deref());
     }
@@ -411,7 +411,7 @@ mod test {
             .unwrap();
 
         cancel_handle.send(()).unwrap();
-        server_handle.await.unwrap().unwrap();
+        server_handle.await.unwrap();
     }
 
     #[tokio::test]

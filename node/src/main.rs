@@ -74,13 +74,13 @@ async fn run(matches: &ArgMatches<'_>) {
     let validator_name = matches.value_of("validator-name").unwrap();
 
     info!("Spawning validator 0");
-    let mut spawner = ValidatorSpawner::new(
+    let mut validator_spawner = ValidatorSpawner::new(
         /* db_path */ db_path.clone(),
         /* key_path */ key_path.clone(),
         /* genesis_path */ genesis_path.clone(),
         /* validator_name */ validator_name.to_string(),
     );
 
-    let handler = spawner.spawn_validator().await;
-    join_all(handler.1).await;
+    let (_address, handler) = validator_spawner.spawn_validator().await;
+    join_all(handler).await;
 }

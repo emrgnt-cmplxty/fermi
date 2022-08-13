@@ -82,13 +82,6 @@ impl ValidatorSpawner {
     fn is_validator_server_spawned(&self) -> bool {
         self.validator_address.is_some()
     }
-    pub async fn spawn_validator(&mut self) -> (Multiaddr, Vec<JoinHandle<()>>) {
-        let mut join_handles = self.spawn_validator_service().await.unwrap();
-        let server_handle = self.spawn_validator_server().await;
-        let address = server_handle.address().to_owned();
-        join_handles.push(server_handle.get_handle());
-        (address, join_handles)
-    }
 
     async fn spawn_validator_service(&mut self) -> Result<Vec<JoinHandle<()>>> {
         if self.is_validator_service_spawned() {
@@ -183,6 +176,14 @@ impl ValidatorSpawner {
         let validator_handle = validator_server.spawn().await.unwrap();
         self.set_validator_address(validator_handle.address().clone());
         validator_handle
+    }
+
+    pub async fn spawn_validator(&mut self) -> (Multiaddr, Vec<JoinHandle<()>>) {
+        let mut join_handles = self.spawn_validator_service().await.unwrap();
+        let server_handle = self.spawn_validator_server().await;
+        let address = server_handle.address().to_owned();
+        join_handles.push(server_handle.get_handle());
+        (address, join_handles)
     }
 }
 

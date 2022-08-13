@@ -82,7 +82,5 @@ async fn run(matches: &ArgMatches<'_>) {
     );
 
     let handler = spawner.spawn_validator().await;
-    println!("blocking on handler");
     join_all(handler.1).await;
-    println!("done blocking on handler");
 }

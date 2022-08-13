@@ -2413,7 +2413,6 @@ dependencies = [
  "config 0.1.0",
  "criterion",
  "crypto",
- "futures",
  "gdex-controller",
  "gdex-core",
  "gdex-engine",

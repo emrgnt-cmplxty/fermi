@@ -190,7 +190,6 @@ impl ValidatorSpawner {
 pub mod suite_spawn_tests {
     use super::*;
     use crate::client::{ClientAPI, NetworkValidatorClient};
-    use futures::future::join_all;
     use gdex_types::{
         account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair},
         transaction::transaction_test_functions::generate_signed_test_transaction,
@@ -270,8 +269,5 @@ pub mod suite_spawn_tests {
                 .unwrap();
             i += 1;
         }
-
-        // uncomment to block on execution
-        join_all(handler_0.1).await;
     }
 }

@@ -22,9 +22,9 @@ pub mod suite_core_tests {
     use std::path::Path;
     use std::{io, sync::Arc, time};
     // use tracing::Level;
+    use futures::future::join_all;
     use tokio::task::JoinHandle;
     use tracing_subscriber::FmtSubscriber;
-    use futures::future::join_all;
 
     // Create a genesis config with a single validator seeded by VALIDATOR_SEED
     async fn get_genesis_state(dir: &Path, number_of_validators: usize) -> ValidatorGenesisState {

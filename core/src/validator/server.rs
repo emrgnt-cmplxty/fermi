@@ -27,30 +27,11 @@ use tracing::{debug, info};
 
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
-    // tx_cancellation: tokio::sync::oneshot::Sender<()>,
     local_addr: Multiaddr,
     handle: JoinHandle<()>,
 }
 
 impl ValidatorServerHandle {
-    // pub async fn join(self) -> Result<(), std::io::Error> {
-    //     // Note that dropping `self.complete` would terminate the server.
-    //     self.handle
-    //         .await?
-    //         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-    //     Ok(())
-    // }
-
-    // pub async fn kill(self) -> Result<(), std::io::Error> {
-    //     self.tx_cancellation
-    //         .send(())
-    //         .map_err(|_e| std::io::Error::new(io::ErrorKind::Other, "could not send cancellation signal!"))?;
-    //     self.handle
-    //         .await?
-    //         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-    //     Ok(())
-    // }
-
     pub fn address(&self) -> &Multiaddr {
         &self.local_addr
     }

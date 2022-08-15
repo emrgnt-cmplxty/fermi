@@ -2368,6 +2368,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "gdex-node"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap 2.34.0",
+ "futures",
+ "gdex-core",
+ "multiaddr",
+ "telemetry-subscribers 0.1.0 (git+https://github.com/MystenLabs/mysten-infra?rev=a4c2cae59d823533061a5d8fe28771629819c43f)",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "gdex-server"
 version = "0.0.0"
 dependencies = [
@@ -2448,6 +2462,35 @@ dependencies = [
 [[package]]
 name = "gdex-workspace-hack"
 version = "0.1.0"
+dependencies = [
+ "chrono",
+ "clap 2.34.0",
+ "criterion",
+ "either",
+ "futures",
+ "futures-channel",
+ "futures-core",
+ "futures-executor",
+ "futures-io",
+ "futures-sink",
+ "futures-task",
+ "futures-util",
+ "log",
+ "memchr",
+ "num-integer",
+ "num-traits 0.2.15",
+ "proc-macro2 1.0.43",
+ "quote 1.0.21",
+ "regex",
+ "scopeguard",
+ "serde 1.0.143",
+ "serde_json",
+ "syn 1.0.99",
+ "tokio",
+ "tracing",
+ "tracing-log",
+ "tracing-subscriber 0.2.25",
+]
 
 [[package]]
 name = "generic-array"

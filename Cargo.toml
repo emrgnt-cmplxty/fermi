@@ -4,6 +4,7 @@ members = [
     "cli",
     "engine",
     "controller",
+    "node",
     "server",
     "suite",
     "types",

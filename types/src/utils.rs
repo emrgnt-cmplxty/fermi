@@ -71,3 +71,33 @@ pub fn write_keypair_to_file<K: KeypairTraits, P: AsRef<std::path::Path>>(keypai
     std::fs::write(path, contents)?;
     Ok(())
 }
+
+use crate::account::{AccountKeyPair};
+use crate::transaction::{PaymentRequest, CreateAssetRequest, TransactionVariant, Transaction};
+//use crate::error::{GDEXError};
+use narwhal_types::BatchDigest;
+
+pub fn create_payment_transaction(
+    sender_pub_key: AccountKeyPair,
+    receiver_pub_key: AccountKeyPair,
+    asset_id: u64,
+    amount: u64,
+    recent_block_hash: BatchDigest
+) -> Transaction {
+    let transaction_variant = TransactionVariant::PaymentTransaction(PaymentRequest::new(
+        receiver_pub_key.public().clone(),
+        asset_id,
+        amount
+    ));
+
+    Transaction::new(sender_pub_key.public().clone(), recent_block_hash, transaction_variant)
+}
+
+pub fn create_asset_creation_transaction(
+    sender_pub_key: AccountKeyPair,
+    recent_block_hash: BatchDigest
+) -> Transaction {
+    let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest {});
+
+    Transaction::new(sender_pub_key.public().clone(), recent_block_hash, transaction_variant)
+}

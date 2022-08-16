@@ -58,6 +58,11 @@ class GDEXBench:
             cmd = CommandMaker.compile(mem_profiling=self.mem_profile)
             Print.info(f"About to run {cmd}...")
             subprocess.run(cmd, check=True, cwd=PathMaker.narwhal_node_crate_path())
+            
+            # Recompile the latest code.
+            cmd = CommandMaker.compile(mem_profiling=self.mem_profile, benchmark=False)
+            Print.info(f"About to run {cmd}...")
+            subprocess.run(cmd, check=True, cwd=PathMaker.narwhal_node_crate_path())
 
             # Create alias for the client and nodes binary.
             cmd = CommandMaker.alias_binaries(PathMaker.binary_path())

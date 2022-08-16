@@ -174,9 +174,9 @@ impl ValidatorService {
 
         let transaction = request.into_inner();
 
-        transaction
-            .verify()
-            .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
+        // transaction
+        //     .verify()
+        //     .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
 
         let transaction_proto = TransactionProto {
             transaction: transaction.serialize().unwrap().into(),

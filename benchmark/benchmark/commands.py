@@ -17,11 +17,13 @@ class CommandMaker:
         return f'rm -r {PathMaker.logs_path()} ; mkdir -p {PathMaker.logs_path()}'
 
     @staticmethod
-    def compile(mem_profiling):
+    def compile(mem_profiling, benchmark=True):
         if mem_profiling:
             params = ["--profile", "bench-profiling", "--features", "benchmark dhat-heap"]
-        else:
+        elif benchmark:
             params = ["--release", "--features", "benchmark"]
+        else:
+            params = ["--release"]
         return ["cargo", "build"] + params
 
     @staticmethod

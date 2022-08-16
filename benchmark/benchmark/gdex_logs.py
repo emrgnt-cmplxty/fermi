@@ -46,14 +46,19 @@ class LogParser:
         # Parse the primaries logs.
         try:
             with Pool() as p:
+                print('p=', p)
+                print('primaries=', primaries)
                 results = p.map(self._parse_primaries, primaries)
         except (ValueError, IndexError, AttributeError) as e:
             exception(e)
             raise ParseError(f'Failed to parse nodes\' logs: {e}')
-        proposals, commits, self.configs = zip(*results)
-        self.proposals = self._merge_results([x.items() for x in proposals])
-        self.commits = self._merge_results([x.items() for x in commits])
         print('d')
+        proposals, commits, self.configs = zip(*results)
+        print('e')
+        self.proposals = self._merge_results([x.items() for x in proposals])
+        print('f')
+        self.commits = self._merge_results([x.items() for x in commits])
+        print('g')
 
         # Parse the workers logs.
         try:
@@ -115,7 +120,7 @@ class LogParser:
         tmp = [(d, self._to_posix(t)) for t, d in tmp]
         print('a3c')
         proposals = self._merge_results([tmp])
-        print('a3')
+        print('a3d')
 
         tmp = findall(r'(.*?) .* Committed B\d+\([^ ]+\) -> ([^ ]+=)', log)
         tmp = [(d, self._to_posix(t)) for t, d in tmp]
@@ -151,7 +156,7 @@ class LogParser:
         }
 
         #ip = search(r'booted on (/ip4/\d+.\d+.\d+.\d+)', log).group(1)
-        print('a4')
+        print('a5')
 
         return proposals, commits, configs#, ip
 
@@ -280,33 +285,3 @@ class LogParser:
 
         return cls(clients, primaries, faults=faults)
 
-
-class LogGrpcParser:
-    def __init__(self, primaries, faults=0):
-        assert all(isinstance(x, str) for x in primaries)
-        self.faults = faults
-
-        # Parse the primaries logs.
-        try:
-            with Pool() as p:
-                results = p.map(self._parse_primaries, primaries)
-        except (ValueError, IndexError, AttributeError) as e:
-            exception(e)
-            raise ParseError(f'Failed to parse nodes\' logs: {e}')
-        self.grpc_ports = results
-
-    def _parse_primaries(self, log):
-        port = search(
-            r'Consensus API gRPC Server listening on /ip4/.+/tcp/(.+)/http', log).group(1)
-        return port
-
-    @classmethod
-    def process(cls, directory, faults=0):
-        assert isinstance(directory, str)
-
-        primaries = []
-        for filename in sorted(glob(join(directory, 'primary-*.log'))):
-            with open(filename, 'r') as f:
-                primaries += [f.read()]
-
-        return cls(primaries, faults=faults)

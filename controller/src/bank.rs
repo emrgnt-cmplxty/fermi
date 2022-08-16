@@ -36,22 +36,23 @@ impl BankController {
         }
     }
 
-    pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
-        // do not allow double-creation of a single account
-        if self.bank_accounts.contains_key(account_pub_key) {
-            Err(GDEXError::AccountCreation)
-        } else {
-            self.bank_accounts
-                .insert(account_pub_key.clone(), BankAccount::new(account_pub_key.clone()));
-            Ok(())
-        }
+    fn check_account_exists(&self, account_pub_key: &AccountPubKey) -> bool {
+        self.bank_accounts.contains_key(account_pub_key)
     }
 
-    fn check_account_exists(&self, account_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
-        self.bank_accounts
-            .get(account_pub_key)
-            .ok_or(GDEXError::AccountLookup)?;
-        Ok(())
+    pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
+        // do not allow double-creation of a single account
+        if self.check_account_exists(account_pub_key) {
+            println!("key exists!");
+            Err(GDEXError::AccountCreation)
+        } else {
+            println!("key does not exist!");
+            self.bank_accounts
+                .insert(account_pub_key.clone(), BankAccount::new(account_pub_key.clone()));
+            println!("asdasdasd");
+            dbg!(self.bank_accounts.get(account_pub_key));
+            Ok(())
+        }
     }
 
     // TODO #0  //
@@ -63,7 +64,9 @@ impl BankController {
             self.create_account(owner_pub_key)?
         }
         // throw error if attempting to create asset prior to account creation
-        self.check_account_exists(owner_pub_key)?;
+        if !self.check_account_exists(owner_pub_key) {
+            return Err(GDEXError::AccountCreation)
+        }
 
         self.asset_id_to_asset.insert(
             self.n_assets,
@@ -74,8 +77,10 @@ impl BankController {
         );
 
         self.update_balance(owner_pub_key, self.n_assets, CREATED_ASSET_BALANCE as i64)?;
+        dbg!(&self.bank_accounts);
         // increment asset counter & return less the increment
         self.n_assets += 1;
+
         Ok(())
     }
 
@@ -121,16 +126,19 @@ impl BankController {
             return Err(GDEXError::PaymentRequest);
         };
 
-        if self.check_account_exists(account_pub_key_to).is_err() {
+        if !self.check_account_exists(account_pub_key_to) {
+            println!("YEEYEE");
             if asset_id == 0 {
                 self.create_account(account_pub_key_to)?
             } else {
                 return Err(GDEXError::AccountLookup);
             }
-        }
+        };
 
         self.update_balance(account_pub_key_from, asset_id, -(amount as i64))?;
+        dbg!(&self.bank_accounts);
         self.update_balance(account_pub_key_to, asset_id, amount as i64)?;
+        dbg!(&self.bank_accounts);
         Ok(())
     }
 }

@@ -78,26 +78,26 @@ use crate::transaction::{PaymentRequest, CreateAssetRequest, TransactionVariant,
 use narwhal_types::BatchDigest;
 
 pub fn create_payment_transaction(
-    sender_pub_key: AccountKeyPair,
-    receiver_pub_key: AccountKeyPair,
+    sender_kp: &AccountKeyPair,
+    receiver_kp: &AccountKeyPair,
     asset_id: u64,
     amount: u64,
     recent_block_hash: BatchDigest
 ) -> Transaction {
     let transaction_variant = TransactionVariant::PaymentTransaction(PaymentRequest::new(
-        receiver_pub_key.public().clone(),
+        receiver_kp.public().clone(),
         asset_id,
         amount
     ));
 
-    Transaction::new(sender_pub_key.public().clone(), recent_block_hash, transaction_variant)
+    Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
 }
 
 pub fn create_asset_creation_transaction(
-    sender_pub_key: AccountKeyPair,
+    sender_kp: &AccountKeyPair,
     recent_block_hash: BatchDigest
 ) -> Transaction {
     let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest {});
 
-    Transaction::new(sender_pub_key.public().clone(), recent_block_hash, transaction_variant)
+    Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
 }

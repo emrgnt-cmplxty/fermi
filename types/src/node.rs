@@ -8,7 +8,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use sui_types::committee::StakeUnit;
 
-
 #[derive(Deserialize, Serialize)]
 pub struct TransactionResult(pub u64);
 

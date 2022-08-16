@@ -151,6 +151,7 @@ async fn run_narwhal_client(name: PublicKey, committee: Committee, mut rx_reconf
     }
 }
 
+#[ignore]
 #[tokio::test]
 async fn restart() {
     let committee = committee(None);
@@ -224,6 +225,7 @@ async fn restart() {
     join_all(handles).await;
 }
 
+#[ignore]
 #[tokio::test]
 async fn epoch_change() {
     let committee = committee(None);

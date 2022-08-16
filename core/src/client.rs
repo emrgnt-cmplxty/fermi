@@ -100,10 +100,6 @@ pub trait ClientAPI {
         &self,
         transaction: SignedTransaction,
     ) -> Result<tonic::Response<TransactionResult>, GDEXError>;
-    // async fn handle_transaction_stream(
-    //     &self,
-    //     transaction: SignedTransaction,
-    // ) -> Result<tonic::Response<TransactionResult>, GDEXError>;
 }
 
 #[async_trait]
@@ -115,23 +111,8 @@ impl ClientAPI for NetworkValidatorClient {
     ) -> Result<tonic::Response<TransactionResult>, GDEXError> {
         trace!("Handling a new transaction with a NetworkValidatorClient ClientAPI",);
 
-        self.client()
-            .transaction(transaction)
-            .await
-            .map_err(Into::into)
+        self.client().transaction(transaction).await.map_err(Into::into)
     }
-
-    // async fn handle_transaction_stream(
-    //     &self,
-    //     transaction: SignedTransaction,
-    // ) -> Result<tonic::Response<TransactionResult>, GDEXError> {
-    //     trace!("Handling a new transaction with a NetworkValidatorClient ClientAPI",);
-
-    //     self.client()
-    //         .stream_transaction(transaction)
-    //         .await
-    //         .map_err(Into::into)
-    // }
 }
 /// Creates a new endpoint and facilitates connectivity
 struct TargetEndpoint {

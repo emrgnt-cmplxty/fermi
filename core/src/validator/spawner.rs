@@ -121,11 +121,7 @@ impl ValidatorSpawner {
 
         // Create a node config with this validators information
         let narwhal_config = ConsensusParameters {
-            batch_size: self
-                .genesis_state
-                .master_controller()
-                .consensus_controller
-                .batch_size,
+            batch_size: self.genesis_state.master_controller().consensus_controller.batch_size,
             max_batch_delay: self
                 .genesis_state
                 .master_controller()

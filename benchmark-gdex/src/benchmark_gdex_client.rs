@@ -172,15 +172,8 @@ impl Client {
             // interval.as_mut().tick().await;
             let now = Instant::now();
 
-            // generate the keypairs
-            // note that seed [0; 32] is also fed into the Executor where the BankController state is initiated
-            // this means that as long as this keypair is the sender on all transactions there will sufficient balance
-
             // copy into a new variablet o avoid we get lifetime errors in the stream
             let size = self.size;
-
-            // let stream = tokio_stream::iter(0..burst).map(async move |x| {
-            let mut passed_time = 0;
 
             for x in 0..burst {
                 let amount = if 0 == counter % burst {
@@ -191,27 +184,20 @@ impl Client {
                     r += 1;
                     r
                 };
-                let signed_tranasction = create_signed_transaction(
-                    &kp_sender,
-                    &kp_receiver,
-                    amount,
-                    /* transmission_size */ size,
-                );
-    
-    
+                let signed_tranasction =
+                    create_signed_transaction(&kp_sender, &kp_receiver, amount, /* transmission_size */ size);
+
                 let in_now = Instant::now();
 
                 if let Err(e) = client.handle_transaction(signed_tranasction.clone()).await {
                     warn!("Failed to send transaction: {e}");
                     break 'main;
                 }
-                passed_time += (in_now.elapsed().as_micros() as u64);
                 // info!("time spent submitting transactions={}", passed_time);
                 counter += 1;
             }
             info!("now.elapsed().as_millis()={}", now.elapsed().as_millis());
-            info!("time spent submitting transactions={}", passed_time/1_000);
-            info!("submitted tps={}", burst*1000/(now.elapsed().as_millis() as u64));
+            info!("submitted tps={}", burst * 1000 / (now.elapsed().as_millis() as u64));
             if now.elapsed().as_millis() > BURST_DURATION as u128 {
                 // NOTE: This log entry is used to compute performance.
                 warn!("Transaction rate too high for this client");

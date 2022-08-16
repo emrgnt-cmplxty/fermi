@@ -23,8 +23,7 @@ use tokio::{
     },
     task::JoinHandle,
 };
-use tonic::IntoStreamingRequest;
-use tracing::{trace, info};
+use tracing::{info, trace};
 
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
@@ -123,8 +122,10 @@ impl ValidatorService {
             "Creating narwhal with committee ={}",
             config.genesis()?.narwhal_committee()
         );
-        info!("input consenus parameters={:?}", consensus_config.narwhal_config().to_owned(),);
-
+        info!(
+            "input consenus parameters={:?}",
+            consensus_config.narwhal_config().to_owned(),
+        );
 
         let mut primary_handles = narwhal_node::Node::spawn_primary(
             consensus_keypair,
@@ -223,34 +224,6 @@ impl ValidatorAPI for ValidatorService {
             .await
             .unwrap()
     }
-    // async fn stream_transaction(
-    //     &self,
-    //     request: tonic::Request<tonic::Streaming<SignedTransaction>>,
-    // ) -> Result<tonic::Response<TransactionResult>, tonic::Status> {
-    //     trace!("Handling a new transaction with a ValidatorService ValidatorAPI",);
-    //     let signed_transaction = request.into_inner().message().await.unwrap();
-    //     if signed_transaction.is_some(){
-    //         let state = self.state.clone();
-    //         let consensus_adapter = self.consensus_adapter.clone();
-    
-    //         return tokio::spawn(async move { Self::handle_transaction(consensus_adapter, state, signed_transaction.unwrap()).await })
-    //         .await
-    //         .unwrap()
-    //     }
-
-    //     // let message = request.into_inner().message();
-
-    //     // let state = self.state.clone();
-    //     // let consensus_adapter = self.consensus_adapter.clone();
-
-    //     // // Spawns a task which handles the transaction. The task will unconditionally continue
-    //     // // processing in the event that the client connection is dropped.
-    //     // tokio::spawn(async move { Self::handle_transaction(consensus_adapter, state, request.into()).await })
-    //     //     .await
-    //     //     .unwrap()
-    //     Ok(tonic::Response::new(TransactionResult(1)))
-    // }
-
 }
 
 #[cfg(test)]

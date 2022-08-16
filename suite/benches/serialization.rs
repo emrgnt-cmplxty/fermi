@@ -14,7 +14,7 @@ use gdex_types::{
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant, SERIALIZED_TRANSACTION_LENGTH},
 };
 use narwhal_crypto::{Hash, DIGEST_LEN};
-use narwhal_types::{Batch, BatchDigest, CertificateDigest, WorkerMessage};
+use narwhal_types::{Batch, CertificateDigest, WorkerMessage};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
 pub fn keys(seed: [u8; 32]) -> Vec<AccountKeyPair> {

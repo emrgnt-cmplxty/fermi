@@ -54,8 +54,8 @@ impl BankAccount {
         &self.balances
     }
 
-    pub fn get_balance(&self, asset_id: AssetId) -> &u64 {
-        self.balances.get(&asset_id).unwrap_or(&0)
+    pub fn get_balance(&self, asset_id: AssetId) -> u64 {
+        *self.balances.get(&asset_id).unwrap_or(&0)
     }
 
     pub fn set_balance(&mut self, asset_id: AssetId, amount: u64) {
@@ -136,8 +136,8 @@ pub mod account_tests {
         bank_account.set_balance(0, new_amount);
 
         assert!(*bank_account.get_balances().get(&0).unwrap() == new_amount);
-        assert!(*bank_account.get_balance(0) == new_amount);
-        assert!(*bank_account.get_balance(1) == 0);
+        assert!(bank_account.get_balance(0) == new_amount);
+        assert!(bank_account.get_balance(1) == 0);
     }
 
     #[test]

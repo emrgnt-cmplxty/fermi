@@ -54,7 +54,7 @@ impl StakeController {
         self.bank_controller
             .lock()
             .unwrap()
-            .update_balance(account_pub_key, PRIMARY_ASSET_ID, -(amount as i64))?;
+            .update_balance(account_pub_key, PRIMARY_ASSET_ID, amount, false)?;
         self.total_staked += amount;
         let lookup = self.stake_accounts.get_mut(account_pub_key);
         match lookup {
@@ -77,7 +77,7 @@ impl StakeController {
         self.bank_controller
             .lock()
             .unwrap()
-            .update_balance(account_pub_key, PRIMARY_ASSET_ID, amount as i64)?;
+            .update_balance(account_pub_key, PRIMARY_ASSET_ID, amount, true)?;
         let stake_account = self
             .stake_accounts
             .get_mut(account_pub_key)

@@ -18,6 +18,8 @@ pub enum GDEXError {
     AccountCreation,
     #[error("Failed to find account")]
     AccountLookup,
+    #[error("Failed to find asset")]
+    AssetLookup,
 
     // transaction associated errors
     #[error("Sender, payload and signature are not consistent")]

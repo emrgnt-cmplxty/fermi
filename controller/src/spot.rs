@@ -79,7 +79,7 @@ impl OrderbookInterface {
             self.create_account(account_pub_key)?
         }
 
-        let balance = *self
+        let balance = self
             .bank_controller
             .lock()
             .unwrap()
@@ -359,7 +359,7 @@ pub mod spot_tests {
             .unwrap();
 
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account.public(), BASE_ASSET_ID)
@@ -367,7 +367,7 @@ pub mod spot_tests {
             CREATED_ASSET_BALANCE
         );
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account.public(), QUOTE_ASSET_ID)
@@ -403,7 +403,7 @@ pub mod spot_tests {
             .unwrap();
 
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account.public(), BASE_ASSET_ID)
@@ -411,7 +411,7 @@ pub mod spot_tests {
             CREATED_ASSET_BALANCE
         );
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account.public(), QUOTE_ASSET_ID)
@@ -439,7 +439,7 @@ pub mod spot_tests {
             .unwrap();
 
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account.public(), QUOTE_ASSET_ID)
@@ -447,7 +447,7 @@ pub mod spot_tests {
             CREATED_ASSET_BALANCE
         );
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account.public(), BASE_ASSET_ID)
@@ -524,7 +524,7 @@ pub mod spot_tests {
             .unwrap();
 
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account_0.public(), QUOTE_ASSET_ID)
@@ -532,7 +532,7 @@ pub mod spot_tests {
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0
         );
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(&account_0.public(), BASE_ASSET_ID)
@@ -541,7 +541,7 @@ pub mod spot_tests {
         );
 
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account_1.public(), QUOTE_ASSET_ID)
@@ -549,7 +549,7 @@ pub mod spot_tests {
             TRANSFER_AMOUNT - bid_size_1 * bid_price_1
         );
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account_1.public(), BASE_ASSET_ID)
@@ -592,7 +592,7 @@ pub mod spot_tests {
             .unwrap();
 
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account_0.public(), QUOTE_ASSET_ID)
@@ -600,7 +600,7 @@ pub mod spot_tests {
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0
         );
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account_0.public(), BASE_ASSET_ID)
@@ -609,7 +609,7 @@ pub mod spot_tests {
         );
 
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account_1.public(), QUOTE_ASSET_ID)
@@ -617,7 +617,7 @@ pub mod spot_tests {
             TRANSFER_AMOUNT - bid_size_1 * bid_price_1
         );
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account_1.public(), BASE_ASSET_ID)
@@ -637,7 +637,7 @@ pub mod spot_tests {
         // paid bid_size_0 * bid_price_0 in quote asset to orderbook
         // received bid_size_0 in base asset from settled trade
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account_0.public(), QUOTE_ASSET_ID)
@@ -645,7 +645,7 @@ pub mod spot_tests {
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0
         );
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account_0.public(), BASE_ASSET_ID)
@@ -659,7 +659,7 @@ pub mod spot_tests {
         // sent bid_size_1 * bid_price_1 in quote asset to escrow
         // paid bid_size_0 in base asset from balance
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account_1.public(), QUOTE_ASSET_ID)
@@ -667,7 +667,7 @@ pub mod spot_tests {
             TRANSFER_AMOUNT - bid_size_1 * bid_price_1 + bid_size_0 * bid_price_0
         );
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account_1.public(), BASE_ASSET_ID)
@@ -685,7 +685,7 @@ pub mod spot_tests {
         // check account 0
         // state should remain unchanged from prior
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account_0.public(), QUOTE_ASSET_ID)
@@ -693,7 +693,7 @@ pub mod spot_tests {
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0
         );
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account_0.public(), BASE_ASSET_ID)
@@ -704,7 +704,7 @@ pub mod spot_tests {
         // check account 1
         // additional trade should act to move bid_size_1 * bid_price_1 in quote from escrow to balance
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account_1.public(), QUOTE_ASSET_ID)
@@ -712,7 +712,7 @@ pub mod spot_tests {
             TRANSFER_AMOUNT + bid_size_0 * bid_price_0
         );
         assert_eq!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(account_1.public(), BASE_ASSET_ID)

@@ -24,7 +24,7 @@ pub const CREATED_ASSET_BALANCE: u64 = 10_000_000_000_000_000;
 pub struct BankController {
     asset_id_to_asset: HashMap<AssetId, Asset>,
     bank_accounts: HashMap<AccountPubKey, BankAccount>,
-    n_assets: u64,
+    n_assets: u64
 }
 
 impl BankController {
@@ -36,26 +36,21 @@ impl BankController {
         }
     }
 
-    fn check_account_exists(&self, account_pub_key: &AccountPubKey) -> bool {
+    pub fn check_account_exists(&self, account_pub_key: &AccountPubKey) -> bool {
         self.bank_accounts.contains_key(account_pub_key)
     }
 
     pub fn create_account(&mut self, account_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
         // do not allow double-creation of a single account
         if self.check_account_exists(account_pub_key) {
-            println!("key exists!");
             Err(GDEXError::AccountCreation)
         } else {
-            println!("key does not exist!");
             self.bank_accounts
                 .insert(account_pub_key.clone(), BankAccount::new(account_pub_key.clone()));
-            println!("asdasdasd");
-            dbg!(self.bank_accounts.get(account_pub_key));
             Ok(())
         }
     }
 
-    // TODO #0  //
     pub fn create_asset(&mut self, owner_pub_key: &AccountPubKey) -> Result<(), GDEXError> {
         // special handling for genesis
         // an account must be created in this instance
@@ -77,19 +72,19 @@ impl BankController {
         );
 
         self.update_balance(owner_pub_key, self.n_assets, CREATED_ASSET_BALANCE as i64)?;
-        dbg!(&self.bank_accounts);
         // increment asset counter & return less the increment
         self.n_assets += 1;
 
         Ok(())
     }
 
-    pub fn get_balance(&self, account_pub_key: &AccountPubKey, asset_id: AssetId) -> Result<&u64, GDEXError> {
+    pub fn get_balance(&self, account_pub_key: &AccountPubKey, asset_id: AssetId) -> Result<u64, GDEXError> {
         let bank_account = self
             .bank_accounts
             .get(account_pub_key)
             .ok_or(GDEXError::AccountLookup)?;
-        Ok(bank_account.get_balances().get(&asset_id).unwrap_or(&0))
+        Ok(*bank_account.get_balances().get(&asset_id).unwrap_or(&0))
+        //Ok(bank_account.get_balances().get(asset_id).unwrap_or(0))
     }
 
     pub fn update_balance(
@@ -121,13 +116,12 @@ impl BankController {
         amount: u64,
     ) -> Result<(), GDEXError> {
         // return error if insufficient user balance
-        let balance = *self.get_balance(account_pub_key_from, asset_id)?;
+        let balance = self.get_balance(account_pub_key_from, asset_id)?;
         if balance < amount {
             return Err(GDEXError::PaymentRequest);
         };
 
         if !self.check_account_exists(account_pub_key_to) {
-            println!("YEEYEE");
             if asset_id == 0 {
                 self.create_account(account_pub_key_to)?
             } else {
@@ -136,9 +130,7 @@ impl BankController {
         };
 
         self.update_balance(account_pub_key_from, asset_id, -(amount as i64))?;
-        dbg!(&self.bank_accounts);
         self.update_balance(account_pub_key_to, asset_id, amount as i64)?;
-        dbg!(&self.bank_accounts);
         Ok(())
     }
 }
@@ -147,4 +139,52 @@ impl Default for BankController {
     fn default() -> Self {
         Self::new()
     }
+}
+
+#[cfg(test)]
+pub mod spot_tests {
+    use super::*;
+    use gdex_types::account::{account_test_functions::generate_keypair_vec};
+    use narwhal_crypto::{
+        ed25519::{Ed25519KeyPair},
+        traits::{Signer},
+        {generate_production_keypair, traits::KeyPair as _, KeyPair}
+    };
+
+    #[test]
+    fn create_and_check_accounts() {
+        let mut bank_controller = BankController::new();
+        assert!(
+            bank_controller.bank_accounts.is_empty(),
+            "Bank accounts hashmap must be empty."
+        );
+
+        // create account and check
+        let user_kp = generate_production_keypair::<KeyPair>();
+        bank_controller.create_account(user_kp.public()).unwrap();
+        assert!(
+            bank_controller.check_account_exists(user_kp.public()),
+            "Bank account must exist."
+        );
+
+        // create another account and check
+        let user_kp1 = generate_production_keypair::<KeyPair>();
+        bank_controller.create_account(user_kp1.public()).unwrap();
+        assert!(
+            bank_controller.check_account_exists(user_kp1.public()),
+            "Bank account must exist."
+        );
+
+        // confirm zero balances
+        const TEST_ASSET_ID: u64 = 0;
+        assert!(
+            bank_controller.get_balance(user_kp.public(), TEST_ASSET_ID).unwrap() == 0,
+            "Account balance for asset 0 must be 0."
+        );
+        assert!(
+            bank_controller.get_balance(user_kp1.public(), TEST_ASSET_ID).unwrap() == 0,
+            "Account balance for asset 0 must be 0."
+        );
+    }
+
 }

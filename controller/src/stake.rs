@@ -123,7 +123,7 @@ pub mod stake_tests {
 
         stake_controller.stake(sender.public(), STAKE_AMOUNT).unwrap();
         assert!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(sender.public(), PRIMARY_ASSET_ID)
@@ -156,7 +156,7 @@ pub mod stake_tests {
 
         stake_controller.stake(sender.public(), STAKE_AMOUNT).unwrap();
         assert!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(sender.public(), PRIMARY_ASSET_ID)
@@ -190,7 +190,7 @@ pub mod stake_tests {
         let mut stake_controller = StakeController::new(Arc::clone(&bank_controller_ref));
 
         assert!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(sender.public(), PRIMARY_ASSET_ID)

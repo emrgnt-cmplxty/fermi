@@ -141,19 +141,16 @@ mod test_validator_state {
     use super::*;
     use crate::{builder::genesis_state::GenesisStateBuilder, genesis_ceremony::VALIDATOR_FUNDING_AMOUNT};
     use gdex_types::{
-        account::{
-            account_test_functions::generate_keypair_vec, AccountKeyPair, AccountSignature, ValidatorPubKeyBytes,
-        },
+        account::{ValidatorPubKeyBytes},
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
         node::ValidatorInfo,
         transaction::SignedTransaction,
         utils,
     };
     use narwhal_consensus::ConsensusOutput;
-    use narwhal_crypto::{ed25519::Ed25519PublicKey, Hash, DIGEST_LEN};
+    use narwhal_crypto::{Hash, DIGEST_LEN, generate_production_keypair, traits::KeyPair as _, KeyPair};
     use narwhal_executor::ExecutionIndices;
-    use narwhal_types::{BatchDigest, Certificate, Header, HeaderDigest};
-    use std::collections::{BTreeMap, BTreeSet};
+    use narwhal_types::{BatchDigest, Certificate, Header};
 
     #[tokio::test]
     pub async fn single_node_init() {
@@ -213,10 +210,10 @@ mod test_validator_state {
             .add_validator(validator);
 
         let genesis = builder.build();
-        let validator = ValidatorState::new(public_key, secret, &genesis).await;
+        let validator = ValidatorState::new(public_key, secret, &genesis);
 
         // create asset transaction
-        let sender_kp = generate_keypair_vec([0; 32]).pop().unwrap();
+        let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BatchDigest::new([0; DIGEST_LEN]);
         let create_asset_txn = utils::create_asset_creation_transaction(&sender_kp, recent_block_hash);
         let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
@@ -248,7 +245,7 @@ mod test_validator_state {
             .unwrap();
 
         // create payment transaction
-        let receiver_kp = generate_keypair_vec([0; 32]).pop().unwrap();
+        let receiver_kp = generate_production_keypair::<KeyPair>();
         let payment_txn = utils::create_payment_transaction(&sender_kp, &receiver_kp, 0, 1000000, recent_block_hash);
         let signed_digest = sender_kp.sign(&payment_txn.digest().get_array()[..]);
         let signed_payment_txn = SignedTransaction::new(sender_kp.public().clone(), payment_txn, signed_digest);

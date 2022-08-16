@@ -30,7 +30,7 @@ use tracing::{debug, info};
 /// Tracks recently submitted transactions to eventually implement transaction gating
 pub struct ValidatorStore {
     /// The transaction map tracks recently submitted transactions
-    transaction_cache: Mutex<HashMap<TransactionDigest, CertificateDigest>>,
+    transaction_cache: Mutex<HashMap<TransactionDigest, Option<CertificateDigest>>>,
     certificate_cache: Mutex<HashMap<CertificateDigest, SequenceNumber>>,
     // garbage collection depth
     gc_depth: u64,
@@ -60,7 +60,7 @@ impl ValidatorStore {
         let transaction_digest = transaction.digest();
         self.transaction_cache.lock().unwrap().insert(
             transaction_digest,
-            CertificateDigest::new([0; 32]), // Insert with dummy certificate, which will later be overwritten
+            None, // Insert with dummy certificate, which will later be overwritten
         );
     }
 
@@ -76,7 +76,7 @@ impl ValidatorStore {
         self.transaction_cache
             .lock()
             .unwrap()
-            .insert(transaction_digest, certificate_digest);
+            .insert(transaction_digest, Some(certificate_digest));
         locked_certificate_cache.insert(certificate_digest, consensus_output.consensus_index);
         drop(locked_certificate_cache);
         if is_new_seq_num {
@@ -93,12 +93,11 @@ impl ValidatorStore {
         let mut locked_certificate_cache = self.certificate_cache.lock().unwrap();
         if locked_certificate_cache.len() > self.gc_depth as usize {
             let mut threshold = locked_certificate_cache.values().max().unwrap() - self.gc_depth;
-            let dummy_certificate_digest = &mut CertificateDigest::new([0; 32]);
             locked_certificate_cache.retain(|_k, v| v > &mut threshold);
             self.transaction_cache
                 .lock()
                 .unwrap()
-                .retain(|_k, v| v == dummy_certificate_digest || locked_certificate_cache.contains_key(v));
+                .retain(|_k, v| v.is_none() || locked_certificate_cache.contains_key(&v.unwrap()));
         }
     }
 }

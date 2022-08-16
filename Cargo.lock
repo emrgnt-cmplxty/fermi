@@ -465,7 +465,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "benchmark-node"
+name = "benchmark-narwhal"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -484,10 +484,12 @@ dependencies = [
  "executor",
  "futures",
  "gdex-controller",
+ "gdex-core",
  "gdex-types",
  "gdex-workspace-hack",
  "hex",
  "log",
+ "multiaddr",
  "mysten-network 0.1.0 (git+https://github.com/mystenlabs/mysten-infra.git?rev=c6dc7a23a40b3517f138d122a76d3bc15f844f67)",
  "network",
  "node",

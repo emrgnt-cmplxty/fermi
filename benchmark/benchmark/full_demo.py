@@ -60,7 +60,7 @@ class Demo:
 
             # Recompile the latest code.
             cmd = CommandMaker.compile().split()
-            subprocess.run(cmd, check=True, cwd=PathMaker.node_crate_path())
+            subprocess.run(cmd, check=True, cwd=PathMaker.narwhal_node_crate_path())
             # Recompile the latest code.
             cmd = CommandMaker.compile().split()
             subprocess.run(cmd, check=True,

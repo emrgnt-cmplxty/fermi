@@ -2,7 +2,7 @@
 from fabric import task
 from benchmark.seed import SeedData
 
-from benchmark.local import LocalBench
+from benchmark.narwhal import NarwhalBench
 from benchmark.full_demo import Demo
 
 from benchmark.logs import ParseError, LogParser
@@ -13,8 +13,8 @@ from benchmark.remote import Bench, BenchError
 
 
 @task
-def local(ctx, debug=True):
-    ''' Run benchmarks on localhost '''
+def narwhal(ctx, debug=True):
+    ''' Run benchmarks on Narwhal node. '''
     bench_params = {
         'faults': 0,
         'nodes': 4,
@@ -50,7 +50,7 @@ def local(ctx, debug=True):
         'execution': 'advanced'
     }
     try:
-        ret = LocalBench(bench_params, node_params).run(debug)
+        ret = NarwhalBench(bench_params, node_params).run(debug)
         print(ret.result())
     except BenchError as e:
         Print.error(e)

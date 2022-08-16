@@ -37,8 +37,10 @@ class CommandMaker:
         assert isinstance(execution, str)
         assert isinstance(debug, bool)
         v = '-vvv' if debug else '-vv'
-        return (f'./benchmark-node {v} run --keys {keys} --committee {committee} '
+        command = (f'./benchmark-node {v} run --keys {keys} --committee {committee} '
                 f'--store {store} --parameters {parameters} --execution {execution} primary')
+        print("Returning execution command = ", command)
+        return command
 
     @staticmethod
     def run_no_consensus_primary(keys, committee, store, parameters, debug=False):
@@ -58,8 +60,11 @@ class CommandMaker:
         assert isinstance(execution, str)
         assert isinstance(debug, bool)
         v = '-vvv' if debug else '-vv'
-        return (f'./benchmark-node {v} run --keys {keys} --committee {committee} '
+        command = (f'./benchmark-node {v} run --keys {keys} --committee {committee} '
                 f'--store {store} --parameters {parameters} --execution {execution} worker --id {id}')
+
+        print("Returning execution command = ", command)
+        return command
 
     @staticmethod
     def run_client(address, size, rate, execution, nodes):
@@ -70,7 +75,9 @@ class CommandMaker:
         assert isinstance(nodes, list)
         assert all(isinstance(x, str) for x in nodes)
         nodes = f'--nodes {" ".join(nodes)}' if nodes else ''
-        return f'./benchmark_client {address} --size {size} --rate {rate} --execution {execution} {nodes}'
+        command = f'./benchmark_client {address} --size {size} --rate {rate} --execution {execution} {nodes}'
+        print("Returning execution command = ", command)
+        return command
 
     @staticmethod
     def alias_demo_binaries(origin):

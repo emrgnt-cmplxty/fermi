@@ -213,7 +213,7 @@ mod test_validator_state {
             .add_validator(validator);
 
         let genesis = builder.build();
-        let validator = ValidatorState::new(public_key, secret, &genesis).await;
+        let validator = ValidatorState::new(public_key, secret, &genesis);
 
         // create asset transaction
         let sender_kp = generate_keypair_vec([0; 32]).pop().unwrap();

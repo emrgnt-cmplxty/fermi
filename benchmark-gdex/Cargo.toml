@@ -65,6 +65,6 @@ benchmark = ["narwhal-worker/benchmark", "narwhal-primary/benchmark", "narwhal-c
 dhat-heap = ["dhat"]    # if you are doing heap profiling
 
 [[bin]]         
-name = "benchmark_gdex"   
-path = "src/benchmark_gdex.rs" 
+name = "benchmark_gdex_client"   
+path = "src/benchmark_gdex_client.rs" 
 required-features = ["benchmark"]

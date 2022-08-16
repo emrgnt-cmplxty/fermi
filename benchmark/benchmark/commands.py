@@ -9,7 +9,7 @@ class CommandMaker:
     @staticmethod
     def cleanup():
         return (
-            f'rm -r .db-* ; rm .*.json ; mkdir -p {PathMaker.results_path()}'
+            f'rm -r .db-* ;  rm -r *_db ; rm .*.json ; mkdir -p {PathMaker.results_path()}'
         )
 
     @staticmethod
@@ -43,15 +43,16 @@ class CommandMaker:
         return command
 
     @staticmethod
-    def run_gdex_primary(keys, committee, store, parameters, execution, debug=False):
-        assert isinstance(keys, str)
-        assert isinstance(committee, str)
-        assert isinstance(parameters, str)
-        assert isinstance(execution, str)
+    def run_gdex_primary(db_dir, genesis_dir, key_dir, validator_name, validator_port, debug=False):
+        assert isinstance(db_dir, str)
+        assert isinstance(genesis_dir, str)
+        assert isinstance(key_dir, str)
+        assert isinstance(validator_name, str)
+        assert isinstance(validator_port, str)
         assert isinstance(debug, bool)
         v = '-vvv' if debug else '-vv'
-        command = (f'./benchmark-narwhal {v} run --keys {keys} --committee {committee} '
-                f'--store {store} --parameters {parameters} --execution {execution} primary')
+        command = (f'./gdex-node {v} run --db-dir {db_dir} --genesis-dir  {genesis_dir} '
+                f'--key-dir {key_dir} --validator-name {validator_name} --validator-port {validator_port}')
         print("Returning execution command = ", command)
         return command
 
@@ -101,7 +102,7 @@ class CommandMaker:
         assert isinstance(nodes, list)
         assert all(isinstance(x, str) for x in nodes)
         nodes = f'--nodes {" ".join(nodes)}' if nodes else ''
-        command = f'./benchmark_gdex {address} --size {size} --rate {rate} --execution {execution} {nodes}'
+        command = f'./benchmark_gdex_client {address} --size {size} --rate {rate} --execution {execution} {nodes}'
         print("Returning execution command = ", command)
         return command
 
@@ -125,6 +126,7 @@ class CommandMaker:
 
     @staticmethod
     def alias_binaries(origin):
+        print("origin=", origin)
         assert isinstance(origin, str)
-        node, client = join(origin, 'benchmark-narwhal'), join(origin, 'benchmark_narwhal_client')
-        return f'rm node ; rm benchmark_narwhal_client ; ln -s {node} . ; ln -s {client} .'
+        gdex_node, narwhal_node, narwhhal_client, gdex_client = join(origin, 'gdex-node'), join(origin, 'benchmark-narwhal'), join(origin, 'benchmark_narwhal_client'), join(origin, 'benchmark_gdex_client')
+        return f'rm gdex-node ; rm benchmark-narwhal ; rm benchmark_narwhal_client ; rm benchmark_gdex_client ; ln -s {gdex_node} . ; ln -s {narwhal_node} . ; ln -s {narwhhal_client}; ln -s {gdex_client} .'

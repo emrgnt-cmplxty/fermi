@@ -4,6 +4,8 @@ benchmark_gdex_client
 results
 plots
 demo_client
+gdex-node
+*_db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

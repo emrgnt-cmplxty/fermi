@@ -46,8 +46,8 @@ class LogParser:
         # Parse the primaries logs.
         try:
             with Pool() as p:
-                print('p=', p)
-                print('primaries=', primaries)
+                # print('p=', p)
+                # print('primaries=', primaries)
                 results = p.map(self._parse_primaries, primaries)
         except (ValueError, IndexError, AttributeError) as e:
             exception(e)
@@ -109,6 +109,7 @@ class LogParser:
 
     def _parse_primaries(self, log):
         print('a1')
+        
         if search(r'(?:panicked|ERROR)', log) is not None:
             raise ParseError('Primary(s) panicked')
         print('a2')

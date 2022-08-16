@@ -9,7 +9,7 @@ use crate::{
 use anyhow::{anyhow, Context, Result};
 use async_trait::async_trait;
 use gdex_server::api::ValidatorAPIClient;
-use gdex_types::{error::GDEXError, transaction::SignedTransaction};
+use gdex_types::{error::GDEXError, node::TransactionResult, transaction::SignedTransaction};
 use multiaddr::{Multiaddr, Protocol};
 use tonic::transport::{Channel, Endpoint, Uri};
 use tracing::trace;
@@ -99,7 +99,11 @@ pub trait ClientAPI {
     async fn handle_transaction(
         &self,
         transaction: SignedTransaction,
-    ) -> Result<tonic::Response<SignedTransaction>, GDEXError>;
+    ) -> Result<tonic::Response<TransactionResult>, GDEXError>;
+    // async fn handle_transaction_stream(
+    //     &self,
+    //     transaction: SignedTransaction,
+    // ) -> Result<tonic::Response<TransactionResult>, GDEXError>;
 }
 
 #[async_trait]
@@ -108,15 +112,26 @@ impl ClientAPI for NetworkValidatorClient {
     async fn handle_transaction(
         &self,
         transaction: SignedTransaction,
-    ) -> Result<tonic::Response<SignedTransaction>, GDEXError> {
+    ) -> Result<tonic::Response<TransactionResult>, GDEXError> {
         trace!("Handling a new transaction with a NetworkValidatorClient ClientAPI",);
 
         self.client()
             .transaction(transaction)
             .await
-            // .map(tonic::Response::into_inner)
             .map_err(Into::into)
     }
+
+    // async fn handle_transaction_stream(
+    //     &self,
+    //     transaction: SignedTransaction,
+    // ) -> Result<tonic::Response<TransactionResult>, GDEXError> {
+    //     trace!("Handling a new transaction with a NetworkValidatorClient ClientAPI",);
+
+    //     self.client()
+    //         .stream_transaction(transaction)
+    //         .await
+    //         .map_err(Into::into)
+    // }
 }
 /// Creates a new endpoint and facilitates connectivity
 struct TargetEndpoint {

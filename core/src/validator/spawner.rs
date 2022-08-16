@@ -125,7 +125,7 @@ impl ValidatorSpawner {
                 .genesis_state
                 .master_controller()
                 .consensus_controller
-                .min_batch_size,
+                .batch_size,
             max_batch_delay: self
                 .genesis_state
                 .master_controller()

@@ -38,9 +38,7 @@ fn create_signed_transaction(
     kp_receiver: &AccountKeyPair,
     amount: u64,
     transmission_size: usize,
-    is_advanced_execution: bool,
 ) -> SignedTransaction {
-    // if is_advanced_execution {
     // use a dummy batch digest for initial benchmarking
     let dummy_batch_digest = BatchDigest::new([0; DIGEST_LEN]);
 
@@ -107,7 +105,6 @@ async fn main() -> Result<()> {
         .map(|x| x.parse::<Url>())
         .collect::<Result<Vec<_>, _>>()
         .with_context(|| format!("Invalid url format {target_str}"))?;
-    let is_advanced_execution: bool = matches.value_of("execution").unwrap_or("advanced") == "advanced";
 
     info!("Node address: {target}");
 
@@ -122,7 +119,6 @@ async fn main() -> Result<()> {
         size,
         rate,
         nodes,
-        is_advanced_execution,
     };
 
     // Wait for all nodes to be online and synchronized.
@@ -138,7 +134,6 @@ struct Client {
     size: usize,
     rate: u64,
     nodes: Vec<Url>,
-    is_advanced_execution: bool,
 }
 
 impl Client {
@@ -157,7 +152,7 @@ impl Client {
         //     .context(format!("failed to connect to {}", self.target))?;
         let validator_port = Multiaddr::from_str(&self.target.as_str()).unwrap();
 
-        let client = NetworkValidatorClient::connect_lazy(&validator_port).unwrap();
+        let client = NetworkValidatorClient::connect(&validator_port).await.unwrap();
 
         // Submit all transactions.
         let burst = self.rate / PRECISION;
@@ -174,7 +169,7 @@ impl Client {
         let kp_receiver = keys([1; 32]).pop().unwrap();
 
         'main: loop {
-            interval.as_mut().tick().await;
+            // interval.as_mut().tick().await;
             let now = Instant::now();
 
             // generate the keypairs
@@ -183,9 +178,10 @@ impl Client {
 
             // copy into a new variablet o avoid we get lifetime errors in the stream
             let size = self.size;
-            let is_advanced_execution = self.is_advanced_execution;
 
             // let stream = tokio_stream::iter(0..burst).map(async move |x| {
+            let mut passed_time = 0;
+
             for x in 0..burst {
                 let amount = if 0 == counter % burst {
                     // NOTE: This log entry is used to compute performance.
@@ -195,21 +191,27 @@ impl Client {
                     r += 1;
                     r
                 };
-
                 let signed_tranasction = create_signed_transaction(
                     &kp_sender,
                     &kp_receiver,
                     amount,
                     /* transmission_size */ size,
-                    /* is_advanced_execution */ is_advanced_execution,
                 );
+    
+    
+                let in_now = Instant::now();
 
-                if let Err(e) = client.handle_transaction(signed_tranasction).await {
+                if let Err(e) = client.handle_transaction(signed_tranasction.clone()).await {
                     warn!("Failed to send transaction: {e}");
                     break 'main;
                 }
+                passed_time += (in_now.elapsed().as_micros() as u64);
+                // info!("time spent submitting transactions={}", passed_time);
                 counter += 1;
             }
+            info!("now.elapsed().as_millis()={}", now.elapsed().as_millis());
+            info!("time spent submitting transactions={}", passed_time/1_000);
+            info!("submitted tps={}", burst*1000/(now.elapsed().as_millis() as u64));
             if now.elapsed().as_millis() > BURST_DURATION as u128 {
                 // NOTE: This log entry is used to compute performance.
                 warn!("Transaction rate too high for this client");

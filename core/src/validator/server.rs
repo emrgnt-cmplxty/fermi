@@ -10,7 +10,7 @@ use crate::{
 use anyhow::anyhow;
 use async_trait::async_trait;
 use gdex_server::api::{ValidatorAPI, ValidatorAPIServer};
-use gdex_types::{crypto::KeypairTraits, transaction::SignedTransaction};
+use gdex_types::{crypto::KeypairTraits, node::TransactionResult, transaction::SignedTransaction};
 use multiaddr::Multiaddr;
 use narwhal_executor::SubscriberError;
 use narwhal_types::{TransactionProto, TransactionsClient};
@@ -23,7 +23,8 @@ use tokio::{
     },
     task::JoinHandle,
 };
-use tracing::{debug, info};
+use tonic::IntoStreamingRequest;
+use tracing::{trace, info};
 
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
@@ -122,6 +123,8 @@ impl ValidatorService {
             "Creating narwhal with committee ={}",
             config.genesis()?.narwhal_committee()
         );
+        info!("input consenus parameters={:?}", consensus_config.narwhal_config().to_owned(),);
+
 
         let mut primary_handles = narwhal_node::Node::spawn_primary(
             consensus_keypair,
@@ -159,7 +162,7 @@ impl ValidatorService {
     async fn analyze(mut rx_output: Receiver<(Result<Vec<u8>, SubscriberError>, Vec<u8>)>) {
         loop {
             while let Some(_message) = rx_output.recv().await {
-                // debug!("Received a finalized consensus transaction with analyze",);
+                trace!("Received a finalized consensus transaction with analyze",);
                 // NOTE: Notify the user that its transaction has been processed.
             }
         }
@@ -168,18 +171,16 @@ impl ValidatorService {
     async fn handle_transaction(
         consensus_adapter: Arc<Mutex<ConsensusAdapter>>,
         state: Arc<ValidatorState>,
-        request: tonic::Request<SignedTransaction>,
-    ) -> Result<tonic::Response<SignedTransaction>, tonic::Status> {
-        // debug!("Handling a new transaction with ValidatorService",);
+        signed_transaction: SignedTransaction,
+    ) -> Result<tonic::Response<TransactionResult>, tonic::Status> {
+        trace!("Handling a new transaction with ValidatorService",);
 
-        let transaction = request.into_inner();
-
-        // transaction
-        //     .verify()
-        //     .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
+        signed_transaction
+            .verify()
+            .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
 
         let transaction_proto = TransactionProto {
-            transaction: transaction.serialize().unwrap().into(),
+            transaction: signed_transaction.serialize().unwrap().into(),
         };
 
         let _result = consensus_adapter
@@ -191,12 +192,12 @@ impl ValidatorService {
             .unwrap();
 
         state
-            .handle_transaction(&transaction)
+            .handle_transaction(&signed_transaction)
             // .instrument(span)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        Ok(tonic::Response::new(transaction))
+        Ok(tonic::Response::new(TransactionResult(1)))
     }
 
     pub fn get_consensus_adapter(&self) -> &Arc<Mutex<ConsensusAdapter>> {
@@ -210,18 +211,46 @@ impl ValidatorAPI for ValidatorService {
     async fn transaction(
         &self,
         request: tonic::Request<SignedTransaction>,
-    ) -> Result<tonic::Response<SignedTransaction>, tonic::Status> {
-        // debug!("Handling a new transaction with a ValidatorService ValidatorAPI",);
-
+    ) -> Result<tonic::Response<TransactionResult>, tonic::Status> {
+        trace!("Handling a new transaction with a ValidatorService ValidatorAPI",);
+        let signed_transaction = request.into_inner();
         let state = self.state.clone();
         let consensus_adapter = self.consensus_adapter.clone();
 
         // Spawns a task which handles the transaction. The task will unconditionally continue
         // processing in the event that the client connection is dropped.
-        tokio::spawn(async move { Self::handle_transaction(consensus_adapter, state, request).await })
+        tokio::spawn(async move { Self::handle_transaction(consensus_adapter, state, signed_transaction).await })
             .await
             .unwrap()
     }
+    // async fn stream_transaction(
+    //     &self,
+    //     request: tonic::Request<tonic::Streaming<SignedTransaction>>,
+    // ) -> Result<tonic::Response<TransactionResult>, tonic::Status> {
+    //     trace!("Handling a new transaction with a ValidatorService ValidatorAPI",);
+    //     let signed_transaction = request.into_inner().message().await.unwrap();
+    //     if signed_transaction.is_some(){
+    //         let state = self.state.clone();
+    //         let consensus_adapter = self.consensus_adapter.clone();
+    
+    //         return tokio::spawn(async move { Self::handle_transaction(consensus_adapter, state, signed_transaction.unwrap()).await })
+    //         .await
+    //         .unwrap()
+    //     }
+
+    //     // let message = request.into_inner().message();
+
+    //     // let state = self.state.clone();
+    //     // let consensus_adapter = self.consensus_adapter.clone();
+
+    //     // // Spawns a task which handles the transaction. The task will unconditionally continue
+    //     // // processing in the event that the client connection is dropped.
+    //     // tokio::spawn(async move { Self::handle_transaction(consensus_adapter, state, request.into()).await })
+    //     //     .await
+    //     //     .unwrap()
+    //     Ok(tonic::Response::new(TransactionResult(1)))
+    // }
+
 }
 
 #[cfg(test)]

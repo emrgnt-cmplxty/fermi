@@ -26,6 +26,10 @@ class PathMaker:
         return join('..', 'benchmark-narwhal')
 
     @staticmethod
+    def gdex_node_crate_path():
+        return join('..', 'benchmark-gdex')
+
+    @staticmethod
     def examples_crate_path():
         return join('..', 'examples')
 

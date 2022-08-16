@@ -18,7 +18,7 @@ use narwhal_node::{
 };
 use std::sync::Arc;
 use tokio::sync::mpsc::{channel, Receiver};
-use tracing::info;
+use tracing::{debug, info};
 
 // IMPORT BESPOKE EXECUTION STATE
 use benchmark_narwhal::execution_state::AdvancedExecutionState;
@@ -158,6 +158,8 @@ async fn run(matches: &ArgMatches<'_>) -> Result<()> {
     let (tx_transaction_confirmation, rx_transaction_confirmation) = channel(Node::CHANNEL_CAPACITY);
 
     let registry;
+
+    debug!("input consenus parameters={:?}", parameters.clone());
 
     // Check whether to run a primary, a worker, or an entire authority.
     let node_handles = match matches.subcommand() {

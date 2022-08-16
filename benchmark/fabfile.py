@@ -22,9 +22,13 @@ def gdex(ctx, debug=True):
             'validator-1': 'http://localhost:62278',
             'validator-2': 'http://localhost:62280',
             'validator-3': 'http://localhost:62282'
+            # 'validator-0': 'http://localhost:62264',
+            # 'validator-1': 'http://localhost:62228',
+            # 'validator-2': 'http://localhost:62252',
+            # 'validator-3': 'http://localhost:62240'
         },
-        'rate': 50_000,
-        'duration': 5,
+        'rate': 100_000,
+        'duration': 20,
         'mem_profiling': False,
         'genesis_dir': "../.proto/",
         'key_dir': "../.proto/",

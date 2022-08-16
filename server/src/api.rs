@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 #[allow(clippy::all)]
 mod validator {
-    include!(concat!(env!("OUT_DIR"), "/gdex.validator.ValidatorAPI.rs"));
+    // include!(concat!(env!("OUT_DIR"), "/gdex.validator.ValidatorAPI.rs"));
+    include!(concat!("./", "/gdex.validator.ValidatorAPI.rs"));
 }
 
 pub use validator::{

@@ -6,15 +6,19 @@ use super::genesis_state::ValidatorGenesisState;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
 use gdex_controller::master::MasterController;
+use gdex_types::transaction::Transaction;
 use gdex_types::{
     account::ValidatorKeyPair,
     committee::{Committee, ValidatorName},
     error::GDEXError,
     transaction::{SignedTransaction, TransactionDigest},
 };
+use narwhal_consensus::ConsensusOutput;
+use narwhal_crypto::Hash;
 use narwhal_executor::{ExecutionIndices, ExecutionState};
+use narwhal_types::{CertificateDigest, SequenceNumber};
 use std::{
-    collections::HashSet,
+    collections::HashMap,
     pin::Pin,
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -24,18 +28,81 @@ use std::{
 use tracing::{debug, info};
 
 /// Tracks recently submitted transactions to eventually implement transaction gating
-// TODO - implement the gating and garbage collection
 pub struct ValidatorStore {
     /// The transaction map tracks recently submitted transactions
-    pub tranasaction_map: Mutex<HashSet<TransactionDigest>>,
+    transaction_cache: Mutex<HashMap<TransactionDigest, CertificateDigest>>,
+    certificate_cache: Mutex<HashMap<CertificateDigest, SequenceNumber>>,
+    // garbage collection depth
+    gc_depth: u64,
 }
+
 impl Default for ValidatorStore {
     fn default() -> Self {
         Self {
-            tranasaction_map: Mutex::new(HashSet::new()),
+            transaction_cache: Mutex::new(HashMap::new()),
+            certificate_cache: Mutex::new(HashMap::new()),
+            gc_depth: 50,
         }
     }
 }
+
+impl ValidatorStore {
+    pub fn check_seen_transaction(&self, transaction: &Transaction) -> bool {
+        let transaction_digest = transaction.digest();
+        return self.transaction_cache.lock().unwrap().contains_key(&transaction_digest);
+    }
+
+    pub fn check_seen_certificate_digest(&self, certificate_digest: &CertificateDigest) -> bool {
+        return self.certificate_cache.lock().unwrap().contains_key(certificate_digest);
+    }
+
+    pub fn insert_unconfirmed_transaction(&self, transaction: &Transaction) {
+        let transaction_digest = transaction.digest();
+        self.transaction_cache.lock().unwrap().insert(
+            transaction_digest,
+            CertificateDigest::new([0; 32]), // Insert with dummy certificate, which will later be overwritten
+        );
+    }
+
+    pub fn insert_confirmed_transaction(&self, transaction: &Transaction, consensus_output: &ConsensusOutput) {
+        let transaction_digest = transaction.digest();
+        let certificate_digest = consensus_output.certificate.digest();
+        let mut locked_certificate_cache = self.certificate_cache.lock().unwrap();
+        let max_seq_num_so_far = locked_certificate_cache.values().max();
+
+        let is_new_seq_num =
+            max_seq_num_so_far.is_none() || consensus_output.consensus_index > *max_seq_num_so_far.unwrap();
+
+        self.transaction_cache
+            .lock()
+            .unwrap()
+            .insert(transaction_digest, certificate_digest);
+        locked_certificate_cache.insert(certificate_digest, consensus_output.consensus_index);
+        drop(locked_certificate_cache);
+        if is_new_seq_num {
+            self.handle_new_sequence_number();
+        }
+    }
+
+    fn handle_new_sequence_number(&self) {
+        self.prune()
+        // extend this
+    }
+
+    fn prune(&self) {
+        let mut locked_certificate_cache = self.certificate_cache.lock().unwrap();
+        if locked_certificate_cache.len() > self.gc_depth as usize {
+            let mut threshold = locked_certificate_cache.values().max().unwrap() - self.gc_depth;
+            let dummy_certificate_digest = &mut CertificateDigest::new([0; 32]);
+            locked_certificate_cache.retain(|_k, v| v > &mut threshold);
+            self.transaction_cache
+                .lock()
+                .unwrap()
+                .retain(|_k, v| v == dummy_certificate_digest || locked_certificate_cache.contains_key(v));
+        }
+    }
+}
+
 pub type StableSyncValidatorSigner = Pin<Arc<ValidatorKeyPair>>;
 
 /// Encapsulates all state of the necessary state for a validator
@@ -83,8 +150,10 @@ impl ValidatorState {
 
 impl ValidatorState {
     /// Initiate a new transaction.
-    pub async fn handle_transaction(&self, _transaction: &SignedTransaction) -> Result<(), GDEXError> {
-        debug!("Handling a new transaction with the ValidatorState",);
+    pub fn handle_pre_consensus_transaction(&self, transaction: &SignedTransaction) -> Result<(), GDEXError> {
+        debug!("Handling a new pre-consensus transaction with the ValidatorState",);
+        self.validator_store
+            .insert_unconfirmed_transaction(&transaction.get_transaction_payload());
         Ok(())
     }
 }
@@ -149,6 +218,9 @@ impl ExecutionState for ValidatorState {
             "Processing transaction = {:?} with consensus output = {:?}",
             transaction, consensus_output
         );
+
+        self.validator_store
+            .insert_confirmed_transaction(transaction.get_transaction_payload(), consensus_output);
 
         Ok((Vec::default(), None))
     }

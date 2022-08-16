@@ -132,7 +132,7 @@ impl ValidatorService {
         state: Arc<ValidatorState>,
         prometheus_registry: &Registry,
     ) -> anyhow::Result<Self> {
-        let (tx_consensus_to_sui, rx_consensus_to_sui) = channel(1_000);
+        let (tx_consensus_to_gdex, rx_consensus_to_gdex) = channel(1_000);
         // let (tx_sui_to_consensus, rx_sui_to_consensus) = channel(1_000);
 
         // Spawn the consensus node of this authority.
@@ -155,7 +155,7 @@ impl ValidatorService {
             consensus_config.narwhal_config().to_owned(),
             /* consensus */ true, // Indicate that we want to run consensus.
             /* execution_state */ Arc::clone(&state),
-            /* tx_confirmation */ tx_consensus_to_sui,
+            /* tx_confirmation */ tx_consensus_to_gdex,
             prometheus_registry,
         )
         .await?;
@@ -179,7 +179,7 @@ impl ValidatorService {
 
         // Create a new task to listen to received transactions
         tokio::spawn(async move {
-            Self::analyze(rx_consensus_to_sui).await;
+            Self::process_confirmed_transactions(rx_consensus_to_gdex).await;
         });
 
         Ok(Self {
@@ -190,7 +190,7 @@ impl ValidatorService {
 
     /// Receives an ordered list of certificates and apply any application-specific logic.
     #[allow(clippy::type_complexity)]
-    async fn analyze(mut rx_output: Receiver<(Result<Vec<u8>, SubscriberError>, Vec<u8>)>) {
+    async fn process_confirmed_transactions(mut rx_output: Receiver<(Result<Vec<u8>, SubscriberError>, Vec<u8>)>) {
         loop {
             while let Some(_message) = rx_output.recv().await {
                 debug!("Received a finalized consensus transaction with analyze",);
@@ -212,6 +212,23 @@ impl ValidatorService {
             .verify()
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
 
+        // TODO change this to err flow
+        // if !state
+        //     .validator_store
+        //     .check_seen_certificate_digest(transaction.get_transaction_payload().get_recent_certificate_digest())
+        // {
+        //     tonic::Status::internal("Duplicate transaction");
+        //     ();
+        // }
+        //
+        // if state
+        //     .validator_store
+        //     .check_seen_transaction(transaction.get_transaction_payload())
+        // {
+        //     tonic::Status::internal("Duplicate transaction");
+        //     ();
+        // }
+
         let transaction_proto = TransactionProto {
             transaction: transaction.serialize().unwrap().into(),
         };
@@ -225,9 +242,8 @@ impl ValidatorService {
             .unwrap();
 
         state
-            .handle_transaction(&transaction)
+            .handle_pre_consensus_transaction(&transaction)
             // .instrument(span)
-            .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
         Ok(tonic::Response::new(transaction))

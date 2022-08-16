@@ -15,6 +15,7 @@ http = "0.2.8"
 multiaddr = "0.14.0"
 futures = "0.3.21"
 serde = { version = "1.0.140", features = ["derive"] }
+tempfile = "3.3.0"
 tokio = { version = "1.20.1", features = ["sync", "rt", "macros"] }
 tokio-stream = { version = "0.1.9", features = ["net"] }
 tonic = { version = "0.7.2", features = ["transport"] }

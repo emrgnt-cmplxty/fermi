@@ -105,15 +105,15 @@ pub struct Transaction {
     // it is necessary to pass a recent block hash to make sure that a transaction cannot
     // be duplicated, moreover it is used to gaurantee that a submitted transaction was
     // created within a well designated lookback, TODO - implement such checks in pipeline
-    recent_batch_digest: BatchDigest,
+    recent_block_hash: BatchDigest,
     variant: TransactionVariant,
 }
 
 impl Transaction {
-    pub fn new(sender: AccountPubKey, recent_batch_digest: BatchDigest, variant: TransactionVariant) -> Self {
+    pub fn new(sender: AccountPubKey, recent_block_hash: BatchDigest, variant: TransactionVariant) -> Self {
         Transaction {
             sender,
-            recent_batch_digest,
+            recent_block_hash,
             variant,
         }
     }
@@ -122,8 +122,8 @@ impl Transaction {
         &self.sender
     }
 
-    pub fn get_recent_batch_digest(&self) -> &BatchDigest {
-        &self.recent_batch_digest
+    pub fn get_recent_block_hash(&self) -> &BatchDigest {
+        &self.recent_block_hash
     }
 
     pub fn get_variant(&self) -> &TransactionVariant {
@@ -167,14 +167,14 @@ impl Hash for Transaction {
                     hasher.update(payment.get_receiver().0.as_bytes());
                     hasher.update(payment.get_asset_id().to_le_bytes());
                     hasher.update(payment.get_amount().to_le_bytes());
-                    hasher.update(&self.get_recent_batch_digest().0[..]);
+                    hasher.update(&self.get_recent_block_hash().0[..]);
                 };
                 TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
             }
             TransactionVariant::CreateAssetTransaction(_create_asset) => {
                 let hasher_update = |hasher: &mut VarBlake2b| {
                     hasher.update(self.get_sender().0.to_bytes());
-                    hasher.update(&self.get_recent_batch_digest().0[..]);
+                    hasher.update(&self.get_recent_block_hash().0[..]);
                 };
                 TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
             }
@@ -350,7 +350,7 @@ pub mod transaction_tests {
         assert!(
             signed_transaction
                 .get_transaction_payload()
-                .get_recent_batch_digest()
+                .get_recent_block_hash()
                 .to_string()
                 == BatchDigest::new([0; DIGEST_LEN]).to_string(),
             "transaction payload batch digest does not match transaction input"

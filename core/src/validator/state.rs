@@ -10,7 +10,7 @@ use gdex_types::{
     account::ValidatorKeyPair,
     committee::{Committee, ValidatorName},
     error::GDEXError,
-    transaction::{SignedTransaction, TransactionDigest},
+    transaction::{SignedTransaction, TransactionDigest, TransactionVariant},
 };
 use narwhal_executor::{ExecutionIndices, ExecutionState};
 use std::{
@@ -89,16 +89,71 @@ impl ValidatorState {
     }
 }
 
+#[async_trait]
+impl ExecutionState for ValidatorState {
+    type Transaction = SignedTransaction;
+    type Error = GDEXError;
+    type Outcome = Vec<u8>;
+
+    async fn handle_consensus_transaction(
+        &self,
+        _consensus_output: &narwhal_consensus::ConsensusOutput,
+        _execution_indices: ExecutionIndices,
+        signed_transaction: Self::Transaction,
+    ) -> Result<(Self::Outcome, Option<narwhal_config::Committee>), Self::Error> {
+        let transaction = signed_transaction.get_transaction_payload();
+        match transaction.get_variant() {
+            TransactionVariant::PaymentTransaction(payment) => {
+                self.master_controller.bank_controller.lock().unwrap().transfer(
+                    transaction.get_sender(),
+                    payment.get_receiver(),
+                    payment.get_asset_id(),
+                    payment.get_amount(),
+                )?
+            }
+            TransactionVariant::CreateAssetTransaction(_create_asset) => self
+                .master_controller
+                .bank_controller
+                .lock()
+                .unwrap()
+                .create_asset(transaction.get_sender())?,
+        };
+
+        Ok((Vec::default(), None))
+    }
+
+    fn ask_consensus_write_lock(&self) -> bool {
+        info!("Asking consensus write lock");
+        true
+    }
+
+    fn release_consensus_write_lock(&self) {
+        info!("releasing consensus write lock");
+    }
+
+    async fn load_execution_indices(&self) -> Result<ExecutionIndices, Self::Error> {
+        Ok(ExecutionIndices::default())
+    }
+}
+
 #[cfg(test)]
 mod test_validator_state {
     use super::*;
     use crate::{builder::genesis_state::GenesisStateBuilder, genesis_ceremony::VALIDATOR_FUNDING_AMOUNT};
     use gdex_types::{
-        account::ValidatorPubKeyBytes,
-        crypto::{get_key_pair_from_rng, KeypairTraits},
+        account::{
+            account_test_functions::generate_keypair_vec, AccountKeyPair, AccountSignature, ValidatorPubKeyBytes,
+        },
+        crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
         node::ValidatorInfo,
+        transaction::SignedTransaction,
         utils,
     };
+    use narwhal_consensus::ConsensusOutput;
+    use narwhal_crypto::{ed25519::Ed25519PublicKey, Hash, DIGEST_LEN};
+    use narwhal_executor::ExecutionIndices;
+    use narwhal_types::{BatchDigest, Certificate, Header, HeaderDigest};
+    use std::collections::{BTreeMap, BTreeSet};
 
     #[tokio::test]
     pub async fn single_node_init() {
@@ -131,38 +186,80 @@ mod test_validator_state {
         validator.halt_validator();
         validator.unhalt_validator();
     }
-}
 
-#[async_trait]
-impl ExecutionState for ValidatorState {
-    type Transaction = SignedTransaction;
-    type Error = GDEXError;
-    type Outcome = Vec<u8>;
+    #[tokio::test]
+    pub async fn process_payment_txn() {
+        let master_controller = MasterController::default();
 
-    async fn handle_consensus_transaction(
-        &self,
-        consensus_output: &narwhal_consensus::ConsensusOutput,
-        _execution_indices: ExecutionIndices,
-        transaction: Self::Transaction,
-    ) -> Result<(Self::Outcome, Option<narwhal_config::Committee>), Self::Error> {
-        debug!(
-            "Processing transaction = {:?} with consensus output = {:?}",
-            transaction, consensus_output
-        );
+        let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let public_key = ValidatorPubKeyBytes::from(key.public());
+        let secret = Arc::pin(key);
 
-        Ok((Vec::default(), None))
-    }
+        let validator = ValidatorInfo {
+            name: "0".into(),
+            public_key: public_key.clone(),
+            stake: VALIDATOR_FUNDING_AMOUNT,
+            delegation: 0,
+            network_address: utils::new_network_address(),
+            narwhal_primary_to_primary: utils::new_network_address(),
+            narwhal_worker_to_primary: utils::new_network_address(),
+            narwhal_primary_to_worker: utils::new_network_address(),
+            narwhal_worker_to_worker: utils::new_network_address(),
+            narwhal_consensus_address: utils::new_network_address(),
+        };
 
-    fn ask_consensus_write_lock(&self) -> bool {
-        info!("Asking consensus write lock");
-        true
-    }
+        let builder = GenesisStateBuilder::new()
+            .set_master_controller(master_controller)
+            .add_validator(validator);
 
-    fn release_consensus_write_lock(&self) {
-        info!("releasing consensus write lock");
-    }
+        let genesis = builder.build();
+        let validator = ValidatorState::new(public_key, secret, &genesis).await;
 
-    async fn load_execution_indices(&self) -> Result<ExecutionIndices, Self::Error> {
-        Ok(ExecutionIndices::default())
+        // create asset transaction
+        let sender_kp = generate_keypair_vec([0; 32]).pop().unwrap();
+        let recent_block_hash = BatchDigest::new([0; DIGEST_LEN]);
+        let create_asset_txn = utils::create_asset_creation_transaction(&sender_kp, recent_block_hash);
+        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
+        let signed_create_asset_txn =
+            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+
+        let dummy_execution_indices = ExecutionIndices {
+            next_certificate_index: 1,
+            next_batch_index: 1,
+            next_transaction_index: 1,
+        };
+        let dummy_header = Header::default();
+        let dummy_certificate = Certificate {
+            header: dummy_header,
+            votes: Vec::new(),
+        };
+        let dummy_consensus_output = ConsensusOutput {
+            certificate: dummy_certificate,
+            consensus_index: 1,
+        };
+
+        validator
+            .handle_consensus_transaction(
+                &dummy_consensus_output,
+                dummy_execution_indices.clone(),
+                signed_create_asset_txn,
+            )
+            .await
+            .unwrap();
+
+        // create payment transaction
+        let receiver_kp = generate_keypair_vec([0; 32]).pop().unwrap();
+        let payment_txn = utils::create_payment_transaction(&sender_kp, &receiver_kp, 0, 1000000, recent_block_hash);
+        let signed_digest = sender_kp.sign(&payment_txn.digest().get_array()[..]);
+        let signed_payment_txn = SignedTransaction::new(sender_kp.public().clone(), payment_txn, signed_digest);
+
+        validator
+            .handle_consensus_transaction(
+                &dummy_consensus_output,
+                dummy_execution_indices.clone(),
+                signed_payment_txn,
+            )
+            .await
+            .unwrap();
     }
 }

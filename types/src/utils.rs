@@ -75,7 +75,7 @@ pub fn write_keypair_to_file<K: KeypairTraits, P: AsRef<std::path::Path>>(keypai
 use crate::account::AccountKeyPair;
 use crate::transaction::{CreateAssetRequest, PaymentRequest, Transaction, TransactionVariant};
 //use crate::error::{GDEXError};
-use narwhal_types::{BatchDigest, CertificateDigest};
+use narwhal_types::{CertificateDigest};
 
 pub fn create_payment_transaction(
     sender_kp: &AccountKeyPair,

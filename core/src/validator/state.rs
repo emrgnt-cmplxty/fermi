@@ -213,7 +213,7 @@ mod test_validator_state {
     use crate::{builder::genesis_state::GenesisStateBuilder, genesis_ceremony::VALIDATOR_FUNDING_AMOUNT};
     use gdex_types::{
         account::{
-            account_test_functions::generate_keypair_vec, AccountKeyPair, AccountSignature, ValidatorPubKeyBytes,
+            account_test_functions::generate_keypair_vec, ValidatorPubKeyBytes,
         },
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
         node::ValidatorInfo,
@@ -221,10 +221,10 @@ mod test_validator_state {
         utils,
     };
     use narwhal_consensus::ConsensusOutput;
-    use narwhal_crypto::{ed25519::Ed25519PublicKey, Hash, DIGEST_LEN};
+    use narwhal_crypto::{Hash, DIGEST_LEN};
     use narwhal_executor::ExecutionIndices;
-    use narwhal_types::{BatchDigest, Certificate, Header, HeaderDigest};
-    use std::collections::{BTreeMap, BTreeSet};
+    use narwhal_types::{Certificate, Header};
+    
 
     #[tokio::test]
     pub async fn single_node_init() {

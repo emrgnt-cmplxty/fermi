@@ -152,7 +152,7 @@ impl ValidatorState {
     pub fn handle_pre_consensus_transaction(&self, transaction: &SignedTransaction) -> Result<(), GDEXError> {
         debug!("Handling a new pre-consensus transaction with the ValidatorState",);
         self.validator_store
-            .insert_unconfirmed_transaction(&transaction.get_transaction_payload());
+            .insert_unconfirmed_transaction(transaction.get_transaction_payload());
         Ok(())
     }
 }

@@ -165,7 +165,7 @@ async fn run(matches: &ArgMatches<'_>) -> Result<()> {
         ("primary", Some(sub_matches)) => {
             registry = primary_metrics_registry(keypair.public().clone());
             // can we condense into a single spawn_primary call? I found type errors when trying to do the if else inline or similar
-            let handle = if is_advanced_execution {
+            if is_advanced_execution {
                 Node::spawn_primary(
                     keypair,
                     committee,
@@ -189,8 +189,7 @@ async fn run(matches: &ArgMatches<'_>) -> Result<()> {
                     &registry,
                 )
                 .await?
-            };
-            handle
+            }
         }
 
         // Spawn a single worker.

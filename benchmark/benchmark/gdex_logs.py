@@ -17,16 +17,19 @@ class ParseError(Exception):
 
 class LogParser:
     def __init__(self, clients, primaries, faults=0):
+        print('inside of log parser')
         inputs = [clients, primaries]
         assert all(isinstance(x, list) for x in inputs)
         assert all(isinstance(x, str) for y in inputs for x in y)
         assert all(x for x in inputs)
+        print('a')
 
         self.faults = faults
         if isinstance(faults, int):
             self.committee_size = len(primaries) + int(faults)
         else:
             self.committee_size = '?'
+        print('b')
 
         # Parse the clients logs.
         try:
@@ -38,6 +41,7 @@ class LogParser:
         self.size, self.rate, self.start, misses, self.sent_samples \
             = zip(*results)
         self.misses = sum(misses)
+        print('c')
 
         # Parse the primaries logs.
         try:
@@ -49,6 +53,7 @@ class LogParser:
         proposals, commits, self.configs = zip(*results)
         self.proposals = self._merge_results([x.items() for x in proposals])
         self.commits = self._merge_results([x.items() for x in commits])
+        print('d')
 
         # Parse the workers logs.
         try:
@@ -98,17 +103,25 @@ class LogParser:
         return size, rate, start, misses, samples
 
     def _parse_primaries(self, log):
+        print('a1')
         if search(r'(?:panicked|ERROR)', log) is not None:
             raise ParseError('Primary(s) panicked')
+        print('a2')
 
+        print('a3a')
+        # print('log=', log)
         tmp = findall(r'(.*?) .* Created B\d+\([^ ]+\) -> ([^ ]+=)', log)
+        print('a3b')
         tmp = [(d, self._to_posix(t)) for t, d in tmp]
+        print('a3c')
         proposals = self._merge_results([tmp])
+        print('a3')
 
         tmp = findall(r'(.*?) .* Committed B\d+\([^ ]+\) -> ([^ ]+=)', log)
         tmp = [(d, self._to_posix(t)) for t, d in tmp]
         commits = self._merge_results([tmp])
-        print('commits=', commits)
+        # print('commits=', commits)
+        print('a4')
 
         configs = {
             'header_size': int(
@@ -138,6 +151,7 @@ class LogParser:
         }
 
         #ip = search(r'booted on (/ip4/\d+.\d+.\d+.\d+)', log).group(1)
+        print('a4')
 
         return proposals, commits, configs#, ip
 
@@ -252,13 +266,15 @@ class LogParser:
     @classmethod
     def process(cls, directory, faults=0):
         assert isinstance(directory, str)
-
+        print('starting processing now')
         clients = []
         for filename in sorted(glob(join(directory, 'client-*.log'))):
+            print('parsing filename=', filename)
             with open(filename, 'r') as f:
                 clients += [f.read()]
         primaries = []
         for filename in sorted(glob(join(directory, 'primary-*.log'))):
+            print('parsing filename=', filename)
             with open(filename, 'r') as f:
                 primaries += [f.read()]
 

@@ -84,7 +84,7 @@ impl ValidatorState {
 impl ValidatorState {
     /// Initiate a new transaction.
     pub async fn handle_transaction(&self, _transaction: &SignedTransaction) -> Result<(), GDEXError> {
-        debug!("Handling a new transaction with the ValidatorState",);
+        // debug!("Handling a new transaction with the ValidatorState",);
         Ok(())
     }
 }
@@ -145,10 +145,10 @@ impl ExecutionState for ValidatorState {
         _execution_indices: ExecutionIndices,
         transaction: Self::Transaction,
     ) -> Result<(Self::Outcome, Option<narwhal_config::Committee>), Self::Error> {
-        debug!(
-            "Processing transaction = {:?} with consensus output = {:?}",
-            transaction, consensus_output
-        );
+        // debug!(
+        //     "Processing transaction = {:?} with consensus output = {:?}",
+        //     transaction, consensus_output
+        // );
 
         Ok((Vec::default(), None))
     }

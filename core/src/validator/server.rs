@@ -159,7 +159,7 @@ impl ValidatorService {
     async fn analyze(mut rx_output: Receiver<(Result<Vec<u8>, SubscriberError>, Vec<u8>)>) {
         loop {
             while let Some(_message) = rx_output.recv().await {
-                debug!("Received a finalized consensus transaction with analyze",);
+                // debug!("Received a finalized consensus transaction with analyze",);
                 // NOTE: Notify the user that its transaction has been processed.
             }
         }
@@ -170,7 +170,7 @@ impl ValidatorService {
         state: Arc<ValidatorState>,
         request: tonic::Request<SignedTransaction>,
     ) -> Result<tonic::Response<SignedTransaction>, tonic::Status> {
-        debug!("Handling a new transaction with ValidatorService",);
+        // debug!("Handling a new transaction with ValidatorService",);
 
         let transaction = request.into_inner();
 
@@ -211,7 +211,7 @@ impl ValidatorAPI for ValidatorService {
         &self,
         request: tonic::Request<SignedTransaction>,
     ) -> Result<tonic::Response<SignedTransaction>, tonic::Status> {
-        debug!("Handling a new transaction with a ValidatorService ValidatorAPI",);
+        // debug!("Handling a new transaction with a ValidatorService ValidatorAPI",);
 
         let state = self.state.clone();
         let consensus_adapter = self.consensus_adapter.clone();

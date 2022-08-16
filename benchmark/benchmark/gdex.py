@@ -102,7 +102,6 @@ class GDEXBench:
 
             # Parse logs and return the parser.
             Print.info('Parsing logs...')
-            print('logs = ', PathMaker.logs_path())
             return LogParser.process(PathMaker.logs_path(), faults=self.faults)
 
         except (subprocess.SubprocessError, ParseError) as e:

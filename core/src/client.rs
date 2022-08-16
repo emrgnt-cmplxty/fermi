@@ -12,7 +12,7 @@ use gdex_server::api::ValidatorAPIClient;
 use gdex_types::{error::GDEXError, transaction::SignedTransaction};
 use multiaddr::{Multiaddr, Protocol};
 use tonic::transport::{Channel, Endpoint, Uri};
-use tracing::debug;
+use tracing::trace;
 
 pub async fn connect(address: &Multiaddr) -> Result<Channel> {
     let channel = endpoint_from_multiaddr(address)?.connect().await?;
@@ -109,7 +109,7 @@ impl ClientAPI for NetworkValidatorClient {
         &self,
         transaction: SignedTransaction,
     ) -> Result<tonic::Response<SignedTransaction>, GDEXError> {
-        debug!("Handling a new transaction with a NetworkValidatorClient ClientAPI",);
+        trace!("Handling a new transaction with a NetworkValidatorClient ClientAPI",);
 
         self.client()
             .transaction(transaction)

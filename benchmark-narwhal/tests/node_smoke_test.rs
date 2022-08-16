@@ -227,7 +227,7 @@ fn test_benchmark_client() {
 
     let mut child = std::process::Command::new("cargo")
         .current_dir("..")
-        .args(&["run", "--bin", "benchmark_client", "--features", "benchmark", "--"])
+        .args(&["run", "--bin", "benchmark_narwhal", "--features", "benchmark", "--"])
         .args(&[
             "http://127.0.0.1:3003/",
             "--size",

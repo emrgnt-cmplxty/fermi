@@ -75,7 +75,7 @@ class CommandMaker:
         assert isinstance(nodes, list)
         assert all(isinstance(x, str) for x in nodes)
         nodes = f'--nodes {" ".join(nodes)}' if nodes else ''
-        command = f'./benchmark_client {address} --size {size} --rate {rate} --execution {execution} {nodes}'
+        command = f'./benchmark_narwhal {address} --size {size} --rate {rate} --execution {execution} {nodes}'
         print("Returning execution command = ", command)
         return command
 
@@ -100,5 +100,5 @@ class CommandMaker:
     @staticmethod
     def alias_binaries(origin):
         assert isinstance(origin, str)
-        node, client = join(origin, 'benchmark-node'), join(origin, 'benchmark_client')
-        return f'rm node ; rm benchmark_client ; ln -s {node} . ; ln -s {client} .'
+        node, client = join(origin, 'benchmark-node'), join(origin, 'benchmark_narwhal')
+        return f'rm node ; rm benchmark_narwhal ; ln -s {node} . ; ln -s {client} .'

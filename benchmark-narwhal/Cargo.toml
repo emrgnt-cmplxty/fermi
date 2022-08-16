@@ -65,6 +65,6 @@ benchmark = ["narwhal-worker/benchmark", "narwhal-primary/benchmark", "narwhal-c
 dhat-heap = ["dhat"]    # if you are doing heap profiling
 
 [[bin]]         
-name = "benchmark_client"   
-path = "src/benchmark_client.rs" 
+name = "benchmark_narwhal"   
+path = "src/benchmark_narwhal.rs" 
 required-features = ["benchmark"]

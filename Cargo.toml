@@ -8,6 +8,7 @@ members = [
     "server",
     "suite",
     "types",
+    "benchmark-gdex",
     "benchmark-narwhal",
     "workspace-hack"
 ]

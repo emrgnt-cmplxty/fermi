@@ -15,43 +15,29 @@ use multiaddr::Multiaddr;
 use narwhal_executor::SubscriberError;
 use narwhal_types::{TransactionProto, TransactionsClient};
 use prometheus::Registry;
-use std::{io, sync::Arc, time::Duration};
-use tokio::sync::mpsc::channel;
-use tokio::sync::mpsc::Receiver;
-use tokio::sync::Mutex;
+use std::{io, sync::Arc};
+use tokio::{
+    sync::{
+        mpsc::{channel, Receiver},
+        Mutex,
+    },
+    task::JoinHandle,
+};
 use tracing::{debug, info};
-
-const DEFAULT_MIN_BATCH_SIZE: usize = 1_000;
-const DEFAULT_MAX_DELAY_MILLIS: u64 = 5_000; // 5 sec
 
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
-    pub tx_cancellation: tokio::sync::oneshot::Sender<()>,
-    pub local_addr: Multiaddr,
-    pub handle: tokio::task::JoinHandle<Result<(), tonic::transport::Error>>,
+    local_addr: Multiaddr,
+    handle: JoinHandle<()>,
 }
 
 impl ValidatorServerHandle {
-    pub async fn join(self) -> Result<(), std::io::Error> {
-        // Note that dropping `self.complete` would terminate the server.
-        self.handle
-            .await?
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-        Ok(())
-    }
-
-    pub async fn kill(self) -> Result<(), std::io::Error> {
-        self.tx_cancellation
-            .send(())
-            .map_err(|_e| std::io::Error::new(io::ErrorKind::Other, "could not send cancellation signal!"))?;
-        self.handle
-            .await?
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-        Ok(())
-    }
-
     pub fn address(&self) -> &Multiaddr {
         &self.local_addr
+    }
+
+    pub fn get_handle(self) -> JoinHandle<()> {
+        self.handle
     }
 }
 
@@ -59,20 +45,12 @@ impl ValidatorServerHandle {
 /// the server handle contains a validator api (grpc) that exposes a validator service
 pub struct ValidatorServer {
     address: Multiaddr,
-    pub state: Arc<ValidatorState>,
+    state: Arc<ValidatorState>,
     consensus_adapter: ConsensusAdapter,
-    pub min_batch_size: usize,
-    pub max_delay: Duration,
 }
 
 impl ValidatorServer {
-    pub fn new(
-        address: Multiaddr,
-        state: Arc<ValidatorState>,
-        consensus_address: Multiaddr,
-        min_batch_size: Option<usize>,
-        max_delay: Option<Duration>,
-    ) -> Self {
+    pub fn new(address: Multiaddr, state: Arc<ValidatorState>, consensus_address: Multiaddr) -> Self {
         let consensus_client =
             TransactionsClient::new(client::connect_lazy(&consensus_address).expect("Failed to connect to consensus"));
         let consensus_adapter = ConsensusAdapter {
@@ -83,8 +61,6 @@ impl ValidatorServer {
             address,
             state,
             consensus_adapter,
-            min_batch_size: min_batch_size.unwrap_or(DEFAULT_MIN_BATCH_SIZE),
-            max_delay: max_delay.unwrap_or(Duration::from_millis(DEFAULT_MAX_DELAY_MILLIS)),
         }
     }
 
@@ -98,7 +74,7 @@ impl ValidatorServer {
     }
 
     pub async fn spawn_with_bind_address(self, address: Multiaddr) -> Result<ValidatorServerHandle, io::Error> {
-        let mut server = crate::config::server::ServerConfig::new()
+        let server = crate::config::server::ServerConfig::new()
             .server_builder()
             .add_service(ValidatorAPIServer::new(ValidatorService {
                 state: self.state,
@@ -110,7 +86,6 @@ impl ValidatorServer {
         let local_addr = server.local_addr().to_owned();
         info!("Listening to traffic on {local_addr}");
         let handle = ValidatorServerHandle {
-            tx_cancellation: server.take_cancel_handle().unwrap(),
             local_addr,
             handle: tokio::spawn(server.serve()),
         };
@@ -121,17 +96,17 @@ impl ValidatorServer {
 /// Handles communication with consensus and resulting validator state updates
 pub struct ValidatorService {
     state: Arc<ValidatorState>,
-    pub consensus_adapter: Arc<Mutex<ConsensusAdapter>>,
+    consensus_adapter: Arc<Mutex<ConsensusAdapter>>,
 }
 
 impl ValidatorService {
     /// Spawn all the subsystems run by a gdex valdiator: a consensus node, a gdex valdiator server,
     /// and a consensus listener bridging the consensus node and the gdex valdiator.
-    pub async fn new(
+    pub async fn spawn_narwhal(
         config: &NodeConfig,
         state: Arc<ValidatorState>,
         prometheus_registry: &Registry,
-    ) -> anyhow::Result<Self> {
+    ) -> anyhow::Result<Vec<JoinHandle<()>>> {
         let (tx_consensus_to_gdex, rx_consensus_to_gdex) = channel(1_000);
         // let (tx_sui_to_consensus, rx_sui_to_consensus) = channel(1_000);
 
@@ -148,7 +123,7 @@ impl ValidatorService {
             config.genesis()?.narwhal_committee()
         );
 
-        narwhal_node::Node::spawn_primary(
+        let mut primary_handles = narwhal_node::Node::spawn_primary(
             consensus_keypair,
             config.genesis()?.narwhal_committee(),
             &consensus_store,
@@ -160,7 +135,7 @@ impl ValidatorService {
         )
         .await?;
 
-        narwhal_node::Node::spawn_workers(
+        let worker_handles = narwhal_node::Node::spawn_workers(
             consensus_name,
             /* ids */ vec![0], // We run a single worker with id '0'.
             config.genesis()?.narwhal_committee(),
@@ -169,28 +144,19 @@ impl ValidatorService {
             prometheus_registry,
         );
 
-        let consensus_client = TransactionsClient::new(
-            client::connect_lazy(consensus_config.address()).expect("Failed to connect to consensus"),
-        );
-        let consensus_adapter = ConsensusAdapter {
-            consensus_client,
-            consensus_address: consensus_config.address().to_owned(),
-        };
-
         // Create a new task to listen to received transactions
-        tokio::spawn(async move {
-            Self::process_confirmed_transactions(rx_consensus_to_gdex).await;
+        let analyzer_handle = tokio::spawn(async move {
+            Self::analyze(rx_consensus_to_gdex).await;
         });
 
-        Ok(Self {
-            state,
-            consensus_adapter: Arc::new(Mutex::new(consensus_adapter)),
-        })
+        primary_handles.extend(worker_handles);
+        primary_handles.push(analyzer_handle);
+        Ok(primary_handles)
     }
 
     /// Receives an ordered list of certificates and apply any application-specific logic.
     #[allow(clippy::type_complexity)]
-    async fn process_confirmed_transactions(mut rx_output: Receiver<(Result<Vec<u8>, SubscriberError>, Vec<u8>)>) {
+    async fn analyze(mut rx_output: Receiver<(Result<Vec<u8>, SubscriberError>, Vec<u8>)>) {
         loop {
             while let Some(_message) = rx_output.recv().await {
                 debug!("Received a finalized consensus transaction with analyze",);
@@ -247,6 +213,10 @@ impl ValidatorService {
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
         Ok(tonic::Response::new(transaction))
+    }
+
+    pub fn get_consensus_adapter(&self) -> &Arc<Mutex<ConsensusAdapter>> {
+        &self.consensus_adapter
     }
 }
 
@@ -313,10 +283,9 @@ mod test_validator_server {
             .add_validator(validator);
 
         let genesis = builder.build();
-        let validator_state = ValidatorState::new(public_key, secret, &genesis).await;
+        let validator_state = ValidatorState::new(public_key, secret, &genesis);
         let new_addr = utils::new_network_address();
-        let validator_server =
-            ValidatorServer::new(new_addr.clone(), Arc::new(validator_state), network_address, None, None);
+        let validator_server = ValidatorServer::new(new_addr.clone(), Arc::new(validator_state), network_address);
         validator_server.spawn().await
     }
 
@@ -385,22 +354,18 @@ mod test_validator_server {
             .add_validator(validator_1);
 
         let genesis = builder.build();
-        let validator_state_0 = ValidatorState::new(public_key_0, secret_0, &genesis).await;
-        let validator_state_1 = ValidatorState::new(public_key_1, secret_1, &genesis).await;
+        let validator_state_0 = ValidatorState::new(public_key_0, secret_0, &genesis);
+        let validator_state_1 = ValidatorState::new(public_key_1, secret_1, &genesis);
 
         let validator_server_0 = ValidatorServer::new(
             utils::new_network_address(),
             Arc::new(validator_state_0),
             utils::new_network_address(),
-            None,
-            None,
         );
         let validator_server_1 = ValidatorServer::new(
             utils::new_network_address(),
             Arc::new(validator_state_1),
             utils::new_network_address(),
-            None,
-            None,
         );
 
         validator_server_0.spawn().await.unwrap();

@@ -1,6 +1,6 @@
-node
-benchmark_narwhal
-benchmark_gdex
+benchmark-narwhal
+benchmark_narwhal_client
+benchmark_gdex_client
 results
 plots
 demo_client

@@ -80,7 +80,7 @@ class NarwhalBench:
             rate_share = ceil(rate / committee.workers())
             for i, addresses in enumerate(workers_addresses):
                 for (id, address) in addresses:
-                    cmd = CommandMaker.run_client(
+                    cmd = CommandMaker.run_narwhal_client(
                         address,
                         self.tx_size,
                         rate_share,
@@ -93,7 +93,7 @@ class NarwhalBench:
 
             # Run the primaries (except the faulty ones).
             for i, address in enumerate(committee.primary_addresses(self.faults)):
-                cmd = CommandMaker.run_primary(
+                cmd = CommandMaker.run_narwhal_primary(
                     PathMaker.key_file(i),
                     PathMaker.committee_file(),
                     PathMaker.db_path(i),
@@ -108,7 +108,7 @@ class NarwhalBench:
             # Run the workers (except the faulty ones).
             for i, addresses in enumerate(workers_addresses):
                 for (id, address) in addresses:
-                    cmd = CommandMaker.run_worker(
+                    cmd = CommandMaker.run_narwhal_worker(
                         PathMaker.key_file(i),
                         PathMaker.committee_file(),
                         PathMaker.db_path(i, id),

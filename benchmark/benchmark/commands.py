@@ -27,17 +27,30 @@ class CommandMaker:
     @staticmethod
     def generate_key(filename):
         assert isinstance(filename, str)
-        return f'./benchmark-node generate_keys --filename {filename}'
+        return f'./benchmark-narwhal generate_keys --filename {filename}'
 
     @staticmethod
-    def run_primary(keys, committee, store, parameters, execution, debug=False):
+    def run_narwhal_primary(keys, committee, store, parameters, execution, debug=False):
         assert isinstance(keys, str)
         assert isinstance(committee, str)
         assert isinstance(parameters, str)
         assert isinstance(execution, str)
         assert isinstance(debug, bool)
         v = '-vvv' if debug else '-vv'
-        command = (f'./benchmark-node {v} run --keys {keys} --committee {committee} '
+        command = (f'./benchmark-narwhal {v} run --keys {keys} --committee {committee} '
+                f'--store {store} --parameters {parameters} --execution {execution} primary')
+        print("Returning execution command = ", command)
+        return command
+
+    @staticmethod
+    def run_gdex_primary(keys, committee, store, parameters, execution, debug=False):
+        assert isinstance(keys, str)
+        assert isinstance(committee, str)
+        assert isinstance(parameters, str)
+        assert isinstance(execution, str)
+        assert isinstance(debug, bool)
+        v = '-vvv' if debug else '-vv'
+        command = (f'./benchmark-narwhal {v} run --keys {keys} --committee {committee} '
                 f'--store {store} --parameters {parameters} --execution {execution} primary')
         print("Returning execution command = ", command)
         return command
@@ -49,25 +62,25 @@ class CommandMaker:
         assert isinstance(parameters, str)
         assert isinstance(debug, bool)
         v = '-vvv' if debug else '-vv'
-        return (f'./benchmark-node {v} run --keys {keys} --committee {committee} '
+        return (f'./benchmark-narwhal {v} run --keys {keys} --committee {committee} '
                 f'--store {store} --parameters {parameters} primary --consensus-disabled')
 
     @staticmethod
-    def run_worker(keys, committee, store, parameters, execution, id, debug=False):
+    def run_narwhal_worker(keys, committee, store, parameters, execution, id, debug=False):
         assert isinstance(keys, str)
         assert isinstance(committee, str)
         assert isinstance(parameters, str)
         assert isinstance(execution, str)
         assert isinstance(debug, bool)
         v = '-vvv' if debug else '-vv'
-        command = (f'./benchmark-node {v} run --keys {keys} --committee {committee} '
+        command = (f'./benchmark-narwhal {v} run --keys {keys} --committee {committee} '
                 f'--store {store} --parameters {parameters} --execution {execution} worker --id {id}')
 
         print("Returning execution command = ", command)
         return command
 
     @staticmethod
-    def run_client(address, size, rate, execution, nodes):
+    def run_narwhal_client(address, size, rate, execution, nodes):
         assert isinstance(address, str)
         assert isinstance(size, int) and size > 0
         assert isinstance(rate, int) and rate >= 0
@@ -75,7 +88,20 @@ class CommandMaker:
         assert isinstance(nodes, list)
         assert all(isinstance(x, str) for x in nodes)
         nodes = f'--nodes {" ".join(nodes)}' if nodes else ''
-        command = f'./benchmark_narwhal {address} --size {size} --rate {rate} --execution {execution} {nodes}'
+        command = f'./benchmark_narwhal_client {address} --size {size} --rate {rate} --execution {execution} {nodes}'
+        print("Returning execution command = ", command)
+        return command
+
+    @staticmethod
+    def run_gdex_client(address, size, rate, execution, nodes):
+        assert isinstance(address, str)
+        assert isinstance(size, int) and size > 0
+        assert isinstance(rate, int) and rate >= 0
+        assert isinstance(execution, str)
+        assert isinstance(nodes, list)
+        assert all(isinstance(x, str) for x in nodes)
+        nodes = f'--nodes {" ".join(nodes)}' if nodes else ''
+        command = f'./benchmark_gdex {address} --size {size} --rate {rate} --execution {execution} {nodes}'
         print("Returning execution command = ", command)
         return command
 
@@ -100,5 +126,5 @@ class CommandMaker:
     @staticmethod
     def alias_binaries(origin):
         assert isinstance(origin, str)
-        node, client = join(origin, 'benchmark-node'), join(origin, 'benchmark_narwhal')
-        return f'rm node ; rm benchmark_narwhal ; ln -s {node} . ; ln -s {client} .'
+        node, client = join(origin, 'benchmark-narwhal'), join(origin, 'benchmark_narwhal_client')
+        return f'rm node ; rm benchmark_narwhal_client ; ln -s {node} . ; ln -s {client} .'

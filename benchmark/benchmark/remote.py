@@ -227,7 +227,7 @@ class Bench:
         for i, addresses in enumerate(workers_addresses):
             for (id, address) in addresses:
                 host = Committee.ip(address)
-                cmd = CommandMaker.run_client(
+                cmd = CommandMaker.run_narwhal_client(
                     address,
                     bench_parameters.tx_size,
                     rate_share,
@@ -240,7 +240,7 @@ class Bench:
         Print.info('Booting primaries...')
         for i, address in enumerate(committee.load().primary_addresses(faults)):
             host = Committee.ip(address)
-            cmd = CommandMaker.run_primary(
+            cmd = CommandMaker.run_narwhal_primary(
                 PathMaker.key_file(i),
                 PathMaker.committee_file(),
                 PathMaker.db_path(i),
@@ -255,7 +255,7 @@ class Bench:
         for i, addresses in enumerate(workers_addresses):
             for (id, address) in addresses:
                 host = Committee.ip(address)
-                cmd = CommandMaker.run_worker(
+                cmd = CommandMaker.run_narwhal_worker(
                     PathMaker.key_file(i),
                     PathMaker.committee_file(),
                     PathMaker.db_path(i, id),

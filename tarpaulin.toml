@@ -1,2 +1,2 @@
 [main]
-exclude = ["benchmark-node"]
+exclude = ["benchmark-narwhal"]

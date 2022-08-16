@@ -66,7 +66,7 @@ class SeedData:
             rate_share = ceil(rate / (nodes * workers))
             for i, addresses in enumerate(workers_addresses):
                 for (id, address) in addresses:
-                    cmd = CommandMaker.run_client(
+                    cmd = CommandMaker.run_narwhal_client(
                         address,
                         self.tx_size,
                         rate_share,

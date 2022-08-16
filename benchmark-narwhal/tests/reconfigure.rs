@@ -111,7 +111,7 @@ impl ExecutionStateError for SimpleExecutionError {
     }
 }
 
-async fn run_client(name: PublicKey, committee: Committee, mut rx_reconfigure: Receiver<u64>) {
+async fn run_narwhal_client(name: PublicKey, committee: Committee, mut rx_reconfigure: Receiver<u64>) {
     let target = committee
         .worker(&name, /* id */ &0)
         .expect("Our key or worker id is not in the committee")
@@ -196,7 +196,7 @@ async fn restart() {
 
         let name = keypair.public().clone();
         let committee = committee.clone();
-        tokio::spawn(async move { run_client(name, committee.clone(), rx_client_reconfigure).await });
+        tokio::spawn(async move { run_narwhal_client(name, committee.clone(), rx_client_reconfigure).await });
     }
 
     // Listen to the outputs.
@@ -309,7 +309,7 @@ async fn epoch_change() {
 
         let name = keypair.public().clone();
         let committee = committee.clone();
-        tokio::spawn(async move { run_client(name, committee.clone(), rx_client_reconfigure).await });
+        tokio::spawn(async move { run_narwhal_client(name, committee.clone(), rx_client_reconfigure).await });
     }
 
     // Listen to the outputs.

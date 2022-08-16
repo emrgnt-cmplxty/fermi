@@ -2,8 +2,8 @@
 from fabric import task
 from benchmark.seed import SeedData
 
+from benchmark.gdex import GDEXBench
 from benchmark.narwhal import NarwhalBench
-from benchmark.full_demo import Demo
 
 from benchmark.logs import ParseError, LogParser
 from benchmark.utils import Print
@@ -11,6 +11,48 @@ from benchmark.plot import Ploter, PlotError
 from benchmark.instance import InstanceManager
 from benchmark.remote import Bench, BenchError
 
+@task
+def gdex(ctx, debug=True):
+    ''' Run benchmarks on Narwhal node. '''
+    bench_params = {
+        'faults': 0,
+        'nodes': 4,
+        'workers': 1,
+        'rate': 50_000,
+        'tx_size': 512,
+        'duration': 20,
+        'mem_profiling': False
+    }
+    node_params = {
+        'header_size': 1_000,  # bytes
+        'max_header_delay': '200ms',  # ms
+        'gc_depth': 50,  # rounds
+        'sync_retry_delay': '10_000ms',  # ms
+        'sync_retry_nodes': 3,  # number of nodes
+        'batch_size': 500_000,  # bytes
+        'max_batch_delay': '200ms',  # ms,
+        'block_synchronizer': {
+            'certificates_synchronize_timeout': '2_000ms',
+            'payload_synchronize_timeout': '2_000ms',
+            'payload_availability_timeout': '2_000ms',
+            'handler_certificate_deliver_timeout': '2_000ms'
+        },
+        "consensus_api_grpc": {
+            "socket_addr": "/ip4/127.0.0.1/tcp/0/http",
+            "get_collections_timeout": "5_000ms",
+            "remove_collections_timeout": "5_000ms"
+        },
+        'max_concurrent_requests': 500_000,
+        'prometheus_metrics': {
+            "socket_addr": "127.0.0.1:0"
+        },
+        'execution': 'advanced'
+    }
+    try:
+        ret = GDEXBench(bench_params, node_params).run(debug)
+        print(ret.result())
+    except BenchError as e:
+        Print.error(e)
 
 @task
 def narwhal(ctx, debug=True):
@@ -54,49 +96,6 @@ def narwhal(ctx, debug=True):
         print(ret.result())
     except BenchError as e:
         Print.error(e)
-
-
-@task
-def demo(ctx, debug=True):
-    ''' Run benchmarks on localhost '''
-    bench_params = {
-        'faults': 0,
-        'nodes': 4,
-        'workers': 1,
-        'rate': 50_000,
-        'tx_size': 512,
-        'duration': 10,
-    }
-    node_params = {
-        "batch_size": 500000,
-        "block_synchronizer": {
-            "certificates_synchronize_timeout": "2_000ms",
-            "handler_certificate_deliver_timeout": "2_000ms",
-            "payload_availability_timeout": "2_000ms",
-            "payload_synchronize_timeout": "2_000ms"
-        },
-        "consensus_api_grpc": {
-            "get_collections_timeout": "5_000ms",
-            "remove_collections_timeout": "5_000ms",
-            "socket_addr": "/ip4/0.0.0.0/tcp/0/http"
-        },
-        "gc_depth": 50,  # rounds
-        "header_size": 1000,  # bytes
-        "max_batch_delay": "200ms",  # ms
-        "max_concurrent_requests": 500_000,
-        "max_header_delay": "2000ms",  # ms
-        "sync_retry_delay": "10_000ms",  # ms
-        "sync_retry_nodes": 3,  # number of nodes
-        'prometheus_metrics': {
-            "socket_addr": "127.0.0.1:0"
-        }
-    }
-    try:
-        ret = Demo(bench_params, node_params).run(debug)
-        print(ret.result())
-    except BenchError as e:
-        Print.error(e)
-
 
 @task
 def seed(ctx, starting_data_port):

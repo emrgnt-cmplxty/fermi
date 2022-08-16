@@ -71,16 +71,16 @@ impl BankController {
             .bank_accounts
             .get_mut(account_pub_key)
             .ok_or(GDEXError::AccountLookup)?;
-        let prev_amount: u64 = bank_account.get_balance(asset_id);
+        let current_balance: u64 = bank_account.get_balance(asset_id);
 
         // if decrementing balance, check if amount exceeds existing balance
         if !increment {
-            if amount > prev_amount {
+            if amount > current_balance {
                 return Err(GDEXError::PaymentRequest);
             };
-            bank_account.set_balance(asset_id, prev_amount - amount);
+            bank_account.set_balance(asset_id, current_balance - amount);
         } else {
-            bank_account.set_balance(asset_id, prev_amount + amount);
+            bank_account.set_balance(asset_id, current_balance + amount);
         }
 
         Ok(())

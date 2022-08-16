@@ -217,7 +217,7 @@ impl ValidatorService {
         //     .validator_store
         //     .check_seen_certificate_digest(transaction.get_transaction_payload().get_recent_certificate_digest())
         // {
-        //     tonic::Status::internal("Duplicate transaction");
+        //     tonic::Status::internal("Invalid recent certificate digest");
         //     ();
         // }
         //

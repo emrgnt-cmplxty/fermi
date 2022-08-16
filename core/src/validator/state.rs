@@ -27,7 +27,7 @@ use std::{
 };
 use tracing::{debug, info};
 
-/// Tracks recently submitted transactions to eventually implement transaction gating
+/// Tracks recently submitted transactions to implement transaction gating
 pub struct ValidatorStore {
     /// The transaction map tracks recently submitted transactions
     transaction_cache: Mutex<HashMap<TransactionDigest, Option<CertificateDigest>>>,
@@ -47,12 +47,12 @@ impl Default for ValidatorStore {
 }
 
 impl ValidatorStore {
-    pub fn check_seen_transaction(&self, transaction: &Transaction) -> bool {
+    pub fn contains_transaction(&self, transaction: &Transaction) -> bool {
         let transaction_digest = transaction.digest();
         return self.transaction_cache.lock().unwrap().contains_key(&transaction_digest);
     }
 
-    pub fn check_seen_certificate_digest(&self, certificate_digest: &CertificateDigest) -> bool {
+    pub fn contains_certificate_digest(&self, certificate_digest: &CertificateDigest) -> bool {
         return self.certificate_cache.lock().unwrap().contains_key(certificate_digest);
     }
 

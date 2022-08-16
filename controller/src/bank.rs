@@ -24,7 +24,7 @@ pub const CREATED_ASSET_BALANCE: u64 = 10_000_000_000_000_000;
 pub struct BankController {
     asset_id_to_asset: HashMap<AssetId, Asset>,
     bank_accounts: HashMap<AccountPubKey, BankAccount>,
-    n_assets: u64
+    n_assets: u64,
 }
 
 impl BankController {
@@ -65,7 +65,7 @@ impl BankController {
         account_pub_key: &AccountPubKey,
         asset_id: AssetId,
         amount: u64,
-        increment: bool
+        increment: bool,
     ) -> Result<(), GDEXError> {
         let bank_account = self
             .bank_accounts
@@ -124,7 +124,7 @@ impl BankController {
 
         // throw error if attempting to create asset prior to account creation
         if !self.check_account_exists(owner_pub_key) {
-            return Err(GDEXError::AccountCreation)
+            return Err(GDEXError::AccountCreation);
         }
 
         // add asset id -> asset mapping to hashmap
@@ -144,10 +144,7 @@ impl BankController {
     }
 
     pub fn get_asset(&mut self, asset_id: AssetId) -> Result<&Asset, GDEXError> {
-        self
-        .asset_id_to_asset
-        .get(&asset_id)
-        .ok_or(GDEXError::AssetLookup)
+        self.asset_id_to_asset.get(&asset_id).ok_or(GDEXError::AssetLookup)
     }
 
     pub fn get_num_assets(&mut self) -> u64 {
@@ -164,9 +161,7 @@ impl Default for BankController {
 #[cfg(test)]
 pub mod spot_tests {
     use super::*;
-    use narwhal_crypto::{
-        {generate_production_keypair, traits::KeyPair as _, KeyPair}
-    };
+    use narwhal_crypto::{generate_production_keypair, traits::KeyPair as _, KeyPair};
 
     #[test]
     fn create_and_check_accounts() {
@@ -215,13 +210,11 @@ pub mod spot_tests {
         );
 
         // cannot get balances of account that hasn't been created
-        let user_kp2= generate_production_keypair::<KeyPair>();
+        let user_kp2 = generate_production_keypair::<KeyPair>();
         assert!(
             bank_controller.get_balance(user_kp2.public(), TEST_ASSET_ID).is_err(),
             "Cannot get balance for account that hasnt been created."
         );
-
-
     }
 
     #[test]
@@ -253,10 +246,7 @@ pub mod spot_tests {
             "User balance must be CREATED_ASSET_BALANCE."
         );
         // check the number of assets is 1
-        assert!(
-            bank_controller.get_num_assets() == 1,
-            "Number of assets must be 1."
-        );
+        assert!(bank_controller.get_num_assets() == 1, "Number of assets must be 1.");
 
         // check account creation does not occur on asset 1
         let user_kp1 = generate_production_keypair::<KeyPair>();
@@ -269,19 +259,18 @@ pub mod spot_tests {
         bank_controller.create_asset(user_kp.public()).unwrap();
         // check asset was created
         assert!(
-            bank_controller.get_asset(TEST_ASSET_ID+1).unwrap().asset_id == TEST_ASSET_ID+1,
+            bank_controller.get_asset(TEST_ASSET_ID + 1).unwrap().asset_id == TEST_ASSET_ID + 1,
             "Asset ID must be 1."
         );
         // check user's balance was incremented
         assert!(
-            bank_controller.get_balance(user_kp.public(), TEST_ASSET_ID+1).unwrap() == CREATED_ASSET_BALANCE,
+            bank_controller
+                .get_balance(user_kp.public(), TEST_ASSET_ID + 1)
+                .unwrap()
+                == CREATED_ASSET_BALANCE,
             "User balance must be CREATED_ASSET_BALANCE."
         );
         // check the number of assets is 1
-        assert!(
-            bank_controller.get_num_assets() == 2,
-            "Number of assets must be 2."
-        );
+        assert!(bank_controller.get_num_assets() == 2, "Number of assets must be 2.");
     }
-
 }

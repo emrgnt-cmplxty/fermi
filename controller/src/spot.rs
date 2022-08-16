@@ -181,7 +181,7 @@ impl OrderbookInterface {
                 account_pub_key,
                 self.base_asset_id,
                 quantity,
-                false
+                false,
             )?;
         } else {
             // E.g. bid 1 BTC @ $20k moves 20k USD (quote) from balance to escrow
@@ -189,7 +189,7 @@ impl OrderbookInterface {
                 account_pub_key,
                 self.quote_asset_id,
                 quantity * price,
-                false
+                false,
             )?;
         }
         Ok(())
@@ -209,16 +209,14 @@ impl OrderbookInterface {
                 account_pub_key,
                 self.quote_asset_id,
                 quantity * price,
-                true
+                true,
             )?;
         } else {
             // E.g. fill bid 1 BTC @ 20k adds 1 BTC (base) to bal, subtracts 20k USD (quote) from escrow
-            self.bank_controller.lock().unwrap().update_balance(
-                account_pub_key,
-                self.base_asset_id,
-                quantity,
-                true
-            )?;
+            self.bank_controller
+                .lock()
+                .unwrap()
+                .update_balance(account_pub_key, self.base_asset_id, quantity, true)?;
         }
         Ok(())
     }

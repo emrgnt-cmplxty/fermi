@@ -1,5 +1,6 @@
 node
 benchmark_narwhal
+benchmark_gdex
 results
 plots
 demo_client

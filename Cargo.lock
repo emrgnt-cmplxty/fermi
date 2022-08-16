@@ -2306,6 +2306,7 @@ version = "0.1.0"
 dependencies = [
  "assert_approx_eq",
  "criterion",
+ "crypto",
  "gdex-engine",
  "gdex-types",
  "gdex-workspace-hack",
@@ -2395,6 +2396,7 @@ dependencies = [
  "http",
  "multiaddr",
  "serde 1.0.143",
+ "tempfile",
  "tokio",
  "tokio-stream",
  "tonic",

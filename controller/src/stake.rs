@@ -54,7 +54,7 @@ impl StakeController {
         self.bank_controller
             .lock()
             .unwrap()
-            .update_balance(account_pub_key, PRIMARY_ASSET_ID, -(amount as i64))?;
+            .update_balance(account_pub_key, PRIMARY_ASSET_ID, amount, false)?;
         self.total_staked += amount;
         let lookup = self.stake_accounts.get_mut(account_pub_key);
         match lookup {
@@ -77,7 +77,7 @@ impl StakeController {
         self.bank_controller
             .lock()
             .unwrap()
-            .update_balance(account_pub_key, PRIMARY_ASSET_ID, amount as i64)?;
+            .update_balance(account_pub_key, PRIMARY_ASSET_ID, amount, true)?;
         let stake_account = self
             .stake_accounts
             .get_mut(account_pub_key)
@@ -123,7 +123,7 @@ pub mod stake_tests {
 
         stake_controller.stake(sender.public(), STAKE_AMOUNT).unwrap();
         assert!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(sender.public(), PRIMARY_ASSET_ID)
@@ -156,7 +156,7 @@ pub mod stake_tests {
 
         stake_controller.stake(sender.public(), STAKE_AMOUNT).unwrap();
         assert!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(sender.public(), PRIMARY_ASSET_ID)
@@ -190,7 +190,7 @@ pub mod stake_tests {
         let mut stake_controller = StakeController::new(Arc::clone(&bank_controller_ref));
 
         assert!(
-            *bank_controller_ref
+            bank_controller_ref
                 .lock()
                 .unwrap()
                 .get_balance(sender.public(), PRIMARY_ASSET_ID)

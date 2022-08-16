@@ -18,6 +18,8 @@ pub enum GDEXError {
     AccountCreation,
     #[error("Failed to find account")]
     AccountLookup,
+    #[error("Failed to find asset")]
+    AssetLookup,
 
     // transaction associated errors
     #[error("Sender, payload and signature are not consistent")]
@@ -32,6 +34,10 @@ pub enum GDEXError {
     TransactionSerialization,
     #[error("Failed to deserialize into a signed transaction")]
     TransactionDeserialization,
+
+    // Consensus output errors
+    #[error("Failed to execute transaction")]
+    ExecError,
 
     // server errors
     #[error("Failed to process the inbound transaction")]

@@ -18,14 +18,14 @@ def gdex(ctx, debug=True):
         'faults': 0,
         # must have corresponding info in genesis .proto
         'node_info': {
-            'validator-0': 'http://localhost:62276',
-            'validator-1': 'http://localhost:62278',
-            'validator-2': 'http://localhost:62280',
-            'validator-3': 'http://localhost:62282'
-            # 'validator-0': 'http://localhost:62264',
-            # 'validator-1': 'http://localhost:62228',
-            # 'validator-2': 'http://localhost:62252',
-            # 'validator-3': 'http://localhost:62240'
+            # 'validator-0': 'http://localhost:62276',
+            # 'validator-1': 'http://localhost:62278',
+            # 'validator-2': 'http://localhost:62280',
+            # 'validator-3': 'http://localhost:62282'
+            'validator-0': 'http://localhost:62238',
+            'validator-1': 'http://localhost:62250',
+            'validator-2': 'http://localhost:62262',
+            'validator-3': 'http://localhost:62274'
         },
         'rate': 100_000,
         'duration': 20,

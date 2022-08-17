@@ -16,6 +16,7 @@ use narwhal_executor::SubscriberError;
 use narwhal_types::{TransactionProto, TransactionsClient};
 use prometheus::Registry;
 use std::{io, sync::Arc};
+use narwhal_consensus::ConsensusOutput;
 use tokio::{
     sync::{
         mpsc::{channel, Receiver},
@@ -24,6 +25,7 @@ use tokio::{
     task::JoinHandle,
 };
 use tracing::{debug, info};
+
 
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
@@ -145,21 +147,34 @@ impl ValidatorService {
         );
 
         // Create a new task to listen to received transactions
-        let analyzer_handle = tokio::spawn(async move {
-            Self::analyze(rx_consensus_to_gdex).await;
+        let post_process = tokio::spawn(async move {
+            Self::post_process(rx_consensus_to_gdex, state).await;
         });
 
         primary_handles.extend(worker_handles);
-        primary_handles.push(analyzer_handle);
+        primary_handles.push(post_process);
         Ok(primary_handles)
     }
 
     /// Receives an ordered list of certificates and apply any application-specific logic.
     #[allow(clippy::type_complexity)]
-    async fn analyze(mut rx_output: Receiver<(Result<Vec<u8>, SubscriberError>, Vec<u8>)>) {
+    async fn post_process(mut rx_output: Receiver<(Result<ConsensusOutput, SubscriberError>, Vec<u8>)>, validator_state: Arc<ValidatorState>) {
+        // TODO load the actual last seq num from db
+        let mut last_seq_num = 0;
         loop {
-            while let Some(_message) = rx_output.recv().await {
+            while let Some(message) = rx_output.recv().await {
                 debug!("Received a finalized consensus transaction with analyze",);
+                let (result, _serialized_txn) = message;
+                match result {
+                    Ok(consensus_output)=> {
+                        if consensus_output.consensus_index > last_seq_num {
+                            validator_state.validator_store.prune();
+                            last_seq_num = consensus_output.consensus_index;
+                        }
+                    }
+                    Err(_e) => () // TODO
+                }
+
                 // NOTE: Notify the user that its transaction has been processed.
             }
         }

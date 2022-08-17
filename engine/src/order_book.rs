@@ -74,7 +74,7 @@ impl Orderbook {
                 quote_asset_id,
                 side,
                 quantity,
-                local_timestamp,
+                local_timestamp: _ts,
             } => {
                 // generate new ID for order
                 let order_id = self.seq.next_id();

@@ -116,7 +116,7 @@ impl<T> OrderQueue<T> {
         self.idx_queue.as_mut().unwrap().push(OrderIndex {
             id,
             price,
-            timestamp: timestamp,
+            timestamp,
             order_side: self.queue_side,
         });
         self.orders.insert(id, order);
@@ -190,7 +190,7 @@ impl<T> OrderQueue<T> {
             active_orders.push(OrderIndex {
                 id,
                 price,
-                timestamp: timestamp,
+                timestamp,
                 order_side: self.queue_side,
             });
             // construct new queue

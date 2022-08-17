@@ -130,9 +130,9 @@ impl ExecutionState for ValidatorState {
                         quote_asset_id,
                         side,
                         quantity,
-                        local_timestamp,
+                        local_timestamp: _ts,
                     } => {
-                        dbg!(base_asset_id, quote_asset_id, side, quantity, local_timestamp);
+                        dbg!(base_asset_id, quote_asset_id, side, quantity);
                     }
                     OrderRequest::Limit {
                         base_asset_id,
@@ -140,10 +140,9 @@ impl ExecutionState for ValidatorState {
                         side,
                         price,
                         quantity,
-                        local_timestamp,
+                        local_timestamp: _ts,
                     } => {
                         // TODO: find out why these u64 are references
-                        dbg!(local_timestamp);
                         self.master_controller
                             .spot_controller
                             .lock()
@@ -165,9 +164,9 @@ impl ExecutionState for ValidatorState {
                         side,
                         price,
                         quantity,
-                        local_timestamp,
+                        local_timestamp: _ts,
                     } => {
-                        dbg!(id, side, price, quantity, local_timestamp);
+                        dbg!(id, side, price, quantity);
                     }
                 }
             }
@@ -441,7 +440,6 @@ mod test_validator_state {
         // create orderbook transaction
         const TEST_BASE_ASSET_ID: u64 = 1;
         const TEST_QUOTE_ASSET_ID: u64 = 2;
-        let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BatchDigest::new([0; DIGEST_LEN]);
         let create_orderbook_txn = create_orderbook_creation_transaction(
             &sender_kp,
@@ -474,14 +472,14 @@ mod test_validator_state {
             recent_block_hash,
         );
         let signed_digest = sender_kp.sign(&place_limit_order_txn.digest().get_array()[..]);
-        let signed_create_asset_txn =
+        let signed_place_limit_order_txn =
             SignedTransaction::new(sender_kp.public().clone(), place_limit_order_txn, signed_digest);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_create_asset_txn,
+                signed_place_limit_order_txn,
             )
             .await
             .unwrap();

@@ -120,7 +120,7 @@ impl Client {
         const PRECISION: u64 = 20; // Sample precision.
         const BURST_DURATION: u64 = 1000 / PRECISION;
 
-        let client = NetworkValidatorClient::connect(&self.target).await.unwrap();
+        let client = NetworkValidatorClient::connect_lazy(&self.target).unwrap();
 
         // Submit all transactions.
         let burst = self.rate / PRECISION;
@@ -151,6 +151,10 @@ impl Client {
                     r
                 };
                 let signed_tranasction = create_signed_transaction(&kp_sender, &kp_receiver, amount);
+                if counter == 0 {
+                    let transaction_size = signed_tranasction.serialize().unwrap().len();
+                    info!("Transactions size: {transaction_size} B");
+                }
 
                 if let Err(e) = client.handle_transaction(signed_tranasction).await {
                     warn!("Failed to send transaction: {e}");

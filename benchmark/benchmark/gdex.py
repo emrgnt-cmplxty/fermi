@@ -46,7 +46,6 @@ class GDEXBench:
 
         try:
             Print.info('Setting up testbed...')
-            print('self.nodes=', self.nodes)
             nodes, rate = self.nodes, self.rate
 
             # Cleanup all files.

@@ -9,7 +9,7 @@ pub type OrderId = u64;
 #[derive(Copy, Clone, Deserialize, Serialize, Debug)]
 pub enum OrderSide {
     Bid = 1,
-    Ask = 2
+    Ask = 2,
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]

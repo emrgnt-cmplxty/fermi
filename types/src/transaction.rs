@@ -6,9 +6,9 @@
 //! the space of allowable blockchain transitions
 use crate::{
     account::{AccountPubKey, AccountSignature},
-    asset::{AssetId, AssetAmount, AssetPrice},
-    order_book::{OrderId},
+    asset::{AssetAmount, AssetId, AssetPrice},
     error::GDEXError,
+    order_book::OrderId,
     order_book::OrderSide,
     serialization::Base64,
     serialization::Encoding,
@@ -59,14 +59,14 @@ impl PaymentRequest {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CreateOrderbookRequest {
     base_asset_id: AssetId,
-    quote_asset_id: AssetId
+    quote_asset_id: AssetId,
 }
 
 impl CreateOrderbookRequest {
     pub fn new(base_asset_id: AssetId, quote_asset_id: AssetId) -> Self {
         Self {
             base_asset_id,
-            quote_asset_id
+            quote_asset_id,
         }
     }
 
@@ -137,7 +137,7 @@ pub enum OrderRequest {
 
     CancelOrder {
         id: OrderId,
-        side: OrderSide
+        side: OrderSide,
     },
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -147,7 +147,7 @@ pub enum TransactionVariant {
     CreateAssetTransaction(CreateAssetRequest),
     CreateOrderbookTransaction(CreateOrderbookRequest),
     // this handles limit, market, cancel, update
-    PlaceOrderTransaction(OrderRequest)
+    PlaceOrderTransaction(OrderRequest),
 }
 
 /// A transaction for creating a new asset in the BankController
@@ -244,7 +244,14 @@ impl Hash for Transaction {
             }
             TransactionVariant::PlaceOrderTransaction(order) => {
                 match order {
-                    OrderRequest::Limit { base_asset, quote_asset, side, price, quantity, timestamp } => {
+                    OrderRequest::Limit {
+                        base_asset,
+                        quote_asset,
+                        side,
+                        price,
+                        quantity,
+                        timestamp,
+                    } => {
                         let hasher_update = |hasher: &mut VarBlake2b| {
                             hasher.update(self.get_sender().0.to_bytes());
                             hasher.update(base_asset.to_le_bytes());
@@ -258,7 +265,13 @@ impl Hash for Transaction {
                         };
                         TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
                     }
-                    OrderRequest::Market { base_asset, quote_asset, side, quantity, timestamp } => {
+                    OrderRequest::Market {
+                        base_asset,
+                        quote_asset,
+                        side,
+                        quantity,
+                        timestamp,
+                    } => {
                         let hasher_update = |hasher: &mut VarBlake2b| {
                             hasher.update(self.get_sender().0.to_bytes());
                             hasher.update(base_asset.to_le_bytes());
@@ -280,7 +293,13 @@ impl Hash for Transaction {
                         };
                         TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
                     }
-                    OrderRequest::Update { id, side, price, quantity, timestamp } => {
+                    OrderRequest::Update {
+                        id,
+                        side,
+                        price,
+                        quantity,
+                        timestamp,
+                    } => {
                         let hasher_update = |hasher: &mut VarBlake2b| {
                             hasher.update(self.get_sender().0.to_bytes());
                             hasher.update(id.to_le_bytes());
@@ -385,7 +404,12 @@ pub fn create_asset_creation_transaction(sender_kp: &AccountKeyPair, recent_bloc
     Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
 }
 
-pub fn create_orderbook_creation_transaction(sender_kp: &AccountKeyPair, base_asset_id: AssetId, quote_asset_id: AssetId, recent_block_hash: BatchDigest) -> Transaction {
+pub fn create_orderbook_creation_transaction(
+    sender_kp: &AccountKeyPair,
+    base_asset_id: AssetId,
+    quote_asset_id: AssetId,
+    recent_block_hash: BatchDigest,
+) -> Transaction {
     let transaction_variant =
         TransactionVariant::CreateOrderbookTransaction(CreateOrderbookRequest::new(base_asset_id, quote_asset_id));
 

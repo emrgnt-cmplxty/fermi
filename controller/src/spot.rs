@@ -256,11 +256,7 @@ impl SpotController {
         if !self.check_orderbook_exists(base_asset_id, quote_asset_id) {
             self.orderbooks.insert(
                 lookup_string,
-                OrderbookInterface::new(
-                    base_asset_id,
-                    quote_asset_id,
-                    Arc::clone(&self.bank_controller),
-                )
+                OrderbookInterface::new(base_asset_id, quote_asset_id, Arc::clone(&self.bank_controller)),
             );
             Ok(())
         } else {
@@ -269,12 +265,13 @@ impl SpotController {
     }
 
     // Attempts to retrieve an order book from the controller
-    pub fn get_orderbook(&mut self, base_asset_id: AssetId, quote_asset_id: AssetId) -> Result<&mut OrderbookInterface, GDEXError> {
+    pub fn get_orderbook(
+        &mut self,
+        base_asset_id: AssetId,
+        quote_asset_id: AssetId,
+    ) -> Result<&mut OrderbookInterface, GDEXError> {
         let lookup_string = self._get_orderbook_key(base_asset_id, quote_asset_id);
-        self
-            .orderbooks
-            .get_mut(&lookup_string)
-            .ok_or(GDEXError::AccountLookup)
+        self.orderbooks.get_mut(&lookup_string).ok_or(GDEXError::AccountLookup)
     }
 
     // pub fn parse_limit_order_transaction(

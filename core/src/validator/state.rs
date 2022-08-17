@@ -111,15 +111,19 @@ impl ExecutionState for ValidatorState {
                     payment.get_amount(),
                 )?
             }
-            TransactionVariant::CreateAssetTransaction(_create_asset) => {
-                self.master_controller.bank_controller.lock().unwrap().create_asset(transaction.get_sender())?
-            }
-            TransactionVariant::CreateOrderbookTransaction(orderbook) => {
-                self.master_controller.spot_controller.lock().unwrap().create_orderbook(
-                    orderbook.get_base_asset_id(),
-                    orderbook.get_quote_asset_id()
-                )?
-            }
+            TransactionVariant::CreateAssetTransaction(_create_asset) => self
+                .master_controller
+                .bank_controller
+                .lock()
+                .unwrap()
+                .create_asset(transaction.get_sender())?,
+            TransactionVariant::CreateOrderbookTransaction(orderbook) => self
+                .master_controller
+                .spot_controller
+                .lock()
+                .unwrap()
+                .create_orderbook(orderbook.get_base_asset_id(), orderbook.get_quote_asset_id())?,
+            TransactionVariant::PlaceOrderTransaction(order) => {}
         };
 
         Ok((Vec::default(), None))
@@ -144,14 +148,17 @@ mod test_validator_state {
     use super::*;
     use crate::{builder::genesis_state::GenesisStateBuilder, genesis_ceremony::VALIDATOR_FUNDING_AMOUNT};
     use gdex_types::{
-        account::{ValidatorPubKeyBytes},
+        account::ValidatorPubKeyBytes,
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
         node::ValidatorInfo,
-        transaction::{SignedTransaction, create_payment_transaction, create_asset_creation_transaction, create_orderbook_creation_transaction},
-        utils
+        transaction::{
+            create_asset_creation_transaction, create_orderbook_creation_transaction, create_payment_transaction,
+            SignedTransaction,
+        },
+        utils,
     };
     use narwhal_consensus::ConsensusOutput;
-    use narwhal_crypto::{Hash, DIGEST_LEN, generate_production_keypair, traits::KeyPair as _, KeyPair};
+    use narwhal_crypto::{generate_production_keypair, traits::KeyPair as _, Hash, KeyPair, DIGEST_LEN};
     use narwhal_executor::ExecutionIndices;
     use narwhal_types::{BatchDigest, Certificate, Header};
 
@@ -217,7 +224,7 @@ mod test_validator_state {
         validator
     }
 
-    fn create_test_execution_indices() -> ExecutionIndices { 
+    fn create_test_execution_indices() -> ExecutionIndices {
         ExecutionIndices {
             next_certificate_index: 1,
             next_batch_index: 1,
@@ -263,7 +270,6 @@ mod test_validator_state {
 
     #[tokio::test]
     pub async fn process_payment_txn() {
-
         let validator: ValidatorState = create_test_validator();
         let dummy_consensus_output = create_test_consensus_output();
         let dummy_execution_indices = create_test_execution_indices();
@@ -289,7 +295,8 @@ mod test_validator_state {
         const TEST_ASSET_ID: u64 = 0;
         const TEST_AMOUNT: u64 = 1000000;
         let receiver_kp = generate_production_keypair::<KeyPair>();
-        let payment_txn = create_payment_transaction(&sender_kp, &receiver_kp, TEST_ASSET_ID, TEST_AMOUNT, recent_block_hash);
+        let payment_txn =
+            create_payment_transaction(&sender_kp, &receiver_kp, TEST_ASSET_ID, TEST_AMOUNT, recent_block_hash);
         let signed_digest = sender_kp.sign(&payment_txn.digest().get_array()[..]);
         let signed_payment_txn = SignedTransaction::new(sender_kp.public().clone(), payment_txn, signed_digest);
 
@@ -305,7 +312,6 @@ mod test_validator_state {
 
     #[tokio::test]
     pub async fn process_create_orderbook_transaction() {
-
         let validator: ValidatorState = create_test_validator();
         let dummy_consensus_output = create_test_consensus_output();
         let dummy_execution_indices = create_test_execution_indices();
@@ -327,7 +333,7 @@ mod test_validator_state {
                 )
                 .await
                 .unwrap();
-            }
+        }
 
         //dbg!(validator.master_controller.bank_controller.lock().unwrap().get_num_assets());
 
@@ -336,7 +342,12 @@ mod test_validator_state {
         const TEST_QUOTE_ASSET_ID: u64 = 2;
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BatchDigest::new([0; DIGEST_LEN]);
-        let create_orderbook_txn = create_orderbook_creation_transaction(&sender_kp, TEST_BASE_ASSET_ID, TEST_QUOTE_ASSET_ID, recent_block_hash);
+        let create_orderbook_txn = create_orderbook_creation_transaction(
+            &sender_kp,
+            TEST_BASE_ASSET_ID,
+            TEST_QUOTE_ASSET_ID,
+            recent_block_hash,
+        );
         let signed_digest = sender_kp.sign(&create_orderbook_txn.digest().get_array()[..]);
         let signed_create_asset_txn =
             SignedTransaction::new(sender_kp.public().clone(), create_orderbook_txn, signed_digest);

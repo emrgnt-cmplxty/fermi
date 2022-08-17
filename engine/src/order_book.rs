@@ -246,10 +246,28 @@ impl Orderbook {
                 }
             } else {
                 // just insert new order in queue
-                self.store_new_limit_order(results, order_id, base_asset, quote_asset, side, price, quantity, timestamp);
+                self.store_new_limit_order(
+                    results,
+                    order_id,
+                    base_asset,
+                    quote_asset,
+                    side,
+                    price,
+                    quantity,
+                    timestamp,
+                );
             }
         } else {
-            self.store_new_limit_order(results, order_id, base_asset, quote_asset, side, price, quantity, timestamp);
+            self.store_new_limit_order(
+                results,
+                order_id,
+                base_asset,
+                quote_asset,
+                side,
+                price,
+                quantity,
+                timestamp,
+            );
         }
     }
 
@@ -472,7 +490,7 @@ mod test_order_book {
 
     use super::*;
     use crate::orders::{
-        update_order_request, limit_order_cancel_request, new_limit_order_request, new_market_order_request,
+        limit_order_cancel_request, new_limit_order_request, new_market_order_request, update_order_request,
     };
 
     const BASE_ASSET: u64 = 0;

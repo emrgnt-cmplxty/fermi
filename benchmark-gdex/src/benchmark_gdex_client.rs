@@ -3,11 +3,13 @@
 // SPDX-License-Identifier: Apache-2.0
 use anyhow::{Context, Result};
 use clap::{crate_name, crate_version, App, AppSettings};
-use futures::future::join_all;
+use futures::FutureExt;
+use futures::{future::join_all, StreamExt};
 use gdex_core::client::{ClientAPI, NetworkValidatorClient};
 use gdex_types::{
     account::AccountKeyPair,
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
+    TransactionsClient,
 };
 use multiaddr::Multiaddr;
 use narwhal_crypto::{
@@ -81,7 +83,7 @@ async fn main() -> Result<()> {
 
     let target_str = matches.value_of("ADDR").unwrap();
     let target = target_str
-        .parse::<Multiaddr>()
+        .parse::<Url>()
         .with_context(|| format!("Invalid url format {target_str}"))?;
     let rate = matches
         .value_of("rate")
@@ -110,7 +112,7 @@ async fn main() -> Result<()> {
 
 /// TODO - add do_real_transaction as boolean field on client
 struct Client {
-    target: Multiaddr,
+    target: Url,
     rate: u64,
     nodes: Vec<Url>,
 }
@@ -120,7 +122,9 @@ impl Client {
         const PRECISION: u64 = 20; // Sample precision.
         const BURST_DURATION: u64 = 1000 / PRECISION;
 
-        let client = NetworkValidatorClient::connect_lazy(&self.target).unwrap();
+        let mut client = TransactionsClient::connect(self.target.as_str().to_owned())
+            .await
+            .unwrap();
 
         // Submit all transactions.
         let burst = self.rate / PRECISION;
@@ -133,16 +137,47 @@ impl Client {
 
         // NOTE: This log entry is used to compute performance.
         info!("Start sending transactions");
-        let kp_sender = keys([0; 32]).pop().unwrap();
-        let kp_receiver = keys([1; 32]).pop().unwrap();
-
         'main: loop {
             interval.as_mut().tick().await;
             let now = Instant::now();
 
             // copy into a new variablet o avoid we get lifetime errors in the stream
-            for _x in 0..burst {
-                let amount = if 0 == counter % burst {
+            // let stream = tokio_stream::iter(0..burst).map(move |x| {
+            //     let amount = if 0 == counter % burst {
+            //         // NOTE: This log entry is used to compute performance.
+            //         info!("Sending sample transaction {counter}");
+            //         counter
+            //     } else {
+            //         r += 1;
+            //         r
+            //     };
+            //     let signed_tranasction = create_signed_transaction(&kp_sender, &kp_receiver, amount);
+            //     if counter == 0 {
+            //         let transaction_size = signed_tranasction.serialize().unwrap().len();
+            //         info!("Transactions size: {transaction_size} B");
+            //     }
+
+            //     if let Err(e) = client.handle_transaction(signed_tranasction).await {
+            //         warn!("Failed to send transaction: {e}");
+            //         break 'main;
+            //     }
+            //     counter += 1;
+            // }
+
+            // let a = tokio_stream::iter(vec![1, 3, 5]);
+            let kp_sender = keys([0; 32]).pop().unwrap();
+            let kp_receiver = keys([1; 32]).pop().unwrap();
+
+            if counter == 0 {
+                let transaction_size = create_signed_transaction(&kp_sender, &kp_receiver, 1)
+                    .serialize()
+                    .unwrap()
+                    .len();
+                info!("Transactions size: {transaction_size} B");
+            }
+
+            let stream = tokio_stream::iter(0..burst).map(move |x| {
+                let amount = if x == counter % burst {
                     // NOTE: This log entry is used to compute performance.
                     info!("Sending sample transaction {counter}");
                     counter
@@ -151,23 +186,30 @@ impl Client {
                     r
                 };
                 let signed_tranasction = create_signed_transaction(&kp_sender, &kp_receiver, amount);
-                if counter == 0 {
-                    let transaction_size = signed_tranasction.serialize().unwrap().len();
-                    info!("Transactions size: {transaction_size} B");
+                gdex_types::TransactionProto {
+                    transaction: signed_tranasction.serialize().unwrap().into(),
+                    // signature: signed_tranasction.signature.to_bytes().to_vec(),
                 }
+                // signed_tranasction
+            });
 
-                if let Err(e) = client.handle_transaction(signed_tranasction).await {
-                    warn!("Failed to send transaction: {e}");
-                    break 'main;
-                }
-                counter += 1;
+            //  while let Some(value) = stream.next().await {
+            //     println!("Got {:?}", value);
+            //     client.handle_transaction(value).await.unwrap();
+            //  };
+
+            if let Err(e) = client.submit_transaction_stream(stream).await {
+                warn!("Failed to send transaction: {e}");
+                break 'main;
             }
+
             info!("now.elapsed().as_millis()={}", now.elapsed().as_millis());
             info!("submitted tps={}", burst * 1000 / (now.elapsed().as_millis() as u64));
             if now.elapsed().as_millis() > BURST_DURATION as u128 {
                 // NOTE: This log entry is used to compute performance.
                 warn!("Transaction rate too high for this client");
             }
+            counter += 1;
         }
         Ok(())
     }

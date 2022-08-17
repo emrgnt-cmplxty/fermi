@@ -27,16 +27,16 @@ fn main() -> Result<()> {
                 .codec_path(codec_path)
                 .build(),
         )
-        // .method(
-        //     Method::builder()
-        //         .name("stream_transaction")
-        //         .route_name("SignedTransaction")
-        //         .input_type("gdex_types::transaction::SignedTransaction")
-        //         .output_type("gdex_types::node::TransactionResult")
-        //         .codec_path(codec_path)
-        //         .client_streaming()
-        //         .build(),
-        // )
+        .method(
+            Method::builder()
+                .name("stream_transaction")
+                .route_name("SignedTransactionStream")
+                .input_type("gdex_types::transaction::SignedTransaction")
+                .output_type("gdex_types::node::TransactionResult")
+                .codec_path(codec_path)
+                .client_streaming()
+                .build(),
+        )
         .build();
 
     Builder::new().out_dir("./src/").compile(&[validator_service]);

@@ -85,6 +85,32 @@ pub mod validator_a_p_i_client {
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
+        pub async fn stream_transaction(
+            &mut self,
+            request: impl tonic::IntoStreamingRequest<
+                Message = gdex_types::transaction::SignedTransaction,
+            >,
+        ) -> Result<
+            tonic::Response<gdex_types::node::TransactionResult>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = crate::codec::BincodeCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/gdex.validator.ValidatorAPI/SignedTransactionStream",
+            );
+            self.inner
+                .client_streaming(request.into_streaming_request(), path, codec)
+                .await
+        }
     }
 }
 /// Generated server implementations.
@@ -97,6 +123,12 @@ pub mod validator_a_p_i_server {
         async fn transaction(
             &self,
             request: tonic::Request<gdex_types::transaction::SignedTransaction>,
+        ) -> Result<tonic::Response<gdex_types::node::TransactionResult>, tonic::Status>;
+        async fn stream_transaction(
+            &self,
+            request: tonic::Request<
+                tonic::Streaming<gdex_types::transaction::SignedTransaction>,
+            >,
         ) -> Result<tonic::Response<gdex_types::node::TransactionResult>, tonic::Status>;
     }
     ///The Validator API
@@ -184,6 +216,49 @@ pub mod validator_a_p_i_server {
                                 send_compression_encodings,
                             );
                         let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/gdex.validator.ValidatorAPI/SignedTransactionStream" => {
+                    #[allow(non_camel_case_types)]
+                    struct SignedTransactionStreamSvc<T: ValidatorAPI>(pub Arc<T>);
+                    impl<
+                        T: ValidatorAPI,
+                    > tonic::server::ClientStreamingService<
+                        gdex_types::transaction::SignedTransaction,
+                    > for SignedTransactionStreamSvc<T> {
+                        type Response = gdex_types::node::TransactionResult;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<
+                                tonic::Streaming<gdex_types::transaction::SignedTransaction>,
+                            >,
+                        ) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut = async move {
+                                (*inner).stream_transaction(request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = SignedTransactionStreamSvc(inner);
+                        let codec = crate::codec::BincodeCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            );
+                        let res = grpc.client_streaming(method, req).await;
                         Ok(res)
                     };
                     Box::pin(fut)

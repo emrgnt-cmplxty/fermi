@@ -100,6 +100,12 @@ pub trait ClientAPI {
         &self,
         transaction: SignedTransaction,
     ) -> Result<tonic::Response<TransactionResult>, GDEXError>;
+
+    /// Initiate a new transaction to a Sui or Primary account.
+    async fn handle_stream_transaction(
+        &self,
+        transactions: impl tonic::IntoStreamingRequest<Message = SignedTransaction> + std::marker::Send,
+    ) -> Result<tonic::Response<TransactionResult>, GDEXError>;
 }
 
 #[async_trait]
@@ -112,6 +118,15 @@ impl ClientAPI for NetworkValidatorClient {
         trace!("Handling a new transaction with a NetworkValidatorClient ClientAPI",);
 
         self.client().transaction(transaction).await.map_err(Into::into)
+    }
+
+    /// Initiate a new transfer to a Sui or Primary account.
+    async fn handle_stream_transaction(
+        &self,
+        transactions: impl tonic::IntoStreamingRequest<Message = SignedTransaction> + std::marker::Send,
+    ) -> Result<tonic::Response<TransactionResult>, GDEXError> {
+        trace!("Handling a new transaction stream with a NetworkValidatorClient ClientAPI",);
+        self.client().stream_transaction(transactions).await.map_err(Into::into)
     }
 }
 /// Creates a new endpoint and facilitates connectivity

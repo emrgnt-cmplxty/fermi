@@ -76,7 +76,7 @@ class GDEXBench:
             rate_share = ceil(rate / len(nodes.keys()))
             for id, address in enumerate(nodes.values()):
                     cmd = CommandMaker.run_gdex_client(
-                        url_to_multiaddr(address),
+                        address, #url_to_multiaddr(address),
                         rate_share,
                         [x for x in nodes.values() if x != address]
                     )

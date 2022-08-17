@@ -111,16 +111,16 @@ impl PlaceLimitOrderRequest {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum OrderRequest {
     Market {
-        base_asset: AssetId,
-        quote_asset: AssetId,
+        base_asset_id: AssetId,
+        quote_asset_id: AssetId,
         side: OrderSide,
         quantity: AssetAmount,
         timestamp: SystemTime,
     },
 
     Limit {
-        base_asset: AssetId,
-        quote_asset: AssetId,
+        base_asset_id: AssetId,
+        quote_asset_id: AssetId,
         side: OrderSide,
         price: AssetPrice,
         quantity: AssetAmount,
@@ -245,8 +245,8 @@ impl Hash for Transaction {
             TransactionVariant::PlaceOrderTransaction(order) => {
                 match order {
                     OrderRequest::Limit {
-                        base_asset,
-                        quote_asset,
+                        base_asset_id,
+                        quote_asset_id,
                         side,
                         price,
                         quantity,
@@ -254,8 +254,8 @@ impl Hash for Transaction {
                     } => {
                         let hasher_update = |hasher: &mut VarBlake2b| {
                             hasher.update(self.get_sender().0.to_bytes());
-                            hasher.update(base_asset.to_le_bytes());
-                            hasher.update(quote_asset.to_le_bytes());
+                            hasher.update(base_asset_id.to_le_bytes());
+                            hasher.update(quote_asset_id.to_le_bytes());
                             hasher.update((*side as u8).to_le_bytes());
                             hasher.update(price.to_le_bytes());
                             hasher.update(quantity.to_le_bytes());
@@ -266,16 +266,16 @@ impl Hash for Transaction {
                         TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
                     }
                     OrderRequest::Market {
-                        base_asset,
-                        quote_asset,
+                        base_asset_id,
+                        quote_asset_id,
                         side,
                         quantity,
                         timestamp,
                     } => {
                         let hasher_update = |hasher: &mut VarBlake2b| {
                             hasher.update(self.get_sender().0.to_bytes());
-                            hasher.update(base_asset.to_le_bytes());
-                            hasher.update(quote_asset.to_le_bytes());
+                            hasher.update(base_asset_id.to_le_bytes());
+                            hasher.update(quote_asset_id.to_le_bytes());
                             hasher.update((*side as u8).to_le_bytes());
                             hasher.update(quantity.to_le_bytes());
                             // TODO: add timestamp
@@ -412,6 +412,30 @@ pub fn create_orderbook_creation_transaction(
 ) -> Transaction {
     let transaction_variant =
         TransactionVariant::CreateOrderbookTransaction(CreateOrderbookRequest::new(base_asset_id, quote_asset_id));
+
+    Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
+}
+
+pub fn create_place_limit_order_transaction(
+    sender_kp: &AccountKeyPair,
+    base_asset_id: AssetId,
+    quote_asset_id: AssetId,
+    side: OrderSide,
+    price: AssetPrice,
+    quantity: AssetAmount,
+    recent_block_hash: BatchDigest,
+) -> Transaction {
+
+    let timestamp = SystemTime::now();
+    let transaction_variant =
+        TransactionVariant::PlaceOrderTransaction(OrderRequest::Limit { 
+            base_asset_id,
+            quote_asset_id,
+            side,
+            price,
+            quantity,
+            timestamp
+        });
 
     Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
 }

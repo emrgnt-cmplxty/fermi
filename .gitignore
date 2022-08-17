@@ -1,6 +1,7 @@
 .gdex/*
 .proto/*db*/
 suite/db_rocks/*
+suite/db.rocks/*
 *.json
 *.python-version
 !Docker/**/*.json

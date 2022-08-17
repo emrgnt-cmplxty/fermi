@@ -60,12 +60,12 @@ impl Orderbook {
 
     pub fn process_order(&mut self, order: OrderRequest) -> OrderProcessingResult {
         // processing result accumulator
-        let mut proc_result: OrderProcessingResult = vec![];
+        let mut process_result: OrderProcessingResult = vec![];
 
         // validate request
         if let Err(reason) = self.order_validator.validate(&order) {
-            proc_result.push(Err(Failed::Validation(String::from(reason))));
-            return proc_result;
+            process_result.push(Err(Failed::Validation(String::from(reason))));
+            return process_result;
         }
 
         match order {
@@ -78,14 +78,14 @@ impl Orderbook {
             } => {
                 // generate new ID for order
                 let order_id = self.seq.next_id();
-                proc_result.push(Ok(Success::Accepted {
+                process_result.push(Ok(Success::Accepted {
                     order_id,
                     order_type: OrderType::Market,
                     timestamp: SystemTime::now(),
                 }));
 
                 self.process_market_order(
-                    &mut proc_result,
+                    &mut process_result,
                     order_id,
                     base_asset_id,
                     quote_asset_id,
@@ -103,14 +103,14 @@ impl Orderbook {
                 local_timestamp,
             } => {
                 let order_id = self.seq.next_id();
-                proc_result.push(Ok(Success::Accepted {
+                process_result.push(Ok(Success::Accepted {
                     order_id,
                     order_type: OrderType::Limit,
                     timestamp: SystemTime::now(),
                 }));
 
                 self.process_limit_order(
-                    &mut proc_result,
+                    &mut process_result,
                     order_id,
                     base_asset_id,
                     quote_asset_id,
@@ -128,17 +128,17 @@ impl Orderbook {
                 quantity,
                 local_timestamp,
             } => {
-                self.process_order_update(&mut proc_result, id, side, price, quantity, local_timestamp);
+                self.process_order_update(&mut process_result, id, side, price, quantity, local_timestamp);
             }
 
             OrderRequest::CancelOrder { id, side } => {
-                self.process_order_cancel(&mut proc_result, id, side);
+                self.process_order_cancel(&mut process_result, id, side);
             }
         }
 
         // return collected processing results
 
-        proc_result
+        process_result
     }
 
     /// Get current spread as a tuple: (bid, ask)

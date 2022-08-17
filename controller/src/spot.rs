@@ -102,11 +102,11 @@ impl OrderbookInterface {
             SystemTime::now(),
         );
         let res = self.orderbook.process_order(order);
-        self.proc_limit_result(account_pub_key, side, price, quantity, res)
+        self.process_limit_result(account_pub_key, side, price, quantity, res)
     }
 
     /// Attempts to loop over and process the outputs from a placed limit order
-    fn proc_limit_result(
+    fn process_limit_result(
         &mut self,
         account_pub_key: &AccountPubKey,
         sub_side: OrderSide,
@@ -118,7 +118,7 @@ impl OrderbookInterface {
             match order {
                 // first order is expected to be an Accepted result
                 Ok(Success::Accepted { order_id, .. }) => {
-                    self.proc_order_init(account_pub_key, sub_side, sub_price, sub_qty)?;
+                    self.process_order_init(account_pub_key, sub_side, sub_price, sub_qty)?;
                     // insert new order to map
                     self.order_to_account.insert(*order_id, account_pub_key.clone());
                 }
@@ -135,7 +135,7 @@ impl OrderbookInterface {
                         .get(order_id)
                         .ok_or(GDEXError::AccountLookup)?
                         .clone();
-                    self.proc_order_fill(&existing_pub_key, *side, *price, *quantity)?;
+                    self.process_order_fill(&existing_pub_key, *side, *price, *quantity)?;
                 }
                 Ok(Success::Filled {
                     order_id,
@@ -149,7 +149,7 @@ impl OrderbookInterface {
                         .get(order_id)
                         .ok_or(GDEXError::AccountLookup)?
                         .clone();
-                    self.proc_order_fill(&existing_pub_key, *side, *price, *quantity)?;
+                    self.process_order_fill(&existing_pub_key, *side, *price, *quantity)?;
                     // erase existing order
                     self.order_to_account.remove(order_id).ok_or(GDEXError::OrderRequest)?;
                 }
@@ -168,7 +168,7 @@ impl OrderbookInterface {
     }
 
     /// Processes an initialized order by modifying the associated account
-    fn proc_order_init(
+    fn process_order_init(
         &mut self,
         account_pub_key: &AccountPubKey,
         side: OrderSide,
@@ -196,7 +196,7 @@ impl OrderbookInterface {
     }
 
     /// Processes a filled order by modifying the associated account
-    fn proc_order_fill(
+    fn process_order_fill(
         &mut self,
         account_pub_key: &AccountPubKey,
         side: OrderSide,

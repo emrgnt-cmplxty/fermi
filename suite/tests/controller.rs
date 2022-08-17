@@ -3,7 +3,7 @@
 //! 2.) MOVE TOWARDS PRE-DETRMINED KEYS INSTEAD OF RNG
 //!
 #[cfg(test)]
-pub mod proc_tests {
+pub mod process_tests {
     use gdex_controller::{
         bank::{BankController, CREATED_ASSET_BALANCE},
         spot::OrderbookInterface,

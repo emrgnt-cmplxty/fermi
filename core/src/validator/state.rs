@@ -70,7 +70,7 @@ impl ValidatorStore {
         let mut locked_certificate_cache = self.certificate_cache.lock().unwrap();
         let max_seq_num_so_far = locked_certificate_cache.values().max();
 
-        let is_new_seq_num =
+        let _is_new_seq_num =
             max_seq_num_so_far.is_none() || consensus_output.consensus_index > *max_seq_num_so_far.unwrap();
 
         self.transaction_cache
@@ -79,17 +79,9 @@ impl ValidatorStore {
             .insert(transaction_digest, Some(certificate_digest));
         locked_certificate_cache.insert(certificate_digest, consensus_output.consensus_index);
         drop(locked_certificate_cache);
-        if is_new_seq_num {
-            self.handle_new_sequence_number();
-        }
     }
 
-    fn handle_new_sequence_number(&self) {
-        self.prune()
-        // extend this
-    }
-
-    fn prune(&self) {
+    pub fn prune(&self) {
         let mut locked_certificate_cache = self.certificate_cache.lock().unwrap();
         if locked_certificate_cache.len() > self.gc_depth as usize {
             let mut threshold = locked_certificate_cache.values().max().unwrap() - self.gc_depth;
@@ -161,7 +153,7 @@ impl ValidatorState {
 impl ExecutionState for ValidatorState {
     type Transaction = SignedTransaction;
     type Error = GDEXError;
-    type Outcome = Vec<u8>;
+    type Outcome = ConsensusOutput;
 
     async fn handle_consensus_transaction(
         &self,
@@ -190,7 +182,7 @@ impl ExecutionState for ValidatorState {
         self.validator_store
             .insert_confirmed_transaction(transaction, consensus_output);
 
-        Ok((Vec::default(), None))
+        Ok((consensus_output.clone(), None))
     }
 
     fn ask_consensus_write_lock(&self) -> bool {

@@ -82,8 +82,8 @@ pub mod suite_core_tests {
 
         let key_pair_pin = Arc::pin(utils::read_keypair_from_file(&key_file).unwrap());
         let key_pair_arc = Arc::new(utils::read_keypair_from_file(&key_file).unwrap());
-
-        let validator_state = Arc::new(ValidatorState::new(pubilc_key, key_pair_pin, &genesis_state));
+        let (tx_reconfigure_consensus, _rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
+        let validator_state = Arc::new(ValidatorState::new(pubilc_key, key_pair_pin, &genesis_state, tx_reconfigure_consensus));
 
         // Create a node config with this validators information
         let consensus_db_path = db_dir.join(CONSENSUS_DB_NAME);

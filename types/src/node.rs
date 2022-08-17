@@ -8,9 +8,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use sui_types::committee::StakeUnit;
 
-#[derive(Deserialize, Serialize)]
-pub struct TransactionResult(pub u64);
-
 /// This class is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/node.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 /// Publicly known information about a validator
 /// TODO read most of this from on-chain

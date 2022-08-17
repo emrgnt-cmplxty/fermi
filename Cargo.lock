@@ -2386,7 +2386,6 @@ dependencies = [
  "executor",
  "futures",
  "gdex-controller",
- "gdex-server",
  "gdex-types",
  "gdex-workspace-hack",
  "http",
@@ -2437,30 +2436,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gdex-server"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "bincode",
- "bytes",
- "futures",
- "gdex-types",
- "gdex-workspace-hack",
- "http",
- "multiaddr",
- "serde 1.0.143",
- "tempfile",
- "tokio",
- "tokio-stream",
- "tonic",
- "tonic-build 0.7.2 (git+https://github.com/hyperium/tonic.git?rev=de2e4ac077c076736dc451f3415ea7da1a61a560)",
- "tonic-health",
- "tower",
- "tower-http",
-]
-
-[[package]]
 name = "gdex-suite"
 version = "0.1.0"
 dependencies = [
@@ -2502,8 +2477,11 @@ dependencies = [
  "hex",
  "itertools",
  "multiaddr",
+ "prost",
+ "prost-build",
  "rand 0.7.3",
  "rand 0.8.5",
+ "rustversion",
  "schemars",
  "serde 1.0.143",
  "serde_with 1.14.0",
@@ -2512,6 +2490,7 @@ dependencies = [
  "sui-types",
  "thiserror",
  "tonic",
+ "tonic-build 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "types",
 ]
 

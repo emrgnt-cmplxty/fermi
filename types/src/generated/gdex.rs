@@ -1,13 +1,21 @@
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Transaction {
+    #[prost(bytes="bytes", tag="1")]
+    pub transaction: ::prost::bytes::Bytes,
+}
+/// Empty message for when we don't have anything to return
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Empty {
+}
 /// Generated client implementations.
-pub mod validator_a_p_i_client {
+pub mod transactions_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
-    ///The Validator API
     #[derive(Debug, Clone)]
-    pub struct ValidatorAPIClient<T> {
+    pub struct TransactionsClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl ValidatorAPIClient<tonic::transport::Channel> {
+    impl TransactionsClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -18,7 +26,7 @@ pub mod validator_a_p_i_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> ValidatorAPIClient<T>
+    impl<T> TransactionsClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
@@ -32,7 +40,7 @@ pub mod validator_a_p_i_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> ValidatorAPIClient<InterceptedService<T, F>>
+        ) -> TransactionsClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -46,7 +54,7 @@ pub mod validator_a_p_i_client {
                 http::Request<tonic::body::BoxBody>,
             >>::Error: Into<StdError> + Send + Sync,
         {
-            ValidatorAPIClient::new(InterceptedService::new(inner, interceptor))
+            TransactionsClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with `gzip`.
         ///
@@ -63,13 +71,11 @@ pub mod validator_a_p_i_client {
             self.inner = self.inner.accept_gzip();
             self
         }
-        pub async fn transaction(
+        /// Submit a Transactions
+        pub async fn submit_transaction(
             &mut self,
-            request: impl tonic::IntoRequest<gdex_types::transaction::SignedTransaction>,
-        ) -> Result<
-            tonic::Response<gdex_types::node::TransactionResult>,
-            tonic::Status,
-        > {
+            request: impl tonic::IntoRequest<super::Transaction>,
+        ) -> Result<tonic::Response<super::Empty>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -79,35 +85,62 @@ pub mod validator_a_p_i_client {
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
-            let codec = crate::codec::BincodeCodec::default();
+            let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/gdex.validator.ValidatorAPI/SignedTransaction",
+                "/gdex.Transactions/SubmitTransaction",
             );
             self.inner.unary(request.into_request(), path, codec).await
+        }
+        /// Submit a Transactions
+        pub async fn submit_transaction_stream(
+            &mut self,
+            request: impl tonic::IntoStreamingRequest<Message = super::Transaction>,
+        ) -> Result<tonic::Response<super::Empty>, tonic::Status> {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/gdex.Transactions/SubmitTransactionStream",
+            );
+            self.inner
+                .client_streaming(request.into_streaming_request(), path, codec)
+                .await
         }
     }
 }
 /// Generated server implementations.
-pub mod validator_a_p_i_server {
+pub mod transactions_server {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
-    ///Generated trait containing gRPC methods that should be implemented for use with ValidatorAPIServer.
+    ///Generated trait containing gRPC methods that should be implemented for use with TransactionsServer.
     #[async_trait]
-    pub trait ValidatorAPI: Send + Sync + 'static {
-        async fn transaction(
+    pub trait Transactions: Send + Sync + 'static {
+        /// Submit a Transactions
+        async fn submit_transaction(
             &self,
-            request: tonic::Request<gdex_types::transaction::SignedTransaction>,
-        ) -> Result<tonic::Response<gdex_types::node::TransactionResult>, tonic::Status>;
+            request: tonic::Request<super::Transaction>,
+        ) -> Result<tonic::Response<super::Empty>, tonic::Status>;
+        /// Submit a Transactions
+        async fn submit_transaction_stream(
+            &self,
+            request: tonic::Request<tonic::Streaming<super::Transaction>>,
+        ) -> Result<tonic::Response<super::Empty>, tonic::Status>;
     }
-    ///The Validator API
     #[derive(Debug)]
-    pub struct ValidatorAPIServer<T: ValidatorAPI> {
+    pub struct TransactionsServer<T: Transactions> {
         inner: _Inner<T>,
         accept_compression_encodings: (),
         send_compression_encodings: (),
     }
     struct _Inner<T>(Arc<T>);
-    impl<T: ValidatorAPI> ValidatorAPIServer<T> {
+    impl<T: Transactions> TransactionsServer<T> {
         pub fn new(inner: T) -> Self {
             Self::from_arc(Arc::new(inner))
         }
@@ -129,9 +162,9 @@ pub mod validator_a_p_i_server {
             InterceptedService::new(Self::new(inner), interceptor)
         }
     }
-    impl<T, B> tonic::codegen::Service<http::Request<B>> for ValidatorAPIServer<T>
+    impl<T, B> tonic::codegen::Service<http::Request<B>> for TransactionsServer<T>
     where
-        T: ValidatorAPI,
+        T: Transactions,
         B: Body + Send + 'static,
         B::Error: Into<StdError> + Send + 'static,
     {
@@ -147,27 +180,24 @@ pub mod validator_a_p_i_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
-                "/gdex.validator.ValidatorAPI/SignedTransaction" => {
+                "/gdex.Transactions/SubmitTransaction" => {
                     #[allow(non_camel_case_types)]
-                    struct SignedTransactionSvc<T: ValidatorAPI>(pub Arc<T>);
-                    impl<
-                        T: ValidatorAPI,
-                    > tonic::server::UnaryService<
-                        gdex_types::transaction::SignedTransaction,
-                    > for SignedTransactionSvc<T> {
-                        type Response = gdex_types::node::TransactionResult;
+                    struct SubmitTransactionSvc<T: Transactions>(pub Arc<T>);
+                    impl<T: Transactions> tonic::server::UnaryService<super::Transaction>
+                    for SubmitTransactionSvc<T> {
+                        type Response = super::Empty;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<
-                                gdex_types::transaction::SignedTransaction,
-                            >,
+                            request: tonic::Request<super::Transaction>,
                         ) -> Self::Future {
                             let inner = self.0.clone();
-                            let fut = async move { (*inner).transaction(request).await };
+                            let fut = async move {
+                                (*inner).submit_transaction(request).await
+                            };
                             Box::pin(fut)
                         }
                     }
@@ -176,14 +206,54 @@ pub mod validator_a_p_i_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let inner = inner.0;
-                        let method = SignedTransactionSvc(inner);
-                        let codec = crate::codec::BincodeCodec::default();
+                        let method = SubmitTransactionSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(
                                 accept_compression_encodings,
                                 send_compression_encodings,
                             );
                         let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/gdex.Transactions/SubmitTransactionStream" => {
+                    #[allow(non_camel_case_types)]
+                    struct SubmitTransactionStreamSvc<T: Transactions>(pub Arc<T>);
+                    impl<
+                        T: Transactions,
+                    > tonic::server::ClientStreamingService<super::Transaction>
+                    for SubmitTransactionStreamSvc<T> {
+                        type Response = super::Empty;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<tonic::Streaming<super::Transaction>>,
+                        ) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut = async move {
+                                (*inner).submit_transaction_stream(request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = SubmitTransactionStreamSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            );
+                        let res = grpc.client_streaming(method, req).await;
                         Ok(res)
                     };
                     Box::pin(fut)
@@ -203,7 +273,7 @@ pub mod validator_a_p_i_server {
             }
         }
     }
-    impl<T: ValidatorAPI> Clone for ValidatorAPIServer<T> {
+    impl<T: Transactions> Clone for TransactionsServer<T> {
         fn clone(&self) -> Self {
             let inner = self.inner.clone();
             Self {
@@ -213,7 +283,7 @@ pub mod validator_a_p_i_server {
             }
         }
     }
-    impl<T: ValidatorAPI> Clone for _Inner<T> {
+    impl<T: Transactions> Clone for _Inner<T> {
         fn clone(&self) -> Self {
             Self(self.0.clone())
         }
@@ -223,7 +293,7 @@ pub mod validator_a_p_i_server {
             write!(f, "{:?}", self.0)
         }
     }
-    impl<T: ValidatorAPI> tonic::transport::NamedService for ValidatorAPIServer<T> {
-        const NAME: &'static str = "gdex.validator.ValidatorAPI";
+    impl<T: Transactions> tonic::transport::NamedService for TransactionsServer<T> {
+        const NAME: &'static str = "gdex.Transactions";
     }
 }

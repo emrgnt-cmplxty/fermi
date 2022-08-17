@@ -44,7 +44,7 @@ impl OrderRequestValidator {
                 quote_asset,
                 side: _side,
                 quantity,
-                ts: _ts,
+                timestamp: _ts,
             } => self.validate_market(base_asset, quote_asset, quantity),
 
             OrderRequest::Limit {
@@ -53,16 +53,16 @@ impl OrderRequestValidator {
                 side: _side,
                 price,
                 quantity,
-                ts: _ts,
+                timestamp: _ts,
             } => self.validate_limit(base_asset, quote_asset, price, quantity),
 
-            OrderRequest::Amend {
+            OrderRequest::Update {
                 id,
                 price,
                 side: _side,
                 quantity,
-                ts: _ts,
-            } => self.validate_amend(id, price, quantity),
+                timestamp: _ts,
+            } => self.validate_update(id, price, quantity),
 
             OrderRequest::CancelOrder { id, side: _side } => self.validate_cancel(id),
         }
@@ -106,7 +106,7 @@ impl OrderRequestValidator {
         Ok(())
     }
 
-    fn validate_amend(&self, id: u64, price: u64, quantity: u64) -> Result<(), &str> {
+    fn validate_update(&self, id: u64, price: u64, quantity: u64) -> Result<(), &str> {
         if self.min_sequence_id > id || self.max_sequence_id < id {
             return Err(ERR_BAD_SEQ_ID);
         }

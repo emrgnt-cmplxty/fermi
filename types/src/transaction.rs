@@ -6,7 +6,8 @@
 //! the space of allowable blockchain transitions
 use crate::{
     account::{AccountPubKey, AccountSignature},
-    asset::AssetId,
+    asset::{AssetId, AssetAmount, AssetPrice},
+    order_book::{OrderId},
     error::GDEXError,
     order_book::OrderSide,
     serialization::Base64,
@@ -34,7 +35,7 @@ pub struct PaymentRequest {
 }
 
 impl PaymentRequest {
-    pub fn new(receiver: AccountPubKey, asset_id: AssetId, amount: u64) -> Self {
+    pub fn new(receiver: AccountPubKey, asset_id: AssetId, amount: AssetAmount) -> Self {
         PaymentRequest {
             receiver,
             asset_id,
@@ -50,10 +51,62 @@ impl PaymentRequest {
         self.asset_id
     }
 
-    pub fn get_amount(&self) -> u64 {
+    pub fn get_amount(&self) -> AssetAmount {
         self.amount
     }
 }
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct CreateOrderbookRequest {
+    base_asset_id: AssetId,
+    quote_asset_id: AssetId
+}
+
+impl CreateOrderbookRequest {
+    pub fn new(base_asset_id: AssetId, quote_asset_id: AssetId) -> Self {
+        Self {
+            base_asset_id,
+            quote_asset_id
+        }
+    }
+
+    pub fn get_base_asset_id(&self) -> AssetId {
+        self.base_asset_id
+    }
+
+    pub fn get_quote_asset_id(&self) -> AssetId {
+        self.quote_asset_id
+    }
+}
+
+/***#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct PlaceLimitOrderRequest {
+    side: OrderSide,
+    quantity: AssetAmount,
+    price: AssetPrice
+}
+
+impl PlaceLimitOrderRequest {
+    pub fn new (side: OrderSide, quantity: AssetAmount, price: AssetPrice) -> Self {
+        Self {
+            side,
+            quantity,
+            price
+        }
+    }
+
+    pub fn get_side(&self) -> OrderSide {
+        self.side
+    }
+
+    pub fn get_quantity(&self) -> AssetAmount {
+        self.quantity
+    }
+
+    pub fn get_price(&self) -> AssetPrice {
+        self.price
+    }
+}***/
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum OrderRequest {
@@ -61,31 +114,30 @@ pub enum OrderRequest {
         base_asset: AssetId,
         quote_asset: AssetId,
         side: OrderSide,
-        quantity: u64,
-        ts: SystemTime,
+        quantity: AssetAmount,
+        timestamp: SystemTime,
     },
 
     Limit {
         base_asset: AssetId,
         quote_asset: AssetId,
         side: OrderSide,
-        price: u64,
-        quantity: u64,
-        ts: SystemTime,
+        price: AssetPrice,
+        quantity: AssetAmount,
+        timestamp: SystemTime,
     },
 
-    Amend {
-        id: u64,
+    Update {
+        id: OrderId,
         side: OrderSide,
-        price: u64,
-        quantity: u64,
-        ts: SystemTime,
+        price: AssetPrice,
+        quantity: AssetAmount,
+        timestamp: SystemTime,
     },
 
     CancelOrder {
-        id: u64,
-        side: OrderSide,
-        //ts: SystemTime,
+        id: OrderId,
+        side: OrderSide
     },
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -93,6 +145,9 @@ pub enum OrderRequest {
 pub enum TransactionVariant {
     PaymentTransaction(PaymentRequest),
     CreateAssetTransaction(CreateAssetRequest),
+    CreateOrderbookTransaction(CreateOrderbookRequest),
+    // this handles limit, market, cancel, update
+    PlaceOrderTransaction(OrderRequest)
 }
 
 /// A transaction for creating a new asset in the BankController
@@ -178,6 +233,68 @@ impl Hash for Transaction {
                 };
                 TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
             }
+            TransactionVariant::CreateOrderbookTransaction(create_orderbook) => {
+                let hasher_update = |hasher: &mut VarBlake2b| {
+                    hasher.update(self.get_sender().0.to_bytes());
+                    hasher.update(create_orderbook.base_asset_id.to_le_bytes());
+                    hasher.update(create_orderbook.quote_asset_id.to_le_bytes());
+                    hasher.update(&self.get_recent_block_hash().0[..]);
+                };
+                TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
+            }
+            TransactionVariant::PlaceOrderTransaction(order) => {
+                match order {
+                    OrderRequest::Limit { base_asset, quote_asset, side, price, quantity, timestamp } => {
+                        let hasher_update = |hasher: &mut VarBlake2b| {
+                            hasher.update(self.get_sender().0.to_bytes());
+                            hasher.update(base_asset.to_le_bytes());
+                            hasher.update(quote_asset.to_le_bytes());
+                            hasher.update((*side as u8).to_le_bytes());
+                            hasher.update(price.to_le_bytes());
+                            hasher.update(quantity.to_le_bytes());
+                            // TODO: add timestamp
+                            //hasher.update((timestamp as u64).to_le_bytes());
+                            hasher.update(&self.get_recent_block_hash().0[..]);
+                        };
+                        TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
+                    }
+                    OrderRequest::Market { base_asset, quote_asset, side, quantity, timestamp } => {
+                        let hasher_update = |hasher: &mut VarBlake2b| {
+                            hasher.update(self.get_sender().0.to_bytes());
+                            hasher.update(base_asset.to_le_bytes());
+                            hasher.update(quote_asset.to_le_bytes());
+                            hasher.update((*side as u8).to_le_bytes());
+                            hasher.update(quantity.to_le_bytes());
+                            // TODO: add timestamp
+                            //hasher.update((timestamp as u64).to_le_bytes());
+                            hasher.update(&self.get_recent_block_hash().0[..]);
+                        };
+                        TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
+                    }
+                    OrderRequest::CancelOrder { id, side } => {
+                        let hasher_update = |hasher: &mut VarBlake2b| {
+                            hasher.update(self.get_sender().0.to_bytes());
+                            hasher.update(id.to_le_bytes());
+                            hasher.update((*side as u8).to_le_bytes());
+                            hasher.update(&self.get_recent_block_hash().0[..]);
+                        };
+                        TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
+                    }
+                    OrderRequest::Update { id, side, price, quantity, timestamp } => {
+                        let hasher_update = |hasher: &mut VarBlake2b| {
+                            hasher.update(self.get_sender().0.to_bytes());
+                            hasher.update(id.to_le_bytes());
+                            hasher.update((*side as u8).to_le_bytes());
+                            hasher.update(price.to_le_bytes());
+                            hasher.update(quantity.to_le_bytes());
+                            // TODO: add timestamp
+                            //hasher.update((timestamp as u64).to_le_bytes());
+                            hasher.update(&self.get_recent_block_hash().0[..]);
+                        };
+                        TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
+                    }
+                }
+            }
         }
     }
 }
@@ -244,6 +361,35 @@ impl SignedTransaction {
             Err(..) => Err(GDEXError::FailedVerification),
         }
     }
+}
+
+use crate::account::AccountKeyPair;
+use crate::crypto::KeypairTraits;
+
+pub fn create_payment_transaction(
+    sender_kp: &AccountKeyPair,
+    receiver_kp: &AccountKeyPair,
+    asset_id: u64,
+    amount: u64,
+    recent_block_hash: BatchDigest,
+) -> Transaction {
+    let transaction_variant =
+        TransactionVariant::PaymentTransaction(PaymentRequest::new(receiver_kp.public().clone(), asset_id, amount));
+
+    Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
+}
+
+pub fn create_asset_creation_transaction(sender_kp: &AccountKeyPair, recent_block_hash: BatchDigest) -> Transaction {
+    let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest {});
+
+    Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
+}
+
+pub fn create_orderbook_creation_transaction(sender_kp: &AccountKeyPair, base_asset_id: AssetId, quote_asset_id: AssetId, recent_block_hash: BatchDigest) -> Transaction {
+    let transaction_variant =
+        TransactionVariant::CreateOrderbookTransaction(CreateOrderbookRequest::new(base_asset_id, quote_asset_id));
+
+    Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
 }
 
 /// Begin externally available testing functions

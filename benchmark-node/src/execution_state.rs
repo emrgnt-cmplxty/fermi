@@ -75,11 +75,19 @@ impl ExecutionState for AdvancedExecutionState {
                     payment.get_amount(),
                 )
             }
-            TransactionVariant::CreateAssetTransaction(_create_asset) => self
+            TransactionVariant::CreateAssetTransaction(_create_asset) => {
+                self
                 .bank_controller
                 .lock()
                 .unwrap()
-                .create_asset(transaction.get_sender()),
+                .create_asset(transaction.get_sender())
+            }
+            TransactionVariant::CreateOrderbookTransaction(_create_orderbook) => {
+                Ok(())
+            }
+            TransactionVariant::PlaceOrderTransaction(_order) => {
+                Ok(())
+            }
         };
         match execution {
             Ok(_) => Ok((Vec::default(), None)),

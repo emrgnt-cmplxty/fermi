@@ -153,7 +153,7 @@ impl OrderbookInterface {
                     // erase existing order
                     self.order_to_account.remove(order_id).ok_or(GDEXError::OrderRequest)?;
                 }
-                Ok(Success::Amended { .. }) => {
+                Ok(Success::Updated { .. }) => {
                     panic!("This needs to be implemented...")
                 }
                 Ok(Success::Cancelled { .. }) => {
@@ -240,38 +240,41 @@ impl SpotController {
         }
     }
 
-    /// Gets the order book key for a pair of assets
-    fn get_orderbook_key(&self, base_asset_id: AssetId, quote_asset_id: AssetId) -> AssetPairKey {
+    // Gets the order book key for a pair of assets
+    fn _get_orderbook_key(&self, base_asset_id: AssetId, quote_asset_id: AssetId) -> AssetPairKey {
         format!("{}_{}", base_asset_id, quote_asset_id)
     }
 
-    /// Attempts to retrieve an order book from the controller
-    fn get_orderbook(
-        &mut self,
-        base_asset_id: AssetId,
-        quote_asset_id: AssetId,
-    ) -> Result<&mut OrderbookInterface, GDEXError> {
-        let orderbook_lookup = self.get_orderbook_key(base_asset_id, quote_asset_id);
-
-        let orderbook = self
-            .orderbooks
-            .get_mut(&orderbook_lookup)
-            .ok_or(GDEXError::AccountLookup)?;
-        Ok(orderbook)
+    // check if the orderbook has been created
+    pub fn check_orderbook_exists(&self, base_asset_id: AssetId, quote_asset_id: AssetId) -> bool {
+        let lookup_string = self._get_orderbook_key(base_asset_id, quote_asset_id);
+        self.orderbooks.contains_key(&lookup_string)
     }
 
     pub fn create_orderbook(&mut self, base_asset_id: AssetId, quote_asset_id: AssetId) -> Result<(), GDEXError> {
-        let orderbook_lookup = self.get_orderbook_key(base_asset_id, quote_asset_id);
-        if let std::collections::hash_map::Entry::Vacant(e) = self.orderbooks.entry(orderbook_lookup) {
-            e.insert(OrderbookInterface::new(
-                base_asset_id,
-                quote_asset_id,
-                Arc::clone(&self.bank_controller),
-            ));
+        let lookup_string = self._get_orderbook_key(base_asset_id, quote_asset_id);
+        if !self.check_orderbook_exists(base_asset_id, quote_asset_id) {
+            self.orderbooks.insert(
+                lookup_string,
+                OrderbookInterface::new(
+                    base_asset_id,
+                    quote_asset_id,
+                    Arc::clone(&self.bank_controller),
+                )
+            );
             Ok(())
         } else {
             Err(GDEXError::OrderBookCreation)
         }
+    }
+
+    // Attempts to retrieve an order book from the controller
+    pub fn get_orderbook(&mut self, base_asset_id: AssetId, quote_asset_id: AssetId) -> Result<&mut OrderbookInterface, GDEXError> {
+        let lookup_string = self._get_orderbook_key(base_asset_id, quote_asset_id);
+        self
+            .orderbooks
+            .get_mut(&lookup_string)
+            .ok_or(GDEXError::AccountLookup)
     }
 
     // pub fn parse_limit_order_transaction(

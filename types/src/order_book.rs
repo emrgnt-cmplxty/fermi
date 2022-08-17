@@ -4,10 +4,12 @@ use crate::asset::AssetId;
 use serde::{Deserialize, Serialize};
 use std::{fmt::Debug, time::SystemTime};
 
+pub type OrderId = u64;
+
 #[derive(Copy, Clone, Deserialize, Serialize, Debug)]
 pub enum OrderSide {
-    Bid,
-    Ask,
+    Bid = 1,
+    Ask = 2
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -31,7 +33,7 @@ pub enum Success {
     Accepted {
         order_id: u64,
         order_type: OrderType,
-        ts: SystemTime,
+        timestamp: SystemTime,
     },
 
     Filled {
@@ -40,7 +42,7 @@ pub enum Success {
         order_type: OrderType,
         price: u64,
         quantity: u64,
-        ts: SystemTime,
+        timestamp: SystemTime,
     },
 
     PartiallyFilled {
@@ -49,19 +51,19 @@ pub enum Success {
         order_type: OrderType,
         price: u64,
         quantity: u64,
-        ts: SystemTime,
+        timestamp: SystemTime,
     },
 
-    Amended {
+    Updated {
         order_id: u64,
         price: u64,
         quantity: u64,
-        ts: SystemTime,
+        timestamp: SystemTime,
     },
 
     Cancelled {
         order_id: u64,
-        ts: SystemTime,
+        timestamp: SystemTime,
     },
 }
 

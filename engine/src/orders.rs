@@ -13,14 +13,14 @@ pub fn new_market_order_request(
     quote_asset: AssetId,
     side: OrderSide,
     quantity: u64,
-    ts: SystemTime,
+    timestamp: SystemTime,
 ) -> OrderRequest {
     OrderRequest::Market {
         base_asset,
         quote_asset,
         quantity,
         side,
-        ts,
+        timestamp,
     }
 }
 
@@ -31,7 +31,7 @@ pub fn new_limit_order_request(
     side: OrderSide,
     price: u64,
     quantity: u64,
-    ts: SystemTime,
+    timestamp: SystemTime,
 ) -> OrderRequest {
     OrderRequest::Limit {
         base_asset,
@@ -39,7 +39,7 @@ pub fn new_limit_order_request(
         side,
         price,
         quantity,
-        ts,
+        timestamp,
     }
 }
 
@@ -47,13 +47,13 @@ pub fn new_limit_order_request(
 ///
 /// Note: do not change order side!
 /// Instead cancel existing order and create a new one.
-pub fn amend_order_request(id: u64, side: OrderSide, price: u64, quantity: u64, ts: SystemTime) -> OrderRequest {
-    OrderRequest::Amend {
+pub fn update_order_request(id: u64, side: OrderSide, price: u64, quantity: u64, timestamp: SystemTime) -> OrderRequest {
+    OrderRequest::Update {
         id,
         side,
         price,
         quantity,
-        ts,
+        timestamp,
     }
 }
 

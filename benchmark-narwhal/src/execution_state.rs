@@ -80,6 +80,8 @@ impl ExecutionState for AdvancedExecutionState {
                 .lock()
                 .unwrap()
                 .create_asset(transaction.get_sender()),
+            TransactionVariant::CreateOrderbookTransaction(_create_orderbook) => Ok(()),
+            TransactionVariant::PlaceOrderTransaction(_order) => Ok(()),
         };
         match execution {
             Ok(_) => Ok((Vec::default(), None)),

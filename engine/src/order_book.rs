@@ -70,58 +70,65 @@ impl Orderbook {
 
         match order {
             OrderRequest::Market {
-                base_asset,
-                quote_asset,
+                base_asset_id,
+                quote_asset_id,
                 side,
                 quantity,
-                ts: _ts,
+                local_timestamp: _ts,
             } => {
                 // generate new ID for order
                 let order_id = self.seq.next_id();
                 proc_result.push(Ok(Success::Accepted {
                     order_id,
                     order_type: OrderType::Market,
-                    ts: SystemTime::now(),
+                    timestamp: SystemTime::now(),
                 }));
 
-                self.process_market_order(&mut proc_result, order_id, base_asset, quote_asset, side, quantity);
+                self.process_market_order(
+                    &mut proc_result,
+                    order_id,
+                    base_asset_id,
+                    quote_asset_id,
+                    side,
+                    quantity,
+                );
             }
 
             OrderRequest::Limit {
-                base_asset,
-                quote_asset,
+                base_asset_id,
+                quote_asset_id,
                 side,
                 price,
                 quantity,
-                ts,
+                local_timestamp,
             } => {
                 let order_id = self.seq.next_id();
                 proc_result.push(Ok(Success::Accepted {
                     order_id,
                     order_type: OrderType::Limit,
-                    ts: SystemTime::now(),
+                    timestamp: SystemTime::now(),
                 }));
 
                 self.process_limit_order(
                     &mut proc_result,
                     order_id,
-                    base_asset,
-                    quote_asset,
+                    base_asset_id,
+                    quote_asset_id,
                     side,
                     price,
                     quantity,
-                    ts,
+                    local_timestamp,
                 );
             }
 
-            OrderRequest::Amend {
+            OrderRequest::Update {
                 id,
                 side,
                 price,
                 quantity,
-                ts,
+                local_timestamp,
             } => {
-                self.process_order_amend(&mut proc_result, id, side, price, quantity, ts);
+                self.process_order_update(&mut proc_result, id, side, price, quantity, local_timestamp);
             }
 
             OrderRequest::CancelOrder { id, side } => {
@@ -200,7 +207,7 @@ impl Orderbook {
         side: OrderSide,
         price: u64,
         quantity: u64,
-        ts: SystemTime,
+        timestamp: SystemTime,
     ) {
         // take a look at current opposite limit order
         let opposite_order_result = {
@@ -241,36 +248,54 @@ impl Orderbook {
                         side,
                         price,
                         quantity - opposite_order.quantity,
-                        ts,
+                        timestamp,
                     );
                 }
             } else {
                 // just insert new order in queue
-                self.store_new_limit_order(results, order_id, base_asset, quote_asset, side, price, quantity, ts);
+                self.store_new_limit_order(
+                    results,
+                    order_id,
+                    base_asset,
+                    quote_asset,
+                    side,
+                    price,
+                    quantity,
+                    timestamp,
+                );
             }
         } else {
-            self.store_new_limit_order(results, order_id, base_asset, quote_asset, side, price, quantity, ts);
+            self.store_new_limit_order(
+                results,
+                order_id,
+                base_asset,
+                quote_asset,
+                side,
+                price,
+                quantity,
+                timestamp,
+            );
         }
     }
 
-    fn process_order_amend(
+    fn process_order_update(
         &mut self,
         results: &mut OrderProcessingResult,
         order_id: u64,
         side: OrderSide,
         price: u64,
         quantity: u64,
-        ts: SystemTime,
+        timestamp: SystemTime,
     ) {
         let order_queue = match side {
             OrderSide::Bid => &mut self.bid_queue,
             OrderSide::Ask => &mut self.ask_queue,
         };
 
-        if order_queue.amend(
+        if order_queue.update(
             order_id,
             price,
-            ts,
+            timestamp,
             Order {
                 order_id,
                 base_asset: self.base_asset,
@@ -280,11 +305,11 @@ impl Orderbook {
                 quantity,
             },
         ) {
-            results.push(Ok(Success::Amended {
+            results.push(Ok(Success::Updated {
                 order_id,
                 price,
                 quantity,
-                ts: SystemTime::now(),
+                timestamp: SystemTime::now(),
             }));
         } else {
             results.push(Err(Failed::OrderNotFound(order_id)));
@@ -300,7 +325,7 @@ impl Orderbook {
         if order_queue.cancel(order_id) {
             results.push(Ok(Success::Cancelled {
                 order_id,
-                ts: SystemTime::now(),
+                timestamp: SystemTime::now(),
             }));
         } else {
             results.push(Err(Failed::OrderNotFound(order_id)));
@@ -319,7 +344,7 @@ impl Orderbook {
         side: OrderSide,
         price: u64,
         quantity: u64,
-        ts: SystemTime,
+        timestamp: SystemTime,
     ) {
         let order_queue = match side {
             OrderSide::Bid => &mut self.bid_queue,
@@ -328,7 +353,7 @@ impl Orderbook {
         if !order_queue.insert(
             order_id,
             price,
-            ts,
+            timestamp,
             Order {
                 order_id,
                 base_asset,
@@ -368,7 +393,7 @@ impl Orderbook {
                     order_type,
                     price: opposite_order.price,
                     quantity,
-                    ts: deal_time,
+                    timestamp: deal_time,
                 }));
 
                 // report partially filled opposite limit order
@@ -378,7 +403,7 @@ impl Orderbook {
                     order_type: OrderType::Limit,
                     price: opposite_order.price,
                     quantity,
-                    ts: deal_time,
+                    timestamp: deal_time,
                 }));
 
                 // modify unmatched part of the opposite limit order
@@ -406,7 +431,7 @@ impl Orderbook {
                     order_type,
                     price: opposite_order.price,
                     quantity: opposite_order.quantity,
-                    ts: deal_time,
+                    timestamp: deal_time,
                 }));
 
                 // report filled opposite limit order
@@ -416,7 +441,7 @@ impl Orderbook {
                     order_type: OrderType::Limit,
                     price: opposite_order.price,
                     quantity: opposite_order.quantity,
-                    ts: deal_time,
+                    timestamp: deal_time,
                 }));
 
                 // remove filled limit order from the queue
@@ -440,7 +465,7 @@ impl Orderbook {
                     order_type,
                     price: opposite_order.price,
                     quantity,
-                    ts: deal_time,
+                    timestamp: deal_time,
                 }));
                 // report filled opposite limit order
                 results.push(Ok(Success::Filled {
@@ -449,7 +474,7 @@ impl Orderbook {
                     order_type: OrderType::Limit,
                     price: opposite_order.price,
                     quantity,
-                    ts: deal_time,
+                    timestamp: deal_time,
                 }));
 
                 // remove filled limit order from the queue
@@ -472,7 +497,7 @@ mod test_order_book {
 
     use super::*;
     use crate::orders::{
-        amend_order_request, limit_order_cancel_request, new_limit_order_request, new_market_order_request,
+        limit_order_cancel_request, new_limit_order_request, new_market_order_request, update_order_request,
     };
 
     const BASE_ASSET: u64 = 0;
@@ -521,7 +546,7 @@ mod test_order_book {
     }
 
     #[test]
-    pub fn successful_amend() {
+    pub fn successful_update() {
         let mut order_book = Orderbook::new(BASE_ASSET, QUOTE_ASSET);
 
         // create and process limit order
@@ -532,8 +557,8 @@ mod test_order_book {
 
         match order_result {
             Success::Accepted { order_id, .. } => {
-                let amend_order = amend_order_request(order_id, OrderSide::Bid, 100, 100, SystemTime::now());
-                order_book.process_order(amend_order).pop().unwrap().unwrap();
+                let update_order = update_order_request(order_id, OrderSide::Bid, 100, 100, SystemTime::now());
+                order_book.process_order(update_order).pop().unwrap().unwrap();
             }
             _ => {
                 panic!("unexpected match result");

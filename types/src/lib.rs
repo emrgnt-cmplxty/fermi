@@ -12,8 +12,7 @@ pub mod error;
 
 pub mod node;
 
-mod proto;
-pub use proto::*;
+pub mod proto;
 
 pub mod order_book;
 

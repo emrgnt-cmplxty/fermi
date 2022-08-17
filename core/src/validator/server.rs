@@ -10,14 +10,13 @@ use crate::{
 use anyhow::anyhow;
 use async_trait::async_trait;
 use futures::StreamExt;
-use gdex_server::api::{ValidatorAPI, ValidatorAPIServer};
 use gdex_types::{
-    crypto::KeypairTraits, node::TransactionResult, transaction::SignedTransaction, Empty, TransactionProto,
-    Transactions, TransactionsServer,
+    crypto::KeypairTraits,
+    proto::{Empty, TransactionProto, Transactions, TransactionsServer},
+    transaction::SignedTransaction,
 };
 use multiaddr::Multiaddr;
 use narwhal_executor::SubscriberError;
-use narwhal_types::TransactionsClient;
 use prometheus::Registry;
 use std::{io, sync::Arc};
 use tokio::{
@@ -55,8 +54,9 @@ pub struct ValidatorServer {
 
 impl ValidatorServer {
     pub fn new(address: Multiaddr, state: Arc<ValidatorState>, consensus_address: Multiaddr) -> Self {
-        let consensus_client =
-            TransactionsClient::new(client::connect_lazy(&consensus_address).expect("Failed to connect to consensus"));
+        let consensus_client = narwhal_types::TransactionsClient::new(
+            client::connect_lazy(&consensus_address).expect("Failed to connect to consensus"),
+        );
         let consensus_adapter = ConsensusAdapter {
             consensus_client,
             consensus_address,
@@ -254,16 +254,13 @@ impl Transactions for ValidatorService {
 #[cfg(test)]
 mod test_validator_server {
     use super::*;
-    use crate::{
-        builder::genesis_state::GenesisStateBuilder,
-        client::{ClientAPI, NetworkValidatorClient},
-        genesis_ceremony::VALIDATOR_FUNDING_AMOUNT,
-    };
+    use crate::{builder::genesis_state::GenesisStateBuilder, genesis_ceremony::VALIDATOR_FUNDING_AMOUNT};
     use gdex_controller::master::MasterController;
     use gdex_types::{
         account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair, ValidatorPubKeyBytes},
         crypto::{get_key_pair_from_rng, KeypairTraits},
         node::ValidatorInfo,
+        proto::TransactionsClient,
         transaction::transaction_test_functions::generate_signed_test_transaction,
         utils,
     };
@@ -309,14 +306,18 @@ mod test_validator_server {
     pub async fn server_process_transaction() {
         let handle_result = spawn_validator_server().await;
         let handle = handle_result.unwrap();
-        let client = NetworkValidatorClient::connect_lazy(&handle.address()).unwrap();
+        let mut client =
+            TransactionsClient::new(client::connect_lazy(&handle.address()).expect("Failed to connect to consensus"));
 
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
         let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
+        let transaction_proto = TransactionProto {
+            transaction: signed_transaction.serialize().unwrap().into(),
+        };
 
         let _resp1 = client
-            .handle_transaction(signed_transaction)
+            .submit_transaction(transaction_proto)
             .await
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e));
     }

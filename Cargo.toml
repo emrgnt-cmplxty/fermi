@@ -5,7 +5,6 @@ members = [
     "engine",
     "controller",
     "node",
-    "server",
     "suite",
     "types",
     "benchmark-gdex",

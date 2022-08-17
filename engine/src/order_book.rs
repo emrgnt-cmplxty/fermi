@@ -84,7 +84,14 @@ impl Orderbook {
                     timestamp: SystemTime::now(),
                 }));
 
-                self.process_market_order(&mut proc_result, order_id, base_asset_id, quote_asset_id, side, quantity);
+                self.process_market_order(
+                    &mut proc_result,
+                    order_id,
+                    base_asset_id,
+                    quote_asset_id,
+                    side,
+                    quantity,
+                );
             }
 
             OrderRequest::Limit {

@@ -17,7 +17,9 @@ use blake2::{digest::Update, VarBlake2b};
 use narwhal_crypto::{Digest, Hash, Verifier, DIGEST_LEN};
 use narwhal_types::BatchDigest;
 use serde::{Deserialize, Serialize};
-use std::{fmt, fmt::Debug, time::SystemTime};
+use std::{fmt, fmt::Debug,
+    time::{SystemTime, UNIX_EPOCH}
+};
 
 pub const SERIALIZED_TRANSACTION_LENGTH: usize = 280;
 
@@ -211,6 +213,10 @@ impl From<TransactionDigest> for Digest {
     }
 }
 
+fn convert_system_time_to_int(timestamp: SystemTime) -> u128 {
+    timestamp.duration_since(UNIX_EPOCH).unwrap().as_millis()
+}
+
 impl Hash for Transaction {
     type TypedDigest = TransactionDigest;
 
@@ -252,6 +258,7 @@ impl Hash for Transaction {
                         quantity,
                         timestamp,
                     } => {
+                        let ts = convert_system_time_to_int(*timestamp);
                         let hasher_update = |hasher: &mut VarBlake2b| {
                             hasher.update(self.get_sender().0.to_bytes());
                             hasher.update(base_asset_id.to_le_bytes());
@@ -259,8 +266,7 @@ impl Hash for Transaction {
                             hasher.update((*side as u8).to_le_bytes());
                             hasher.update(price.to_le_bytes());
                             hasher.update(quantity.to_le_bytes());
-                            // TODO: add timestamp
-                            //hasher.update((timestamp as u64).to_le_bytes());
+                            hasher.update(ts.to_le_bytes());
                             hasher.update(&self.get_recent_block_hash().0[..]);
                         };
                         TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
@@ -272,14 +278,14 @@ impl Hash for Transaction {
                         quantity,
                         timestamp,
                     } => {
+                        let ts = convert_system_time_to_int(*timestamp);
                         let hasher_update = |hasher: &mut VarBlake2b| {
                             hasher.update(self.get_sender().0.to_bytes());
                             hasher.update(base_asset_id.to_le_bytes());
                             hasher.update(quote_asset_id.to_le_bytes());
                             hasher.update((*side as u8).to_le_bytes());
                             hasher.update(quantity.to_le_bytes());
-                            // TODO: add timestamp
-                            //hasher.update((timestamp as u64).to_le_bytes());
+                            hasher.update(ts.to_le_bytes());
                             hasher.update(&self.get_recent_block_hash().0[..]);
                         };
                         TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
@@ -300,14 +306,14 @@ impl Hash for Transaction {
                         quantity,
                         timestamp,
                     } => {
+                        let ts = convert_system_time_to_int(*timestamp);
                         let hasher_update = |hasher: &mut VarBlake2b| {
                             hasher.update(self.get_sender().0.to_bytes());
                             hasher.update(id.to_le_bytes());
                             hasher.update((*side as u8).to_le_bytes());
                             hasher.update(price.to_le_bytes());
                             hasher.update(quantity.to_le_bytes());
-                            // TODO: add timestamp
-                            //hasher.update((timestamp as u64).to_le_bytes());
+                            hasher.update(ts.to_le_bytes());
                             hasher.update(&self.get_recent_block_hash().0[..]);
                         };
                         TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
@@ -425,17 +431,15 @@ pub fn create_place_limit_order_transaction(
     quantity: AssetAmount,
     recent_block_hash: BatchDigest,
 ) -> Transaction {
-
     let timestamp = SystemTime::now();
-    let transaction_variant =
-        TransactionVariant::PlaceOrderTransaction(OrderRequest::Limit { 
-            base_asset_id,
-            quote_asset_id,
-            side,
-            price,
-            quantity,
-            timestamp
-        });
+    let transaction_variant = TransactionVariant::PlaceOrderTransaction(OrderRequest::Limit {
+        base_asset_id,
+        quote_asset_id,
+        side,
+        price,
+        quantity,
+        timestamp,
+    });
 
     Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
 }

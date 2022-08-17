@@ -10,7 +10,7 @@ use gdex_types::{
     account::ValidatorKeyPair,
     committee::{Committee, ValidatorName},
     error::GDEXError,
-    transaction::{SignedTransaction, TransactionDigest, TransactionVariant, OrderRequest},
+    transaction::{OrderRequest, SignedTransaction, TransactionDigest, TransactionVariant},
 };
 use narwhal_executor::{ExecutionIndices, ExecutionState};
 use std::{
@@ -125,23 +125,43 @@ impl ExecutionState for ValidatorState {
                 .create_orderbook(orderbook.get_base_asset_id(), orderbook.get_quote_asset_id())?,
             TransactionVariant::PlaceOrderTransaction(order) => {
                 match order {
-                    OrderRequest::Market { base_asset_id, quote_asset_id, side, quantity, timestamp } => {
-                    }
-                    OrderRequest::Limit { base_asset_id, quote_asset_id, side, price, quantity, timestamp } => {
+                    OrderRequest::Market {
+                        base_asset_id,
+                        quote_asset_id,
+                        side,
+                        quantity,
+                        timestamp,
+                    } => {}
+                    OrderRequest::Limit {
+                        base_asset_id,
+                        quote_asset_id,
+                        side,
+                        price,
+                        quantity,
+                        timestamp,
+                    } => {
                         // TODO: find out why these u64 are references
-                        self.master_controller.spot_controller.lock().unwrap().place_limit_order(
-                            *base_asset_id,
-                            *quote_asset_id,
-                            transaction.get_sender(),
-                            *side,
-                            *quantity,
-                            *price
-                        )?
+                        self.master_controller
+                            .spot_controller
+                            .lock()
+                            .unwrap()
+                            .place_limit_order(
+                                *base_asset_id,
+                                *quote_asset_id,
+                                transaction.get_sender(),
+                                *side,
+                                *quantity,
+                                *price,
+                            )?
                     }
-                    OrderRequest::CancelOrder { id, side } => {
-                    }
-                    OrderRequest::Update { id, side, price, quantity, timestamp } => {
-                    }
+                    OrderRequest::CancelOrder { id, side } => {}
+                    OrderRequest::Update {
+                        id,
+                        side,
+                        price,
+                        quantity,
+                        timestamp,
+                    } => {}
                 }
             }
         };
@@ -171,10 +191,11 @@ mod test_validator_state {
         account::ValidatorPubKeyBytes,
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
         node::ValidatorInfo,
+        order_book::OrderSide,
         transaction::{
-            create_asset_creation_transaction, create_orderbook_creation_transaction, create_payment_transaction, create_place_limit_order_transaction, SignedTransaction
+            create_asset_creation_transaction, create_orderbook_creation_transaction, create_payment_transaction,
+            create_place_limit_order_transaction, SignedTransaction,
         },
-        order_book::{OrderSide},
         utils,
     };
     use narwhal_consensus::ConsensusOutput;
@@ -443,7 +464,7 @@ mod test_validator_state {
             OrderSide::Bid,
             TEST_PRICE,
             TEST_QUANTITY,
-            recent_block_hash
+            recent_block_hash,
         );
         let signed_digest = sender_kp.sign(&place_limit_order_txn.digest().get_array()[..]);
         let signed_create_asset_txn =
@@ -457,6 +478,5 @@ mod test_validator_state {
             )
             .await
             .unwrap();
-
     }
 }

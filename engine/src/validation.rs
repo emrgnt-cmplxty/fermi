@@ -40,21 +40,21 @@ impl OrderRequestValidator {
     pub fn validate(&self, request: &OrderRequest) -> Result<(), &str> {
         match *request {
             OrderRequest::Market {
-                base_asset,
-                quote_asset,
+                base_asset_id,
+                quote_asset_id,
                 side: _side,
                 quantity,
                 timestamp: _ts,
-            } => self.validate_market(base_asset, quote_asset, quantity),
+            } => self.validate_market(base_asset_id, quote_asset_id, quantity),
 
             OrderRequest::Limit {
-                base_asset,
-                quote_asset,
+                base_asset_id,
+                quote_asset_id,
                 side: _side,
                 price,
                 quantity,
                 timestamp: _ts,
-            } => self.validate_limit(base_asset, quote_asset, price, quantity),
+            } => self.validate_limit(base_asset_id, quote_asset_id, price, quantity),
 
             OrderRequest::Update {
                 id,

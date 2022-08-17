@@ -9,15 +9,15 @@ use std::time::SystemTime;
 
 /// Create request for the new market order
 pub fn new_market_order_request(
-    base_asset: AssetId,
-    quote_asset: AssetId,
+    base_asset_id: AssetId,
+    quote_asset_id: AssetId,
     side: OrderSide,
     quantity: u64,
     timestamp: SystemTime,
 ) -> OrderRequest {
     OrderRequest::Market {
-        base_asset,
-        quote_asset,
+        base_asset_id,
+        quote_asset_id,
         quantity,
         side,
         timestamp,
@@ -26,16 +26,16 @@ pub fn new_market_order_request(
 
 /// Create request for the new limit order
 pub fn new_limit_order_request(
-    base_asset: AssetId,
-    quote_asset: AssetId,
+    base_asset_id: AssetId,
+    quote_asset_id: AssetId,
     side: OrderSide,
     price: u64,
     quantity: u64,
     timestamp: SystemTime,
 ) -> OrderRequest {
     OrderRequest::Limit {
-        base_asset,
-        quote_asset,
+        base_asset_id,
+        quote_asset_id,
         side,
         price,
         quantity,

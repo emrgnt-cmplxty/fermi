@@ -70,8 +70,8 @@ impl Orderbook {
 
         match order {
             OrderRequest::Market {
-                base_asset,
-                quote_asset,
+                base_asset_id,
+                quote_asset_id,
                 side,
                 quantity,
                 timestamp: _ts,
@@ -84,12 +84,12 @@ impl Orderbook {
                     timestamp: SystemTime::now(),
                 }));
 
-                self.process_market_order(&mut proc_result, order_id, base_asset, quote_asset, side, quantity);
+                self.process_market_order(&mut proc_result, order_id, base_asset_id, quote_asset_id, side, quantity);
             }
 
             OrderRequest::Limit {
-                base_asset,
-                quote_asset,
+                base_asset_id,
+                quote_asset_id,
                 side,
                 price,
                 quantity,
@@ -105,8 +105,8 @@ impl Orderbook {
                 self.process_limit_order(
                     &mut proc_result,
                     order_id,
-                    base_asset,
-                    quote_asset,
+                    base_asset_id,
+                    quote_asset_id,
                     side,
                     price,
                     quantity,

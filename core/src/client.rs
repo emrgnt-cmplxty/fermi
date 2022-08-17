@@ -7,12 +7,8 @@ use crate::{
     multiaddr::{parse_dns, parse_ip4, parse_ip6},
 };
 use anyhow::{anyhow, Context, Result};
-use async_trait::async_trait;
-use gdex_server::api::ValidatorAPIClient;
-use gdex_types::{error::GDEXError, transaction::SignedTransaction};
 use multiaddr::{Multiaddr, Protocol};
 use tonic::transport::{Channel, Endpoint, Uri};
-use tracing::debug;
 
 pub async fn connect(address: &Multiaddr) -> Result<Channel> {
     let channel = endpoint_from_multiaddr(address)?.connect().await?;
@@ -66,58 +62,6 @@ fn endpoint_from_multiaddr(addr: &Multiaddr) -> Result<TargetEndpoint> {
     Ok(channel)
 }
 
-#[derive(Clone)]
-pub struct NetworkValidatorClient {
-    client: ValidatorAPIClient<tonic::transport::Channel>,
-}
-
-impl NetworkValidatorClient {
-    pub async fn connect(address: &Multiaddr) -> anyhow::Result<Self> {
-        let channel = connect(address).await?;
-        Ok(Self::new(channel))
-    }
-
-    pub fn connect_lazy(address: &Multiaddr) -> anyhow::Result<Self> {
-        let channel = connect_lazy(address)?;
-        Ok(Self::new(channel))
-    }
-
-    pub fn new(channel: tonic::transport::Channel) -> Self {
-        Self {
-            client: ValidatorAPIClient::new(channel),
-        }
-    }
-
-    fn client(&self) -> ValidatorAPIClient<tonic::transport::Channel> {
-        self.client.clone()
-    }
-}
-
-#[async_trait]
-pub trait ClientAPI {
-    /// Initiate a new transaction to a Sui or Primary account.
-    async fn handle_transaction(
-        &self,
-        transaction: SignedTransaction,
-    ) -> Result<tonic::Response<SignedTransaction>, GDEXError>;
-}
-
-#[async_trait]
-impl ClientAPI for NetworkValidatorClient {
-    /// Initiate a new transfer to a Sui or Primary account.
-    async fn handle_transaction(
-        &self,
-        transaction: SignedTransaction,
-    ) -> Result<tonic::Response<SignedTransaction>, GDEXError> {
-        debug!("Handling a new transaction with a NetworkValidatorClient ClientAPI",);
-
-        self.client()
-            .transaction(transaction)
-            .await
-            // .map(tonic::Response::into_inner)
-            .map_err(Into::into)
-    }
-}
 /// Creates a new endpoint and facilitates connectivity
 struct TargetEndpoint {
     endpoint: Endpoint,

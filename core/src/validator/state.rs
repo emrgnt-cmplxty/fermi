@@ -21,8 +21,7 @@ use std::{
         Arc, Mutex,
     },
 };
-use tracing::{debug, info};
-
+use tracing::{info, trace};
 /// Tracks recently submitted transactions to eventually implement transaction gating
 // TODO - implement the gating and garbage collection
 pub struct ValidatorStore {
@@ -84,7 +83,7 @@ impl ValidatorState {
 impl ValidatorState {
     /// Initiate a new transaction.
     pub async fn handle_transaction(&self, _transaction: &SignedTransaction) -> Result<(), GDEXError> {
-        debug!("Handling a new transaction with the ValidatorState",);
+        trace!("Handling a new transaction with the ValidatorState",);
         Ok(())
     }
 }

@@ -44,7 +44,7 @@ impl OrderRequestValidator {
                 quote_asset_id,
                 side: _side,
                 quantity,
-                timestamp: _ts,
+                local_timestamp: _ts,
             } => self.validate_market(base_asset_id, quote_asset_id, quantity),
 
             OrderRequest::Limit {
@@ -53,7 +53,7 @@ impl OrderRequestValidator {
                 side: _side,
                 price,
                 quantity,
-                timestamp: _ts,
+                local_timestamp: _ts,
             } => self.validate_limit(base_asset_id, quote_asset_id, price, quantity),
 
             OrderRequest::Update {
@@ -61,7 +61,7 @@ impl OrderRequestValidator {
                 price,
                 side: _side,
                 quantity,
-                timestamp: _ts,
+                local_timestamp: _ts,
             } => self.validate_update(id, price, quantity),
 
             OrderRequest::CancelOrder { id, side: _side } => self.validate_cancel(id),

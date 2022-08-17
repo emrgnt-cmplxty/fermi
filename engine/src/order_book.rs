@@ -74,7 +74,7 @@ impl Orderbook {
                 quote_asset_id,
                 side,
                 quantity,
-                timestamp: _ts,
+                local_timestamp,
             } => {
                 // generate new ID for order
                 let order_id = self.seq.next_id();
@@ -100,7 +100,7 @@ impl Orderbook {
                 side,
                 price,
                 quantity,
-                timestamp,
+                local_timestamp,
             } => {
                 let order_id = self.seq.next_id();
                 proc_result.push(Ok(Success::Accepted {
@@ -117,7 +117,7 @@ impl Orderbook {
                     side,
                     price,
                     quantity,
-                    timestamp,
+                    local_timestamp,
                 );
             }
 
@@ -126,9 +126,9 @@ impl Orderbook {
                 side,
                 price,
                 quantity,
-                timestamp,
+                local_timestamp,
             } => {
-                self.process_order_update(&mut proc_result, id, side, price, quantity, timestamp);
+                self.process_order_update(&mut proc_result, id, side, price, quantity, local_timestamp);
             }
 
             OrderRequest::CancelOrder { id, side } => {

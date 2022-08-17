@@ -130,17 +130,20 @@ impl ExecutionState for ValidatorState {
                         quote_asset_id,
                         side,
                         quantity,
-                        timestamp,
-                    } => {}
+                        local_timestamp,
+                    } => {
+                        dbg!(base_asset_id, quote_asset_id, side, quantity, local_timestamp);
+                    }
                     OrderRequest::Limit {
                         base_asset_id,
                         quote_asset_id,
                         side,
                         price,
                         quantity,
-                        timestamp,
+                        local_timestamp,
                     } => {
                         // TODO: find out why these u64 are references
+                        dbg!(local_timestamp);
                         self.master_controller
                             .spot_controller
                             .lock()
@@ -154,14 +157,18 @@ impl ExecutionState for ValidatorState {
                                 *price,
                             )?
                     }
-                    OrderRequest::CancelOrder { id, side } => {}
+                    OrderRequest::CancelOrder { id, side } => {
+                        dbg!(id, side);
+                    }
                     OrderRequest::Update {
                         id,
                         side,
                         price,
                         quantity,
-                        timestamp,
-                    } => {}
+                        local_timestamp,
+                    } => {
+                        dbg!(id, side, price, quantity, local_timestamp);
+                    }
                 }
             }
         };

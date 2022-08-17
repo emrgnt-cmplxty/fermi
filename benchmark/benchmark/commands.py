@@ -45,7 +45,7 @@ class CommandMaker:
         return command
 
     @staticmethod
-    def run_gdex_primary(db_dir, genesis_dir, key_dir, validator_name, validator_port, debug=False):
+    def run_gdex_node(db_dir, genesis_dir, key_dir, validator_name, validator_port, debug=False):
         assert isinstance(db_dir, str)
         assert isinstance(genesis_dir, str)
         assert isinstance(key_dir, str)

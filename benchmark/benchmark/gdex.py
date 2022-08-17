@@ -87,7 +87,7 @@ class GDEXBench:
 
             # Run the primaries
             for id, node_name in enumerate(nodes.keys()):
-                cmd = CommandMaker.run_gdex_primary(
+                cmd = CommandMaker.run_gdex_node(
                     self.db_dir,
                     self.genesis_dir,
                     self.key_dir,

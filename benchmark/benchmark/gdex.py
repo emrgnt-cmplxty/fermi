@@ -78,9 +78,7 @@ class GDEXBench:
             for id, address in enumerate(nodes.values()):
                     cmd = CommandMaker.run_gdex_client(
                         url_to_multiaddr(address),
-                        512,
                         rate_share,
-                        "advanced",
                         [x for x in nodes.values() if x != address]
                     )
                     print(cmd)

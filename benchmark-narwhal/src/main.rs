@@ -132,6 +132,7 @@ async fn main() -> Result<()> {
 }
 
 // Runs either a worker or a primary.
+#[allow(clippy::let_and_return)]
 async fn run(matches: &ArgMatches<'_>) -> Result<()> {
     let key_file = matches.value_of("keys").unwrap();
     let committee_file = matches.value_of("committee").unwrap();

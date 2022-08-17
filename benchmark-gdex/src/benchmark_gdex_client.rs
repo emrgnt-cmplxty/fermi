@@ -1,9 +1,9 @@
 // Copyright (c) 2021, Facebook, Inc. and its affiliates
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-use anyhow::{Context, Error, Result};
+use anyhow::{Context, Result};
 use clap::{crate_name, crate_version, App, AppSettings};
-use futures::{future::join_all};
+use futures::future::join_all;
 use gdex_core::client::{ClientAPI, NetworkValidatorClient};
 use gdex_types::{
     account::AccountKeyPair,
@@ -16,7 +16,6 @@ use narwhal_crypto::{
 };
 use narwhal_types::BatchDigest;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use std::str::FromStr;
 use tokio::{
     net::TcpStream,
     time::{interval, sleep, Duration, Instant},
@@ -36,7 +35,6 @@ fn create_signed_transaction(
     kp_sender: &AccountKeyPair,
     kp_receiver: &AccountKeyPair,
     amount: u64,
-    _transmission_size: usize,
 ) -> SignedTransaction {
     // use a dummy batch digest for initial benchmarking
     let dummy_batch_digest = BatchDigest::new([0; DIGEST_LEN]);
@@ -60,9 +58,7 @@ async fn main() -> Result<()> {
         .version(crate_version!())
         .about("Benchmark client for Narwhal and Tusk.")
         .args_from_usage("<ADDR> 'The network address of the node where to send txs'")
-        .args_from_usage("--size=<INT> 'The size of each transaction in bytes'")
         .args_from_usage("--rate=<INT> 'The rate (txs/s) at which to send the transactions'")
-        .args_from_usage("--execution=<EXECUTION> 'The rate (txs/s) at which to send the transactions'")
         .args_from_usage("--nodes=[ADDR]... 'Network addresses that must be reachable before starting the benchmark.'")
         .setting(AppSettings::ArgRequiredElseHelp)
         .get_matches();
@@ -85,13 +81,8 @@ async fn main() -> Result<()> {
 
     let target_str = matches.value_of("ADDR").unwrap();
     let target = target_str
-        .parse::<String>()
+        .parse::<Multiaddr>()
         .with_context(|| format!("Invalid url format {target_str}"))?;
-    let size = matches
-        .value_of("size")
-        .unwrap()
-        .parse::<usize>()
-        .context("The size of transactions must be a non-negative integer")?;
     let rate = matches
         .value_of("rate")
         .unwrap()
@@ -106,19 +97,9 @@ async fn main() -> Result<()> {
         .with_context(|| format!("Invalid url format {target_str}"))?;
 
     info!("Node address: {target}");
-
-    // NOTE: This log entry is used to compute performance.
-    info!("Transactions size: {size} B");
-
-    // NOTE: This log entry is used to compute performance.
     info!("Transactions rate: {rate} tx/s");
 
-    let client = Client {
-        target,
-        size,
-        rate,
-        nodes,
-    };
+    let client = Client { target, rate, nodes };
 
     // Wait for all nodes to be online and synchronized.
     client.wait().await;
@@ -129,8 +110,7 @@ async fn main() -> Result<()> {
 
 /// TODO - add do_real_transaction as boolean field on client
 struct Client {
-    target: String,
-    size: usize,
+    target: Multiaddr,
     rate: u64,
     nodes: Vec<Url>,
 }
@@ -140,25 +120,14 @@ impl Client {
         const PRECISION: u64 = 20; // Sample precision.
         const BURST_DURATION: u64 = 1000 / PRECISION;
 
-        // The transaction size must be at least 16 bytes to ensure all txs are different.
-        if self.size < 9 {
-            return Err(Error::msg("Transaction size must be at least 9 bytes"));
-        }
-
-        // Connect to the mempool.
-        // let mut client = TransactionsClient::connect(self.target.as_str().to_owned())
-        //     .await
-        //     .context(format!("failed to connect to {}", self.target))?;
-        let validator_port = Multiaddr::from_str(&self.target.as_str()).unwrap();
-
-        let client = NetworkValidatorClient::connect(&validator_port).await.unwrap();
+        let client = NetworkValidatorClient::connect(&self.target).await.unwrap();
 
         // Submit all transactions.
         let burst = self.rate / PRECISION;
         let mut counter = 0;
         // select a number from a range that is gaurenteed to be larger than the size of transactions submitted
         // but, not so large that we can exhaust the primary senders balance
-        let mut r = rand::thread_rng().gen_range(self.size as u64, (2 * self.size) as u64);
+        let mut r = rand::thread_rng().gen_range(100_000 as u64, 1_000_000 as u64);
         let interval = interval(Duration::from_millis(BURST_DURATION));
         tokio::pin!(interval);
 
@@ -172,8 +141,6 @@ impl Client {
             let now = Instant::now();
 
             // copy into a new variablet o avoid we get lifetime errors in the stream
-            let size = self.size;
-
             for _x in 0..burst {
                 let amount = if 0 == counter % burst {
                     // NOTE: This log entry is used to compute performance.
@@ -183,10 +150,9 @@ impl Client {
                     r += 1;
                     r
                 };
-                let signed_tranasction =
-                    create_signed_transaction(&kp_sender, &kp_receiver, amount, /* transmission_size */ size);
+                let signed_tranasction = create_signed_transaction(&kp_sender, &kp_receiver, amount);
 
-                if let Err(e) = client.handle_transaction(signed_tranasction.clone()).await {
+                if let Err(e) = client.handle_transaction(signed_tranasction).await {
                     warn!("Failed to send transaction: {e}");
                     break 'main;
                 }

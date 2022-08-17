@@ -1,5 +1,5 @@
 [package]
-name = "benchmark-node"
+name = "benchmark-narwhal"
 version = "0.1.0"
 license = "Apache-2.0"
 authors = ["Mysten Labs <build@mystenlabs.com>"]
@@ -15,6 +15,7 @@ bytes = "1.2.0"
 cfg-if = "1.0.0"
 clap = "2.34"
 futures = "0.3.21"
+multiaddr = "0.14.0"
 rand = "0.7.3"
 store = { git = "https://github.com/mystenlabs/mysten-infra.git", package = "typed-store", rev = "123c9e40b529315e1c1d91a54fb717111c3e349c" }
 thiserror = "1.0.31"
@@ -31,9 +32,6 @@ dhat = { version = "0.3.0", optional = true }
 axum = "0.5.13"
 tempfile = "3.3.0"
 prometheus = "0.13.1"
-gdex-workspace-hack = { version = "0.1", path = "../workspace-hack" }
-gdex-controller = { path = "../controller" }
-gdex-types = { path = "../types" }
 
 # narwhal crates
 narwhal-node = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "node" }
@@ -45,6 +43,12 @@ narwhal-primary = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37
 narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "types" }
 narwhal-worker = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "worker" }
 narwhal-network = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "network" }
+
+# local crates
+gdex-core = { path = "../core" }
+gdex-controller = { path = "../controller" }
+gdex-types = { path = "../types" }
+gdex-workspace-hack = { version = "0.1", path = "../workspace-hack" }
 
 [dev-dependencies]
 ed25519-dalek = "1.0.1"
@@ -61,6 +65,6 @@ benchmark = ["narwhal-worker/benchmark", "narwhal-primary/benchmark", "narwhal-c
 dhat-heap = ["dhat"]    # if you are doing heap profiling
 
 [[bin]]         
-name = "benchmark_client"   
-path = "src/benchmark_client.rs" 
+name = "benchmark_narwhal_client"   
+path = "src/benchmark_narwhal_client.rs" 
 required-features = ["benchmark"]

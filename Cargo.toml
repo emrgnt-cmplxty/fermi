@@ -5,9 +5,9 @@ members = [
     "engine",
     "controller",
     "node",
-    "server",
     "suite",
     "types",
-    "benchmark-node",
+    "benchmark-gdex",
+    "benchmark-narwhal",
     "workspace-hack"
 ]

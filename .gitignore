@@ -14,7 +14,7 @@ Docker/validators/**/logs*
 rust/.idea/*
 .db-*
 benchmark/db-*
-
+suite/db.rocks
 target/
 !/**/src/**/target/
 .test_*

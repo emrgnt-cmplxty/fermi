@@ -9,11 +9,14 @@ use crate::{
 };
 use anyhow::anyhow;
 use async_trait::async_trait;
-use gdex_server::api::{ValidatorAPI, ValidatorAPIServer};
-use gdex_types::{crypto::KeypairTraits, transaction::SignedTransaction};
+use futures::StreamExt;
+use gdex_types::{
+    crypto::KeypairTraits,
+    proto::{Empty, TransactionProto, Transactions, TransactionsServer},
+    transaction::SignedTransaction,
+};
 use multiaddr::Multiaddr;
 use narwhal_executor::SubscriberError;
-use narwhal_types::{TransactionProto, TransactionsClient};
 use prometheus::Registry;
 use std::{io, sync::Arc};
 use tokio::{
@@ -23,7 +26,7 @@ use tokio::{
     },
     task::JoinHandle,
 };
-use tracing::{debug, info};
+use tracing::{info, trace};
 
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
@@ -51,8 +54,9 @@ pub struct ValidatorServer {
 
 impl ValidatorServer {
     pub fn new(address: Multiaddr, state: Arc<ValidatorState>, consensus_address: Multiaddr) -> Self {
-        let consensus_client =
-            TransactionsClient::new(client::connect_lazy(&consensus_address).expect("Failed to connect to consensus"));
+        let consensus_client = narwhal_types::TransactionsClient::new(
+            client::connect_lazy(&consensus_address).expect("Failed to connect to consensus"),
+        );
         let consensus_adapter = ConsensusAdapter {
             consensus_client,
             consensus_address,
@@ -70,13 +74,13 @@ impl ValidatorServer {
             "Calling spawn to produce a the validator server with port address = {:?}",
             address
         );
-        self.spawn_with_bind_address(address).await
+        self.run(address).await
     }
 
-    pub async fn spawn_with_bind_address(self, address: Multiaddr) -> Result<ValidatorServerHandle, io::Error> {
+    pub async fn run(self, address: Multiaddr) -> Result<ValidatorServerHandle, io::Error> {
         let server = crate::config::server::ServerConfig::new()
             .server_builder()
-            .add_service(ValidatorAPIServer::new(ValidatorService {
+            .add_service(TransactionsServer::new(ValidatorService {
                 state: self.state,
                 consensus_adapter: Arc::new(Mutex::new(self.consensus_adapter)),
             }))
@@ -122,6 +126,10 @@ impl ValidatorService {
             "Creating narwhal with committee ={}",
             config.genesis()?.narwhal_committee()
         );
+        info!(
+            "input consenus parameters={:?}",
+            consensus_config.narwhal_config().to_owned(),
+        );
 
         let mut primary_handles = narwhal_node::Node::spawn_primary(
             consensus_keypair,
@@ -159,7 +167,7 @@ impl ValidatorService {
     async fn analyze(mut rx_output: Receiver<(Result<Vec<u8>, SubscriberError>, Vec<u8>)>) {
         loop {
             while let Some(_message) = rx_output.recv().await {
-                debug!("Received a finalized consensus transaction with analyze",);
+                trace!("Received a finalized consensus transaction with analyze",);
                 // NOTE: Notify the user that its transaction has been processed.
             }
         }
@@ -168,18 +176,18 @@ impl ValidatorService {
     async fn handle_transaction(
         consensus_adapter: Arc<Mutex<ConsensusAdapter>>,
         state: Arc<ValidatorState>,
-        request: tonic::Request<SignedTransaction>,
-    ) -> Result<tonic::Response<SignedTransaction>, tonic::Status> {
-        debug!("Handling a new transaction with ValidatorService",);
+        transaction_proto: TransactionProto,
+    ) -> Result<tonic::Response<Empty>, tonic::Status> {
+        trace!("Handling a new transaction with ValidatorService",);
 
-        let transaction = request.into_inner();
-
-        transaction
+        let signed_transaction = SignedTransaction::deserialize(transaction_proto.transaction.to_vec())
+            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        signed_transaction
             .verify()
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
 
-        let transaction_proto = TransactionProto {
-            transaction: transaction.serialize().unwrap().into(),
+        let transaction_proto = narwhal_types::TransactionProto {
+            transaction: transaction_proto.transaction, //.serialize().unwrap().into(),
         };
 
         let _result = consensus_adapter
@@ -191,12 +199,13 @@ impl ValidatorService {
             .unwrap();
 
         state
-            .handle_transaction(&transaction)
+            .handle_transaction(&signed_transaction)
             // .instrument(span)
             .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        Ok(tonic::Response::new(transaction))
+        // Ok(tonic::Response::new(TransactionResult(1)))
+        Ok(tonic::Response::new(Empty {}))
     }
 
     pub fn get_consensus_adapter(&self) -> &Arc<Mutex<ConsensusAdapter>> {
@@ -206,37 +215,52 @@ impl ValidatorService {
 
 /// Spawns a tonic grpc which parses incoming transactions and forwards them to the handle_transaction method of ValidatorService
 #[async_trait]
-impl ValidatorAPI for ValidatorService {
-    async fn transaction(
+impl Transactions for ValidatorService {
+    async fn submit_transaction(
         &self,
-        request: tonic::Request<SignedTransaction>,
-    ) -> Result<tonic::Response<SignedTransaction>, tonic::Status> {
-        debug!("Handling a new transaction with a ValidatorService ValidatorAPI",);
-
+        request: tonic::Request<TransactionProto>,
+    ) -> Result<tonic::Response<Empty>, tonic::Status> {
+        trace!("Handling a new transaction with a ValidatorService ValidatorAPI",);
+        let signed_transaction = request.into_inner();
         let state = self.state.clone();
         let consensus_adapter = self.consensus_adapter.clone();
 
         // Spawns a task which handles the transaction. The task will unconditionally continue
         // processing in the event that the client connection is dropped.
-        tokio::spawn(async move { Self::handle_transaction(consensus_adapter, state, request).await })
+        tokio::spawn(async move { Self::handle_transaction(consensus_adapter, state, signed_transaction).await })
             .await
             .unwrap()
+    }
+    async fn submit_transaction_stream(
+        &self,
+        request: tonic::Request<tonic::Streaming<TransactionProto>>,
+    ) -> Result<tonic::Response<Empty>, tonic::Status> {
+        let mut transactions = request.into_inner();
+        trace!("Handling a new transaction stream with a ValidatorService ValidatorAPI",);
+
+        while let Some(Ok(signed_transaction)) = transactions.next().await {
+            trace!("Streaming a new transaction with a ValidatorService ValidatorAPI",);
+
+            let state = self.state.clone();
+            let consensus_adapter = self.consensus_adapter.clone();
+            tokio::spawn(async move { Self::handle_transaction(consensus_adapter, state, signed_transaction).await })
+                .await
+                .unwrap()?;
+        }
+        Ok(tonic::Response::new(Empty {}))
     }
 }
 
 #[cfg(test)]
 mod test_validator_server {
     use super::*;
-    use crate::{
-        builder::genesis_state::GenesisStateBuilder,
-        client::{ClientAPI, NetworkValidatorClient},
-        genesis_ceremony::VALIDATOR_FUNDING_AMOUNT,
-    };
+    use crate::{builder::genesis_state::GenesisStateBuilder, genesis_ceremony::VALIDATOR_FUNDING_AMOUNT};
     use gdex_controller::master::MasterController;
     use gdex_types::{
         account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair, ValidatorPubKeyBytes},
         crypto::{get_key_pair_from_rng, KeypairTraits},
         node::ValidatorInfo,
+        proto::TransactionsClient,
         transaction::transaction_test_functions::generate_signed_test_transaction,
         utils,
     };
@@ -282,14 +306,18 @@ mod test_validator_server {
     pub async fn server_process_transaction() {
         let handle_result = spawn_validator_server().await;
         let handle = handle_result.unwrap();
-        let client = NetworkValidatorClient::connect_lazy(&handle.address()).unwrap();
+        let mut client =
+            TransactionsClient::new(client::connect_lazy(&handle.address()).expect("Failed to connect to consensus"));
 
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
         let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
+        let transaction_proto = TransactionProto {
+            transaction: signed_transaction.serialize().unwrap().into(),
+        };
 
         let _resp1 = client
-            .handle_transaction(signed_transaction)
+            .submit_transaction(transaction_proto)
             .await
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e));
     }

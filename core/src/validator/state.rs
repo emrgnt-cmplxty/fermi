@@ -21,8 +21,7 @@ use std::{
         Arc, Mutex,
     },
 };
-use tracing::{debug, info};
-
+use tracing::{info, trace};
 /// Tracks recently submitted transactions to eventually implement transaction gating
 // TODO - implement the gating and garbage collection
 pub struct ValidatorStore {
@@ -84,7 +83,7 @@ impl ValidatorState {
 impl ValidatorState {
     /// Initiate a new transaction.
     pub async fn handle_transaction(&self, _transaction: &SignedTransaction) -> Result<(), GDEXError> {
-        debug!("Handling a new transaction with the ValidatorState",);
+        trace!("Handling a new transaction with the ValidatorState",);
         Ok(())
     }
 }
@@ -141,14 +140,14 @@ mod test_validator_state {
     use super::*;
     use crate::{builder::genesis_state::GenesisStateBuilder, genesis_ceremony::VALIDATOR_FUNDING_AMOUNT};
     use gdex_types::{
-        account::{ValidatorPubKeyBytes},
+        account::ValidatorPubKeyBytes,
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
         node::ValidatorInfo,
         transaction::SignedTransaction,
         utils,
     };
     use narwhal_consensus::ConsensusOutput;
-    use narwhal_crypto::{Hash, DIGEST_LEN, generate_production_keypair, traits::KeyPair as _, KeyPair};
+    use narwhal_crypto::{generate_production_keypair, Hash, KeyPair, DIGEST_LEN};
     use narwhal_executor::ExecutionIndices;
     use narwhal_types::{BatchDigest, Certificate, Header};
 

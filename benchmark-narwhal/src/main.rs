@@ -18,10 +18,10 @@ use narwhal_node::{
 };
 use std::sync::Arc;
 use tokio::sync::mpsc::{channel, Receiver};
-use tracing::info;
+use tracing::{debug, info};
 
 // IMPORT BESPOKE EXECUTION STATE
-use benchmark_node::execution_state::AdvancedExecutionState;
+use benchmark_narwhal::execution_state::AdvancedExecutionState;
 use narwhal_node::execution_state::SimpleExecutionState;
 
 #[cfg(feature = "benchmark")]
@@ -132,6 +132,7 @@ async fn main() -> Result<()> {
 }
 
 // Runs either a worker or a primary.
+#[allow(clippy::let_and_return)]
 async fn run(matches: &ArgMatches<'_>) -> Result<()> {
     let key_file = matches.value_of("keys").unwrap();
     let committee_file = matches.value_of("committee").unwrap();
@@ -158,6 +159,8 @@ async fn run(matches: &ArgMatches<'_>) -> Result<()> {
     let (tx_transaction_confirmation, rx_transaction_confirmation) = channel(Node::CHANNEL_CAPACITY);
 
     let registry;
+
+    debug!("input consenus parameters={:?}", parameters.clone());
 
     // Check whether to run a primary, a worker, or an entire authority.
     let node_handles = match matches.subcommand() {

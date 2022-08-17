@@ -1,8 +1,11 @@
-node
-benchmark_client
+benchmark-narwhal
+benchmark_narwhal_client
+benchmark_gdex_client
 results
 plots
 demo_client
+gdex-node
+*_db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

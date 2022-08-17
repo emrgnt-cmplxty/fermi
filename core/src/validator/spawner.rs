@@ -197,6 +197,7 @@ impl ValidatorSpawner {
 #[cfg(test)]
 pub mod suite_spawn_tests {
     use super::*;
+    use crate::client;
     use gdex_types::{
         account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair},
         proto::{TransactionProto, TransactionsClient},

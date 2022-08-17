@@ -316,9 +316,16 @@ impl SpotController {
         side: OrderSide,
         quantity: u64,
         price: u64,
-    ) -> Result<OrderProcessingResult, GDEXError> {
-        self.get_orderbook(base_asset_id, quote_asset_id)?
-            .place_limit_order(account_pub_key, side, quantity, price)
+    ) -> Result<(), GDEXError> {
+        match self.get_orderbook(base_asset_id, quote_asset_id)?
+            .place_limit_order(account_pub_key, side, quantity, price) {
+                Ok(_ordering_processing_result) => {
+                    Ok(())
+                }
+                Err(_err) => {
+                    Err(GDEXError::OrderRequest)
+                }
+            }
     }
 }
 

@@ -14,6 +14,9 @@ Docker/validators/**/logs*
 rust/.idea/*
 .db-*
 benchmark/db-*
+benchmark/benchmark_narwhal_client
+benchmark/benchmark_gdex_client
+benchmark/benchmark-narwhal
 
 target/
 !/**/src/**/target/

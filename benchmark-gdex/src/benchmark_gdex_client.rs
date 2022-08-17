@@ -5,11 +5,10 @@ use anyhow::{Context, Result};
 use clap::{crate_name, crate_version, App, AppSettings};
 use futures::FutureExt;
 use futures::{future::join_all, StreamExt};
-use gdex_core::client::{ClientAPI, NetworkValidatorClient};
 use gdex_types::{
     account::AccountKeyPair,
+    proto::{TransactionProto, TransactionsClient},
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
-    TransactionsClient,
 };
 use multiaddr::Multiaddr;
 use narwhal_crypto::{
@@ -141,30 +140,6 @@ impl Client {
             interval.as_mut().tick().await;
             let now = Instant::now();
 
-            // copy into a new variablet o avoid we get lifetime errors in the stream
-            // let stream = tokio_stream::iter(0..burst).map(move |x| {
-            //     let amount = if 0 == counter % burst {
-            //         // NOTE: This log entry is used to compute performance.
-            //         info!("Sending sample transaction {counter}");
-            //         counter
-            //     } else {
-            //         r += 1;
-            //         r
-            //     };
-            //     let signed_tranasction = create_signed_transaction(&kp_sender, &kp_receiver, amount);
-            //     if counter == 0 {
-            //         let transaction_size = signed_tranasction.serialize().unwrap().len();
-            //         info!("Transactions size: {transaction_size} B");
-            //     }
-
-            //     if let Err(e) = client.handle_transaction(signed_tranasction).await {
-            //         warn!("Failed to send transaction: {e}");
-            //         break 'main;
-            //     }
-            //     counter += 1;
-            // }
-
-            // let a = tokio_stream::iter(vec![1, 3, 5]);
             let kp_sender = keys([0; 32]).pop().unwrap();
             let kp_receiver = keys([1; 32]).pop().unwrap();
 
@@ -186,17 +161,10 @@ impl Client {
                     r
                 };
                 let signed_tranasction = create_signed_transaction(&kp_sender, &kp_receiver, amount);
-                gdex_types::TransactionProto {
+                TransactionProto {
                     transaction: signed_tranasction.serialize().unwrap().into(),
-                    // signature: signed_tranasction.signature.to_bytes().to_vec(),
                 }
-                // signed_tranasction
             });
-
-            //  while let Some(value) = stream.next().await {
-            //     println!("Got {:?}", value);
-            //     client.handle_transaction(value).await.unwrap();
-            //  };
 
             if let Err(e) = client.submit_transaction_stream(stream).await {
                 warn!("Failed to send transaction: {e}");

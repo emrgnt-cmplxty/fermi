@@ -24,7 +24,7 @@ fn test_primary_no_consensus() {
 
     let mut child = std::process::Command::new("cargo")
         .current_dir("..")
-        .args(&["run", "--bin", "benchmark-node", "--"])
+        .args(&["run", "--bin", "benchmark-narwhal", "--"])
         .args(&[
             "run",
             "--committee",
@@ -76,7 +76,7 @@ fn test_primary_no_consensus_advanced_execution() {
 
     let mut child = std::process::Command::new("cargo")
         .current_dir("..")
-        .args(&["run", "--bin", "benchmark-node", "--"])
+        .args(&["run", "--bin", "benchmark-narwhal", "--"])
         .args(&[
             "run",
             "--committee",
@@ -128,7 +128,7 @@ fn test_primary_with_consensus() {
 
     let mut child = std::process::Command::new("cargo")
         .current_dir("..")
-        .args(&["run", "--bin", "benchmark-node", "--"])
+        .args(&["run", "--bin", "benchmark-narwhal", "--"])
         .args(&[
             "run",
             "--committee",
@@ -181,7 +181,7 @@ fn test_primary_with_consensus_advanced_execution() {
 
     let mut child = std::process::Command::new("cargo")
         .current_dir("..")
-        .args(&["run", "--bin", "benchmark-node", "--"])
+        .args(&["run", "--bin", "benchmark-narwhal", "--"])
         .args(&[
             "run",
             "--committee",
@@ -227,7 +227,14 @@ fn test_benchmark_client() {
 
     let mut child = std::process::Command::new("cargo")
         .current_dir("..")
-        .args(&["run", "--bin", "benchmark_client", "--features", "benchmark", "--"])
+        .args(&[
+            "run",
+            "--bin",
+            "benchmark_narwhal_client",
+            "--features",
+            "benchmark",
+            "--",
+        ])
         .args(&[
             "http://127.0.0.1:3003/",
             "--size",

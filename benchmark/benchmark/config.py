@@ -232,6 +232,28 @@ class BenchParameters:
             raise ConfigError('There should be more nodes than faults')
 
 
+class GDEXBenchParameters:
+    def __init__(self, json):
+        try:
+            self.faults = int(json['faults'])
+            self.nodes = json['node_info']
+            self.rate = json['rate']
+            self.genesis_dir = json['genesis_dir']
+            self.key_dir = json['key_dir']
+            self.db_dir = json['db_dir']
+            self.duration = int(json['duration'])
+
+            if 'mem_profiling' in json:
+                self.mem_profile = bool(json['mem_profiling'])
+            else:
+                self.mem_profile = False
+
+        except KeyError as e:
+            raise ConfigError(f'Malformed bench parameters: missing key {e}')
+
+        except ValueError:
+            raise ConfigError('Invalid parameters type')
+
 class PlotParameters:
     def __init__(self, json):
         try:

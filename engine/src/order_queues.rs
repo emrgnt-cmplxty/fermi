@@ -106,7 +106,7 @@ impl<T> OrderQueue<T> {
     }
 
     // Add new limit order to the queue
-    pub fn insert(&mut self, id: u64, price: u64, ts: time::SystemTime, order: T) -> bool {
+    pub fn insert(&mut self, id: u64, price: u64, timestamp: time::SystemTime, order: T) -> bool {
         if self.orders.contains_key(&id) {
             // do not update existing order
             return false;
@@ -116,7 +116,7 @@ impl<T> OrderQueue<T> {
         self.idx_queue.as_mut().unwrap().push(OrderIndex {
             id,
             price,
-            timestamp: ts,
+            timestamp,
             order_side: self.queue_side,
         });
         self.orders.insert(id, order);
@@ -124,11 +124,11 @@ impl<T> OrderQueue<T> {
     }
 
     // use it when price was changed
-    pub fn amend(&mut self, id: u64, price: u64, ts: time::SystemTime, order: T) -> bool {
+    pub fn update(&mut self, id: u64, price: u64, timestamp: time::SystemTime, order: T) -> bool {
         if let std::collections::hash_map::Entry::Occupied(mut e) = self.orders.entry(id) {
             // store new order data
             e.insert(order);
-            self.rebuild_idx(id, price, ts);
+            self.rebuild_idx(id, price, timestamp);
             true
         } else {
             false
@@ -180,7 +180,7 @@ impl<T> OrderQueue<T> {
     }
 
     /// Recreate order-index queue with changed index info
-    fn rebuild_idx(&mut self, id: u64, price: u64, ts: time::SystemTime) {
+    fn rebuild_idx(&mut self, id: u64, price: u64, timestamp: time::SystemTime) {
         if let Some(idx_queue) = self.idx_queue.take() {
             // deconstruct queue
             let mut active_orders = idx_queue.into_vec();
@@ -190,12 +190,12 @@ impl<T> OrderQueue<T> {
             active_orders.push(OrderIndex {
                 id,
                 price,
-                timestamp: ts,
+                timestamp,
                 order_side: self.queue_side,
             });
             // construct new queue
-            let amended_queue = BinaryHeap::from(active_orders);
-            self.idx_queue = Some(amended_queue);
+            let updated_queue = BinaryHeap::from(active_orders);
+            self.idx_queue = Some(updated_queue);
         }
     }
 
@@ -299,14 +299,14 @@ mod test {
     }
 
     #[test]
-    fn queue_operations_amend() {
+    fn queue_operations_update() {
         let mut ask_queue = get_queue_asks();
 
-        // amend two orders in the queue
-        assert!(ask_queue.amend(2, 99, time::SystemTime::now(), TestOrder { name: "new first" },));
-        assert!(ask_queue.amend(1, 101, time::SystemTime::now(), TestOrder { name: "new last" },));
+        // update two orders in the queue
+        assert!(ask_queue.update(2, 99, time::SystemTime::now(), TestOrder { name: "new first" },));
+        assert!(ask_queue.update(1, 101, time::SystemTime::now(), TestOrder { name: "new last" },));
         // non-exist order
-        assert!(!ask_queue.amend(4, 303, time::SystemTime::now(), TestOrder { name: "nonexistent" },));
+        assert!(!ask_queue.update(4, 303, time::SystemTime::now(), TestOrder { name: "nonexistent" },));
 
         assert_eq!(ask_queue.pop().unwrap().name, "new first");
         assert_eq!(ask_queue.pop().unwrap().name, "low ask second");

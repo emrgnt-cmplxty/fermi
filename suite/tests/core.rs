@@ -2,7 +2,7 @@
 pub mod suite_core_tests {
     use gdex_controller::master::MasterController;
     use gdex_core::{
-        client::{ClientAPI, NetworkValidatorClient},
+        client,
         config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, FULL_NODE_DB_PATH},
         genesis_ceremony::VALIDATOR_FUNDING_AMOUNT,
         metrics::start_prometheus_server,
@@ -15,6 +15,7 @@ pub mod suite_core_tests {
         account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair, ValidatorPubKeyBytes},
         crypto::{get_key_pair_from_rng, KeypairTraits},
         node::ValidatorInfo,
+        proto::{TransactionProto, TransactionsClient},
         transaction::transaction_test_functions::generate_signed_test_transaction,
         utils,
     };
@@ -129,7 +130,7 @@ pub mod suite_core_tests {
         let subscriber = FmtSubscriber::builder()
             // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
             // will be written to stdout.
-            .with_env_filter("gdex_core=debug, gdex_suite=debug")
+            .with_env_filter("gdex_core=trace, gdex_suite=debug")
             // .with_max_level(Level::DEBUG)
             // completes the builder.
             .finish();
@@ -170,11 +171,17 @@ pub mod suite_core_tests {
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
         let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
 
-        let client = NetworkValidatorClient::connect_lazy(&validator_handle.address()).unwrap();
+        let mut client = TransactionsClient::new(
+            client::connect_lazy(&validator_handle.address()).expect("Failed to connect to consensus"),
+        );
+
         let mut i = 0;
         while i < 1_000 {
+            let transaction_proto = TransactionProto {
+                transaction: signed_transaction.serialize().unwrap().into(),
+            };
             let _resp1 = client
-                .handle_transaction(signed_transaction.clone())
+                .submit_transaction(transaction_proto)
                 .await
                 .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
                 .unwrap();

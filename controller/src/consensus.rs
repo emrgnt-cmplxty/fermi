@@ -6,6 +6,6 @@ use std::time::Duration;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ConsensusController {
-    pub min_batch_size: usize,
+    pub batch_size: usize,
     pub max_batch_delay: Duration,
 }

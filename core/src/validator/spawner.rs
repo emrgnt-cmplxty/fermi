@@ -163,7 +163,7 @@ impl ValidatorSpawner {
             genesis: Genesis::new(self.genesis_state.clone()),
         };
         let prometheus_registry = start_prometheus_server(node_config.metrics_address);
-        
+
         // spawn the validator service, e.g. Narwhal consensus
         let spawned_service = ValidatorService::spawn_narwhal(
             &node_config,
@@ -212,7 +212,9 @@ impl ValidatorSpawner {
     }
 
     #[cfg(test)]
-    pub async fn spawn_validator_with_reconfigure(&mut self) -> (Vec<JoinHandle<()>>, Sender<(ConsensusKeyPair, ConsensusCommittee)>) {
+    pub async fn spawn_validator_with_reconfigure(
+        &mut self,
+    ) -> (Vec<JoinHandle<()>>, Sender<(ConsensusKeyPair, ConsensusCommittee)>) {
         let (tx_reconfigure_consensus, rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
 
         let mut join_handles = self.spawn_validator_service(rx_reconfigure_consensus).await.unwrap();
@@ -225,7 +227,6 @@ impl ValidatorSpawner {
     pub fn get_genesis_state(&self) -> ValidatorGenesisState {
         return self.genesis_state.clone();
     }
-
 }
 
 #[cfg(test)]
@@ -244,41 +245,68 @@ pub mod suite_spawn_tests {
     use tracing_subscriber::FmtSubscriber;
 
     #[tokio::test]
-    #[ignore]
     pub async fn spawn_node_and_reconfigure() {
         let subscriber = FmtSubscriber::builder()
             // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
             // will be written to stdout.
-            .with_env_filter("gdex_core=trace, gdex_suite=debug")
-            // .with_max_level(Level::DEBUG)
-            // completes the builder.
+            .with_env_filter("info")
             .finish();
         tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
         let dir = "../.proto";
         let path = Path::new(dir).to_path_buf();
 
-        info!("Spawning validator 0");
-        let _address_0 = utils::new_network_address();
-        let mut spawner_0 = ValidatorSpawner::new(
+        info!("Spawning validator");
+        let address = utils::new_network_address();
+        let mut spawner = ValidatorSpawner::new(
             /* db_path */ path.clone(),
             /* key_path */ path.clone(),
             /* genesis_path */ path.clone(),
-            /* validator_port */ _address_0,
+            /* validator_port */ address.clone(),
             /* validator_name */ "validator-0".to_string(),
         );
 
-        let handles = spawner_0.spawn_validator_with_reconfigure().await;
+        let handles = spawner.spawn_validator_with_reconfigure().await;
 
-        let consensus_committee = spawner_0.get_genesis_state().narwhal_committee().load().clone();
+        info!("Sending 10 transactions");
+
+        let mut client =
+            TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
+
+        let key_file = path.join(format!("{}.key", spawner.get_validator_info().name));
+        let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
+        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
+
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
+
+        let mut i = 0;
+        while i < 10 {
+            let transaction_proto = TransactionProto {
+                transaction: signed_transaction.serialize().unwrap().into(),
+            };
+            let _resp1 = client
+                .submit_transaction(transaction_proto)
+                .await
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+                .unwrap();
+            i += 1;
+        }
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+
+        info!("Reconfiguring validator");
+
+        let consensus_committee = spawner.get_genesis_state().narwhal_committee().load().clone();
         let new_committee: narwhal_config::Committee = narwhal_config::Committee::clone(&consensus_committee);
+        let new_committee: narwhal_config::Committee = narwhal_config::Committee {
+            authorities: new_committee.authorities,
+            epoch: 1,
+        };
 
         let key = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
-
         let tx_reconfigure = handles.1;
         tx_reconfigure.send((key, new_committee)).await.unwrap();
 
-        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
     }
 
     #[tokio::test]

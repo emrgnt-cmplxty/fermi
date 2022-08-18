@@ -322,14 +322,14 @@ mod test_validator_server {
     }
 
     #[tokio::test]
-    pub async fn spawn_validator_server_and_reconfigure(){
+    pub async fn spawn_validator_server_and_reconfigure() {
         let subscriber = FmtSubscriber::builder()
-        // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
-        // will be written to stdout.
-        .with_env_filter("gdex_core=trace, gdex_suite=debug")
-        // .with_max_level(Level::DEBUG)
-        // completes the builder.
-        .finish();
+            // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
+            // will be written to stdout.
+            .with_env_filter("gdex_core=trace, gdex_suite=debug")
+            // .with_max_level(Level::DEBUG)
+            // completes the builder.
+            .finish();
         tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
         let master_controller = MasterController::default();

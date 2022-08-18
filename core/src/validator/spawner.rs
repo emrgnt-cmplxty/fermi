@@ -10,9 +10,13 @@ use crate::{
 use anyhow::Result;
 use gdex_types::{node::ValidatorInfo, utils};
 use multiaddr::Multiaddr;
-use narwhal_config::Parameters as ConsensusParameters;
+use narwhal_config::{Committee as ConsensusCommittee, Parameters as ConsensusParameters};
+use narwhal_crypto::KeyPair as ConsensusKeyPair;
 use std::{path::PathBuf, sync::Arc};
-use tokio::task::JoinHandle;
+use tokio::{
+    sync::mpsc::{Receiver, Sender},
+    task::JoinHandle,
+};
 use tracing::info;
 /// Can spawn a validator server handle at the internal address
 /// the server handle contains a validator api (grpc) that exposes a validator service
@@ -94,7 +98,10 @@ impl ValidatorSpawner {
 
     /// Internal helper function used to spawns the validator service
     /// note, this function will fail if called twice from the same spawner
-    async fn spawn_validator_service(&mut self) -> Result<Vec<JoinHandle<()>>> {
+    async fn spawn_validator_service(
+        &mut self,
+        rx_reconfigure_consensus: Receiver<(ConsensusKeyPair, ConsensusCommittee)>,
+    ) -> Result<Vec<JoinHandle<()>>> {
         if self.is_validator_service_spawned() {
             panic!("The validator service has already been spawned");
         };
@@ -157,10 +164,14 @@ impl ValidatorSpawner {
         };
         let prometheus_registry = start_prometheus_server(node_config.metrics_address);
         // spawn the validator service, e.g. Narwhal consensus
-        let spawned_service =
-            ValidatorService::spawn_narwhal(&node_config, Arc::clone(&validator_state), &prometheus_registry)
-                .await
-                .unwrap();
+        let spawned_service = ValidatorService::spawn_narwhal(
+            &node_config,
+            Arc::clone(&validator_state),
+            &prometheus_registry,
+            rx_reconfigure_consensus,
+        )
+        .await
+        .unwrap();
 
         self.set_validator_state(validator_state);
         Ok(spawned_service)
@@ -168,7 +179,10 @@ impl ValidatorSpawner {
 
     /// Internal helper function used to spawns the validator server
     /// note, this function will fail if called twice from the same spawner
-    pub async fn spawn_validator_server(&mut self) -> ValidatorServerHandle {
+    pub async fn spawn_validator_server(
+        &mut self,
+        tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
+    ) -> ValidatorServerHandle {
         if self.is_validator_server_spawned() {
             panic!("The validator server already been spawned");
         };
@@ -179,6 +193,7 @@ impl ValidatorSpawner {
             // unwrapping is safe as validator state must have been created in spawn_validator_service
             Arc::clone(self.validator_state.as_ref().unwrap()),
             consensus_address,
+            tx_reconfigure_consensus,
         );
 
         let validator_handle = validator_server.spawn().await.unwrap();
@@ -187,8 +202,10 @@ impl ValidatorSpawner {
     }
 
     pub async fn spawn_validator(&mut self) -> Vec<JoinHandle<()>> {
-        let mut join_handles = self.spawn_validator_service().await.unwrap();
-        let server_handle = self.spawn_validator_server().await;
+        let (tx_reconfigure_consensus, rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
+
+        let mut join_handles = self.spawn_validator_service(rx_reconfigure_consensus).await.unwrap();
+        let server_handle = self.spawn_validator_server(tx_reconfigure_consensus).await;
         join_handles.push(server_handle.get_handle());
         join_handles
     }
@@ -214,7 +231,7 @@ pub mod suite_spawn_tests {
         let subscriber = FmtSubscriber::builder()
             // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
             // will be written to stdout.
-            .with_env_filter("gdex_core=debug, gdex_suite=debug")
+            .with_env_filter("gdex_core=trace, gdex_suite=debug")
             // .with_max_level(Level::DEBUG)
             // completes the builder.
             .finish();

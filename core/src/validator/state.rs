@@ -22,6 +22,7 @@ use std::{
     },
 };
 use tracing::{info, trace};
+
 /// Tracks recently submitted transactions to eventually implement transaction gating
 // TODO - implement the gating and garbage collection
 pub struct ValidatorStore {
@@ -99,7 +100,7 @@ impl ExecutionState for ValidatorState {
         _consensus_output: &narwhal_consensus::ConsensusOutput,
         _execution_indices: ExecutionIndices,
         signed_transaction: Self::Transaction,
-    ) -> Result<(Self::Outcome, Option<narwhal_config::Committee>), Self::Error> {
+    ) -> Result<Self::Outcome, Self::Error> {
         let transaction = signed_transaction.get_transaction_payload();
         match transaction.get_variant() {
             TransactionVariant::PaymentTransaction(payment) => {
@@ -171,7 +172,7 @@ impl ExecutionState for ValidatorState {
             }
         };
 
-        Ok((Vec::default(), None))
+        Ok(Vec::default())
     }
 
     fn ask_consensus_write_lock(&self) -> bool {

@@ -119,7 +119,7 @@ pub enum OrderRequest {
         quote_asset_id: AssetId,
         side: OrderSide,
         quantity: AssetAmount,
-        local_timestamp: SystemTime,
+        local_timestamp: SystemTime
     },
 
     Limit {
@@ -128,20 +128,24 @@ pub enum OrderRequest {
         side: OrderSide,
         price: AssetPrice,
         quantity: AssetAmount,
-        local_timestamp: SystemTime,
+        local_timestamp: SystemTime
     },
 
     Update {
-        id: OrderId,
+        base_asset_id: AssetId,
+        quote_asset_id: AssetId,
+        order_id: OrderId,
         side: OrderSide,
         price: AssetPrice,
         quantity: AssetAmount,
-        local_timestamp: SystemTime,
+        local_timestamp: SystemTime
     },
 
     CancelOrder {
+        base_asset_id: AssetId,
+        quote_asset_id: AssetId,
         order_id: OrderId,
-        side: OrderSide,
+        side: OrderSide
     },
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -291,9 +295,16 @@ impl Hash for Transaction {
                     };
                     TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
                 }
-                OrderRequest::CancelOrder { order_id, side } => {
+                OrderRequest::CancelOrder {
+                    base_asset_id,
+                    quote_asset_id,
+                    order_id,
+                    side
+                } => {
                     let hasher_update = |hasher: &mut VarBlake2b| {
                         hasher.update(self.get_sender().0.to_bytes());
+                        hasher.update(base_asset_id.to_le_bytes());
+                        hasher.update(quote_asset_id.to_le_bytes());
                         hasher.update(order_id.to_le_bytes());
                         hasher.update((*side as u8).to_le_bytes());
                         hasher.update(&self.get_recent_block_hash().0[..]);
@@ -301,7 +312,9 @@ impl Hash for Transaction {
                     TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
                 }
                 OrderRequest::Update {
-                    id,
+                    base_asset_id,
+                    quote_asset_id,
+                    order_id,
                     side,
                     price,
                     quantity,
@@ -310,7 +323,9 @@ impl Hash for Transaction {
                     let ts = convert_system_time_to_int(*local_timestamp);
                     let hasher_update = |hasher: &mut VarBlake2b| {
                         hasher.update(self.get_sender().0.to_bytes());
-                        hasher.update(id.to_le_bytes());
+                        hasher.update(base_asset_id.to_le_bytes());
+                        hasher.update(quote_asset_id.to_le_bytes());
+                        hasher.update(order_id.to_le_bytes());
                         hasher.update((*side as u8).to_le_bytes());
                         hasher.update(price.to_le_bytes());
                         hasher.update(quantity.to_le_bytes());

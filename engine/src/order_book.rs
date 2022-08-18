@@ -74,7 +74,7 @@ impl Orderbook {
                 quote_asset_id,
                 side,
                 quantity,
-                local_timestamp: _ts,
+                ..
             } => {
                 // generate new ID for order
                 let order_id = self.seq.next_id();
@@ -126,16 +126,21 @@ impl Orderbook {
             }
 
             OrderRequest::Update {
-                id,
+                order_id,
                 side,
                 price,
                 quantity,
                 local_timestamp,
+                ..
             } => {
-                self.process_order_update(&mut process_result, id, side, price, quantity, local_timestamp);
+                self.process_order_update(&mut process_result, order_id, side, price, quantity, local_timestamp);
             }
 
-            OrderRequest::CancelOrder { order_id, side } => {
+            OrderRequest::CancelOrder {
+                order_id,
+                side,
+                ..
+            } => {
                 self.process_order_cancel(&mut process_result, order_id, side);
             }
         }
@@ -521,7 +526,7 @@ mod test_order_book {
     #[test]
     fn failed_cancel() {
         let mut orderbook = Orderbook::new(BASE_ASSET, QUOTE_ASSET);
-        let request = create_cancel_order_request(1, OrderSide::Bid);
+        let request = create_cancel_order_request(BASE_ASSET, QUOTE_ASSET, 1, OrderSide::Bid);
         let mut result = orderbook.process_order(request);
 
         assert_eq!(result.len(), 1);
@@ -572,7 +577,7 @@ mod test_order_book {
 
         match order_result {
             Success::Accepted { order_id, .. } => {
-                let update_order = create_update_order_request(order_id, OrderSide::Bid, 100, 100, SystemTime::now());
+                let update_order = create_update_order_request(BASE_ASSET, QUOTE_ASSET, order_id, OrderSide::Bid, 100, 100, SystemTime::now());
                 order_book.process_order(update_order).pop().unwrap().unwrap();
             }
             _ => {

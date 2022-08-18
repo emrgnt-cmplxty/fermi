@@ -42,29 +42,30 @@ impl OrderRequestValidator {
             OrderRequest::Market {
                 base_asset_id,
                 quote_asset_id,
-                side: _side,
                 quantity,
-                local_timestamp: _ts,
+                ..
             } => self.validate_market(base_asset_id, quote_asset_id, quantity),
 
             OrderRequest::Limit {
                 base_asset_id,
                 quote_asset_id,
-                side: _side,
                 price,
                 quantity,
-                local_timestamp: _ts,
+                ..
             } => self.validate_limit(base_asset_id, quote_asset_id, price, quantity),
 
             OrderRequest::Update {
-                id,
+                order_id,
                 price,
-                side: _side,
                 quantity,
-                local_timestamp: _ts,
-            } => self.validate_update(id, price, quantity),
+                ..
+            } => self.validate_update(order_id, price, quantity),
 
-            OrderRequest::CancelOrder { order_id, side: _side } => self.validate_cancel(order_id),
+            OrderRequest::CancelOrder {
+                order_id,
+                side,
+                ..
+            } => self.validate_cancel(order_id),
         }
     }
 

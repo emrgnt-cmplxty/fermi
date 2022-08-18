@@ -121,6 +121,8 @@ impl OrderbookInterface {
 
         // create and process limit order
         let order = create_cancel_order_request(
+            self.base_asset_id,
+            self.quote_asset_id,
             order_id,
             side
         );
@@ -382,6 +384,21 @@ impl SpotController {
             quantity,
             price,
         ) {
+            Ok(_ordering_processing_result) => Ok(()),
+            Err(_err) => Err(GDEXError::OrderRequest),
+        }
+    }
+
+    pub fn place_cancel_order(
+        &mut self,
+        base_asset_id: AssetId,
+        quote_asset_id: AssetId,
+        account_pub_key: &AccountPubKey,
+        order_id: OrderId,
+        side: OrderSide
+    ) -> Result<(), GDEXError> {
+        match self.get_orderbook(base_asset_id, quote_asset_id)?.place_cancel_order(account_pub_key, order_id, side)
+        {
             Ok(_ordering_processing_result) => Ok(()),
             Err(_err) => Err(GDEXError::OrderRequest),
         }

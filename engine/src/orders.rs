@@ -48,14 +48,18 @@ pub fn create_limit_order_request(
 /// Note: do not change order side!
 /// Instead cancel existing order and create a new one.
 pub fn create_update_order_request(
-    id: u64,
+    base_asset_id: AssetId,
+    quote_asset_id: AssetId,
+    order_id: u64,
     side: OrderSide,
     price: u64,
     quantity: u64,
     local_timestamp: SystemTime,
 ) -> OrderRequest {
     OrderRequest::Update {
-        id,
+        base_asset_id,
+        quote_asset_id,
+        order_id,
         side,
         price,
         quantity,
@@ -64,8 +68,15 @@ pub fn create_update_order_request(
 }
 
 /// Create request for cancelling active limit order
-pub fn create_cancel_order_request(order_id: u64, side: OrderSide) -> OrderRequest {
+pub fn create_cancel_order_request(
+    base_asset_id: AssetId,
+    quote_asset_id: AssetId,
+    order_id: u64,
+    side: OrderSide
+) -> OrderRequest {
     OrderRequest::CancelOrder {
+        base_asset_id,
+        quote_asset_id,
         order_id,
         side 
     }

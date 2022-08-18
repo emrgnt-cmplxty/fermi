@@ -129,7 +129,7 @@ impl ExecutionState for ValidatorState {
                         quote_asset_id,
                         side,
                         quantity,
-                        local_timestamp: _ts,
+                        ..
                     } => {
                         dbg!(base_asset_id, quote_asset_id, side, quantity);
                     }
@@ -139,7 +139,7 @@ impl ExecutionState for ValidatorState {
                         side,
                         price,
                         quantity,
-                        local_timestamp: _ts,
+                        ..
                     } => {
                         // TODO: find out why these u64 are references
                         self.master_controller
@@ -155,17 +155,32 @@ impl ExecutionState for ValidatorState {
                                 *price,
                             )?
                     }
-                    OrderRequest::CancelOrder { order_id, side } => {
-                        dbg!(order_id, side);
+                    OrderRequest::CancelOrder {
+                        base_asset_id,
+                        quote_asset_id,
+                        order_id,
+                        side
+                    } => {
+                        self.master_controller
+                            .spot_controller
+                            .lock()
+                            .unwrap()
+                            .place_cancel_order(
+                                *base_asset_id,
+                                *quote_asset_id,
+                                transaction.get_sender(),
+                                *order_id,
+                                *side
+                            )?
                     }
                     OrderRequest::Update {
-                        id,
+                        order_id,
                         side,
                         price,
                         quantity,
-                        local_timestamp: _ts,
+                        ..
                     } => {
-                        dbg!(id, side, price, quantity);
+                        dbg!(order_id, side, price, quantity);
                     }
                 }
             }

@@ -50,7 +50,7 @@ impl ExecutionState for SimpleExecutionState {
         _consensus_output: &ConsensusOutput,
         execution_indices: ExecutionIndices,
         transaction: Self::Transaction,
-    ) -> Result<(Self::Outcome, Option<Committee>), Self::Error> {
+    ) -> Result<Self::Outcome, Self::Error> {
         // Change epoch every few certificates. Note that empty certificates are not provided to
         // this function (they are immediately skipped).
         let mut epoch = self.committee.lock().unwrap().epoch();
@@ -73,7 +73,7 @@ impl ExecutionState for SimpleExecutionState {
             self.tx_reconfigure.send((keypair, new_committee)).await.unwrap();
         }
 
-        Ok((epoch, None))
+        Ok(epoch)
     }
 
     fn ask_consensus_write_lock(&self) -> bool {
@@ -104,10 +104,6 @@ impl ExecutionStateError for SimpleExecutionError {
             Self::ServerError => true,
             Self::ClientError => false,
         }
-    }
-
-    fn to_string(&self) -> String {
-        ToString::to_string(&self)
     }
 }
 
@@ -170,6 +166,7 @@ async fn restart() {
         let committee = committee.clone();
         let execution_state = execution_state.clone();
         let parameters = parameters.clone();
+
         tokio::spawn(async move {
             NodeRestarter::watch(
                 keypair,
@@ -179,6 +176,7 @@ async fn restart() {
                 parameters,
                 rx_node_reconfigure,
                 tx_output,
+                &Registry::new(),
             )
             .await;
         });
@@ -256,7 +254,7 @@ async fn epoch_change() {
                     .expect("Our key is not in the committee")
                     .primary_to_primary;
                 let message =
-                    WorkerPrimaryMessage::Reconfigure(ReconfigureNotification::NewCommittee(committee.clone()));
+                    WorkerPrimaryMessage::Reconfigure(ReconfigureNotification::NewEpoch(committee.clone()));
                 let primary_cancel_handle = primary_network.send(address, &message).await;
 
                 let addresses = committee
@@ -266,7 +264,7 @@ async fn epoch_change() {
                     .map(|x| x.primary_to_worker)
                     .collect();
                 let message =
-                    PrimaryWorkerMessage::Reconfigure(ReconfigureNotification::NewCommittee(committee.clone()));
+                    PrimaryWorkerMessage::Reconfigure(ReconfigureNotification::NewEpoch(committee.clone()));
                 let worker_cancel_handles = worker_network.unreliable_broadcast(addresses, &message).await;
 
                 // Ensure the message has been received.

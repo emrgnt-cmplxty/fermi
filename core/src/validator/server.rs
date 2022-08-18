@@ -111,72 +111,73 @@ impl ValidatorService {
         state: Arc<ValidatorState>,
         prometheus_registry: &Registry,
     ) -> anyhow::Result<Vec<JoinHandle<()>>> {
-        let (tx_consensus_to_sui, rx_consensus_to_sui) = channel(1_000);
-        let (tx_sui_to_consensus, rx_sui_to_consensus) = channel(1_000);
-        // let (tx_sui_to_consensus, rx_sui_to_consensus) = channel(1_000);
+    //     let (tx_consensus_to_sui, rx_consensus_to_sui) = channel(1_000);
+    //     let (tx_sui_to_consensus, rx_sui_to_consensus) = channel(1_000);
+    //     // let (tx_sui_to_consensus, rx_sui_to_consensus) = channel(1_000);
 
-        // Spawn the consensus node of this authority.
-        let consensus_config = config
-            .consensus_config()
-            .ok_or_else(|| anyhow!("Validator is missing consensus config"))?;
-        let consensus_keypair = config.key_pair().copy();
-        let consensus_name = consensus_keypair.public().clone();
-        let consensus_store = narwhal_node::NodeStorage::reopen(consensus_config.db_path());
+    //     // Spawn the consensus node of this authority.
+    //     let consensus_config = config
+    //         .consensus_config()
+    //         .ok_or_else(|| anyhow!("Validator is missing consensus config"))?;
+    //     let consensus_keypair = config.key_pair().copy();
+    //     let consensus_name = consensus_keypair.public().clone();
+    //     let consensus_store = narwhal_node::NodeStorage::reopen(consensus_config.db_path());
 
-        info!(
-            "Creating narwhal with committee ={}",
-            config.genesis()?.narwhal_committee()
-        );
-        info!(
-            "input consenus parameters={:?}",
-            consensus_config.narwhal_config().to_owned(),
-        );
+    //     info!(
+    //         "Creating narwhal with committee ={}",
+    //         config.genesis()?.narwhal_committee()
+    //     );
+    //     info!(
+    //         "input consenus parameters={:?}",
+    //         consensus_config.narwhal_config().to_owned(),
+    //     );
         
-        let registry = prometheus_registry.clone();
+    //     let registry = prometheus_registry.clone();
 
-        tokio::spawn(async move {
-            narwhal_node::restarter::NodeRestarter::watch(
-                consensus_keypair,
-                &(&*consensus_committee).clone(),
-                consensus_storage_base_path,
-                consensus_execution_state,
-                consensus_parameters,
-                rx_reconfigure_consensus,
-                /* tx_output */ tx_consensus_to_sui,
-                &registry,
-            )
-            .await
-        });
+    //     tokio::spawn(async move {
+    //         narwhal_node::restarter::NodeRestarter::watch(
+    //             consensus_keypair,
+    //             &(&*consensus_committee).clone(),
+    //             consensus_storage_base_path,
+    //             consensus_execution_state,
+    //             consensus_parameters,
+    //             rx_reconfigure_consensus,
+    //             /* tx_output */ tx_consensus_to_sui,
+    //             &registry,
+    //         )
+    //         .await
+    //     });
 
-        // let mut primary_handles = narwhal_node::Node::spawn_primary(
-        //     consensus_keypair,
-        //     config.genesis()?.narwhal_committee(),
-        //     &consensus_store,
-        //     consensus_config.narwhal_config().to_owned(),
-        //     /* consensus */ true, // Indicate that we want to run consensus.
-        //     /* execution_state */ Arc::clone(&state),
-        //     /* tx_confirmation */ tx_consensus_to_sui,
-        //     prometheus_registry,
-        // )
-        // .await?;
+    //     // let mut primary_handles = narwhal_node::Node::spawn_primary(
+    //     //     consensus_keypair,
+    //     //     config.genesis()?.narwhal_committee(),
+    //     //     &consensus_store,
+    //     //     consensus_config.narwhal_config().to_owned(),
+    //     //     /* consensus */ true, // Indicate that we want to run consensus.
+    //     //     /* execution_state */ Arc::clone(&state),
+    //     //     /* tx_confirmation */ tx_consensus_to_sui,
+    //     //     prometheus_registry,
+    //     // )
+    //     // .await?;
 
-        // let worker_handles = narwhal_node::Node::spawn_workers(
-        //     consensus_name,
-        //     /* ids */ vec![0], // We run a single worker with id '0'.
-        //     config.genesis()?.narwhal_committee(),
-        //     &consensus_store,
-        //     consensus_config.narwhal_config().to_owned(),
-        //     prometheus_registry,
-        // );
+    //     // let worker_handles = narwhal_node::Node::spawn_workers(
+    //     //     consensus_name,
+    //     //     /* ids */ vec![0], // We run a single worker with id '0'.
+    //     //     config.genesis()?.narwhal_committee(),
+    //     //     &consensus_store,
+    //     //     consensus_config.narwhal_config().to_owned(),
+    //     //     prometheus_registry,
+    //     // );
 
-        // Create a new task to listen to received transactions
+    //     // Create a new task to listen to received transactions
         let analyzer_handle = tokio::spawn(async move {
-            Self::analyze(rx_consensus_to_sui).await;
+            // Self::analyze(rx_consensus_to_sui).await;
         });
 
-        primary_handles.extend(worker_handles);
-        primary_handles.push(analyzer_handle);
-        Ok(primary_handles)
+    //     primary_handles.extend(worker_handles);
+    //     primary_handles.push(analyzer_handle);
+    //     Ok(primary_handles)
+        Ok(vec![analyzer_handle])
     }
 
     /// Receives an ordered list of certificates and apply any application-specific logic.

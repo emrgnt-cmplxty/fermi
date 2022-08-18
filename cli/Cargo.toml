@@ -9,7 +9,7 @@ anyhow = { version = "1.0.58", features = ["backtrace"] }
 colored = "2.0.0"
 clap = { version = "3.1.17", features = ["derive"] }
 multiaddr = "0.14.0"
-rand = { version = "0.7.3" }
+rand = { version = "0.8.5" }
 telemetry-subscribers = { git = "https://github.com/MystenLabs/mysten-infra", rev = "8d090689be14078f2ca41c356e7bbc0af21f73ab" }
 tempfile = "3.3.0"
 tokio = { version = "1.20.1", features = ["full", "tracing", "test-util"] }

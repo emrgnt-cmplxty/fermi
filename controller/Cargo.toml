@@ -8,7 +8,7 @@ edition = "2021"
 assert_approx_eq = "1.1.0"
 criterion = "0.3.4"
 narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "crypto" }
-rand = "0.7.0"
+rand = { version = "0.8.5" }
 serde = { version = "1.0.141", features = ["derive"] }
 
 gdex-engine = { path = "../engine" }

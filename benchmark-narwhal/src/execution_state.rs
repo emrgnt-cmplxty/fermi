@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 use async_trait::async_trait;
 use gdex_controller::bank::BankController;
-use narwhal_config::Committee;
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::ed25519::Ed25519KeyPair;
 use narwhal_crypto::traits::KeyPair;
@@ -29,19 +28,16 @@ impl ExecutionStateError for AdvancedExecutionStateError {
             Self::VMError(_) => true,
         }
     }
-
-    fn to_string(&self) -> String {
-        ToString::to_string(&self)
-    }
 }
 
 #[derive(Debug, Error)]
 pub enum AdvancedExecutionStateError {
     VMError(#[from] GDEXError),
 }
+
 impl Display for AdvancedExecutionStateError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "{}", narwhal_executor::ExecutionStateError::to_string(self))
+        write!(f, "{}", <dyn narwhal_executor::ExecutionStateError>::to_string(self))
     }
 }
 
@@ -63,7 +59,7 @@ impl ExecutionState for AdvancedExecutionState {
         _consensus_output: &ConsensusOutput,
         execution_indices: ExecutionIndices,
         signed_transaction: Self::Transaction,
-    ) -> Result<(Self::Outcome, Option<Committee>), Self::Error> {
+    ) -> Result<Self::Outcome, Self::Error> {
         let transaction = signed_transaction.get_transaction_payload();
         let execution = match transaction.get_variant() {
             TransactionVariant::PaymentTransaction(payment) => {
@@ -80,9 +76,11 @@ impl ExecutionState for AdvancedExecutionState {
                 .lock()
                 .unwrap()
                 .create_asset(transaction.get_sender()),
+            TransactionVariant::CreateOrderbookTransaction(_create_orderbook) => Ok(()),
+            TransactionVariant::PlaceOrderTransaction(_order) => Ok(()),
         };
         match execution {
-            Ok(_) => Ok((Vec::default(), None)),
+            Ok(_) => Ok(Vec::default()),
             Err(err) => Err(Self::Error::VMError(err)),
         }
     }

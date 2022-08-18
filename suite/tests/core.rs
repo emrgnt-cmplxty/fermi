@@ -2,7 +2,7 @@
 pub mod suite_core_tests {
     use gdex_controller::master::MasterController;
     use gdex_core::{
-        client::{ClientAPI, NetworkValidatorClient},
+        client,
         config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, FULL_NODE_DB_PATH},
         genesis_ceremony::VALIDATOR_FUNDING_AMOUNT,
         metrics::start_prometheus_server,
@@ -15,6 +15,7 @@ pub mod suite_core_tests {
         account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair, ValidatorPubKeyBytes},
         crypto::{get_key_pair_from_rng, KeypairTraits},
         node::ValidatorInfo,
+        proto::{TransactionProto, TransactionsClient},
         transaction::transaction_test_functions::generate_signed_test_transaction,
         utils,
     };
@@ -81,7 +82,6 @@ pub mod suite_core_tests {
 
         let key_pair_pin = Arc::pin(utils::read_keypair_from_file(&key_file).unwrap());
         let key_pair_arc = Arc::new(utils::read_keypair_from_file(&key_file).unwrap());
-
         let validator_state = Arc::new(ValidatorState::new(pubilc_key, key_pair_pin, &genesis_state));
 
         // Create a node config with this validators information
@@ -115,10 +115,15 @@ pub mod suite_core_tests {
 
         // spawn the validator service, e.g. Narwhal consensus
         let prometheus_registry = start_prometheus_server(node_config.metrics_address);
-        let narwhal_handle =
-            ValidatorService::spawn_narwhal(&node_config, Arc::clone(&validator_state), &prometheus_registry)
-                .await
-                .unwrap();
+        let (_tx_reconfigure_consensus, rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
+        let narwhal_handle = ValidatorService::spawn_narwhal(
+            &node_config,
+            Arc::clone(&validator_state),
+            &prometheus_registry,
+            rx_reconfigure_consensus,
+        )
+        .await
+        .unwrap();
         (validator_state, narwhal_handle)
     }
 
@@ -129,7 +134,7 @@ pub mod suite_core_tests {
         let subscriber = FmtSubscriber::builder()
             // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
             // will be written to stdout.
-            .with_env_filter("gdex_core=debug, gdex_suite=debug")
+            .with_env_filter("gdex_core=trace, gdex_suite=debug")
             // .with_max_level(Level::DEBUG)
             // completes the builder.
             .finish();
@@ -162,7 +167,13 @@ pub mod suite_core_tests {
         let new_addr = utils::new_network_address();
         let consensus_address = validator.narwhal_consensus_address.clone();
 
-        let validator_server = ValidatorServer::new(new_addr.clone(), Arc::clone(&validator_state), consensus_address);
+        let (tx_reconfigure_consensus, _rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
+        let validator_server = ValidatorServer::new(
+            new_addr.clone(),
+            Arc::clone(&validator_state),
+            consensus_address,
+            tx_reconfigure_consensus,
+        );
         let validator_handle = validator_server.spawn().await.unwrap();
 
         let key_file = working_dir.join(format!("validator-{}.key", primary_validator_index));
@@ -170,11 +181,17 @@ pub mod suite_core_tests {
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
         let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
 
-        let client = NetworkValidatorClient::connect_lazy(&validator_handle.address()).unwrap();
+        let mut client = TransactionsClient::new(
+            client::connect_lazy(&validator_handle.address()).expect("Failed to connect to consensus"),
+        );
+
         let mut i = 0;
         while i < 1_000 {
+            let transaction_proto = TransactionProto {
+                transaction: signed_transaction.serialize().unwrap().into(),
+            };
             let _resp1 = client
-                .handle_transaction(signed_transaction.clone())
+                .submit_transaction(transaction_proto)
                 .await
                 .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
                 .unwrap();

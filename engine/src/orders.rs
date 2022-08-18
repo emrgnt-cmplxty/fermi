@@ -9,37 +9,37 @@ use std::time::SystemTime;
 
 /// Create request for the new market order
 pub fn new_market_order_request(
-    base_asset: AssetId,
-    quote_asset: AssetId,
+    base_asset_id: AssetId,
+    quote_asset_id: AssetId,
     side: OrderSide,
     quantity: u64,
-    ts: SystemTime,
+    local_timestamp: SystemTime,
 ) -> OrderRequest {
     OrderRequest::Market {
-        base_asset,
-        quote_asset,
+        base_asset_id,
+        quote_asset_id,
         quantity,
         side,
-        ts,
+        local_timestamp,
     }
 }
 
 /// Create request for the new limit order
 pub fn new_limit_order_request(
-    base_asset: AssetId,
-    quote_asset: AssetId,
+    base_asset_id: AssetId,
+    quote_asset_id: AssetId,
     side: OrderSide,
     price: u64,
     quantity: u64,
-    ts: SystemTime,
+    local_timestamp: SystemTime,
 ) -> OrderRequest {
     OrderRequest::Limit {
-        base_asset,
-        quote_asset,
+        base_asset_id,
+        quote_asset_id,
         side,
         price,
         quantity,
-        ts,
+        local_timestamp,
     }
 }
 
@@ -47,13 +47,19 @@ pub fn new_limit_order_request(
 ///
 /// Note: do not change order side!
 /// Instead cancel existing order and create a new one.
-pub fn amend_order_request(id: u64, side: OrderSide, price: u64, quantity: u64, ts: SystemTime) -> OrderRequest {
-    OrderRequest::Amend {
+pub fn update_order_request(
+    id: u64,
+    side: OrderSide,
+    price: u64,
+    quantity: u64,
+    local_timestamp: SystemTime,
+) -> OrderRequest {
+    OrderRequest::Update {
         id,
         side,
         price,
         quantity,
-        ts,
+        local_timestamp,
     }
 }
 

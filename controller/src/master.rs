@@ -8,15 +8,15 @@ use std::{
     time::Duration,
 };
 
-const DEFAULT_MIN_BATCH_SIZE: usize = 1_000;
-const DEFAULT_MAX_DELAY_MILLIS: u64 = 5_000; // 5 sec
+const DEFAULT_BATCH_SIZE: usize = 500_000;
+const DEFAULT_MAX_DELAY_MILLIS: u64 = 200; // .2 sec
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MasterController {
     pub consensus_controller: ConsensusController,
     pub bank_controller: Arc<Mutex<BankController>>,
     pub stake_controller: StakeController,
-    pub spot_controller: SpotController,
+    pub spot_controller: Arc<Mutex<SpotController>>,
 }
 
 impl Default for MasterController {
@@ -24,10 +24,10 @@ impl Default for MasterController {
         let bank_controller = BankController::default();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
         let stake_controller = StakeController::new(Arc::clone(&bank_controller_ref));
-        let spot_controller = SpotController::new(Arc::clone(&bank_controller_ref));
+        let spot_controller = Arc::new(Mutex::new(SpotController::new(Arc::clone(&bank_controller_ref))));
         Self {
             consensus_controller: ConsensusController {
-                min_batch_size: DEFAULT_MIN_BATCH_SIZE,
+                batch_size: DEFAULT_BATCH_SIZE,
                 max_batch_delay: Duration::from_millis(DEFAULT_MAX_DELAY_MILLIS),
             },
             bank_controller: bank_controller_ref,

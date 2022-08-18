@@ -11,11 +11,11 @@ use gdex_types::{
     account::ValidatorKeyPair,
     committee::{Committee, ValidatorName},
     error::GDEXError,
-    transaction::{SignedTransaction, TransactionDigest, TransactionVariant},
+    transaction::{SignedTransaction, TransactionDigest},
 };
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::Hash;
-use narwhal_executor::{ExecutionIndices, ExecutionState};
+use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
 use narwhal_types::{CertificateDigest, SequenceNumber};
 use std::{
     collections::HashMap,
@@ -25,7 +25,13 @@ use std::{
         Arc, Mutex,
     },
 };
-use tracing::{debug, info};
+
+use store::{
+    reopen,
+    rocks::{open_cf, DBMap},
+    Store,
+};
+use tracing::{debug, info, trace};
 
 /// Tracks recently submitted transactions to implement transaction gating
 pub struct ValidatorStore {
@@ -34,19 +40,35 @@ pub struct ValidatorStore {
     certificate_cache: Mutex<HashMap<CertificateDigest, SequenceNumber>>,
     // garbage collection depth
     gc_depth: u64,
+    pub transaction_store: Store<SequenceNumber, Vec<SerializedTransaction>>,
+    pub sequence_store: Store<SequenceNumber, CertificateDigest>,
 }
 
-impl Default for ValidatorStore {
-    fn default() -> Self {
+impl ValidatorStore {
+    const TRANSACTIONS_CF: &'static str = "transactions";
+    const SEQUENCE_CF: &'static str = "sequence";
+
+    pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
+        let rocksdb =
+            open_cf(store_path, None, &[Self::TRANSACTIONS_CF, Self::SEQUENCE_CF]).expect("Cannot open database");
+
+        let (transactions_map, sequence_map) = reopen!(&rocksdb,
+            Self::TRANSACTIONS_CF;<SequenceNumber, Vec<SerializedTransaction>>,
+            Self::SEQUENCE_CF;<SequenceNumber, CertificateDigest>
+        );
+
+        let transaction_store = Store::new(transactions_map);
+        let sequence_store = Store::new(sequence_map);
+
         Self {
             transaction_cache: Mutex::new(HashMap::new()),
             certificate_cache: Mutex::new(HashMap::new()),
             gc_depth: 50,
+            transaction_store,
+            sequence_store,
         }
     }
-}
 
-impl ValidatorStore {
     pub fn contains_transaction(&self, transaction: &Transaction) -> bool {
         let transaction_digest = transaction.digest();
         return self.transaction_cache.lock().unwrap().contains_key(&transaction_digest);
@@ -91,6 +113,15 @@ impl ValidatorStore {
                 .unwrap()
                 .retain(|_k, v| v.is_none() || locked_certificate_cache.contains_key(&v.unwrap()));
         }
+    }
+}
+
+impl Default for ValidatorStore {
+    fn default() -> Self {
+        let store_path = tempfile::tempdir()
+            .expect("Failed to open temporary directory")
+            .into_path();
+        Self::reopen(store_path)
     }
 }
 
@@ -142,7 +173,7 @@ impl ValidatorState {
 impl ValidatorState {
     /// Initiate a new transaction.
     pub fn handle_pre_consensus_transaction(&self, transaction: &SignedTransaction) -> Result<(), GDEXError> {
-        debug!("Handling a new pre-consensus transaction with the ValidatorState",);
+        trace!("Handling a new pre-consensus transaction with the ValidatorState",);
         self.validator_store
             .insert_unconfirmed_transaction(transaction.get_transaction_payload());
         Ok(())
@@ -160,29 +191,82 @@ impl ExecutionState for ValidatorState {
         consensus_output: &narwhal_consensus::ConsensusOutput,
         _execution_indices: ExecutionIndices,
         signed_transaction: Self::Transaction,
-    ) -> Result<(Self::Outcome, Option<narwhal_config::Committee>), Self::Error> {
+    ) -> Result<Self::Outcome, Self::Error> {
         let transaction = signed_transaction.get_transaction_payload();
-        match transaction.get_variant() {
-            TransactionVariant::PaymentTransaction(payment) => {
-                self.master_controller.bank_controller.lock().unwrap().transfer(
-                    transaction.get_sender(),
-                    payment.get_receiver(),
-                    payment.get_asset_id(),
-                    payment.get_amount(),
-                )?
-            }
-            TransactionVariant::CreateAssetTransaction(_create_asset) => self
-                .master_controller
-                .bank_controller
-                .lock()
-                .unwrap()
-                .create_asset(transaction.get_sender())?,
-        };
+        // match transaction.get_variant() {
+        //     TransactionVariant::PaymentTransaction(payment) => {
+        //         self.master_controller.bank_controller.lock().unwrap().transfer(
+        //             transaction.get_sender(),
+        //             payment.get_receiver(),
+        //             payment.get_asset_id(),
+        //             payment.get_amount(),
+        //         )?
+        //     }
+        //     TransactionVariant::CreateAssetTransaction(_create_asset) => self
+        //         .master_controller
+        //         .bank_controller
+        //         .lock()
+        //         .unwrap()
+        //         .create_asset(transaction.get_sender())?,
+        //     TransactionVariant::CreateOrderbookTransaction(orderbook) => self
+        //         .master_controller
+        //         .spot_controller
+        //         .lock()
+        //         .unwrap()
+        //         .create_orderbook(orderbook.get_base_asset_id(), orderbook.get_quote_asset_id())?,
+        //     TransactionVariant::PlaceOrderTransaction(order) => {
+        //         match order {
+        //             OrderRequest::Market {
+        //                 base_asset_id,
+        //                 quote_asset_id,
+        //                 side,
+        //                 quantity,
+        //                 local_timestamp: _ts,
+        //             } => {
+        //                 dbg!(base_asset_id, quote_asset_id, side, quantity);
+        //             }
+        //             OrderRequest::Limit {
+        //                 base_asset_id,
+        //                 quote_asset_id,
+        //                 side,
+        //                 price,
+        //                 quantity,
+        //                 local_timestamp: _ts,
+        //             } => {
+        //                 // TODO: find out why these u64 are references
+        //                 self.master_controller
+        //                     .spot_controller
+        //                     .lock()
+        //                     .unwrap()
+        //                     .place_limit_order(
+        //                         *base_asset_id,
+        //                         *quote_asset_id,
+        //                         transaction.get_sender(),
+        //                         *side,
+        //                         *quantity,
+        //                         *price,
+        //                     )?
+        //             }
+        //             OrderRequest::CancelOrder { id, side } => {
+        //                 dbg!(id, side);
+        //             }
+        //             OrderRequest::Update {
+        //                 id,
+        //                 side,
+        //                 price,
+        //                 quantity,
+        //                 local_timestamp: _ts,
+        //             } => {
+        //                 dbg!(id, side, price, quantity);
+        //             }
+        //         }
+        //     }
+        // };
 
         self.validator_store
             .insert_confirmed_transaction(transaction, consensus_output);
 
-        Ok((consensus_output.clone(), None))
+        Ok(consensus_output.clone())
     }
 
     fn ask_consensus_write_lock(&self) -> bool {
@@ -207,7 +291,11 @@ mod test_validator_state {
         account::ValidatorPubKeyBytes,
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
         node::ValidatorInfo,
-        transaction::SignedTransaction,
+        order_book::OrderSide,
+        transaction::{
+            create_asset_creation_transaction, create_orderbook_creation_transaction, create_payment_transaction,
+            create_place_limit_order_transaction, SignedTransaction,
+        },
         utils,
     };
     use narwhal_consensus::ConsensusOutput;
@@ -247,8 +335,7 @@ mod test_validator_state {
         validator.unhalt_validator();
     }
 
-    #[tokio::test]
-    pub async fn process_payment_txn() {
+    fn create_test_validator() -> ValidatorState {
         let master_controller = MasterController::default();
 
         let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
@@ -275,28 +362,66 @@ mod test_validator_state {
         let genesis = builder.build();
         let validator = ValidatorState::new(public_key, secret, &genesis);
 
-        // create asset transaction
-        let sender_kp = generate_production_keypair::<KeyPair>();
-        let recent_block_hash = CertificateDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = utils::create_asset_creation_transaction(&sender_kp, recent_block_hash);
-        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
-        let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+        validator
+    }
 
-        let dummy_execution_indices = ExecutionIndices {
+    fn create_test_execution_indices() -> ExecutionIndices {
+        ExecutionIndices {
             next_certificate_index: 1,
             next_batch_index: 1,
             next_transaction_index: 1,
-        };
+        }
+    }
+
+    fn create_test_consensus_output() -> ConsensusOutput {
         let dummy_header = Header::default();
         let dummy_certificate = Certificate {
             header: dummy_header,
             votes: Vec::new(),
         };
-        let dummy_consensus_output = ConsensusOutput {
+        ConsensusOutput {
             certificate: dummy_certificate,
             consensus_index: 1,
-        };
+        }
+    }
+
+    #[tokio::test]
+    pub async fn process_create_asset_txn() {
+        let validator: ValidatorState = create_test_validator();
+        let dummy_consensus_output = create_test_consensus_output();
+        let dummy_execution_indices = create_test_execution_indices();
+
+        // create asset transaction
+        let sender_kp = generate_production_keypair::<KeyPair>();
+        let recent_block_hash = CertificateDigest::new([0; DIGEST_LEN]);
+        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
+        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
+        let signed_create_asset_txn =
+            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+
+        validator
+            .handle_consensus_transaction(
+                &dummy_consensus_output,
+                dummy_execution_indices.clone(),
+                signed_create_asset_txn,
+            )
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    pub async fn process_payment_txn() {
+        let validator: ValidatorState = create_test_validator();
+        let dummy_consensus_output = create_test_consensus_output();
+        let dummy_execution_indices = create_test_execution_indices();
+
+        // create asset transaction
+        let sender_kp = generate_production_keypair::<KeyPair>();
+        let recent_block_hash = CertificateDigest::new([0; DIGEST_LEN]);
+        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
+        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
+        let signed_create_asset_txn =
+            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
 
         validator
             .handle_consensus_transaction(
@@ -308,8 +433,11 @@ mod test_validator_state {
             .unwrap();
 
         // create payment transaction
+        const TEST_ASSET_ID: u64 = 0;
+        const TEST_AMOUNT: u64 = 1000000;
         let receiver_kp = generate_production_keypair::<KeyPair>();
-        let payment_txn = utils::create_payment_transaction(&sender_kp, &receiver_kp, 0, 1000000, recent_block_hash);
+        let payment_txn =
+            create_payment_transaction(&sender_kp, &receiver_kp, TEST_ASSET_ID, TEST_AMOUNT, recent_block_hash);
         let signed_digest = sender_kp.sign(&payment_txn.digest().get_array()[..]);
         let signed_payment_txn = SignedTransaction::new(sender_kp.public().clone(), payment_txn, signed_digest);
 
@@ -318,6 +446,134 @@ mod test_validator_state {
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
                 signed_payment_txn,
+            )
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    pub async fn process_create_orderbook_transaction() {
+        let validator: ValidatorState = create_test_validator();
+        let dummy_consensus_output = create_test_consensus_output();
+        let dummy_execution_indices = create_test_execution_indices();
+
+        // create asset transaction
+        let sender_kp = generate_production_keypair::<KeyPair>();
+        let recent_block_hash = CertificateDigest::new([0; DIGEST_LEN]);
+        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
+        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
+        let signed_create_asset_txn =
+            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+
+        for _ in 0..5 {
+            validator
+                .handle_consensus_transaction(
+                    &dummy_consensus_output,
+                    dummy_execution_indices.clone(),
+                    signed_create_asset_txn.clone(),
+                )
+                .await
+                .unwrap();
+        }
+
+        //dbg!(validator.master_controller.bank_controller.lock().unwrap().get_num_assets());
+
+        // create orderbook transaction
+        const TEST_BASE_ASSET_ID: u64 = 1;
+        const TEST_QUOTE_ASSET_ID: u64 = 2;
+        let sender_kp = generate_production_keypair::<KeyPair>();
+        let recent_block_hash = CertificateDigest::new([0; DIGEST_LEN]);
+        let create_orderbook_txn = create_orderbook_creation_transaction(
+            &sender_kp,
+            TEST_BASE_ASSET_ID,
+            TEST_QUOTE_ASSET_ID,
+            recent_block_hash,
+        );
+        let signed_digest = sender_kp.sign(&create_orderbook_txn.digest().get_array()[..]);
+        let signed_create_asset_txn =
+            SignedTransaction::new(sender_kp.public().clone(), create_orderbook_txn, signed_digest);
+
+        validator
+            .handle_consensus_transaction(
+                &dummy_consensus_output,
+                dummy_execution_indices.clone(),
+                signed_create_asset_txn,
+            )
+            .await
+            .unwrap();
+        //dbg!(validator.master_controller.spot_controller.lock().unwrap().get_orderbook(TEST_BASE_ASSET_ID, TEST_QUOTE_ASSET_ID).unwrap());
+    }
+
+    #[tokio::test]
+    pub async fn process_place_limit_order_transaction() {
+        let validator: ValidatorState = create_test_validator();
+        let dummy_consensus_output = create_test_consensus_output();
+        let dummy_execution_indices = create_test_execution_indices();
+
+        // create asset transaction
+        let sender_kp = generate_production_keypair::<KeyPair>();
+        let recent_block_hash = CertificateDigest::new([0; DIGEST_LEN]);
+        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
+        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
+        let signed_create_asset_txn =
+            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+
+        for _ in 0..5 {
+            validator
+                .handle_consensus_transaction(
+                    &dummy_consensus_output,
+                    dummy_execution_indices.clone(),
+                    signed_create_asset_txn.clone(),
+                )
+                .await
+                .unwrap();
+        }
+
+        //dbg!(validator.master_controller.bank_controller.lock().unwrap().get_num_assets());
+
+        // create orderbook transaction
+        const TEST_BASE_ASSET_ID: u64 = 1;
+        const TEST_QUOTE_ASSET_ID: u64 = 2;
+        let recent_block_hash = CertificateDigest::new([0; DIGEST_LEN]);
+        let create_orderbook_txn = create_orderbook_creation_transaction(
+            &sender_kp,
+            TEST_BASE_ASSET_ID,
+            TEST_QUOTE_ASSET_ID,
+            recent_block_hash,
+        );
+        let signed_digest = sender_kp.sign(&create_orderbook_txn.digest().get_array()[..]);
+        let signed_create_asset_txn =
+            SignedTransaction::new(sender_kp.public().clone(), create_orderbook_txn, signed_digest);
+
+        validator
+            .handle_consensus_transaction(
+                &dummy_consensus_output,
+                dummy_execution_indices.clone(),
+                signed_create_asset_txn,
+            )
+            .await
+            .unwrap();
+
+        const TEST_PRICE: u64 = 100;
+        const TEST_QUANTITY: u64 = 100;
+        let place_limit_order_txn = create_place_limit_order_transaction(
+            &sender_kp,
+            TEST_BASE_ASSET_ID,
+            TEST_QUOTE_ASSET_ID,
+            OrderSide::Bid,
+            TEST_PRICE,
+            TEST_QUANTITY,
+            recent_block_hash,
+        );
+        let signed_digest = sender_kp.sign(&place_limit_order_txn.digest().get_array()[..]);
+        let signed_place_limit_order_txn =
+            SignedTransaction::new(sender_kp.public().clone(), place_limit_order_txn, signed_digest);
+
+        validator
+            .handle_consensus_transaction(
+                &dummy_consensus_output,
+                dummy_execution_indices.clone(),
+                signed_place_limit_order_txn,
             )
             .await
             .unwrap();

@@ -96,7 +96,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     let mut i = 0;
     let mut batch = Vec::new();
     while i < 1_000 {
-        let amount = rand::thread_rng().gen_range(10, 100);
+        let amount = rand::thread_rng().gen_range(10..100);
         let signed_transaction = get_signed_transaction([0; 32], [1; 32], amount);
         batch.push(bincode::serialize(&signed_transaction).unwrap());
         i += 1;

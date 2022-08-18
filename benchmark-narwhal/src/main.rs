@@ -3,10 +3,9 @@
 // SPDX-License-Identifier: Apache-2.0
 #![warn(future_incompatible, nonstandard_style, rust_2018_idioms, rust_2021_compatibility)]
 
-use anyhow::{Context, Result};
 use arc_swap::ArcSwap;
 use clap::{crate_name, crate_version, App, AppSettings, ArgMatches, SubCommand};
-use futures::future::join_all;
+use eyre::{eyre, Context};
 use narwhal_config::{Committee, Import, Parameters, WorkerId};
 use narwhal_crypto::{generate_production_keypair, traits::KeyPair as _, KeyPair};
 use narwhal_executor::{SerializedTransaction, SubscriberResult};
@@ -18,10 +17,10 @@ use narwhal_node::{
 };
 use std::sync::Arc;
 use tokio::sync::mpsc::{channel, Receiver};
-use tracing::info;
+use tracing::{debug, info};
 
 // IMPORT BESPOKE EXECUTION STATE
-use benchmark_node::execution_state::AdvancedExecutionState;
+use benchmark_narwhal::execution_state::AdvancedExecutionState;
 use narwhal_node::execution_state::SimpleExecutionState;
 
 #[cfg(feature = "benchmark")]
@@ -35,7 +34,7 @@ static ALLOC: dhat::Alloc = dhat::Alloc;
 
 #[cfg(not(tarpaulin))]
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> Result<(), eyre::Report> {
     let matches = App::new(crate_name!())
         .version(crate_version!())
         .about("A research implementation of Narwhal and Tusk.")
@@ -132,7 +131,8 @@ async fn main() -> Result<()> {
 }
 
 // Runs either a worker or a primary.
-async fn run(matches: &ArgMatches<'_>) -> Result<()> {
+#[allow(clippy::let_and_return)]
+async fn run(matches: &ArgMatches<'_>) -> Result<(), eyre::Report> {
     let key_file = matches.value_of("keys").unwrap();
     let committee_file = matches.value_of("committee").unwrap();
     let parameters_file = matches.value_of("parameters");
@@ -141,6 +141,7 @@ async fn run(matches: &ArgMatches<'_>) -> Result<()> {
 
     // Read the committee and node's keypair from file.
     let keypair = KeyPair::import(key_file).context("Failed to load the node's keypair")?;
+
     let committee = Arc::new(ArcSwap::from_pointee(
         Committee::import(committee_file).context("Failed to load the committee information")?,
     ));
@@ -159,8 +160,10 @@ async fn run(matches: &ArgMatches<'_>) -> Result<()> {
 
     let registry;
 
+    debug!("input consenus parameters={:?}", parameters.clone());
+
     // Check whether to run a primary, a worker, or an entire authority.
-    let node_handles = match matches.subcommand() {
+    let task_manager = match matches.subcommand() {
         // Spawn the primary and consensus core.
         ("primary", Some(sub_matches)) => {
             registry = primary_metrics_registry(keypair.public().clone());
@@ -224,10 +227,14 @@ async fn run(matches: &ArgMatches<'_>) -> Result<()> {
     analyze(rx_transaction_confirmation).await;
 
     // Await on the completion handles of all the nodes we have launched
-    join_all(node_handles).await;
-
+    // Await on the completion handles of all the nodes we have launched
+    task_manager.await.map_err(|err| match err {
+        task_group::RuntimeError::Panic { name: n, panic: p } => eyre!("{} paniced: {:?}", n, p),
+        task_group::RuntimeError::Application { name: n, error: e } => {
+            eyre!("{} error: {:?}", n, e)
+        }
+    })
     // If this expression is reached, the program ends and all other tasks terminate.
-    Ok(())
 }
 
 /// Receives an ordered list of certificates and apply any application-specific logic.

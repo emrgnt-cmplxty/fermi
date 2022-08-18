@@ -9,8 +9,8 @@ use crate::{
     fp_ensure,
 };
 use itertools::Itertools;
-use rand_latest::rngs::OsRng;
-use rand_latest::seq::SliceRandom;
+use rand::rngs::OsRng;
+use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
 use std::borrow::Borrow;
 use std::collections::{BTreeMap, BTreeSet, HashMap};

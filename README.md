@@ -56,7 +56,7 @@ Supported features:
 
 * market orders
 * limit orders
-* amending limit order price/quantity
+* updating limit order price/quantity
 * cancelling limit order
 * partial filling
 

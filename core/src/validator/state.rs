@@ -31,7 +31,7 @@ use store::{
     rocks::{open_cf, DBMap},
     Store,
 };
-use tracing::{debug, info, trace};
+use tracing::{info, trace};
 
 /// Tracks recently submitted transactions to implement transaction gating
 pub struct ValidatorStore {

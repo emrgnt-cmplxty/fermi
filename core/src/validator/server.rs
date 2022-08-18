@@ -21,6 +21,9 @@ use narwhal_crypto::KeyPair as ConsensusKeyPair;
 use narwhal_executor::SubscriberError;
 use prometheus::Registry;
 use std::{io, sync::Arc};
+
+use narwhal_consensus::ConsensusOutput;
+use narwhal_crypto::Hash;
 use tokio::{
     sync::{
         mpsc::{channel, Receiver, Sender},
@@ -28,7 +31,7 @@ use tokio::{
     },
     task::JoinHandle,
 };
-use tracing::{info, trace};
+use tracing::{debug, info, trace};
 
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
@@ -121,7 +124,7 @@ impl ValidatorService {
         prometheus_registry: &Registry,
         rx_reconfigure_consensus: Receiver<(ConsensusKeyPair, ConsensusCommittee)>,
     ) -> anyhow::Result<Vec<JoinHandle<()>>> {
-        let (tx_consensus_to_sui, rx_consensus_to_sui) = channel(1_000);
+        let (tx_consensus_to_gdex, rx_consensus_to_gdex) = channel(1_000);
         // Spawn the consensus node of this authority.
         let consensus_config = config
             .consensus_config()
@@ -131,34 +134,68 @@ impl ValidatorService {
         let consensus_storage_base_path = consensus_config.db_path().to_path_buf();
         let consensus_parameters = consensus_config.narwhal_config().to_owned();
 
+        let state_ref = Arc::clone(&state);
         let registry = prometheus_registry.clone();
         let restarter_handle = tokio::spawn(async move {
             narwhal_node::restarter::NodeRestarter::watch(
                 consensus_keypair,
                 &(&*consensus_committee).clone(),
                 consensus_storage_base_path,
-                /* execution_state */ state,
+                /* execution_state */ state_ref,
                 consensus_parameters,
                 rx_reconfigure_consensus,
-                /* tx_output */ tx_consensus_to_sui,
+                /* tx_output */ tx_consensus_to_gdex,
                 &registry,
             )
             .await
         });
         // Create a new task to listen to received transactions
-        let analyzer_handle = tokio::spawn(async move {
-            Self::analyze(rx_consensus_to_sui).await;
+        let post_process_handle = tokio::spawn(async move {
+            Self::post_process(rx_consensus_to_gdex, Arc::clone(&state)).await;
         });
 
-        Ok(vec![restarter_handle, analyzer_handle])
+        Ok(vec![restarter_handle, post_process_handle])
     }
 
     /// Receives an ordered list of certificates and apply any application-specific logic.
     #[allow(clippy::type_complexity)]
-    async fn analyze(mut rx_output: Receiver<(Result<Vec<u8>, SubscriberError>, Vec<u8>)>) {
+    async fn post_process(
+        mut rx_output: Receiver<(Result<ConsensusOutput, SubscriberError>, Vec<u8>)>,
+        validator_state: Arc<ValidatorState>,
+    ) {
+        // TODO load the actual last seq
+        let mut last_seq_num = 0;
+        let mut serialized_txns_buf = Vec::new();
         loop {
-            while let Some(_message) = rx_output.recv().await {
-                trace!("Received a finalized consensus transaction with analyze",);
+            while let Some(message) = rx_output.recv().await {
+                trace!("Received a finalized consensus transaction for post processing",);
+                let (result, serialized_txn) = message;
+                match result {
+                    Ok(consensus_output) => {
+                        let new_seq_num = consensus_output.consensus_index;
+                        if new_seq_num > last_seq_num {
+                            let num_txns = serialized_txns_buf.len();
+                            debug!("Processing finalized block {last_seq_num} with {num_txns} transactions");
+                            validator_state.validator_store.prune();
+                            validator_state
+                                .validator_store
+                                .transaction_store
+                                .write(last_seq_num, serialized_txns_buf.clone())
+                                .await;
+                            validator_state
+                                .validator_store
+                                .sequence_store
+                                .write(last_seq_num, consensus_output.certificate.digest())
+                                .await;
+
+                            last_seq_num = new_seq_num;
+                            serialized_txns_buf.clear();
+                        }
+                        serialized_txns_buf.push(serialized_txn)
+                    }
+                    Err(e) => trace!("{:?}", e), // TODO
+                }
+
                 // NOTE: Notify the user that its transaction has been processed.
             }
         }
@@ -177,6 +214,23 @@ impl ValidatorService {
             .verify()
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
 
+        // TODO change this to err flow
+        // if !state
+        //     .validator_store
+        //     .check_seen_certificate_digest(transaction.get_transaction_payload().get_recent_certificate_digest())
+        // {
+        //     tonic::Status::internal("Invalid recent certificate digest");
+        //     ();
+        // }
+        //
+        // if state
+        //     .validator_store
+        //     .check_seen_transaction(transaction.get_transaction_payload())
+        // {
+        //     tonic::Status::internal("Duplicate transaction");
+        //     ();
+        // }
+
         let transaction_proto = narwhal_types::TransactionProto {
             transaction: transaction_proto.transaction, //.serialize().unwrap().into(),
         };
@@ -190,9 +244,8 @@ impl ValidatorService {
             .unwrap();
 
         state
-            .handle_transaction(&signed_transaction)
+            .handle_pre_consensus_transaction(&signed_transaction)
             // .instrument(span)
-            .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
         // Ok(tonic::Response::new(TransactionResult(1)))

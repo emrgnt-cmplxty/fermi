@@ -167,6 +167,7 @@ pub mod suite_core_tests {
         let validator_handle = validator_server.spawn().await.unwrap();
 
         let key_file = working_dir.join(format!("validator-{}.key", primary_validator_index));
+        println!("KEYFILE: {:?}", key_file);
         let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
         let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
@@ -176,16 +177,16 @@ pub mod suite_core_tests {
         );
 
         let mut i = 0;
-        while i < 1_000 {
-            let transaction_proto = TransactionProto {
-                transaction: signed_transaction.serialize().unwrap().into(),
-            };
-            let _resp1 = client
-                .submit_transaction(transaction_proto)
-                .await
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
-                .unwrap();
-            i += 1;
-        }
+        // while i < 10 {
+        //     let transaction_proto = TransactionProto {
+        //         transaction: signed_transaction.serialize().unwrap().into(),
+        //     };
+        //     let _resp1 = client
+        //         .submit_transaction(transaction_proto)
+        //         .await
+        //         .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+        //         .unwrap();
+        //     i += 1;
+        // }
     }
 }

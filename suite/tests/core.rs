@@ -82,11 +82,7 @@ pub mod suite_core_tests {
 
         let key_pair_pin = Arc::pin(utils::read_keypair_from_file(&key_file).unwrap());
         let key_pair_arc = Arc::new(utils::read_keypair_from_file(&key_file).unwrap());
-        let validator_state = Arc::new(ValidatorState::new(
-            pubilc_key,
-            key_pair_pin,
-            &genesis_state,
-        ));
+        let validator_state = Arc::new(ValidatorState::new(pubilc_key, key_pair_pin, &genesis_state));
 
         // Create a node config with this validators information
         let consensus_db_path = db_dir.join(CONSENSUS_DB_NAME);
@@ -120,10 +116,14 @@ pub mod suite_core_tests {
         // spawn the validator service, e.g. Narwhal consensus
         let prometheus_registry = start_prometheus_server(node_config.metrics_address);
         let (_tx_reconfigure_consensus, rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
-        let narwhal_handle =
-            ValidatorService::spawn_narwhal(&node_config, Arc::clone(&validator_state), &prometheus_registry, rx_reconfigure_consensus)
-                .await
-                .unwrap();
+        let narwhal_handle = ValidatorService::spawn_narwhal(
+            &node_config,
+            Arc::clone(&validator_state),
+            &prometheus_registry,
+            rx_reconfigure_consensus,
+        )
+        .await
+        .unwrap();
         (validator_state, narwhal_handle)
     }
 
@@ -168,7 +168,12 @@ pub mod suite_core_tests {
         let consensus_address = validator.narwhal_consensus_address.clone();
 
         let (tx_reconfigure_consensus, _rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
-        let validator_server = ValidatorServer::new(new_addr.clone(), Arc::clone(&validator_state), consensus_address, tx_reconfigure_consensus);
+        let validator_server = ValidatorServer::new(
+            new_addr.clone(),
+            Arc::clone(&validator_state),
+            consensus_address,
+            tx_reconfigure_consensus,
+        );
         let validator_handle = validator_server.spawn().await.unwrap();
 
         let key_file = working_dir.join(format!("validator-{}.key", primary_validator_index));

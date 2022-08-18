@@ -16,14 +16,14 @@ use gdex_types::{
     transaction::SignedTransaction,
 };
 use multiaddr::Multiaddr;
-use narwhal_executor::SubscriberError;
 use narwhal_config::Committee as ConsensusCommittee;
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
+use narwhal_executor::SubscriberError;
 use prometheus::Registry;
 use std::{io, sync::Arc};
 use tokio::{
     sync::{
-        mpsc::{channel, Sender, Receiver},
+        mpsc::{channel, Receiver, Sender},
         Mutex,
     },
     task::JoinHandle,
@@ -55,14 +55,19 @@ pub struct ValidatorServer {
 }
 
 impl ValidatorServer {
-    pub fn new(address: Multiaddr, state: Arc<ValidatorState>, consensus_address: Multiaddr, tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>) -> Self {
+    pub fn new(
+        address: Multiaddr,
+        state: Arc<ValidatorState>,
+        consensus_address: Multiaddr,
+        tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
+    ) -> Self {
         let consensus_client = narwhal_types::TransactionsClient::new(
             client::connect_lazy(&consensus_address).expect("Failed to connect to consensus"),
         );
         let consensus_adapter = ConsensusAdapter {
             consensus_client,
             consensus_address,
-            tx_reconfigure_consensus
+            tx_reconfigure_consensus,
         };
 
         Self {
@@ -204,7 +209,6 @@ impl ValidatorService {
 /// Spawns a tonic grpc which parses incoming transactions and forwards them to the handle_transaction method of ValidatorService
 #[async_trait]
 impl Transactions for ValidatorService {
-    
     async fn submit_transaction(
         &self,
         request: tonic::Request<TransactionProto>,
@@ -284,7 +288,12 @@ mod test_validator_server {
         let validator_state = ValidatorState::new(public_key, secret, &genesis);
         let new_addr = utils::new_network_address();
         let (tx_reconfigure_consensus, _rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
-        let validator_server = ValidatorServer::new(new_addr.clone(), Arc::new(validator_state), network_address, tx_reconfigure_consensus);
+        let validator_server = ValidatorServer::new(
+            new_addr.clone(),
+            Arc::new(validator_state),
+            network_address,
+            tx_reconfigure_consensus,
+        );
         validator_server.spawn().await
     }
 
@@ -366,14 +375,14 @@ mod test_validator_server {
             utils::new_network_address(),
             Arc::new(validator_state_0),
             utils::new_network_address(),
-            tx_reconfigure_consensus
+            tx_reconfigure_consensus,
         );
         let (tx_reconfigure_consensus, _rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
         let validator_server_1 = ValidatorServer::new(
             utils::new_network_address(),
             Arc::new(validator_state_1),
             utils::new_network_address(),
-            tx_reconfigure_consensus
+            tx_reconfigure_consensus,
         );
 
         validator_server_0.spawn().await.unwrap();

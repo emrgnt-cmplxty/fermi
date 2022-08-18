@@ -14,10 +14,8 @@ use narwhal_config::{Committee as ConsensusCommittee, Parameters as ConsensusPar
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
 use std::{path::PathBuf, sync::Arc};
 use tokio::{
-    sync::{
-        mpsc::{channel, Sender, Receiver},
-    },
-    task::JoinHandle
+    sync::mpsc::{Receiver, Sender},
+    task::JoinHandle,
 };
 use tracing::info;
 /// Can spawn a validator server handle at the internal address
@@ -100,7 +98,10 @@ impl ValidatorSpawner {
 
     /// Internal helper function used to spawns the validator service
     /// note, this function will fail if called twice from the same spawner
-    async fn spawn_validator_service(&mut self, rx_reconfigure_consensus: Receiver<(ConsensusKeyPair, ConsensusCommittee)>,) -> Result<Vec<JoinHandle<()>>> {
+    async fn spawn_validator_service(
+        &mut self,
+        rx_reconfigure_consensus: Receiver<(ConsensusKeyPair, ConsensusCommittee)>,
+    ) -> Result<Vec<JoinHandle<()>>> {
         if self.is_validator_service_spawned() {
             panic!("The validator service has already been spawned");
         };
@@ -118,11 +119,7 @@ impl ValidatorSpawner {
             .join(format!("{}-{}", self.validator_info.name, CONSENSUS_DB_NAME));
 
         let key_pair = Arc::pin(utils::read_keypair_from_file(&key_file).unwrap());
-        let validator_state = Arc::new(ValidatorState::new(
-            pubilc_key,
-            key_pair,
-            &self.genesis_state,
-        ));
+        let validator_state = Arc::new(ValidatorState::new(pubilc_key, key_pair, &self.genesis_state));
 
         info!(
             "Spawning a validator with the initial validator info = {:?}",
@@ -167,10 +164,14 @@ impl ValidatorSpawner {
         };
         let prometheus_registry = start_prometheus_server(node_config.metrics_address);
         // spawn the validator service, e.g. Narwhal consensus
-        let spawned_service =
-            ValidatorService::spawn_narwhal(&node_config, Arc::clone(&validator_state), &prometheus_registry, rx_reconfigure_consensus)
-                .await
-                .unwrap();
+        let spawned_service = ValidatorService::spawn_narwhal(
+            &node_config,
+            Arc::clone(&validator_state),
+            &prometheus_registry,
+            rx_reconfigure_consensus,
+        )
+        .await
+        .unwrap();
 
         self.set_validator_state(validator_state);
         Ok(spawned_service)
@@ -178,7 +179,10 @@ impl ValidatorSpawner {
 
     /// Internal helper function used to spawns the validator server
     /// note, this function will fail if called twice from the same spawner
-    pub async fn spawn_validator_server(&mut self, tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,) -> ValidatorServerHandle {
+    pub async fn spawn_validator_server(
+        &mut self,
+        tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
+    ) -> ValidatorServerHandle {
         if self.is_validator_server_spawned() {
             panic!("The validator server already been spawned");
         };

@@ -61,11 +61,7 @@ pub struct ValidatorState {
 impl ValidatorState {
     // TODO: This function takes both committee and genesis as parameter.
     // Technically genesis already contains committee information. Could consider merging them.
-    pub fn new(
-        name: ValidatorName,
-        secret: StableSyncValidatorSigner,
-        genesis: &ValidatorGenesisState,
-    ) -> Self {
+    pub fn new(name: ValidatorName, secret: StableSyncValidatorSigner, genesis: &ValidatorGenesisState) -> Self {
         ValidatorState {
             name,
             secret,

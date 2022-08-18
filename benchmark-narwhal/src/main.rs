@@ -6,7 +6,6 @@
 use arc_swap::ArcSwap;
 use clap::{crate_name, crate_version, App, AppSettings, ArgMatches, SubCommand};
 use eyre::{eyre, Context};
-use futures::future::join_all;
 use narwhal_config::{Committee, Import, Parameters, WorkerId};
 use narwhal_crypto::{generate_production_keypair, traits::KeyPair as _, KeyPair};
 use narwhal_executor::{SerializedTransaction, SubscriberResult};
@@ -17,7 +16,6 @@ use narwhal_node::{
     NodeStorage,
 };
 use std::sync::Arc;
-use task_group::{TaskGroup, TaskManager};
 use tokio::sync::mpsc::{channel, Receiver};
 use tracing::{debug, info};
 

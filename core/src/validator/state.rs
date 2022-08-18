@@ -15,7 +15,7 @@ use gdex_types::{
 };
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::Hash;
-use narwhal_executor::{ExecutionIndices, ExecutionState};
+use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
 use narwhal_types::{CertificateDigest, SequenceNumber};
 use std::{
     collections::HashMap,
@@ -24,6 +24,12 @@ use std::{
         atomic::{AtomicBool, Ordering},
         Arc, Mutex,
     },
+};
+
+use store::{
+    reopen,
+    rocks::{open_cf, DBMap},
+    Store,
 };
 use tracing::{debug, info};
 
@@ -34,19 +40,43 @@ pub struct ValidatorStore {
     certificate_cache: Mutex<HashMap<CertificateDigest, SequenceNumber>>,
     // garbage collection depth
     gc_depth: u64,
+    pub transaction_store: Store<SequenceNumber, Vec<SerializedTransaction>>,
+    pub sequence_store: Store<SequenceNumber, CertificateDigest>
 }
 
-impl Default for ValidatorStore {
-    fn default() -> Self {
+impl ValidatorStore {
+
+    const TRANSACTIONS_CF: &'static str = "transactions";
+    const SEQUENCE_CF: &'static str = "sequence";
+
+    pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
+        let rocksdb = open_cf(
+            store_path,
+            None,
+            &[
+                Self::TRANSACTIONS_CF,
+                Self::SEQUENCE_CF,
+            ],
+        )
+        .expect("Cannot open database");
+
+        let (transactions_map, sequence_map) = reopen!(&rocksdb,
+            Self::TRANSACTIONS_CF;<SequenceNumber, Vec<SerializedTransaction>>,
+            Self::SEQUENCE_CF;<SequenceNumber, CertificateDigest>
+        );
+
+        let transaction_store = Store::new(transactions_map);
+        let sequence_store = Store::new(sequence_map);
+
         Self {
             transaction_cache: Mutex::new(HashMap::new()),
             certificate_cache: Mutex::new(HashMap::new()),
             gc_depth: 50,
+            transaction_store,
+            sequence_store,
         }
     }
-}
 
-impl ValidatorStore {
     pub fn contains_transaction(&self, transaction: &Transaction) -> bool {
         let transaction_digest = transaction.digest();
         return self.transaction_cache.lock().unwrap().contains_key(&transaction_digest);
@@ -91,6 +121,16 @@ impl ValidatorStore {
                 .unwrap()
                 .retain(|_k, v| v.is_none() || locked_certificate_cache.contains_key(&v.unwrap()));
         }
+    }
+}
+
+
+impl Default for ValidatorStore {
+    fn default() -> Self {
+        let store_path = tempfile::tempdir()
+            .expect("Failed to open temporary directory")
+            .into_path();
+        Self::reopen(store_path)
     }
 }
 
@@ -162,22 +202,22 @@ impl ExecutionState for ValidatorState {
         signed_transaction: Self::Transaction,
     ) -> Result<(Self::Outcome, Option<narwhal_config::Committee>), Self::Error> {
         let transaction = signed_transaction.get_transaction_payload();
-        match transaction.get_variant() {
-            TransactionVariant::PaymentTransaction(payment) => {
-                self.master_controller.bank_controller.lock().unwrap().transfer(
-                    transaction.get_sender(),
-                    payment.get_receiver(),
-                    payment.get_asset_id(),
-                    payment.get_amount(),
-                )?
-            }
-            TransactionVariant::CreateAssetTransaction(_create_asset) => self
-                .master_controller
-                .bank_controller
-                .lock()
-                .unwrap()
-                .create_asset(transaction.get_sender())?,
-        };
+        // match transaction.get_variant() {
+        //     TransactionVariant::PaymentTransaction(payment) => {
+        //         self.master_controller.bank_controller.lock().unwrap().transfer(
+        //             transaction.get_sender(),
+        //             payment.get_receiver(),
+        //             payment.get_asset_id(),
+        //             payment.get_amount(),
+        //         )?
+        //     }
+        //     TransactionVariant::CreateAssetTransaction(_create_asset) => self
+        //         .master_controller
+        //         .bank_controller
+        //         .lock()
+        //         .unwrap()
+        //         .create_asset(transaction.get_sender())?,
+        // };
 
         self.validator_store
             .insert_confirmed_transaction(transaction, consensus_output);

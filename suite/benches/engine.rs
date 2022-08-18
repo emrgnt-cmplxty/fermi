@@ -1,6 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use gdex_controller::{bank::BankController, spot::OrderbookInterface};
-use gdex_engine::{order_book::Orderbook, orders::new_limit_order_request};
+use gdex_engine::{order_book::Orderbook, orders::create_limit_order_request};
 use gdex_types::transaction::OrderRequest;
 use gdex_types::{
     account::{account_test_functions::generate_keypair_vec, AccountPubKey},
@@ -61,7 +61,7 @@ fn place_orders_engine(
         let price: u64 = rng.gen_range(1, 100);
 
         // order construction & submission
-        let order: OrderRequest = new_limit_order_request(
+        let order: OrderRequest = create_limit_order_request(
             base_asset_id,
             quote_asset_id,
             order_type,

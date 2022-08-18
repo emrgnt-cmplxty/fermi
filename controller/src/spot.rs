@@ -9,7 +9,7 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 use super::bank::BankController;
-use gdex_engine::{order_book::Orderbook, orders::new_limit_order_request};
+use gdex_engine::{order_book::Orderbook, orders::create_limit_order_request};
 use gdex_types::{
     account::{AccountPubKey, OrderAccount},
     asset::{AssetId, AssetPairKey},
@@ -93,7 +93,7 @@ impl OrderbookInterface {
             assert!(balance > quantity * price);
         }
         // create and process limit order
-        let order = new_limit_order_request(
+        let order = create_limit_order_request(
             self.base_asset_id,
             self.quote_asset_id,
             side,

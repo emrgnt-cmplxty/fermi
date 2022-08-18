@@ -64,7 +64,7 @@ impl OrderRequestValidator {
                 local_timestamp: _ts,
             } => self.validate_update(id, price, quantity),
 
-            OrderRequest::CancelOrder { id, side: _side } => self.validate_cancel(id),
+            OrderRequest::CancelOrder { order_id, side: _side } => self.validate_cancel(order_id),
         }
     }
 

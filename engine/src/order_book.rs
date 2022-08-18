@@ -131,8 +131,8 @@ impl Orderbook {
                 self.process_order_update(&mut process_result, id, side, price, quantity, local_timestamp);
             }
 
-            OrderRequest::CancelOrder { id, side } => {
-                self.process_order_cancel(&mut process_result, id, side);
+            OrderRequest::CancelOrder { order_id, side } => {
+                self.process_order_cancel(&mut process_result, order_id, side);
             }
         }
 
@@ -497,7 +497,7 @@ mod test_order_book {
 
     use super::*;
     use crate::orders::{
-        limit_order_cancel_request, new_limit_order_request, new_market_order_request, update_order_request,
+        limit_order_cancel_request, create_limit_order_request, create_market_order_request, create_update_order_request,
     };
 
     const BASE_ASSET: u64 = 0;
@@ -522,7 +522,7 @@ mod test_order_book {
         let mut order_book = Orderbook::new(BASE_ASSET, QUOTE_ASSET);
 
         // create and process limit order
-        let order = new_limit_order_request(BASE_ASSET, QUOTE_ASSET + 1, OrderSide::Ask, 10, 1, SystemTime::now());
+        let order = create_limit_order_request(BASE_ASSET, QUOTE_ASSET + 1, OrderSide::Ask, 10, 1, SystemTime::now());
         let results = order_book.process_order(order);
         for result in results {
             result.unwrap();
@@ -534,11 +534,11 @@ mod test_order_book {
         let mut order_book = Orderbook::new(BASE_ASSET, QUOTE_ASSET);
 
         // create and process limit order
-        let order = new_limit_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Bid, 10, 100, SystemTime::now());
+        let order = create_limit_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Bid, 10, 100, SystemTime::now());
         order_book.process_order(order);
 
         // create and process limit order
-        let order = new_market_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Ask, 10, SystemTime::now());
+        let order = create_market_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Ask, 10, SystemTime::now());
         let results = order_book.process_order(order);
         for result in results {
             result.unwrap();
@@ -550,14 +550,14 @@ mod test_order_book {
         let mut order_book = Orderbook::new(BASE_ASSET, QUOTE_ASSET);
 
         // create and process limit order
-        let order = new_limit_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Bid, 10, 100, SystemTime::now());
+        let order = create_limit_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Bid, 10, 100, SystemTime::now());
         let mut results = order_book.process_order(order);
 
         let order_result = results.pop().unwrap().unwrap();
 
         match order_result {
             Success::Accepted { order_id, .. } => {
-                let update_order = update_order_request(order_id, OrderSide::Bid, 100, 100, SystemTime::now());
+                let update_order = create_update_order_request(order_id, OrderSide::Bid, 100, 100, SystemTime::now());
                 order_book.process_order(update_order).pop().unwrap().unwrap();
             }
             _ => {
@@ -571,10 +571,10 @@ mod test_order_book {
         let mut order_book = Orderbook::new(BASE_ASSET, QUOTE_ASSET);
 
         // create and process limit order
-        let order = new_limit_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Bid, 10, 100, SystemTime::now());
+        let order = create_limit_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Bid, 10, 100, SystemTime::now());
         order_book.process_order(order);
 
-        let order = new_limit_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Ask, 5, 10, SystemTime::now());
+        let order = create_limit_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Ask, 5, 10, SystemTime::now());
         let results = order_book.process_order(order);
 
         for result in results {

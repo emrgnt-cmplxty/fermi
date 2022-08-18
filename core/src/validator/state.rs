@@ -155,8 +155,8 @@ impl ExecutionState for ValidatorState {
                                 *price,
                             )?
                     }
-                    OrderRequest::CancelOrder { id, side } => {
-                        dbg!(id, side);
+                    OrderRequest::CancelOrder { order_id, side } => {
+                        dbg!(order_id, side);
                     }
                     OrderRequest::Update {
                         id,

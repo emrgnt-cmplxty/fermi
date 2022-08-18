@@ -140,7 +140,7 @@ pub enum OrderRequest {
     },
 
     CancelOrder {
-        id: OrderId,
+        order_id: OrderId,
         side: OrderSide,
     },
 }
@@ -291,10 +291,10 @@ impl Hash for Transaction {
                     };
                     TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
                 }
-                OrderRequest::CancelOrder { id, side } => {
+                OrderRequest::CancelOrder { order_id, side } => {
                     let hasher_update = |hasher: &mut VarBlake2b| {
                         hasher.update(self.get_sender().0.to_bytes());
-                        hasher.update(id.to_le_bytes());
+                        hasher.update(order_id.to_le_bytes());
                         hasher.update((*side as u8).to_le_bytes());
                         hasher.update(&self.get_recent_block_hash().0[..]);
                     };

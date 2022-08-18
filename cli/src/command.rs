@@ -17,21 +17,16 @@ use gdex_core::{
     genesis_ceremony::{run, Ceremony, CeremonyCommand},
 };
 use gdex_types::{
-    account::{AccountKeyPair, ValidatorPubKeyBytes},
+    account::AccountKeyPair,
     crypto::{get_key_pair_from_rng, KeypairTraits, ToFromBytes},
     utils,
 };
 
+use faucet::faucet_client::FaucetClient;
+use faucet::FaucetAirdropRequest;
 use multiaddr::Multiaddr;
-use narwhal_crypto::ed25519::Ed25519PublicKey;
 use std::{fs, io::Write, num::NonZeroUsize, path::PathBuf};
 use tracing::info;
-
-use faucet::faucet_client::FaucetClient;
-use std::{env, error::Error};
-
-use faucet::FaucetAirdropRequest;
-
 pub mod faucet {
     tonic::include_proto!("faucet");
 }
@@ -136,6 +131,8 @@ pub enum GDEXCommand {
         amount: u64,
         #[clap(value_parser, help = "Specify who you wait to airdrop to")]
         airdrop_to: String,
+        #[clap(value_parser, help = "Specify the port that the faucet server is running on")]
+        faucet_port: u64,
     },
 }
 
@@ -414,38 +411,20 @@ impl GDEXCommand {
 
                 Ok(())
             }
-            GDEXCommand::Airdrop { amount, airdrop_to } => {
-                // // hardcoding for now
-                // let addr = "http://127.0.0.1:8080";
-
-                // let mut client = FaucetClient::connect(addr.to_string()).await?;
-
-                // let request = tonic::Request::new(FaucetAirdropRequest {
-                //     airdrop_to: airdrop_to.to_owned(),
-                // });
-
-                // let response = client.airdrop(request).await?;
-
-                let kp_sender: AccountKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
-
-                let kp_public = kp_sender.public();
-                println!("{:?}", kp_public.as_bytes());
-                let hex_name = utils::encode_bytes_hex(&ValidatorPubKeyBytes::from(kp_public));
-                println!("{:?}", hex_name);
-                // let bytes_ver = utils::decode_hex(&hex_name).unwrap();
-                let bytes_ver = hex::decode(hex_name).unwrap();
-                println!("{:?}", bytes_ver);
-                let kp_public_derived = Ed25519PublicKey::from_bytes(&bytes_ver).unwrap();
-                println!("{:?}", kp_public_derived.as_bytes());
-                assert!(kp_public.as_bytes() == kp_public_derived.as_bytes());
-
-                // println!("{:?}", hex_name);
-                // let kp_public_derived =
-                //     ValidatorPubKeyBytes::from_bytes(&utils::decode_bytes_hex::<Vec<u8>>(&hex_name)?[..]);
-                // println!("{:?}", kp_public_derived);
-
-                // println!("RESPONSE={:?}", response);
-
+            GDEXCommand::Airdrop {
+                amount,
+                airdrop_to,
+                faucet_port,
+            } => {
+                // Address for the faucet
+                let addr = format!("http://127.0.0.1:{}", faucet_port.to_string());
+                let mut client = FaucetClient::connect(addr.to_string()).await?;
+                let request = tonic::Request::new(FaucetAirdropRequest {
+                    airdrop_to: airdrop_to.to_owned(),
+                    amount: amount,
+                });
+                let _response = client.airdrop(request).await?;
+                println!("Success! Airdroped {} tokens to address {}", amount, airdrop_to);
                 Ok(())
             }
         }

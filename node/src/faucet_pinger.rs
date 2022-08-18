@@ -1,24 +1,24 @@
-use faucet::faucet_client::FaucetClient;
-use std::{env, error::Error};
+// use faucet::faucet_client::FaucetClient;
+// use std::{env, error::Error};
 
-use faucet::FaucetAirdropRequest;
+// use faucet::FaucetAirdropRequest;
 
-pub mod faucet {
-    tonic::include_proto!("faucet");
-}
+// pub mod faucet {
+//     tonic::include_proto!("faucet");
+// }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
-    let addr = env::args().nth(1).unwrap();
-    let mut client = FaucetClient::connect(addr.to_string()).await?;
+// #[tokio::main]
+// async fn main() -> Result<(), Box<dyn Error>> {
+//     let addr = env::args().nth(1).unwrap();
+//     let mut client = FaucetClient::connect(addr.to_string()).await?;
 
-    let request = tonic::Request::new(FaucetAirdropRequest {
-        airdrop_to: "Armstrong".to_owned(),
-    });
+//     let request = tonic::Request::new(FaucetAirdropRequest {
+//         airdrop_to: "Armstrong".to_owned(),
+//     });
 
-    let response = client.airdrop(request).await?;
+//     let response = client.airdrop(request).await?;
 
-    println!("RESPONSE={:?}", response);
+//     println!("RESPONSE={:?}", response);
 
-    Ok(())
-}
+//     Ok(())
+// }

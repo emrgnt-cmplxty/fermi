@@ -19,6 +19,7 @@ gdex-core = { path = "../core" }
 narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "types" }
 narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "crypto", features=["copy_key"]}
 tempfile = "3.3.0"
+hex = "0.4.3"
 
 [build-dependencies]
 tonic-build = "0.7"
@@ -26,9 +27,5 @@ tonic-build = "0.7"
 [[bin]]
 name = "faucet-server"
 path = "src/faucet_server.rs"
-
-[[bin]]
-name = "faucet-pinger"
-path = "src/faucet_pinger.rs"
 
 

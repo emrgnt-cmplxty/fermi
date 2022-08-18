@@ -47,7 +47,6 @@ narwhal-worker = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611e
 narwhal-network = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "network" }
 
 # local crates
-gdex-core = { path = "../core" }
 gdex-controller = { path = "../controller" }
 gdex-types = { path = "../types" }
 gdex-workspace-hack = { version = "0.1", path = "../workspace-hack" }

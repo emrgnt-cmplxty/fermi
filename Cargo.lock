@@ -546,7 +546,6 @@ dependencies = [
  "eyre",
  "futures",
  "gdex-controller",
- "gdex-core",
  "gdex-types",
  "gdex-workspace-hack",
  "hex",
@@ -2457,8 +2456,6 @@ dependencies = [
 name = "gdex-controller"
 version = "0.1.0"
 dependencies = [
- "assert_approx_eq",
- "criterion",
  "crypto",
  "gdex-engine",
  "gdex-types",
@@ -2505,7 +2502,6 @@ dependencies = [
  "tower",
  "tower-http",
  "tracing",
- "tracing-subscriber 0.2.25",
  "types",
 ]
 
@@ -2513,7 +2509,6 @@ dependencies = [
 name = "gdex-engine"
 version = "0.1.0"
 dependencies = [
- "criterion",
  "gdex-types",
  "gdex-workspace-hack",
  "rand 0.8.5",

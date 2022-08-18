@@ -57,8 +57,8 @@ fn place_orders_engine(
         } else {
             OrderSide::Ask
         };
-        let quantity: u64 = rng.gen_range(1, 100);
-        let price: u64 = rng.gen_range(1, 100);
+        let quantity: u64 = rng.gen_range(1..100);
+        let price: u64 = rng.gen_range(1..100);
 
         // order construction & submission
         let order: OrderRequest = new_limit_order_request(
@@ -102,8 +102,8 @@ fn place_orders_engine_account(
             OrderSide::Ask
         };
         // generate two random a number between 0.001 and 10 w/ interval of 0.001
-        let quantity = rng.gen_range(1, 100);
-        let price = rng.gen_range(1, 100);
+        let quantity = rng.gen_range(1..100);
+        let price = rng.gen_range(1..100);
 
         let res = orderbook_controller
             .place_limit_order(primary, order_type, quantity, price)

@@ -130,7 +130,6 @@ impl ValidatorService {
         let consensus_keypair = config.key_pair().copy();
         let consensus_committee = config.genesis()?.narwhal_committee().load();
         let consensus_storage_base_path = consensus_config.db_path().to_path_buf();
-        let consensus_execution_state = state.clone();
         let consensus_parameters = consensus_config.narwhal_config().to_owned();
 
         let registry = prometheus_registry.clone();
@@ -139,7 +138,7 @@ impl ValidatorService {
                 consensus_keypair,
                 &(&*consensus_committee).clone(),
                 consensus_storage_base_path,
-                consensus_execution_state,
+                /* execution_state */ state,
                 consensus_parameters,
                 rx_reconfigure_consensus,
                 /* tx_output */ tx_consensus_to_sui,

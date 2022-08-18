@@ -246,12 +246,12 @@ pub mod suite_spawn_tests {
 
     #[tokio::test]
     pub async fn spawn_node_and_reconfigure() {
-        let subscriber = FmtSubscriber::builder()
-            // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
-            // will be written to stdout.
-            .with_env_filter("info")
-            .finish();
-        tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+        // let subscriber = FmtSubscriber::builder()
+        //     // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
+        //     // will be written to stdout.
+        //     .with_env_filter("info")
+        //     .finish();
+        // tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
         let dir = "../.proto";
         let path = Path::new(dir).to_path_buf();

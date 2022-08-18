@@ -326,8 +326,7 @@ mod test_validator_server {
         let subscriber = FmtSubscriber::builder()
             // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
             // will be written to stdout.
-            .with_env_filter("gdex_core=trace, gdex_suite=debug")
-            // .with_max_level(Level::DEBUG)
+            .with_max_level(tracing::Level::DEBUG)
             // completes the builder.
             .finish();
         tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");

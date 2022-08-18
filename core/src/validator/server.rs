@@ -122,7 +122,6 @@ impl ValidatorService {
         rx_reconfigure_consensus: Receiver<(ConsensusKeyPair, ConsensusCommittee)>,
     ) -> anyhow::Result<Vec<JoinHandle<()>>> {
         let (tx_consensus_to_sui, rx_consensus_to_sui) = channel(1_000);
-        // TODO - consume _tx_sui_to_consensus inside of GDEX
         // Spawn the consensus node of this authority.
         let consensus_config = config
             .consensus_config()

@@ -8,11 +8,12 @@ use gdex_types::{
     proto::TransactionsClient,
     crypto::{KeypairTraits, Signer},
     account::{AccountKeyPair, account_test_functions::generate_keypair_vec},
+    transaction::{SignedTransaction, TransactionVariant, PaymentRequest, Transaction},
     utils,
 };
-use gdex_types::transaction::{SignedTransaction, TransactionVariant, PaymentRequest, Transaction};
 use narwhal_types::BatchDigest;
 use narwhal_crypto::{DIGEST_LEN, Hash};
+use gdex_core::validator::server::ValidatorServer;
 
 pub const PRIMARY_ASSET_ID: u64 = 0;
 
@@ -48,21 +49,24 @@ impl Faucet for FaucetService {
         &self,
         request: Request<FaucetAirdropRequest>,
     ) -> Result<Response<FaucetAirdropResponse>, Status> {
-        // let file_path = "./something.txt";
-        // let contents = fs::read_to_string(file_path).expect("Should have been able to read the file");
-        // println!("With text: \n {contents}");
         let key_dir = ".proto/";
         let key_path = Path::new(key_dir).to_path_buf();
-        // let temp_dir = tempfile::tempdir().unwrap();
         let primary_validator_index = 0;
         let key_file = key_path.join(format!("validator-{}.key", primary_validator_index));
 
         // Treating the validator as an account for now 
         let kp_sender: AccountKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
-        // let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
+        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
 
-        // let signed_transaction = generate_signed_airdrop_transaction_from_faucet(&kp_sender, &kp_receiver, 100);
-        // println!("{:?}", signed_transaction);
+        let signed_transaction = generate_signed_airdrop_transaction_from_faucet(&kp_sender, &kp_receiver, 100);
+        println!("{:?}", signed_transaction);
+
+        let validator_server = ValidatorServer::new(new_addr.clone(), Arc::clone(&validator_state), consensus_address);
+        let validator_handle = validator_server.spawn().await.unwrap();
+
+        let mut client = TransactionsClient::new(
+            client::connect_lazy(&validator_handle.address()).expect("Failed to connect to consensus"),
+        );
 
         // let req = request.into_inner();
 

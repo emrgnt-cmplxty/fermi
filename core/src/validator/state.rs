@@ -159,20 +159,19 @@ impl ExecutionState for ValidatorState {
                         base_asset_id,
                         quote_asset_id,
                         order_id,
-                        side
-                    } => {
-                        self.master_controller
-                            .spot_controller
-                            .lock()
-                            .unwrap()
-                            .place_cancel_order(
-                                *base_asset_id,
-                                *quote_asset_id,
-                                transaction.get_sender(),
-                                *order_id,
-                                *side
-                            )?
-                    }
+                        side,
+                    } => self
+                        .master_controller
+                        .spot_controller
+                        .lock()
+                        .unwrap()
+                        .place_cancel_order(
+                            *base_asset_id,
+                            *quote_asset_id,
+                            transaction.get_sender(),
+                            *order_id,
+                            *side,
+                        )?,
                     OrderRequest::Update {
                         order_id,
                         side,

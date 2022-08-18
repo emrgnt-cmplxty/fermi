@@ -9,14 +9,15 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 use super::bank::BankController;
-use gdex_engine::{order_book::Orderbook,
-    orders::{create_limit_order_request, create_cancel_order_request}
+use gdex_engine::{
+    order_book::Orderbook,
+    orders::{create_cancel_order_request, create_limit_order_request},
 };
 use gdex_types::{
     account::{AccountPubKey, OrderAccount},
     asset::{AssetId, AssetPairKey},
     error::GDEXError,
-    order_book::{OrderProcessingResult, OrderSide, Order, Success},
+    order_book::{Order, OrderProcessingResult, OrderSide, Success},
 };
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -112,7 +113,7 @@ impl OrderbookInterface {
         &mut self,
         account_pub_key: &AccountPubKey,
         order_id: OrderId,
-        side: OrderSide
+        side: OrderSide,
     ) -> Result<OrderProcessingResult, GDEXError> {
         // create account
         if !self.accounts.contains_key(account_pub_key) {
@@ -120,15 +121,10 @@ impl OrderbookInterface {
         }
 
         // create and process limit order
-        let order = create_cancel_order_request(
-            self.base_asset_id,
-            self.quote_asset_id,
-            order_id,
-            side
-        );
+        let order = create_cancel_order_request(self.base_asset_id, self.quote_asset_id, order_id, side);
         let res = self.orderbook.process_order(order);
         self.process_order_result(account_pub_key, res)
-}
+    }
 
     /// Attempts to loop over and process the outputs from a placed limit order
     fn process_order_result(
@@ -185,10 +181,10 @@ impl OrderbookInterface {
                 Ok(Success::Cancelled { order_id, side, .. }) => {
                     // order has been cancelled from order book, update states
                     let existing_pub_key = self
-                    .order_to_account
-                    .get(order_id)
-                    .ok_or(GDEXError::AccountLookup)?
-                    .clone();
+                        .order_to_account
+                        .get(order_id)
+                        .ok_or(GDEXError::AccountLookup)?
+                        .clone();
                     let order: &Order = self.orderbook.get_order(*side, *order_id);
                     let order_side = order.get_side();
                     let order_price = order.get_price();
@@ -262,21 +258,19 @@ impl OrderbookInterface {
         account_pub_key: &AccountPubKey,
         side: OrderSide,
         price: u64,
-        quantity: u64
+        quantity: u64,
     ) -> Result<(), GDEXError> {
         if matches!(side, OrderSide::Ask) {
-            self.bank_controller.lock().unwrap().update_balance(
-                account_pub_key,
-                self.base_asset_id,
-                quantity,
-                true,
-            )?;
+            self.bank_controller
+                .lock()
+                .unwrap()
+                .update_balance(account_pub_key, self.base_asset_id, quantity, true)?;
         } else {
             self.bank_controller.lock().unwrap().update_balance(
                 account_pub_key,
                 self.quote_asset_id,
                 quantity * price,
-                true
+                true,
             )?;
         }
         Ok(())
@@ -395,9 +389,11 @@ impl SpotController {
         quote_asset_id: AssetId,
         account_pub_key: &AccountPubKey,
         order_id: OrderId,
-        side: OrderSide
+        side: OrderSide,
     ) -> Result<(), GDEXError> {
-        match self.get_orderbook(base_asset_id, quote_asset_id)?.place_cancel_order(account_pub_key, order_id, side)
+        match self
+            .get_orderbook(base_asset_id, quote_asset_id)?
+            .place_cancel_order(account_pub_key, order_id, side)
         {
             Ok(_ordering_processing_result) => Ok(()),
             Err(_err) => Err(GDEXError::OrderRequest),

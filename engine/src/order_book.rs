@@ -136,11 +136,7 @@ impl Orderbook {
                 self.process_order_update(&mut process_result, order_id, side, price, quantity, local_timestamp);
             }
 
-            OrderRequest::CancelOrder {
-                order_id,
-                side,
-                ..
-            } => {
+            OrderRequest::CancelOrder { order_id, side, .. } => {
                 self.process_order_cancel(&mut process_result, order_id, side);
             }
         }
@@ -517,7 +513,8 @@ mod test_order_book {
 
     use super::*;
     use crate::orders::{
-        create_cancel_order_request, create_limit_order_request, create_market_order_request, create_update_order_request,
+        create_cancel_order_request, create_limit_order_request, create_market_order_request,
+        create_update_order_request,
     };
 
     const BASE_ASSET: u64 = 0;
@@ -577,7 +574,15 @@ mod test_order_book {
 
         match order_result {
             Success::Accepted { order_id, .. } => {
-                let update_order = create_update_order_request(BASE_ASSET, QUOTE_ASSET, order_id, OrderSide::Bid, 100, 100, SystemTime::now());
+                let update_order = create_update_order_request(
+                    BASE_ASSET,
+                    QUOTE_ASSET,
+                    order_id,
+                    OrderSide::Bid,
+                    100,
+                    100,
+                    SystemTime::now(),
+                );
                 order_book.process_order(update_order).pop().unwrap().unwrap();
             }
             _ => {

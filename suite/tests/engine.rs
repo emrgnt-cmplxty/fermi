@@ -70,11 +70,23 @@ mod tests {
     fn market_order_two_orders_match() {
         let mut orderbook = Orderbook::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
 
-        let order1 =
-            orders::create_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Bid, 10, 10, SystemTime::now());
+        let order1 = orders::create_limit_order_request(
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
+            OrderSide::Bid,
+            10,
+            10,
+            SystemTime::now(),
+        );
 
-        let order2 =
-            orders::create_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Bid, 12, 10, SystemTime::now());
+        let order2 = orders::create_limit_order_request(
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
+            OrderSide::Bid,
+            12,
+            10,
+            SystemTime::now(),
+        );
 
         let order3 =
             orders::create_market_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Ask, 15, SystemTime::now());
@@ -160,8 +172,14 @@ mod tests {
             SystemTime::now(),
         );
 
-        let order2 =
-            orders::create_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Ask, 90, 50, SystemTime::now());
+        let order2 = orders::create_limit_order_request(
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
+            OrderSide::Ask,
+            90,
+            50,
+            SystemTime::now(),
+        );
 
         orderbook.process_order(order1);
         let res = orderbook.process_order(order2);
@@ -279,8 +297,14 @@ mod tests {
         // not enough orders to calculate
         assert_eq!(orderbook.current_spread(), None);
 
-        let order2 =
-            orders::create_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Ask, 120, 5, SystemTime::now());
+        let order2 = orders::create_limit_order_request(
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
+            OrderSide::Ask,
+            120,
+            5,
+            SystemTime::now(),
+        );
 
         let order3 = orders::create_limit_order_request(
             BASE_ASSET_ID,

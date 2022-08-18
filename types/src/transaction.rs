@@ -119,7 +119,7 @@ pub enum OrderRequest {
         quote_asset_id: AssetId,
         side: OrderSide,
         quantity: AssetAmount,
-        local_timestamp: SystemTime
+        local_timestamp: SystemTime,
     },
 
     Limit {
@@ -128,7 +128,7 @@ pub enum OrderRequest {
         side: OrderSide,
         price: AssetPrice,
         quantity: AssetAmount,
-        local_timestamp: SystemTime
+        local_timestamp: SystemTime,
     },
 
     Update {
@@ -138,14 +138,14 @@ pub enum OrderRequest {
         side: OrderSide,
         price: AssetPrice,
         quantity: AssetAmount,
-        local_timestamp: SystemTime
+        local_timestamp: SystemTime,
     },
 
     CancelOrder {
         base_asset_id: AssetId,
         quote_asset_id: AssetId,
         order_id: OrderId,
-        side: OrderSide
+        side: OrderSide,
     },
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -299,7 +299,7 @@ impl Hash for Transaction {
                     base_asset_id,
                     quote_asset_id,
                     order_id,
-                    side
+                    side,
                 } => {
                     let hasher_update = |hasher: &mut VarBlake2b| {
                         hasher.update(self.get_sender().0.to_bytes());

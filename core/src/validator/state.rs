@@ -12,8 +12,6 @@ use gdex_types::{
     error::GDEXError,
     transaction::{SignedTransaction, TransactionDigest, TransactionVariant},
 };
-use narwhal_config::Committee as ConsensusCommittee;
-use narwhal_crypto::KeyPair as ConsensusKeyPair;
 use narwhal_executor::{ExecutionIndices, ExecutionState};
 use std::{
     collections::HashSet,
@@ -23,8 +21,8 @@ use std::{
         Arc, Mutex,
     },
 };
-use tokio::sync::mpsc::Sender;
 use tracing::{info, trace};
+
 /// Tracks recently submitted transactions to eventually implement transaction gating
 // TODO - implement the gating and garbage collection
 pub struct ValidatorStore {
@@ -58,8 +56,6 @@ pub struct ValidatorState {
     pub master_controller: MasterController,
     // A map of transactions which have been seen
     pub validator_store: ValidatorStore,
-    /// A channel to tell consensus to reconfigure.
-    tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
 }
 
 impl ValidatorState {
@@ -69,7 +65,6 @@ impl ValidatorState {
         name: ValidatorName,
         secret: StableSyncValidatorSigner,
         genesis: &ValidatorGenesisState,
-        tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
     ) -> Self {
         ValidatorState {
             name,
@@ -78,7 +73,6 @@ impl ValidatorState {
             committee: ArcSwap::from(Arc::new(genesis.committee().unwrap())),
             master_controller: genesis.master_controller().clone(),
             validator_store: ValidatorStore::default(),
-            tx_reconfigure_consensus,
         }
     }
 
@@ -165,7 +159,6 @@ mod test_validator_state {
     #[tokio::test]
     pub async fn single_node_init() {
         let master_controller = MasterController::default();
-        let (tx_reconfigure_consensus, _rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
 
         let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
         let public_key = ValidatorPubKeyBytes::from(key.public());
@@ -189,7 +182,7 @@ mod test_validator_state {
             .add_validator(validator);
 
         let genesis = builder.build();
-        let validator = ValidatorState::new(public_key, secret, &genesis, tx_reconfigure_consensus);
+        let validator = ValidatorState::new(public_key, secret, &genesis);
 
         validator.halt_validator();
         validator.unhalt_validator();
@@ -198,7 +191,6 @@ mod test_validator_state {
     #[tokio::test]
     pub async fn process_payment_txn() {
         let master_controller = MasterController::default();
-        let (tx_reconfigure_consensus, _rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
 
         let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
         let public_key = ValidatorPubKeyBytes::from(key.public());
@@ -222,7 +214,7 @@ mod test_validator_state {
             .add_validator(validator);
 
         let genesis = builder.build();
-        let validator = ValidatorState::new(public_key, secret, &genesis, tx_reconfigure_consensus);
+        let validator = ValidatorState::new(public_key, secret, &genesis);
 
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();

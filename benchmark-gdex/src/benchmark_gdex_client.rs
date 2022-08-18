@@ -130,7 +130,7 @@ impl Client {
         let mut counter = 0;
         // select a number from a range that is gaurenteed to be larger than the size of transactions submitted
         // but, not so large that we can exhaust the primary senders balance
-        let mut r = rand::thread_rng().gen_range(100_000 as u64, 1_000_000 as u64);
+        let mut r = rand::thread_rng().gen_range(100_000 as u64..1_000_000 as u64);
         let interval = interval(Duration::from_millis(BURST_DURATION));
         tokio::pin!(interval);
 

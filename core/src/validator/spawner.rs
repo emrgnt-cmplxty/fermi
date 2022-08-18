@@ -227,7 +227,7 @@ pub mod suite_spawn_tests {
         let subscriber = FmtSubscriber::builder()
             // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
             // will be written to stdout.
-            .with_env_filter("gdex_core=debug, gdex_suite=debug")
+            .with_env_filter("gdex_core=trace, gdex_suite=debug")
             // .with_max_level(Level::DEBUG)
             // completes the builder.
             .finish();

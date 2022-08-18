@@ -76,7 +76,7 @@ def narwhal(ctx, debug=True):
         },
         'max_concurrent_requests': 500_000,
         'prometheus_metrics': {
-            'socket_addr': '127.0.0.1:0'
+            "socket_addr": "/ip4/127.0.0.1/tcp/0/http"
         },
         'execution': 'advanced'
     }
@@ -190,7 +190,7 @@ def remote(ctx, debug=False):
         },
         'max_concurrent_requests': 500_000,
         'prometheus_metrics': {
-            'socket_addr': '127.0.0.1:0'
+            "socket_addr": "/ip4/127.0.0.1/tcp/0/http"
         }
     }
     try:

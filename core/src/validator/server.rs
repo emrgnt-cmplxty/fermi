@@ -204,6 +204,7 @@ impl ValidatorService {
 /// Spawns a tonic grpc which parses incoming transactions and forwards them to the handle_transaction method of ValidatorService
 #[async_trait]
 impl Transactions for ValidatorService {
+    
     async fn submit_transaction(
         &self,
         request: tonic::Request<TransactionProto>,
@@ -219,6 +220,7 @@ impl Transactions for ValidatorService {
             .await
             .unwrap()
     }
+
     async fn submit_transaction_stream(
         &self,
         request: tonic::Request<tonic::Streaming<TransactionProto>>,

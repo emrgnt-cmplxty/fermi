@@ -46,7 +46,11 @@ fn create_signed_padded_transaction(
             PRIMARY_ASSET_ID,
             amount,
         ));
-        let transaction = Transaction::new(kp_sender.public().clone(), dummy_certificate_digest, transaction_variant);
+        let transaction = Transaction::new(
+            kp_sender.public().clone(),
+            dummy_certificate_digest,
+            transaction_variant,
+        );
 
         // sign digest and create signed transaction
         let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);

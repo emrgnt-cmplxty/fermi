@@ -410,7 +410,10 @@ pub fn create_payment_transaction(
     Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
 }
 
-pub fn create_asset_creation_transaction(sender_kp: &AccountKeyPair, recent_block_hash: CertificateDigest) -> Transaction {
+pub fn create_asset_creation_transaction(
+    sender_kp: &AccountKeyPair,
+    recent_block_hash: CertificateDigest,
+) -> Transaction {
     let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest {});
 
     Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)

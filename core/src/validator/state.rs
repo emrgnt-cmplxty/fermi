@@ -11,7 +11,7 @@ use gdex_types::{
     account::ValidatorKeyPair,
     committee::{Committee, ValidatorName},
     error::GDEXError,
-    transaction::{OrderRequest, SignedTransaction, TransactionDigest, TransactionVariant},
+    transaction::{SignedTransaction, TransactionDigest},
 };
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::Hash;
@@ -41,24 +41,16 @@ pub struct ValidatorStore {
     // garbage collection depth
     gc_depth: u64,
     pub transaction_store: Store<SequenceNumber, Vec<SerializedTransaction>>,
-    pub sequence_store: Store<SequenceNumber, CertificateDigest>
+    pub sequence_store: Store<SequenceNumber, CertificateDigest>,
 }
 
 impl ValidatorStore {
-
     const TRANSACTIONS_CF: &'static str = "transactions";
     const SEQUENCE_CF: &'static str = "sequence";
 
     pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
-        let rocksdb = open_cf(
-            store_path,
-            None,
-            &[
-                Self::TRANSACTIONS_CF,
-                Self::SEQUENCE_CF,
-            ],
-        )
-        .expect("Cannot open database");
+        let rocksdb =
+            open_cf(store_path, None, &[Self::TRANSACTIONS_CF, Self::SEQUENCE_CF]).expect("Cannot open database");
 
         let (transactions_map, sequence_map) = reopen!(&rocksdb,
             Self::TRANSACTIONS_CF;<SequenceNumber, Vec<SerializedTransaction>>,
@@ -123,7 +115,6 @@ impl ValidatorStore {
         }
     }
 }
-
 
 impl Default for ValidatorStore {
     fn default() -> Self {

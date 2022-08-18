@@ -31,7 +31,6 @@ use tokio::{
 };
 use tracing::{debug, info, trace};
 
-
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
     local_addr: Multiaddr,
@@ -169,7 +168,10 @@ impl ValidatorService {
 
     /// Receives an ordered list of certificates and apply any application-specific logic.
     #[allow(clippy::type_complexity)]
-    async fn post_process(mut rx_output: Receiver<(Result<ConsensusOutput, SubscriberError>, Vec<u8>)>, validator_state: Arc<ValidatorState>) {
+    async fn post_process(
+        mut rx_output: Receiver<(Result<ConsensusOutput, SubscriberError>, Vec<u8>)>,
+        validator_state: Arc<ValidatorState>,
+    ) {
         // TODO load the actual last seq
         let mut last_seq_num = 0;
         let mut serialized_txns_buf = Vec::new();
@@ -184,15 +186,23 @@ impl ValidatorService {
                             let num_txns = serialized_txns_buf.len();
                             debug!("Processing finalized block {last_seq_num} with {num_txns} transactions");
                             validator_state.validator_store.prune();
-                            validator_state.validator_store.transaction_store.write(last_seq_num.clone(), serialized_txns_buf.clone()).await;
-                            validator_state.validator_store.sequence_store.write(last_seq_num.clone(), consensus_output.certificate.digest()).await;
+                            validator_state
+                                .validator_store
+                                .transaction_store
+                                .write(last_seq_num.clone(), serialized_txns_buf.clone())
+                                .await;
+                            validator_state
+                                .validator_store
+                                .sequence_store
+                                .write(last_seq_num.clone(), consensus_output.certificate.digest())
+                                .await;
 
                             last_seq_num = new_seq_num;
                             serialized_txns_buf.clear();
                         }
                         serialized_txns_buf.push(serialized_txn)
                     }
-                    Err(e) => trace!("{:?}", e) // TODO
+                    Err(e) => trace!("{:?}", e), // TODO
                 }
 
                 // NOTE: Notify the user that its transaction has been processed.

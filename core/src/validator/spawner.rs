@@ -120,9 +120,7 @@ impl ValidatorSpawner {
         );
 
         // Create a node config with this validators information
-        let narwhal_config = ConsensusParameters {
-            ..Default::default()
-        };
+        let narwhal_config = ConsensusParameters { ..Default::default() };
 
         info!(
             "Spawning a validator with the input narwhal config = {:?}",

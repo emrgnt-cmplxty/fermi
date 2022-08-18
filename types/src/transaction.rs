@@ -416,14 +416,19 @@ pub mod transaction_tests {
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
         let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
+        println!("signed_transaction: {:?}", signed_transaction);
 
         // perform transaction checks
 
         let serialized = signed_transaction.serialize().unwrap();
         // check valid signature
         let signed_transaction_deserialized: SignedTransaction = SignedTransaction::deserialize(serialized).unwrap();
-
+        println!("signed_transaction_deserialized: {:?}", signed_transaction_deserialized);
         // verify signed transaction matches previous values
+
+
+        println!("signed_transaction.get_transaction_signature(): {:?}", signed_transaction_deserialized.get_transaction_signature());
+        println!("signed_transaction_deserialized.get_transaction_signature: {:?}", signed_transaction_deserialized.get_transaction_signature());
         assert!(
             signed_transaction.get_transaction_signature()
                 == signed_transaction_deserialized.get_transaction_signature(),

@@ -2354,6 +2354,7 @@ dependencies = [
  "tower-http",
  "tracing",
  "tracing-subscriber 0.2.25",
+ "typed-store 0.1.0 (git+https://github.com/mystenlabs/mysten-infra.git?rev=d965a5a795dcdb4d1c7964acf556bc249fdc58aa)",
  "types",
 ]
 
@@ -7883,6 +7884,24 @@ dependencies = [
 name = "typed-store"
 version = "0.1.0"
 source = "git+https://github.com/MystenLabs/mysten-infra?rev=a4c2cae59d823533061a5d8fe28771629819c43f#a4c2cae59d823533061a5d8fe28771629819c43f"
+dependencies = [
+ "anyhow",
+ "bincode",
+ "collectable",
+ "eyre",
+ "fdlimit",
+ "pre",
+ "rocksdb",
+ "serde 1.0.143",
+ "thiserror",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "typed-store"
+version = "0.1.0"
+source = "git+https://github.com/mystenlabs/mysten-infra.git?rev=d965a5a795dcdb4d1c7964acf556bc249fdc58aa#d965a5a795dcdb4d1c7964acf556bc249fdc58aa"
 dependencies = [
  "anyhow",
  "bincode",

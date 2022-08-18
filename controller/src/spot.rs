@@ -17,7 +17,7 @@ use gdex_types::{
     account::{AccountPubKey, OrderAccount},
     asset::{AssetId, AssetPairKey},
     error::GDEXError,
-    order_book::{Order, OrderProcessingResult, OrderSide, Success, OrderType},
+    order_book::{Order, OrderProcessingResult, OrderSide, OrderType, Success},
 };
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -135,7 +135,14 @@ impl OrderbookInterface {
         for order in &res {
             match order {
                 // first order is expected to be an Accepted result
-                Ok(Success::Accepted { order_id, side, price, quantity, order_type, .. }) => {
+                Ok(Success::Accepted {
+                    order_id,
+                    side,
+                    price,
+                    quantity,
+                    order_type,
+                    ..
+                }) => {
                     // update user's balances if it is a limit order
                     if *order_type == OrderType::Limit {
                         self.process_order_init(account_pub_key, *side, *price, *quantity)?;

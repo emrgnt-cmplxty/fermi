@@ -10,7 +10,22 @@ clap = "2.34"
 futures = "0.3.21"
 multiaddr = "0.14.0"
 telemetry-subscribers = { git = "https://github.com/MystenLabs/mysten-infra", rev = "a4c2cae59d823533061a5d8fe28771629819c43f" }
-tokio = { version = "1.20.1", features = ["full", "tracing", "test-util"] }
+tokio = { version = "1.20.1", features = ["full", "tracing", "test-util", "macros", "rt-multi-thread"] }
 tracing = "0.1.36"
-
+tonic = "0.7"
+prost = "0.10"
 gdex-core = { path = "../core" }
+gdex-types = { path = "../types" }
+
+[build-dependencies]
+tonic-build = "0.7"
+
+[[bin]]
+name = "faucet-server"
+path = "src/faucet_server.rs"
+
+[[bin]]
+name = "faucet-pinger"
+path = "src/faucet_pinger.rs"
+
+

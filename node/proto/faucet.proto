@@ -1,0 +1,14 @@
+syntax = "proto3";
+package faucet;
+
+service Faucet {
+    rpc Airdrop (FaucetAirdropRequest) returns (FaucetAirdropResponse);
+}
+
+message FaucetAirdropRequest {
+    string airdrop_to = 1;
+}
+
+message FaucetAirdropResponse {
+    bool successful = 1;
+}

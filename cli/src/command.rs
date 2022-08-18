@@ -17,11 +17,13 @@ use gdex_core::{
     genesis_ceremony::{run, Ceremony, CeremonyCommand},
 };
 use gdex_types::{
-    account::AccountKeyPair,
+    account::{AccountKeyPair, ValidatorPubKeyBytes},
     crypto::{get_key_pair_from_rng, KeypairTraits, ToFromBytes},
     utils,
 };
+
 use multiaddr::Multiaddr;
+use narwhal_crypto::ed25519::Ed25519PublicKey;
 use std::{fs, io::Write, num::NonZeroUsize, path::PathBuf};
 use tracing::info;
 
@@ -413,18 +415,36 @@ impl GDEXCommand {
                 Ok(())
             }
             GDEXCommand::Airdrop { amount, airdrop_to } => {
-                // hardcoding for now
-                let addr = "http://127.0.0.1:8080";
+                // // hardcoding for now
+                // let addr = "http://127.0.0.1:8080";
 
-                let mut client = FaucetClient::connect(addr.to_string()).await?;
+                // let mut client = FaucetClient::connect(addr.to_string()).await?;
 
-                let request = tonic::Request::new(FaucetAirdropRequest {
-                    airdrop_to: airdrop_to.to_owned(),
-                });
+                // let request = tonic::Request::new(FaucetAirdropRequest {
+                //     airdrop_to: airdrop_to.to_owned(),
+                // });
 
-                let response = client.airdrop(request).await?;
+                // let response = client.airdrop(request).await?;
 
-                println!("RESPONSE={:?}", response);
+                let kp_sender: AccountKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+
+                let kp_public = kp_sender.public();
+                println!("{:?}", kp_public.as_bytes());
+                let hex_name = utils::encode_bytes_hex(&ValidatorPubKeyBytes::from(kp_public));
+                println!("{:?}", hex_name);
+                // let bytes_ver = utils::decode_hex(&hex_name).unwrap();
+                let bytes_ver = hex::decode(hex_name).unwrap();
+                println!("{:?}", bytes_ver);
+                let kp_public_derived = Ed25519PublicKey::from_bytes(&bytes_ver).unwrap();
+                println!("{:?}", kp_public_derived.as_bytes());
+                assert!(kp_public.as_bytes() == kp_public_derived.as_bytes());
+
+                // println!("{:?}", hex_name);
+                // let kp_public_derived =
+                //     ValidatorPubKeyBytes::from_bytes(&utils::decode_bytes_hex::<Vec<u8>>(&hex_name)?[..]);
+                // println!("{:?}", kp_public_derived);
+
+                // println!("RESPONSE={:?}", response);
 
                 Ok(())
             }

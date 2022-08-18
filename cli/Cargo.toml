@@ -14,12 +14,14 @@ telemetry-subscribers = { git = "https://github.com/MystenLabs/mysten-infra", re
 tempfile = "3.3.0"
 tokio = { version = "1.20.1", features = ["full", "tracing", "test-util"] }
 tracing = "0.1.36"
+hex = "0.4.3"
 
 gdex-core = { path = "../core" }
 gdex-types = { path = "../types" }
 gdex-workspace-hack = { path = "../workspace-hack" }
 tonic = "0.7"
 prost = "0.10"
+narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "crypto" }
 
 [build-dependencies]
 tonic-build = "0.7"

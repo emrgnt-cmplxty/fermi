@@ -4,6 +4,7 @@
 use crate::crypto::KeypairTraits;
 use anyhow::anyhow;
 use std::net::{TcpListener, TcpStream};
+use std::num::ParseIntError;
 
 /// This class is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/utils.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 /// Return an ephemeral, available port. On unix systems, the port returned will be in the

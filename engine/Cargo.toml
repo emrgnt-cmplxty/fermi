@@ -9,5 +9,6 @@ criterion = "0.3"
 rand =  "0.8.5"
 serde = { version = "1.0.141", features = ["derive"] }
 
+# local crates
 gdex-types = { path = "../types" }
 gdex-workspace-hack = { path = "../workspace-hack" }

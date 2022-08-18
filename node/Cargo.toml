@@ -9,8 +9,11 @@ anyhow = { version = "1.0.58", features = ["backtrace"] }
 clap = "2.34"
 futures = "0.3.21"
 multiaddr = "0.14.0"
-telemetry-subscribers = { git = "https://github.com/MystenLabs/mysten-infra", rev = "8d090689be14078f2ca41c356e7bbc0af21f73ab" }
 tokio = { version = "1.20.1", features = ["full", "tracing", "test-util"] }
 tracing = "0.1.36"
 
+# mysten crates
+telemetry-subscribers = { git = "https://github.com/MystenLabs/mysten-infra", rev = "8d090689be14078f2ca41c356e7bbc0af21f73ab" }
+
+# local crates
 gdex-core = { path = "../core" }

@@ -35,7 +35,7 @@ tempfile = "3.3.0"
 prometheus = "0.13.1"
 task-group = "0.2.2"
 
-# narwhal crates
+# mysten crates
 narwhal-node = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "node" }
 narwhal-config = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "config" }
 narwhal-consensus = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "consensus" }

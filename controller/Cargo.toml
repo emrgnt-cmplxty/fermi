@@ -7,10 +7,13 @@ edition = "2021"
 [dependencies]
 assert_approx_eq = "1.1.0"
 criterion = "0.3.4"
-narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "crypto" }
 rand =  "0.8.5"
 serde = { version = "1.0.141", features = ["derive"] }
 
+# mysten crates
+narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "crypto" }
+
+# local crates
 gdex-engine = { path = "../engine" }
 gdex-types = { path = "../types", features=["testing"] }
 gdex-workspace-hack = { path = "../workspace-hack" }

@@ -163,6 +163,7 @@ impl ValidatorSpawner {
             genesis: Genesis::new(self.genesis_state.clone()),
         };
         let prometheus_registry = start_prometheus_server(node_config.metrics_address);
+        
         // spawn the validator service, e.g. Narwhal consensus
         let spawned_service = ValidatorService::spawn_narwhal(
             &node_config,
@@ -209,6 +210,22 @@ impl ValidatorSpawner {
         join_handles.push(server_handle.get_handle());
         join_handles
     }
+
+    #[cfg(test)]
+    pub async fn spawn_validator_with_reconfigure(&mut self) -> (Vec<JoinHandle<()>>, Sender<(ConsensusKeyPair, ConsensusCommittee)>) {
+        let (tx_reconfigure_consensus, rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
+
+        let mut join_handles = self.spawn_validator_service(rx_reconfigure_consensus).await.unwrap();
+        let server_handle = self.spawn_validator_server(tx_reconfigure_consensus.clone()).await;
+        join_handles.push(server_handle.get_handle());
+        (join_handles, tx_reconfigure_consensus)
+    }
+
+    #[cfg(test)]
+    pub fn get_genesis_state(&self) -> ValidatorGenesisState {
+        return self.genesis_state.clone();
+    }
+
 }
 
 #[cfg(test)]
@@ -217,6 +234,7 @@ pub mod suite_spawn_tests {
     use crate::client;
     use gdex_types::{
         account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair},
+        crypto::get_key_pair_from_rng,
         proto::{TransactionProto, TransactionsClient},
         transaction::transaction_test_functions::generate_signed_test_transaction,
         utils,
@@ -224,6 +242,44 @@ pub mod suite_spawn_tests {
     use std::{io, path::Path};
     use tracing::info;
     use tracing_subscriber::FmtSubscriber;
+
+    #[tokio::test]
+    #[ignore]
+    pub async fn spawn_node_and_reconfigure() {
+        let subscriber = FmtSubscriber::builder()
+            // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
+            // will be written to stdout.
+            .with_env_filter("gdex_core=trace, gdex_suite=debug")
+            // .with_max_level(Level::DEBUG)
+            // completes the builder.
+            .finish();
+        tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+
+        let dir = "../.proto";
+        let path = Path::new(dir).to_path_buf();
+
+        info!("Spawning validator 0");
+        let _address_0 = utils::new_network_address();
+        let mut spawner_0 = ValidatorSpawner::new(
+            /* db_path */ path.clone(),
+            /* key_path */ path.clone(),
+            /* genesis_path */ path.clone(),
+            /* validator_port */ _address_0,
+            /* validator_name */ "validator-0".to_string(),
+        );
+
+        let handles = spawner_0.spawn_validator_with_reconfigure().await;
+
+        let consensus_committee = spawner_0.get_genesis_state().narwhal_committee().load().clone();
+        let new_committee: narwhal_config::Committee = narwhal_config::Committee::clone(&consensus_committee);
+
+        let key = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+
+        let tx_reconfigure = handles.1;
+        tx_reconfigure.send((key, new_committee)).await.unwrap();
+
+        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+    }
 
     #[tokio::test]
     #[ignore]

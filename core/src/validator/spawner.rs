@@ -191,9 +191,10 @@ impl ValidatorSpawner {
 #[cfg(test)]
 pub mod suite_spawn_tests {
     use super::*;
-    use crate::client::{ClientAPI, NetworkValidatorClient};
+    use crate::client;
     use gdex_types::{
         account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair},
+        proto::{TransactionProto, TransactionsClient},
         transaction::transaction_test_functions::generate_signed_test_transaction,
         utils,
     };
@@ -269,11 +270,17 @@ pub mod suite_spawn_tests {
 
         let address = spawner_0.get_validator_address().as_ref().unwrap().clone();
         info!("Connecting network client to address={:?}", address);
-        let client = NetworkValidatorClient::connect_lazy(&address).unwrap();
+
+        let mut client =
+            TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
+
         let mut i = 0;
         while i < 1_000 {
+            let transaction_proto = TransactionProto {
+                transaction: signed_transaction.serialize().unwrap().into(),
+            };
             let _resp1 = client
-                .handle_transaction(signed_transaction.clone())
+                .submit_transaction(transaction_proto)
                 .await
                 .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
                 .unwrap();

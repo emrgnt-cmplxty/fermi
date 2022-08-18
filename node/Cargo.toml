@@ -14,8 +14,8 @@ tokio = { version = "1.20.1", features = ["full", "tracing", "test-util", "macro
 tracing = "0.1.36"
 tonic = "0.7"
 prost = "0.10"
-gdex-core = { path = "../core" }
 gdex-types = { path = "../types" }
+gdex-core = { path = "../core" }
 narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "types" }
 narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "crypto", features=["copy_key"]}
 tempfile = "3.3.0"

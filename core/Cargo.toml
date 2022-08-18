@@ -42,4 +42,3 @@ tempfile = "3.3.0"
 gdex-controller = { path = "../controller" }
 gdex-types = { path = "../types", feature = "testing"}
 gdex-workspace-hack = { path = "../workspace-hack" }
-gdex-core = { path = "../core" }

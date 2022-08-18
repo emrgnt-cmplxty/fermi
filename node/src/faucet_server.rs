@@ -1,19 +1,20 @@
+use std::{env, fs, io, net::SocketAddr, path::Path};
 use tonic::{transport::Server, Request, Response, Status};
-use std::{env, fs, net::SocketAddr, path::Path};
 
 use faucet::faucet_server::{Faucet, FaucetServer};
 use faucet::{FaucetAirdropRequest, FaucetAirdropResponse};
 
+use gdex_core::client;
+use gdex_core::validator::server::ValidatorServer;
 use gdex_types::{
-    proto::TransactionsClient,
+    account::{account_test_functions::generate_keypair_vec, AccountKeyPair},
     crypto::{KeypairTraits, Signer},
-    account::{AccountKeyPair, account_test_functions::generate_keypair_vec},
-    transaction::{SignedTransaction, TransactionVariant, PaymentRequest, Transaction},
+    proto::{TransactionProto, TransactionsClient},
+    transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
     utils,
 };
+use narwhal_crypto::{Hash, DIGEST_LEN};
 use narwhal_types::BatchDigest;
-use narwhal_crypto::{DIGEST_LEN, Hash};
-use gdex_core::validator::server::ValidatorServer;
 
 pub const PRIMARY_ASSET_ID: u64 = 0;
 
@@ -27,7 +28,7 @@ pub struct FaucetService {}
 pub fn generate_signed_airdrop_transaction_from_faucet(
     kp_sender: &AccountKeyPair,
     kp_receiver: &AccountKeyPair,
-    amount: u64
+    amount: u64,
 ) -> SignedTransaction {
     let dummy_batch_digest = BatchDigest::new([0; DIGEST_LEN]);
     let transaction_variant = TransactionVariant::PaymentTransaction(PaymentRequest::new(
@@ -45,34 +46,38 @@ pub fn generate_signed_airdrop_transaction_from_faucet(
 
 #[tonic::async_trait]
 impl Faucet for FaucetService {
-    async fn airdrop(
-        &self,
-        request: Request<FaucetAirdropRequest>,
-    ) -> Result<Response<FaucetAirdropResponse>, Status> {
+    async fn airdrop(&self, request: Request<FaucetAirdropRequest>) -> Result<Response<FaucetAirdropResponse>, Status> {
         let key_dir = ".proto/";
         let key_path = Path::new(key_dir).to_path_buf();
         let primary_validator_index = 0;
         let key_file = key_path.join(format!("validator-{}.key", primary_validator_index));
 
-        // Treating the validator as an account for now 
+        // Treating the validator as an account for now
         let kp_sender: AccountKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
 
         let signed_transaction = generate_signed_airdrop_transaction_from_faucet(&kp_sender, &kp_receiver, 100);
-        println!("{:?}", signed_transaction);
+        let transaction_proto = TransactionProto {
+            transaction: signed_transaction.serialize().unwrap().into(),
+        };
 
-        let validator_server = ValidatorServer::new(new_addr.clone(), Arc::clone(&validator_state), consensus_address);
-        let validator_handle = validator_server.spawn().await.unwrap();
-
+        let primary_validator_addr = "/dns/localhost/tcp/62276/http";
+        let primary_validator_multiaddr = primary_validator_addr.parse().unwrap();
         let mut client = TransactionsClient::new(
-            client::connect_lazy(&validator_handle.address()).expect("Failed to connect to consensus"),
+            client::connect_lazy(&primary_validator_multiaddr).expect("Failed to connect to consensus"),
         );
+
+        let _resp1 = client
+            .submit_transaction(transaction_proto)
+            .await
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+            .unwrap();
+
+        println!("{:?}", _resp1);
 
         // let req = request.into_inner();
 
-        let reply = FaucetAirdropResponse {
-            successful: true,
-        };
+        let reply = FaucetAirdropResponse { successful: true };
 
         Ok(Response::new(reply))
     }
@@ -80,8 +85,7 @@ impl Faucet for FaucetService {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-
-    // Getting the address that is passed in 
+    // Getting the address that is passed in
     let addr = env::args().nth(1).unwrap();
     // Parsing it into an address
     let addr = addr.parse::<SocketAddr>()?;

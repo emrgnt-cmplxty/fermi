@@ -59,6 +59,7 @@ pub enum Success {
     Accepted {
         order_id: u64,
         side: OrderSide,
+        price: u64,
         quantity: u64,
         order_type: OrderType,
         timestamp: SystemTime,

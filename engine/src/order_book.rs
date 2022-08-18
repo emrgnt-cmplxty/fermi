@@ -78,9 +78,11 @@ impl Orderbook {
             } => {
                 // generate new ID for order
                 let order_id = self.seq.next_id();
+                let price: u64 = 0;
                 process_result.push(Ok(Success::Accepted {
                     order_id,
                     side,
+                    price,
                     quantity,
                     order_type: OrderType::Market,
                     timestamp: SystemTime::now(),
@@ -108,6 +110,7 @@ impl Orderbook {
                 process_result.push(Ok(Success::Accepted {
                     order_id,
                     side,
+                    price,
                     quantity,
                     order_type: OrderType::Limit,
                     timestamp: SystemTime::now(),

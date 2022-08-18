@@ -17,7 +17,7 @@ use gdex_types::{
     account::{AccountPubKey, OrderAccount},
     asset::{AssetId, AssetPairKey},
     error::GDEXError,
-    order_book::{Order, OrderProcessingResult, OrderSide, Success},
+    order_book::{Order, OrderProcessingResult, OrderSide, Success, OrderType},
 };
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -135,12 +135,11 @@ impl OrderbookInterface {
         for order in &res {
             match order {
                 // first order is expected to be an Accepted result
-                Ok(Success::Accepted { order_id, side, .. }) => {
-                    let order: &Order = self.orderbook.get_order(*side, *order_id);
-                    let order_side = order.get_side();
-                    let order_price = order.get_price();
-                    let order_quantity = order.get_quantity();
-                    self.process_order_init(account_pub_key, order_side, order_price, order_quantity)?;
+                Ok(Success::Accepted { order_id, side, price, quantity, order_type, .. }) => {
+                    // update user's balances if it is a limit order
+                    if *order_type == OrderType::Limit {
+                        self.process_order_init(account_pub_key, *side, *price, *quantity)?;
+                    }
                     // insert new order to map
                     self.order_to_account.insert(*order_id, account_pub_key.clone());
                 }
@@ -192,6 +191,7 @@ impl OrderbookInterface {
                     self.process_order_cancel(&existing_pub_key, order_side, order_price, order_quantity)?;
                 }
                 Err(_failure) => {
+                    println!("FAILED");
                     return Err(GDEXError::OrderRequest);
                 }
             }
@@ -328,39 +328,6 @@ impl SpotController {
         let lookup_string = self._get_orderbook_key(base_asset_id, quote_asset_id);
         self.orderbooks.get_mut(&lookup_string).ok_or(GDEXError::AccountLookup)
     }
-
-    // pub fn parse_limit_order_transaction(
-    //     &mut self,
-    //     signed_transaction: &SignedTransaction,
-    // ) -> Result<OrderProcessingResult, GDEXError> {
-    //     // verify transaction is an order
-    //     if let TransactionVariant::OrderTransaction(order) = &signed_transaction.get_transaction() {
-    //         // verify and place a limit order
-    //         if let OrderRequest::Limit {
-    //             side,
-    //             price,
-    //             quantity,
-    //             base_asset,
-    //             quote_asset,
-    //             ..
-    //         } = order
-    //         {
-    //             let orderbook: &mut OrderbookInterface = self.get_orderbook(*base_asset, *quote_asset)?;
-
-    //             return orderbook.place_limit_order(
-    //                 signed_transaction.get_sender(),
-    //                 *side,
-    //                 *quantity,
-    //                 *price,
-    //             );
-    //         } else {
-    //             return Err(GDEXError::OrderProc("Only limit orders supported".to_string()));
-    //         }
-    //     }
-    //     Err(GDEXError::OrderProc(
-    //         "Only order transactions are supported".to_string(),
-    //     ))
-    // }
 
     /// Attempts to get an order book and places a limit order
     pub fn place_limit_order(
@@ -660,6 +627,8 @@ pub mod spot_tests {
         let mut orderbook_interface =
             OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
 
+        println!("ASDASD");
+
         let bid_size_0: u64 = 95;
         let bid_price_0: u64 = 200;
         orderbook_interface
@@ -688,7 +657,7 @@ pub mod spot_tests {
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT
         );
-
+        println!("ASDASD");
         assert_eq!(
             bank_controller_ref
                 .lock()
@@ -705,14 +674,14 @@ pub mod spot_tests {
                 .unwrap(),
             TRANSFER_AMOUNT
         );
-
+        println!("ASDASD");
         // Place ask for account 1 at price that crosses spread entirely
         let ask_size_0: u64 = bid_size_0;
         let ask_price_0: u64 = bid_price_0 - 1;
         orderbook_interface
             .place_limit_order(account_1.public(), OrderSide::Ask, ask_size_0, ask_price_0)
             .unwrap();
-
+        println!("ASDASD");
         // check account 0
         // received initial asset creation balance
         // paid bid_size_0 * bid_price_0 in quote asset to orderbook
@@ -725,6 +694,7 @@ pub mod spot_tests {
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0
         );
+        println!("ASDASD");
         assert_eq!(
             bank_controller_ref
                 .lock()
@@ -755,7 +725,7 @@ pub mod spot_tests {
                 .unwrap(),
             TRANSFER_AMOUNT - bid_size_0
         );
-
+        println!("ASDASD");
         // Place final order for account 1 at price that crosses spread entirely and closes it's own position
         let ask_size_1: u64 = bid_size_1;
         let ask_price_1: u64 = bid_price_1 - 1;

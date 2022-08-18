@@ -52,12 +52,8 @@ gdex-types = { path = "../types" }
 gdex-workspace-hack = { version = "0.1", path = "../workspace-hack" }
 
 [dev-dependencies]
-ed25519-dalek = "1.0.1"
 hex = "0.4.3"
-pretty_assertions = "1.2.1"
 serde-reflection = "0.3.6"
-serde_yaml = "0.8.26"
-structopt = "0.3.26"
 test_utils = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "test_utils" }
 mysten-network = { git = "https://github.com/mystenlabs/mysten-infra.git", rev = "8d090689be14078f2ca41c356e7bbc0af21f73ab" }
 

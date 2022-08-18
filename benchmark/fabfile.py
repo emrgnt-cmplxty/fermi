@@ -30,7 +30,7 @@ def gdex(ctx, debug=True):
             # 'validator-3': 'http://localhost:62274'
         },
         'rate': 50_000,
-        'duration': 5,
+        'duration': 20,
         'mem_profiling': False,
         'genesis_dir': "../.proto/",
         'key_dir': "../.proto/",

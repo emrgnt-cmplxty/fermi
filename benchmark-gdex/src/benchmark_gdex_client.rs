@@ -3,14 +3,12 @@
 // SPDX-License-Identifier: Apache-2.0
 use anyhow::{Context, Result};
 use clap::{crate_name, crate_version, App, AppSettings};
-use futures::FutureExt;
 use futures::{future::join_all, StreamExt};
 use gdex_types::{
     account::AccountKeyPair,
     proto::{TransactionProto, TransactionsClient},
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
 };
-use multiaddr::Multiaddr;
 use narwhal_crypto::{
     traits::{KeyPair, Signer},
     Hash, DIGEST_LEN,

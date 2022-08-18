@@ -180,12 +180,12 @@ impl ValidatorService {
                             validator_state
                                 .validator_store
                                 .transaction_store
-                                .write(last_seq_num.clone(), serialized_txns_buf.clone())
+                                .write(last_seq_num, serialized_txns_buf.clone())
                                 .await;
                             validator_state
                                 .validator_store
                                 .sequence_store
-                                .write(last_seq_num.clone(), consensus_output.certificate.digest())
+                                .write(last_seq_num, consensus_output.certificate.digest())
                                 .await;
 
                             last_seq_num = new_seq_num;

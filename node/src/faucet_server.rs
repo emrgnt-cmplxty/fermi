@@ -1,11 +1,10 @@
-use std::{env, fs, io, net::SocketAddr, path::Path};
+use std::{env, io, net::SocketAddr, path::Path};
 use tonic::{transport::Server, Request, Response, Status};
 
 use faucet::faucet_server::{Faucet, FaucetServer};
 use faucet::{FaucetAirdropRequest, FaucetAirdropResponse};
 
 use gdex_core::client;
-use gdex_core::validator::server::ValidatorServer;
 use gdex_types::{
     account::{account_test_functions::generate_keypair_vec, AccountKeyPair},
     crypto::{KeypairTraits, Signer},

@@ -18,6 +18,11 @@ tracing = "0.1.36"
 gdex-core = { path = "../core" }
 gdex-types = { path = "../types" }
 gdex-workspace-hack = { path = "../workspace-hack" }
+tonic = "0.7"
+prost = "0.10"
+
+[build-dependencies]
+tonic-build = "0.7"
 
 [[bin]]
 name = "gdex"

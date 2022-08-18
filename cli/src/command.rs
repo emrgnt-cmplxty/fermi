@@ -25,6 +25,15 @@ use multiaddr::Multiaddr;
 use std::{fs, io::Write, num::NonZeroUsize, path::PathBuf};
 use tracing::info;
 
+use faucet::faucet_client::FaucetClient;
+use std::{env, error::Error};
+
+use faucet::FaucetAirdropRequest;
+
+pub mod faucet {
+    tonic::include_proto!("faucet");
+}
+
 /// Note, the code in this struct is inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui/src/sui_commands.rs
 /// commit #e91604e0863c86c77ea1def8d9bd116127bee0bc.
 /// This enum is responsible for routing input commands to the GDEX CLI
@@ -118,6 +127,13 @@ pub enum GDEXCommand {
         keystore_path: Option<PathBuf>,
         #[clap(value_parser, help = "Specify a name for the keystore")]
         keystore_name: Option<String>,
+    },
+    /// Airdrop someone a specific amount of funds
+    Airdrop {
+        #[clap(value_parser, help = "Specify how much you want to airdrop")]
+        amount: u64,
+        #[clap(value_parser, help = "Specify who you wait to airdrop to")]
+        airdrop_to: String,
     },
 }
 
@@ -393,6 +409,22 @@ impl GDEXCommand {
                         println!("A keystore already exists at {:?}.", &keystore_path);
                     }
                 }
+
+                Ok(())
+            }
+            GDEXCommand::Airdrop { amount, airdrop_to } => {
+                // hardcoding for now
+                let addr = "http://127.0.0.1:8080";
+
+                let mut client = FaucetClient::connect(addr.to_string()).await?;
+
+                let request = tonic::Request::new(FaucetAirdropRequest {
+                    airdrop_to: airdrop_to.to_owned(),
+                });
+
+                let response = client.airdrop(request).await?;
+
+                println!("RESPONSE={:?}", response);
 
                 Ok(())
             }

@@ -2347,10 +2347,13 @@ dependencies = [
  "gdex-types",
  "gdex-workspace-hack",
  "multiaddr",
+ "prost",
  "rand 0.7.3",
  "telemetry-subscribers 0.1.0 (git+https://github.com/MystenLabs/mysten-infra?rev=a4c2cae59d823533061a5d8fe28771629819c43f)",
  "tempfile",
  "tokio",
+ "tonic",
+ "tonic-build 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracing",
 ]
 

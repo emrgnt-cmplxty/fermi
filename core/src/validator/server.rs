@@ -29,7 +29,7 @@ use tokio::{
     },
     task::JoinHandle,
 };
-use tracing::{info, trace};
+use tracing::{debug, info, trace};
 
 
 /// Contains and orchestrates a tokio handle where the validator server runs
@@ -182,7 +182,7 @@ impl ValidatorService {
                         let new_seq_num = consensus_output.consensus_index;
                         if new_seq_num > last_seq_num {
                             let num_txns = serialized_txns_buf.len();
-                            trace!("Processing finalized block {last_seq_num} with {num_txns} transactions");
+                            debug!("Processing finalized block {last_seq_num} with {num_txns} transactions");
                             validator_state.validator_store.prune();
                             validator_state.validator_store.transaction_store.write(last_seq_num.clone(), serialized_txns_buf.clone()).await;
                             validator_state.validator_store.sequence_store.write(last_seq_num.clone(), consensus_output.certificate.digest()).await;

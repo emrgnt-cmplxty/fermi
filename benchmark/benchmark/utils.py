@@ -27,7 +27,7 @@ class PathMaker:
 
     @staticmethod
     def gdex_node_crate_path():
-        return join('..', 'benchmark-gdex')
+        return '../'
 
     @staticmethod
     def examples_crate_path():

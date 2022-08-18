@@ -64,6 +64,9 @@ pub fn create_update_order_request(
 }
 
 /// Create request for cancelling active limit order
-pub fn limit_order_cancel_request(order_id: u64, side: OrderSide) -> OrderRequest {
-    OrderRequest::CancelOrder { order_id, side }
+pub fn create_cancel_order_request(order_id: u64, side: OrderSide) -> OrderRequest {
+    OrderRequest::CancelOrder {
+        order_id,
+        side 
+    }
 }

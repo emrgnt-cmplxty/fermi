@@ -123,6 +123,10 @@ impl<T> OrderQueue<T> {
         true
     }
 
+    pub fn get(&self, id: u64) -> Option<&T> {
+        self.orders.get(&id)
+    }
+
     // use it when price was changed
     pub fn update(&mut self, id: u64, price: u64, timestamp: time::SystemTime, order: T) -> bool {
         if let std::collections::hash_map::Entry::Occupied(mut e) = self.orders.entry(id) {

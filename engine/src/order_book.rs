@@ -80,6 +80,8 @@ impl Orderbook {
                 let order_id = self.seq.next_id();
                 process_result.push(Ok(Success::Accepted {
                     order_id,
+                    side,
+                    quantity,
                     order_type: OrderType::Market,
                     timestamp: SystemTime::now(),
                 }));
@@ -105,6 +107,8 @@ impl Orderbook {
                 let order_id = self.seq.next_id();
                 process_result.push(Ok(Success::Accepted {
                     order_id,
+                    side,
+                    quantity,
                     order_type: OrderType::Limit,
                     timestamp: SystemTime::now(),
                 }));
@@ -307,6 +311,7 @@ impl Orderbook {
         ) {
             results.push(Ok(Success::Updated {
                 order_id,
+                side,
                 price,
                 quantity,
                 timestamp: SystemTime::now(),
@@ -325,6 +330,7 @@ impl Orderbook {
         if order_queue.cancel(order_id) {
             results.push(Ok(Success::Cancelled {
                 order_id,
+                side,
                 timestamp: SystemTime::now(),
             }));
         } else {
@@ -333,6 +339,15 @@ impl Orderbook {
     }
 
     /* Helpers */
+
+    pub fn get_order(&mut self, side: OrderSide, order_id: u64) -> &Order {
+        let order_queue = match side {
+            OrderSide::Bid => &mut self.bid_queue,
+            OrderSide::Ask => &mut self.ask_queue,
+        };
+
+        order_queue.get(order_id).unwrap()
+    }
 
     #[allow(clippy::too_many_arguments)]
     fn store_new_limit_order(
@@ -497,7 +512,7 @@ mod test_order_book {
 
     use super::*;
     use crate::orders::{
-        limit_order_cancel_request, create_limit_order_request, create_market_order_request, create_update_order_request,
+        create_cancel_order_request, create_limit_order_request, create_market_order_request, create_update_order_request,
     };
 
     const BASE_ASSET: u64 = 0;
@@ -506,7 +521,7 @@ mod test_order_book {
     #[test]
     fn failed_cancel() {
         let mut orderbook = Orderbook::new(BASE_ASSET, QUOTE_ASSET);
-        let request = limit_order_cancel_request(1, OrderSide::Bid);
+        let request = create_cancel_order_request(1, OrderSide::Bid);
         let mut result = orderbook.process_order(request);
 
         assert_eq!(result.len(), 1);

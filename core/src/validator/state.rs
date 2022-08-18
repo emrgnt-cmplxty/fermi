@@ -12,7 +12,7 @@ use gdex_types::{
     error::GDEXError,
     transaction::{SignedTransaction, TransactionDigest, TransactionVariant},
 };
-use narwhal_config::{Committee as ConsensusCommittee};
+use narwhal_config::Committee as ConsensusCommittee;
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
 use narwhal_executor::{ExecutionIndices, ExecutionState};
 use std::{
@@ -23,8 +23,8 @@ use std::{
         Arc, Mutex,
     },
 };
-use tracing::{info, trace};
 use tokio::sync::mpsc::Sender;
+use tracing::{info, trace};
 /// Tracks recently submitted transactions to eventually implement transaction gating
 // TODO - implement the gating and garbage collection
 pub struct ValidatorStore {
@@ -65,7 +65,12 @@ pub struct ValidatorState {
 impl ValidatorState {
     // TODO: This function takes both committee and genesis as parameter.
     // Technically genesis already contains committee information. Could consider merging them.
-    pub fn new(name: ValidatorName, secret: StableSyncValidatorSigner, genesis: &ValidatorGenesisState, tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>) -> Self {
+    pub fn new(
+        name: ValidatorName,
+        secret: StableSyncValidatorSigner,
+        genesis: &ValidatorGenesisState,
+        tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
+    ) -> Self {
         ValidatorState {
             name,
             secret,
@@ -73,7 +78,7 @@ impl ValidatorState {
             committee: ArcSwap::from(Arc::new(genesis.committee().unwrap())),
             master_controller: genesis.master_controller().clone(),
             validator_store: ValidatorStore::default(),
-            tx_reconfigure_consensus
+            tx_reconfigure_consensus,
         }
     }
 

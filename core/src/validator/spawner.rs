@@ -113,7 +113,12 @@ impl ValidatorSpawner {
 
         let key_pair = Arc::pin(utils::read_keypair_from_file(&key_file).unwrap());
         let (tx_reconfigure_consensus, _rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
-        let validator_state = Arc::new(ValidatorState::new(pubilc_key, key_pair, &self.genesis_state, tx_reconfigure_consensus));
+        let validator_state = Arc::new(ValidatorState::new(
+            pubilc_key,
+            key_pair,
+            &self.genesis_state,
+            tx_reconfigure_consensus,
+        ));
 
         info!(
             "Spawning a validator with the initial validator info = {:?}",

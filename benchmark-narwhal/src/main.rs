@@ -17,9 +17,9 @@ use narwhal_node::{
     NodeStorage,
 };
 use std::sync::Arc;
+use task_group::{TaskGroup, TaskManager};
 use tokio::sync::mpsc::{channel, Receiver};
 use tracing::{debug, info};
-use task_group::{TaskGroup, TaskManager};
 
 // IMPORT BESPOKE EXECUTION STATE
 use benchmark_narwhal::execution_state::AdvancedExecutionState;
@@ -134,7 +134,7 @@ async fn main() -> Result<(), eyre::Report> {
 
 // Runs either a worker or a primary.
 #[allow(clippy::let_and_return)]
-async fn run(matches: &ArgMatches<'_>) -> Result<(), eyre::Report>  {
+async fn run(matches: &ArgMatches<'_>) -> Result<(), eyre::Report> {
     let key_file = matches.value_of("keys").unwrap();
     let committee_file = matches.value_of("committee").unwrap();
     let parameters_file = matches.value_of("parameters");

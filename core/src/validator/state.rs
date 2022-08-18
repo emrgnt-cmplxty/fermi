@@ -31,7 +31,7 @@ use store::{
     rocks::{open_cf, DBMap},
     Store,
 };
-use tracing::{debug, info};
+use tracing::{debug, info, trace};
 
 /// Tracks recently submitted transactions to implement transaction gating
 pub struct ValidatorStore {
@@ -173,7 +173,7 @@ impl ValidatorState {
 impl ValidatorState {
     /// Initiate a new transaction.
     pub fn handle_pre_consensus_transaction(&self, transaction: &SignedTransaction) -> Result<(), GDEXError> {
-        debug!("Handling a new pre-consensus transaction with the ValidatorState",);
+        trace!("Handling a new pre-consensus transaction with the ValidatorState",);
         self.validator_store
             .insert_unconfirmed_transaction(transaction.get_transaction_payload());
         Ok(())
@@ -191,7 +191,7 @@ impl ExecutionState for ValidatorState {
         consensus_output: &narwhal_consensus::ConsensusOutput,
         _execution_indices: ExecutionIndices,
         signed_transaction: Self::Transaction,
-    ) -> Result<(Self::Outcome, Option<narwhal_config::Committee>), Self::Error> {
+    ) -> Result<Self::Outcome, Self::Error> {
         let transaction = signed_transaction.get_transaction_payload();
         // match transaction.get_variant() {
         //     TransactionVariant::PaymentTransaction(payment) => {
@@ -266,7 +266,7 @@ impl ExecutionState for ValidatorState {
         self.validator_store
             .insert_confirmed_transaction(transaction, consensus_output);
 
-        Ok((consensus_output.clone(), None))
+        Ok(consensus_output.clone())
     }
 
     fn ask_consensus_write_lock(&self) -> bool {

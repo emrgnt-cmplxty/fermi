@@ -2502,6 +2502,7 @@ dependencies = [
  "tower",
  "tower-http",
  "tracing",
+ "tracing-subscriber 0.2.25",
  "types",
 ]
 

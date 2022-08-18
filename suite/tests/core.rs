@@ -177,16 +177,16 @@ pub mod suite_core_tests {
         );
 
         let mut i = 0;
-        // while i < 10 {
-        //     let transaction_proto = TransactionProto {
-        //         transaction: signed_transaction.serialize().unwrap().into(),
-        //     };
-        //     let _resp1 = client
-        //         .submit_transaction(transaction_proto)
-        //         .await
-        //         .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
-        //         .unwrap();
-        //     i += 1;
-        // }
+        while i < 10 {
+            let transaction_proto = TransactionProto {
+                transaction: signed_transaction.serialize().unwrap().into(),
+            };
+            let _resp1 = client
+                .submit_transaction(transaction_proto)
+                .await
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+                .unwrap();
+            i += 1;
+        }
     }
 }

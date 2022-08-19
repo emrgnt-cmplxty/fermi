@@ -17,13 +17,12 @@ use gdex_types::{
 };
 use multiaddr::Multiaddr;
 use narwhal_config::Committee as ConsensusCommittee;
-use narwhal_crypto::KeyPair as ConsensusKeyPair;
-use narwhal_executor::SubscriberError;
+use narwhal_consensus::ConsensusOutput;
+use narwhal_crypto::{Hash, KeyPair as ConsensusKeyPair};
+use narwhal_executor::{ExecutionIndices, SubscriberError};
 use prometheus::Registry;
 use std::{io, sync::Arc};
 
-use narwhal_consensus::ConsensusOutput;
-use narwhal_crypto::Hash;
 use tokio::{
     sync::{
         mpsc::{channel, Receiver, Sender},
@@ -160,38 +159,40 @@ impl ValidatorService {
     /// Receives an ordered list of certificates and apply any application-specific logic.
     #[allow(clippy::type_complexity)]
     async fn post_process(
-        mut rx_output: Receiver<(Result<ConsensusOutput, SubscriberError>, Vec<u8>)>,
+        mut rx_output: Receiver<(Result<(ConsensusOutput, ExecutionIndices), SubscriberError>, Vec<u8>)>,
         validator_state: Arc<ValidatorState>,
     ) {
         // TODO load the actual last seq
-        let mut last_seq_num = 0;
         let mut serialized_txns_buf = Vec::new();
         loop {
             while let Some(message) = rx_output.recv().await {
                 trace!("Received a finalized consensus transaction for post processing",);
                 let (result, serialized_txn) = message;
                 match result {
-                    Ok(consensus_output) => {
-                        let new_seq_num = consensus_output.consensus_index;
-                        if new_seq_num > last_seq_num {
+                    Ok((consensus_output, execution_indices)) => {
+                        serialized_txns_buf.push(serialized_txn);
+
+                        // if next_transaction_index == 0 then the block is complete and we may write-out
+                        if execution_indices.next_transaction_index == 0 {
+                            let consensus_index = consensus_output.consensus_index;
                             let num_txns = serialized_txns_buf.len();
-                            debug!("Processing finalized block {last_seq_num} with {num_txns} transactions");
+                            debug!("Processing finalized block {consensus_index} with {num_txns} transactions");
                             validator_state.validator_store.prune();
+                            // write-out the serialized transactions to the validator store
                             validator_state
                                 .validator_store
                                 .transaction_store
-                                .write(last_seq_num, serialized_txns_buf.clone())
+                                .write(consensus_index, serialized_txns_buf.clone())
                                 .await;
+                            // write-out the block hash to the validator store
                             validator_state
                                 .validator_store
                                 .sequence_store
-                                .write(last_seq_num, consensus_output.certificate.digest())
+                                .write(consensus_index, consensus_output.certificate.digest())
                                 .await;
 
-                            last_seq_num = new_seq_num;
                             serialized_txns_buf.clear();
                         }
-                        serialized_txns_buf.push(serialized_txn)
                     }
                     Err(e) => trace!("{:?}", e), // TODO
                 }
@@ -309,7 +310,6 @@ mod test_validator_server {
         transaction::transaction_test_functions::generate_signed_test_transaction,
         utils,
     };
-    use tracing_subscriber::FmtSubscriber;
 
     async fn spawn_validator_server() -> Result<ValidatorServerHandle, io::Error> {
         let master_controller = MasterController::default();
@@ -337,7 +337,11 @@ mod test_validator_server {
             .add_validator(validator);
 
         let genesis = builder.build();
-        let validator_state = ValidatorState::new(public_key, secret, &genesis);
+        let store_path = tempfile::tempdir()
+            .expect("Failed to open temporary directory")
+            .into_path();
+
+        let validator_state = ValidatorState::new(public_key, secret, &genesis, &store_path);
         let new_addr = utils::new_network_address();
         let (tx_reconfigure_consensus, _rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
         let validator_server = ValidatorServer::new(
@@ -375,15 +379,7 @@ mod test_validator_server {
     }
 
     #[tokio::test]
-    pub async fn spawn_validator_server_and_reconfigure() {
-        let subscriber = FmtSubscriber::builder()
-            // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
-            // will be written to stdout.
-            .with_max_level(tracing::Level::DEBUG)
-            // completes the builder.
-            .finish();
-        tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-
+    pub async fn spawn() {
         let master_controller = MasterController::default();
 
         let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
@@ -409,7 +405,10 @@ mod test_validator_server {
             .add_validator(validator);
 
         let genesis = builder.build();
-        let validator_state = ValidatorState::new(public_key, secret, &genesis);
+        let store_path = tempfile::tempdir()
+            .expect("Failed to open temporary directory")
+            .into_path();
+        let validator_state = ValidatorState::new(public_key, secret, &genesis, &store_path);
         let new_addr = utils::new_network_address();
         let (tx_reconfigure_consensus, _rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
         let validator_server = ValidatorServer::new(

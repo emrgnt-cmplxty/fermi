@@ -9,7 +9,7 @@ use crate::{
         genesis::{GenesisConfig, ValidatorGenesisStateInfo},
         network::NetworkConfig,
         node::NodeConfig,
-        {AUTHORITIES_DB_NAME, CONSENSUS_DB_NAME, DEFAULT_STAKE},
+        {CONSENSUS_DB_NAME, DEFAULT_STAKE, GDEX_DB_NAME},
     },
 };
 use gdex_types::{
@@ -149,25 +149,26 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
             .into_iter()
             .map(|validator| {
                 let public_key: ValidatorPubKeyBytes = validator.key_pair.public().into();
-                let db_path = self
-                    .config_directory
-                    .join(AUTHORITIES_DB_NAME)
-                    .join(utils::encode_bytes_hex(&public_key));
                 let network_address = validator.network_address;
                 let consensus_address = validator.narwhal_consensus_address;
                 let consensus_db_path = self
                     .config_directory
                     .join(CONSENSUS_DB_NAME)
                     .join(utils::encode_bytes_hex(&public_key));
+                let gdex_db_path = self
+                    .config_directory
+                    .join(GDEX_DB_NAME)
+                    .join(utils::encode_bytes_hex(&public_key));
                 let consensus_config = ConsensusConfig {
                     consensus_address,
-                    consensus_db_path,
+                    consensus_db_path: consensus_db_path.clone(),
                     narwhal_config: Default::default(),
                 };
 
                 NodeConfig {
                     key_pair: Arc::new(validator.key_pair),
-                    db_path,
+                    consensus_db_path,
+                    gdex_db_path,
                     network_address,
                     metrics_address: utils::available_local_socket_address(),
                     admin_interface_port: utils::get_available_port(),

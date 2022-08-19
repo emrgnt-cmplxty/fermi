@@ -1,5 +1,5 @@
 use crate::{
-    config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME},
+    config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, GDEX_DB_NAME},
     genesis_ceremony::GENESIS_FILENAME,
     metrics::start_prometheus_server,
     validator::{
@@ -114,12 +114,20 @@ impl ValidatorSpawner {
         // TODO - can we avoid consuming the private key twice in the network setup?
         // Note, this awkwardness is due to my inferred understanding of Arc pin.
         let key_file = self.key_path.join(format!("{}.key", self.validator_info.name));
-        let db_path = self
+        let consensus_db_path = self
             .db_path
             .join(format!("{}-{}", self.validator_info.name, CONSENSUS_DB_NAME));
+        let gdex_db_path = self
+            .db_path
+            .join(format!("{}-{}", self.validator_info.name, GDEX_DB_NAME));
 
         let key_pair = Arc::pin(utils::read_keypair_from_file(&key_file).unwrap());
-        let validator_state = Arc::new(ValidatorState::new(pubilc_key, key_pair, &self.genesis_state));
+        let validator_state = Arc::new(ValidatorState::new(
+            pubilc_key,
+            key_pair,
+            &self.genesis_state,
+            &gdex_db_path,
+        ));
 
         info!(
             "Spawning a validator with the initial validator info = {:?}",
@@ -136,13 +144,14 @@ impl ValidatorSpawner {
 
         let consensus_config = ConsensusConfig {
             consensus_address,
-            consensus_db_path: db_path.clone(),
+            consensus_db_path: consensus_db_path.clone(),
             narwhal_config,
         };
         let key_pair = Arc::new(utils::read_keypair_from_file(&key_file).unwrap());
         let node_config = NodeConfig {
             key_pair,
-            db_path,
+            consensus_db_path,
+            gdex_db_path,
             network_address,
             metrics_address: utils::available_local_socket_address(),
             admin_interface_port: utils::get_available_port(),
@@ -155,6 +164,7 @@ impl ValidatorSpawner {
             genesis: Genesis::new(self.genesis_state.clone()),
         };
         let prometheus_registry = start_prometheus_server(node_config.metrics_address);
+
         // spawn the validator service, e.g. Narwhal consensus
         let spawned_service = ValidatorService::spawn_narwhal(
             &node_config,
@@ -201,6 +211,23 @@ impl ValidatorSpawner {
         join_handles.push(server_handle.get_handle());
         join_handles
     }
+
+    #[cfg(test)]
+    pub async fn spawn_validator_with_reconfigure(
+        &mut self,
+    ) -> (Vec<JoinHandle<()>>, Sender<(ConsensusKeyPair, ConsensusCommittee)>) {
+        let (tx_reconfigure_consensus, rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
+
+        let mut join_handles = self.spawn_validator_service(rx_reconfigure_consensus).await.unwrap();
+        let server_handle = self.spawn_validator_server(tx_reconfigure_consensus.clone()).await;
+        join_handles.push(server_handle.get_handle());
+        (join_handles, tx_reconfigure_consensus)
+    }
+
+    #[cfg(test)]
+    pub fn get_genesis_state(&self) -> ValidatorGenesisState {
+        return self.genesis_state.clone();
+    }
 }
 
 #[cfg(test)]
@@ -209,6 +236,7 @@ pub mod suite_spawn_tests {
     use crate::client;
     use gdex_types::{
         account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair},
+        crypto::get_key_pair_from_rng,
         proto::{TransactionProto, TransactionsClient},
         transaction::transaction_test_functions::generate_signed_test_transaction,
         utils,
@@ -216,6 +244,71 @@ pub mod suite_spawn_tests {
     use std::{io, path::Path};
     use tracing::info;
     use tracing_subscriber::FmtSubscriber;
+
+    #[tokio::test]
+    pub async fn spawn_node_and_reconfigure() {
+        // let subscriber = FmtSubscriber::builder()
+        //     // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
+        //     // will be written to stdout.
+        //     .with_env_filter("info")
+        //     .finish();
+        // tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+
+        let dir = "../.proto";
+        let path = Path::new(dir).to_path_buf();
+
+        info!("Spawning validator");
+        let address = utils::new_network_address();
+        let mut spawner = ValidatorSpawner::new(
+            /* db_path */ path.clone(),
+            /* key_path */ path.clone(),
+            /* genesis_path */ path.clone(),
+            /* validator_port */ address.clone(),
+            /* validator_name */ "validator-0".to_string(),
+        );
+
+        let handles = spawner.spawn_validator_with_reconfigure().await;
+
+        info!("Sending 10 transactions");
+
+        let mut client =
+            TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
+
+        let key_file = path.join(format!("{}.key", spawner.get_validator_info().name));
+        let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
+        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
+
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
+
+        let mut i = 0;
+        while i < 10 {
+            let transaction_proto = TransactionProto {
+                transaction: signed_transaction.serialize().unwrap().into(),
+            };
+            let _resp1 = client
+                .submit_transaction(transaction_proto)
+                .await
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+                .unwrap();
+            i += 1;
+        }
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+
+        info!("Reconfiguring validator");
+
+        let consensus_committee = spawner.get_genesis_state().narwhal_committee().load().clone();
+        let new_committee: narwhal_config::Committee = narwhal_config::Committee::clone(&consensus_committee);
+        let new_committee: narwhal_config::Committee = narwhal_config::Committee {
+            authorities: new_committee.authorities,
+            epoch: 1,
+        };
+
+        let key = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let tx_reconfigure = handles.1;
+        tx_reconfigure.send((key, new_committee)).await.unwrap();
+
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+    }
 
     #[tokio::test]
     #[ignore]

@@ -20,9 +20,9 @@ def gdex(ctx, debug=True):
         'node_info': {
             ### direct line to wrapper node
             'validator-0': 'http://localhost:62276',
-            'validator-1': 'http://localhost:62278',
-            'validator-2': 'http://localhost:62280',
-            'validator-3': 'http://localhost:62282'
+            'validator-1': 'http://localhost:62378',
+            'validator-2': 'http://localhost:62480',
+            'validator-3': 'http://localhost:62582'
             ### direct line to narwhal node
             # 'validator-0': 'http://localhost:62238',
             # 'validator-1': 'http://localhost:62250',

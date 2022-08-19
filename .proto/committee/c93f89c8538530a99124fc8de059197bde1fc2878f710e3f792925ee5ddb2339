@@ -3,9 +3,9 @@ name: validator-2
 public-key: yT+JyFOFMKmRJPyN4FkZe94fwoePcQ4/eSkl7l3bIzk=
 stake: 1000000
 delegation: 0
-network-address: /dns/localhost/tcp/62252/http
-narwhal-primary-to-primary: /dns/localhost/tcp/62254/http
-narwhal-worker-to-primary: /dns/localhost/tcp/62256/http
-narwhal-primary-to-worker: /dns/localhost/tcp/62258/http
-narwhal-worker-to-worker: /dns/localhost/tcp/62260/http
-narwhal-consensus-address: /dns/localhost/tcp/62262/http
+network-address: /dns/localhost/tcp/62452/http
+narwhal-primary-to-primary: /dns/localhost/tcp/62454/http
+narwhal-worker-to-primary: /dns/localhost/tcp/62456/http
+narwhal-primary-to-worker: /dns/localhost/tcp/62458/http
+narwhal-worker-to-worker: /dns/localhost/tcp/62460/http
+narwhal-consensus-address: /dns/localhost/tcp/62462/http

@@ -13,10 +13,16 @@ use gdex_types::{
     error::GDEXError,
     transaction::{SignedTransaction, TransactionDigest},
 };
+use mysten_store::{
+    reopen,
+    rocks::{open_cf, DBMap},
+    Store,
+};
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::Hash;
 use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
 use narwhal_types::{CertificateDigest, SequenceNumber};
+use std::path::PathBuf;
 use std::{
     collections::HashMap,
     pin::Pin,
@@ -24,12 +30,6 @@ use std::{
         atomic::{AtomicBool, Ordering},
         Arc, Mutex,
     },
-};
-
-use store::{
-    reopen,
-    rocks::{open_cf, DBMap},
-    Store,
 };
 use tracing::{info, trace};
 
@@ -109,7 +109,6 @@ impl ValidatorStore {
             .unwrap()
             .insert(transaction_digest, Some(certificate_digest));
         locked_certificate_cache.insert(certificate_digest, consensus_output.consensus_index);
-        drop(locked_certificate_cache);
     }
 
     pub fn prune(&self) {
@@ -159,14 +158,19 @@ pub struct ValidatorState {
 impl ValidatorState {
     // TODO: This function takes both committee and genesis as parameter.
     // Technically genesis already contains committee information. Could consider merging them.
-    pub fn new(name: ValidatorName, secret: StableSyncValidatorSigner, genesis: &ValidatorGenesisState) -> Self {
+    pub fn new(
+        name: ValidatorName,
+        secret: StableSyncValidatorSigner,
+        genesis: &ValidatorGenesisState,
+        store_db_path: &PathBuf,
+    ) -> Self {
         ValidatorState {
             name,
             secret,
             halted: AtomicBool::new(false),
             committee: ArcSwap::from(Arc::new(genesis.committee().unwrap())),
             master_controller: genesis.master_controller().clone(),
-            validator_store: ValidatorStore::default(),
+            validator_store: ValidatorStore::reopen(store_db_path),
         }
     }
 
@@ -206,7 +210,7 @@ impl ExecutionState for ValidatorState {
         self.validator_store
             .insert_confirmed_transaction(transaction, consensus_output);
 
-        Ok((consensus_output.clone(), execution_indices.clone()))
+        Ok((consensus_output.clone(), execution_indices))
     }
 
     fn ask_consensus_write_lock(&self) -> bool {
@@ -239,7 +243,7 @@ mod test_validator_state {
         utils,
     };
     use narwhal_consensus::ConsensusOutput;
-    use narwhal_crypto::{generate_production_keypair, traits::KeyPair as _, Hash, KeyPair, DIGEST_LEN};
+    use narwhal_crypto::{generate_production_keypair, Hash, KeyPair, DIGEST_LEN};
     use narwhal_executor::ExecutionIndices;
     use narwhal_types::{Certificate, Header};
 
@@ -269,7 +273,10 @@ mod test_validator_state {
             .add_validator(validator);
 
         let genesis = builder.build();
-        let validator = ValidatorState::new(public_key, secret, &genesis);
+        let store_path = tempfile::tempdir()
+            .expect("Failed to open temporary directory")
+            .into_path();
+        let validator = ValidatorState::new(public_key, secret, &genesis, &store_path);
 
         validator.halt_validator();
         validator.unhalt_validator();
@@ -300,7 +307,10 @@ mod test_validator_state {
             .add_validator(validator);
 
         let genesis = builder.build();
-        let validator = ValidatorState::new(public_key, secret, &genesis);
+        let store_path = tempfile::tempdir()
+            .expect("Failed to open temporary directory")
+            .into_path();
+        let validator = ValidatorState::new(public_key, secret, &genesis, &store_path);
 
         validator
     }

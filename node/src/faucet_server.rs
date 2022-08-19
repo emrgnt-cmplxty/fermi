@@ -12,7 +12,7 @@ use gdex_types::{
 use narwhal_crypto::ed25519::Ed25519PublicKey;
 use narwhal_crypto::traits::ToFromBytes;
 use narwhal_crypto::{Hash, DIGEST_LEN};
-use narwhal_types::{BatchDigest, CertificateDigest};
+use narwhal_types::CertificateDigest;
 use std::{env, io, net::SocketAddr, path::Path};
 use tonic::{transport::Server, Request, Response, Status};
 pub const PRIMARY_ASSET_ID: u64 = 0;

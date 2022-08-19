@@ -16,7 +16,13 @@ use gdex_types::{
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::Hash;
 use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
+use narwhal_store::{
+    reopen,
+    rocks::{open_cf, DBMap},
+    Store,
+};
 use narwhal_types::{CertificateDigest, SequenceNumber};
+use std::path::PathBuf;
 use std::{
     collections::HashMap,
     pin::Pin,
@@ -24,12 +30,6 @@ use std::{
         atomic::{AtomicBool, Ordering},
         Arc, Mutex,
     },
-};
-
-use store::{
-    reopen,
-    rocks::{open_cf, DBMap},
-    Store,
 };
 use tracing::{info, trace};
 
@@ -47,6 +47,10 @@ pub struct ValidatorStore {
 impl ValidatorStore {
     const TRANSACTIONS_CF: &'static str = "transactions";
     const SEQUENCE_CF: &'static str = "sequence";
+
+    fn new(store_path: &PathBuf) -> Self {
+        Self::reopen(store_path)
+    }
 
     pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
         let rocksdb =
@@ -150,14 +154,19 @@ pub struct ValidatorState {
 impl ValidatorState {
     // TODO: This function takes both committee and genesis as parameter.
     // Technically genesis already contains committee information. Could consider merging them.
-    pub fn new(name: ValidatorName, secret: StableSyncValidatorSigner, genesis: &ValidatorGenesisState) -> Self {
+    pub fn new(
+        name: ValidatorName,
+        secret: StableSyncValidatorSigner,
+        genesis: &ValidatorGenesisState,
+        store_db_path: &PathBuf,
+    ) -> Self {
         ValidatorState {
             name,
             secret,
             halted: AtomicBool::new(false),
             committee: ArcSwap::from(Arc::new(genesis.committee().unwrap())),
             master_controller: genesis.master_controller().clone(),
-            validator_store: ValidatorStore::default(),
+            validator_store: ValidatorStore::new(store_db_path),
         }
     }
 
@@ -299,7 +308,7 @@ mod test_validator_state {
         utils,
     };
     use narwhal_consensus::ConsensusOutput;
-    use narwhal_crypto::{generate_production_keypair, traits::KeyPair as _, Hash, KeyPair, DIGEST_LEN};
+    use narwhal_crypto::{generate_production_keypair, Hash, KeyPair, DIGEST_LEN};
     use narwhal_executor::ExecutionIndices;
     use narwhal_types::{Certificate, Header};
 
@@ -329,7 +338,10 @@ mod test_validator_state {
             .add_validator(validator);
 
         let genesis = builder.build();
-        let validator = ValidatorState::new(public_key, secret, &genesis);
+        let store_path = tempfile::tempdir()
+            .expect("Failed to open temporary directory")
+            .into_path();
+        let validator = ValidatorState::new(public_key, secret, &genesis, &store_path);
 
         validator.halt_validator();
         validator.unhalt_validator();
@@ -360,7 +372,10 @@ mod test_validator_state {
             .add_validator(validator);
 
         let genesis = builder.build();
-        let validator = ValidatorState::new(public_key, secret, &genesis);
+        let store_path = tempfile::tempdir()
+            .expect("Failed to open temporary directory")
+            .into_path();
+        let validator = ValidatorState::new(public_key, secret, &genesis, &store_path);
 
         validator
     }

@@ -3,7 +3,7 @@ pub mod suite_core_tests {
     use gdex_controller::master::MasterController;
     use gdex_core::{
         client,
-        config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, FULL_NODE_DB_PATH},
+        config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, GDEX_DB_NAME},
         genesis_ceremony::VALIDATOR_FUNDING_AMOUNT,
         metrics::start_prometheus_server,
         validator::{
@@ -63,7 +63,6 @@ pub mod suite_core_tests {
         // create config directory
         let temp_dir = tempfile::tempdir().unwrap();
         let db_dir = temp_dir.path();
-        let db_path = db_dir.join(FULL_NODE_DB_PATH);
 
         let validators = genesis_state.validator_set();
         assert!(
@@ -82,7 +81,13 @@ pub mod suite_core_tests {
 
         let key_pair_pin = Arc::pin(utils::read_keypair_from_file(&key_file).unwrap());
         let key_pair_arc = Arc::new(utils::read_keypair_from_file(&key_file).unwrap());
-        let validator_state = Arc::new(ValidatorState::new(pubilc_key, key_pair_pin, &genesis_state));
+        let gdex_db_path = db_dir.join(GDEX_DB_NAME);
+        let validator_state = Arc::new(ValidatorState::new(
+            pubilc_key,
+            key_pair_pin,
+            &genesis_state,
+            &gdex_db_path,
+        ));
 
         // Create a node config with this validators information
         let consensus_db_path = db_dir.join(CONSENSUS_DB_NAME);
@@ -94,13 +99,14 @@ pub mod suite_core_tests {
 
         let consensus_config = ConsensusConfig {
             consensus_address,
-            consensus_db_path,
+            consensus_db_path: consensus_db_path.clone(),
             narwhal_config,
         };
 
         let node_config = NodeConfig {
             key_pair: key_pair_arc,
-            db_path,
+            consensus_db_path,
+            gdex_db_path,
             network_address: network_address,
             metrics_address: utils::available_local_socket_address(),
             admin_interface_port: utils::get_available_port(),

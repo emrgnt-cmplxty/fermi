@@ -309,7 +309,6 @@ mod test_validator_server {
         transaction::transaction_test_functions::generate_signed_test_transaction,
         utils,
     };
-    use tracing_subscriber::FmtSubscriber;
 
     async fn spawn_validator_server() -> Result<ValidatorServerHandle, io::Error> {
         let master_controller = MasterController::default();
@@ -337,7 +336,11 @@ mod test_validator_server {
             .add_validator(validator);
 
         let genesis = builder.build();
-        let validator_state = ValidatorState::new(public_key, secret, &genesis);
+        let store_path = tempfile::tempdir()
+            .expect("Failed to open temporary directory")
+            .into_path();
+
+        let validator_state = ValidatorState::new(public_key, secret, &genesis, &store_path);
         let new_addr = utils::new_network_address();
         let (tx_reconfigure_consensus, _rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
         let validator_server = ValidatorServer::new(
@@ -375,15 +378,7 @@ mod test_validator_server {
     }
 
     #[tokio::test]
-    pub async fn spawn_validator_server_and_reconfigure() {
-        let subscriber = FmtSubscriber::builder()
-            // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
-            // will be written to stdout.
-            .with_max_level(tracing::Level::DEBUG)
-            // completes the builder.
-            .finish();
-        tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-
+    pub async fn spawn() {
         let master_controller = MasterController::default();
 
         let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
@@ -409,7 +404,10 @@ mod test_validator_server {
             .add_validator(validator);
 
         let genesis = builder.build();
-        let validator_state = ValidatorState::new(public_key, secret, &genesis);
+        let store_path = tempfile::tempdir()
+            .expect("Failed to open temporary directory")
+            .into_path();
+        let validator_state = ValidatorState::new(public_key, secret, &genesis, &store_path);
         let new_addr = utils::new_network_address();
         let (tx_reconfigure_consensus, _rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
         let validator_server = ValidatorServer::new(

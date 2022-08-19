@@ -136,15 +136,6 @@ pub mod suite_core_tests {
     #[tokio::test]
     #[ignore] // it fails in remote view
     pub async fn four_node_network() {
-        // let subscriber = FmtSubscriber::builder()
-        //     // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
-        //     // will be written to stdout.
-        //     .with_env_filter("gdex_core=trace, gdex_suite=debug")
-        //     // .with_max_level(Level::DEBUG)
-        //     // completes the builder.
-        //     .finish();
-        // tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-
         let temp_dir = tempfile::tempdir().unwrap();
         let working_dir = temp_dir.path();
 

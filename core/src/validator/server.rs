@@ -175,11 +175,13 @@ impl ValidatorService {
                             let num_txns = serialized_txns_buf.len();
                             debug!("Processing finalized block {consensus_index} with {num_txns} transactions");
                             validator_state.validator_store.prune();
+                            // write-out the serialized transactions to the validator store
                             validator_state
                                 .validator_store
                                 .transaction_store
                                 .write(consensus_index, serialized_txns_buf.clone())
                                 .await;
+                            // write-out the block hash to the validator store
                             validator_state
                                 .validator_store
                                 .sequence_store

@@ -1,11 +1,9 @@
-use faucet::faucet_server::{Faucet, FaucetServer};
-use faucet::{FaucetAirdropRequest, FaucetAirdropResponse};
 use gdex_cli::command::FAUCET_PORT;
 use gdex_core::client;
 use gdex_types::{
     account::AccountKeyPair,
     crypto::{KeypairTraits, Signer},
-    proto::{TransactionProto, TransactionsClient},
+    proto::{Faucet, FaucetAirdropRequest, FaucetAirdropResponse, FaucetServer, TransactionProto, TransactionsClient},
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
     utils,
 };
@@ -16,9 +14,6 @@ use narwhal_types::CertificateDigest;
 use std::{env, io, net::SocketAddr, path::Path};
 use tonic::{transport::Server, Request, Response, Status};
 pub const PRIMARY_ASSET_ID: u64 = 0;
-pub mod faucet {
-    tonic::include_proto!("faucet");
-}
 
 #[derive(Debug, Default)]
 pub struct FaucetService {}

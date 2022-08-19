@@ -19,11 +19,10 @@ use gdex_core::{
 use gdex_types::{
     account::AccountKeyPair,
     crypto::{get_key_pair_from_rng, KeypairTraits, ToFromBytes},
+    proto::{FaucetAirdropRequest, FaucetClient},
     utils,
 };
 
-use faucet::faucet_client::FaucetClient;
-use faucet::FaucetAirdropRequest;
 use multiaddr::Multiaddr;
 use std::{fs, io::Write, num::NonZeroUsize, path::PathBuf};
 use tracing::info;

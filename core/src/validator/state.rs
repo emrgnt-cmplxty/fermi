@@ -16,7 +16,7 @@ use gdex_types::{
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::Hash;
 use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
-use narwhal_store::{
+use mysten_store::{
     reopen,
     rocks::{open_cf, DBMap},
     Store,

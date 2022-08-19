@@ -10,9 +10,13 @@ use crate::{
 use anyhow::Result;
 use gdex_types::{node::ValidatorInfo, utils};
 use multiaddr::Multiaddr;
-use narwhal_config::Parameters as ConsensusParameters;
+use narwhal_config::{Committee as ConsensusCommittee, Parameters as ConsensusParameters};
+use narwhal_crypto::KeyPair as ConsensusKeyPair;
 use std::{path::PathBuf, sync::Arc};
-use tokio::task::JoinHandle;
+use tokio::{
+    sync::mpsc::{Receiver, Sender},
+    task::JoinHandle,
+};
 use tracing::info;
 /// Can spawn a validator server handle at the internal address
 /// the server handle contains a validator api (grpc) that exposes a validator service
@@ -94,7 +98,10 @@ impl ValidatorSpawner {
 
     /// Internal helper function used to spawns the validator service
     /// note, this function will fail if called twice from the same spawner
-    async fn spawn_validator_service(&mut self) -> Result<Vec<JoinHandle<()>>> {
+    async fn spawn_validator_service(
+        &mut self,
+        rx_reconfigure_consensus: Receiver<(ConsensusKeyPair, ConsensusCommittee)>,
+    ) -> Result<Vec<JoinHandle<()>>> {
         if self.is_validator_service_spawned() {
             panic!("The validator service has already been spawned");
         };
@@ -120,15 +127,7 @@ impl ValidatorSpawner {
         );
 
         // Create a node config with this validators information
-        let narwhal_config = ConsensusParameters {
-            batch_size: self.genesis_state.master_controller().consensus_controller.batch_size,
-            max_batch_delay: self
-                .genesis_state
-                .master_controller()
-                .consensus_controller
-                .max_batch_delay,
-            ..Default::default()
-        };
+        let narwhal_config = ConsensusParameters { ..Default::default() };
 
         info!(
             "Spawning a validator with the input narwhal config = {:?}",
@@ -156,11 +155,16 @@ impl ValidatorSpawner {
             genesis: Genesis::new(self.genesis_state.clone()),
         };
         let prometheus_registry = start_prometheus_server(node_config.metrics_address);
+
         // spawn the validator service, e.g. Narwhal consensus
-        let spawned_service =
-            ValidatorService::spawn_narwhal(&node_config, Arc::clone(&validator_state), &prometheus_registry)
-                .await
-                .unwrap();
+        let spawned_service = ValidatorService::spawn_narwhal(
+            &node_config,
+            Arc::clone(&validator_state),
+            &prometheus_registry,
+            rx_reconfigure_consensus,
+        )
+        .await
+        .unwrap();
 
         self.set_validator_state(validator_state);
         Ok(spawned_service)
@@ -168,7 +172,10 @@ impl ValidatorSpawner {
 
     /// Internal helper function used to spawns the validator server
     /// note, this function will fail if called twice from the same spawner
-    pub async fn spawn_validator_server(&mut self) -> ValidatorServerHandle {
+    pub async fn spawn_validator_server(
+        &mut self,
+        tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
+    ) -> ValidatorServerHandle {
         if self.is_validator_server_spawned() {
             panic!("The validator server already been spawned");
         };
@@ -179,6 +186,7 @@ impl ValidatorSpawner {
             // unwrapping is safe as validator state must have been created in spawn_validator_service
             Arc::clone(self.validator_state.as_ref().unwrap()),
             consensus_address,
+            tx_reconfigure_consensus,
         );
 
         let validator_handle = validator_server.spawn().await.unwrap();
@@ -187,10 +195,29 @@ impl ValidatorSpawner {
     }
 
     pub async fn spawn_validator(&mut self) -> Vec<JoinHandle<()>> {
-        let mut join_handles = self.spawn_validator_service().await.unwrap();
-        let server_handle = self.spawn_validator_server().await;
+        let (tx_reconfigure_consensus, rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
+
+        let mut join_handles = self.spawn_validator_service(rx_reconfigure_consensus).await.unwrap();
+        let server_handle = self.spawn_validator_server(tx_reconfigure_consensus).await;
         join_handles.push(server_handle.get_handle());
         join_handles
+    }
+
+    #[cfg(test)]
+    pub async fn spawn_validator_with_reconfigure(
+        &mut self,
+    ) -> (Vec<JoinHandle<()>>, Sender<(ConsensusKeyPair, ConsensusCommittee)>) {
+        let (tx_reconfigure_consensus, rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
+
+        let mut join_handles = self.spawn_validator_service(rx_reconfigure_consensus).await.unwrap();
+        let server_handle = self.spawn_validator_server(tx_reconfigure_consensus.clone()).await;
+        join_handles.push(server_handle.get_handle());
+        (join_handles, tx_reconfigure_consensus)
+    }
+
+    #[cfg(test)]
+    pub fn get_genesis_state(&self) -> ValidatorGenesisState {
+        return self.genesis_state.clone();
     }
 }
 
@@ -200,6 +227,7 @@ pub mod suite_spawn_tests {
     use crate::client;
     use gdex_types::{
         account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair},
+        crypto::get_key_pair_from_rng,
         proto::{TransactionProto, TransactionsClient},
         transaction::transaction_test_functions::generate_signed_test_transaction,
         utils,
@@ -209,12 +237,77 @@ pub mod suite_spawn_tests {
     use tracing_subscriber::FmtSubscriber;
 
     #[tokio::test]
+    pub async fn spawn_node_and_reconfigure() {
+        // let subscriber = FmtSubscriber::builder()
+        //     // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
+        //     // will be written to stdout.
+        //     .with_env_filter("info")
+        //     .finish();
+        // tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+
+        let dir = "../.proto";
+        let path = Path::new(dir).to_path_buf();
+
+        info!("Spawning validator");
+        let address = utils::new_network_address();
+        let mut spawner = ValidatorSpawner::new(
+            /* db_path */ path.clone(),
+            /* key_path */ path.clone(),
+            /* genesis_path */ path.clone(),
+            /* validator_port */ address.clone(),
+            /* validator_name */ "validator-0".to_string(),
+        );
+
+        let handles = spawner.spawn_validator_with_reconfigure().await;
+
+        info!("Sending 10 transactions");
+
+        let mut client =
+            TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
+
+        let key_file = path.join(format!("{}.key", spawner.get_validator_info().name));
+        let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
+        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
+
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
+
+        let mut i = 0;
+        while i < 10 {
+            let transaction_proto = TransactionProto {
+                transaction: signed_transaction.serialize().unwrap().into(),
+            };
+            let _resp1 = client
+                .submit_transaction(transaction_proto)
+                .await
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+                .unwrap();
+            i += 1;
+        }
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+
+        info!("Reconfiguring validator");
+
+        let consensus_committee = spawner.get_genesis_state().narwhal_committee().load().clone();
+        let new_committee: narwhal_config::Committee = narwhal_config::Committee::clone(&consensus_committee);
+        let new_committee: narwhal_config::Committee = narwhal_config::Committee {
+            authorities: new_committee.authorities,
+            epoch: 1,
+        };
+
+        let key = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let tx_reconfigure = handles.1;
+        tx_reconfigure.send((key, new_committee)).await.unwrap();
+
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+    }
+
+    #[tokio::test]
     #[ignore]
     pub async fn spawn_four_node_network() {
         let subscriber = FmtSubscriber::builder()
             // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
             // will be written to stdout.
-            .with_env_filter("gdex_core=debug, gdex_suite=debug")
+            .with_env_filter("gdex_core=trace, gdex_suite=debug")
             // .with_max_level(Level::DEBUG)
             // completes the builder.
             .finish();

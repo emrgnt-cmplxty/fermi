@@ -60,7 +60,7 @@ impl ValidatorGenesisState {
                 };
                 let workers = [(
                     0, // worker_id
-                    narwhal_config::WorkerAddresses {
+                    narwhal_config::WorkerInfo {
                         primary_to_worker: validator.narwhal_primary_to_worker.clone(),
                         transactions: validator.narwhal_consensus_address.clone(),
                         worker_to_worker: validator.narwhal_worker_to_worker.clone(),

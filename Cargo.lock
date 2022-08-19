@@ -2521,6 +2521,7 @@ dependencies = [
  "crypto",
  "futures",
  "gdex-cli",
+ "gdex-controller",
  "gdex-core",
  "gdex-types",
  "hex",

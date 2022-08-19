@@ -25,6 +25,7 @@ gdex-core = { path = "../core" }
 tempfile = "3.3.0"
 hex = "0.4.3"
 gdex-cli = { path = "../cli" }
+gdex-controller = { path = "../controller" }
 
 [build-dependencies]
 tonic-build = "0.7"
@@ -33,4 +34,10 @@ tonic-build = "0.7"
 name = "faucet-server"
 path = "src/faucet_server.rs"
 
+[[bin]]
+name = "relay-server"
+path = "src/relay_server.rs"
 
+[[bin]]
+name = "relay-pinger"
+path = "src/relay_pinger.rs"

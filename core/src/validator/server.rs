@@ -17,13 +17,12 @@ use gdex_types::{
 };
 use multiaddr::Multiaddr;
 use narwhal_config::Committee as ConsensusCommittee;
-use narwhal_crypto::KeyPair as ConsensusKeyPair;
-use narwhal_executor::SubscriberError;
+use narwhal_consensus::ConsensusOutput;
+use narwhal_crypto::{Hash, KeyPair as ConsensusKeyPair};
+use narwhal_executor::{ExecutionIndices, SubscriberError};
 use prometheus::Registry;
 use std::{io, sync::Arc};
 
-use narwhal_consensus::ConsensusOutput;
-use narwhal_crypto::Hash;
 use tokio::{
     sync::{
         mpsc::{channel, Receiver, Sender},
@@ -160,35 +159,33 @@ impl ValidatorService {
     /// Receives an ordered list of certificates and apply any application-specific logic.
     #[allow(clippy::type_complexity)]
     async fn post_process(
-        mut rx_output: Receiver<(Result<ConsensusOutput, SubscriberError>, Vec<u8>)>,
+        mut rx_output: Receiver<(Result<(ConsensusOutput, ExecutionIndices), SubscriberError>, Vec<u8>)>,
         validator_state: Arc<ValidatorState>,
     ) {
         // TODO load the actual last seq
-        let mut last_seq_num = 0;
         let mut serialized_txns_buf = Vec::new();
         loop {
             while let Some(message) = rx_output.recv().await {
                 trace!("Received a finalized consensus transaction for post processing",);
                 let (result, serialized_txn) = message;
                 match result {
-                    Ok(consensus_output) => {
-                        let new_seq_num = consensus_output.consensus_index;
-                        if new_seq_num > last_seq_num {
+                    Ok((consensus_output, execution_indices)) => {
+                        if execution_indices.next_transaction_index == 0 {
+                            let consensus_index = consensus_output.consensus_index;
                             let num_txns = serialized_txns_buf.len();
-                            debug!("Processing finalized block {last_seq_num} with {num_txns} transactions");
+                            debug!("Processing finalized block {consensus_index} with {num_txns} transactions");
                             validator_state.validator_store.prune();
                             validator_state
                                 .validator_store
                                 .transaction_store
-                                .write(last_seq_num, serialized_txns_buf.clone())
+                                .write(consensus_index, serialized_txns_buf.clone())
                                 .await;
                             validator_state
                                 .validator_store
                                 .sequence_store
-                                .write(last_seq_num, consensus_output.certificate.digest())
+                                .write(consensus_index, consensus_output.certificate.digest())
                                 .await;
 
-                            last_seq_num = new_seq_num;
                             serialized_txns_buf.clear();
                         }
                         serialized_txns_buf.push(serialized_txn)

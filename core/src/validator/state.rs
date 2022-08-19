@@ -104,7 +104,6 @@ impl ValidatorStore {
             .unwrap()
             .insert(transaction_digest, Some(certificate_digest));
         locked_certificate_cache.insert(certificate_digest, consensus_output.consensus_index);
-        drop(locked_certificate_cache);
     }
 
     pub fn prune(&self) {
@@ -193,12 +192,12 @@ impl ValidatorState {
 impl ExecutionState for ValidatorState {
     type Transaction = SignedTransaction;
     type Error = GDEXError;
-    type Outcome = ConsensusOutput;
+    type Outcome = (ConsensusOutput, ExecutionIndices);
 
     async fn handle_consensus_transaction(
         &self,
         consensus_output: &narwhal_consensus::ConsensusOutput,
-        _execution_indices: ExecutionIndices,
+        execution_indices: ExecutionIndices,
         signed_transaction: Self::Transaction,
     ) -> Result<Self::Outcome, Self::Error> {
         let transaction = signed_transaction.get_transaction_payload();
@@ -275,7 +274,7 @@ impl ExecutionState for ValidatorState {
         self.validator_store
             .insert_confirmed_transaction(transaction, consensus_output);
 
-        Ok(consensus_output.clone())
+        Ok((consensus_output.clone(), execution_indices))
     }
 
     fn ask_consensus_write_lock(&self) -> bool {

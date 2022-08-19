@@ -12,7 +12,7 @@ use gdex_types::{
 use narwhal_crypto::ed25519::Ed25519PublicKey;
 use narwhal_crypto::traits::ToFromBytes;
 use narwhal_crypto::{Hash, DIGEST_LEN};
-use narwhal_types::BatchDigest;
+use narwhal_types::{BatchDigest, CertificateDigest};
 use std::{env, io, net::SocketAddr, path::Path};
 use tonic::{transport::Server, Request, Response, Status};
 pub const PRIMARY_ASSET_ID: u64 = 0;
@@ -28,8 +28,8 @@ pub fn generate_signed_airdrop_transaction_for_faucet(
     kp_receiver_public_key: &Ed25519PublicKey,
     amount: u64,
 ) -> SignedTransaction {
-    // Setting a dummy batch digest for now
-    let dummy_batch_digest = BatchDigest::new([0; DIGEST_LEN]);
+    // Setting a certificate_digest
+    let recent_certificate_digest = CertificateDigest::new([0; DIGEST_LEN]);
 
     // Creating the transaction variant
     let transaction_variant = TransactionVariant::PaymentTransaction(PaymentRequest::new(
@@ -39,7 +39,11 @@ pub fn generate_signed_airdrop_transaction_for_faucet(
     ));
 
     // Creating the transaction itself, signing it, and returning it
-    let transaction = Transaction::new(kp_sender.public().clone(), dummy_batch_digest, transaction_variant);
+    let transaction = Transaction::new(
+        kp_sender.public().clone(),
+        recent_certificate_digest,
+        transaction_variant,
+    );
     let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
     SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest)
 }

@@ -176,12 +176,13 @@ impl ValidatorService {
                         if new_seq_num > last_seq_num {
                             let num_txns = serialized_txns_buf.len();
                             debug!("Processing finalized block {last_seq_num} with {num_txns} transactions");
-                            validator_state.validator_store.prune();
+                            validator_state.valxcv idator_store.prune();
                             validator_state
                                 .validator_store
                                 .transaction_store
                                 .write(last_seq_num, serialized_txns_buf.clone())
                                 .await;
+                            // transaction_store.read
                             validator_state
                                 .validator_store
                                 .sequence_store
@@ -362,6 +363,8 @@ mod test_validator_server {
 
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
+        // let recent_batch_certificate = client.get_recent_batch_certificate().await
+        // attach this this to signed transaction
         let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
         let transaction_proto = TransactionProto {
             transaction: signed_transaction.serialize().unwrap().into(),

@@ -1,11 +1,6 @@
-use narwhal_crypto::ed25519::Ed25519PublicKey;
-use narwhal_crypto::traits::ToFromBytes;
-use std::{env, io, net::SocketAddr, path::Path};
-use tonic::{transport::Server, Request, Response, Status};
-
 use faucet::faucet_server::{Faucet, FaucetServer};
 use faucet::{FaucetAirdropRequest, FaucetAirdropResponse};
-
+use gdex_cli::command::FAUCET_PORT;
 use gdex_core::client;
 use gdex_types::{
     account::AccountKeyPair,
@@ -14,11 +9,13 @@ use gdex_types::{
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
     utils,
 };
+use narwhal_crypto::ed25519::Ed25519PublicKey;
+use narwhal_crypto::traits::ToFromBytes;
 use narwhal_crypto::{Hash, DIGEST_LEN};
 use narwhal_types::BatchDigest;
-
+use std::{env, io, net::SocketAddr, path::Path};
+use tonic::{transport::Server, Request, Response, Status};
 pub const PRIMARY_ASSET_ID: u64 = 0;
-
 pub mod faucet {
     tonic::include_proto!("faucet");
 }
@@ -75,7 +72,7 @@ impl Faucet for FaucetService {
         };
 
         // Getting the validator port from the second cli argument
-        let validator_port = env::args().nth(2).unwrap();
+        let validator_port = env::args().nth(1).unwrap();
 
         // The port for the validator that we will send the transaction to is passed in as the second cli argument when the server is starting
         let primary_validator_addr = format!("/dns/localhost/tcp/{}/http", validator_port);
@@ -91,6 +88,7 @@ impl Faucet for FaucetService {
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
             .unwrap();
 
+        // Printing the response
         println!("{:?}", _response);
 
         // We can now return true because errors will have been caught above
@@ -104,11 +102,14 @@ impl Faucet for FaucetService {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Getting the address that is passed in
-    let addr = format!("127.0.0.1:{}", env::args().nth(1).unwrap());
+    let addr = format!("127.0.0.1:{}", FAUCET_PORT.to_string());
+
     // Parsing it into an address
     let addr = addr.parse::<SocketAddr>()?;
+
     // Instantiating the faucet service
     let faucet_service = FaucetService::default();
+
     // Start the faucet service
     Server::builder()
         .add_service(FaucetServer::new(faucet_service))

@@ -20,6 +20,7 @@ narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b4
 narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "crypto", features=["copy_key"]}
 tempfile = "3.3.0"
 hex = "0.4.3"
+gdex-cli = { path = "../cli" }
 
 [build-dependencies]
 tonic-build = "0.7"

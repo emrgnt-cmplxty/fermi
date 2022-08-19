@@ -31,6 +31,8 @@ pub mod faucet {
     tonic::include_proto!("faucet");
 }
 
+pub const FAUCET_PORT: u32 = 8080;
+
 /// Note, the code in this struct is inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui/src/sui_commands.rs
 /// commit #e91604e0863c86c77ea1def8d9bd116127bee0bc.
 /// This enum is responsible for routing input commands to the GDEX CLI
@@ -131,8 +133,6 @@ pub enum GDEXCommand {
         amount: u64,
         #[clap(value_parser, help = "Specify who you wait to airdrop to")]
         airdrop_to: String,
-        #[clap(value_parser, help = "Specify the port that the faucet server is running on")]
-        faucet_port: u64,
     },
 }
 
@@ -411,19 +411,23 @@ impl GDEXCommand {
 
                 Ok(())
             }
-            GDEXCommand::Airdrop {
-                amount,
-                airdrop_to,
-                faucet_port,
-            } => {
+            GDEXCommand::Airdrop { amount, airdrop_to } => {
                 // Address for the faucet
-                let addr = format!("http://127.0.0.1:{}", faucet_port.to_string());
+                let addr = format!("http://127.0.0.1:{}", FAUCET_PORT.to_string());
+
+                // Client to connect
                 let mut client = FaucetClient::connect(addr.to_string()).await?;
+
+                // Creating the gRPC request
                 let request = tonic::Request::new(FaucetAirdropRequest {
                     airdrop_to: airdrop_to.to_owned(),
                     amount: amount,
                 });
+
+                // Sending the request
                 let _response = client.airdrop(request).await?;
+
+                // Printing response and returning Ok(())
                 println!("Success! Airdroped {} tokens to address {}", amount, airdrop_to);
                 Ok(())
             }

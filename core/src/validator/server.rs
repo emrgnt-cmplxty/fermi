@@ -32,6 +32,8 @@ use tokio::{
 };
 use tracing::{debug, info, trace};
 
+const NARWHAL_LOOK_BACK: u64 = 2;
+
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
     local_addr: Multiaddr,
@@ -174,21 +176,22 @@ impl ValidatorService {
 
                         // if next_transaction_index == 0 then the block is complete and we may write-out
                         if execution_indices.next_transaction_index == 0 {
-                            let consensus_index = consensus_output.consensus_index;
+                            // subtract round look-back from the latest round to get block number
+                            let block_number = consensus_output.certificate.header.round - NARWHAL_LOOK_BACK;
                             let num_txns = serialized_txns_buf.len();
-                            debug!("Processing finalized block {consensus_index} with {num_txns} transactions");
+                            debug!("Processing finalized block {block_number} with {num_txns} transactions");
                             validator_state.validator_store.prune();
                             // write-out the serialized transactions to the validator store
                             validator_state
                                 .validator_store
                                 .transaction_store
-                                .write(consensus_index, serialized_txns_buf.clone())
+                                .write(block_number, serialized_txns_buf.clone())
                                 .await;
                             // write-out the block hash to the validator store
                             validator_state
                                 .validator_store
                                 .sequence_store
-                                .write(consensus_index, consensus_output.certificate.digest())
+                                .write(block_number, consensus_output.certificate.digest())
                                 .await;
 
                             serialized_txns_buf.clear();
@@ -367,7 +370,7 @@ mod test_validator_server {
 
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, 10);
         let transaction_proto = TransactionProto {
             transaction: signed_transaction.serialize().unwrap().into(),
         };

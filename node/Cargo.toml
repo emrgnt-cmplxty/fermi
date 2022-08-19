@@ -17,11 +17,11 @@ tracing = "0.1.36"
 
 # mysten crates
 telemetry-subscribers = { git = "https://github.com/MystenLabs/mysten-infra", rev = "8d090689be14078f2ca41c356e7bbc0af21f73ab" }
+narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "types" }
+narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "crypto", features=["copy_key"]}
 
 # local crates
 gdex-core = { path = "../core" }
-narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "types" }
-narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "crypto", features=["copy_key"]}
 tempfile = "3.3.0"
 hex = "0.4.3"
 gdex-cli = { path = "../cli" }

@@ -86,14 +86,14 @@ impl Faucet for FaucetService {
         );
 
         // If there is an error we will get a panic because of the unwrap
-        let _response = client
+        let response = client
             .submit_transaction(transaction_proto)
             .await
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
             .unwrap();
 
         // Printing the response
-        println!("{:?}", _response);
+        println!("{:?}", response);
 
         // We can now return true because errors will have been caught above
         let reply = FaucetAirdropResponse { successful: true };

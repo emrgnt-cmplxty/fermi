@@ -131,7 +131,7 @@ pub enum GDEXCommand {
     Airdrop {
         #[clap(value_parser, help = "Specify how much you want to airdrop")]
         amount: u64,
-        #[clap(value_parser, help = "Specify who you wait to airdrop to")]
+        #[clap(value_parser, help = "Specify who you want to airdrop to")]
         airdrop_to: String,
     },
 }

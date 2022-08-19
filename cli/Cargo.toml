@@ -17,6 +17,7 @@ hex = "0.4.3"
 
 # mysten crates
 telemetry-subscribers = { git = "https://github.com/MystenLabs/mysten-infra", rev = "8d090689be14078f2ca41c356e7bbc0af21f73ab" }
+narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "crypto" }
 
 # local crates
 gdex-core = { path = "../core" }
@@ -24,7 +25,6 @@ gdex-types = { path = "../types" }
 gdex-workspace-hack = { path = "../workspace-hack" }
 tonic = "0.7"
 prost = "0.10"
-narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "crypto" }
 
 [build-dependencies]
 tonic-build = "0.7"

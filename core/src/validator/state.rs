@@ -46,7 +46,7 @@ pub struct ValidatorStore {
     pub sequence_store: Store<SequenceNumber, CertificateDigest>,
 
     // singleton store that keeps only the most recent block info at key 0
-    pub last_sequence_store: Store<u64, (SequenceNumber, CertificateDigest)>
+    pub last_sequence_store: Store<u64, (SequenceNumber, CertificateDigest)>,
 }
 
 impl ValidatorStore {
@@ -55,8 +55,12 @@ impl ValidatorStore {
     const LAST_SEQUENCE_CF: &'static str = "last_sequence";
 
     pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
-        let rocksdb =
-            open_cf(store_path, None, &[Self::TRANSACTIONS_CF, Self::SEQUENCE_CF, Self::LAST_SEQUENCE_CF]).expect("Cannot open database");
+        let rocksdb = open_cf(
+            store_path,
+            None,
+            &[Self::TRANSACTIONS_CF, Self::SEQUENCE_CF, Self::LAST_SEQUENCE_CF],
+        )
+        .expect("Cannot open database");
 
         let (transactions_map, sequence_map, last_sequence_map) = reopen!(&rocksdb,
             Self::TRANSACTIONS_CF;<SequenceNumber, Vec<SerializedTransaction>>,
@@ -74,7 +78,7 @@ impl ValidatorStore {
             gc_depth: 50,
             transaction_store,
             sequence_store,
-            last_sequence_store
+            last_sequence_store,
         }
     }
 
@@ -205,10 +209,8 @@ impl ExecutionState for ValidatorState {
         execution_indices: ExecutionIndices,
         signed_transaction: Self::Transaction,
     ) -> Result<Self::Outcome, Self::Error> {
-
-
         self.validator_store
-            .insert_confirmed_transaction(transaction, consensus_output);
+            .insert_confirmed_transaction(signed_transaction.get_transaction_payload(), consensus_output);
 
         Ok((consensus_output.clone(), execution_indices))
     }

@@ -164,6 +164,7 @@ impl ValidatorService {
     ) {
         // TODO load the actual last seq
         let mut serialized_txns_buf = Vec::new();
+        let store = &validator_state.validator_store;
         loop {
             while let Some(message) = rx_output.recv().await {
                 trace!("Received a finalized consensus transaction for post processing",);
@@ -177,20 +178,19 @@ impl ValidatorService {
                             let consensus_index = consensus_output.consensus_index;
                             let num_txns = serialized_txns_buf.len();
                             debug!("Processing finalized block {consensus_index} with {num_txns} transactions");
-                            validator_state.validator_store.prune();
+                            store.prune();
                             // write-out the serialized transactions to the validator store
-                            validator_state
-                                .validator_store
+                            store
                                 .transaction_store
                                 .write(consensus_index, serialized_txns_buf.clone())
                                 .await;
                             // write-out the block hash to the validator store
-                            validator_state
-                                .validator_store
-                                .sequence_store
-                                .write(consensus_index, consensus_output.certificate.digest())
+                            let certificate_digest = consensus_output.certificate.digest();
+                            store.sequence_store.write(consensus_index, certificate_digest).await;
+                            store
+                                .last_sequence_store
+                                .write(0, (consensus_index, certificate_digest))
                                 .await;
-
                             serialized_txns_buf.clear();
                         }
                     }

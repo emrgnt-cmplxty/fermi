@@ -20,8 +20,8 @@ telemetry-subscribers = { git = "https://github.com/MystenLabs/mysten-infra", re
 
 # local crates
 gdex-core = { path = "../core" }
-narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "types" }
-narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "crypto", features=["copy_key"]}
+narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "types" }
+narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "crypto", features=["copy_key"]}
 tempfile = "3.3.0"
 hex = "0.4.3"
 gdex-cli = { path = "../cli" }

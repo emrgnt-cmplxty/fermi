@@ -24,7 +24,7 @@ gdex-types = { path = "../types" }
 gdex-workspace-hack = { path = "../workspace-hack" }
 tonic = "0.7"
 prost = "0.10"
-narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "259a37b487570763575e6b28f8b8057b16b3e916", package = "crypto" }
+narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "crypto" }
 
 [build-dependencies]
 tonic-build = "0.7"

@@ -48,10 +48,6 @@ impl ValidatorStore {
     const TRANSACTIONS_CF: &'static str = "transactions";
     const SEQUENCE_CF: &'static str = "sequence";
 
-    fn new(store_path: &PathBuf) -> Self {
-        Self::reopen(store_path)
-    }
-
     pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
         let rocksdb =
             open_cf(store_path, None, &[Self::TRANSACTIONS_CF, Self::SEQUENCE_CF]).expect("Cannot open database");
@@ -165,7 +161,7 @@ impl ValidatorState {
             halted: AtomicBool::new(false),
             committee: ArcSwap::from(Arc::new(genesis.committee().unwrap())),
             master_controller: genesis.master_controller().clone(),
-            validator_store: ValidatorStore::new(store_db_path),
+            validator_store: ValidatorStore::reopen(store_db_path),
         }
     }
 

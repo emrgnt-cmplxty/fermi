@@ -170,7 +170,10 @@ impl ValidatorService {
                 let (result, serialized_txn) = message;
                 match result {
                     Ok((consensus_output, execution_indices)) => {
-                        if execution_indices.next_transaction_index == 0 {
+                        serialized_txns_buf.push(serialized_txn);
+
+                        // if next_transaction_index == 0 then the block is complete and we may write-out
+                        if execution_indices.next_transaction_index == 0 {                            
                             let consensus_index = consensus_output.consensus_index;
                             let num_txns = serialized_txns_buf.len();
                             debug!("Processing finalized block {consensus_index} with {num_txns} transactions");
@@ -190,7 +193,6 @@ impl ValidatorService {
 
                             serialized_txns_buf.clear();
                         }
-                        serialized_txns_buf.push(serialized_txn)
                     }
                     Err(e) => trace!("{:?}", e), // TODO
                 }

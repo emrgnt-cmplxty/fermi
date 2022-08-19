@@ -173,7 +173,7 @@ impl ValidatorService {
                         serialized_txns_buf.push(serialized_txn);
 
                         // if next_transaction_index == 0 then the block is complete and we may write-out
-                        if execution_indices.next_transaction_index == 0 {                            
+                        if execution_indices.next_transaction_index == 0 {
                             let consensus_index = consensus_output.consensus_index;
                             let num_txns = serialized_txns_buf.len();
                             debug!("Processing finalized block {consensus_index} with {num_txns} transactions");

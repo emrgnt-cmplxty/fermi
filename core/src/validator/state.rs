@@ -13,14 +13,14 @@ use gdex_types::{
     error::GDEXError,
     transaction::{SignedTransaction, TransactionDigest},
 };
-use narwhal_consensus::ConsensusOutput;
-use narwhal_crypto::Hash;
-use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
 use mysten_store::{
     reopen,
     rocks::{open_cf, DBMap},
     Store,
 };
+use narwhal_consensus::ConsensusOutput;
+use narwhal_crypto::Hash;
+use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
 use narwhal_types::{CertificateDigest, SequenceNumber};
 use std::path::PathBuf;
 use std::{

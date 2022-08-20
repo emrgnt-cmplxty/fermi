@@ -11,6 +11,7 @@ use anyhow::anyhow;
 use async_trait::async_trait;
 use futures::StreamExt;
 use gdex_types::{
+    block::Block,
     crypto::KeypairTraits,
     proto::{Empty, TransactionProto, Transactions, TransactionsServer},
     transaction::SignedTransaction,
@@ -31,8 +32,6 @@ use tokio::{
     task::JoinHandle,
 };
 use tracing::{debug, info, trace};
-
-const NARWHAL_LOOK_BACK: u64 = 2;
 
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
@@ -177,22 +176,22 @@ impl ValidatorService {
                         // if next_transaction_index == 0 then the block is complete and we may write-out
                         if execution_indices.next_transaction_index == 0 {
                             // subtract round look-back from the latest round to get block number
-                            let block_number = consensus_output.certificate.header.round - NARWHAL_LOOK_BACK;
+                            let round_number = consensus_output.certificate.header.round;
                             let num_txns = serialized_txns_buf.len();
-                            debug!("Processing finalized block {block_number} with {num_txns} transactions");
+                            debug!("Processing result from {round_number} with {num_txns} transactions");
                             validator_state.validator_store.prune();
-                            // write-out the serialized transactions to the validator store
+                            // write-out the new block to the validator store
+                            let block = Block {
+                                certificate_digest: consensus_output.certificate.digest(), 
+                                transactions: serialized_txns_buf.clone()
+                            };
+                            // write-out the block transactions to the validator store
                             validator_state
                                 .validator_store
-                                .transaction_store
-                                .write(block_number, serialized_txns_buf.clone())
+                                .block_store
+                                .write(round_number, block)
                                 .await;
-                            // write-out the block hash to the validator store
-                            validator_state
-                                .validator_store
-                                .sequence_store
-                                .write(block_number, consensus_output.certificate.digest())
-                                .await;
+
 
                             serialized_txns_buf.clear();
                         }

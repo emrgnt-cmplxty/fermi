@@ -243,10 +243,11 @@ pub mod suite_spawn_tests {
         account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair},
         crypto::get_key_pair_from_rng,
         proto::{TransactionProto, TransactionsClient},
-        transaction::transaction_test_functions::generate_signed_test_transaction,
+        transaction::{transaction_test_functions::generate_signed_test_transaction, SignedTransaction},
         utils,
     };
     use std::{io, path::Path};
+    
     use tracing::info;
     use tracing_subscriber::FmtSubscriber;
 
@@ -399,27 +400,27 @@ pub mod suite_spawn_tests {
             .unwrap()
             .clone()
             .validator_store;
+
         // check that every transaction entered the cache
-        for signed_transaction in signed_transactions {
+        for signed_transaction in signed_transactions.clone() {
             assert!(validator_store.contains_transaction(&signed_transaction.get_transaction_payload()));
         }
 
+        println!("iterating over transactions");
         let mut total = 0;
-        let mut i_block = 0;
-        let mut latest_data = validator_store.transaction_store.read(i_block).await.unwrap();
+        let block_db = validator_store.block_store.iter(None).await;
 
-        while latest_data.is_some() {
-            let data = latest_data.unwrap();
-            total += data.len().clone() as u64;
-            i_block+=1;
-            latest_data = validator_store.transaction_store.read(i_block).await.unwrap();
+        while let Some(next_block) = block_db.iter().next() {
+            let block = next_block.1;
+            for serialized_transaction in &block.transactions {
+                let signed_transaction_db = SignedTransaction::deserialize(serialized_transaction.clone()).unwrap();
+                assert!(validator_store.contains_transaction(&signed_transaction_db.get_transaction_payload()));
+                total += 1;
+            };
+            assert!(validator_store.contains_certificate_digest(&block.certificate_digest));
+
         }
-        
-        println!("toatl={}", total);
-        println!("n_transactions_to_submit={}", n_transactions_to_submit);
-        
-        assert!(total == n_transactions_to_submit, "total transactions in db does not match total submitted");
-        
-
+        info!("total={}", total);
+        assert!(total as u64 == n_transactions_to_submit, "total transactions in db does not match total submitted");
     }
 }

@@ -9,6 +9,7 @@ use gdex_controller::master::MasterController;
 use gdex_types::transaction::Transaction;
 use gdex_types::{
     account::ValidatorKeyPair,
+    block::{BlockNumber, Block},
     committee::{Committee, ValidatorName},
     error::GDEXError,
     transaction::{SignedTransaction, TransactionDigest},
@@ -20,11 +21,11 @@ use mysten_store::{
 };
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::Hash;
-use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
+use narwhal_executor::{ExecutionIndices, ExecutionState};
 use narwhal_types::{CertificateDigest, SequenceNumber};
-use std::path::PathBuf;
 use std::{
     collections::HashMap,
+    path::PathBuf,
     pin::Pin,
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -32,7 +33,6 @@ use std::{
     },
 };
 use tracing::{info, trace};
-
 /// Tracks recently submitted transactions to implement transaction gating
 pub struct ValidatorStore {
     /// The transaction map tracks recently submitted transactions
@@ -40,32 +40,27 @@ pub struct ValidatorStore {
     certificate_cache: Mutex<HashMap<CertificateDigest, SequenceNumber>>,
     // garbage collection depth
     gc_depth: u64,
-    pub transaction_store: Store<SequenceNumber, Vec<SerializedTransaction>>,
-    pub sequence_store: Store<SequenceNumber, CertificateDigest>,
+    pub block_store: Store<BlockNumber, Block>,
 }
 
 impl ValidatorStore {
-    const TRANSACTIONS_CF: &'static str = "transactions";
-    const SEQUENCE_CF: &'static str = "sequence";
+    const BLOCKS_CF: &'static str = "blocks";
 
     pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
         let rocksdb =
-            open_cf(store_path, None, &[Self::TRANSACTIONS_CF, Self::SEQUENCE_CF]).expect("Cannot open database");
+            open_cf(store_path, None, &[Self::BLOCKS_CF]).expect("Cannot open database");
 
-        let (transactions_map, sequence_map) = reopen!(&rocksdb,
-            Self::TRANSACTIONS_CF;<SequenceNumber, Vec<SerializedTransaction>>,
-            Self::SEQUENCE_CF;<SequenceNumber, CertificateDigest>
+        let block_map = reopen!(&rocksdb,
+            Self::BLOCKS_CF;<SequenceNumber, Block>
         );
 
-        let transaction_store = Store::new(transactions_map);
-        let sequence_store = Store::new(sequence_map);
+        let block_store = Store::new(block_map);
 
         Self {
             transaction_cache: Mutex::new(HashMap::new()),
             certificate_cache: Mutex::new(HashMap::new()),
             gc_depth: 50,
-            transaction_store,
-            sequence_store,
+            block_store,
         }
     }
 
@@ -538,8 +533,6 @@ mod test_validator_state {
                 .await
                 .unwrap();
         }
-
-        //dbg!(validator.master_controller.bank_controller.lock().unwrap().get_num_assets());
 
         // create orderbook transaction
         const TEST_BASE_ASSET_ID: u64 = 1;

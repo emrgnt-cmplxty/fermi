@@ -99,10 +99,12 @@ impl ValidatorStore {
     }
 
     pub async fn write_latest_block(&self, block: Block) {
+        // TODO - is there a way to acquire a mutable reference to the block-number without demanding &mut self? 
+        // this would allow us to avoid separate commands to load and add to the counter
         let block_number = self.block_number.load(std::sync::atomic::Ordering::SeqCst);
         // write-out the block transactions to the validator store
         self.block_store.write(block_number, block).await;
-
+        // update the block number
         self.block_number.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
     }
 

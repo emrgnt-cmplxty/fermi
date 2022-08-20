@@ -9,7 +9,7 @@ use gdex_controller::master::MasterController;
 use gdex_types::transaction::Transaction;
 use gdex_types::{
     account::ValidatorKeyPair,
-    block::{BlockNumber, Block},
+    block::{BlockNumber, BlockDigest, Block},
     committee::{Committee, ValidatorName},
     error::GDEXError,
     transaction::{SignedTransaction, TransactionDigest},
@@ -22,7 +22,7 @@ use mysten_store::{
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::Hash;
 use narwhal_executor::{ExecutionIndices, ExecutionState};
-use narwhal_types::{CertificateDigest, SequenceNumber};
+use narwhal_types::SequenceNumber;
 use std::{
     collections::HashMap,
     path::PathBuf,
@@ -36,8 +36,8 @@ use tracing::{info, trace};
 /// Tracks recently submitted transactions to implement transaction gating
 pub struct ValidatorStore {
     /// The transaction map tracks recently submitted transactions
-    transaction_cache: Mutex<HashMap<TransactionDigest, Option<CertificateDigest>>>,
-    certificate_cache: Mutex<HashMap<CertificateDigest, SequenceNumber>>,
+    transaction_cache: Mutex<HashMap<TransactionDigest, Option<BlockDigest>>>,
+    block_digest_cache: Mutex<HashMap<BlockDigest, SequenceNumber>>,
     // garbage collection depth
     gc_depth: u64,
     pub block_store: Store<BlockNumber, Block>,
@@ -58,7 +58,7 @@ impl ValidatorStore {
 
         Self {
             transaction_cache: Mutex::new(HashMap::new()),
-            certificate_cache: Mutex::new(HashMap::new()),
+            block_digest_cache: Mutex::new(HashMap::new()),
             gc_depth: 50,
             block_store,
         }
@@ -69,8 +69,8 @@ impl ValidatorStore {
         return self.transaction_cache.lock().unwrap().contains_key(&transaction_digest);
     }
 
-    pub fn contains_certificate_digest(&self, certificate_digest: &CertificateDigest) -> bool {
-        return self.certificate_cache.lock().unwrap().contains_key(certificate_digest);
+    pub fn contains_block_digest(&self, certificate_digest: &BlockDigest) -> bool {
+        return self.block_digest_cache.lock().unwrap().contains_key(certificate_digest);
     }
 
     pub fn insert_unconfirmed_transaction(&self, transaction: &Transaction) {
@@ -84,8 +84,8 @@ impl ValidatorStore {
     pub fn insert_confirmed_transaction(&self, transaction: &Transaction, consensus_output: &ConsensusOutput) {
         let transaction_digest = transaction.digest();
         let certificate_digest = consensus_output.certificate.digest();
-        let mut locked_certificate_cache = self.certificate_cache.lock().unwrap();
-        let max_seq_num_so_far = locked_certificate_cache.values().max();
+        let mut locked_block_digest_cache = self.block_digest_cache.lock().unwrap();
+        let max_seq_num_so_far = locked_block_digest_cache.values().max();
 
         let _is_new_seq_num =
             max_seq_num_so_far.is_none() || consensus_output.consensus_index > *max_seq_num_so_far.unwrap();
@@ -94,18 +94,18 @@ impl ValidatorStore {
             .lock()
             .unwrap()
             .insert(transaction_digest, Some(certificate_digest));
-        locked_certificate_cache.insert(certificate_digest, consensus_output.consensus_index);
+        locked_block_digest_cache.insert(certificate_digest, consensus_output.consensus_index);
     }
 
     pub fn prune(&self) {
-        let mut locked_certificate_cache = self.certificate_cache.lock().unwrap();
-        if locked_certificate_cache.len() > self.gc_depth as usize {
-            let mut threshold = locked_certificate_cache.values().max().unwrap() - self.gc_depth;
-            locked_certificate_cache.retain(|_k, v| v > &mut threshold);
+        let mut locked_block_digest_cache = self.block_digest_cache.lock().unwrap();
+        if locked_block_digest_cache.len() > self.gc_depth as usize {
+            let mut threshold = locked_block_digest_cache.values().max().unwrap() - self.gc_depth;
+            locked_block_digest_cache.retain(|_k, v| v > &mut threshold);
             self.transaction_cache
                 .lock()
                 .unwrap()
-                .retain(|_k, v| v.is_none() || locked_certificate_cache.contains_key(&v.unwrap()));
+                .retain(|_k, v| v.is_none() || locked_block_digest_cache.contains_key(&v.unwrap()));
         }
     }
 }
@@ -398,7 +398,7 @@ mod test_validator_state {
 
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
-        let recent_block_hash = CertificateDigest::new([0; DIGEST_LEN]);
+        let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
         let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
         let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
         let signed_create_asset_txn =
@@ -422,7 +422,7 @@ mod test_validator_state {
 
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
-        let recent_block_hash = CertificateDigest::new([0; DIGEST_LEN]);
+        let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
         let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
         let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
         let signed_create_asset_txn =
@@ -464,7 +464,7 @@ mod test_validator_state {
 
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
-        let recent_block_hash = CertificateDigest::new([0; DIGEST_LEN]);
+        let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
         let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
         let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
         let signed_create_asset_txn =
@@ -487,7 +487,7 @@ mod test_validator_state {
         const TEST_BASE_ASSET_ID: u64 = 1;
         const TEST_QUOTE_ASSET_ID: u64 = 2;
         let sender_kp = generate_production_keypair::<KeyPair>();
-        let recent_block_hash = CertificateDigest::new([0; DIGEST_LEN]);
+        let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
         let create_orderbook_txn = create_orderbook_creation_transaction(
             &sender_kp,
             TEST_BASE_ASSET_ID,
@@ -517,7 +517,7 @@ mod test_validator_state {
 
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
-        let recent_block_hash = CertificateDigest::new([0; DIGEST_LEN]);
+        let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
         let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
         let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
         let signed_create_asset_txn =
@@ -537,7 +537,7 @@ mod test_validator_state {
         // create orderbook transaction
         const TEST_BASE_ASSET_ID: u64 = 1;
         const TEST_QUOTE_ASSET_ID: u64 = 2;
-        let recent_block_hash = CertificateDigest::new([0; DIGEST_LEN]);
+        let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
         let create_orderbook_txn = create_orderbook_creation_transaction(
             &sender_kp,
             TEST_BASE_ASSET_ID,

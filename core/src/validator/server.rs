@@ -182,7 +182,7 @@ impl ValidatorService {
                             validator_state.validator_store.prune();
                             // write-out the new block to the validator store
                             let block = Block {
-                                certificate_digest: consensus_output.certificate.digest(), 
+                                block_digest: consensus_output.certificate.digest(), 
                                 transactions: serialized_txns_buf.clone()
                             };
                             // write-out the block transactions to the validator store

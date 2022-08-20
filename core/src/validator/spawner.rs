@@ -406,11 +406,11 @@ pub mod suite_spawn_tests {
             assert!(validator_store.contains_transaction(&signed_transaction.get_transaction_payload()));
         }
 
-        println!("iterating over transactions");
         let mut total = 0;
         let block_db = validator_store.block_store.iter(None).await;
+        let mut block_db_iter = block_db.iter();
 
-        while let Some(next_block) = block_db.iter().next() {
+        while let Some(next_block) = block_db_iter.next() {
             let block = next_block.1;
             for serialized_transaction in &block.transactions {
                 let signed_transaction_db = SignedTransaction::deserialize(serialized_transaction.clone()).unwrap();
@@ -420,7 +420,6 @@ pub mod suite_spawn_tests {
             assert!(validator_store.contains_certificate_digest(&block.certificate_digest));
 
         }
-        info!("total={}", total);
         assert!(total as u64 == n_transactions_to_submit, "total transactions in db does not match total submitted");
     }
 }

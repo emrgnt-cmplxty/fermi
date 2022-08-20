@@ -28,7 +28,7 @@ use std::{
     path::PathBuf,
     pin::Pin,
     sync::{
-        atomic::{AtomicBool, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
         Arc, Mutex,
     },
 };
@@ -41,6 +41,7 @@ pub struct ValidatorStore {
     // garbage collection depth
     gc_depth: u64,
     pub block_store: Store<BlockNumber, Block>,
+    pub block_number: AtomicU64,
 }
 
 impl ValidatorStore {
@@ -60,6 +61,7 @@ impl ValidatorStore {
             block_digest_cache: Mutex::new(HashMap::new()),
             gc_depth: 50,
             block_store,
+            block_number: AtomicU64::new(0),
         }
     }
 
@@ -94,6 +96,14 @@ impl ValidatorStore {
             .unwrap()
             .insert(transaction_digest, Some(certificate_digest));
         locked_block_digest_cache.insert(certificate_digest, consensus_output.consensus_index);
+    }
+
+    pub async fn write_latest_block(&self, block: Block) {
+        let block_number = self.block_number.load(std::sync::atomic::Ordering::SeqCst);
+        // write-out the block transactions to the validator store
+        self.block_store.write(block_number, block).await;
+
+        self.block_number.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
     }
 
     pub fn prune(&self) {

@@ -186,11 +186,7 @@ impl ValidatorService {
                                 transactions: serialized_txns_buf.clone(),
                             };
                             // write-out the block transactions to the validator store
-                            validator_state
-                                .validator_store
-                                .block_store
-                                .write(round_number, block)
-                                .await;
+                            validator_state.validator_store.write_latest_block(block).await;
 
                             serialized_txns_buf.clear();
                         }

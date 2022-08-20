@@ -247,7 +247,7 @@ pub mod suite_spawn_tests {
         utils,
     };
     use std::{io, path::Path};
-    
+
     use tracing::info;
     use tracing_subscriber::FmtSubscriber;
 
@@ -379,7 +379,7 @@ pub mod suite_spawn_tests {
         let mut i = 1;
         let mut signed_transactions = Vec::new();
         let n_transactions_to_submit = 10;
-        while i < n_transactions_to_submit+1 {
+        while i < n_transactions_to_submit + 1 {
             let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, i);
             signed_transactions.push(signed_transaction.clone());
             let transaction_proto = TransactionProto {
@@ -416,10 +416,12 @@ pub mod suite_spawn_tests {
                 let signed_transaction_db = SignedTransaction::deserialize(serialized_transaction.clone()).unwrap();
                 assert!(validator_store.contains_transaction(&signed_transaction_db.get_transaction_payload()));
                 total += 1;
-            };
+            }
             assert!(validator_store.contains_block_digest(&block.block_digest));
-
         }
-        assert!(total as u64 == n_transactions_to_submit, "total transactions in db does not match total submitted");
+        assert!(
+            total as u64 == n_transactions_to_submit,
+            "total transactions in db does not match total submitted"
+        );
     }
 }

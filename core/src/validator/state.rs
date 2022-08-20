@@ -9,7 +9,7 @@ use gdex_controller::master::MasterController;
 use gdex_types::transaction::Transaction;
 use gdex_types::{
     account::ValidatorKeyPair,
-    block::{BlockNumber, BlockDigest, Block},
+    block::{Block, BlockDigest, BlockNumber},
     committee::{Committee, ValidatorName},
     error::GDEXError,
     transaction::{SignedTransaction, TransactionDigest},
@@ -47,8 +47,7 @@ impl ValidatorStore {
     const BLOCKS_CF: &'static str = "blocks";
 
     pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
-        let rocksdb =
-            open_cf(store_path, None, &[Self::BLOCKS_CF]).expect("Cannot open database");
+        let rocksdb = open_cf(store_path, None, &[Self::BLOCKS_CF]).expect("Cannot open database");
 
         let block_map = reopen!(&rocksdb,
             Self::BLOCKS_CF;<SequenceNumber, Block>

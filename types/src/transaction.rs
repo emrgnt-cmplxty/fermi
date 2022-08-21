@@ -468,6 +468,7 @@ pub mod transaction_test_functions {
         kp_sender: &AccountKeyPair,
         kp_receiver: &AccountKeyPair,
     ) -> SignedTransaction {
+        // TODO replace this with latest
         let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
         let transaction_variant = TransactionVariant::PaymentTransaction(PaymentRequest::new(
             kp_receiver.public().clone(),

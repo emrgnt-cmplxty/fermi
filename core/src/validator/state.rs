@@ -492,8 +492,6 @@ mod test_validator_state {
                 .unwrap();
         }
 
-        //dbg!(validator.master_controller.bank_controller.lock().unwrap().get_num_assets());
-
         // create orderbook transaction
         const TEST_BASE_ASSET_ID: u64 = 1;
         const TEST_QUOTE_ASSET_ID: u64 = 2;
@@ -517,7 +515,6 @@ mod test_validator_state {
             )
             .await
             .unwrap();
-        //dbg!(validator.master_controller.spot_controller.lock().unwrap().get_orderbook(TEST_BASE_ASSET_ID, TEST_QUOTE_ASSET_ID).unwrap());
     }
 
     #[tokio::test]

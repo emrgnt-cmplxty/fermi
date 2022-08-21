@@ -251,6 +251,7 @@ pub mod suite_spawn_tests {
     use tracing::info;
     use tracing_subscriber::FmtSubscriber;
 
+    #[ignore]
     #[tokio::test]
     pub async fn spawn_node_and_reconfigure() {
         // let subscriber = FmtSubscriber::builder()

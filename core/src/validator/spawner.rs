@@ -24,50 +24,17 @@ use tokio::{
 use tonic::{transport::Server, Request, Response, Status};
 use tracing::info;
 
-#[derive(Debug, Default)]
-pub struct RelayService {}
+pub struct RelayService {
+    state: Arc<ValidatorState>,
+}
 
 #[tonic::async_trait]
 impl Relay for RelayService {
     async fn read_data(&self, request: Request<RelayRequest>) -> Result<Response<RelayResponse>, Status> {
-        // let master_controller = MasterController::default();
-
-        // // Getting the file path for the key of the faucet
-        // let key_dir = ".proto/";
-        // let key_path = Path::new(key_dir).to_path_buf();
-
-        // // For now the faucet is the primary validator
-        // let primary_validator_index = 0;
-        // let key_file = key_path.join(format!("validator-{}.key", primary_validator_index));
-
-        // let kp: AccountKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
-        // let public_key = ValidatorPubKeyBytes::from(kp.public());
-
-        // let validator = ValidatorInfo {
-        //     name: "0".into(),
-        //     public_key: public_key.clone(),
-        //     stake: VALIDATOR_FUNDING_AMOUNT,
-        //     delegation: 0,
-        //     network_address: utils::new_network_address(),
-        //     narwhal_primary_to_primary: utils::new_network_address(),
-        //     narwhal_worker_to_primary: utils::new_network_address(),
-        //     narwhal_primary_to_worker: utils::new_network_address(),
-        //     narwhal_worker_to_worker: utils::new_network_address(),
-        //     narwhal_consensus_address: utils::new_network_address(),
-        // };
-
-        // let builder = GenesisStateBuilder::new()
-        //     .set_master_controller(master_controller)
-        //     .add_validator(validator);
-
-        // let genesis = builder.build();
-
-        // let secret = Arc::pin(kp);
-
-        // let validator_state = Arc::new(ValidatorState::new(public_key, secret, &genesis));
-        // validator_state.validator_store.prune();
-        // let returned_value = validator_state.validator_store.transaction_store.read(1).await.unwrap();
-        // println!("{:?}", returned_value);
+        let validator_state = &self.state;
+        validator_state.validator_store.prune();
+        let returned_value = validator_state.validator_store.transaction_store.read(1).await.unwrap();
+        println!("{:?}", returned_value);
 
         println!("Succesfully loaded validator state!");
 
@@ -272,7 +239,9 @@ impl ValidatorSpawner {
         let addr = addr.parse::<SocketAddr>()?;
 
         // Instantiating the faucet service
-        let relay_service = RelayService::default();
+        let relay_service = RelayService {
+            state: Arc::clone(self.validator_state.as_ref().unwrap()),
+        };
 
         // Start the faucet service
         Server::builder()

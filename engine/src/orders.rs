@@ -73,11 +73,13 @@ pub fn create_cancel_order_request(
     quote_asset_id: AssetId,
     order_id: u64,
     side: OrderSide,
+    local_timestamp: SystemTime,
 ) -> OrderRequest {
     OrderRequest::CancelOrder {
         base_asset_id,
         quote_asset_id,
         order_id,
         side,
+        local_timestamp,
     }
 }

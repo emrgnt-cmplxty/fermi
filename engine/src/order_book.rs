@@ -535,7 +535,7 @@ mod test_order_book {
     #[test]
     fn failed_cancel() {
         let mut orderbook = Orderbook::new(BASE_ASSET, QUOTE_ASSET);
-        let request = create_cancel_order_request(BASE_ASSET, QUOTE_ASSET, 1, OrderSide::Bid);
+        let request = create_cancel_order_request(BASE_ASSET, QUOTE_ASSET, 1, OrderSide::Bid, SystemTime::now());
         let mut result = orderbook.process_order(request);
 
         assert_eq!(result.len(), 1);

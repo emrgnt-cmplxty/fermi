@@ -146,6 +146,7 @@ pub enum OrderRequest {
         quote_asset_id: AssetId,
         order_id: OrderId,
         side: OrderSide,
+        local_timestamp: SystemTime,
     },
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -306,13 +307,16 @@ impl Hash for Transaction {
                     quote_asset_id,
                     order_id,
                     side,
+                    local_timestamp,
                 } => {
+                    let ts = convert_system_time_to_int(*local_timestamp);
                     let hasher_update = |hasher: &mut VarBlake2b| {
                         hasher.update(self.get_sender().0.to_bytes());
                         hasher.update(base_asset_id.to_le_bytes());
                         hasher.update(quote_asset_id.to_le_bytes());
                         hasher.update(order_id.to_le_bytes());
                         hasher.update((*side as u8).to_le_bytes());
+                        hasher.update(ts.to_le_bytes());
                         hasher.update(self.get_recent_certificate_digest().to_string());
                     };
                     TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
@@ -462,6 +466,26 @@ pub fn create_place_limit_order_transaction(
         side,
         price,
         quantity,
+        local_timestamp,
+    });
+
+    Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
+}
+
+pub fn create_cancel_order_transaction(
+    sender_kp: &AccountKeyPair,
+    base_asset_id: AssetId,
+    quote_asset_id: AssetId,
+    order_id: OrderId,
+    side: OrderSide,
+    local_timestamp: SystemTime,
+    recent_block_hash: CertificateDigest,
+) -> Transaction {
+    let transaction_variant = TransactionVariant::PlaceOrderTransaction(OrderRequest::CancelOrder {
+        base_asset_id,
+        quote_asset_id,
+        order_id,
+        side,
         local_timestamp,
     });
 

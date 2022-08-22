@@ -292,6 +292,7 @@ impl ExecutionState for ValidatorState {
                         quote_asset_id,
                         order_id,
                         side,
+                        ..
                     } => self
                         .master_controller
                         .spot_controller
@@ -562,7 +563,7 @@ mod test_validator_state {
     }
 
     #[tokio::test]
-    pub async fn process_place_limit_order_transaction() {
+    pub async fn process_place_limit_order_and_cancel_transaction() {
         let validator: ValidatorState = create_test_validator();
         let dummy_consensus_output = create_test_consensus_output();
         let dummy_execution_indices = create_test_execution_indices();

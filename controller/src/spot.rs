@@ -132,7 +132,13 @@ impl OrderbookInterface {
         }
 
         // create and process limit order
-        let order = create_cancel_order_request(self.base_asset_id, self.quote_asset_id, order_id, side);
+        let order = create_cancel_order_request(
+            self.base_asset_id,
+            self.quote_asset_id,
+            order_id,
+            side,
+            SystemTime::now(),
+        );
         let res = self.orderbook.process_order(order.clone());
         self.process_order_result(account_pub_key, res)
     }

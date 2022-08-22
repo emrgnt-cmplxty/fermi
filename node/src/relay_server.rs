@@ -1,15 +1,20 @@
 use gdex_core::builder::genesis_state::GenesisStateBuilder;
 use gdex_types::account::{AccountKeyPair, ValidatorKeyPair, ValidatorPubKeyBytes};
-use relay::relay_server::{Relay, RelayServer};
-use relay::{RelayRequest, RelayResponse};
+// use relay::relay_server::{Relay, RelayServer};
+// use relay::{RelayRequest, RelayResponse};
 use std::{net::SocketAddr, path::Path, sync::Arc};
 use tonic::{transport::Server, Request, Response, Status};
-pub mod relay {
-    tonic::include_proto!("relay");
-}
+// pub mod relay {
+//     tonic::include_proto!("relay");
+// }
 use gdex_controller::master::MasterController;
 use gdex_core::{genesis_ceremony::VALIDATOR_FUNDING_AMOUNT, validator::state::ValidatorState};
-use gdex_types::{crypto::KeypairTraits, node::ValidatorInfo, utils};
+use gdex_types::{
+    crypto::KeypairTraits,
+    node::ValidatorInfo,
+    proto::{Relay, RelayRequest, RelayResponse, RelayServer},
+    utils,
+};
 
 #[derive(Debug, Default)]
 pub struct RelayService {}
@@ -69,7 +74,7 @@ impl Relay for RelayService {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Putting the port to 8000
-    let addr = format!("127.0.0.1:8000");
+    let addr = "127.0.0.1:8000";
 
     // Parsing it into an address
     let addr = addr.parse::<SocketAddr>()?;

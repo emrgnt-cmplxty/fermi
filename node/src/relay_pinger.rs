@@ -1,11 +1,6 @@
-use relay::relay_client::RelayClient;
 use std::error::Error;
 
-use relay::RelayRequest;
-
-pub mod relay {
-    tonic::include_proto!("relay");
-}
+use gdex_types::proto::{RelayClient, RelayRequest};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {

@@ -20,6 +20,7 @@ service Transactions {
     rpc SubmitTransactionStream(stream Transaction) returns (Empty) {}
 }
 
+// Faucet service for airdropping
 service Faucet {
     rpc Airdrop (FaucetAirdropRequest) returns (FaucetAirdropResponse);
 }
@@ -32,3 +33,18 @@ message FaucetAirdropRequest {
 message FaucetAirdropResponse {
     bool successful = 1;
 }
+
+
+// Relay service for relaying information outside
+service Relay {
+    rpc ReadData (RelayRequest) returns (RelayResponse);
+}
+
+message RelayRequest {
+    string dummy_request = 1;
+}
+
+message RelayResponse {
+    bool successful = 1;
+}
+

@@ -26,9 +26,6 @@ use gdex_types::{
 use multiaddr::Multiaddr;
 use std::{fs, io::Write, num::NonZeroUsize, path::PathBuf};
 use tracing::info;
-pub mod faucet {
-    tonic::include_proto!("faucet");
-}
 
 pub const FAUCET_PORT: u32 = 8080;
 

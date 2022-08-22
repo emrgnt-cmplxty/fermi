@@ -8,16 +8,77 @@ use crate::{
     },
 };
 use anyhow::Result;
-use gdex_types::{node::ValidatorInfo, utils};
+use gdex_types::{
+    node::ValidatorInfo,
+    proto::{Relay, RelayRequest, RelayResponse, RelayServer},
+    utils,
+};
 use multiaddr::Multiaddr;
 use narwhal_config::{Committee as ConsensusCommittee, Parameters as ConsensusParameters};
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
-use std::{path::PathBuf, sync::Arc};
+use std::{net::SocketAddr, path::PathBuf, sync::Arc};
 use tokio::{
     sync::mpsc::{Receiver, Sender},
     task::JoinHandle,
 };
+use tonic::{transport::Server, Request, Response, Status};
 use tracing::info;
+
+#[derive(Debug, Default)]
+pub struct RelayService {}
+
+#[tonic::async_trait]
+impl Relay for RelayService {
+    async fn read_data(&self, request: Request<RelayRequest>) -> Result<Response<RelayResponse>, Status> {
+        // let master_controller = MasterController::default();
+
+        // // Getting the file path for the key of the faucet
+        // let key_dir = ".proto/";
+        // let key_path = Path::new(key_dir).to_path_buf();
+
+        // // For now the faucet is the primary validator
+        // let primary_validator_index = 0;
+        // let key_file = key_path.join(format!("validator-{}.key", primary_validator_index));
+
+        // let kp: AccountKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
+        // let public_key = ValidatorPubKeyBytes::from(kp.public());
+
+        // let validator = ValidatorInfo {
+        //     name: "0".into(),
+        //     public_key: public_key.clone(),
+        //     stake: VALIDATOR_FUNDING_AMOUNT,
+        //     delegation: 0,
+        //     network_address: utils::new_network_address(),
+        //     narwhal_primary_to_primary: utils::new_network_address(),
+        //     narwhal_worker_to_primary: utils::new_network_address(),
+        //     narwhal_primary_to_worker: utils::new_network_address(),
+        //     narwhal_worker_to_worker: utils::new_network_address(),
+        //     narwhal_consensus_address: utils::new_network_address(),
+        // };
+
+        // let builder = GenesisStateBuilder::new()
+        //     .set_master_controller(master_controller)
+        //     .add_validator(validator);
+
+        // let genesis = builder.build();
+
+        // let secret = Arc::pin(kp);
+
+        // let validator_state = Arc::new(ValidatorState::new(public_key, secret, &genesis));
+        // validator_state.validator_store.prune();
+        // let returned_value = validator_state.validator_store.transaction_store.read(1).await.unwrap();
+        // println!("{:?}", returned_value);
+
+        println!("Succesfully loaded validator state!");
+
+        // We can now return true because errors will have been caught above
+        let reply = RelayResponse { successful: true };
+
+        // Sending back a response
+        Ok(Response::new(reply))
+    }
+}
+
 /// Can spawn a validator server handle at the internal address
 /// the server handle contains a validator api (grpc) that exposes a validator service
 pub struct ValidatorSpawner {
@@ -203,6 +264,25 @@ impl ValidatorSpawner {
         join_handles
     }
 
+    pub async fn spawn_relay_server(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        // Putting the port to 8000
+        let addr = "127.0.0.1:8000";
+
+        // Parsing it into an address
+        let addr = addr.parse::<SocketAddr>()?;
+
+        // Instantiating the faucet service
+        let relay_service = RelayService::default();
+
+        // Start the faucet service
+        Server::builder()
+            .add_service(RelayServer::new(relay_service))
+            .serve(addr)
+            .await?;
+
+        Ok(())
+    }
+
     #[cfg(test)]
     pub async fn spawn_validator_with_reconfigure(
         &mut self,
@@ -259,46 +339,47 @@ pub mod suite_spawn_tests {
         );
 
         let handles = spawner.spawn_validator_with_reconfigure().await;
+        spawner.spawn_relay_server().await;
 
-        info!("Sending 10 transactions");
+        // info!("Sending 10 transactions");
 
-        let mut client =
-            TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
+        // let mut client =
+        //     TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
 
-        let key_file = path.join(format!("{}.key", spawner.get_validator_info().name));
-        let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
-        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
+        // let key_file = path.join(format!("{}.key", spawner.get_validator_info().name));
+        // let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
+        // let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
 
-        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
+        // let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
 
-        let mut i = 0;
-        while i < 10 {
-            let transaction_proto = TransactionProto {
-                transaction: signed_transaction.serialize().unwrap().into(),
-            };
-            let _resp1 = client
-                .submit_transaction(transaction_proto)
-                .await
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
-                .unwrap();
-            i += 1;
-        }
-        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+        // let mut i = 0;
+        // while i < 10 {
+        //     let transaction_proto = TransactionProto {
+        //         transaction: signed_transaction.serialize().unwrap().into(),
+        //     };
+        //     let _resp1 = client
+        //         .submit_transaction(transaction_proto)
+        //         .await
+        //         .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+        //         .unwrap();
+        //     i += 1;
+        // }
+        // tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
-        info!("Reconfiguring validator");
+        // info!("Reconfiguring validator");
 
-        let consensus_committee = spawner.get_genesis_state().narwhal_committee().load().clone();
-        let new_committee: narwhal_config::Committee = narwhal_config::Committee::clone(&consensus_committee);
-        let new_committee: narwhal_config::Committee = narwhal_config::Committee {
-            authorities: new_committee.authorities,
-            epoch: 1,
-        };
+        // let consensus_committee = spawner.get_genesis_state().narwhal_committee().load().clone();
+        // let new_committee: narwhal_config::Committee = narwhal_config::Committee::clone(&consensus_committee);
+        // let new_committee: narwhal_config::Committee = narwhal_config::Committee {
+        //     authorities: new_committee.authorities,
+        //     epoch: 1,
+        // };
 
-        let key = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
-        let tx_reconfigure = handles.1;
-        tx_reconfigure.send((key, new_committee)).await.unwrap();
+        // let key = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        // let tx_reconfigure = handles.1;
+        // tx_reconfigure.send((key, new_committee)).await.unwrap();
 
-        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+        // tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
     }
 
     #[tokio::test]

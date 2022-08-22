@@ -36,15 +36,15 @@ message FaucetAirdropResponse {
 
 
 // Relay service for relaying information outside
-service Relay {
-    rpc ReadData (RelayRequest) returns (RelayResponse);
+service Relayer {
+    rpc ReadLatestBlockInfo (RelayerRequest) returns (RelayerResponse);
 }
 
-message RelayRequest {
+message RelayerRequest {
     string dummy_request = 1;
 }
 
-message RelayResponse {
+message RelayerResponse {
     bool successful = 1;
 }
 

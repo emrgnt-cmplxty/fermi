@@ -13,6 +13,8 @@ rand =  "0.8.5"
 tempfile = "3.3.0"
 tokio = { version = "1.20.1", features = ["full", "tracing", "test-util"] }
 tracing = "0.1.36"
+tonic = "0.7"
+prost = "0.10"
 
 # mysten crates
 telemetry-subscribers = { git = "https://github.com/MystenLabs/mysten-infra", rev = "8d090689be14078f2ca41c356e7bbc0af21f73ab" }
@@ -21,8 +23,7 @@ telemetry-subscribers = { git = "https://github.com/MystenLabs/mysten-infra", re
 gdex-core = { path = "../core" }
 gdex-types = { path = "../types" }
 gdex-workspace-hack = { path = "../workspace-hack" }
-tonic = "0.7"
-prost = "0.10"
+gdex-node = { path = "../node" }
 
 [[bin]]
 name = "gdex"

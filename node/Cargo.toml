@@ -12,7 +12,7 @@ multiaddr = "0.14.0"
 tokio = { version = "1.20.1", features = ["full", "tracing", "test-util"] }
 tonic = "0.7"
 prost = "0.10"
-gdex-types = { path = "../types" }
+hex = "0.4.3"
 tracing = "0.1.36"
 
 # mysten crates
@@ -22,8 +22,7 @@ narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611e
 
 # local crates
 gdex-core = { path = "../core" }
-hex = "0.4.3"
-gdex-cli = { path = "../cli" }
+gdex-types = { path = "../types" }
 
 [[bin]]
 name = "faucet-server"

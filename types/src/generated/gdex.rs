@@ -20,12 +20,12 @@ pub struct FaucetAirdropResponse {
     pub successful: bool,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct RelayRequest {
+pub struct RelayerRequest {
     #[prost(string, tag="1")]
     pub dummy_request: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct RelayResponse {
+pub struct RelayerResponse {
     #[prost(bool, tag="1")]
     pub successful: bool,
 }
@@ -222,15 +222,15 @@ pub mod faucet_client {
     }
 }
 /// Generated client implementations.
-pub mod relay_client {
+pub mod relayer_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
     /// Relay service for relaying information outside
     #[derive(Debug, Clone)]
-    pub struct RelayClient<T> {
+    pub struct RelayerClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl RelayClient<tonic::transport::Channel> {
+    impl RelayerClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -241,7 +241,7 @@ pub mod relay_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> RelayClient<T>
+    impl<T> RelayerClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
@@ -255,7 +255,7 @@ pub mod relay_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> RelayClient<InterceptedService<T, F>>
+        ) -> RelayerClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -269,7 +269,7 @@ pub mod relay_client {
                 http::Request<tonic::body::BoxBody>,
             >>::Error: Into<StdError> + Send + Sync,
         {
-            RelayClient::new(InterceptedService::new(inner, interceptor))
+            RelayerClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with `gzip`.
         ///
@@ -286,10 +286,10 @@ pub mod relay_client {
             self.inner = self.inner.accept_gzip();
             self
         }
-        pub async fn read_data(
+        pub async fn read_latest_block_info(
             &mut self,
-            request: impl tonic::IntoRequest<super::RelayRequest>,
-        ) -> Result<tonic::Response<super::RelayResponse>, tonic::Status> {
+            request: impl tonic::IntoRequest<super::RelayerRequest>,
+        ) -> Result<tonic::Response<super::RelayerResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -300,7 +300,9 @@ pub mod relay_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gdex.Relay/ReadData");
+            let path = http::uri::PathAndQuery::from_static(
+                "/gdex.Relayer/ReadLatestBlockInfo",
+            );
             self.inner.unary(request.into_request(), path, codec).await
         }
     }
@@ -625,26 +627,26 @@ pub mod faucet_server {
     }
 }
 /// Generated server implementations.
-pub mod relay_server {
+pub mod relayer_server {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
-    ///Generated trait containing gRPC methods that should be implemented for use with RelayServer.
+    ///Generated trait containing gRPC methods that should be implemented for use with RelayerServer.
     #[async_trait]
-    pub trait Relay: Send + Sync + 'static {
-        async fn read_data(
+    pub trait Relayer: Send + Sync + 'static {
+        async fn read_latest_block_info(
             &self,
-            request: tonic::Request<super::RelayRequest>,
-        ) -> Result<tonic::Response<super::RelayResponse>, tonic::Status>;
+            request: tonic::Request<super::RelayerRequest>,
+        ) -> Result<tonic::Response<super::RelayerResponse>, tonic::Status>;
     }
     /// Relay service for relaying information outside
     #[derive(Debug)]
-    pub struct RelayServer<T: Relay> {
+    pub struct RelayerServer<T: Relayer> {
         inner: _Inner<T>,
         accept_compression_encodings: (),
         send_compression_encodings: (),
     }
     struct _Inner<T>(Arc<T>);
-    impl<T: Relay> RelayServer<T> {
+    impl<T: Relayer> RelayerServer<T> {
         pub fn new(inner: T) -> Self {
             Self::from_arc(Arc::new(inner))
         }
@@ -666,9 +668,9 @@ pub mod relay_server {
             InterceptedService::new(Self::new(inner), interceptor)
         }
     }
-    impl<T, B> tonic::codegen::Service<http::Request<B>> for RelayServer<T>
+    impl<T, B> tonic::codegen::Service<http::Request<B>> for RelayerServer<T>
     where
-        T: Relay,
+        T: Relayer,
         B: Body + Send + 'static,
         B::Error: Into<StdError> + Send + 'static,
     {
@@ -684,22 +686,24 @@ pub mod relay_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
-                "/gdex.Relay/ReadData" => {
+                "/gdex.Relayer/ReadLatestBlockInfo" => {
                     #[allow(non_camel_case_types)]
-                    struct ReadDataSvc<T: Relay>(pub Arc<T>);
-                    impl<T: Relay> tonic::server::UnaryService<super::RelayRequest>
-                    for ReadDataSvc<T> {
-                        type Response = super::RelayResponse;
+                    struct ReadLatestBlockInfoSvc<T: Relayer>(pub Arc<T>);
+                    impl<T: Relayer> tonic::server::UnaryService<super::RelayerRequest>
+                    for ReadLatestBlockInfoSvc<T> {
+                        type Response = super::RelayerResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::RelayRequest>,
+                            request: tonic::Request<super::RelayerRequest>,
                         ) -> Self::Future {
                             let inner = self.0.clone();
-                            let fut = async move { (*inner).read_data(request).await };
+                            let fut = async move {
+                                (*inner).read_latest_block_info(request).await
+                            };
                             Box::pin(fut)
                         }
                     }
@@ -708,7 +712,7 @@ pub mod relay_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let inner = inner.0;
-                        let method = ReadDataSvc(inner);
+                        let method = ReadLatestBlockInfoSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(
@@ -735,7 +739,7 @@ pub mod relay_server {
             }
         }
     }
-    impl<T: Relay> Clone for RelayServer<T> {
+    impl<T: Relayer> Clone for RelayerServer<T> {
         fn clone(&self) -> Self {
             let inner = self.inner.clone();
             Self {
@@ -745,7 +749,7 @@ pub mod relay_server {
             }
         }
     }
-    impl<T: Relay> Clone for _Inner<T> {
+    impl<T: Relayer> Clone for _Inner<T> {
         fn clone(&self) -> Self {
             Self(self.0.clone())
         }
@@ -755,7 +759,7 @@ pub mod relay_server {
             write!(f, "{:?}", self.0)
         }
     }
-    impl<T: Relay> tonic::transport::NamedService for RelayServer<T> {
-        const NAME: &'static str = "gdex.Relay";
+    impl<T: Relayer> tonic::transport::NamedService for RelayerServer<T> {
+        const NAME: &'static str = "gdex.Relayer";
     }
 }

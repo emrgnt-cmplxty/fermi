@@ -23,11 +23,10 @@ use gdex_types::{
     utils,
 };
 
+use gdex_node::faucet_server::FAUCET_PORT;
 use multiaddr::Multiaddr;
 use std::{fs, io::Write, num::NonZeroUsize, path::PathBuf};
 use tracing::info;
-
-pub const FAUCET_PORT: u32 = 8080;
 
 /// Note, the code in this struct is inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui/src/sui_commands.rs
 /// commit #e91604e0863c86c77ea1def8d9bd116127bee0bc.

@@ -1,4 +1,3 @@
-use gdex_cli::command::FAUCET_PORT;
 use gdex_core::client;
 use gdex_types::{
     account::AccountKeyPair,
@@ -7,13 +6,12 @@ use gdex_types::{
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
     utils,
 };
-use narwhal_crypto::ed25519::Ed25519PublicKey;
-use narwhal_crypto::traits::ToFromBytes;
-use narwhal_crypto::{Hash, DIGEST_LEN};
+use narwhal_crypto::{ed25519::Ed25519PublicKey, traits::ToFromBytes, Hash, DIGEST_LEN};
 use narwhal_types::CertificateDigest;
 use std::{env, io, net::SocketAddr, path::Path};
 use tonic::{transport::Server, Request, Response, Status};
 pub const PRIMARY_ASSET_ID: u64 = 0;
+pub const FAUCET_PORT: u32 = 8080;
 
 #[derive(Debug, Default)]
 pub struct FaucetService {}

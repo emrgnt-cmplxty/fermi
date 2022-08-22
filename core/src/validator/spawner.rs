@@ -8,63 +8,16 @@ use crate::{
     },
 };
 use anyhow::Result;
-use gdex_types::block::BlockInfo;
-use gdex_types::proto::BlockInfoProto;
-use gdex_types::{
-    node::ValidatorInfo,
-    proto::{Relay, RelayRequest, RelayResponse, RelayServer},
-    utils,
-};
+use gdex_types::{node::ValidatorInfo, utils};
 use multiaddr::Multiaddr;
 use narwhal_config::{Committee as ConsensusCommittee, Parameters as ConsensusParameters};
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
-use narwhal_types::{CertificateDigest, CertificateDigestProto, SequenceNumber};
-use std::{net::SocketAddr, path::PathBuf, sync::Arc};
+use std::{path::PathBuf, sync::Arc};
 use tokio::{
     sync::mpsc::{Receiver, Sender},
     task::JoinHandle,
 };
-use tonic::{transport::Server, Request, Response, Status};
 use tracing::info;
-
-pub struct RelayService {
-    state: Arc<ValidatorState>,
-}
-
-#[tonic::async_trait]
-impl Relay for RelayService {
-    async fn read_data(&self, request: Request<RelayRequest>) -> Result<Response<RelayResponse>, Status> {
-        let validator_state = &self.state;
-        validator_state.validator_store.prune();
-        let returned_value = validator_state.validator_store.last_block_store.read(0).await;
-        println!("{:?}", returned_value.as_ref().unwrap());
-
-        match returned_value {
-            Ok(opt) => {
-                if opt.is_some() {
-                    let block_info = opt.unwrap();
-                    Ok(Response::new(RelayResponse {
-                        successful: true,
-                        block_info: Some(BlockInfoProto {
-                            block_number: block_info.block_number,
-                            digest: CertificateDigestProto::from(block_info.block_digest).digest, // TODO egregious hack (MI)
-                        }),
-                    }))
-                } else {
-                    Ok(Response::new(RelayResponse {
-                        successful: true,
-                        block_info: None
-                    }))
-                }
-            }
-            // TODO propagate error message to client
-            Err(_) =>  Ok(Response::new(RelayResponse {
-                successful: false,
-                block_info: None
-            })),
-        }
-    }
-}
 
 /// Can spawn a validator server handle at the internal address
 /// the server handle contains a validator api (grpc) that exposes a validator service
@@ -265,27 +218,6 @@ impl ValidatorSpawner {
         join_handles
     }
 
-    pub async fn spawn_relay_server(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        // Putting the port to 8000
-        let addr = "127.0.0.1:8000";
-
-        // Parsing it into an address
-        let addr = addr.parse::<SocketAddr>()?;
-
-        // Instantiating the faucet service
-        let relay_service = RelayService {
-            state: Arc::clone(self.validator_state.as_ref().unwrap()),
-        };
-
-        // Start the faucet service
-        Server::builder()
-            .add_service(RelayServer::new(relay_service))
-            .serve(addr)
-            .await?;
-
-        Ok(())
-    }
-
     #[cfg(test)]
     pub async fn spawn_validator_with_reconfigure(
         &mut self,
@@ -315,8 +247,8 @@ pub mod suite_spawn_tests {
         transaction::{transaction_test_functions::generate_signed_test_transaction, SignedTransaction},
         utils,
     };
-    use narwhal_crypto::Hash;
     use std::{io, path::Path};
+    use narwhal_crypto::Hash;
 
     use tracing::info;
     use tracing_subscriber::FmtSubscriber;

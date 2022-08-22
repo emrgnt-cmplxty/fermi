@@ -36,11 +36,11 @@ message FaucetAirdropResponse {
 
 
 // Relay service for relaying information outside
-service Relay {
-    rpc ReadData (RelayRequest) returns (RelayResponse);
+service Relayer {
+    rpc ReadLatestBlockInfo (RelayerRequest) returns (RelayerResponse);
 }
 
-message RelayRequest {
+message RelayerRequest {
     string dummy_request = 1;
 }
 
@@ -51,7 +51,7 @@ message BlockInfo {
 
 // TODO figure out how to import from narwhal. It almost worked but it failed because ../ is not allowed
 // in the virtual path for some reason
-message RelayResponse {
+message RelayerResponse {
     bool successful = 1;
     BlockInfo block_info = 2;
 }

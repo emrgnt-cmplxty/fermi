@@ -10,10 +10,10 @@ mod gdex;
 pub use gdex::{
     faucet_client::FaucetClient,
     faucet_server::{Faucet, FaucetServer},
-    relay_client::RelayClient,
-    relay_server::{Relay, RelayServer},
+    relayer_client::RelayerClient,
+    relayer_server::{Relayer, RelayerServer},
     transactions_client::TransactionsClient,
     transactions_server::{Transactions, TransactionsServer},
-    BlockInfo as BlockInfoProto, Empty, FaucetAirdropRequest, FaucetAirdropResponse, RelayRequest, RelayResponse,
+    BlockInfo as BlockInfoProto, Empty, FaucetAirdropRequest, FaucetAirdropResponse, RelayerRequest, RelayerResponse,
     Transaction, Transaction as TransactionProto,
 };

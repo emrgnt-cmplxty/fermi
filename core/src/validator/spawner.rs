@@ -2,17 +2,14 @@ use crate::{
     config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, GDEX_DB_NAME},
     genesis_ceremony::GENESIS_FILENAME,
     metrics::start_prometheus_server,
+    relay::server::RelayService,
     validator::{
         genesis_state::ValidatorGenesisState, server::ValidatorServer, server::ValidatorServerHandle,
         server::ValidatorService, state::ValidatorState,
     },
 };
 use anyhow::Result;
-use gdex_types::{
-    node::ValidatorInfo,
-    proto::{Relay, RelayRequest, RelayResponse, RelayServer},
-    utils,
-};
+use gdex_types::{node::ValidatorInfo, proto::RelayServer, utils};
 use multiaddr::Multiaddr;
 use narwhal_config::{Committee as ConsensusCommittee, Parameters as ConsensusParameters};
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
@@ -21,28 +18,8 @@ use tokio::{
     sync::mpsc::{Receiver, Sender},
     task::JoinHandle,
 };
-use tonic::{transport::Server, Request, Response, Status};
+use tonic::transport::Server;
 use tracing::info;
-
-pub struct RelayService {
-    state: Arc<ValidatorState>,
-}
-
-#[tonic::async_trait]
-impl Relay for RelayService {
-    async fn read_data(&self, request: Request<RelayRequest>) -> Result<Response<RelayResponse>, Status> {
-        let validator_state = &self.state;
-        validator_state.validator_store.prune();
-        let returned_value = validator_state.validator_store.transaction_store.read(1).await.unwrap();
-        println!("Returned {:?}", returned_value);
-
-        // We can now return true because errors will have been caught above
-        let reply = RelayResponse { successful: true };
-
-        // Sending back a response
-        Ok(Response::new(reply))
-    }
-}
 
 /// Can spawn a validator server handle at the internal address
 /// the server handle contains a validator api (grpc) that exposes a validator service

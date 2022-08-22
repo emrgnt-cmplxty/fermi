@@ -66,7 +66,7 @@ impl ValidatorStore {
             gc_depth: 50,
             block_store,
             block_number: AtomicU64::new(0),
-            last_block_store: last_block_store,
+            last_block_store,
         }
     }
 

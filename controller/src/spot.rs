@@ -17,7 +17,7 @@ use gdex_types::{
     account::{AccountPubKey, OrderAccount},
     asset::{AssetId, AssetPairKey},
     error::GDEXError,
-    order_book::{Order, OrderProcessingResult, OrderSide, OrderType, Success},
+    order_book::{OrderProcessingResult, OrderSide, OrderType, Success},
 };
 use narwhal_crypto::ed25519::Ed25519PublicKey;
 use serde::{Deserialize, Serialize};
@@ -139,7 +139,7 @@ impl OrderbookInterface {
             side,
             SystemTime::now(),
         );
-        let res = self.orderbook.process_order(order.clone());
+        let res = self.orderbook.process_order(order);
         self.process_order_result(account_pub_key, res)
     }
 

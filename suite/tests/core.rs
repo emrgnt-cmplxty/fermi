@@ -1,9 +1,6 @@
 #[cfg(test)]
 pub mod suite_core_tests {
-    use gdex_controller::{
-        master::MasterController,
-        bank::{CREATED_ASSET_BALANCE}
-    };
+    use gdex_controller::{bank::CREATED_ASSET_BALANCE, master::MasterController};
     use gdex_core::{
         client,
         config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, GDEX_DB_NAME},
@@ -15,19 +12,21 @@ pub mod suite_core_tests {
         },
     };
     use gdex_types::{
-        account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair, ValidatorPubKeyBytes, ValidatorPubKey},
+        account::{
+            account_test_functions::generate_keypair_vec, ValidatorKeyPair, ValidatorPubKey, ValidatorPubKeyBytes,
+        },
+        asset::PRIMARY_ASSET_ID,
         crypto::{get_key_pair_from_rng, KeypairTraits},
         node::ValidatorInfo,
         proto::{TransactionProto, TransactionsClient},
         transaction::transaction_test_functions::generate_signed_test_transaction,
         utils,
-        asset::{PRIMARY_ASSET_ID}
     };
     use narwhal_config::Parameters as ConsensusParameters;
     use std::path::Path;
     use std::{io, sync::Arc, time};
     use tokio::task::JoinHandle;
-    use tokio::time::{Duration, sleep};
+    use tokio::time::{sleep, Duration};
 
     // Create a genesis config with a single validator seeded by VALIDATOR_SEED
     async fn get_genesis_state(dir: &Path, number_of_validators: u64) -> ValidatorGenesisState {
@@ -51,21 +50,31 @@ pub mod suite_core_tests {
                 info
             })
             .collect::<Vec<_>>();
-        
+
         let master_controller = MasterController::default();
         // create asset + fund other validators
         let validator_creator_pubkey = ValidatorPubKey::try_from(validators[0].public_key).unwrap();
-        master_controller.bank_controller.lock().unwrap().create_asset(&validator_creator_pubkey).unwrap();
+        master_controller
+            .bank_controller
+            .lock()
+            .unwrap()
+            .create_asset(&validator_creator_pubkey)
+            .unwrap();
         // get transfer amount
         let transfer_amount: u64 = CREATED_ASSET_BALANCE / number_of_validators;
         for i in 1..number_of_validators {
             let validator_pubkey = ValidatorPubKey::try_from(validators[i as usize].public_key).unwrap();
-            master_controller.bank_controller.lock().unwrap().transfer(
-                &validator_creator_pubkey,
-                &validator_pubkey,
-                PRIMARY_ASSET_ID,
-                transfer_amount
-            ).unwrap();
+            master_controller
+                .bank_controller
+                .lock()
+                .unwrap()
+                .transfer(
+                    &validator_creator_pubkey,
+                    &validator_pubkey,
+                    PRIMARY_ASSET_ID,
+                    transfer_amount,
+                )
+                .unwrap();
         }
 
         ValidatorGenesisState::new(master_controller, validators)
@@ -210,17 +219,25 @@ pub mod suite_core_tests {
                 .await
                 .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
                 .unwrap();
-        };
+        }
         sleep(Duration::from_millis(3250)).await;
-        let sender_balance = genesis_state.clone().master_controller().bank_controller.lock().unwrap().get_balance(&kp_sender.public(), PRIMARY_ASSET_ID).unwrap();
-        let receiver_balance = genesis_state.clone().master_controller().bank_controller.lock().unwrap().get_balance(&kp_receiver.public(), PRIMARY_ASSET_ID).unwrap();
-        assert_eq!(
-            sender_balance + receiver_balance,
-            2_500_000_000_000_000
-        );
-        assert!(
-            receiver_balance > 0,
-            "Receiver balance must be greater than 0"
-        );
+        let sender_balance = genesis_state
+            .clone()
+            .master_controller()
+            .bank_controller
+            .lock()
+            .unwrap()
+            .get_balance(&kp_sender.public(), PRIMARY_ASSET_ID)
+            .unwrap();
+        let receiver_balance = genesis_state
+            .clone()
+            .master_controller()
+            .bank_controller
+            .lock()
+            .unwrap()
+            .get_balance(&kp_receiver.public(), PRIMARY_ASSET_ID)
+            .unwrap();
+        assert_eq!(sender_balance + receiver_balance, 2_500_000_000_000_000);
+        assert!(receiver_balance > 0, "Receiver balance must be greater than 0");
     }
 }

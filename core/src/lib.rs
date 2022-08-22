@@ -6,5 +6,5 @@ pub mod config;
 pub mod genesis_ceremony;
 pub mod metrics;
 pub mod multiaddr;
-pub mod relay;
+pub mod relayer;
 pub mod validator;

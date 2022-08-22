@@ -15,9 +15,8 @@ impl Relayer for RelayerService {
         _request: Request<RelayerRequest>,
     ) -> Result<Response<RelayerResponse>, Status> {
         let validator_state = &self.state;
-        let returned_value = validator_state.validator_store.last_block_store.read(0).await;
 
-        match returned_value {
+        match validator_state.validator_store.last_block_store.read(0).await {
             Ok(opt) => {
                 if opt.is_some() {
                     let block_info = opt.unwrap();

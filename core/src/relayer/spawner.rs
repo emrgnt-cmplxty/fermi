@@ -1,4 +1,4 @@
-use crate::{relay::server::RelayerService, validator::state::ValidatorState};
+use crate::{relayer::server::RelayerService, validator::state::ValidatorState};
 use gdex_types::proto::RelayerServer;
 use std::{net::SocketAddr, sync::Arc};
 use tonic::transport::Server;
@@ -32,7 +32,7 @@ impl RelayerSpawner {
 
 #[cfg(test)]
 pub mod suite_spawn_tests {
-    use crate::relay::spawner::RelayerSpawner;
+    use crate::relayer::spawner::RelayerSpawner;
     use crate::validator::spawner::ValidatorSpawner;
     use gdex_types::{
         proto::{RelayerClient, RelayerRequest},

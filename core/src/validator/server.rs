@@ -18,7 +18,7 @@ use gdex_types::{
 use multiaddr::Multiaddr;
 use narwhal_config::Committee as ConsensusCommittee;
 use narwhal_consensus::ConsensusOutput;
-use narwhal_crypto::{Hash, KeyPair as ConsensusKeyPair};
+use narwhal_crypto::KeyPair as ConsensusKeyPair;
 use narwhal_executor::{ExecutionIndices, SubscriberError};
 use prometheus::Registry;
 use std::{io, sync::Arc};
@@ -175,28 +175,20 @@ impl ValidatorService {
 
                         // if next_transaction_index == 0 then the block is complete and we may write-out
                         if execution_indices.next_transaction_index == 0 {
-                            let consensus_index = consensus_output.consensus_index;
+                            // subtract round look-back from the latest round to get block number
+                            let round_number = consensus_output.certificate.header.round;
                             let num_txns = serialized_txns_buf.len();
-                            debug!("Processing finalized block {consensus_index} with {num_txns} transactions");
+                            debug!("Processing result from {round_number} with {num_txns} transactions");
                             store.prune();
-                            // write-out the serialized transactions to the validator store
+                            // write-out the new block to the validator store
                             store
-                                .transaction_store
-                                .write(consensus_index, serialized_txns_buf.clone())
-                                .await;
-                            // write-out the block hash to the validator store
-                            let certificate_digest = consensus_output.certificate.digest();
-                            store.sequence_store.write(consensus_index, certificate_digest).await;
-                            store
-                                .last_sequence_store
-                                .write(0, (consensus_index, certificate_digest))
+                                .write_latest_block(consensus_output.certificate, serialized_txns_buf.clone())
                                 .await;
                             serialized_txns_buf.clear();
                         }
                     }
                     Err(e) => trace!("{:?}", e), // TODO
                 }
-
                 // NOTE: Notify the user that its transaction has been processed.
             }
         }
@@ -233,7 +225,7 @@ impl ValidatorService {
         // }
 
         let transaction_proto = narwhal_types::TransactionProto {
-            transaction: transaction_proto.transaction, //.serialize().unwrap().into(),
+            transaction: transaction_proto.transaction,
         };
 
         let _result = consensus_adapter
@@ -249,7 +241,6 @@ impl ValidatorService {
             // .instrument(span)
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        // Ok(tonic::Response::new(TransactionResult(1)))
         Ok(tonic::Response::new(Empty {}))
     }
 
@@ -367,9 +358,7 @@ mod test_validator_server {
 
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        // let recent_batch_certificate = client.get_recent_batch_certificate().await
-        // attach this this to signed transaction
-        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, 10);
         let transaction_proto = TransactionProto {
             transaction: signed_transaction.serialize().unwrap().into(),
         };

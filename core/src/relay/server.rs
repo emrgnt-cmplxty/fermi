@@ -12,8 +12,7 @@ impl Relay for RelayService {
     async fn read_data(&self, request: Request<RelayRequest>) -> Result<Response<RelayResponse>, Status> {
         let validator_state = &self.state;
         validator_state.validator_store.prune();
-        let returned_value = validator_state.validator_store.transaction_store.read(1).await.unwrap();
-        println!("Returned {:?} successfully!", returned_value);
+        println!("Returned succesfully!");
 
         // We can now return true because errors will have been caught above
         let reply = RelayResponse { successful: true };

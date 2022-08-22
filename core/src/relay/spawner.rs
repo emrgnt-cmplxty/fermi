@@ -33,6 +33,7 @@ impl RelaySpawner {
 
 #[cfg(test)]
 pub mod suite_spawn_tests {
+    use crate::relay::spawner::RelaySpawner;
     use crate::validator::spawner::ValidatorSpawner;
     use gdex_types::utils;
     use std::path::Path;
@@ -43,7 +44,7 @@ pub mod suite_spawn_tests {
         let path = Path::new(dir).to_path_buf();
 
         let address = utils::new_network_address();
-        let mut spawner = ValidatorSpawner::new(
+        let mut validator_spawner = ValidatorSpawner::new(
             /* db_path */ path.clone(),
             /* key_path */ path.clone(),
             /* genesis_path */ path.clone(),
@@ -51,6 +52,14 @@ pub mod suite_spawn_tests {
             /* validator_name */ "validator-0".to_string(),
         );
 
-        let handles = spawner.spawn_validator_with_reconfigure().await;
+        let handles = validator_spawner.spawn_validator_with_reconfigure().await;
+
+        let validator_state = validator_spawner.get_validator_state();
+
+        let mut relay_spawner = RelaySpawner {
+            validator_state: validator_state.clone(),
+        };
+
+        let result = relay_spawner.spawn_relay_server().await;
     }
 }

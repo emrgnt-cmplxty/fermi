@@ -13,8 +13,7 @@ impl Relayer for RelayerService {
         &self,
         request: Request<RelayerRequest>,
     ) -> Result<Response<RelayerResponse>, Status> {
-        let validator_state = &self.state;
-        validator_state.validator_store.prune();
+        let _validator_state = &self.state;
         println!("Returned succesfully!");
 
         // We can now return true because errors will have been caught above

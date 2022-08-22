@@ -182,7 +182,7 @@ pub mod suite_core_tests {
         );
 
         let mut i = 0;
-        while i < 1000 {
+        while i < 1_000 {
             let transaction_proto = TransactionProto {
                 transaction: signed_transaction.serialize().unwrap().into(),
             };

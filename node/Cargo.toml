@@ -9,11 +9,35 @@ anyhow = { version = "1.0.58", features = ["backtrace"] }
 clap = "2.34"
 futures = "0.3.21"
 multiaddr = "0.14.0"
-tokio = { version = "1.20.1", features = ["full", "tracing", "test-util"] }
+tokio = { version = "1.20.1", features = ["full", "tracing", "test-util", "macros", "rt-multi-thread"] }
+tonic = "0.7"
+prost = "0.10"
+gdex-types = { path = "../types" }
 tracing = "0.1.36"
 
 # mysten crates
 telemetry-subscribers = { git = "https://github.com/MystenLabs/mysten-infra", rev = "8d090689be14078f2ca41c356e7bbc0af21f73ab" }
+narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "types" }
+narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "crypto", features=["copy_key"]}
 
 # local crates
 gdex-core = { path = "../core" }
+tempfile = "3.3.0"
+hex = "0.4.3"
+gdex-cli = { path = "../cli" }
+gdex-controller = { path = "../controller" }
+
+[build-dependencies]
+tonic-build = "0.7"
+
+[[bin]]
+name = "faucet-server"
+path = "src/faucet_server.rs"
+
+[[bin]]
+name = "relay-server"
+path = "src/relay_server.rs"
+
+[[bin]]
+name = "relay-pinger"
+path = "src/relay_pinger.rs"

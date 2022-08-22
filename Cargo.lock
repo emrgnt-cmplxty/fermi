@@ -2431,14 +2431,19 @@ dependencies = [
  "anyhow",
  "clap 3.2.2",
  "colored",
+ "crypto",
  "gdex-core",
  "gdex-types",
  "gdex-workspace-hack",
+ "hex",
  "multiaddr",
+ "prost",
  "rand 0.8.5",
  "telemetry-subscribers",
  "tempfile",
  "tokio",
+ "tonic",
+ "tonic-build 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracing",
 ]
 
@@ -2513,12 +2518,22 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap 2.34.0",
+ "crypto",
  "futures",
+ "gdex-cli",
+ "gdex-controller",
  "gdex-core",
+ "gdex-types",
+ "hex",
  "multiaddr",
+ "prost",
  "telemetry-subscribers",
+ "tempfile",
  "tokio",
+ "tonic",
+ "tonic-build 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracing",
+ "types",
 ]
 
 [[package]]

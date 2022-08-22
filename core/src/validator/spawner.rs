@@ -1,5 +1,5 @@
 use crate::{
-    config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME},
+    config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, GDEX_DB_NAME},
     genesis_ceremony::GENESIS_FILENAME,
     metrics::start_prometheus_server,
     validator::{
@@ -142,12 +142,20 @@ impl ValidatorSpawner {
         // TODO - can we avoid consuming the private key twice in the network setup?
         // Note, this awkwardness is due to my inferred understanding of Arc pin.
         let key_file = self.key_path.join(format!("{}.key", self.validator_info.name));
-        let db_path = self
+        let consensus_db_path = self
             .db_path
             .join(format!("{}-{}", self.validator_info.name, CONSENSUS_DB_NAME));
+        let gdex_db_path = self
+            .db_path
+            .join(format!("{}-{}", self.validator_info.name, GDEX_DB_NAME));
 
         let key_pair = Arc::pin(utils::read_keypair_from_file(&key_file).unwrap());
-        let validator_state = Arc::new(ValidatorState::new(pubilc_key, key_pair, &self.genesis_state));
+        let validator_state = Arc::new(ValidatorState::new(
+            pubilc_key,
+            key_pair,
+            &self.genesis_state,
+            &gdex_db_path,
+        ));
 
         info!(
             "Spawning a validator with the initial validator info = {:?}",
@@ -164,13 +172,14 @@ impl ValidatorSpawner {
 
         let consensus_config = ConsensusConfig {
             consensus_address,
-            consensus_db_path: db_path.clone(),
+            consensus_db_path: consensus_db_path.clone(),
             narwhal_config,
         };
         let key_pair = Arc::new(utils::read_keypair_from_file(&key_file).unwrap());
         let node_config = NodeConfig {
             key_pair,
-            db_path,
+            consensus_db_path,
+            gdex_db_path,
             network_address,
             metrics_address: utils::available_local_socket_address(),
             admin_interface_port: utils::get_available_port(),

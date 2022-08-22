@@ -26,7 +26,8 @@ pub struct NodeConfig {
     #[serde(default = "default_key_pair")]
     #[serde_as(as = "Arc<KeyPairBase64>")]
     pub key_pair: Arc<ValidatorKeyPair>,
-    pub db_path: PathBuf,
+    pub consensus_db_path: PathBuf,
+    pub gdex_db_path: PathBuf,
     #[serde(default = "default_grpc_address")]
     pub network_address: Multiaddr,
     #[serde(default = "default_json_rpc_address")]
@@ -97,8 +98,12 @@ impl NodeConfig {
         (&self.public_key()).into()
     }
 
-    pub fn db_path(&self) -> &Path {
-        &self.db_path
+    pub fn consensus_db_path(&self) -> &Path {
+        &self.consensus_db_path
+    }
+
+    pub fn gdex_db_path(&self) -> &Path {
+        &self.gdex_db_path
     }
 
     pub fn network_address(&self) -> &Multiaddr {
@@ -138,7 +143,8 @@ mod node_tests {
         let _default_key_pair = validator_config.key_pair();
         let _public_key = validator_config.public_key();
         let _gdex_address = validator_config.gdex_address();
-        let _db_path = validator_config.db_path();
+        let _consensus_db_path = validator_config.consensus_db_path();
+        let _gdex_db_path = validator_config.gdex_db_path();
         let _network_address = validator_config.network_address();
         let _consensus_config = validator_config.consensus_config();
         let _genesis = validator_config.genesis();

@@ -13,10 +13,16 @@ use gdex_types::{
     error::GDEXError,
     transaction::{SignedTransaction, TransactionDigest},
 };
+use mysten_store::{
+    reopen,
+    rocks::{open_cf, DBMap},
+    Store,
+};
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::Hash;
 use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
 use narwhal_types::{CertificateDigest, SequenceNumber};
+use std::path::PathBuf;
 use std::{
     collections::HashMap,
     pin::Pin,
@@ -24,12 +30,6 @@ use std::{
         atomic::{AtomicBool, Ordering},
         Arc, Mutex,
     },
-};
-
-use store::{
-    reopen,
-    rocks::{open_cf, DBMap},
-    Store,
 };
 use tracing::{info, trace};
 
@@ -40,25 +40,37 @@ pub struct ValidatorStore {
     certificate_cache: Mutex<HashMap<CertificateDigest, SequenceNumber>>,
     // garbage collection depth
     gc_depth: u64,
+
+    // TODO consider making this private and injected
     pub transaction_store: Store<SequenceNumber, Vec<SerializedTransaction>>,
     pub sequence_store: Store<SequenceNumber, CertificateDigest>,
+
+    // singleton store that keeps only the most recent block info at key 0
+    pub last_sequence_store: Store<u64, (SequenceNumber, CertificateDigest)>,
 }
 
 impl ValidatorStore {
     const TRANSACTIONS_CF: &'static str = "transactions";
     const SEQUENCE_CF: &'static str = "sequence";
+    const LAST_SEQUENCE_CF: &'static str = "last_sequence";
 
     pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
-        let rocksdb =
-            open_cf(store_path, None, &[Self::TRANSACTIONS_CF, Self::SEQUENCE_CF]).expect("Cannot open database");
+        let rocksdb = open_cf(
+            store_path,
+            None,
+            &[Self::TRANSACTIONS_CF, Self::SEQUENCE_CF, Self::LAST_SEQUENCE_CF],
+        )
+        .expect("Cannot open database");
 
-        let (transactions_map, sequence_map) = reopen!(&rocksdb,
+        let (transactions_map, sequence_map, last_sequence_map) = reopen!(&rocksdb,
             Self::TRANSACTIONS_CF;<SequenceNumber, Vec<SerializedTransaction>>,
-            Self::SEQUENCE_CF;<SequenceNumber, CertificateDigest>
+            Self::SEQUENCE_CF;<SequenceNumber, CertificateDigest>,
+            Self::LAST_SEQUENCE_CF;<u64, (SequenceNumber, CertificateDigest)>
         );
 
         let transaction_store = Store::new(transactions_map);
         let sequence_store = Store::new(sequence_map);
+        let last_sequence_store = Store::new(last_sequence_map);
 
         Self {
             transaction_cache: Mutex::new(HashMap::new()),
@@ -66,6 +78,7 @@ impl ValidatorStore {
             gc_depth: 50,
             transaction_store,
             sequence_store,
+            last_sequence_store,
         }
     }
 
@@ -100,7 +113,6 @@ impl ValidatorStore {
             .unwrap()
             .insert(transaction_digest, Some(certificate_digest));
         locked_certificate_cache.insert(certificate_digest, consensus_output.consensus_index);
-        drop(locked_certificate_cache);
     }
 
     pub fn prune(&self) {
@@ -150,14 +162,19 @@ pub struct ValidatorState {
 impl ValidatorState {
     // TODO: This function takes both committee and genesis as parameter.
     // Technically genesis already contains committee information. Could consider merging them.
-    pub fn new(name: ValidatorName, secret: StableSyncValidatorSigner, genesis: &ValidatorGenesisState) -> Self {
+    pub fn new(
+        name: ValidatorName,
+        secret: StableSyncValidatorSigner,
+        genesis: &ValidatorGenesisState,
+        store_db_path: &PathBuf,
+    ) -> Self {
         ValidatorState {
             name,
             secret,
             halted: AtomicBool::new(false),
             committee: ArcSwap::from(Arc::new(genesis.committee().unwrap())),
             master_controller: genesis.master_controller().clone(),
-            validator_store: ValidatorStore::default(),
+            validator_store: ValidatorStore::reopen(store_db_path),
         }
     }
 
@@ -184,89 +201,18 @@ impl ValidatorState {
 impl ExecutionState for ValidatorState {
     type Transaction = SignedTransaction;
     type Error = GDEXError;
-    type Outcome = ConsensusOutput;
+    type Outcome = (ConsensusOutput, ExecutionIndices);
 
     async fn handle_consensus_transaction(
         &self,
         consensus_output: &narwhal_consensus::ConsensusOutput,
-        _execution_indices: ExecutionIndices,
+        execution_indices: ExecutionIndices,
         signed_transaction: Self::Transaction,
     ) -> Result<Self::Outcome, Self::Error> {
-        let transaction = signed_transaction.get_transaction_payload();
-        // match transaction.get_variant() {
-        //     TransactionVariant::PaymentTransaction(payment) => {
-        //         self.master_controller.bank_controller.lock().unwrap().transfer(
-        //             transaction.get_sender(),
-        //             payment.get_receiver(),
-        //             payment.get_asset_id(),
-        //             payment.get_amount(),
-        //         )?
-        //     }
-        //     TransactionVariant::CreateAssetTransaction(_create_asset) => self
-        //         .master_controller
-        //         .bank_controller
-        //         .lock()
-        //         .unwrap()
-        //         .create_asset(transaction.get_sender())?,
-        //     TransactionVariant::CreateOrderbookTransaction(orderbook) => self
-        //         .master_controller
-        //         .spot_controller
-        //         .lock()
-        //         .unwrap()
-        //         .create_orderbook(orderbook.get_base_asset_id(), orderbook.get_quote_asset_id())?,
-        //     TransactionVariant::PlaceOrderTransaction(order) => {
-        //         match order {
-        //             OrderRequest::Market {
-        //                 base_asset_id,
-        //                 quote_asset_id,
-        //                 side,
-        //                 quantity,
-        //                 local_timestamp: _ts,
-        //             } => {
-        //                 dbg!(base_asset_id, quote_asset_id, side, quantity);
-        //             }
-        //             OrderRequest::Limit {
-        //                 base_asset_id,
-        //                 quote_asset_id,
-        //                 side,
-        //                 price,
-        //                 quantity,
-        //                 local_timestamp: _ts,
-        //             } => {
-        //                 // TODO: find out why these u64 are references
-        //                 self.master_controller
-        //                     .spot_controller
-        //                     .lock()
-        //                     .unwrap()
-        //                     .place_limit_order(
-        //                         *base_asset_id,
-        //                         *quote_asset_id,
-        //                         transaction.get_sender(),
-        //                         *side,
-        //                         *quantity,
-        //                         *price,
-        //                     )?
-        //             }
-        //             OrderRequest::CancelOrder { id, side } => {
-        //                 dbg!(id, side);
-        //             }
-        //             OrderRequest::Update {
-        //                 id,
-        //                 side,
-        //                 price,
-        //                 quantity,
-        //                 local_timestamp: _ts,
-        //             } => {
-        //                 dbg!(id, side, price, quantity);
-        //             }
-        //         }
-        //     }
-        // };
-
         self.validator_store
-            .insert_confirmed_transaction(transaction, consensus_output);
+            .insert_confirmed_transaction(signed_transaction.get_transaction_payload(), consensus_output);
 
-        Ok(consensus_output.clone())
+        Ok((consensus_output.clone(), execution_indices))
     }
 
     fn ask_consensus_write_lock(&self) -> bool {
@@ -299,7 +245,7 @@ mod test_validator_state {
         utils,
     };
     use narwhal_consensus::ConsensusOutput;
-    use narwhal_crypto::{generate_production_keypair, traits::KeyPair as _, Hash, KeyPair, DIGEST_LEN};
+    use narwhal_crypto::{generate_production_keypair, Hash, KeyPair, DIGEST_LEN};
     use narwhal_executor::ExecutionIndices;
     use narwhal_types::{Certificate, Header};
 
@@ -329,7 +275,10 @@ mod test_validator_state {
             .add_validator(validator);
 
         let genesis = builder.build();
-        let validator = ValidatorState::new(public_key, secret, &genesis);
+        let store_path = tempfile::tempdir()
+            .expect("Failed to open temporary directory")
+            .into_path();
+        let validator = ValidatorState::new(public_key, secret, &genesis, &store_path);
 
         validator.halt_validator();
         validator.unhalt_validator();
@@ -360,7 +309,10 @@ mod test_validator_state {
             .add_validator(validator);
 
         let genesis = builder.build();
-        let validator = ValidatorState::new(public_key, secret, &genesis);
+        let store_path = tempfile::tempdir()
+            .expect("Failed to open temporary directory")
+            .into_path();
+        let validator = ValidatorState::new(public_key, secret, &genesis, &store_path);
 
         validator
     }

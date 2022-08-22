@@ -20,9 +20,14 @@ pub struct FaucetAirdropResponse {
     pub successful: bool,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct RelayerRequest {
+pub struct RelayerGetLatestBlockInfoRequest {
     #[prost(string, tag="1")]
     pub dummy_request: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RelayerGetBlockInfoRequest {
+    #[prost(uint64, tag="1")]
+    pub block_number: u64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct BlockInfo {
@@ -299,7 +304,7 @@ pub mod relayer_client {
         }
         pub async fn read_latest_block_info(
             &mut self,
-            request: impl tonic::IntoRequest<super::RelayerRequest>,
+            request: impl tonic::IntoRequest<super::RelayerGetLatestBlockInfoRequest>,
         ) -> Result<tonic::Response<super::RelayerResponse>, tonic::Status> {
             self.inner
                 .ready()
@@ -313,6 +318,25 @@ pub mod relayer_client {
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/gdex.Relayer/ReadLatestBlockInfo",
+            );
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        pub async fn get_block_info(
+            &mut self,
+            request: impl tonic::IntoRequest<super::RelayerGetBlockInfoRequest>,
+        ) -> Result<tonic::Response<super::RelayerResponse>, tonic::Status> {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/gdex.Relayer/GetBlockInfo",
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
@@ -646,7 +670,11 @@ pub mod relayer_server {
     pub trait Relayer: Send + Sync + 'static {
         async fn read_latest_block_info(
             &self,
-            request: tonic::Request<super::RelayerRequest>,
+            request: tonic::Request<super::RelayerGetLatestBlockInfoRequest>,
+        ) -> Result<tonic::Response<super::RelayerResponse>, tonic::Status>;
+        async fn get_block_info(
+            &self,
+            request: tonic::Request<super::RelayerGetBlockInfoRequest>,
         ) -> Result<tonic::Response<super::RelayerResponse>, tonic::Status>;
     }
     /// Relay service for relaying information outside
@@ -700,8 +728,11 @@ pub mod relayer_server {
                 "/gdex.Relayer/ReadLatestBlockInfo" => {
                     #[allow(non_camel_case_types)]
                     struct ReadLatestBlockInfoSvc<T: Relayer>(pub Arc<T>);
-                    impl<T: Relayer> tonic::server::UnaryService<super::RelayerRequest>
-                    for ReadLatestBlockInfoSvc<T> {
+                    impl<
+                        T: Relayer,
+                    > tonic::server::UnaryService<
+                        super::RelayerGetLatestBlockInfoRequest,
+                    > for ReadLatestBlockInfoSvc<T> {
                         type Response = super::RelayerResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
@@ -709,7 +740,9 @@ pub mod relayer_server {
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::RelayerRequest>,
+                            request: tonic::Request<
+                                super::RelayerGetLatestBlockInfoRequest,
+                            >,
                         ) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move {
@@ -724,6 +757,46 @@ pub mod relayer_server {
                     let fut = async move {
                         let inner = inner.0;
                         let method = ReadLatestBlockInfoSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/gdex.Relayer/GetBlockInfo" => {
+                    #[allow(non_camel_case_types)]
+                    struct GetBlockInfoSvc<T: Relayer>(pub Arc<T>);
+                    impl<
+                        T: Relayer,
+                    > tonic::server::UnaryService<super::RelayerGetBlockInfoRequest>
+                    for GetBlockInfoSvc<T> {
+                        type Response = super::RelayerResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::RelayerGetBlockInfoRequest>,
+                        ) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut = async move {
+                                (*inner).get_block_info(request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = GetBlockInfoSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

@@ -35,7 +35,7 @@ pub mod suite_spawn_tests {
     use crate::relayer::spawner::RelayerSpawner;
     use crate::validator::spawner::ValidatorSpawner;
     use gdex_types::{
-        proto::{RelayerClient, RelayerRequest},
+        proto::{RelayerClient, RelayerGetBlockInfoRequest, RelayerGetLatestBlockInfoRequest},
         utils,
     };
     use std::path::Path;
@@ -72,12 +72,18 @@ pub mod suite_spawn_tests {
         let addr = "http://127.0.0.1:8000";
         let mut client = RelayerClient::connect(addr.to_string()).await.unwrap();
 
-        let request = tonic::Request::new(RelayerRequest {
+        let latest_block_request = tonic::Request::new(RelayerGetLatestBlockInfoRequest {
             dummy_request: "hello world".to_string(),
         });
 
-        let response = client.read_latest_block_info(request).await;
+        let latest_block_response = client.read_latest_block_info(latest_block_request).await;
 
-        println!("RESPONSE={:?}", response);
+        println!("Response from latest block={:?}", latest_block_response);
+
+        let specific_block_request = tonic::Request::new(RelayerGetBlockInfoRequest { block_number: 0 });
+
+        let specific_block_response = client.get_block_info(specific_block_request).await;
+
+        println!("Response from specific block request = {:?}", specific_block_response);
     }
 }

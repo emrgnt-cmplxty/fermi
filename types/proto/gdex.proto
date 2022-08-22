@@ -37,11 +37,16 @@ message FaucetAirdropResponse {
 
 // Relay service for relaying information outside
 service Relayer {
-    rpc ReadLatestBlockInfo (RelayerRequest) returns (RelayerResponse);
+    rpc ReadLatestBlockInfo (RelayerGetLatestBlockInfoRequest) returns (RelayerResponse);
+    rpc GetBlockInfo (RelayerGetBlockInfoRequest) returns (RelayerResponse);
 }
 
-message RelayerRequest {
+message RelayerGetLatestBlockInfoRequest {
     string dummy_request = 1;
+}
+
+message RelayerGetBlockInfoRequest {
+    uint64 block_number = 1;
 }
 
 message BlockInfo {
@@ -55,5 +60,3 @@ message RelayerResponse {
     bool successful = 1;
     BlockInfo block_info = 2;
 }
-
-

@@ -332,19 +332,21 @@ impl Orderbook {
         };
 
         // get order to extract price + quantity
-        let order = order_queue.get(order_id).unwrap();
-        let price = order.get_price();
-        let quantity = order.get_quantity();
-
-        if order_queue.cancel(order_id) {
-            results.push(Ok(Success::Cancelled {
-                order_id,
-                side,
-                price,
-                quantity,
-                timestamp: SystemTime::now(),
-            }));
-        } else {
+        if let Some(order) = order_queue.get(order_id) {
+            // get price and quantity of live order
+            let price = order.get_price();
+            let quantity = order.get_quantity();
+    
+            if order_queue.cancel(order_id) {
+                results.push(Ok(Success::Cancelled {
+                    order_id,
+                    side,
+                    price,
+                    quantity,
+                    timestamp: SystemTime::now(),
+                }));
+            }
+        } else{
             results.push(Err(Failed::OrderNotFound(order_id)));
         }
     }
@@ -537,6 +539,8 @@ mod test_order_book {
         let mut result = orderbook.process_order(request);
 
         assert_eq!(result.len(), 1);
+        println!("CHECK OUT THE LENGTH");
+        dbg!(result.len());
         match result.pop().unwrap() {
             Err(..) => (),
             _ => panic!("unexpected success"),

@@ -2,23 +2,21 @@ use crate::{
     config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, GDEX_DB_NAME},
     genesis_ceremony::GENESIS_FILENAME,
     metrics::start_prometheus_server,
-    relay::server::RelayService,
     validator::{
         genesis_state::ValidatorGenesisState, server::ValidatorServer, server::ValidatorServerHandle,
         server::ValidatorService, state::ValidatorState,
     },
 };
 use anyhow::Result;
-use gdex_types::{node::ValidatorInfo, proto::RelayServer, utils};
+use gdex_types::{node::ValidatorInfo, utils};
 use multiaddr::Multiaddr;
 use narwhal_config::{Committee as ConsensusCommittee, Parameters as ConsensusParameters};
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
-use std::{net::SocketAddr, path::PathBuf, sync::Arc};
+use std::{path::PathBuf, sync::Arc};
 use tokio::{
     sync::mpsc::{Receiver, Sender},
     task::JoinHandle,
 };
-use tonic::transport::Server;
 use tracing::info;
 
 /// Can spawn a validator server handle at the internal address
@@ -213,27 +211,6 @@ impl ValidatorSpawner {
         let server_handle = self.spawn_validator_server(tx_reconfigure_consensus).await;
         join_handles.push(server_handle.get_handle());
         join_handles
-    }
-
-    pub async fn spawn_relay_server(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        // Putting the port to 8000
-        let addr = "127.0.0.1:8000";
-
-        // Parsing it into an address
-        let addr = addr.parse::<SocketAddr>()?;
-
-        // Instantiating the faucet service
-        let relay_service = RelayService {
-            state: Arc::clone(self.validator_state.as_ref().unwrap()),
-        };
-
-        // Start the faucet service
-        Server::builder()
-            .add_service(RelayServer::new(relay_service))
-            .serve(addr)
-            .await?;
-
-        Ok(())
     }
 
     #[cfg(test)]

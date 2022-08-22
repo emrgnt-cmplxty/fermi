@@ -247,8 +247,8 @@ pub mod suite_spawn_tests {
         transaction::{transaction_test_functions::generate_signed_test_transaction, SignedTransaction},
         utils,
     };
-    use std::{io, path::Path};
     use narwhal_crypto::Hash;
+    use std::{io, path::Path};
 
     use tracing::info;
     use tracing_subscriber::FmtSubscriber;

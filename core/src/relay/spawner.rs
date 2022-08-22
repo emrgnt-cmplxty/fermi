@@ -57,10 +57,10 @@ pub mod suite_spawn_tests {
 
         let _handles = validator_spawner.spawn_validator_with_reconfigure().await;
 
-        let validator_state = validator_spawner.get_validator_state();
+        let validator_state = validator_spawner.get_validator_state().clone();
 
         let mut relay_spawner = RelayerSpawner {
-            validator_state: *validator_state.clone(),
+            validator_state: validator_state,
         };
 
         let _result = relay_spawner.spawn_relay_server().await;

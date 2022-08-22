@@ -10,7 +10,10 @@ pub struct RelayerService {
 
 #[tonic::async_trait]
 impl Relayer for RelayerService {
-    async fn read_latest_block_info(&self, request: Request<RelayerRequest>) -> Result<Response<RelayerResponse>, Status> {
+    async fn read_latest_block_info(
+        &self,
+        request: Request<RelayerRequest>,
+    ) -> Result<Response<RelayerResponse>, Status> {
         let validator_state = &self.state;
         let returned_value = validator_state.validator_store.last_block_store.read(0).await;
 
@@ -28,14 +31,14 @@ impl Relayer for RelayerService {
                 } else {
                     Ok(Response::new(RelayerResponse {
                         successful: true,
-                        block_info: None
+                        block_info: None,
                     }))
                 }
             }
             // TODO propagate error message to client
-            Err(_) =>  Ok(Response::new(RelayerResponse {
+            Err(_) => Ok(Response::new(RelayerResponse {
                 successful: false,
-                block_info: None
+                block_info: None,
             })),
         }
     }

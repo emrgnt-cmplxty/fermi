@@ -201,7 +201,6 @@ impl OrderbookInterface {
                     self.process_order_cancel(&existing_pub_key, *side, *price, *quantity)?;
                 }
                 Err(_failure) => {
-                    println!("FAILED");
                     return Err(GDEXError::OrderRequest);
                 }
             }
@@ -391,8 +390,8 @@ pub mod spot_tests {
         bank::{BankController, CREATED_ASSET_BALANCE},
         spot::OrderbookInterface,
     };
+    use gdex_types::crypto::KeypairTraits;
     use gdex_types::{account::account_test_functions::generate_keypair_vec, order_book::OrderSide};
-    use gdex_types::{crypto::KeypairTraits, order_book::Failed};
 
     const BASE_ASSET_ID: AssetId = 0;
     const QUOTE_ASSET_ID: AssetId = 1;

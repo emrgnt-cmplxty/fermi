@@ -12,7 +12,7 @@ use gdex_types::{
     block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},
     committee::{Committee, ValidatorName},
     error::GDEXError,
-    transaction::{SignedTransaction, TransactionDigest},
+    transaction::{OrderRequest, SignedTransaction, TransactionDigest, TransactionVariant},
 };
 use mysten_store::{
     reopen,

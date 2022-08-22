@@ -43,7 +43,7 @@ pub struct ValidatorStore {
     pub block_info_store: Store<BlockNumber, BlockInfo>,
     pub block_number: AtomicU64,
     // singleton store that keeps only the most recent block info at key 0
-    pub last_block_store: Store<u64, Block>,
+    pub last_block_store: Store<u64, BlockInfo>,
 }
 
 impl ValidatorStore {
@@ -62,7 +62,7 @@ impl ValidatorStore {
         let (block_map, block_info_map, last_block_map) = reopen!(&rocksdb,
             Self::BLOCKS_CF;<BlockNumber, Block>,
             Self::BLOCK_INFO_CF;<BlockNumber, BlockInfo>,
-            Self::LAST_BLOCK_CF;<u64, Block>
+            Self::LAST_BLOCK_CF;<u64, BlockInfo>
         );
 
         let block_store = Store::new(block_map);
@@ -122,17 +122,20 @@ impl ValidatorStore {
         // this would allow us to avoid separate commands to load and add to the counter
 
         let block_number = self.block_number.load(std::sync::atomic::Ordering::SeqCst);
+        let block_digest = block_certificate.digest();
         let block = Block {
-            block_number,
-            block_digest: block_certificate.digest(),
+            block_certificate,
             transactions,
         };
-        let block_info = BlockInfo { block_certificate };
+        let block_info = BlockInfo {
+            block_number,
+            block_digest: block_digest,
+        };
 
         // write-out the block information to associated stores
         self.block_store.write(block_number, block.clone()).await;
-        self.block_info_store.write(block_number, block_info).await;
-        self.last_block_store.write(0, block).await;
+        self.block_info_store.write(block_number, block_info.clone()).await;
+        self.last_block_store.write(0, block_info).await;
         // update the block number
         self.block_number.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
     }

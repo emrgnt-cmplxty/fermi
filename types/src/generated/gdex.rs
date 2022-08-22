@@ -25,8 +25,10 @@ pub struct RelayRequest {
     pub dummy_request: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct CertificateDigest {
-    #[prost(bytes="bytes", tag="1")]
+pub struct BlockInfo {
+    #[prost(uint64, tag="1")]
+    pub block_number: u64,
+    #[prost(bytes="bytes", tag="2")]
     pub digest: ::prost::bytes::Bytes,
 }
 /// TODO figure out how to import from narwhal. It almost worked but it failed because ../ is not allowed
@@ -35,10 +37,8 @@ pub struct CertificateDigest {
 pub struct RelayResponse {
     #[prost(bool, tag="1")]
     pub successful: bool,
-    #[prost(uint64, tag="2")]
-    pub block_number: u64,
-    #[prost(message, optional, tag="3")]
-    pub certificate_digest: ::core::option::Option<CertificateDigest>,
+    #[prost(message, optional, tag="2")]
+    pub block_info: ::core::option::Option<BlockInfo>,
 }
 /// Generated client implementations.
 pub mod transactions_client {

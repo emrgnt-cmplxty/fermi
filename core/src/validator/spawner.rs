@@ -8,6 +8,8 @@ use crate::{
     },
 };
 use anyhow::Result;
+use gdex_types::block::BlockInfo;
+use gdex_types::proto::BlockInfoProto;
 use gdex_types::{
     node::ValidatorInfo,
     proto::{Relay, RelayRequest, RelayResponse, RelayServer},
@@ -16,8 +18,8 @@ use gdex_types::{
 use multiaddr::Multiaddr;
 use narwhal_config::{Committee as ConsensusCommittee, Parameters as ConsensusParameters};
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
+use narwhal_types::{CertificateDigest, CertificateDigestProto, SequenceNumber};
 use std::{net::SocketAddr, path::PathBuf, sync::Arc};
-use narwhal_types::{CertificateDigest, SequenceNumber};
 use tokio::{
     sync::mpsc::{Receiver, Sender},
     task::JoinHandle,
@@ -34,19 +36,32 @@ impl Relay for RelayService {
     async fn read_data(&self, request: Request<RelayRequest>) -> Result<Response<RelayResponse>, Status> {
         let validator_state = &self.state;
         validator_state.validator_store.prune();
-        let returned_value = validator_state.validator_store.last_sequence_store.read(0).await;
-        println!("{:?}", returned_value.unwrap());
+        let returned_value = validator_state.validator_store.last_block_store.read(0).await;
+        println!("{:?}", returned_value.as_ref().unwrap());
 
         match returned_value {
             Ok(opt) => {
                 if opt.is_some() {
-                    let (seq_number, cert_digest) = opt.unwrap();
-                    Ok(Response::new(RelayResponse { successful: true, block_number: seq_number, certificate_digest: Some(CertificateDigest::from(cert_digest)) }))
+                    let block_info = opt.unwrap();
+                    Ok(Response::new(RelayResponse {
+                        successful: true,
+                        block_info: Some(BlockInfoProto {
+                            block_number: block_info.block_number,
+                            digest: CertificateDigestProto::from(block_info.block_digest).digest, // TODO egregious hack (MI)
+                        }),
+                    }))
                 } else {
-                    Ok(Response::new(RelayResponse { successful: false, block_number: 0, certificate_digest: None }))
+                    Ok(Response::new(RelayResponse {
+                        successful: true,
+                        block_info: None
+                    }))
                 }
-            },
-            Err(e) => e,
+            }
+            // TODO propagate error message to client
+            Err(_) =>  Ok(Response::new(RelayResponse {
+                successful: false,
+                block_info: None
+            })),
         }
     }
 }
@@ -300,6 +315,7 @@ pub mod suite_spawn_tests {
         transaction::{transaction_test_functions::generate_signed_test_transaction, SignedTransaction},
         utils,
     };
+    use narwhal_crypto::Hash;
     use std::{io, path::Path};
 
     use tracing::info;
@@ -473,7 +489,7 @@ pub mod suite_spawn_tests {
                 assert!(validator_store.contains_transaction(&signed_transaction_db.get_transaction_payload()));
                 total += 1;
             }
-            assert!(validator_store.contains_block_digest(&block.block_digest));
+            assert!(validator_store.contains_block_digest(&block.block_certificate.digest()));
         }
         assert!(
             total as u64 == n_transactions_to_submit,

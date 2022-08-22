@@ -12,7 +12,7 @@ pub struct RelayerService {
 impl Relayer for RelayerService {
     async fn read_latest_block_info(
         &self,
-        request: Request<RelayerRequest>,
+        _request: Request<RelayerRequest>,
     ) -> Result<Response<RelayerResponse>, Status> {
         let validator_state = &self.state;
         let returned_value = validator_state.validator_store.last_block_store.read(0).await;

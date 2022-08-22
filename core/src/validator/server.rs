@@ -193,7 +193,6 @@ impl ValidatorService {
                     }
                     Err(e) => trace!("{:?}", e), // TODO
                 }
-
                 // NOTE: Notify the user that its transaction has been processed.
             }
         }

@@ -47,18 +47,18 @@ pub struct ValidatorStore {
 
 impl ValidatorStore {
     const BLOCKS_CF: &'static str = "blocks";
-    const LAST_SEQUENCE_CF: &'static str = "last_sequence";
+    const LAST_BLOCK_CF: &'static str = "last_block";
 
     pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
-        let rocksdb = open_cf(store_path, None, &[Self::BLOCKS_CF, Self::LAST_SEQUENCE_CF]).expect("Cannot open database");
+        let rocksdb = open_cf(store_path, None, &[Self::BLOCKS_CF, Self::LAST_BLOCK_CF]).expect("Cannot open database");
 
-        let (block_map, last_sequence_map) = reopen!(&rocksdb,
+        let (block_map, last_block_map) = reopen!(&rocksdb,
             Self::BLOCKS_CF;<BlockNumber, Block>,
-            Self::LAST_SEQUENCE_CF;<u64, Block>
+            Self::LAST_BLOCK_CF;<u64, Block>
         );
 
         let block_store = Store::new(block_map);
-        let last_block_store = Store::new(last_sequence_map);
+        let last_block_store = Store::new(last_block_map);
 
         Self {
             transaction_cache: Mutex::new(HashMap::new()),
@@ -75,21 +75,21 @@ impl ValidatorStore {
         return self.transaction_cache.lock().unwrap().contains_key(&transaction_digest);
     }
 
-    pub fn contains_block_digest(&self, certificate_digest: &BlockDigest) -> bool {
-        return self.block_digest_cache.lock().unwrap().contains_key(certificate_digest);
+    pub fn contains_block_digest(&self, block_digest: &BlockDigest) -> bool {
+        return self.block_digest_cache.lock().unwrap().contains_key(block_digest);
     }
 
     pub fn insert_unconfirmed_transaction(&self, transaction: &Transaction) {
         let transaction_digest = transaction.digest();
         self.transaction_cache.lock().unwrap().insert(
             transaction_digest,
-            None, // Insert with dummy certificate, which will later be overwritten
+            None, // Insert with dummy block digest, which will later be overwritten
         );
     }
 
     pub fn insert_confirmed_transaction(&self, transaction: &Transaction, consensus_output: &ConsensusOutput) {
         let transaction_digest = transaction.digest();
-        let certificate_digest = consensus_output.certificate.digest();
+        let block_digest = consensus_output.certificate.digest();
         let mut locked_block_digest_cache = self.block_digest_cache.lock().unwrap();
         let max_seq_num_so_far = locked_block_digest_cache.values().max();
 
@@ -99,8 +99,8 @@ impl ValidatorStore {
         self.transaction_cache
             .lock()
             .unwrap()
-            .insert(transaction_digest, Some(certificate_digest));
-        locked_block_digest_cache.insert(certificate_digest, consensus_output.consensus_index);
+            .insert(transaction_digest, Some(block_digest));
+        locked_block_digest_cache.insert(block_digest, consensus_output.consensus_index);
     }
 
     pub async fn write_latest_block(&self, block: Block) {

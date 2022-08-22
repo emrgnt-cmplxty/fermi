@@ -19,6 +19,7 @@ use gdex_types::{
     error::GDEXError,
     order_book::{Order, OrderProcessingResult, OrderSide, OrderType, Success},
 };
+use narwhal_crypto::ed25519::{Ed25519PublicKey};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use std::{collections::HashMap, time::SystemTime};
@@ -48,6 +49,13 @@ impl OrderbookInterface {
             order_to_account: HashMap::new(),
             bank_controller,
         }
+    }
+
+    fn get_pub_key_from_order(&self, order_id: &OrderId) -> Ed25519PublicKey {
+        self
+        .order_to_account
+        .get(order_id)
+        .ok_or(GDEXError::AccountLookup).unwrap().clone()
     }
 
     /// Create a new account in the orderbook
@@ -87,6 +95,7 @@ impl OrderbookInterface {
             .lock()
             .unwrap()
             .get_balance(account_pub_key, self.base_asset_id)?;
+
         // check balances before placing order
         if matches!(side, OrderSide::Ask) {
             // if ask, selling quantity of base asset
@@ -95,6 +104,7 @@ impl OrderbookInterface {
             // if bid, buying base asset with quantity*price of quote asset
             assert!(balance > quantity * price);
         }
+
         // create and process limit order
         let order = create_limit_order_request(
             self.base_asset_id,
@@ -122,7 +132,7 @@ impl OrderbookInterface {
 
         // create and process limit order
         let order = create_cancel_order_request(self.base_asset_id, self.quote_asset_id, order_id, side);
-        let res = self.orderbook.process_order(order);
+        let res = self.orderbook.process_order(order.clone());
         self.process_order_result(account_pub_key, res)
     }
 
@@ -145,7 +155,7 @@ impl OrderbookInterface {
                 }) => {
                     // update user's balances if it is a limit order
                     if *order_type == OrderType::Limit {
-                        self.process_order_init(account_pub_key, *side, *price, *quantity)?;
+                        self.update_balances_on_limit_order_create(account_pub_key, *side, *price, *quantity)?;
                     }
                     // insert new order to map
                     self.order_to_account.insert(*order_id, account_pub_key.clone());
@@ -158,12 +168,9 @@ impl OrderbookInterface {
                     quantity,
                     ..
                 }) => {
-                    let existing_pub_key = self
-                        .order_to_account
-                        .get(order_id)
-                        .ok_or(GDEXError::AccountLookup)?
-                        .clone();
-                    self.process_order_fill(&existing_pub_key, *side, *price, *quantity)?;
+                    // update user balances
+                    let existing_pub_key = self.get_pub_key_from_order(order_id);
+                    self.update_balances_on_fill(&existing_pub_key, *side, *price, *quantity)?;
                 }
                 Ok(Success::Filled {
                     order_id,
@@ -172,30 +179,19 @@ impl OrderbookInterface {
                     quantity,
                     ..
                 }) => {
-                    let existing_pub_key = self
-                        .order_to_account
-                        .get(order_id)
-                        .ok_or(GDEXError::AccountLookup)?
-                        .clone();
-                    self.process_order_fill(&existing_pub_key, *side, *price, *quantity)?;
-                    // erase existing order
+                    // update user balances
+                    let existing_pub_key = self.get_pub_key_from_order(order_id);
+                    self.update_balances_on_fill(&existing_pub_key, *side, *price, *quantity)?;
+                    // remove order from map
                     self.order_to_account.remove(order_id).ok_or(GDEXError::OrderRequest)?;
                 }
                 Ok(Success::Updated { .. }) => {
                     panic!("This needs to be implemented...")
                 }
-                Ok(Success::Cancelled { order_id, side, .. }) => {
+                Ok(Success::Cancelled { order_id, side, price, quantity, .. }) => {
                     // order has been cancelled from order book, update states
-                    let existing_pub_key = self
-                        .order_to_account
-                        .get(order_id)
-                        .ok_or(GDEXError::AccountLookup)?
-                        .clone();
-                    let order: &Order = self.orderbook.get_order(*side, *order_id);
-                    let order_side = order.get_side();
-                    let order_price = order.get_price();
-                    let order_quantity = order.get_quantity();
-                    self.process_order_cancel(&existing_pub_key, order_side, order_price, order_quantity)?;
+                    let existing_pub_key = self.get_pub_key_from_order(order_id);
+                    self.process_order_cancel(&existing_pub_key, *side, *price, *quantity)?;
                 }
                 Err(_failure) => {
                     println!("FAILED");
@@ -207,7 +203,7 @@ impl OrderbookInterface {
     }
 
     /// Processes an initialized order by modifying the associated account
-    fn process_order_init(
+    fn update_balances_on_limit_order_create(
         &mut self,
         account_pub_key: &AccountPubKey,
         side: OrderSide,
@@ -235,7 +231,7 @@ impl OrderbookInterface {
     }
 
     /// Processes a filled order by modifying the associated account
-    fn process_order_fill(
+    fn update_balances_on_fill(
         &mut self,
         account_pub_key: &AccountPubKey,
         side: OrderSide,
@@ -388,7 +384,7 @@ pub mod spot_tests {
         bank::{BankController, CREATED_ASSET_BALANCE},
         spot::OrderbookInterface,
     };
-    use gdex_types::crypto::KeypairTraits;
+    use gdex_types::{crypto::KeypairTraits, order_book::Failed};
     use gdex_types::{account::account_test_functions::generate_keypair_vec, order_book::OrderSide};
 
     const BASE_ASSET_ID: AssetId = 0;
@@ -777,5 +773,54 @@ pub mod spot_tests {
                 .unwrap(),
             TRANSFER_AMOUNT - bid_size_0
         );
+    }
+
+    #[test]
+    fn place_cancel_order() {
+        let account = generate_keypair_vec([0; 32]).pop().unwrap();
+
+        let mut bank_controller = BankController::new();
+        bank_controller.create_asset(account.public()).unwrap();
+        bank_controller.create_asset(account.public()).unwrap();
+        let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
+
+        let mut orderbook_interface =
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
+
+        let bid_size = 100;
+        let bid_price = 100;
+        let result = orderbook_interface
+            .place_limit_order(account.public(), OrderSide::Bid, bid_size, bid_price).unwrap();
+        
+        if let Ok(Success::Accepted { order_id, side, .. }) = result[0] {
+            // get order
+            assert!(
+                orderbook_interface.orderbook.get_order(side, order_id).is_ok(),
+                "Orer has been created"
+            );
+
+            // check user balances
+            let user_quote_balance = bank_controller_ref.lock().unwrap().get_balance(account.public(), QUOTE_ASSET_ID).unwrap();
+            assert_eq!(
+                user_quote_balance,
+                CREATED_ASSET_BALANCE - 100*100
+            );
+            
+            // cancel order
+            orderbook_interface
+                .place_cancel_order(account.public(), order_id, side).unwrap();
+
+            assert!(
+                orderbook_interface.orderbook.get_order(side, order_id).is_err(),
+                "Orer has been cancelled"
+            );
+
+            // check user balances
+            let user_quote_balance = bank_controller_ref.lock().unwrap().get_balance(account.public(), QUOTE_ASSET_ID).unwrap();
+            assert_eq!(
+                user_quote_balance,
+                CREATED_ASSET_BALANCE
+            );
+        }
     }
 }

@@ -94,6 +94,8 @@ pub enum Success {
     Cancelled {
         order_id: u64,
         side: OrderSide,
+        price: u64,
+        quantity: u64,
         timestamp: SystemTime,
     },
 }

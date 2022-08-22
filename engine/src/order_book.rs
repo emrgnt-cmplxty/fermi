@@ -331,10 +331,17 @@ impl Orderbook {
             OrderSide::Ask => &mut self.ask_queue,
         };
 
+        // get order to extract price + quantity
+        let order = order_queue.get(order_id).unwrap();
+        let price = order.get_price();
+        let quantity = order.get_quantity();
+
         if order_queue.cancel(order_id) {
             results.push(Ok(Success::Cancelled {
                 order_id,
                 side,
+                price,
+                quantity,
                 timestamp: SystemTime::now(),
             }));
         } else {
@@ -344,13 +351,13 @@ impl Orderbook {
 
     /* Helpers */
 
-    pub fn get_order(&mut self, side: OrderSide, order_id: u64) -> &Order {
+    pub fn get_order(&mut self, side: OrderSide, order_id: u64) -> Result<&Order, Failed> {
         let order_queue = match side {
             OrderSide::Bid => &mut self.bid_queue,
             OrderSide::Ask => &mut self.ask_queue,
         };
 
-        order_queue.get(order_id).unwrap()
+        order_queue.get(order_id).ok_or(Failed::OrderNotFound(order_id))
     }
 
     #[allow(clippy::too_many_arguments)]

@@ -18,8 +18,7 @@ impl Relayer for RelayerService {
 
         match validator_state.validator_store.last_block_store.read(0).await {
             Ok(opt) => {
-                if opt.is_some() {
-                    let block_info = opt.unwrap();
+                if let Some(block_info) = opt {
                     Ok(Response::new(RelayerResponse {
                         successful: true,
                         block_info: Some(BlockInfoProto {

@@ -129,7 +129,7 @@ impl ValidatorStore {
         };
         let block_info = BlockInfo {
             block_number,
-            block_digest: block_digest,
+            block_digest,
         };
 
         // write-out the block information to associated stores

@@ -19,7 +19,7 @@ use gdex_types::{
     error::GDEXError,
     order_book::{Order, OrderProcessingResult, OrderSide, OrderType, Success},
 };
-use narwhal_crypto::ed25519::{Ed25519PublicKey};
+use narwhal_crypto::ed25519::Ed25519PublicKey;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use std::{collections::HashMap, time::SystemTime};
@@ -52,10 +52,11 @@ impl OrderbookInterface {
     }
 
     fn get_pub_key_from_order(&self, order_id: &OrderId) -> Ed25519PublicKey {
-        self
-        .order_to_account
-        .get(order_id)
-        .ok_or(GDEXError::AccountLookup).unwrap().clone()
+        self.order_to_account
+            .get(order_id)
+            .ok_or(GDEXError::AccountLookup)
+            .unwrap()
+            .clone()
     }
 
     /// Create a new account in the orderbook
@@ -188,7 +189,13 @@ impl OrderbookInterface {
                 Ok(Success::Updated { .. }) => {
                     panic!("This needs to be implemented...")
                 }
-                Ok(Success::Cancelled { order_id, side, price, quantity, .. }) => {
+                Ok(Success::Cancelled {
+                    order_id,
+                    side,
+                    price,
+                    quantity,
+                    ..
+                }) => {
                     // order has been cancelled from order book, update states
                     let existing_pub_key = self.get_pub_key_from_order(order_id);
                     self.process_order_cancel(&existing_pub_key, *side, *price, *quantity)?;
@@ -384,8 +391,8 @@ pub mod spot_tests {
         bank::{BankController, CREATED_ASSET_BALANCE},
         spot::OrderbookInterface,
     };
-    use gdex_types::{crypto::KeypairTraits, order_book::Failed};
     use gdex_types::{account::account_test_functions::generate_keypair_vec, order_book::OrderSide};
+    use gdex_types::{crypto::KeypairTraits, order_book::Failed};
 
     const BASE_ASSET_ID: AssetId = 0;
     const QUOTE_ASSET_ID: AssetId = 1;
@@ -790,8 +797,9 @@ pub mod spot_tests {
         let bid_size = 100;
         let bid_price = 100;
         let result = orderbook_interface
-            .place_limit_order(account.public(), OrderSide::Bid, bid_size, bid_price).unwrap();
-        
+            .place_limit_order(account.public(), OrderSide::Bid, bid_size, bid_price)
+            .unwrap();
+
         if let Ok(Success::Accepted { order_id, side, .. }) = result[0] {
             // get order
             assert!(
@@ -800,15 +808,17 @@ pub mod spot_tests {
             );
 
             // check user balances
-            let user_quote_balance = bank_controller_ref.lock().unwrap().get_balance(account.public(), QUOTE_ASSET_ID).unwrap();
-            assert_eq!(
-                user_quote_balance,
-                CREATED_ASSET_BALANCE - 100*100
-            );
-            
+            let user_quote_balance = bank_controller_ref
+                .lock()
+                .unwrap()
+                .get_balance(account.public(), QUOTE_ASSET_ID)
+                .unwrap();
+            assert_eq!(user_quote_balance, CREATED_ASSET_BALANCE - 100 * 100);
+
             // cancel order
             orderbook_interface
-                .place_cancel_order(account.public(), order_id, side).unwrap();
+                .place_cancel_order(account.public(), order_id, side)
+                .unwrap();
 
             assert!(
                 orderbook_interface.orderbook.get_order(side, order_id).is_err(),
@@ -816,11 +826,12 @@ pub mod spot_tests {
             );
 
             // check user balances
-            let user_quote_balance = bank_controller_ref.lock().unwrap().get_balance(account.public(), QUOTE_ASSET_ID).unwrap();
-            assert_eq!(
-                user_quote_balance,
-                CREATED_ASSET_BALANCE
-            );
+            let user_quote_balance = bank_controller_ref
+                .lock()
+                .unwrap()
+                .get_balance(account.public(), QUOTE_ASSET_ID)
+                .unwrap();
+            assert_eq!(user_quote_balance, CREATED_ASSET_BALANCE);
         }
     }
 }

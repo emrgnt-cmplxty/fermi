@@ -308,47 +308,46 @@ pub mod suite_spawn_tests {
         );
 
         let handles = spawner.spawn_validator_with_reconfigure().await;
-        spawner.spawn_relay_server().await;
 
-        // info!("Sending 10 transactions");
+        info!("Sending 10 transactions");
 
-        // let mut client =
-        //     TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
+        let mut client =
+            TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
 
-        // let key_file = path.join(format!("{}.key", spawner.get_validator_info().name));
-        // let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
-        // let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
+        let key_file = path.join(format!("{}.key", spawner.get_validator_info().name));
+        let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
+        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
 
-        // let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
 
-        // let mut i = 0;
-        // while i < 10 {
-        //     let transaction_proto = TransactionProto {
-        //         transaction: signed_transaction.serialize().unwrap().into(),
-        //     };
-        //     let _resp1 = client
-        //         .submit_transaction(transaction_proto)
-        //         .await
-        //         .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
-        //         .unwrap();
-        //     i += 1;
-        // }
-        // tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+        let mut i = 0;
+        while i < 10 {
+            let transaction_proto = TransactionProto {
+                transaction: signed_transaction.serialize().unwrap().into(),
+            };
+            let _resp1 = client
+                .submit_transaction(transaction_proto)
+                .await
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+                .unwrap();
+            i += 1;
+        }
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
-        // info!("Reconfiguring validator");
+        info!("Reconfiguring validator");
 
-        // let consensus_committee = spawner.get_genesis_state().narwhal_committee().load().clone();
-        // let new_committee: narwhal_config::Committee = narwhal_config::Committee::clone(&consensus_committee);
-        // let new_committee: narwhal_config::Committee = narwhal_config::Committee {
-        //     authorities: new_committee.authorities,
-        //     epoch: 1,
-        // };
+        let consensus_committee = spawner.get_genesis_state().narwhal_committee().load().clone();
+        let new_committee: narwhal_config::Committee = narwhal_config::Committee::clone(&consensus_committee);
+        let new_committee: narwhal_config::Committee = narwhal_config::Committee {
+            authorities: new_committee.authorities,
+            epoch: 1,
+        };
 
-        // let key = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
-        // let tx_reconfigure = handles.1;
-        // tx_reconfigure.send((key, new_committee)).await.unwrap();
+        let key = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let tx_reconfigure = handles.1;
+        tx_reconfigure.send((key, new_committee)).await.unwrap();
 
-        // tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
     }
 
     #[tokio::test]

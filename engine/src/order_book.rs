@@ -336,7 +336,7 @@ impl Orderbook {
             // get price and quantity of live order
             let price = order.get_price();
             let quantity = order.get_quantity();
-    
+
             if order_queue.cancel(order_id) {
                 results.push(Ok(Success::Cancelled {
                     order_id,
@@ -346,7 +346,7 @@ impl Orderbook {
                     timestamp: SystemTime::now(),
                 }));
             }
-        } else{
+        } else {
             results.push(Err(Failed::OrderNotFound(order_id)));
         }
     }

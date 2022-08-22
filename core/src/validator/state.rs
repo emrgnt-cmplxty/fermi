@@ -22,7 +22,6 @@ use mysten_store::{
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::Hash;
 use narwhal_executor::{ExecutionIndices, ExecutionState};
-use narwhal_types::SequenceNumber;
 use std::{
     collections::HashMap,
     path::PathBuf,
@@ -37,24 +36,29 @@ use tracing::{info, trace};
 pub struct ValidatorStore {
     /// The transaction map tracks recently submitted transactions
     transaction_cache: Mutex<HashMap<TransactionDigest, Option<BlockDigest>>>,
-    block_digest_cache: Mutex<HashMap<BlockDigest, SequenceNumber>>,
+    block_digest_cache: Mutex<HashMap<BlockDigest, BlockNumber>>,
     // garbage collection depth
     gc_depth: u64,
     pub block_store: Store<BlockNumber, Block>,
     pub block_number: AtomicU64,
+    // singleton store that keeps only the most recent block info at key 0
+    pub last_block_store: Store<u64, Block>,
 }
 
 impl ValidatorStore {
     const BLOCKS_CF: &'static str = "blocks";
+    const LAST_SEQUENCE_CF: &'static str = "last_sequence";
 
     pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
-        let rocksdb = open_cf(store_path, None, &[Self::BLOCKS_CF]).expect("Cannot open database");
+        let rocksdb = open_cf(store_path, None, &[Self::BLOCKS_CF, Self::LAST_SEQUENCE_CF]).expect("Cannot open database");
 
-        let block_map = reopen!(&rocksdb,
-            Self::BLOCKS_CF;<SequenceNumber, Block>
+        let (block_map, last_sequence_map) = reopen!(&rocksdb,
+            Self::BLOCKS_CF;<BlockNumber, Block>,
+            Self::LAST_SEQUENCE_CF;<u64, Block>
         );
 
         let block_store = Store::new(block_map);
+        let last_block_store = Store::new(last_sequence_map);
 
         Self {
             transaction_cache: Mutex::new(HashMap::new()),
@@ -62,6 +66,7 @@ impl ValidatorStore {
             gc_depth: 50,
             block_store,
             block_number: AtomicU64::new(0),
+            last_block_store: last_block_store,
         }
     }
 
@@ -103,9 +108,12 @@ impl ValidatorStore {
         // this would allow us to avoid separate commands to load and add to the counter
         let block_number = self.block_number.load(std::sync::atomic::Ordering::SeqCst);
         // write-out the block transactions to the validator store
-        self.block_store.write(block_number, block).await;
+        self.block_store.write(block_number, block.clone()).await;
+        // write-out the last block to the block store
+        self.last_block_store.write(0, block).await;
         // update the block number
         self.block_number.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+
     }
 
     pub fn prune(&self) {
@@ -203,75 +211,6 @@ impl ExecutionState for ValidatorState {
         signed_transaction: Self::Transaction,
     ) -> Result<Self::Outcome, Self::Error> {
         let transaction = signed_transaction.get_transaction_payload();
-        // match transaction.get_variant() {
-        //     TransactionVariant::PaymentTransaction(payment) => {
-        //         self.master_controller.bank_controller.lock().unwrap().transfer(
-        //             transaction.get_sender(),
-        //             payment.get_receiver(),
-        //             payment.get_asset_id(),
-        //             payment.get_amount(),
-        //         )?
-        //     }
-        //     TransactionVariant::CreateAssetTransaction(_create_asset) => self
-        //         .master_controller
-        //         .bank_controller
-        //         .lock()
-        //         .unwrap()
-        //         .create_asset(transaction.get_sender())?,
-        //     TransactionVariant::CreateOrderbookTransaction(orderbook) => self
-        //         .master_controller
-        //         .spot_controller
-        //         .lock()
-        //         .unwrap()
-        //         .create_orderbook(orderbook.get_base_asset_id(), orderbook.get_quote_asset_id())?,
-        //     TransactionVariant::PlaceOrderTransaction(order) => {
-        //         match order {
-        //             OrderRequest::Market {
-        //                 base_asset_id,
-        //                 quote_asset_id,
-        //                 side,
-        //                 quantity,
-        //                 local_timestamp: _ts,
-        //             } => {
-        //                 dbg!(base_asset_id, quote_asset_id, side, quantity);
-        //             }
-        //             OrderRequest::Limit {
-        //                 base_asset_id,
-        //                 quote_asset_id,
-        //                 side,
-        //                 price,
-        //                 quantity,
-        //                 local_timestamp: _ts,
-        //             } => {
-        //                 // TODO: find out why these u64 are references
-        //                 self.master_controller
-        //                     .spot_controller
-        //                     .lock()
-        //                     .unwrap()
-        //                     .place_limit_order(
-        //                         *base_asset_id,
-        //                         *quote_asset_id,
-        //                         transaction.get_sender(),
-        //                         *side,
-        //                         *quantity,
-        //                         *price,
-        //                     )?
-        //             }
-        //             OrderRequest::CancelOrder { id, side } => {
-        //                 dbg!(id, side);
-        //             }
-        //             OrderRequest::Update {
-        //                 id,
-        //                 side,
-        //                 price,
-        //                 quantity,
-        //                 local_timestamp: _ts,
-        //             } => {
-        //                 dbg!(id, side, price, quantity);
-        //             }
-        //         }
-        //     }
-        // };
 
         self.validator_store
             .insert_confirmed_transaction(transaction, consensus_output);

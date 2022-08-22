@@ -349,7 +349,7 @@ mod test_validator_state {
         order_book::OrderSide,
         transaction::{
             create_asset_creation_transaction, create_orderbook_creation_transaction, create_payment_transaction,
-            create_place_limit_order_transaction, SignedTransaction,
+            create_place_limit_order_transaction, SignedTransaction, create_cancel_order_transaction
         },
         utils,
     };
@@ -630,6 +630,29 @@ mod test_validator_state {
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
                 signed_place_limit_order_txn,
+            )
+            .await
+            .unwrap();
+        
+        // cancel order
+        const TEST_ORDER_ID: u64 = 1;
+        let cancel_order_txn = create_cancel_order_transaction(
+            &sender_kp,
+            TEST_BASE_ASSET_ID,
+            TEST_QUOTE_ASSET_ID,
+            TEST_ORDER_ID,
+            OrderSide::Bid,
+            recent_block_hash
+        );
+        let signed_digest = sender_kp.sign(&cancel_order_txn.digest().get_array()[..]);
+        let signed_cancel_order_txn =
+            SignedTransaction::new(sender_kp.public().clone(), cancel_order_txn, signed_digest);
+        
+        validator
+            .handle_consensus_transaction(
+                &dummy_consensus_output,
+                dummy_execution_indices.clone(),
+                signed_cancel_order_txn,
             )
             .await
             .unwrap();

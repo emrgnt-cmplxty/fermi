@@ -478,9 +478,9 @@ pub fn create_cancel_order_transaction(
     quote_asset_id: AssetId,
     order_id: OrderId,
     side: OrderSide,
-    local_timestamp: SystemTime,
     recent_block_hash: CertificateDigest,
 ) -> Transaction {
+    let local_timestamp = SystemTime::now();
     let transaction_variant = TransactionVariant::PlaceOrderTransaction(OrderRequest::CancelOrder {
         base_asset_id,
         quote_asset_id,

@@ -34,9 +34,7 @@ impl Relay for RelayService {
         let validator_state = &self.state;
         validator_state.validator_store.prune();
         let returned_value = validator_state.validator_store.transaction_store.read(1).await.unwrap();
-        println!("{:?}", returned_value);
-
-        println!("Succesfully loaded validator state!");
+        println!("Returned {:?}", returned_value);
 
         // We can now return true because errors will have been caught above
         let reply = RelayResponse { successful: true };

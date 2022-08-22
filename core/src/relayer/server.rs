@@ -53,7 +53,7 @@ impl Relayer for RelayerService {
 
         match validator_state
             .validator_store
-            .last_block_store
+            .block_info_store
             .read(block_number)
             .await
         {

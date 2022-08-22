@@ -11,7 +11,6 @@ use anyhow::anyhow;
 use async_trait::async_trait;
 use futures::StreamExt;
 use gdex_types::{
-    block::Block,
     crypto::KeypairTraits,
     proto::{Empty, TransactionProto, Transactions, TransactionsServer},
     transaction::SignedTransaction,
@@ -19,7 +18,7 @@ use gdex_types::{
 use multiaddr::Multiaddr;
 use narwhal_config::Committee as ConsensusCommittee;
 use narwhal_consensus::ConsensusOutput;
-use narwhal_crypto::{Hash, KeyPair as ConsensusKeyPair};
+use narwhal_crypto::KeyPair as ConsensusKeyPair;
 use narwhal_executor::{ExecutionIndices, SubscriberError};
 use prometheus::Registry;
 use std::{io, sync::Arc};
@@ -182,12 +181,9 @@ impl ValidatorService {
                             debug!("Processing result from {round_number} with {num_txns} transactions");
                             store.prune();
                             // write-out the new block to the validator store
-                            let block = Block {
-                                block_digest: consensus_output.certificate.digest(),
-                                transactions: serialized_txns_buf.clone(),
-                            };
-                            // write-out the block transactions to the validator store
-                            store.write_latest_block(block).await;
+                            store
+                                .write_latest_block(consensus_output.certificate, serialized_txns_buf.clone())
+                                .await;
                             serialized_txns_buf.clear();
                         }
                     }
@@ -229,7 +225,7 @@ impl ValidatorService {
         // }
 
         let transaction_proto = narwhal_types::TransactionProto {
-            transaction: transaction_proto.transaction, //.serialize().unwrap().into(),
+            transaction: transaction_proto.transaction,
         };
 
         let _result = consensus_adapter
@@ -245,7 +241,6 @@ impl ValidatorService {
             // .instrument(span)
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        // Ok(tonic::Response::new(TransactionResult(1)))
         Ok(tonic::Response::new(Empty {}))
     }
 

@@ -317,6 +317,7 @@ pub mod suite_spawn_tests {
     }
 
     #[tokio::test]
+    #[ignore]
     pub async fn spawn_four_node_network() {
         let subscriber = FmtSubscriber::builder().with_max_level(tracing::Level::INFO).finish();
         tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");

@@ -9,7 +9,7 @@ use gdex_controller::master::MasterController;
 use gdex_types::transaction::Transaction;
 use gdex_types::{
     account::ValidatorKeyPair,
-    block::{Block, BlockDigest, BlockNumber},
+    block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},
     committee::{Committee, ValidatorName},
     error::GDEXError,
     transaction::{SignedTransaction, TransactionDigest},
@@ -21,7 +21,7 @@ use mysten_store::{
 };
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::Hash;
-use narwhal_executor::{ExecutionIndices, ExecutionState};
+use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
 use std::{
     collections::HashMap,
     path::PathBuf,
@@ -40,6 +40,7 @@ pub struct ValidatorStore {
     // garbage collection depth
     gc_depth: u64,
     pub block_store: Store<BlockNumber, Block>,
+    pub block_info_store: Store<BlockNumber, BlockInfo>,
     pub block_number: AtomicU64,
     // singleton store that keeps only the most recent block info at key 0
     pub last_block_store: Store<u64, Block>,
@@ -47,17 +48,25 @@ pub struct ValidatorStore {
 
 impl ValidatorStore {
     const BLOCKS_CF: &'static str = "blocks";
+    const BLOCK_INFO_CF: &'static str = "block_info";
     const LAST_BLOCK_CF: &'static str = "last_block";
 
     pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
-        let rocksdb = open_cf(store_path, None, &[Self::BLOCKS_CF, Self::LAST_BLOCK_CF]).expect("Cannot open database");
+        let rocksdb = open_cf(
+            store_path,
+            None,
+            &[Self::BLOCKS_CF, Self::BLOCK_INFO_CF, Self::LAST_BLOCK_CF],
+        )
+        .expect("Cannot open database");
 
-        let (block_map, last_block_map) = reopen!(&rocksdb,
+        let (block_map, block_info_map, last_block_map) = reopen!(&rocksdb,
             Self::BLOCKS_CF;<BlockNumber, Block>,
+            Self::BLOCK_INFO_CF;<BlockNumber, BlockInfo>,
             Self::LAST_BLOCK_CF;<u64, Block>
         );
 
         let block_store = Store::new(block_map);
+        let block_info_store = Store::new(block_info_map);
         let last_block_store = Store::new(last_block_map);
 
         Self {
@@ -65,6 +74,7 @@ impl ValidatorStore {
             block_digest_cache: Mutex::new(HashMap::new()),
             gc_depth: 50,
             block_store,
+            block_info_store,
             block_number: AtomicU64::new(0),
             last_block_store,
         }
@@ -83,7 +93,7 @@ impl ValidatorStore {
         let transaction_digest = transaction.digest();
         self.transaction_cache.lock().unwrap().insert(
             transaction_digest,
-            None, // Insert with dummy block digest, which will later be overwritten
+            None, // Insert with no block digest, a digest will be added after confirmation
         );
     }
 
@@ -103,17 +113,28 @@ impl ValidatorStore {
         locked_block_digest_cache.insert(block_digest, consensus_output.consensus_index);
     }
 
-    pub async fn write_latest_block(&self, block: Block) {
-        // TODO - is there a way to acquire a mutable reference to the block-number without demanding &mut self? 
+    pub async fn write_latest_block(
+        &self,
+        block_certificate: BlockCertificate,
+        transactions: Vec<SerializedTransaction>,
+    ) {
+        // TODO - is there a way to acquire a mutable reference to the block-number without demanding &mut self?
         // this would allow us to avoid separate commands to load and add to the counter
+
         let block_number = self.block_number.load(std::sync::atomic::Ordering::SeqCst);
-        // write-out the block transactions to the validator store
+        let block = Block {
+            block_number,
+            block_digest: block_certificate.digest(),
+            transactions,
+        };
+        let block_info = BlockInfo { block_certificate };
+
+        // write-out the block information to associated stores
         self.block_store.write(block_number, block.clone()).await;
-        // write-out the last block to the block store
+        self.block_info_store.write(block_number, block_info).await;
         self.last_block_store.write(0, block).await;
         // update the block number
         self.block_number.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-
     }
 
     pub fn prune(&self) {

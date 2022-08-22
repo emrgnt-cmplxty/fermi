@@ -25,9 +25,20 @@ pub struct RelayRequest {
     pub dummy_request: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CertificateDigest {
+    #[prost(bytes="bytes", tag="1")]
+    pub digest: ::prost::bytes::Bytes,
+}
+/// TODO figure out how to import from narwhal. It almost worked but it failed because ../ is not allowed
+/// in the virtual path for some reason
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RelayResponse {
     #[prost(bool, tag="1")]
     pub successful: bool,
+    #[prost(uint64, tag="2")]
+    pub block_number: u64,
+    #[prost(message, optional, tag="3")]
+    pub certificate_digest: ::core::option::Option<CertificateDigest>,
 }
 /// Generated client implementations.
 pub mod transactions_client {

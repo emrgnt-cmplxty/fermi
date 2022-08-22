@@ -17,6 +17,7 @@ use multiaddr::Multiaddr;
 use narwhal_config::{Committee as ConsensusCommittee, Parameters as ConsensusParameters};
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
 use std::{net::SocketAddr, path::PathBuf, sync::Arc};
+use narwhal_types::{CertificateDigest, SequenceNumber};
 use tokio::{
     sync::mpsc::{Receiver, Sender},
     task::JoinHandle,
@@ -33,16 +34,20 @@ impl Relay for RelayService {
     async fn read_data(&self, request: Request<RelayRequest>) -> Result<Response<RelayResponse>, Status> {
         let validator_state = &self.state;
         validator_state.validator_store.prune();
-        let returned_value = validator_state.validator_store.transaction_store.read(1).await.unwrap();
-        println!("{:?}", returned_value);
+        let returned_value = validator_state.validator_store.last_sequence_store.read(0).await;
+        println!("{:?}", returned_value.unwrap());
 
-        println!("Succesfully loaded validator state!");
-
-        // We can now return true because errors will have been caught above
-        let reply = RelayResponse { successful: true };
-
-        // Sending back a response
-        Ok(Response::new(reply))
+        match returned_value {
+            Ok(opt) => {
+                if opt.is_some() {
+                    let (seq_number, cert_digest) = opt.unwrap();
+                    Ok(Response::new(RelayResponse { successful: true, block_number: seq_number, certificate_digest: Some(CertificateDigest::from(cert_digest)) }))
+                } else {
+                    Ok(Response::new(RelayResponse { successful: false, block_number: 0, certificate_digest: None }))
+                }
+            },
+            Err(e) => e,
+        }
     }
 }
 

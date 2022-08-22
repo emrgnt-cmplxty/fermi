@@ -44,7 +44,15 @@ message RelayRequest {
     string dummy_request = 1;
 }
 
+message CertificateDigest {
+    bytes digest = 1;
+}
+
+// TODO figure out how to import from narwhal. It almost worked but it failed because ../ is not allowed
+// in the virtual path for some reason
 message RelayResponse {
     bool successful = 1;
+    uint64 block_number = 2;
+    CertificateDigest certificate_digest = 3;
 }
 

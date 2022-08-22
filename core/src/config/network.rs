@@ -4,7 +4,7 @@
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/swarm.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 use crate::{
     builder::network_config::NetworkConfigBuilder,
-    config::{node::NodeConfig, Config, FULL_NODE_DB_PATH},
+    config::{node::NodeConfig, Config, CONSENSUS_DB_NAME, GDEX_DB_NAME},
     validator::genesis_state::ValidatorGenesisState,
 };
 use gdex_types::{
@@ -72,12 +72,13 @@ impl NetworkConfig {
         let key_pair: Arc<ValidatorKeyPair> = Arc::new(get_key_pair_from_rng(&mut OsRng).1);
         let validator_config = &self.validator_configs[0];
 
-        let mut db_path = validator_config.db_path.clone();
+        let mut db_path = validator_config.consensus_db_path.clone();
         db_path.pop();
 
         NodeConfig {
             key_pair,
-            db_path: db_path.join(FULL_NODE_DB_PATH),
+            consensus_db_path: db_path.join(CONSENSUS_DB_NAME),
+            gdex_db_path: db_path.join(GDEX_DB_NAME),
             network_address: utils::new_network_address(),
             metrics_address: utils::available_local_socket_address(),
             admin_interface_port: utils::get_available_port(),

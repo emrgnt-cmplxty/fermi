@@ -3,7 +3,7 @@ pub mod suite_core_tests {
     use gdex_controller::master::MasterController;
     use gdex_core::{
         client,
-        config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, FULL_NODE_DB_PATH},
+        config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, GDEX_DB_NAME},
         genesis_ceremony::VALIDATOR_FUNDING_AMOUNT,
         metrics::start_prometheus_server,
         validator::{
@@ -23,7 +23,6 @@ pub mod suite_core_tests {
     use std::path::Path;
     use std::{io, sync::Arc, time};
     use tokio::task::JoinHandle;
-    use tracing_subscriber::FmtSubscriber;
 
     // Create a genesis config with a single validator seeded by VALIDATOR_SEED
     async fn get_genesis_state(dir: &Path, number_of_validators: usize) -> ValidatorGenesisState {
@@ -63,7 +62,6 @@ pub mod suite_core_tests {
         // create config directory
         let temp_dir = tempfile::tempdir().unwrap();
         let db_dir = temp_dir.path();
-        let db_path = db_dir.join(FULL_NODE_DB_PATH);
 
         let validators = genesis_state.validator_set();
         assert!(
@@ -82,8 +80,13 @@ pub mod suite_core_tests {
 
         let key_pair_pin = Arc::pin(utils::read_keypair_from_file(&key_file).unwrap());
         let key_pair_arc = Arc::new(utils::read_keypair_from_file(&key_file).unwrap());
-
-        let validator_state = Arc::new(ValidatorState::new(pubilc_key, key_pair_pin, &genesis_state));
+        let gdex_db_path = db_dir.join(GDEX_DB_NAME);
+        let validator_state = Arc::new(ValidatorState::new(
+            pubilc_key,
+            key_pair_pin,
+            &genesis_state,
+            &gdex_db_path,
+        ));
 
         // Create a node config with this validators information
         let consensus_db_path = db_dir.join(CONSENSUS_DB_NAME);
@@ -95,13 +98,14 @@ pub mod suite_core_tests {
 
         let consensus_config = ConsensusConfig {
             consensus_address,
-            consensus_db_path,
+            consensus_db_path: consensus_db_path.clone(),
             narwhal_config,
         };
 
         let node_config = NodeConfig {
             key_pair: key_pair_arc,
-            db_path,
+            consensus_db_path,
+            gdex_db_path,
             network_address: network_address,
             metrics_address: utils::available_local_socket_address(),
             admin_interface_port: utils::get_available_port(),
@@ -116,10 +120,15 @@ pub mod suite_core_tests {
 
         // spawn the validator service, e.g. Narwhal consensus
         let prometheus_registry = start_prometheus_server(node_config.metrics_address);
-        let narwhal_handle =
-            ValidatorService::spawn_narwhal(&node_config, Arc::clone(&validator_state), &prometheus_registry)
-                .await
-                .unwrap();
+        let (_tx_reconfigure_consensus, rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
+        let narwhal_handle = ValidatorService::spawn_narwhal(
+            &node_config,
+            Arc::clone(&validator_state),
+            &prometheus_registry,
+            rx_reconfigure_consensus,
+        )
+        .await
+        .unwrap();
         (validator_state, narwhal_handle)
     }
 
@@ -127,15 +136,6 @@ pub mod suite_core_tests {
     #[tokio::test]
     #[ignore] // it fails in remote view
     pub async fn four_node_network() {
-        let subscriber = FmtSubscriber::builder()
-            // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
-            // will be written to stdout.
-            .with_env_filter("gdex_core=trace, gdex_suite=debug")
-            // .with_max_level(Level::DEBUG)
-            // completes the builder.
-            .finish();
-        tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-
         let temp_dir = tempfile::tempdir().unwrap();
         let working_dir = temp_dir.path();
 
@@ -163,13 +163,19 @@ pub mod suite_core_tests {
         let new_addr = utils::new_network_address();
         let consensus_address = validator.narwhal_consensus_address.clone();
 
-        let validator_server = ValidatorServer::new(new_addr.clone(), Arc::clone(&validator_state), consensus_address);
+        let (tx_reconfigure_consensus, _rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
+        let validator_server = ValidatorServer::new(
+            new_addr.clone(),
+            Arc::clone(&validator_state),
+            consensus_address,
+            tx_reconfigure_consensus,
+        );
         let validator_handle = validator_server.spawn().await.unwrap();
 
         let key_file = working_dir.join(format!("validator-{}.key", primary_validator_index));
         let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, 10);
 
         let mut client = TransactionsClient::new(
             client::connect_lazy(&validator_handle.address()).expect("Failed to connect to consensus"),

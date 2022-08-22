@@ -4,6 +4,8 @@ pub mod account;
 
 pub mod asset;
 
+pub mod block;
+
 pub mod committee;
 
 pub mod crypto;

@@ -16,17 +16,21 @@ use gdex_types::{
     transaction::SignedTransaction,
 };
 use multiaddr::Multiaddr;
-use narwhal_executor::SubscriberError;
+use narwhal_config::Committee as ConsensusCommittee;
+use narwhal_consensus::ConsensusOutput;
+use narwhal_crypto::KeyPair as ConsensusKeyPair;
+use narwhal_executor::{ExecutionIndices, SubscriberError};
 use prometheus::Registry;
 use std::{io, sync::Arc};
+
 use tokio::{
     sync::{
-        mpsc::{channel, Receiver},
+        mpsc::{channel, Receiver, Sender},
         Mutex,
     },
     task::JoinHandle,
 };
-use tracing::{info, trace};
+use tracing::{debug, info, trace};
 
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
@@ -53,14 +57,21 @@ pub struct ValidatorServer {
 }
 
 impl ValidatorServer {
-    pub fn new(address: Multiaddr, state: Arc<ValidatorState>, consensus_address: Multiaddr) -> Self {
+    pub fn new(
+        address: Multiaddr,
+        state: Arc<ValidatorState>,
+        consensus_address: Multiaddr,
+        tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
+    ) -> Self {
         let consensus_client = narwhal_types::TransactionsClient::new(
             client::connect_lazy(&consensus_address).expect("Failed to connect to consensus"),
         );
         let consensus_adapter = ConsensusAdapter {
             consensus_client,
             consensus_address,
+            tx_reconfigure_consensus,
         };
+
         Self {
             address,
             state,
@@ -110,64 +121,74 @@ impl ValidatorService {
         config: &NodeConfig,
         state: Arc<ValidatorState>,
         prometheus_registry: &Registry,
+        rx_reconfigure_consensus: Receiver<(ConsensusKeyPair, ConsensusCommittee)>,
     ) -> anyhow::Result<Vec<JoinHandle<()>>> {
-        let (tx_consensus_to_sui, rx_consensus_to_sui) = channel(1_000);
-        // let (tx_sui_to_consensus, rx_sui_to_consensus) = channel(1_000);
-
+        let (tx_consensus_to_gdex, rx_consensus_to_gdex) = channel(1_000);
         // Spawn the consensus node of this authority.
         let consensus_config = config
             .consensus_config()
             .ok_or_else(|| anyhow!("Validator is missing consensus config"))?;
         let consensus_keypair = config.key_pair().copy();
-        let consensus_name = consensus_keypair.public().clone();
-        let consensus_store = narwhal_node::NodeStorage::reopen(consensus_config.db_path());
+        let consensus_committee = config.genesis()?.narwhal_committee().load();
+        let consensus_storage_base_path = consensus_config.db_path().to_path_buf();
+        let consensus_parameters = consensus_config.narwhal_config().to_owned();
 
-        info!(
-            "Creating narwhal with committee ={}",
-            config.genesis()?.narwhal_committee()
-        );
-        info!(
-            "input consenus parameters={:?}",
-            consensus_config.narwhal_config().to_owned(),
-        );
-
-        let mut primary_handles = narwhal_node::Node::spawn_primary(
-            consensus_keypair,
-            config.genesis()?.narwhal_committee(),
-            &consensus_store,
-            consensus_config.narwhal_config().to_owned(),
-            /* consensus */ true, // Indicate that we want to run consensus.
-            /* execution_state */ Arc::clone(&state),
-            /* tx_confirmation */ tx_consensus_to_sui,
-            prometheus_registry,
-        )
-        .await?;
-
-        let worker_handles = narwhal_node::Node::spawn_workers(
-            consensus_name,
-            /* ids */ vec![0], // We run a single worker with id '0'.
-            config.genesis()?.narwhal_committee(),
-            &consensus_store,
-            consensus_config.narwhal_config().to_owned(),
-            prometheus_registry,
-        );
-
+        let state_ref = Arc::clone(&state);
+        let registry = prometheus_registry.clone();
+        let restarter_handle = tokio::spawn(async move {
+            narwhal_node::restarter::NodeRestarter::watch(
+                consensus_keypair,
+                &(&*consensus_committee).clone(),
+                consensus_storage_base_path,
+                /* execution_state */ state_ref,
+                consensus_parameters,
+                rx_reconfigure_consensus,
+                /* tx_output */ tx_consensus_to_gdex,
+                &registry,
+            )
+            .await
+        });
         // Create a new task to listen to received transactions
-        let analyzer_handle = tokio::spawn(async move {
-            Self::analyze(rx_consensus_to_sui).await;
+        let post_process_handle = tokio::spawn(async move {
+            Self::post_process(rx_consensus_to_gdex, Arc::clone(&state)).await;
         });
 
-        primary_handles.extend(worker_handles);
-        primary_handles.push(analyzer_handle);
-        Ok(primary_handles)
+        Ok(vec![restarter_handle, post_process_handle])
     }
 
     /// Receives an ordered list of certificates and apply any application-specific logic.
     #[allow(clippy::type_complexity)]
-    async fn analyze(mut rx_output: Receiver<(Result<Vec<u8>, SubscriberError>, Vec<u8>)>) {
+    async fn post_process(
+        mut rx_output: Receiver<(Result<(ConsensusOutput, ExecutionIndices), SubscriberError>, Vec<u8>)>,
+        validator_state: Arc<ValidatorState>,
+    ) {
+        // TODO load the actual last seq
+        let mut serialized_txns_buf = Vec::new();
+        let store = &validator_state.validator_store;
         loop {
-            while let Some(_message) = rx_output.recv().await {
-                trace!("Received a finalized consensus transaction with analyze",);
+            while let Some(message) = rx_output.recv().await {
+                trace!("Received a finalized consensus transaction for post processing",);
+                let (result, serialized_txn) = message;
+                match result {
+                    Ok((consensus_output, execution_indices)) => {
+                        serialized_txns_buf.push(serialized_txn);
+
+                        // if next_transaction_index == 0 then the block is complete and we may write-out
+                        if execution_indices.next_transaction_index == 0 {
+                            // subtract round look-back from the latest round to get block number
+                            let round_number = consensus_output.certificate.header.round;
+                            let num_txns = serialized_txns_buf.len();
+                            debug!("Processing result from {round_number} with {num_txns} transactions");
+                            store.prune();
+                            // write-out the new block to the validator store
+                            store
+                                .write_latest_block(consensus_output.certificate, serialized_txns_buf.clone())
+                                .await;
+                            serialized_txns_buf.clear();
+                        }
+                    }
+                    Err(e) => trace!("{:?}", e), // TODO
+                }
                 // NOTE: Notify the user that its transaction has been processed.
             }
         }
@@ -186,8 +207,25 @@ impl ValidatorService {
             .verify()
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
 
+        // TODO change this to err flow
+        // if !state
+        //     .validator_store
+        //     .check_seen_certificate_digest(transaction.get_transaction_payload().get_recent_certificate_digest())
+        // {
+        //     tonic::Status::internal("Invalid recent certificate digest");
+        //     ();
+        // }
+        //
+        // if state
+        //     .validator_store
+        //     .check_seen_transaction(transaction.get_transaction_payload())
+        // {
+        //     tonic::Status::internal("Duplicate transaction");
+        //     ();
+        // }
+
         let transaction_proto = narwhal_types::TransactionProto {
-            transaction: transaction_proto.transaction, //.serialize().unwrap().into(),
+            transaction: transaction_proto.transaction,
         };
 
         let _result = consensus_adapter
@@ -199,12 +237,10 @@ impl ValidatorService {
             .unwrap();
 
         state
-            .handle_transaction(&signed_transaction)
+            .handle_pre_consensus_transaction(&signed_transaction)
             // .instrument(span)
-            .await
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
-        // Ok(tonic::Response::new(TransactionResult(1)))
         Ok(tonic::Response::new(Empty {}))
     }
 
@@ -231,6 +267,7 @@ impl Transactions for ValidatorService {
             .await
             .unwrap()
     }
+
     async fn submit_transaction_stream(
         &self,
         request: tonic::Request<tonic::Streaming<TransactionProto>>,
@@ -291,9 +328,19 @@ mod test_validator_server {
             .add_validator(validator);
 
         let genesis = builder.build();
-        let validator_state = ValidatorState::new(public_key, secret, &genesis);
+        let store_path = tempfile::tempdir()
+            .expect("Failed to open temporary directory")
+            .into_path();
+
+        let validator_state = ValidatorState::new(public_key, secret, &genesis, &store_path);
         let new_addr = utils::new_network_address();
-        let validator_server = ValidatorServer::new(new_addr.clone(), Arc::new(validator_state), network_address);
+        let (tx_reconfigure_consensus, _rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
+        let validator_server = ValidatorServer::new(
+            new_addr.clone(),
+            Arc::new(validator_state),
+            network_address,
+            tx_reconfigure_consensus,
+        );
         validator_server.spawn().await
     }
 
@@ -311,7 +358,7 @@ mod test_validator_server {
 
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, 10);
         let transaction_proto = TransactionProto {
             transaction: signed_transaction.serialize().unwrap().into(),
         };
@@ -323,20 +370,16 @@ mod test_validator_server {
     }
 
     #[tokio::test]
-    pub async fn multiple_server_init() {
+    pub async fn spawn() {
         let master_controller = MasterController::default();
 
-        let key_0: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
-        let public_key_0 = ValidatorPubKeyBytes::from(key_0.public());
-        let secret_0 = Arc::pin(key_0);
+        let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let public_key = ValidatorPubKeyBytes::from(key.public());
+        let secret = Arc::pin(key);
 
-        let key_1: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
-        let public_key_1 = ValidatorPubKeyBytes::from(key_1.public());
-        let secret_1 = Arc::pin(key_1);
-
-        let validator_0 = ValidatorInfo {
+        let validator = ValidatorInfo {
             name: "0".into(),
-            public_key: public_key_0.clone(),
+            public_key: public_key.clone(),
             stake: VALIDATOR_FUNDING_AMOUNT,
             delegation: 0,
             network_address: utils::new_network_address(),
@@ -346,41 +389,25 @@ mod test_validator_server {
             narwhal_worker_to_worker: utils::new_network_address(),
             narwhal_consensus_address: utils::new_network_address(),
         };
-
-        let validator_1 = ValidatorInfo {
-            name: "1".into(),
-            public_key: public_key_1.clone(),
-            stake: VALIDATOR_FUNDING_AMOUNT,
-            delegation: 0,
-            network_address: utils::new_network_address(),
-            narwhal_primary_to_primary: utils::new_network_address(),
-            narwhal_worker_to_primary: utils::new_network_address(),
-            narwhal_primary_to_worker: utils::new_network_address(),
-            narwhal_worker_to_worker: utils::new_network_address(),
-            narwhal_consensus_address: utils::new_network_address(),
-        };
+        let network_address = validator.network_address.clone();
 
         let builder = GenesisStateBuilder::new()
             .set_master_controller(master_controller)
-            .add_validator(validator_0)
-            .add_validator(validator_1);
+            .add_validator(validator);
 
         let genesis = builder.build();
-        let validator_state_0 = ValidatorState::new(public_key_0, secret_0, &genesis);
-        let validator_state_1 = ValidatorState::new(public_key_1, secret_1, &genesis);
-
-        let validator_server_0 = ValidatorServer::new(
-            utils::new_network_address(),
-            Arc::new(validator_state_0),
-            utils::new_network_address(),
+        let store_path = tempfile::tempdir()
+            .expect("Failed to open temporary directory")
+            .into_path();
+        let validator_state = ValidatorState::new(public_key, secret, &genesis, &store_path);
+        let new_addr = utils::new_network_address();
+        let (tx_reconfigure_consensus, _rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
+        let validator_server = ValidatorServer::new(
+            new_addr.clone(),
+            Arc::new(validator_state),
+            network_address,
+            tx_reconfigure_consensus.clone(),
         );
-        let validator_server_1 = ValidatorServer::new(
-            utils::new_network_address(),
-            Arc::new(validator_state_1),
-            utils::new_network_address(),
-        );
-
-        validator_server_0.spawn().await.unwrap();
-        validator_server_1.spawn().await.unwrap();
+        validator_server.spawn().await.unwrap();
     }
 }

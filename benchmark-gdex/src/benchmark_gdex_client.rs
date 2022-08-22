@@ -3,19 +3,17 @@
 // SPDX-License-Identifier: Apache-2.0
 use anyhow::{Context, Result};
 use clap::{crate_name, crate_version, App, AppSettings};
-use futures::FutureExt;
 use futures::{future::join_all, StreamExt};
 use gdex_types::{
     account::AccountKeyPair,
     proto::{TransactionProto, TransactionsClient},
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
 };
-use multiaddr::Multiaddr;
 use narwhal_crypto::{
     traits::{KeyPair, Signer},
     Hash, DIGEST_LEN,
 };
-use narwhal_types::BatchDigest;
+use narwhal_types::CertificateDigest;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use tokio::{
     net::TcpStream,
@@ -38,14 +36,18 @@ fn create_signed_transaction(
     amount: u64,
 ) -> SignedTransaction {
     // use a dummy batch digest for initial benchmarking
-    let dummy_batch_digest = BatchDigest::new([0; DIGEST_LEN]);
+    let dummy_certificate_digest = CertificateDigest::new([0; DIGEST_LEN]);
 
     let transaction_variant = TransactionVariant::PaymentTransaction(PaymentRequest::new(
         kp_receiver.public().clone(),
         PRIMARY_ASSET_ID,
         amount,
     ));
-    let transaction = Transaction::new(kp_sender.public().clone(), dummy_batch_digest, transaction_variant);
+    let transaction = Transaction::new(
+        kp_sender.public().clone(),
+        dummy_certificate_digest,
+        transaction_variant,
+    );
 
     // sign digest and create signed transaction
     let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
@@ -130,7 +132,7 @@ impl Client {
         let mut counter = 0;
         // select a number from a range that is gaurenteed to be larger than the size of transactions submitted
         // but, not so large that we can exhaust the primary senders balance
-        let mut r = rand::thread_rng().gen_range(100_000 as u64, 1_000_000 as u64);
+        let mut r = rand::thread_rng().gen_range(100_000 as u64..1_000_000 as u64);
         let interval = interval(Duration::from_millis(BURST_DURATION));
         tokio::pin!(interval);
 

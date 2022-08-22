@@ -25,9 +25,8 @@ pub const GDEX_GATEWAY_CONFIG: &str = "gateway.yaml";
 pub const GDEX_GENESIS_FILENAME: &str = "genesis.blob";
 pub const GDEX_DEV_NET_URL: &str = "https://gateway.devnet.sui.io:443";
 
-pub const AUTHORITIES_DB_NAME: &str = "authorities_db";
 pub const CONSENSUS_DB_NAME: &str = "consensus_db";
-pub const FULL_NODE_DB_PATH: &str = "full_node_db";
+pub const GDEX_DB_NAME: &str = "gdex_db";
 pub const DEFAULT_STAKE: u64 = crate::genesis_ceremony::VALIDATOR_FUNDING_AMOUNT;
 
 pub trait Config

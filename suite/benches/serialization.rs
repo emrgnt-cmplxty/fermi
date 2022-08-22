@@ -14,7 +14,7 @@ use gdex_types::{
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant, SERIALIZED_TRANSACTION_LENGTH},
 };
 use narwhal_crypto::{Hash, DIGEST_LEN};
-use narwhal_types::{Batch, BatchDigest, WorkerMessage};
+use narwhal_types::{Batch, CertificateDigest, WorkerMessage};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
 pub fn keys(seed: [u8; 32]) -> Vec<AccountKeyPair> {
@@ -49,9 +49,9 @@ fn criterion_benchmark(c: &mut Criterion) {
 
         let transaction_variant =
             TransactionVariant::PaymentTransaction(PaymentRequest::new(kp_receiver.public().clone(), 0, amount));
-        let dummy_batch_digest = BatchDigest::new([0; DIGEST_LEN]);
+        let certificate_digest = CertificateDigest::new([0; DIGEST_LEN]);
 
-        let transaction = Transaction::new(kp_sender.public().clone(), dummy_batch_digest, transaction_variant);
+        let transaction = Transaction::new(kp_sender.public().clone(), certificate_digest, transaction_variant);
 
         // generate the signed digest for repeated use
         let signed_digest: AccountSignature = kp_sender.sign(&(transaction.digest().get_array())[..]);
@@ -96,7 +96,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     let mut i = 0;
     let mut batch = Vec::new();
     while i < 1_000 {
-        let amount = rand::thread_rng().gen_range(10, 100);
+        let amount = rand::thread_rng().gen_range(10..100);
         let signed_transaction = get_signed_transaction([0; 32], [1; 32], amount);
         batch.push(bincode::serialize(&signed_transaction).unwrap());
         i += 1;

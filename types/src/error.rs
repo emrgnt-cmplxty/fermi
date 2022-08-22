@@ -56,10 +56,6 @@ impl ExecutionStateError for GDEXError {
     fn node_error(&self) -> bool {
         false
     }
-
-    fn to_string(&self) -> String {
-        ToString::to_string(&self)
-    }
 }
 
 /// This function is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-types/src/error.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc

@@ -20,9 +20,9 @@ def gdex(ctx, debug=True):
         'node_info': {
             ### direct line to wrapper node
             'validator-0': 'http://localhost:62276',
-            'validator-1': 'http://localhost:62278',
-            'validator-2': 'http://localhost:62280',
-            'validator-3': 'http://localhost:62282'
+            'validator-1': 'http://localhost:62378',
+            'validator-2': 'http://localhost:62480',
+            'validator-3': 'http://localhost:62582'
             ### direct line to narwhal node
             # 'validator-0': 'http://localhost:62238',
             # 'validator-1': 'http://localhost:62250',
@@ -30,7 +30,7 @@ def gdex(ctx, debug=True):
             # 'validator-3': 'http://localhost:62274'
         },
         'rate': 50_000,
-        'duration': 5,
+        'duration': 20,
         'mem_profiling': False,
         'genesis_dir': "../.proto/",
         'key_dir': "../.proto/",
@@ -76,7 +76,7 @@ def narwhal(ctx, debug=True):
         },
         'max_concurrent_requests': 500_000,
         'prometheus_metrics': {
-            'socket_addr': '127.0.0.1:0'
+            "socket_addr": "/ip4/127.0.0.1/tcp/0/http"
         },
         'execution': 'advanced'
     }
@@ -190,7 +190,7 @@ def remote(ctx, debug=False):
         },
         'max_concurrent_requests': 500_000,
         'prometheus_metrics': {
-            'socket_addr': '127.0.0.1:0'
+            "socket_addr": "/ip4/127.0.0.1/tcp/0/http"
         }
     }
     try:

@@ -1,8 +1,7 @@
 use crate::{relay::server::RelayService, validator::state::ValidatorState};
-use gdex_types::{proto::RelayServer, utils};
+use gdex_types::proto::RelayServer;
 use std::{net::SocketAddr, sync::Arc};
 use tonic::transport::Server;
-use tracing::info;
 
 pub struct RelaySpawner {
     validator_state: Option<Arc<ValidatorState>>,
@@ -35,11 +34,15 @@ impl RelaySpawner {
 pub mod suite_spawn_tests {
     use crate::relay::spawner::RelaySpawner;
     use crate::validator::spawner::ValidatorSpawner;
-    use gdex_types::utils;
+    use gdex_types::{
+        proto::{RelayClient, RelayRequest},
+        utils,
+    };
     use std::path::Path;
 
     #[tokio::test]
-    pub async fn spawn_node_and_reconfigure() {
+    #[ignore]
+    pub async fn spawn_relay_server() {
         let dir = "../.proto";
         let path = Path::new(dir).to_path_buf();
 
@@ -61,5 +64,20 @@ pub mod suite_spawn_tests {
         };
 
         let result = relay_spawner.spawn_relay_server().await;
+    }
+
+    #[tokio::test]
+    #[ignore]
+    pub async fn ping_relay_server() {
+        let addr = "http://127.0.0.1:8000";
+        let mut client = RelayClient::connect(addr.to_string()).await.unwrap();
+
+        let request = tonic::Request::new(RelayRequest {
+            dummy_request: "hello world".to_string(),
+        });
+
+        let response = client.read_data(request).await;
+
+        println!("RESPONSE={:?}", response);
     }
 }

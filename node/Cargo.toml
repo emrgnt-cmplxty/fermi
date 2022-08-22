@@ -28,7 +28,3 @@ gdex-cli = { path = "../cli" }
 [[bin]]
 name = "faucet-server"
 path = "src/faucet_server.rs"
-
-[[bin]]
-name = "relay-pinger"
-path = "src/relay_pinger.rs"

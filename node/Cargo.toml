@@ -35,9 +35,5 @@ name = "faucet-server"
 path = "src/faucet_server.rs"
 
 [[bin]]
-name = "relay-server"
-path = "src/relay_server.rs"
-
-[[bin]]
 name = "relay-pinger"
 path = "src/relay_pinger.rs"

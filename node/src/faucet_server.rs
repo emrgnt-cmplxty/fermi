@@ -7,9 +7,7 @@ use gdex_types::{
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
     utils,
 };
-use narwhal_crypto::ed25519::Ed25519PublicKey;
-use narwhal_crypto::traits::ToFromBytes;
-use narwhal_crypto::{Hash, DIGEST_LEN};
+use narwhal_crypto::{ed25519::Ed25519PublicKey, traits::ToFromBytes, Hash, DIGEST_LEN};
 use narwhal_types::CertificateDigest;
 use std::{env, io, net::SocketAddr, path::Path};
 use tonic::{transport::Server, Request, Response, Status};

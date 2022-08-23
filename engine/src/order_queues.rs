@@ -123,7 +123,7 @@ impl<T> OrderQueue<T> {
         true
     }
 
-    pub fn get(&self, id: u64) -> Option<&T> {
+    pub fn get_order(&self, id: u64) -> Option<&T> {
         self.orders.get(&id)
     }
 

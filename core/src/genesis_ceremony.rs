@@ -53,6 +53,8 @@ pub enum CeremonyCommand {
         #[clap(value_parser, long)]
         stake: u64,
         #[clap(value_parser, long)]
+        balance: u64,
+        #[clap(value_parser, long)]
         network_address: Multiaddr,
         #[clap(value_parser, long)]
         narwhal_primary_to_primary: Multiaddr,
@@ -66,10 +68,7 @@ pub enum CeremonyCommand {
         narwhal_consensus_address: Multiaddr,
     },
 
-    AddControllers {
-        #[clap(value_parser, long)]
-        balance: u64,
-    },
+    AddControllers,
 
     Build,
 
@@ -102,6 +101,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             name,
             key_file,
             stake,
+            balance,
             network_address,
             narwhal_primary_to_primary,
             narwhal_worker_to_primary,
@@ -115,6 +115,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
                 name,
                 public_key: keypair.public().into(),
                 stake,
+                balance,
                 delegation: 0,
                 network_address,
                 narwhal_primary_to_primary,
@@ -127,7 +128,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
         }
 
         // Add the order book controllers
-        CeremonyCommand::AddControllers { balance } => {
+        CeremonyCommand::AddControllers => {
             let builder = GenesisStateBuilder::load(&dir)?;
 
             // Initialize controllers to default state
@@ -148,7 +149,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
                     &null_creator,
                     &validator_key,
                     PRIMARY_ASSET_ID,
-                    balance,
+                    validator.balance,
                 )?;
                 master_controller
                     .stake_controller
@@ -269,6 +270,7 @@ mod test_genesis_ceremony {
                     name: format!("validator-{i}"),
                     public_key: ValidatorPubKeyBytes::from(keypair.public()),
                     stake: VALIDATOR_FUNDING_AMOUNT,
+                    balance: VALIDATOR_BALANCE,
                     delegation: 0,
                     network_address: utils::new_network_address(),
                     narwhal_primary_to_primary: utils::new_network_address(),
@@ -298,6 +300,7 @@ mod test_genesis_ceremony {
                     name: validator.name().to_owned(),
                     key_file: key_file.into(),
                     stake: VALIDATOR_FUNDING_AMOUNT,
+                    balance: VALIDATOR_BALANCE,
                     network_address: validator.network_address().to_owned(),
                     narwhal_primary_to_primary: validator.narwhal_primary_to_primary.clone(),
                     narwhal_worker_to_primary: validator.narwhal_worker_to_primary.clone(),
@@ -311,9 +314,7 @@ mod test_genesis_ceremony {
 
         let command = Ceremony {
             path: Some(dir.path().into()),
-            command: CeremonyCommand::AddControllers {
-                balance: VALIDATOR_BALANCE,
-            },
+            command: CeremonyCommand::AddControllers,
         };
 
         command.run()?;

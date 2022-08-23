@@ -332,7 +332,7 @@ impl Orderbook {
         };
 
         // get order to extract price + quantity
-        if let Some(order) = order_queue.get(order_id) {
+        if let Some(order) = order_queue.get_order(order_id) {
             // get price and quantity of live order
             let price = order.get_price();
             let quantity = order.get_quantity();
@@ -359,7 +359,7 @@ impl Orderbook {
             OrderSide::Ask => &mut self.ask_queue,
         };
 
-        order_queue.get(order_id).ok_or(Failed::OrderNotFound(order_id))
+        order_queue.get_order(order_id).ok_or(Failed::OrderNotFound(order_id))
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -539,8 +539,6 @@ mod test_order_book {
         let mut result = orderbook.process_order(request);
 
         assert_eq!(result.len(), 1);
-        println!("CHECK OUT THE LENGTH");
-        dbg!(result.len());
         match result.pop().unwrap() {
             Err(..) => (),
             _ => panic!("unexpected success"),

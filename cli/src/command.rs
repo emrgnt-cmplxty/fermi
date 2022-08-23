@@ -61,6 +61,8 @@ pub enum GDEXCommand {
         name: String,
         #[clap(value_parser, long, help = "validator stake")]
         stake: u64,
+        #[clap(value_parser, long, help = "validator initial balance")]
+        balance: u64,
         #[clap(value_parser, long, help = "Validator keystore path")]
         key_file: PathBuf,
         #[clap(value_parser, long, help = "Network address")]
@@ -80,9 +82,7 @@ pub enum GDEXCommand {
     #[clap(name = "add-controllers-genesis")]
     AddControllersGenesis {
         #[clap(value_parser, long, help = "Path to save genesis blob file")]
-        path: Option<PathBuf>,
-        #[clap(value_parser, long, help = "validator initial balance")]
-        balance: u64,
+        path: Option<PathBuf>
     },
     #[clap(name = "build-genesis")]
     BuildGenesis {
@@ -184,6 +184,7 @@ impl GDEXCommand {
                 path,
                 name,
                 stake,
+                balance,
                 key_file,
                 network_address,
                 narwhal_primary_to_primary,
@@ -198,6 +199,7 @@ impl GDEXCommand {
                         name,
                         key_file,
                         stake,
+                        balance,
                         network_address: network_address.unwrap_or_else(|| utils::new_network_address()),
                         narwhal_primary_to_primary: narwhal_primary_to_primary
                             .unwrap_or_else(|| utils::new_network_address()),
@@ -214,10 +216,10 @@ impl GDEXCommand {
                 ceremony.run().unwrap();
                 Ok(())
             }
-            GDEXCommand::AddControllersGenesis { path, balance } => {
+            GDEXCommand::AddControllersGenesis { path } => {
                 let ceremony = Ceremony {
                     path,
-                    command: CeremonyCommand::AddControllers { balance },
+                    command: CeremonyCommand::AddControllers,
                 };
                 ceremony.run().unwrap();
                 Ok(())

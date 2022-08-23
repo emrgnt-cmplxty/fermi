@@ -4,7 +4,7 @@ pub mod suite_core_tests {
     use gdex_core::{
         client,
         config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, GDEX_DB_NAME},
-        genesis_ceremony::VALIDATOR_FUNDING_AMOUNT,
+        genesis_ceremony::{VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
         metrics::start_prometheus_server,
         validator::{
             genesis_state::ValidatorGenesisState, server::ValidatorServer, server::ValidatorService,
@@ -37,6 +37,7 @@ pub mod suite_core_tests {
                     name: format!("validator-{i}"),
                     public_key: ValidatorPubKeyBytes::from(keypair.public()),
                     stake: VALIDATOR_FUNDING_AMOUNT,
+                    balance: VALIDATOR_BALANCE,
                     delegation: 0,
                     network_address: utils::new_network_address(),
                     narwhal_primary_to_primary: utils::new_network_address(),

@@ -17,6 +17,7 @@ pub struct ValidatorInfo {
     pub name: String,
     pub public_key: ValidatorPubKeyBytes,
     pub stake: StakeUnit,
+    pub balance: u64,
     pub delegation: StakeUnit,
     pub network_address: Multiaddr,
     pub narwhal_primary_to_primary: Multiaddr,
@@ -76,12 +77,14 @@ pub mod node_tests {
 
         let name = "0";
         let stake = 1;
+        let balance = 2;
         let delegation = 0;
         let network_address = utils::new_network_address();
         let validator = ValidatorInfo {
             name: name.into(),
             public_key: kp.public().into(),
             stake,
+            balance,
             delegation,
             network_address: network_address.clone(),
             narwhal_primary_to_primary: utils::new_network_address(),

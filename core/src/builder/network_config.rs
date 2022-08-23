@@ -9,7 +9,7 @@ use crate::{
         genesis::{GenesisConfig, ValidatorGenesisStateInfo},
         network::NetworkConfig,
         node::NodeConfig,
-        {CONSENSUS_DB_NAME, DEFAULT_STAKE, GDEX_DB_NAME},
+        {CONSENSUS_DB_NAME, DEFAULT_STAKE, DEFAULT_BALANCE, GDEX_DB_NAME},
     },
 };
 use gdex_types::{
@@ -93,6 +93,7 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
                 key_pair,
                 network_address: utils::new_network_address(),
                 stake: DEFAULT_STAKE,
+                balance: DEFAULT_BALANCE,
                 narwhal_primary_to_primary: utils::new_network_address(),
                 narwhal_worker_to_primary: utils::new_network_address(),
                 narwhal_primary_to_worker: utils::new_network_address(),
@@ -113,12 +114,14 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
                 let name = format!("validator-{i}");
                 let public_key: ValidatorPubKeyBytes = validator.key_pair.public().into();
                 let stake = validator.stake;
+                let balance = validator.balance;
                 let network_address = validator.network_address.clone();
 
                 ValidatorInfo {
                     name,
                     public_key,
                     stake,
+                    balance,
                     delegation: 0, // no delegation yet at genesis
                     network_address,
                     narwhal_primary_to_primary: validator.narwhal_primary_to_primary.clone(),

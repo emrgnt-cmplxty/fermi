@@ -397,7 +397,7 @@ pub mod suite_spawn_tests {
             i += 1;
         }
         // sleep to allow the network to propagate the transactions
-        tokio::time::sleep(tokio::time::Duration::from_secs(4)).await;
+        tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
         let validator_store = &spawner_1
             .get_validator_state()
             .as_ref()

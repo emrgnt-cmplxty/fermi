@@ -59,6 +59,8 @@ pub enum GDEXCommand {
         path: Option<PathBuf>,
         #[clap(value_parser, long, help = "validator name")]
         name: String,
+        #[clap(value_parser, long, help = "validator stake")]
+        stake: u64,
         #[clap(value_parser, long, help = "Validator keystore path")]
         key_file: PathBuf,
         #[clap(value_parser, long, help = "Network address")]
@@ -79,6 +81,8 @@ pub enum GDEXCommand {
     AddControllersGenesis {
         #[clap(value_parser, long, help = "Path to save genesis blob file")]
         path: Option<PathBuf>,
+        #[clap(value_parser, long, help = "validator initial balance")]
+        balance: u64
     },
     #[clap(name = "build-genesis")]
     BuildGenesis {
@@ -179,6 +183,7 @@ impl GDEXCommand {
             GDEXCommand::AddValidatorGenesis {
                 path,
                 name,
+                stake,
                 key_file,
                 network_address,
                 narwhal_primary_to_primary,
@@ -192,6 +197,7 @@ impl GDEXCommand {
                     command: CeremonyCommand::AddValidator {
                         name,
                         key_file,
+                        stake,
                         network_address: network_address.unwrap_or_else(|| utils::new_network_address()),
                         narwhal_primary_to_primary: narwhal_primary_to_primary
                             .unwrap_or_else(|| utils::new_network_address()),
@@ -208,10 +214,12 @@ impl GDEXCommand {
                 ceremony.run().unwrap();
                 Ok(())
             }
-            GDEXCommand::AddControllersGenesis { path } => {
+            GDEXCommand::AddControllersGenesis { path, balance} => {
                 let ceremony = Ceremony {
                     path,
-                    command: CeremonyCommand::AddControllers,
+                    command: CeremonyCommand::AddControllers{
+                        balance
+                    },
                 };
                 ceremony.run().unwrap();
                 Ok(())

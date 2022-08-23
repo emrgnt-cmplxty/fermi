@@ -248,6 +248,7 @@ pub mod suite_spawn_tests {
         utils,
     };
     use std::{io, path::Path};
+    use narwhal_crypto::Hash;
 
     use tracing::info;
     use tracing_subscriber::FmtSubscriber;
@@ -420,7 +421,7 @@ pub mod suite_spawn_tests {
                 assert!(validator_store.contains_transaction(&signed_transaction_db.get_transaction_payload()));
                 total += 1;
             }
-            assert!(validator_store.contains_block_digest(&block.block_digest));
+            assert!(validator_store.contains_block_digest(&block.block_certificate.digest()));
         }
         assert!(
             total as u64 == n_transactions_to_submit,

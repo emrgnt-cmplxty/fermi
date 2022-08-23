@@ -9,7 +9,7 @@ use crate::{
         genesis::{GenesisConfig, ValidatorGenesisStateInfo},
         network::NetworkConfig,
         node::NodeConfig,
-        {CONSENSUS_DB_NAME, DEFAULT_STAKE, DEFAULT_BALANCE, GDEX_DB_NAME},
+        {CONSENSUS_DB_NAME, DEFAULT_BALANCE, DEFAULT_STAKE, GDEX_DB_NAME},
     },
 };
 use gdex_types::{

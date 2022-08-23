@@ -291,7 +291,10 @@ impl Transactions for ValidatorService {
 #[cfg(test)]
 mod test_validator_server {
     use super::*;
-    use crate::{builder::genesis_state::GenesisStateBuilder, genesis_ceremony::{VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT}};
+    use crate::{
+        builder::genesis_state::GenesisStateBuilder,
+        genesis_ceremony::{VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
+    };
     use gdex_controller::master::MasterController;
     use gdex_types::{
         account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair, ValidatorPubKeyBytes},

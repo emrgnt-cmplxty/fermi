@@ -174,7 +174,10 @@ impl<'de> Deserialize<'de> for ValidatorGenesisState {
 #[cfg(test)]
 mod genesis_test {
     use super::*;
-    use crate::{config::genesis::GenesisConfig, genesis_ceremony::{VALIDATOR_FUNDING_AMOUNT, VALIDATOR_BALANCE}};
+    use crate::{
+        config::genesis::GenesisConfig,
+        genesis_ceremony::{VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
+    };
     use gdex_types::{
         account::ValidatorKeyPair,
         crypto::{get_key_pair_from_rng, KeypairTraits},

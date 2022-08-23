@@ -82,7 +82,7 @@ pub enum GDEXCommand {
     #[clap(name = "add-controllers-genesis")]
     AddControllersGenesis {
         #[clap(value_parser, long, help = "Path to save genesis blob file")]
-        path: Option<PathBuf>
+        path: Option<PathBuf>,
     },
     #[clap(name = "build-genesis")]
     BuildGenesis {

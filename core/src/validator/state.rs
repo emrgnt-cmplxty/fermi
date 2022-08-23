@@ -341,7 +341,10 @@ impl ExecutionState for ValidatorState {
 #[cfg(test)]
 mod test_validator_state {
     use super::*;
-    use crate::{builder::genesis_state::GenesisStateBuilder, genesis_ceremony::{VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT}};
+    use crate::{
+        builder::genesis_state::GenesisStateBuilder,
+        genesis_ceremony::{VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
+    };
     use gdex_types::{
         account::ValidatorPubKeyBytes,
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},

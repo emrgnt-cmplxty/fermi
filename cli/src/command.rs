@@ -408,7 +408,7 @@ impl GDEXCommand {
             }
             GDEXCommand::Airdrop { amount, airdrop_to } => {
                 // Address for the faucet
-                let addr = format!("http://127.0.0.1:{}", FAUCET_PORT.to_string());
+                let addr = format!("http://127.0.0.1:{}", FAUCET_PORT);
 
                 // Client to connect
                 let mut client = FaucetClient::connect(addr.to_string()).await?;
@@ -416,7 +416,7 @@ impl GDEXCommand {
                 // Creating the gRPC request
                 let request = tonic::Request::new(FaucetAirdropRequest {
                     airdrop_to: airdrop_to.to_owned(),
-                    amount: amount,
+                    amount
                 });
 
                 // Sending the request

@@ -11,7 +11,7 @@ pub struct RelayerService {
 impl Relayer for RelayerService {
     async fn read_latest_block_info(
         &self,
-        request: Request<RelayerRequest>,
+        _request: Request<RelayerRequest>,
     ) -> Result<Response<RelayerResponse>, Status> {
         let _validator_state = &self.state;
         println!("Returned succesfully!");

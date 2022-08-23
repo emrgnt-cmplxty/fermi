@@ -102,7 +102,7 @@ pub mod suite_core_tests {
         let validator = validators[validator_index].clone();
         let network_address = validator.network_address.clone();
         let consensus_address = validator.narwhal_consensus_address.clone();
-        let pubilc_key = validator.public_key();
+        let public_key = validator.public_key();
 
         // TODO - can we avoid consuming the private key twice in the network setup?
         // Note, this awkwardness is due to my inferred understanding of Arc pin.
@@ -112,7 +112,7 @@ pub mod suite_core_tests {
         let key_pair_arc = Arc::new(utils::read_keypair_from_file(&key_file).unwrap());
         let gdex_db_path = db_dir.join(GDEX_DB_NAME);
         let validator_state = Arc::new(ValidatorState::new(
-            pubilc_key,
+            public_key,
             key_pair_pin,
             &genesis_state,
             &gdex_db_path,

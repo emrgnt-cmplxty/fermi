@@ -296,30 +296,45 @@ impl ExecutionState for ValidatorState {
                         order_id,
                         side,
                         ..
-                    } => self
-                        .master_controller
-                        .spot_controller
-                        .lock()
-                        .unwrap()
-                        .place_cancel_order(
-                            *base_asset_id,
-                            *quote_asset_id,
-                            transaction.get_sender(),
-                            *order_id,
-                            *side,
-                        )?,
+                    } => {
+                        self.master_controller
+                            .spot_controller
+                            .lock()
+                            .unwrap()
+                            .place_cancel_order(
+                                *base_asset_id,
+                                *quote_asset_id,
+                                transaction.get_sender(),
+                                *order_id,
+                                *side,
+                            )?
+                    }
                     OrderRequest::Update {
+                        base_asset_id,
+                        quote_asset_id,
                         order_id,
                         side,
                         price,
                         quantity,
                         ..
                     } => {
-                        dbg!(order_id, side, price, quantity);
+                        self.master_controller
+                            .spot_controller
+                            .lock()
+                            .unwrap()
+                            .place_update_order(
+                                *base_asset_id,
+                                *quote_asset_id,
+                                transaction.get_sender(),
+                                *order_id,
+                                *side,
+                                *quantity,
+                                *price
+                            )?
                     }
                 }
             }
-        };
+        }
 
         Ok((consensus_output.clone(), execution_indices))
     }
@@ -352,7 +367,7 @@ mod test_validator_state {
         order_book::OrderSide,
         transaction::{
             create_asset_creation_transaction, create_place_cancel_order_transaction, create_orderbook_creation_transaction,
-            create_payment_transaction, create_place_limit_order_transaction, SignedTransaction,
+            create_payment_transaction, create_place_limit_order_transaction, SignedTransaction, create_place_update_order_transaction,
         },
         utils,
     };
@@ -658,6 +673,104 @@ mod test_validator_state {
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
                 signed_cancel_order_txn,
+            )
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    pub async fn process_place_limit_order_and_update_transaction() {
+        let validator: ValidatorState = create_test_validator();
+        let dummy_consensus_output = create_test_consensus_output();
+        let dummy_execution_indices = create_test_execution_indices();
+
+        // create asset transaction
+        let sender_kp = generate_production_keypair::<KeyPair>();
+        let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
+        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
+        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
+        let signed_create_asset_txn =
+            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+
+        for _ in 0..5 {
+            validator
+                .handle_consensus_transaction(
+                    &dummy_consensus_output,
+                    dummy_execution_indices.clone(),
+                    signed_create_asset_txn.clone(),
+                )
+                .await
+                .unwrap();
+        }
+
+        // create orderbook transaction
+        const TEST_BASE_ASSET_ID: u64 = 1;
+        const TEST_QUOTE_ASSET_ID: u64 = 2;
+        let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
+        let create_orderbook_txn = create_orderbook_creation_transaction(
+            &sender_kp,
+            TEST_BASE_ASSET_ID,
+            TEST_QUOTE_ASSET_ID,
+            recent_block_hash,
+        );
+        let signed_digest = sender_kp.sign(&create_orderbook_txn.digest().get_array()[..]);
+        let signed_create_asset_txn =
+            SignedTransaction::new(sender_kp.public().clone(), create_orderbook_txn, signed_digest);
+
+        validator
+            .handle_consensus_transaction(
+                &dummy_consensus_output,
+                dummy_execution_indices.clone(),
+                signed_create_asset_txn,
+            )
+            .await
+            .unwrap();
+
+        const TEST_PRICE: u64 = 100;
+        const TEST_QUANTITY: u64 = 100;
+        let place_limit_order_txn = create_place_limit_order_transaction(
+            &sender_kp,
+            TEST_BASE_ASSET_ID,
+            TEST_QUOTE_ASSET_ID,
+            OrderSide::Bid,
+            TEST_PRICE,
+            TEST_QUANTITY,
+            recent_block_hash,
+        );
+        let signed_digest = sender_kp.sign(&place_limit_order_txn.digest().get_array()[..]);
+        let signed_place_limit_order_txn =
+            SignedTransaction::new(sender_kp.public().clone(), place_limit_order_txn, signed_digest);
+
+        validator
+            .handle_consensus_transaction(
+                &dummy_consensus_output,
+                dummy_execution_indices.clone(),
+                signed_place_limit_order_txn,
+            )
+            .await
+            .unwrap();
+
+        // cancel order
+        const TEST_ORDER_ID: u64 = 1;
+        let update_order_txn = create_place_update_order_transaction(
+            &sender_kp,
+            TEST_BASE_ASSET_ID,
+            TEST_QUOTE_ASSET_ID,
+            TEST_ORDER_ID,
+            OrderSide::Bid,
+            TEST_PRICE,
+            TEST_QUANTITY + 1,
+            recent_block_hash
+        );
+        let signed_digest = sender_kp.sign(&update_order_txn.digest().get_array()[..]);
+        let signed_update_order_txn =
+            SignedTransaction::new(sender_kp.public().clone(), update_order_txn, signed_digest);
+
+        validator
+            .handle_consensus_transaction(
+                &dummy_consensus_output,
+                dummy_execution_indices.clone(),
+                signed_update_order_txn,
             )
             .await
             .unwrap();

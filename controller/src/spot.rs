@@ -503,6 +503,29 @@ impl SpotController {
             Err(_err) => Err(GDEXError::OrderRequest),
         }
     }
+
+    /// Attempts to get an order book and places a limit order
+    pub fn place_update_order(
+        &mut self,
+        base_asset_id: AssetId,
+        quote_asset_id: AssetId,
+        account_pub_key: &AccountPubKey,
+        order_id: OrderId,
+        side: OrderSide,
+        quantity: u64,
+        price: u64,
+    ) -> Result<(), GDEXError> {
+        match self.get_orderbook(base_asset_id, quote_asset_id)?.place_update_order(
+            account_pub_key,
+            order_id,
+            side,
+            quantity,
+            price
+        ) {
+            Ok(_ordering_processing_result) => Ok(()),
+            Err(_err) => Err(GDEXError::OrderRequest),
+        }
+    }
 }
 
 // impl Default for SpotController {

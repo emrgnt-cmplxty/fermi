@@ -55,6 +55,7 @@ impl ValidatorSpawner {
     ) -> Self {
         let genesis_state =
             ValidatorGenesisState::load(genesis_path.join(GENESIS_FILENAME)).expect("Could not open the genesis file");
+
         let validator_info = genesis_state
             .validator_set()
             .iter()
@@ -396,7 +397,7 @@ pub mod suite_spawn_tests {
             i += 1;
         }
         // sleep to allow the network to propagate the transactions
-        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+        tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
         let validator_store = &spawner_1
             .get_validator_state()
             .as_ref()
@@ -422,6 +423,7 @@ pub mod suite_spawn_tests {
             }
             assert!(validator_store.contains_block_digest(&block.block_digest));
         }
+
         assert!(
             total as u64 == n_transactions_to_submit,
             "total transactions in db does not match total submitted"

@@ -1,10 +1,10 @@
 #[cfg(test)]
 pub mod suite_core_tests {
-    use gdex_controller::master::MasterController;
+    use gdex_controller::{bank::CREATED_ASSET_BALANCE, master::MasterController};
     use gdex_core::{
         client,
         config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, GDEX_DB_NAME},
-        genesis_ceremony::VALIDATOR_FUNDING_AMOUNT,
+        genesis_ceremony::{VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
         metrics::start_prometheus_server,
         validator::{
             genesis_state::ValidatorGenesisState, server::ValidatorServer, server::ValidatorService,
@@ -12,7 +12,10 @@ pub mod suite_core_tests {
         },
     };
     use gdex_types::{
-        account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair, ValidatorPubKeyBytes},
+        account::{
+            account_test_functions::generate_keypair_vec, ValidatorKeyPair, ValidatorPubKey, ValidatorPubKeyBytes,
+        },
+        asset::PRIMARY_ASSET_ID,
         crypto::{get_key_pair_from_rng, KeypairTraits},
         node::ValidatorInfo,
         proto::{TransactionProto, TransactionsClient},
@@ -23,9 +26,10 @@ pub mod suite_core_tests {
     use std::path::Path;
     use std::{io, sync::Arc, time};
     use tokio::task::JoinHandle;
+    use tokio::time::{sleep, Duration};
 
     // Create a genesis config with a single validator seeded by VALIDATOR_SEED
-    async fn get_genesis_state(dir: &Path, number_of_validators: usize) -> ValidatorGenesisState {
+    async fn get_genesis_state(dir: &Path, number_of_validators: u64) -> ValidatorGenesisState {
         let validators = (0..number_of_validators)
             .map(|i| {
                 let keypair: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
@@ -33,6 +37,7 @@ pub mod suite_core_tests {
                     name: format!("validator-{i}"),
                     public_key: ValidatorPubKeyBytes::from(keypair.public()),
                     stake: VALIDATOR_FUNDING_AMOUNT,
+                    balance: VALIDATOR_BALANCE,
                     delegation: 0,
                     network_address: utils::new_network_address(),
                     narwhal_primary_to_primary: utils::new_network_address(),
@@ -47,7 +52,33 @@ pub mod suite_core_tests {
             })
             .collect::<Vec<_>>();
 
-        ValidatorGenesisState::new(MasterController::default(), validators)
+        let master_controller = MasterController::default();
+        // create asset + fund other validators
+        let validator_creator_pubkey = ValidatorPubKey::try_from(validators[0].public_key).unwrap();
+        master_controller
+            .bank_controller
+            .lock()
+            .unwrap()
+            .create_asset(&validator_creator_pubkey)
+            .unwrap();
+        // get transfer amount
+        let transfer_amount: u64 = CREATED_ASSET_BALANCE / number_of_validators;
+        for i in 1..number_of_validators {
+            let validator_pubkey = ValidatorPubKey::try_from(validators[i as usize].public_key).unwrap();
+            master_controller
+                .bank_controller
+                .lock()
+                .unwrap()
+                .transfer(
+                    &validator_creator_pubkey,
+                    &validator_pubkey,
+                    PRIMARY_ASSET_ID,
+                    transfer_amount,
+                )
+                .unwrap();
+        }
+
+        ValidatorGenesisState::new(master_controller, validators)
     }
 
     // Start a new validator service given a genesis state and the index of the validator we are using for the local test
@@ -72,7 +103,7 @@ pub mod suite_core_tests {
         let validator = validators[validator_index].clone();
         let network_address = validator.network_address.clone();
         let consensus_address = validator.narwhal_consensus_address.clone();
-        let pubilc_key = validator.public_key();
+        let public_key = validator.public_key();
 
         // TODO - can we avoid consuming the private key twice in the network setup?
         // Note, this awkwardness is due to my inferred understanding of Arc pin.
@@ -82,7 +113,7 @@ pub mod suite_core_tests {
         let key_pair_arc = Arc::new(utils::read_keypair_from_file(&key_file).unwrap());
         let gdex_db_path = db_dir.join(GDEX_DB_NAME);
         let validator_state = Arc::new(ValidatorState::new(
-            pubilc_key,
+            public_key,
             key_pair_pin,
             &genesis_state,
             &gdex_db_path,
@@ -132,7 +163,7 @@ pub mod suite_core_tests {
         (validator_state, narwhal_handle)
     }
 
-    const NUMBER_OF_TEST_VALIDATORS: usize = 4;
+    const NUMBER_OF_TEST_VALIDATORS: u64 = 4;
     #[tokio::test]
     #[ignore] // it fails in remote view
     pub async fn four_node_network() {
@@ -158,7 +189,7 @@ pub mod suite_core_tests {
 
         spawn_validator_service(working_dir, batch_size, max_delay, genesis_state.clone(), 1).await;
         spawn_validator_service(working_dir, batch_size, max_delay, genesis_state.clone(), 2).await;
-        spawn_validator_service(working_dir, batch_size, max_delay, genesis_state, 3).await;
+        spawn_validator_service(working_dir, batch_size, max_delay, genesis_state.clone(), 3).await;
 
         let new_addr = utils::new_network_address();
         let consensus_address = validator.narwhal_consensus_address.clone();
@@ -175,14 +206,12 @@ pub mod suite_core_tests {
         let key_file = working_dir.join(format!("validator-{}.key", primary_validator_index));
         let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, 10);
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, 1_000_000);
 
         let mut client = TransactionsClient::new(
             client::connect_lazy(&validator_handle.address()).expect("Failed to connect to consensus"),
         );
-
-        let mut i = 0;
-        while i < 1_000 {
+        for _ in 0..20 {
             let transaction_proto = TransactionProto {
                 transaction: signed_transaction.serialize().unwrap().into(),
             };
@@ -191,7 +220,25 @@ pub mod suite_core_tests {
                 .await
                 .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
                 .unwrap();
-            i += 1;
         }
+        sleep(Duration::from_millis(3250)).await;
+        let sender_balance = genesis_state
+            .clone()
+            .master_controller()
+            .bank_controller
+            .lock()
+            .unwrap()
+            .get_balance(&kp_sender.public(), PRIMARY_ASSET_ID)
+            .unwrap();
+        let receiver_balance = genesis_state
+            .clone()
+            .master_controller()
+            .bank_controller
+            .lock()
+            .unwrap()
+            .get_balance(&kp_receiver.public(), PRIMARY_ASSET_ID)
+            .unwrap();
+        assert_eq!(sender_balance + receiver_balance, 2_500_000_000_000_000);
+        assert!(receiver_balance > 0, "Receiver balance must be greater than 0");
     }
 }

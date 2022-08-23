@@ -1,7 +1,8 @@
 ---
 name: validator-2
 public-key: yT+JyFOFMKmRJPyN4FkZe94fwoePcQ4/eSkl7l3bIzk=
-stake: 1000000
+stake: 3000000
+balance: 400000000
 delegation: 0
 network-address: /dns/localhost/tcp/62452/http
 narwhal-primary-to-primary: /dns/localhost/tcp/62454/http

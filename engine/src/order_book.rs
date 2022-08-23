@@ -60,12 +60,12 @@ impl Orderbook {
 
     pub fn process_order(&mut self, order: OrderRequest) -> OrderProcessingResult {
         // processing result accumulator
-        let mut proc_result: OrderProcessingResult = vec![];
+        let mut process_result: OrderProcessingResult = vec![];
 
         // validate request
         if let Err(reason) = self.order_validator.validate(&order) {
-            proc_result.push(Err(Failed::Validation(String::from(reason))));
-            return proc_result;
+            process_result.push(Err(Failed::Validation(String::from(reason))));
+            return process_result;
         }
 
         match order {
@@ -74,18 +74,22 @@ impl Orderbook {
                 quote_asset_id,
                 side,
                 quantity,
-                local_timestamp: _ts,
+                ..
             } => {
                 // generate new ID for order
                 let order_id = self.seq.next_id();
-                proc_result.push(Ok(Success::Accepted {
+                let price: u64 = 0;
+                process_result.push(Ok(Success::Accepted {
                     order_id,
+                    side,
+                    price,
+                    quantity,
                     order_type: OrderType::Market,
                     timestamp: SystemTime::now(),
                 }));
 
                 self.process_market_order(
-                    &mut proc_result,
+                    &mut process_result,
                     order_id,
                     base_asset_id,
                     quote_asset_id,
@@ -103,14 +107,17 @@ impl Orderbook {
                 local_timestamp,
             } => {
                 let order_id = self.seq.next_id();
-                proc_result.push(Ok(Success::Accepted {
+                process_result.push(Ok(Success::Accepted {
                     order_id,
+                    side,
+                    price,
+                    quantity,
                     order_type: OrderType::Limit,
                     timestamp: SystemTime::now(),
                 }));
 
                 self.process_limit_order(
-                    &mut proc_result,
+                    &mut process_result,
                     order_id,
                     base_asset_id,
                     quote_asset_id,
@@ -122,23 +129,24 @@ impl Orderbook {
             }
 
             OrderRequest::Update {
-                id,
+                order_id,
                 side,
                 price,
                 quantity,
                 local_timestamp,
+                ..
             } => {
-                self.process_order_update(&mut proc_result, id, side, price, quantity, local_timestamp);
+                self.process_order_update(&mut process_result, order_id, side, price, quantity, local_timestamp);
             }
 
-            OrderRequest::CancelOrder { id, side } => {
-                self.process_order_cancel(&mut proc_result, id, side);
+            OrderRequest::CancelOrder { order_id, side, .. } => {
+                self.process_order_cancel(&mut process_result, order_id, side);
             }
         }
 
         // return collected processing results
 
-        proc_result
+        process_result
     }
 
     /// Get current spread as a tuple: (bid, ask)
@@ -307,6 +315,7 @@ impl Orderbook {
         ) {
             results.push(Ok(Success::Updated {
                 order_id,
+                side,
                 price,
                 quantity,
                 timestamp: SystemTime::now(),
@@ -322,17 +331,36 @@ impl Orderbook {
             OrderSide::Ask => &mut self.ask_queue,
         };
 
-        if order_queue.cancel(order_id) {
-            results.push(Ok(Success::Cancelled {
-                order_id,
-                timestamp: SystemTime::now(),
-            }));
+        // get order to extract price + quantity
+        if let Some(order) = order_queue.get_order(order_id) {
+            // get price and quantity of live order
+            let price = order.get_price();
+            let quantity = order.get_quantity();
+
+            if order_queue.cancel(order_id) {
+                results.push(Ok(Success::Cancelled {
+                    order_id,
+                    side,
+                    price,
+                    quantity,
+                    timestamp: SystemTime::now(),
+                }));
+            }
         } else {
             results.push(Err(Failed::OrderNotFound(order_id)));
         }
     }
 
     /* Helpers */
+
+    pub fn get_order(&mut self, side: OrderSide, order_id: u64) -> Result<&Order, Failed> {
+        let order_queue = match side {
+            OrderSide::Bid => &mut self.bid_queue,
+            OrderSide::Ask => &mut self.ask_queue,
+        };
+
+        order_queue.get_order(order_id).ok_or(Failed::OrderNotFound(order_id))
+    }
 
     #[allow(clippy::too_many_arguments)]
     fn store_new_limit_order(
@@ -497,7 +525,8 @@ mod test_order_book {
 
     use super::*;
     use crate::orders::{
-        limit_order_cancel_request, new_limit_order_request, new_market_order_request, update_order_request,
+        create_cancel_order_request, create_limit_order_request, create_market_order_request,
+        create_update_order_request,
     };
 
     const BASE_ASSET: u64 = 0;
@@ -506,7 +535,7 @@ mod test_order_book {
     #[test]
     fn failed_cancel() {
         let mut orderbook = Orderbook::new(BASE_ASSET, QUOTE_ASSET);
-        let request = limit_order_cancel_request(1, OrderSide::Bid);
+        let request = create_cancel_order_request(BASE_ASSET, QUOTE_ASSET, 1, OrderSide::Bid, SystemTime::now());
         let mut result = orderbook.process_order(request);
 
         assert_eq!(result.len(), 1);
@@ -522,7 +551,7 @@ mod test_order_book {
         let mut order_book = Orderbook::new(BASE_ASSET, QUOTE_ASSET);
 
         // create and process limit order
-        let order = new_limit_order_request(BASE_ASSET, QUOTE_ASSET + 1, OrderSide::Ask, 10, 1, SystemTime::now());
+        let order = create_limit_order_request(BASE_ASSET, QUOTE_ASSET + 1, OrderSide::Ask, 10, 1, SystemTime::now());
         let results = order_book.process_order(order);
         for result in results {
             result.unwrap();
@@ -534,11 +563,11 @@ mod test_order_book {
         let mut order_book = Orderbook::new(BASE_ASSET, QUOTE_ASSET);
 
         // create and process limit order
-        let order = new_limit_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Bid, 10, 100, SystemTime::now());
+        let order = create_limit_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Bid, 10, 100, SystemTime::now());
         order_book.process_order(order);
 
         // create and process limit order
-        let order = new_market_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Ask, 10, SystemTime::now());
+        let order = create_market_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Ask, 10, SystemTime::now());
         let results = order_book.process_order(order);
         for result in results {
             result.unwrap();
@@ -550,14 +579,22 @@ mod test_order_book {
         let mut order_book = Orderbook::new(BASE_ASSET, QUOTE_ASSET);
 
         // create and process limit order
-        let order = new_limit_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Bid, 10, 100, SystemTime::now());
+        let order = create_limit_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Bid, 10, 100, SystemTime::now());
         let mut results = order_book.process_order(order);
 
         let order_result = results.pop().unwrap().unwrap();
 
         match order_result {
             Success::Accepted { order_id, .. } => {
-                let update_order = update_order_request(order_id, OrderSide::Bid, 100, 100, SystemTime::now());
+                let update_order = create_update_order_request(
+                    BASE_ASSET,
+                    QUOTE_ASSET,
+                    order_id,
+                    OrderSide::Bid,
+                    100,
+                    100,
+                    SystemTime::now(),
+                );
                 order_book.process_order(update_order).pop().unwrap().unwrap();
             }
             _ => {
@@ -571,10 +608,10 @@ mod test_order_book {
         let mut order_book = Orderbook::new(BASE_ASSET, QUOTE_ASSET);
 
         // create and process limit order
-        let order = new_limit_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Bid, 10, 100, SystemTime::now());
+        let order = create_limit_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Bid, 10, 100, SystemTime::now());
         order_book.process_order(order);
 
-        let order = new_limit_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Ask, 5, 10, SystemTime::now());
+        let order = create_limit_order_request(BASE_ASSET, QUOTE_ASSET, OrderSide::Ask, 5, 10, SystemTime::now());
         let results = order_book.process_order(order);
 
         for result in results {

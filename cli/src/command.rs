@@ -59,6 +59,10 @@ pub enum GDEXCommand {
         path: Option<PathBuf>,
         #[clap(value_parser, long, help = "validator name")]
         name: String,
+        #[clap(value_parser, long, help = "validator stake")]
+        stake: u64,
+        #[clap(value_parser, long, help = "validator initial balance")]
+        balance: u64,
         #[clap(value_parser, long, help = "Validator keystore path")]
         key_file: PathBuf,
         #[clap(value_parser, long, help = "Network address")]
@@ -179,6 +183,8 @@ impl GDEXCommand {
             GDEXCommand::AddValidatorGenesis {
                 path,
                 name,
+                stake,
+                balance,
                 key_file,
                 network_address,
                 narwhal_primary_to_primary,
@@ -192,6 +198,8 @@ impl GDEXCommand {
                     command: CeremonyCommand::AddValidator {
                         name,
                         key_file,
+                        stake,
+                        balance,
                         network_address: network_address.unwrap_or_else(|| utils::new_network_address()),
                         narwhal_primary_to_primary: narwhal_primary_to_primary
                             .unwrap_or_else(|| utils::new_network_address()),
@@ -408,7 +416,7 @@ impl GDEXCommand {
             }
             GDEXCommand::Airdrop { amount, airdrop_to } => {
                 // Address for the faucet
-                let addr = format!("http://127.0.0.1:{}", FAUCET_PORT.to_string());
+                let addr = format!("http://127.0.0.1:{}", FAUCET_PORT);
 
                 // Client to connect
                 let mut client = FaucetClient::connect(addr.to_string()).await?;
@@ -416,7 +424,7 @@ impl GDEXCommand {
                 // Creating the gRPC request
                 let request = tonic::Request::new(FaucetAirdropRequest {
                     airdrop_to: airdrop_to.to_owned(),
-                    amount: amount,
+                    amount,
                 });
 
                 // Sending the request

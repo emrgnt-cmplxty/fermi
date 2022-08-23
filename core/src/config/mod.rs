@@ -28,6 +28,7 @@ pub const GDEX_DEV_NET_URL: &str = "https://gateway.devnet.sui.io:443";
 pub const CONSENSUS_DB_NAME: &str = "consensus_db";
 pub const GDEX_DB_NAME: &str = "gdex_db";
 pub const DEFAULT_STAKE: u64 = crate::genesis_ceremony::VALIDATOR_FUNDING_AMOUNT;
+pub const DEFAULT_BALANCE: u64 = crate::genesis_ceremony::VALIDATOR_BALANCE;
 
 pub trait Config
 where

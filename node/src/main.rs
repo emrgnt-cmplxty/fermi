@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0
 use anyhow::Result;
 use clap::{crate_name, crate_version, App, AppSettings, ArgMatches, SubCommand};
-use futures::future::join_all;
 use gdex_core::validator::spawner::ValidatorSpawner;
 use multiaddr::Multiaddr;
 use std::{path::Path, str::FromStr};
@@ -87,6 +86,6 @@ async fn run(matches: &ArgMatches<'_>) {
         /* validator_name */ validator_name.to_string(),
     );
 
-    let handler = validator_spawner.spawn_validator().await;
-    join_all(handler).await;
+    validator_spawner.spawn_validator().await;
+    validator_spawner.await_handles().await;
 }

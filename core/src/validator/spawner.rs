@@ -11,6 +11,7 @@ use tokio::{
     task::JoinHandle,
 };
 use tracing::info;
+use futures::future::join_all;
 
 // mysten
 use narwhal_config::{
@@ -73,7 +74,7 @@ pub struct ValidatorSpawner {
     /// Handle for the... TODO
     service_handles: Option<Vec<JoinHandle<()>>>,
     /// Handle for the... TODO
-    server_handle: Option<JoinHandle<()>>
+    server_handles: Option<Vec<JoinHandle<()>>>
 }
 
 impl ValidatorSpawner {
@@ -104,7 +105,7 @@ impl ValidatorSpawner {
             validator_address: None,
             tx_reconfigure_consensus: None,
             service_handles: None,
-            server_handle: None
+            server_handles: None
         }
     }
 
@@ -125,6 +126,7 @@ impl ValidatorSpawner {
     pub fn get_tx_reconfigure_consensus(&self) -> &Option<Sender<(ConsensusKeyPair, ConsensusCommittee)>> {
         &self.tx_reconfigure_consensus
     }
+    
     // SETTERS
 
     fn set_validator_state(&mut self, validator_state: Arc<ValidatorState>) {
@@ -248,7 +250,10 @@ impl ValidatorSpawner {
 
         let validator_server_handle = validator_server.spawn().await.unwrap();
         self.set_validator_address(validator_server_handle.address().clone());
-        self.server_handle = Some(validator_server_handle.get_handle());
+
+        let mut server_handles = Vec::new();
+        server_handles.push(validator_server_handle.get_handle());
+        self.server_handles = Some(server_handles);
     }
 
     pub async fn spawn_validator(&mut self) {
@@ -257,5 +262,10 @@ impl ValidatorSpawner {
         self.tx_reconfigure_consensus = Some(tx_reconfigure_consensus);
         self.spawn_validator_service(rx_reconfigure_consensus).await;
         self.spawn_validator_server().await;
+    }
+    
+    pub async fn await_handles(&mut self) {
+        join_all(self.service_handles.as_mut().unwrap()).await;
+        join_all(self.server_handles.as_mut().unwrap()).await;
     }
 }

@@ -82,7 +82,7 @@ pub enum GDEXCommand {
         #[clap(value_parser, long, help = "Path to save genesis blob file")]
         path: Option<PathBuf>,
         #[clap(value_parser, long, help = "validator initial balance")]
-        balance: u64
+        balance: u64,
     },
     #[clap(name = "build-genesis")]
     BuildGenesis {
@@ -214,12 +214,10 @@ impl GDEXCommand {
                 ceremony.run().unwrap();
                 Ok(())
             }
-            GDEXCommand::AddControllersGenesis { path, balance} => {
+            GDEXCommand::AddControllersGenesis { path, balance } => {
                 let ceremony = Ceremony {
                     path,
-                    command: CeremonyCommand::AddControllers{
-                        balance
-                    },
+                    command: CeremonyCommand::AddControllers { balance },
                 };
                 ceremony.run().unwrap();
                 Ok(())
@@ -424,7 +422,7 @@ impl GDEXCommand {
                 // Creating the gRPC request
                 let request = tonic::Request::new(FaucetAirdropRequest {
                     airdrop_to: airdrop_to.to_owned(),
-                    amount
+                    amount,
                 });
 
                 // Sending the request

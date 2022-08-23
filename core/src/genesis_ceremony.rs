@@ -66,9 +66,9 @@ pub enum CeremonyCommand {
         narwhal_consensus_address: Multiaddr,
     },
 
-    AddControllers{
+    AddControllers {
         #[clap(value_parser, long)]
-        balance: u64
+        balance: u64,
     },
 
     Build,
@@ -114,7 +114,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             builder = builder.add_validator(ValidatorInfo {
                 name,
                 public_key: keypair.public().into(),
-                stake: stake,
+                stake,
                 delegation: 0,
                 network_address,
                 narwhal_primary_to_primary,
@@ -127,7 +127,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
         }
 
         // Add the order book controllers
-        CeremonyCommand::AddControllers {balance} => {
+        CeremonyCommand::AddControllers { balance } => {
             let builder = GenesisStateBuilder::load(&dir)?;
 
             // Initialize controllers to default state
@@ -148,7 +148,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
                     &null_creator,
                     &validator_key,
                     PRIMARY_ASSET_ID,
-                    balance
+                    balance,
                 )?;
                 master_controller
                     .stake_controller
@@ -311,8 +311,8 @@ mod test_genesis_ceremony {
 
         let command = Ceremony {
             path: Some(dir.path().into()),
-            command: CeremonyCommand::AddControllers{
-                balance: VALIDATOR_BALANCE
+            command: CeremonyCommand::AddControllers {
+                balance: VALIDATOR_BALANCE,
             },
         };
 

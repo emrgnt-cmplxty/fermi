@@ -9,72 +9,96 @@ use gdex_controller::master::MasterController;
 use gdex_types::transaction::Transaction;
 use gdex_types::{
     account::ValidatorKeyPair,
+    block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},
     committee::{Committee, ValidatorName},
     error::GDEXError,
     transaction::{SignedTransaction, TransactionDigest},
 };
-use mysten_store::{
-    reopen,
-    rocks::{open_cf, DBMap},
-    Store,
-};
+use mysten_store::{Map, reopen, rocks::{open_cf, DBMap}, Store};
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::Hash;
 use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
-use narwhal_types::{CertificateDigest, SequenceNumber};
-use std::path::PathBuf;
+use narwhal_types::CertificateDigest;
+
 use std::{
     collections::HashMap,
+    path::PathBuf,
     pin::Pin,
     sync::{
-        atomic::{AtomicBool, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
         Arc, Mutex,
     },
 };
 use tracing::{info, trace};
-
 /// Tracks recently submitted transactions to implement transaction gating
 pub struct ValidatorStore {
     /// The transaction map tracks recently submitted transactions
-    transaction_cache: Mutex<HashMap<TransactionDigest, Option<CertificateDigest>>>,
-    certificate_cache: Mutex<HashMap<CertificateDigest, SequenceNumber>>,
+    transaction_cache: Mutex<HashMap<TransactionDigest, Option<BlockDigest>>>,
+    block_digest_cache: Mutex<HashMap<BlockDigest, BlockNumber>>,
     // garbage collection depth
     gc_depth: u64,
-
-    // TODO consider making this private and injected
-    pub transaction_store: Store<SequenceNumber, Vec<SerializedTransaction>>,
-    pub sequence_store: Store<SequenceNumber, CertificateDigest>,
-
+    pub block_store: Store<BlockNumber, Block>,
+    pub block_info_store: Store<BlockNumber, BlockInfo>,
+    pub block_number: AtomicU64,
     // singleton store that keeps only the most recent block info at key 0
-    pub last_sequence_store: Store<u64, (SequenceNumber, CertificateDigest)>
+    pub last_block_store: Store<u64, BlockInfo>,
 }
 
 impl ValidatorStore {
-    const TRANSACTIONS_CF: &'static str = "transactions";
-    const SEQUENCE_CF: &'static str = "sequence";
-    const LAST_SEQUENCE_CF: &'static str = "last_sequence";
+    const BLOCKS_CF: &'static str = "blocks";
+    const BLOCK_INFO_CF: &'static str = "block_info";
+    const LAST_BLOCK_CF: &'static str = "last_block";
 
     pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
-        let rocksdb =
-            open_cf(store_path, None, &[Self::TRANSACTIONS_CF, Self::SEQUENCE_CF, Self::LAST_SEQUENCE_CF]).expect("Cannot open database");
+        let rocksdb = open_cf(
+            store_path,
+            None,
+            &[Self::BLOCKS_CF, Self::BLOCK_INFO_CF, Self::LAST_BLOCK_CF],
+        )
+            .expect("Cannot open database");
 
-        let (transactions_map, sequence_map, last_sequence_map) = reopen!(&rocksdb,
-            Self::TRANSACTIONS_CF;<SequenceNumber, Vec<SerializedTransaction>>,
-            Self::SEQUENCE_CF;<SequenceNumber, CertificateDigest>,
-            Self::LAST_SEQUENCE_CF;<u64, (SequenceNumber, CertificateDigest)>
+        let (block_map, block_info_map, last_block_map) = reopen!(&rocksdb,
+            Self::BLOCKS_CF;<BlockNumber, Block>,
+            Self::BLOCK_INFO_CF;<BlockNumber, BlockInfo>,
+            Self::LAST_BLOCK_CF;<u64, BlockInfo>
         );
 
-        let transaction_store = Store::new(transactions_map);
-        let sequence_store = Store::new(sequence_map);
-        let last_sequence_store = Store::new(last_sequence_map);
+        let block_number_from_dbmap = last_block_map.get(&(0 as u64));
+
+        let block_store = Store::new(block_map);
+        let block_info_store = Store::new(block_info_map);
+        let last_block_store = Store::new(last_block_map);
+
+        // TODO load the state if last block is not 0, i.e. not at genesis
+        let block_number = match block_number_from_dbmap {
+            Ok(o) => {
+                if let Some(v) = o {
+                    v.block_number
+                    // mark for replay somehow here
+                } else {
+                    0
+                }
+            }
+            Err(_) => 0,
+        };
+
+        let block_digest_cache = Mutex::new(HashMap::new());
+        // TODO theres likely a better way to say what I'm saying here
+        if block_number == 0 {
+            block_digest_cache
+                .lock()
+                .unwrap()
+                .insert(CertificateDigest::new([0; 32]), 0);
+        }
 
         Self {
             transaction_cache: Mutex::new(HashMap::new()),
-            certificate_cache: Mutex::new(HashMap::new()),
+            block_digest_cache,
             gc_depth: 50,
-            transaction_store,
-            sequence_store,
-            last_sequence_store
+            block_store,
+            block_info_store,
+            block_number: AtomicU64::new(block_number),
+            last_block_store,
         }
     }
 
@@ -83,23 +107,23 @@ impl ValidatorStore {
         return self.transaction_cache.lock().unwrap().contains_key(&transaction_digest);
     }
 
-    pub fn contains_certificate_digest(&self, certificate_digest: &CertificateDigest) -> bool {
-        return self.certificate_cache.lock().unwrap().contains_key(certificate_digest);
+    pub fn contains_block_digest(&self, block_digest: &BlockDigest) -> bool {
+        return self.block_digest_cache.lock().unwrap().contains_key(block_digest);
     }
 
     pub fn insert_unconfirmed_transaction(&self, transaction: &Transaction) {
         let transaction_digest = transaction.digest();
         self.transaction_cache.lock().unwrap().insert(
             transaction_digest,
-            None, // Insert with dummy certificate, which will later be overwritten
+            None, // Insert with no block digest, a digest will be added after confirmation
         );
     }
 
     pub fn insert_confirmed_transaction(&self, transaction: &Transaction, consensus_output: &ConsensusOutput) {
         let transaction_digest = transaction.digest();
-        let certificate_digest = consensus_output.certificate.digest();
-        let mut locked_certificate_cache = self.certificate_cache.lock().unwrap();
-        let max_seq_num_so_far = locked_certificate_cache.values().max();
+        let block_digest = consensus_output.certificate.digest();
+        let mut locked_block_digest_cache = self.block_digest_cache.lock().unwrap();
+        let max_seq_num_so_far = locked_block_digest_cache.values().max();
 
         let _is_new_seq_num =
             max_seq_num_so_far.is_none() || consensus_output.consensus_index > *max_seq_num_so_far.unwrap();
@@ -107,19 +131,46 @@ impl ValidatorStore {
         self.transaction_cache
             .lock()
             .unwrap()
-            .insert(transaction_digest, Some(certificate_digest));
-        locked_certificate_cache.insert(certificate_digest, consensus_output.consensus_index);
+            .insert(transaction_digest, Some(block_digest));
+        locked_block_digest_cache.insert(block_digest, consensus_output.consensus_index);
+    }
+
+    pub async fn write_latest_block(
+        &self,
+        block_certificate: BlockCertificate,
+        transactions: Vec<SerializedTransaction>,
+    ) {
+        // TODO - is there a way to acquire a mutable reference to the block-number without demanding &mut self?
+        // this would allow us to avoid separate commands to load and add to the counter
+
+        let block_number = self.block_number.load(std::sync::atomic::Ordering::SeqCst);
+        let block_digest = block_certificate.digest();
+        let block = Block {
+            block_certificate,
+            transactions,
+        };
+        let block_info = BlockInfo {
+            block_number,
+            block_digest,
+        };
+
+        // write-out the block information to associated stores
+        self.block_store.write(block_number, block.clone()).await;
+        self.block_info_store.write(block_number, block_info.clone()).await;
+        self.last_block_store.write(0, block_info).await;
+        // update the block number
+        self.block_number.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
     }
 
     pub fn prune(&self) {
-        let mut locked_certificate_cache = self.certificate_cache.lock().unwrap();
-        if locked_certificate_cache.len() > self.gc_depth as usize {
-            let mut threshold = locked_certificate_cache.values().max().unwrap() - self.gc_depth;
-            locked_certificate_cache.retain(|_k, v| v > &mut threshold);
+        let mut locked_block_digest_cache = self.block_digest_cache.lock().unwrap();
+        if locked_block_digest_cache.len() > self.gc_depth as usize {
+            let mut threshold = locked_block_digest_cache.values().max().unwrap() - self.gc_depth;
+            locked_block_digest_cache.retain(|_k, v| v > &mut threshold);
             self.transaction_cache
                 .lock()
                 .unwrap()
-                .retain(|_k, v| v.is_none() || locked_certificate_cache.contains_key(&v.unwrap()));
+                .retain(|_k, v| v.is_none() || locked_block_digest_cache.contains_key(&v.unwrap()));
         }
     }
 }
@@ -205,7 +256,7 @@ impl ExecutionState for ValidatorState {
         execution_indices: ExecutionIndices,
         signed_transaction: Self::Transaction,
     ) -> Result<Self::Outcome, Self::Error> {
-
+        let transaction = signed_transaction.get_transaction_payload();
 
         self.validator_store
             .insert_confirmed_transaction(transaction, consensus_output);
@@ -343,7 +394,7 @@ mod test_validator_state {
 
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
-        let recent_block_hash = CertificateDigest::new([0; DIGEST_LEN]);
+        let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
         let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
         let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
         let signed_create_asset_txn =
@@ -367,7 +418,7 @@ mod test_validator_state {
 
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
-        let recent_block_hash = CertificateDigest::new([0; DIGEST_LEN]);
+        let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
         let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
         let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
         let signed_create_asset_txn =
@@ -409,7 +460,7 @@ mod test_validator_state {
 
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
-        let recent_block_hash = CertificateDigest::new([0; DIGEST_LEN]);
+        let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
         let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
         let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
         let signed_create_asset_txn =
@@ -426,13 +477,11 @@ mod test_validator_state {
                 .unwrap();
         }
 
-        //dbg!(validator.master_controller.bank_controller.lock().unwrap().get_num_assets());
-
         // create orderbook transaction
         const TEST_BASE_ASSET_ID: u64 = 1;
         const TEST_QUOTE_ASSET_ID: u64 = 2;
         let sender_kp = generate_production_keypair::<KeyPair>();
-        let recent_block_hash = CertificateDigest::new([0; DIGEST_LEN]);
+        let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
         let create_orderbook_txn = create_orderbook_creation_transaction(
             &sender_kp,
             TEST_BASE_ASSET_ID,
@@ -451,7 +500,6 @@ mod test_validator_state {
             )
             .await
             .unwrap();
-        //dbg!(validator.master_controller.spot_controller.lock().unwrap().get_orderbook(TEST_BASE_ASSET_ID, TEST_QUOTE_ASSET_ID).unwrap());
     }
 
     #[tokio::test]
@@ -462,7 +510,7 @@ mod test_validator_state {
 
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
-        let recent_block_hash = CertificateDigest::new([0; DIGEST_LEN]);
+        let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
         let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
         let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
         let signed_create_asset_txn =
@@ -479,12 +527,10 @@ mod test_validator_state {
                 .unwrap();
         }
 
-        //dbg!(validator.master_controller.bank_controller.lock().unwrap().get_num_assets());
-
         // create orderbook transaction
         const TEST_BASE_ASSET_ID: u64 = 1;
         const TEST_QUOTE_ASSET_ID: u64 = 2;
-        let recent_block_hash = CertificateDigest::new([0; DIGEST_LEN]);
+        let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
         let create_orderbook_txn = create_orderbook_creation_transaction(
             &sender_kp,
             TEST_BASE_ASSET_ID,

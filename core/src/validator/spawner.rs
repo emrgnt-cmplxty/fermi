@@ -18,6 +18,7 @@ use tokio::{
     task::JoinHandle,
 };
 use tracing::info;
+
 /// Can spawn a validator server handle at the internal address
 /// the server handle contains a validator api (grpc) that exposes a validator service
 pub struct ValidatorSpawner {

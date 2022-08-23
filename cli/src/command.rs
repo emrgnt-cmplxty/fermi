@@ -19,8 +19,11 @@ use gdex_core::{
 use gdex_types::{
     account::AccountKeyPair,
     crypto::{get_key_pair_from_rng, KeypairTraits, ToFromBytes},
+    proto::{FaucetAirdropRequest, FaucetClient},
     utils,
 };
+
+use gdex_node::faucet_server::FAUCET_PORT;
 use multiaddr::Multiaddr;
 use std::{fs, io::Write, num::NonZeroUsize, path::PathBuf};
 use tracing::info;
@@ -118,6 +121,13 @@ pub enum GDEXCommand {
         keystore_path: Option<PathBuf>,
         #[clap(value_parser, help = "Specify a name for the keystore")]
         keystore_name: Option<String>,
+    },
+    /// Airdrop someone a specific amount of funds
+    Airdrop {
+        #[clap(value_parser, help = "Specify how much you want to airdrop")]
+        amount: u64,
+        #[clap(value_parser, help = "Specify who you want to airdrop to")]
+        airdrop_to: String,
     },
 }
 
@@ -394,6 +404,26 @@ impl GDEXCommand {
                     }
                 }
 
+                Ok(())
+            }
+            GDEXCommand::Airdrop { amount, airdrop_to } => {
+                // Address for the faucet
+                let addr = format!("http://127.0.0.1:{}", FAUCET_PORT.to_string());
+
+                // Client to connect
+                let mut client = FaucetClient::connect(addr.to_string()).await?;
+
+                // Creating the gRPC request
+                let request = tonic::Request::new(FaucetAirdropRequest {
+                    airdrop_to: airdrop_to.to_owned(),
+                    amount: amount,
+                });
+
+                // Sending the request
+                let _response = client.airdrop(request).await?;
+
+                // Printing response and returning Ok(())
+                println!("Success! Airdroped {} tokens to address {}", amount, airdrop_to);
                 Ok(())
             }
         }

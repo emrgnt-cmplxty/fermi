@@ -10,7 +10,7 @@ pub struct RelayerSpawner {
 impl RelayerSpawner {
     pub async fn spawn_relay_server(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         // Putting the port to 8000
-        let addr = "127.0.0.1:8000";
+        let addr = "127.0.0.1:8001";
 
         // Parsing it into an address
         let addr = addr.parse::<SocketAddr>()?;
@@ -41,8 +41,8 @@ pub mod suite_spawn_tests {
     use std::path::Path;
 
     #[tokio::test]
-    #[ignore]
-    pub async fn spawn_relay_server() {
+    pub async fn spawn_and_ping_relay_server() {
+        // SPAWNING THE SERVER
         let dir = "../.proto";
         let path = Path::new(dir).to_path_buf();
 
@@ -63,13 +63,14 @@ pub mod suite_spawn_tests {
             validator_state: validator_state,
         };
 
-        let _result = relay_spawner.spawn_relay_server().await;
-    }
+        tokio::spawn(async move {
+            relay_spawner.spawn_relay_server().await.unwrap();
+        });
 
-    #[tokio::test]
-    #[ignore]
-    pub async fn ping_relay_server() {
-        let addr = "http://127.0.0.1:8000";
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+
+        // PINGING THE SERVER
+        let addr = "http://127.0.0.1:8001";
         let mut client = RelayerClient::connect(addr.to_string()).await.unwrap();
 
         let latest_block_info_request = tonic::Request::new(RelayerGetLatestBlockInfoRequest {});

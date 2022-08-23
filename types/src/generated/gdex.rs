@@ -43,13 +43,13 @@ pub struct BlockInfo {
     #[prost(bytes="bytes", tag="2")]
     pub digest: ::prost::bytes::Bytes,
 }
-/// Add Certificate as Well 
+/// Structure for Block
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Block {
     #[prost(bytes="bytes", tag="1")]
     pub block: ::prost::bytes::Bytes,
 }
-/// Response from relayer with actual BLock 
+/// Response from relayer with actual Block 
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RelayerBlockResponse {
     #[prost(bool, tag="1")]

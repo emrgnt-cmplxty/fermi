@@ -30,7 +30,7 @@ use tokio::{
     },
     task::JoinHandle,
 };
-use tracing::{debug, info, trace};
+use tracing::{info, trace};
 
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {

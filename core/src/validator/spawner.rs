@@ -118,6 +118,9 @@ impl ValidatorSpawner {
         &self.validator_info
     }
 
+    pub fn get_validator_state(&mut self) -> &Option<Arc<ValidatorState>> {
+        &self.validator_state
+    }
     // SETTERS
 
     fn set_validator_state(&mut self, validator_state: Arc<ValidatorState>) {
@@ -268,13 +271,15 @@ pub mod suite_spawn_tests {
         account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair},
         crypto::get_key_pair_from_rng,
         proto::{TransactionProto, TransactionsClient},
-        transaction::transaction_test_functions::generate_signed_test_transaction,
+        transaction::{transaction_test_functions::generate_signed_test_transaction, SignedTransaction},
         utils,
     };
     use std::{io, path::Path};
+
     use tracing::info;
     use tracing_subscriber::FmtSubscriber;
 
+    #[ignore]
     #[tokio::test]
     pub async fn spawn_node_and_reconfigure() {
         // let subscriber = FmtSubscriber::builder()
@@ -308,10 +313,9 @@ pub mod suite_spawn_tests {
         let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
 
-        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
-
         let mut i = 0;
         while i < 10 {
+            let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, i);
             let transaction_proto = TransactionProto {
                 transaction: signed_transaction.serialize().unwrap().into(),
             };

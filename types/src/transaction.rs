@@ -467,13 +467,14 @@ pub mod transaction_test_functions {
     pub fn generate_signed_test_transaction(
         kp_sender: &AccountKeyPair,
         kp_receiver: &AccountKeyPair,
+        amount: u64,
     ) -> SignedTransaction {
         // TODO replace this with latest
         let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
         let transaction_variant = TransactionVariant::PaymentTransaction(PaymentRequest::new(
             kp_receiver.public().clone(),
             PRIMARY_ASSET_ID,
-            10,
+            amount,
         ));
 
         let transaction = Transaction::new(kp_sender.public().clone(), dummy_batch_digest, transaction_variant);
@@ -531,7 +532,7 @@ pub mod transaction_tests {
     fn transaction_properties() {
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, 10);
         let transaction = signed_transaction.get_transaction_payload();
         let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
 
@@ -570,7 +571,7 @@ pub mod transaction_tests {
     fn signed_payment_transaction() {
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, 10);
 
         let payment = match signed_transaction.get_transaction_payload().get_variant() {
             TransactionVariant::PaymentTransaction(r) => r,
@@ -623,7 +624,7 @@ pub mod transaction_tests {
     fn test_serialize_deserialize() {
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, 10);
 
         // perform transaction checks
 

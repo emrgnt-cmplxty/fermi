@@ -2432,13 +2432,16 @@ dependencies = [
  "clap 3.2.2",
  "colored",
  "gdex-core",
+ "gdex-node",
  "gdex-types",
  "gdex-workspace-hack",
  "multiaddr",
+ "prost",
  "rand 0.8.5",
  "telemetry-subscribers",
  "tempfile",
  "tokio",
+ "tonic",
  "tracing",
 ]
 
@@ -2513,12 +2516,18 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap 2.34.0",
+ "crypto",
  "futures",
  "gdex-core",
+ "gdex-types",
+ "hex",
  "multiaddr",
+ "prost",
  "telemetry-subscribers",
  "tokio",
+ "tonic",
  "tracing",
+ "types",
 ]
 
 [[package]]

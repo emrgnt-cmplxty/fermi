@@ -175,7 +175,7 @@ pub mod suite_core_tests {
         let key_file = working_dir.join(format!("validator-{}.key", primary_validator_index));
         let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
+        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, 10);
 
         let mut client = TransactionsClient::new(
             client::connect_lazy(&validator_handle.address()).expect("Failed to connect to consensus"),

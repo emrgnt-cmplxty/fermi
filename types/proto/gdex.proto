@@ -19,3 +19,32 @@ service Transactions {
     // Submit a Transactions
     rpc SubmitTransactionStream(stream Transaction) returns (Empty) {}
 }
+
+// Faucet service for airdropping
+service Faucet {
+    rpc Airdrop (FaucetAirdropRequest) returns (FaucetAirdropResponse);
+}
+
+message FaucetAirdropRequest {
+    string airdrop_to = 1;
+    uint64 amount = 2;
+}
+
+message FaucetAirdropResponse {
+    bool successful = 1;
+}
+
+
+// Relay service for relaying information outside
+service Relayer {
+    rpc ReadLatestBlockInfo (RelayerRequest) returns (RelayerResponse);
+}
+
+message RelayerRequest {
+    string dummy_request = 1;
+}
+
+message RelayerResponse {
+    bool successful = 1;
+}
+

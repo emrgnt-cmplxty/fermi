@@ -83,8 +83,20 @@ impl ValidatorSpawner {
         &self.validator_info
     }
 
-    pub fn get_validator_state(&mut self) -> &Option<Arc<ValidatorState>> {
-        &self.validator_state
+    pub fn get_validator_state(&self) -> Option<Arc<ValidatorState>> {
+        if self.validator_state.is_some() {
+            Some(Arc::clone(&(self.validator_state.as_ref().unwrap())))
+        } else {
+            None
+        }
+    }
+
+    pub fn halt_validator(&mut self) {
+        self.validator_state.as_mut().unwrap().halt_validator();
+    }
+
+    pub fn unhalt_validator(&mut self) {
+        self.validator_state.as_mut().unwrap().unhalt_validator();
     }
 
     fn set_validator_state(&mut self, validator_state: Arc<ValidatorState>) {

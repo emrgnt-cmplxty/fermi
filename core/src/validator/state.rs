@@ -127,7 +127,7 @@ impl ValidatorStore {
             block_digest: block_certificate.digest(),
             transactions,
         };
-        let block_info = BlockInfo { block_certificate };
+        let block_info = BlockInfo { block_number, block_digest: block_certificate.digest() };
 
         // write-out the block information to associated stores
         self.block_store.write(block_number, block.clone()).await;
@@ -206,6 +206,10 @@ impl ValidatorState {
 
     pub fn unhalt_validator(&self) {
         self.halted.store(false, Ordering::Relaxed);
+    }
+
+    pub fn is_halted(&self) -> bool {
+        self.halted.load(Ordering::Relaxed)
     }
 }
 

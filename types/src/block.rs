@@ -15,5 +15,6 @@ pub struct Block {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct BlockInfo {
-    pub block_certificate: BlockCertificate,
+    pub block_number: BlockNumber,
+    pub block_digest: BlockDigest,
 }

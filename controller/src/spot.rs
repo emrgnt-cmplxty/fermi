@@ -11,7 +11,7 @@
 use super::bank::BankController;
 use gdex_engine::{
     order_book::Orderbook,
-    orders::{create_cancel_order_request, create_limit_order_request},
+    orders::{create_cancel_order_request, create_limit_order_request, create_update_order_request},
 };
 use gdex_types::{
     account::{AccountPubKey, OrderAccount},
@@ -138,6 +138,34 @@ impl OrderbookInterface {
             order_id,
             side,
             SystemTime::now(),
+        );
+        let res = self.orderbook.process_order(order);
+        self.process_order_result(account_pub_key, res)
+    }
+
+    /// Attempt to place a limit order into the orderbook
+    pub fn place_update_order(
+        &mut self,
+        account_pub_key: &AccountPubKey,
+        order_id: OrderId,
+        side: OrderSide,
+        quantity: u64,
+        price: u64
+    ) -> Result<OrderProcessingResult, GDEXError> {
+        // create account
+        if !self.accounts.contains_key(account_pub_key) {
+            self.create_account(account_pub_key)?
+        }
+
+        // create and process limit order
+        let order = create_update_order_request(
+            self.base_asset_id,
+            self.quote_asset_id,
+            order_id,
+            side,
+            price,
+            quantity,
+            SystemTime::now()
         );
         let res = self.orderbook.process_order(order);
         self.process_order_result(account_pub_key, res)

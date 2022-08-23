@@ -290,7 +290,7 @@ impl ExecutionState for ValidatorState {
                                 *price,
                             )?
                     }
-                    OrderRequest::CancelOrder {
+                    OrderRequest::Cancel {
                         base_asset_id,
                         quote_asset_id,
                         order_id,
@@ -351,7 +351,7 @@ mod test_validator_state {
         node::ValidatorInfo,
         order_book::OrderSide,
         transaction::{
-            create_asset_creation_transaction, create_cancel_order_transaction, create_orderbook_creation_transaction,
+            create_asset_creation_transaction, create_place_cancel_order_transaction, create_orderbook_creation_transaction,
             create_payment_transaction, create_place_limit_order_transaction, SignedTransaction,
         },
         utils,
@@ -641,7 +641,7 @@ mod test_validator_state {
 
         // cancel order
         const TEST_ORDER_ID: u64 = 1;
-        let cancel_order_txn = create_cancel_order_transaction(
+        let cancel_order_txn = create_place_cancel_order_transaction(
             &sender_kp,
             TEST_BASE_ASSET_ID,
             TEST_QUOTE_ASSET_ID,

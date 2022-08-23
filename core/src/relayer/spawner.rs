@@ -35,7 +35,7 @@ pub mod suite_spawn_tests {
     use crate::relayer::spawner::RelayerSpawner;
     use crate::validator::spawner::ValidatorSpawner;
     use gdex_types::{
-        proto::{RelayerClient, RelayerGetBlockInfoRequest, RelayerGetLatestBlockInfoRequest},
+        proto::{RelayerClient, RelayerGetBlockInfoRequest, RelayerGetBlockRequest, RelayerGetLatestBlockInfoRequest},
         utils,
     };
     use std::path::Path;
@@ -72,18 +72,19 @@ pub mod suite_spawn_tests {
         let addr = "http://127.0.0.1:8000";
         let mut client = RelayerClient::connect(addr.to_string()).await.unwrap();
 
-        let latest_block_request = tonic::Request::new(RelayerGetLatestBlockInfoRequest {
-            dummy_request: "hello world".to_string(),
-        });
+        let latest_block_info_request = tonic::Request::new(RelayerGetLatestBlockInfoRequest {});
+        let latest_block_info_response = client.read_latest_block_info(latest_block_info_request).await;
+        println!("Response from latest block={:?}", latest_block_info_response);
 
-        let latest_block_response = client.read_latest_block_info(latest_block_request).await;
+        let specific_block_info_request = tonic::Request::new(RelayerGetBlockInfoRequest { block_number: 0 });
+        let specific_block_info_response = client.get_block_info(specific_block_info_request).await;
+        println!(
+            "Response from specific block request = {:?}",
+            specific_block_info_response
+        );
 
-        println!("Response from latest block={:?}", latest_block_response);
-
-        let specific_block_request = tonic::Request::new(RelayerGetBlockInfoRequest { block_number: 0 });
-
-        let specific_block_response = client.get_block_info(specific_block_request).await;
-
+        let specific_block_request = tonic::Request::new(RelayerGetBlockRequest { block_number: 0 });
+        let specific_block_response = client.get_block(specific_block_request).await;
         println!("Response from specific block request = {:?}", specific_block_response);
     }
 }

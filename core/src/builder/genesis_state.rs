@@ -53,7 +53,7 @@ impl GenesisStateBuilder {
 
     pub fn build(self) -> ValidatorGenesisState {
         let validators = self.validators.into_iter().map(|(_, v)| v).collect::<Vec<_>>();
-        let master_controller = create_genesis_objects();
+        let master_controller = self.master_controller;//create_genesis_objects();
 
         ValidatorGenesisState::new(master_controller, validators)
     }

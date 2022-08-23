@@ -86,6 +86,8 @@ pub enum Success {
     Updated {
         order_id: u64,
         side: OrderSide,
+        previous_price: u64,
+        previous_quantity: u64,
         price: u64,
         quantity: u64,
         timestamp: SystemTime,

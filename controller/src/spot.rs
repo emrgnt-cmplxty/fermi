@@ -91,19 +91,25 @@ impl OrderbookInterface {
             self.create_account(account_pub_key)?
         }
 
-        let balance = self
-            .bank_controller
-            .lock()
-            .unwrap()
-            .get_balance(account_pub_key, self.base_asset_id)?;
-
         // check balances before placing order
         if matches!(side, OrderSide::Ask) {
             // if ask, selling quantity of base asset
-            assert!(balance > quantity);
+            let base_asset_balance = self
+                .bank_controller
+                .lock()
+                .unwrap()
+                .get_balance(account_pub_key, self.base_asset_id)?;
+
+                assert!(base_asset_balance > quantity);
         } else {
             // if bid, buying base asset with quantity*price of quote asset
-            assert!(balance > quantity * price);
+            let quote_asset_balance = self
+                .bank_controller
+                .lock()
+                .unwrap()
+                .get_balance(account_pub_key, self.quote_asset_id)?;
+
+            assert!(quote_asset_balance > quantity * price);
         }
 
         // create and process limit order
@@ -155,6 +161,36 @@ impl OrderbookInterface {
         // create account
         if !self.accounts.contains_key(account_pub_key) {
             self.create_account(account_pub_key)?
+        }
+
+        // check updates against user's balances
+        let current_order = self.orderbook.get_order(side, order_id).unwrap();
+        let current_quantity = current_order.get_quantity();
+        let current_price = current_order.get_price();
+
+        // check balances before placing order
+        if matches!(side, OrderSide::Ask) {
+            // if ask, selling quantity of base asset
+            if quantity > current_quantity {
+                let base_asset_balance = self
+                    .bank_controller
+                    .lock()
+                    .unwrap()
+                    .get_balance(account_pub_key, self.base_asset_id)?;
+
+                assert!(base_asset_balance > quantity - current_quantity);
+            }
+        } else {
+            // if bid, buying base asset with quantity*price of quote asset
+            if quantity * price > current_quantity * current_price {
+                let quote_asset_balance = self
+                    .bank_controller
+                    .lock()
+                    .unwrap()
+                    .get_balance(account_pub_key, self.quote_asset_id)?;
+
+                assert!(quote_asset_balance > quantity * price - current_quantity * current_price);
+            }
         }
 
         // create and process limit order
@@ -220,8 +256,18 @@ impl OrderbookInterface {
                     // remove order from map
                     self.order_to_account.remove(order_id).ok_or(GDEXError::OrderRequest)?;
                 }
-                Ok(Success::Updated { .. }) => {
-                    panic!("This needs to be implemented...")
+                Ok(Success::Updated { 
+                    order_id,
+                    side,
+                    previous_price,
+                    previous_quantity,
+                    price,
+                    quantity,
+                    ..
+                }) => {
+                    let existing_pub_key = self.get_pub_key_from_order(order_id);
+                    dbg!(*previous_price, *previous_quantity, *price, *quantity);
+                    self.update_balances_on_update(&existing_pub_key, *side, *previous_price, *previous_quantity, *price, *quantity)?;
                 }
                 Ok(Success::Cancelled {
                     order_id,
@@ -232,7 +278,7 @@ impl OrderbookInterface {
                 }) => {
                     // order has been cancelled from order book, update states
                     let existing_pub_key = self.get_pub_key_from_order(order_id);
-                    self.process_order_cancel(&existing_pub_key, *side, *price, *quantity)?;
+                    self.update_balances_on_cancel(&existing_pub_key, *side, *price, *quantity)?;
                 }
                 Err(_failure) => {
                     return Err(GDEXError::OrderRequest);
@@ -296,7 +342,55 @@ impl OrderbookInterface {
         Ok(())
     }
 
-    fn process_order_cancel(
+    fn update_balances_on_update(
+        &mut self,
+        account_pub_key: &AccountPubKey,
+        side: OrderSide,
+        previous_price: u64,
+        previous_quantity: u64,
+        price: u64,
+        quantity: u64,
+    ) -> Result<(), GDEXError> {
+        if matches!(side, OrderSide::Ask) {
+            // E.g. fill ask 1 BTC @ 20k adds 20k USD (quote) to bal, subtracts 1 BTC (base) from escrow
+            if quantity > previous_quantity {
+                self.bank_controller.lock().unwrap().update_balance(
+                    account_pub_key,
+                    self.base_asset_id,
+                    quantity - previous_quantity,
+                    false,
+                )?;
+            } else {
+                self.bank_controller.lock().unwrap().update_balance(
+                    account_pub_key,
+                    self.base_asset_id,
+                    previous_quantity - quantity,
+                    true,
+                )?;
+            }
+        } else {
+            // E.g. fill bid 1 BTC @ 20k adds 1 BTC (base) to bal, subtracts 20k USD (quote) from escrow
+            if quantity * price > previous_quantity * previous_price {
+                dbg!(quantity * price -  previous_quantity * previous_price);
+                self.bank_controller.lock().unwrap().update_balance(
+                    account_pub_key,
+                    self.quote_asset_id,
+                    quantity * price - previous_quantity * previous_price,
+                    false,
+                )?;
+            } else {
+                self.bank_controller.lock().unwrap().update_balance(
+                    account_pub_key,
+                    self.quote_asset_id,
+                    previous_quantity * previous_price - quantity * price,
+                    true,
+                )?;
+            }
+        }
+        Ok(())
+    }
+
+    fn update_balances_on_cancel(
         &mut self,
         account_pub_key: &AccountPubKey,
         side: OrderSide,
@@ -670,8 +764,6 @@ pub mod spot_tests {
         let mut orderbook_interface =
             OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
 
-        println!("ASDASD");
-
         let bid_size_0: u64 = 95;
         let bid_price_0: u64 = 200;
         orderbook_interface
@@ -700,7 +792,7 @@ pub mod spot_tests {
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT
         );
-        println!("ASDASD");
+
         assert_eq!(
             bank_controller_ref
                 .lock()
@@ -717,14 +809,14 @@ pub mod spot_tests {
                 .unwrap(),
             TRANSFER_AMOUNT
         );
-        println!("ASDASD");
+
         // Place ask for account 1 at price that crosses spread entirely
         let ask_size_0: u64 = bid_size_0;
         let ask_price_0: u64 = bid_price_0 - 1;
         orderbook_interface
             .place_limit_order(account_1.public(), OrderSide::Ask, ask_size_0, ask_price_0)
             .unwrap();
-        println!("ASDASD");
+
         // check account 0
         // received initial asset creation balance
         // paid bid_size_0 * bid_price_0 in quote asset to orderbook
@@ -737,7 +829,7 @@ pub mod spot_tests {
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0
         );
-        println!("ASDASD");
+
         assert_eq!(
             bank_controller_ref
                 .lock()
@@ -768,7 +860,7 @@ pub mod spot_tests {
                 .unwrap(),
             TRANSFER_AMOUNT - bid_size_0
         );
-        println!("ASDASD");
+
         // Place final order for account 1 at price that crosses spread entirely and closes it's own position
         let ask_size_1: u64 = bid_size_1;
         let ask_price_1: u64 = bid_price_1 - 1;
@@ -837,7 +929,7 @@ pub mod spot_tests {
             // get order
             assert!(
                 orderbook_interface.orderbook.get_order(side, order_id).is_ok(),
-                "Orer has been created"
+                "Order has been created"
             );
 
             // check user balances
@@ -855,7 +947,7 @@ pub mod spot_tests {
 
             assert!(
                 orderbook_interface.orderbook.get_order(side, order_id).is_err(),
-                "Orer has been cancelled"
+                "Order has been cancelled"
             );
 
             // check user balances
@@ -865,6 +957,61 @@ pub mod spot_tests {
                 .get_balance(account.public(), QUOTE_ASSET_ID)
                 .unwrap();
             assert_eq!(user_quote_balance, CREATED_ASSET_BALANCE);
+        }
+    }
+
+    #[test]
+    fn place_update() {
+        let account = generate_keypair_vec([0; 32]).pop().unwrap();
+
+        let mut bank_controller = BankController::new();
+        bank_controller.create_asset(account.public()).unwrap();
+        bank_controller.create_asset(account.public()).unwrap();
+        let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
+
+        let mut orderbook_interface =
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
+
+        const TEST_QUANTITY: u64 = 100;
+        const TEST_PRICE: u64 = 100;
+        const TEST_SIDE: OrderSide = OrderSide::Bid;
+        let result = orderbook_interface
+            .place_limit_order(account.public(), TEST_SIDE, TEST_QUANTITY, TEST_PRICE)
+            .unwrap();
+
+        if let Ok(Success::Accepted { order_id, side, .. }) = result[0] {
+    
+            // update order
+            orderbook_interface
+                .place_update_order(account.public(), order_id, side, TEST_QUANTITY + 1, TEST_PRICE)
+                .unwrap();
+
+            assert!(
+                orderbook_interface.orderbook.get_order(side, order_id).unwrap().get_price() == TEST_PRICE,
+                "Price did not change."
+            );
+            assert!(
+                orderbook_interface.orderbook.get_order(side, order_id).unwrap().get_quantity() == TEST_QUANTITY + 1,
+                "Quantity did change."
+            );
+
+            // check user balances
+            assert_eq!(
+                bank_controller_ref
+                    .lock()
+                    .unwrap()
+                    .get_balance(account.public(), BASE_ASSET_ID)
+                    .unwrap(),
+                CREATED_ASSET_BALANCE
+            );
+            assert_eq!(
+                bank_controller_ref
+                    .lock()
+                    .unwrap()
+                    .get_balance(account.public(), QUOTE_ASSET_ID)
+                    .unwrap(),
+                CREATED_ASSET_BALANCE - (TEST_QUANTITY + 1) * TEST_PRICE
+            );
         }
     }
 }

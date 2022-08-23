@@ -124,10 +124,12 @@ impl ValidatorStore {
         let block_number = self.block_number.load(std::sync::atomic::Ordering::SeqCst);
         let block = Block {
             block_number,
-            block_digest: block_certificate.digest(),
             transactions,
         };
-        let block_info = BlockInfo { block_number, block_digest: block_certificate.digest() };
+        let block_info = BlockInfo {
+            block_number,
+            block_certificate,
+        };
 
         // write-out the block information to associated stores
         self.block_store.write(block_number, block.clone()).await;

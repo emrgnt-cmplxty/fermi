@@ -4,9 +4,9 @@ public-key: p54c7/qkurOMKaf84XxeT+njrQTYOSVtkaPEDMMZHdM=
 stake: 1000000
 balance: 200000000
 delegation: 0
-network-address: /dns/localhost/tcp/62228/http
-narwhal-primary-to-primary: /dns/localhost/tcp/62230/http
-narwhal-worker-to-primary: /dns/localhost/tcp/62232/http
-narwhal-primary-to-worker: /dns/localhost/tcp/62234/http
-narwhal-worker-to-worker: /dns/localhost/tcp/62236/http
-narwhal-consensus-address: /dns/localhost/tcp/62238/http
+network-address: /dns/localhost/tcp/61228/http
+narwhal-primary-to-primary: /dns/localhost/tcp/61330/http
+narwhal-worker-to-primary: /dns/localhost/tcp/61432/http
+narwhal-primary-to-worker: /dns/localhost/tcp/61534/http
+narwhal-worker-to-worker: /dns/localhost/tcp/61636/http
+narwhal-consensus-address: /dns/localhost/tcp/61738/http

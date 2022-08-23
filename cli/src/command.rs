@@ -19,12 +19,12 @@ use gdex_core::{
 use gdex_node::faucet_server::FAUCET_PORT;
 use gdex_types::{
     account::AccountKeyPair,
-    crypto::{get_key_pair_from_rng, KeypairTraits, ToFromBytes},
+    crypto::get_key_pair_from_rng,
     proto::{FaucetAirdropRequest, FaucetClient},
     utils,
 };
 use multiaddr::Multiaddr;
-use std::{fs, io::Write, num::NonZeroUsize, path::PathBuf};
+use std::{fs, num::NonZeroUsize, path::PathBuf};
 use tracing::info;
 
 /// Note, the code in this struct is inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui/src/sui_commands.rs
@@ -58,6 +58,10 @@ pub enum GDEXCommand {
         path: Option<PathBuf>,
         #[clap(value_parser, long, help = "validator name")]
         name: String,
+        #[clap(value_parser, long, help = "validator stake")]
+        stake: u64,
+        #[clap(value_parser, long, help = "validator initial balance")]
+        balance: u64,
         #[clap(value_parser, long, help = "Validator keystore path")]
         key_file: PathBuf,
         #[clap(value_parser, long, help = "Network address")]
@@ -178,6 +182,8 @@ impl GDEXCommand {
             GDEXCommand::AddValidatorGenesis {
                 path,
                 name,
+                stake,
+                balance,
                 key_file,
                 network_address,
                 narwhal_primary_to_primary,
@@ -191,6 +197,8 @@ impl GDEXCommand {
                     command: CeremonyCommand::AddValidator {
                         name,
                         key_file,
+                        stake,
+                        balance,
                         network_address: network_address.unwrap_or_else(|| utils::new_network_address()),
                         narwhal_primary_to_primary: narwhal_primary_to_primary
                             .unwrap_or_else(|| utils::new_network_address()),

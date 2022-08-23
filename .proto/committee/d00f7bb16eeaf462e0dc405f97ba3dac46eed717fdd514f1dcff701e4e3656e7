@@ -5,8 +5,8 @@ stake: 2000000
 balance: 300000000
 delegation: 0
 network-address: /dns/localhost/tcp/62340/http
-narwhal-primary-to-primary: /dns/localhost/tcp/62342/http
-narwhal-worker-to-primary: /dns/localhost/tcp/62344/http
-narwhal-primary-to-worker: /dns/localhost/tcp/62346/http
-narwhal-worker-to-worker: /dns/localhost/tcp/62348/http
-narwhal-consensus-address: /dns/localhost/tcp/62350/http
+narwhal-primary-to-primary: /dns/localhost/tcp/62442/http
+narwhal-worker-to-primary: /dns/localhost/tcp/62544/http
+narwhal-primary-to-worker: /dns/localhost/tcp/62646/http
+narwhal-worker-to-worker: /dns/localhost/tcp/62748/http
+narwhal-consensus-address: /dns/localhost/tcp/62850/http

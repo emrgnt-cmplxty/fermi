@@ -9,12 +9,11 @@ pub type BlockCertificate = Certificate;
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Block {
     pub block_number: BlockNumber,
-    pub block_digest: BlockDigest,
     pub transactions: Vec<SerializedTransaction>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct BlockInfo {
     pub block_number: BlockNumber,
-    pub block_digest: BlockDigest,
+    pub block_certificate: BlockCertificate,
 }

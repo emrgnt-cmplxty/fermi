@@ -201,6 +201,10 @@ impl ValidatorService {
     ) -> Result<tonic::Response<Empty>, tonic::Status> {
         trace!("Handling a new transaction with ValidatorService",);
 
+        if state.is_halted() {
+            return Err(tonic::Status::new(tonic::Code::Unavailable, "Validator is halted"));
+        };
+
         let signed_transaction = SignedTransaction::deserialize(transaction_proto.transaction.to_vec())
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
         signed_transaction

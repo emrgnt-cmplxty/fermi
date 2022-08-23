@@ -486,12 +486,13 @@ pub fn create_place_cancel_order_transaction(
         quote_asset_id,
         order_id,
         side,
-        local_timestamp
+        local_timestamp,
     });
 
     Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
 }
 
+#[cfg_attr(feature = "cargo-clippy", allow(clippy::too_many_arguments))]
 pub fn create_place_update_order_transaction(
     sender_kp: &AccountKeyPair,
     base_asset_id: AssetId,
@@ -500,7 +501,7 @@ pub fn create_place_update_order_transaction(
     side: OrderSide,
     price: AssetPrice,
     quantity: AssetAmount,
-    recent_block_hash: CertificateDigest
+    recent_block_hash: CertificateDigest,
 ) -> Transaction {
     let local_timestamp = SystemTime::now();
     let transaction_variant = TransactionVariant::PlaceOrderTransaction(OrderRequest::Update {
@@ -510,7 +511,7 @@ pub fn create_place_update_order_transaction(
         side,
         price,
         quantity,
-        local_timestamp
+        local_timestamp,
     });
 
     Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
@@ -701,7 +702,7 @@ pub mod transaction_tests {
             TEST_ORDER_SIDE,
             TEST_QUANTITY,
             TEST_PRICE,
-            dummy_batch_digest
+            dummy_batch_digest,
         );
 
         let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
@@ -727,27 +728,13 @@ pub mod transaction_tests {
             price,
             quantity,
             ..
-        } = limit_order_request {
-            assert!(
-                *base_asset_id == TEST_BASE_ASSET_ID,
-                "Base asset is incorrect."
-            );
-            assert!(
-                *quote_asset_id == TEST_QUOTE_ASSET_ID,
-                "Quote asset is incorrect."
-            );
-            assert!(
-                *side == TEST_ORDER_SIDE,
-                "Order side is incorrect."
-            );
-            assert!(
-                *price == TEST_PRICE,
-                "Order price is incorrect."
-            );
-            assert!(
-                *quantity == TEST_QUANTITY,
-                "Order quantity is incorrect."
-            );
+        } = limit_order_request
+        {
+            assert!(*base_asset_id == TEST_BASE_ASSET_ID, "Base asset is incorrect.");
+            assert!(*quote_asset_id == TEST_QUOTE_ASSET_ID, "Quote asset is incorrect.");
+            assert!(*side == TEST_ORDER_SIDE, "Order side is incorrect.");
+            assert!(*price == TEST_PRICE, "Order price is incorrect.");
+            assert!(*quantity == TEST_QUANTITY, "Order quantity is incorrect.");
         } else {
             panic!("Transaction variant for limit order wasn't correctly identified.")
         }
@@ -769,7 +756,7 @@ pub mod transaction_tests {
             TEST_QUOTE_ASSET_ID,
             TEST_ORDER_ID,
             TEST_ORDER_SIDE,
-            dummy_batch_digest
+            dummy_batch_digest,
         );
 
         let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
@@ -794,23 +781,12 @@ pub mod transaction_tests {
             order_id,
             side,
             ..
-        } = cancel_order_request {
-            assert!(
-                *base_asset_id == TEST_BASE_ASSET_ID,
-                "Base asset is incorrect."
-            );
-            assert!(
-                *quote_asset_id == TEST_QUOTE_ASSET_ID,
-                "Quote asset is incorrect."
-            );
-            assert!(
-                *order_id == TEST_ORDER_ID,
-                "Order id is incorrect."
-            );
-            assert!(
-                *side == TEST_ORDER_SIDE,
-                "Order side is incorrect."
-            );
+        } = cancel_order_request
+        {
+            assert!(*base_asset_id == TEST_BASE_ASSET_ID, "Base asset is incorrect.");
+            assert!(*quote_asset_id == TEST_QUOTE_ASSET_ID, "Quote asset is incorrect.");
+            assert!(*order_id == TEST_ORDER_ID, "Order id is incorrect.");
+            assert!(*side == TEST_ORDER_SIDE, "Order side is incorrect.");
         } else {
             panic!("Transaction variant for cancel order wasn't correctly identified.")
         }
@@ -836,7 +812,7 @@ pub mod transaction_tests {
             TEST_ORDER_SIDE,
             TEST_QUANTITY,
             TEST_PRICE,
-            dummy_batch_digest
+            dummy_batch_digest,
         );
 
         let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
@@ -863,31 +839,14 @@ pub mod transaction_tests {
             price,
             quantity,
             ..
-        } = update_order_request {
-            assert!(
-                *base_asset_id == TEST_BASE_ASSET_ID,
-                "Base asset is incorrect."
-            );
-            assert!(
-                *quote_asset_id == TEST_QUOTE_ASSET_ID,
-                "Quote asset is incorrect."
-            );
-            assert!(
-                *order_id == TEST_ORDER_ID,
-                "Order id is incorrect."
-            );
-            assert!(
-                *side == TEST_ORDER_SIDE,
-                "Order side is incorrect."
-            );
-            assert!(
-                *price == TEST_PRICE,
-                "Order price is incorrect."
-            );
-            assert!(
-                *quantity == TEST_QUANTITY,
-                "Order quantity is incorrect."
-            );
+        } = update_order_request
+        {
+            assert!(*base_asset_id == TEST_BASE_ASSET_ID, "Base asset is incorrect.");
+            assert!(*quote_asset_id == TEST_QUOTE_ASSET_ID, "Quote asset is incorrect.");
+            assert!(*order_id == TEST_ORDER_ID, "Order id is incorrect.");
+            assert!(*side == TEST_ORDER_SIDE, "Order side is incorrect.");
+            assert!(*price == TEST_PRICE, "Order price is incorrect.");
+            assert!(*quantity == TEST_QUANTITY, "Order quantity is incorrect.");
         } else {
             panic!("Transaction variant for update order wasn't correctly identified.")
         }

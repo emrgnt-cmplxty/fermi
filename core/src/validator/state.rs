@@ -296,19 +296,18 @@ impl ExecutionState for ValidatorState {
                         order_id,
                         side,
                         ..
-                    } => {
-                        self.master_controller
-                            .spot_controller
-                            .lock()
-                            .unwrap()
-                            .place_cancel_order(
-                                *base_asset_id,
-                                *quote_asset_id,
-                                transaction.get_sender(),
-                                *order_id,
-                                *side,
-                            )?
-                    }
+                    } => self
+                        .master_controller
+                        .spot_controller
+                        .lock()
+                        .unwrap()
+                        .place_cancel_order(
+                            *base_asset_id,
+                            *quote_asset_id,
+                            transaction.get_sender(),
+                            *order_id,
+                            *side,
+                        )?,
                     OrderRequest::Update {
                         base_asset_id,
                         quote_asset_id,
@@ -317,21 +316,20 @@ impl ExecutionState for ValidatorState {
                         price,
                         quantity,
                         ..
-                    } => {
-                        self.master_controller
-                            .spot_controller
-                            .lock()
-                            .unwrap()
-                            .place_update_order(
-                                *base_asset_id,
-                                *quote_asset_id,
-                                transaction.get_sender(),
-                                *order_id,
-                                *side,
-                                *quantity,
-                                *price
-                            )?
-                    }
+                    } => self
+                        .master_controller
+                        .spot_controller
+                        .lock()
+                        .unwrap()
+                        .place_update_order(
+                            *base_asset_id,
+                            *quote_asset_id,
+                            transaction.get_sender(),
+                            *order_id,
+                            *side,
+                            *quantity,
+                            *price,
+                        )?,
                 }
             }
         }
@@ -366,8 +364,9 @@ mod test_validator_state {
         node::ValidatorInfo,
         order_book::OrderSide,
         transaction::{
-            create_asset_creation_transaction, create_place_cancel_order_transaction, create_orderbook_creation_transaction,
-            create_payment_transaction, create_place_limit_order_transaction, SignedTransaction, create_place_update_order_transaction,
+            create_asset_creation_transaction, create_orderbook_creation_transaction, create_payment_transaction,
+            create_place_cancel_order_transaction, create_place_limit_order_transaction,
+            create_place_update_order_transaction, SignedTransaction,
         },
         utils,
     };
@@ -760,7 +759,7 @@ mod test_validator_state {
             OrderSide::Bid,
             TEST_PRICE,
             TEST_QUANTITY + 1,
-            recent_block_hash
+            recent_block_hash,
         );
         let signed_digest = sender_kp.sign(&update_order_txn.digest().get_array()[..]);
         let signed_update_order_txn =

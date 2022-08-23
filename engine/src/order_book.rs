@@ -136,22 +136,11 @@ impl Orderbook {
                 local_timestamp,
                 ..
             } => {
-                self.process_order_update(
-                    &mut process_result,
-                    order_id,
-                    side,
-                    price,
-                    quantity,
-                    local_timestamp
-                );
+                self.process_order_update(&mut process_result, order_id, side, price, quantity, local_timestamp);
             }
 
             OrderRequest::Cancel { order_id, side, .. } => {
-                self.process_order_cancel(
-                    &mut process_result,
-                    order_id,
-                    side
-                );
+                self.process_order_cancel(&mut process_result, order_id, side);
             }
         }
 

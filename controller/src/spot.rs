@@ -100,7 +100,7 @@ impl OrderbookInterface {
                 .unwrap()
                 .get_balance(account_pub_key, self.base_asset_id)?;
 
-                assert!(base_asset_balance > quantity);
+            assert!(base_asset_balance > quantity);
         } else {
             // if bid, buying base asset with quantity*price of quote asset
             let quote_asset_balance = self
@@ -156,7 +156,7 @@ impl OrderbookInterface {
         order_id: OrderId,
         side: OrderSide,
         quantity: u64,
-        price: u64
+        price: u64,
     ) -> Result<OrderProcessingResult, GDEXError> {
         // create account
         if !self.accounts.contains_key(account_pub_key) {
@@ -201,7 +201,7 @@ impl OrderbookInterface {
             side,
             price,
             quantity,
-            SystemTime::now()
+            SystemTime::now(),
         );
         let res = self.orderbook.process_order(order);
         self.process_order_result(account_pub_key, res)
@@ -256,7 +256,7 @@ impl OrderbookInterface {
                     // remove order from map
                     self.order_to_account.remove(order_id).ok_or(GDEXError::OrderRequest)?;
                 }
-                Ok(Success::Updated { 
+                Ok(Success::Updated {
                     order_id,
                     side,
                     previous_price,
@@ -267,7 +267,14 @@ impl OrderbookInterface {
                 }) => {
                     let existing_pub_key = self.get_pub_key_from_order(order_id);
                     dbg!(*previous_price, *previous_quantity, *price, *quantity);
-                    self.update_balances_on_update(&existing_pub_key, *side, *previous_price, *previous_quantity, *price, *quantity)?;
+                    self.update_balances_on_update(
+                        &existing_pub_key,
+                        *side,
+                        *previous_price,
+                        *previous_quantity,
+                        *price,
+                        *quantity,
+                    )?;
                 }
                 Ok(Success::Cancelled {
                     order_id,
@@ -371,7 +378,7 @@ impl OrderbookInterface {
         } else {
             // E.g. fill bid 1 BTC @ 20k adds 1 BTC (base) to bal, subtracts 20k USD (quote) from escrow
             if quantity * price > previous_quantity * previous_price {
-                dbg!(quantity * price -  previous_quantity * previous_price);
+                dbg!(quantity * price - previous_quantity * previous_price);
                 self.bank_controller.lock().unwrap().update_balance(
                     account_pub_key,
                     self.quote_asset_id,
@@ -505,6 +512,7 @@ impl SpotController {
     }
 
     /// Attempts to get an order book and places a limit order
+    #[cfg_attr(feature = "cargo-clippy", allow(clippy::too_many_arguments))]
     pub fn place_update_order(
         &mut self,
         base_asset_id: AssetId,
@@ -520,7 +528,7 @@ impl SpotController {
             order_id,
             side,
             quantity,
-            price
+            price,
         ) {
             Ok(_ordering_processing_result) => Ok(()),
             Err(_err) => Err(GDEXError::OrderRequest),
@@ -1003,18 +1011,27 @@ pub mod spot_tests {
             .unwrap();
 
         if let Ok(Success::Accepted { order_id, side, .. }) = result[0] {
-    
             // update order
             orderbook_interface
                 .place_update_order(account.public(), order_id, side, TEST_QUANTITY + 1, TEST_PRICE)
                 .unwrap();
 
             assert!(
-                orderbook_interface.orderbook.get_order(side, order_id).unwrap().get_price() == TEST_PRICE,
+                orderbook_interface
+                    .orderbook
+                    .get_order(side, order_id)
+                    .unwrap()
+                    .get_price()
+                    == TEST_PRICE,
                 "Price did not change."
             );
             assert!(
-                orderbook_interface.orderbook.get_order(side, order_id).unwrap().get_quantity() == TEST_QUANTITY + 1,
+                orderbook_interface
+                    .orderbook
+                    .get_order(side, order_id)
+                    .unwrap()
+                    .get_quantity()
+                    == TEST_QUANTITY + 1,
                 "Quantity did change."
             );
 

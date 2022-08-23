@@ -14,9 +14,9 @@ use std::{
 };
 use tracing::trace;
 
-fn create_genesis_objects() -> MasterController {
+/***fn create_genesis_objects() -> MasterController {
     MasterController::default()
-}
+}***/
 
 const GENESIS_BUILDER_CONTROLLER_OUT: &str = "master_controller";
 const GENESIS_BUILDER_COMMITTEE_DIR: &str = "committee";
@@ -53,7 +53,7 @@ impl GenesisStateBuilder {
 
     pub fn build(self) -> ValidatorGenesisState {
         let validators = self.validators.into_iter().map(|(_, v)| v).collect::<Vec<_>>();
-        let master_controller = create_genesis_objects();
+        let master_controller = self.master_controller; //create_genesis_objects();
 
         ValidatorGenesisState::new(master_controller, validators)
     }

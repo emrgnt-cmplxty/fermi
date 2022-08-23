@@ -20,7 +20,8 @@ use std::{fs, path::PathBuf};
 
 pub const GENESIS_FILENAME: &str = "genesis.blob";
 pub const GENESIS_BUILDER_SIGNATURE_DIR: &str = "signatures";
-pub const VALIDATOR_FUNDING_AMOUNT: u64 = 1_000_000;
+pub const VALIDATOR_FUNDING_AMOUNT: u64 = 2_000_000;
+pub const VALIDATOR_BALANCE: u64 = 100_000_000 + VALIDATOR_FUNDING_AMOUNT;
 
 /// Specifies the ceremony output path and executes incoming transactions
 #[derive(Parser)]
@@ -49,6 +50,10 @@ pub enum CeremonyCommand {
         name: String,
         #[clap(value_parser, long)]
         key_file: PathBuf,
+        #[clap(value_parser, long)]
+        stake: u64,
+        #[clap(value_parser, long)]
+        balance: u64,
         #[clap(value_parser, long)]
         network_address: Multiaddr,
         #[clap(value_parser, long)]
@@ -95,6 +100,8 @@ pub fn run(cmd: Ceremony) -> Result<()> {
         CeremonyCommand::AddValidator {
             name,
             key_file,
+            stake,
+            balance,
             network_address,
             narwhal_primary_to_primary,
             narwhal_worker_to_primary,
@@ -107,7 +114,8 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             builder = builder.add_validator(ValidatorInfo {
                 name,
                 public_key: keypair.public().into(),
-                stake: VALIDATOR_FUNDING_AMOUNT,
+                stake,
+                balance,
                 delegation: 0,
                 network_address,
                 narwhal_primary_to_primary,
@@ -141,11 +149,11 @@ pub fn run(cmd: Ceremony) -> Result<()> {
                     &null_creator,
                     &validator_key,
                     PRIMARY_ASSET_ID,
-                    VALIDATOR_FUNDING_AMOUNT,
+                    validator.balance,
                 )?;
                 master_controller
                     .stake_controller
-                    .stake(&validator_key, VALIDATOR_FUNDING_AMOUNT)?;
+                    .stake(&validator_key, validator.stake)?;
             }
 
             builder.set_master_controller(master_controller).save(dir)?;
@@ -262,6 +270,7 @@ mod test_genesis_ceremony {
                     name: format!("validator-{i}"),
                     public_key: ValidatorPubKeyBytes::from(keypair.public()),
                     stake: VALIDATOR_FUNDING_AMOUNT,
+                    balance: VALIDATOR_BALANCE,
                     delegation: 0,
                     network_address: utils::new_network_address(),
                     narwhal_primary_to_primary: utils::new_network_address(),
@@ -290,6 +299,8 @@ mod test_genesis_ceremony {
                 command: CeremonyCommand::AddValidator {
                     name: validator.name().to_owned(),
                     key_file: key_file.into(),
+                    stake: VALIDATOR_FUNDING_AMOUNT,
+                    balance: VALIDATOR_BALANCE,
                     network_address: validator.network_address().to_owned(),
                     narwhal_primary_to_primary: validator.narwhal_primary_to_primary.clone(),
                     narwhal_worker_to_primary: validator.narwhal_worker_to_primary.clone(),

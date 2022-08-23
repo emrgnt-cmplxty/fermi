@@ -10,11 +10,15 @@ use tempfile::TempDir;
 // mysten
 
 // gdex
-use gdex_controller::master::MasterController;
+use gdex_controller::{
+    bank::CREATED_ASSET_BALANCE,
+    master::MasterController
+};
 use gdex_core::{
     genesis_ceremony::{
         VALIDATOR_FUNDING_AMOUNT,
-        GENESIS_FILENAME
+        GENESIS_FILENAME,
+        VALIDATOR_BALANCE
     },
     validator::{
         genesis_state::ValidatorGenesisState,
@@ -25,8 +29,10 @@ use gdex_core::{
 use gdex_types::{
     account::{
         ValidatorKeyPair,
-        ValidatorPubKeyBytes
+        ValidatorPubKeyBytes,
+        ValidatorPubKey
     },
+    asset::PRIMARY_ASSET_ID,
     crypto::{
         get_key_pair_from_rng,
         KeypairTraits
@@ -43,6 +49,7 @@ async fn create_genesis_state(
     dir: &Path,
     validator_count: usize
 ) -> ValidatorGenesisState {
+    // initialize validator info
     let validators_info = (0..validator_count)
         .map(|i| {
             let keypair: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
@@ -50,6 +57,7 @@ async fn create_genesis_state(
                 name: format!("validator-{i}"),
                 public_key: ValidatorPubKeyBytes::from(keypair.public()),
                 stake: VALIDATOR_FUNDING_AMOUNT,
+                balance: VALIDATOR_BALANCE,
                 delegation: 0,
                 network_address: utils::new_network_address(),
                 narwhal_primary_to_primary: utils::new_network_address(),
@@ -63,7 +71,36 @@ async fn create_genesis_state(
             info
         })
         .collect::<Vec<_>>();
-    ValidatorGenesisState::new(MasterController::default(), validators_info)
+    
+    let master_controller = MasterController::default();
+
+    // create primary asset
+    let validator_creator_pubkey = ValidatorPubKey::try_from(validators_info[0].public_key).unwrap();
+    master_controller
+        .bank_controller
+        .lock()
+        .unwrap()
+        .create_asset(&validator_creator_pubkey)
+        .unwrap();
+
+    // fund validators
+    let transfer_amount: u64 = CREATED_ASSET_BALANCE / (validator_count as u64);
+    for validator_info in &validators_info {
+        let validator_pubkey = ValidatorPubKey::try_from(validator_info.public_key).unwrap();
+        master_controller
+            .bank_controller
+            .lock()
+            .unwrap()
+            .transfer(
+                &validator_creator_pubkey,
+                &validator_pubkey,
+                PRIMARY_ASSET_ID,
+                transfer_amount,
+            )
+            .unwrap();
+    }
+    
+    ValidatorGenesisState::new(master_controller, validators_info)
 }
 
 // INTERFACE
@@ -71,7 +108,6 @@ async fn create_genesis_state(
 pub struct TestCluster {
     validator_count: usize,
     temp_working_dir: TempDir,
-    genesis_state: ValidatorGenesisState,
     validator_spawners: Vec<ValidatorSpawner>
 }
 
@@ -83,7 +119,7 @@ impl TestCluster {
         let temp_working_dir = tempfile::tempdir().unwrap();
         let working_dir = temp_working_dir.path().to_path_buf();
 
-        // create genesis state
+        // create and save genesis state
         let genesis_state = create_genesis_state(working_dir.as_path(), validator_count).await;
         let _save_result = genesis_state.save(working_dir.join(GENESIS_FILENAME));
     
@@ -103,7 +139,6 @@ impl TestCluster {
         Self {
             validator_count,
             temp_working_dir,
-            genesis_state,
             validator_spawners
         }
     }
@@ -120,12 +155,6 @@ impl TestCluster {
         &self
     ) -> PathBuf {
         self.temp_working_dir.path().to_path_buf()
-    }
-    
-    pub fn get_genesis_state(
-        &self
-    ) -> ValidatorGenesisState {
-        self.genesis_state.clone()
     }
     
     pub fn get_validator_spawner(

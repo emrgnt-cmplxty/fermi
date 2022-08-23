@@ -13,7 +13,7 @@ mod tests {
         let mut orderbook = Orderbook::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
 
         let order1 =
-            orders::new_market_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Bid, 2, SystemTime::now());
+            orders::create_market_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Bid, 2, SystemTime::now());
 
         // process market order
         let res = orderbook.process_order(order1);
@@ -34,10 +34,10 @@ mod tests {
         let mut orderbook = Orderbook::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
 
         let order1 =
-            orders::new_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Bid, 10, 2, SystemTime::now());
+            orders::create_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Bid, 10, 2, SystemTime::now());
 
         let order2 =
-            orders::new_market_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Ask, 1, SystemTime::now());
+            orders::create_market_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Ask, 1, SystemTime::now());
 
         orderbook.process_order(order1);
         let res = orderbook.process_order(order2);
@@ -70,14 +70,26 @@ mod tests {
     fn market_order_two_orders_match() {
         let mut orderbook = Orderbook::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
 
-        let order1 =
-            orders::new_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Bid, 10, 10, SystemTime::now());
+        let order1 = orders::create_limit_order_request(
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
+            OrderSide::Bid,
+            10,
+            10,
+            SystemTime::now(),
+        );
 
-        let order2 =
-            orders::new_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Bid, 12, 10, SystemTime::now());
+        let order2 = orders::create_limit_order_request(
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
+            OrderSide::Bid,
+            12,
+            10,
+            SystemTime::now(),
+        );
 
         let order3 =
-            orders::new_market_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Ask, 15, SystemTime::now());
+            orders::create_market_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Ask, 15, SystemTime::now());
 
         orderbook.process_order(order1);
         orderbook.process_order(order2);
@@ -127,7 +139,7 @@ mod tests {
     fn limit_order_on_empty_orderbook() {
         let mut orderbook = Orderbook::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
 
-        let order1 = orders::new_limit_order_request(
+        let order1 = orders::create_limit_order_request(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             OrderSide::Bid,
@@ -151,7 +163,7 @@ mod tests {
     fn limit_order_partial_match() {
         let mut orderbook = Orderbook::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
 
-        let order1 = orders::new_limit_order_request(
+        let order1 = orders::create_limit_order_request(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             OrderSide::Bid,
@@ -160,8 +172,14 @@ mod tests {
             SystemTime::now(),
         );
 
-        let order2 =
-            orders::new_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Ask, 90, 50, SystemTime::now());
+        let order2 = orders::create_limit_order_request(
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
+            OrderSide::Ask,
+            90,
+            50,
+            SystemTime::now(),
+        );
 
         orderbook.process_order(order1);
         let res = orderbook.process_order(order2);
@@ -194,7 +212,7 @@ mod tests {
     fn limit_order_exact_match() {
         let mut orderbook = Orderbook::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
 
-        let order1 = orders::new_limit_order_request(
+        let order1 = orders::create_limit_order_request(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             OrderSide::Bid,
@@ -204,7 +222,7 @@ mod tests {
         );
 
         let order2 =
-            orders::new_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Ask, 90, 5, SystemTime::now());
+            orders::create_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Ask, 90, 5, SystemTime::now());
 
         orderbook.process_order(order1);
         let res = orderbook.process_order(order2);
@@ -233,7 +251,7 @@ mod tests {
         }
 
         let order3 =
-            orders::new_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Ask, 80, 5, SystemTime::now());
+            orders::create_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Ask, 80, 5, SystemTime::now());
 
         let res2 = orderbook.process_order(order3);
 
@@ -267,7 +285,7 @@ mod tests {
     fn current_spread() {
         let mut orderbook = Orderbook::new(BASE_ASSET_ID, QUOTE_ASSET_ID);
 
-        let order1 = orders::new_limit_order_request(
+        let order1 = orders::create_limit_order_request(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             OrderSide::Bid,
@@ -279,10 +297,16 @@ mod tests {
         // not enough orders to calculate
         assert_eq!(orderbook.current_spread(), None);
 
-        let order2 =
-            orders::new_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, OrderSide::Ask, 120, 5, SystemTime::now());
+        let order2 = orders::create_limit_order_request(
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
+            OrderSide::Ask,
+            120,
+            5,
+            SystemTime::now(),
+        );
 
-        let order3 = orders::new_limit_order_request(
+        let order3 = orders::create_limit_order_request(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             OrderSide::Ask,
@@ -298,7 +322,7 @@ mod tests {
         assert_eq!(orderbook.current_spread(), Some((100, 120)));
 
         // wider spread
-        let order4 = orders::new_limit_order_request(
+        let order4 = orders::create_limit_order_request(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             OrderSide::Bid,

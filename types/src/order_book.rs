@@ -28,10 +28,39 @@ pub struct Order {
     pub quantity: u64,
 }
 
+impl Order {
+    pub fn get_order_id(&self) -> u64 {
+        self.order_id
+    }
+
+    pub fn get_base_asset(&self) -> AssetId {
+        self.base_asset
+    }
+
+    pub fn get_quote_asset(&self) -> AssetId {
+        self.quote_asset
+    }
+
+    pub fn get_side(&self) -> OrderSide {
+        self.side
+    }
+
+    pub fn get_price(&self) -> u64 {
+        self.price
+    }
+
+    pub fn get_quantity(&self) -> u64 {
+        self.quantity
+    }
+}
+
 #[derive(Debug)]
 pub enum Success {
     Accepted {
         order_id: u64,
+        side: OrderSide,
+        price: u64,
+        quantity: u64,
         order_type: OrderType,
         timestamp: SystemTime,
     },
@@ -56,6 +85,7 @@ pub enum Success {
 
     Updated {
         order_id: u64,
+        side: OrderSide,
         price: u64,
         quantity: u64,
         timestamp: SystemTime,
@@ -63,6 +93,9 @@ pub enum Success {
 
     Cancelled {
         order_id: u64,
+        side: OrderSide,
+        price: u64,
+        quantity: u64,
         timestamp: SystemTime,
     },
 }

@@ -87,6 +87,7 @@ impl ValidatorSpawner {
     ) -> Self {
         let genesis_state =
             ValidatorGenesisState::load(genesis_path.join(GENESIS_FILENAME)).expect("Could not open the genesis file");
+
         let validator_info = genesis_state
             .validator_set()
             .iter()
@@ -125,6 +126,10 @@ impl ValidatorSpawner {
 
     pub fn get_tx_reconfigure_consensus(&self) -> &Option<Sender<(ConsensusKeyPair, ConsensusCommittee)>> {
         &self.tx_reconfigure_consensus
+    }
+    
+    pub fn get_genesis_state(&self) -> ValidatorGenesisState {
+        self.genesis_state.clone()
     }
     
     // SETTERS

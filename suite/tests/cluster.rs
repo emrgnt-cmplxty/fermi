@@ -26,7 +26,10 @@ pub mod cluster_test_suite {
             TransactionsClient
         },
         crypto::get_key_pair_from_rng,
-        transaction::transaction_test_functions::generate_signed_test_transaction,
+        transaction::{
+            transaction_test_functions::generate_signed_test_transaction,
+            SignedTransaction
+        },
         utils,
     };
     
@@ -42,22 +45,20 @@ pub mod cluster_test_suite {
     #[tokio::test]
     pub async fn test_spawn_cluster() {
         let subscriber = FmtSubscriber::builder()
-            .with_env_filter("gdex_core=trace, gdex_suite=debug")
+            .with_env_filter("gdex_core=trace, gdex_suite=info")
             .finish();
         tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
     
         info!("Creating test cluster");
         let validator_count: usize = 4;
-        let cluster = TestCluster::new(validator_count).await;
-        
-        let spawner_0 = cluster.get_validator_spawner(0);
+        let mut cluster = TestCluster::new(validator_count).await;
         
         info!("Sending transactions");
         let working_dir = cluster.get_working_dir();
+        let spawner_0 = cluster.get_validator_spawner(0);
         let key_file = working_dir.join(format!("{}.key", spawner_0.get_validator_info().name));
         let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
 
         let address = spawner_0.get_validator_address().as_ref().unwrap().clone();
         info!("Connecting network client to address={:?}", address);
@@ -68,6 +69,7 @@ pub mod cluster_test_suite {
         info!("Sending transactions");
         let mut i = 0;
         while i < 1_000 {
+            let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, i);
             let transaction_proto = TransactionProto {
                 transaction: signed_transaction.serialize().unwrap().into(),
             };
@@ -81,26 +83,25 @@ pub mod cluster_test_suite {
     }
 
     #[tokio::test]
-    pub async fn test_spawn_cluster() {
+    pub async fn test_reconfigure_validator() {
         let subscriber = FmtSubscriber::builder()
-            .with_env_filter("gdex_core=trace, gdex_suite=debug")
+            .with_env_filter("gdex_core=trace, gdex_suite=info")
             .finish();
         tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
     
         info!("Creating test cluster");
         let validator_count: usize = 4;
-        let cluster = TestCluster::new(validator_count).await;
-        
-        let spawner_0 = cluster.get_validator_spawner(0);
+        let mut cluster = TestCluster::new(validator_count).await;
         
         info!("Sending transactions");
         let working_dir = cluster.get_working_dir();
+        let spawner_0 = cluster.get_validator_spawner(0);
         let key_file = working_dir.join(format!("{}.key", spawner_0.get_validator_info().name));
         let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
 
         let address = spawner_0.get_validator_address().as_ref().unwrap().clone();
+        drop(spawner_0);
         info!("Connecting network client to address={:?}", address);
 
         let mut client =
@@ -109,6 +110,7 @@ pub mod cluster_test_suite {
         info!("Sending transactions");
         let mut i = 0;
         while i < 10 {
+            let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, i);
             let transaction_proto = TransactionProto {
                 transaction: signed_transaction.serialize().unwrap().into(),
             };
@@ -124,7 +126,7 @@ pub mod cluster_test_suite {
 
         info!("Reconfiguring validator");
 
-        let consensus_committee = spawner_0.get_genesis_state().narwhal_committee().load().clone();
+        let consensus_committee = cluster.get_genesis_state().narwhal_committee().load().clone();
         let new_committee: narwhal_config::Committee = narwhal_config::Committee::clone(&consensus_committee);
         let new_committee: narwhal_config::Committee = narwhal_config::Committee {
             authorities: new_committee.authorities,
@@ -132,7 +134,9 @@ pub mod cluster_test_suite {
         };
 
         let key = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
-        spawner_0.tx_reconfigure_consensus.unwrap().send((key, new_committee)).await.unwrap();
+        let spawner_0 = cluster.get_validator_spawner(0);
+        spawner_0.get_tx_reconfigure_consensus().as_ref().unwrap().send((key, new_committee)).await.unwrap();
+        drop(spawner_0);
 
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
     }
@@ -140,25 +144,23 @@ pub mod cluster_test_suite {
     #[tokio::test]
     pub async fn test_cache_transactions() {
         let subscriber = FmtSubscriber::builder()
-            .with_env_filter("gdex_core=trace, gdex_suite=debug")
+            .with_env_filter("gdex_core=trace, gdex_suite=info")
             .finish();
         tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
     
         info!("Creating test cluster");
         let validator_count: usize = 4;
-        let cluster = TestCluster::new(validator_count).await;
-        
-        let spawner_0 = cluster.get_validator_spawner(0);
-        let spawner_1 = cluster.get_validator_spawner(0);
+        let mut cluster = TestCluster::new(validator_count).await;
         
         info!("Sending transactions");
         let working_dir = cluster.get_working_dir();
+        let spawner_0 = cluster.get_validator_spawner(0);
         let key_file = working_dir.join(format!("{}.key", spawner_0.get_validator_info().name));
         let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver);
 
         let address = spawner_0.get_validator_address().as_ref().unwrap().clone();
+        drop(spawner_0);
         info!("Connecting network client to address={:?}", address);
 
         let mut client =
@@ -167,7 +169,8 @@ pub mod cluster_test_suite {
         info!("Sending transactions");
         let mut i = 0;
         let mut signed_transactions = Vec::new();
-        while i < 10 {
+        let n_transactions_to_submit = 10;
+        while i < n_transactions_to_submit {
             let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, i);
             signed_transactions.push(signed_transaction.clone());
             let transaction_proto = TransactionProto {
@@ -182,7 +185,8 @@ pub mod cluster_test_suite {
         }
         
         info!("Sleep to allow all transactions to propagate");
-        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+        let spawner_1 = cluster.get_validator_spawner(1);
+        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
         let validator_store = &spawner_1
             .get_validator_state()
             .as_ref()
@@ -191,7 +195,7 @@ pub mod cluster_test_suite {
             .validator_store;
 
         // check that every transaction entered the cache
-        info!("Verify that all transactions entered cache")
+        info!("Verify that all transactions entered cache");
         for signed_transaction in signed_transactions.clone() {
             assert!(validator_store.contains_transaction(&signed_transaction.get_transaction_payload()));
         }

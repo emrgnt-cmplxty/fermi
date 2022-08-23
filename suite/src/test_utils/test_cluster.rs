@@ -71,7 +71,7 @@ async fn create_genesis_state(
 pub struct TestCluster {
     validator_count: usize,
     temp_working_dir: TempDir,
-    //genesis_state: ValidatorGenesisState,// unused
+    genesis_state: ValidatorGenesisState,
     validator_spawners: Vec<ValidatorSpawner>
 }
 
@@ -103,7 +103,7 @@ impl TestCluster {
         Self {
             validator_count,
             temp_working_dir,
-            //genesis_state,
+            genesis_state,
             validator_spawners
         }
     }
@@ -113,19 +113,25 @@ impl TestCluster {
     pub fn get_validator_count(
         &self
     ) -> usize {
-        return self.validator_count;
+        self.validator_count
     }
     
     pub fn get_working_dir(
         &self
     ) -> PathBuf {
-        return self.temp_working_dir.path().to_path_buf();
+        self.temp_working_dir.path().to_path_buf()
+    }
+    
+    pub fn get_genesis_state(
+        &self
+    ) -> ValidatorGenesisState {
+        self.genesis_state.clone()
     }
     
     pub fn get_validator_spawner(
-        &self,
+        &mut self,
         idx: usize
-    ) -> &ValidatorSpawner {
-        &self.validator_spawners[idx]
+    ) -> &mut ValidatorSpawner {
+        &mut self.validator_spawners[idx]
     }
 }

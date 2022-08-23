@@ -233,6 +233,9 @@ impl ExecutionState for ValidatorState {
     ) -> Result<Self::Outcome, Self::Error> {
         let transaction = signed_transaction.get_transaction_payload();
 
+        self.validator_store
+        .insert_confirmed_transaction(transaction, consensus_output);
+
         match transaction.get_variant() {
             TransactionVariant::PaymentTransaction(payment) => {
                 self.master_controller.bank_controller.lock().unwrap().transfer(
@@ -317,9 +320,6 @@ impl ExecutionState for ValidatorState {
                 }
             }
         };
-
-        self.validator_store
-            .insert_confirmed_transaction(transaction, consensus_output);
 
         Ok((consensus_output.clone(), execution_indices))
     }

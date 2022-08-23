@@ -20,7 +20,8 @@ use std::{fs, path::PathBuf};
 
 pub const GENESIS_FILENAME: &str = "genesis.blob";
 pub const GENESIS_BUILDER_SIGNATURE_DIR: &str = "signatures";
-pub const VALIDATOR_FUNDING_AMOUNT: u64 = 1_000_000;
+pub const VALIDATOR_FUNDING_AMOUNT: u64 = 2_000_000;
+pub const VALIDATOR_BALANCE: u64 = 100_000_000 + VALIDATOR_FUNDING_AMOUNT;
 
 /// Specifies the ceremony output path and executes incoming transactions
 #[derive(Parser)]
@@ -141,7 +142,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
                     &null_creator,
                     &validator_key,
                     PRIMARY_ASSET_ID,
-                    VALIDATOR_FUNDING_AMOUNT,
+                    VALIDATOR_BALANCE,
                 )?;
                 master_controller
                     .stake_controller

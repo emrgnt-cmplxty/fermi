@@ -167,7 +167,7 @@ impl ValidatorService {
         let store = &validator_state.validator_store;
         loop {
             while let Some(message) = rx_output.recv().await {
-                trace!("Received a finalized consensus transaction for post processing",);
+                info!("Received a finalized consensus transaction for post processing",);
                 let (result, serialized_txn) = message;
                 match result {
                     Ok((consensus_output, execution_indices)) => {
@@ -178,7 +178,7 @@ impl ValidatorService {
                             // subtract round look-back from the latest round to get block number
                             let round_number = consensus_output.certificate.header.round;
                             let num_txns = serialized_txns_buf.len();
-                            debug!("Processing result from {round_number} with {num_txns} transactions");
+                            info!("Processing result from {round_number} with {num_txns} transactions");
                             store.prune();
                             // write-out the new block to the validator store
                             store
@@ -187,7 +187,7 @@ impl ValidatorService {
                             serialized_txns_buf.clear();
                         }
                     }
-                    Err(e) => trace!("{:?}", e), // TODO
+                    Err(e) => info!("{:?}", e), // TODO
                 }
                 // NOTE: Notify the user that its transaction has been processed.
             }

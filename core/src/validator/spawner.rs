@@ -256,9 +256,7 @@ impl ValidatorSpawner {
         let validator_server_handle = validator_server.spawn().await.unwrap();
         self.set_validator_address(validator_server_handle.address().clone());
 
-        let mut server_handles = Vec::new();
-        server_handles.push(validator_server_handle.get_handle());
-        self.server_handles = Some(server_handles);
+        self.server_handles = Some(vec![validator_server_handle.get_handle()]);
     }
 
     pub async fn spawn_validator(&mut self) {

@@ -8,7 +8,7 @@ pub mod cluster_test_suite {
         io
     };
     use tracing::info;
-    use tracing_subscriber::FmtSubscriber;
+    //use tracing_subscriber::FmtSubscriber;
     use tokio::time::{
         sleep,
         Duration
@@ -52,10 +52,12 @@ pub mod cluster_test_suite {
 
     #[tokio::test]
     pub async fn test_spawn_cluster() {
+        /*
         let subscriber = FmtSubscriber::builder()
             .with_env_filter("gdex_core=info, gdex_suite=info")
             .finish();
         tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+        */
     
         info!("Creating test cluster");
         let validator_count: usize = 4;
@@ -92,10 +94,12 @@ pub mod cluster_test_suite {
     
     #[tokio::test]
     pub async fn test_balance_state() {
+        /*
         let subscriber = FmtSubscriber::builder()
-            .with_env_filter("gdex_core=info, gdex_suite=info, gdex_controller=trace")
+            .with_env_filter("gdex_core=info, gdex_suite=info")
             .finish();
         tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+        */
     
         info!("Creating test cluster");
         let validator_count: usize = 4;
@@ -154,10 +158,12 @@ pub mod cluster_test_suite {
 
     #[tokio::test]
     pub async fn test_reconfigure_validator() {
+        /*
         let subscriber = FmtSubscriber::builder()
             .with_env_filter("gdex_core=info, gdex_suite=info")
             .finish();
         tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+        */
     
         info!("Creating test cluster");
         let validator_count: usize = 4;
@@ -208,10 +214,12 @@ pub mod cluster_test_suite {
 
     #[tokio::test]
     pub async fn test_cache_transactions() {
+        /*
         let subscriber = FmtSubscriber::builder()
             .with_env_filter("gdex_core=info, gdex_suite=info")
             .finish();
         tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+        */
     
         info!("Creating test cluster");
         let validator_count: usize = 4;

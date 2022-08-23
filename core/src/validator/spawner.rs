@@ -407,7 +407,7 @@ pub mod suite_spawn_tests {
 
         // check that every transaction entered the cache
         for signed_transaction in signed_transactions.clone() {
-            assert!(validator_store.contains_transaction(&signed_transaction.get_transaction_payload()));
+            assert!(validator_store.cache_contains_transaction(&signed_transaction.get_transaction_payload()));
         }
 
         let mut total = 0;
@@ -418,10 +418,10 @@ pub mod suite_spawn_tests {
             let block = next_block.1;
             for serialized_transaction in &block.transactions {
                 let signed_transaction_db = SignedTransaction::deserialize(serialized_transaction.clone()).unwrap();
-                assert!(validator_store.contains_transaction(&signed_transaction_db.get_transaction_payload()));
+                assert!(validator_store.cache_contains_transaction(&signed_transaction_db.get_transaction_payload()));
                 total += 1;
             }
-            assert!(validator_store.contains_block_digest(&block.block_certificate.digest()));
+            assert!(validator_store.cache_contains_block_digest(&block.block_certificate.digest()));
         }
         assert!(
             total as u64 == n_transactions_to_submit,

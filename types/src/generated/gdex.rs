@@ -28,6 +28,15 @@ pub struct RelayerRequest {
 pub struct RelayerResponse {
     #[prost(bool, tag="1")]
     pub successful: bool,
+    #[prost(message, optional, tag="2")]
+    pub block_info: ::core::option::Option<BlockInfo>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct BlockInfo {
+    #[prost(uint64, tag="1")]
+    pub block_number: u64,
+    #[prost(bytes="bytes", tag="2")]
+    pub digest: ::prost::bytes::Bytes,
 }
 /// Generated client implementations.
 pub mod transactions_client {

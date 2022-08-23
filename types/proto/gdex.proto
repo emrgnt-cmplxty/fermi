@@ -46,5 +46,11 @@ message RelayerRequest {
 
 message RelayerResponse {
     bool successful = 1;
+    BlockInfo block_info = 2;
+}
+
+message BlockInfo {
+    uint64 block_number = 1;
+    bytes digest = 2;
 }
 

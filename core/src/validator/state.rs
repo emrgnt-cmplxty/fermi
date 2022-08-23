@@ -102,12 +102,12 @@ impl ValidatorStore {
         }
     }
 
-    pub fn contains_transaction(&self, transaction: &Transaction) -> bool {
+    pub fn cache_contains_transaction(&self, transaction: &Transaction) -> bool {
         let transaction_digest = transaction.digest();
         return self.transaction_cache.lock().unwrap().contains_key(&transaction_digest);
     }
 
-    pub fn contains_block_digest(&self, block_digest: &BlockDigest) -> bool {
+    pub fn cache_contains_block_digest(&self, block_digest: &BlockDigest) -> bool {
         return self.block_digest_cache.lock().unwrap().contains_key(block_digest);
     }
 

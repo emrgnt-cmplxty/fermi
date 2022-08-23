@@ -3,11 +3,10 @@ use crate::{
     genesis_ceremony::GENESIS_FILENAME,
     metrics::start_prometheus_server,
     validator::{
-        genesis_state::ValidatorGenesisState, server::ValidatorServer, server::ValidatorServerHandle,
-        server::ValidatorService, state::ValidatorState,
+        genesis_state::ValidatorGenesisState, server::ValidatorServer, server::ValidatorService, state::ValidatorState,
     },
 };
-use anyhow::Result;
+use futures::future::join_all;
 use gdex_types::{node::ValidatorInfo, utils};
 use multiaddr::Multiaddr;
 use narwhal_config::{Committee as ConsensusCommittee, Parameters as ConsensusParameters};
@@ -41,8 +40,14 @@ pub struct ValidatorSpawner {
 
     /// Begin objects initialized after calling spawn_validator_service
 
+    /// Sender for the reconfiguration consensus service
+    tx_reconfigure_consensus: Option<Sender<(ConsensusKeyPair, ConsensusCommittee)>>,
     /// Address for communication to the validator server
     validator_address: Option<Multiaddr>,
+    /// Handle for the service related tasks
+    service_handles: Option<Vec<JoinHandle<()>>>,
+    /// Handle for the server related tasks
+    server_handles: Option<Vec<JoinHandle<()>>>,
 }
 
 impl ValidatorSpawner {
@@ -72,6 +77,9 @@ impl ValidatorSpawner {
             validator_info,
             validator_state: None,
             validator_address: None,
+            tx_reconfigure_consensus: None,
+            service_handles: None,
+            server_handles: None,
         }
     }
 
@@ -120,7 +128,7 @@ impl ValidatorSpawner {
     async fn spawn_validator_service(
         &mut self,
         rx_reconfigure_consensus: Receiver<(ConsensusKeyPair, ConsensusCommittee)>,
-    ) -> Result<Vec<JoinHandle<()>>> {
+    ) {
         if self.is_validator_service_spawned() {
             panic!("The validator service has already been spawned");
         };
@@ -185,25 +193,22 @@ impl ValidatorSpawner {
         let prometheus_registry = start_prometheus_server(node_config.metrics_address);
 
         // spawn the validator service, e.g. Narwhal consensus
-        let spawned_service = ValidatorService::spawn_narwhal(
-            &node_config,
-            Arc::clone(&validator_state),
-            &prometheus_registry,
-            rx_reconfigure_consensus,
-        )
-        .await
-        .unwrap();
-
+        self.service_handles = Some(
+            ValidatorService::spawn_narwhal(
+                &node_config,
+                Arc::clone(&validator_state),
+                &prometheus_registry,
+                rx_reconfigure_consensus,
+            )
+            .await
+            .unwrap(),
+        );
         self.set_validator_state(validator_state);
-        Ok(spawned_service)
     }
 
     /// Internal helper function used to spawns the validator server
     /// note, this function will fail if called twice from the same spawner
-    pub async fn spawn_validator_server(
-        &mut self,
-        tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
-    ) -> ValidatorServerHandle {
+    async fn spawn_validator_server(&mut self) {
         if self.is_validator_server_spawned() {
             panic!("The validator server already been spawned");
         };
@@ -214,237 +219,35 @@ impl ValidatorSpawner {
             // unwrapping is safe as validator state must have been created in spawn_validator_service
             Arc::clone(self.validator_state.as_ref().unwrap()),
             consensus_address,
-            tx_reconfigure_consensus,
+            self.tx_reconfigure_consensus.as_ref().unwrap().clone(),
         );
 
-        let validator_handle = validator_server.spawn().await.unwrap();
-        self.set_validator_address(validator_handle.address().clone());
-        validator_handle
+        let validator_server_handle = validator_server.spawn().await.unwrap();
+        self.set_validator_address(validator_server_handle.address().clone());
+
+        self.server_handles = Some(vec![validator_server_handle.get_handle()]);
     }
 
-    pub async fn spawn_validator(&mut self) -> Vec<JoinHandle<()>> {
+    pub async fn spawn_validator(&mut self) {
+        // TODO assert this has not been called yet
         let (tx_reconfigure_consensus, rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
-
-        let mut join_handles = self.spawn_validator_service(rx_reconfigure_consensus).await.unwrap();
-        let server_handle = self.spawn_validator_server(tx_reconfigure_consensus).await;
-        self.halt_validator();
-
-        join_handles.push(server_handle.get_handle());
-        join_handles
+        self.tx_reconfigure_consensus = Some(tx_reconfigure_consensus);
+        self.spawn_validator_service(rx_reconfigure_consensus).await;
+        self.spawn_validator_server().await;
+        // Unwrap is safe since we have already launched the validator service
+        self.validator_state.as_ref().unwrap().halt_validator();
     }
 
-    #[cfg(test)]
-    pub async fn spawn_validator_with_reconfigure(
-        &mut self,
-    ) -> (Vec<JoinHandle<()>>, Sender<(ConsensusKeyPair, ConsensusCommittee)>) {
-        let (tx_reconfigure_consensus, rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
-
-        let mut join_handles = self.spawn_validator_service(rx_reconfigure_consensus).await.unwrap();
-        let server_handle = self.spawn_validator_server(tx_reconfigure_consensus.clone()).await;
-        join_handles.push(server_handle.get_handle());
-        (join_handles, tx_reconfigure_consensus)
+    pub async fn await_handles(&mut self) {
+        join_all(self.service_handles.as_mut().unwrap()).await;
+        join_all(self.server_handles.as_mut().unwrap()).await;
     }
 
-    #[cfg(test)]
+    pub fn get_tx_reconfigure_consensus(&self) -> &Option<Sender<(ConsensusKeyPair, ConsensusCommittee)>> {
+        &self.tx_reconfigure_consensus
+    }
+
     pub fn get_genesis_state(&self) -> ValidatorGenesisState {
-        return self.genesis_state.clone();
-    }
-}
-
-#[cfg(test)]
-pub mod suite_spawn_tests {
-    use super::*;
-    use crate::client;
-    use gdex_types::{
-        account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair},
-        crypto::get_key_pair_from_rng,
-        proto::{TransactionProto, TransactionsClient},
-        transaction::{transaction_test_functions::generate_signed_test_transaction, SignedTransaction},
-        utils,
-    };
-    use std::{io, path::Path};
-
-    use tracing::info;
-    use tracing_subscriber::FmtSubscriber;
-
-    #[ignore]
-    #[tokio::test]
-    pub async fn spawn_node_and_reconfigure() {
-        // let subscriber = FmtSubscriber::builder()
-        //     // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
-        //     // will be written to stdout.
-        //     .with_env_filter("info")
-        //     .finish();
-        // tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-
-        let dir = "../.proto";
-        let path = Path::new(dir).to_path_buf();
-
-        info!("Spawning validator");
-        let address = utils::new_network_address();
-        let mut spawner = ValidatorSpawner::new(
-            /* db_path */ path.clone(),
-            /* key_path */ path.clone(),
-            /* genesis_path */ path.clone(),
-            /* validator_port */ address.clone(),
-            /* validator_name */ "validator-0".to_string(),
-        );
-
-        let handles = spawner.spawn_validator_with_reconfigure().await;
-
-        info!("Sending 10 transactions");
-
-        let mut client =
-            TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
-
-        let key_file = path.join(format!("{}.key", spawner.get_validator_info().name));
-        let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
-        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-
-        let mut i = 0;
-        while i < 10 {
-            let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, i);
-            let transaction_proto = TransactionProto {
-                transaction: signed_transaction.serialize().unwrap().into(),
-            };
-            let _resp1 = client
-                .submit_transaction(transaction_proto)
-                .await
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
-                .unwrap();
-            i += 1;
-        }
-        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-
-        info!("Reconfiguring validator");
-
-        let consensus_committee = spawner.get_genesis_state().narwhal_committee().load().clone();
-        let new_committee: narwhal_config::Committee = narwhal_config::Committee::clone(&consensus_committee);
-        let new_committee: narwhal_config::Committee = narwhal_config::Committee {
-            authorities: new_committee.authorities,
-            epoch: 1,
-        };
-
-        let key = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
-        let tx_reconfigure = handles.1;
-        tx_reconfigure.send((key, new_committee)).await.unwrap();
-
-        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-    }
-
-    #[tokio::test]
-    #[ignore]
-    pub async fn spawn_four_node_network() {
-        let subscriber = FmtSubscriber::builder().with_max_level(tracing::Level::INFO).finish();
-        tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-
-        let dir = "../.proto";
-        let temp_dir = tempfile::tempdir().unwrap().path().to_path_buf();
-        let path = Path::new(dir).to_path_buf();
-
-        info!("Spawning validator 0");
-        let mut spawner_0 = ValidatorSpawner::new(
-            /* db_path */ temp_dir.clone(),
-            /* key_path */ path.clone(),
-            /* genesis_path */ path.clone(),
-            /* validator_port */ utils::new_network_address(),
-            /* validator_name */ "validator-0".to_string(),
-        );
-
-        let _handler_0 = spawner_0.spawn_validator().await;
-        spawner_0.get_validator_state().unwrap().unhalt_validator();
-
-        info!("Spawning validator 1");
-        let mut spawner_1 = ValidatorSpawner::new(
-            /* db_path */ temp_dir.clone(),
-            /* key_path */ path.clone(),
-            /* genesis_path */ path.clone(),
-            /* validator_port */ utils::new_network_address(),
-            /* validator_name */ "validator-1".to_string(),
-        );
-        let _handler_1 = spawner_1.spawn_validator().await;
-        spawner_1.get_validator_state().unwrap().unhalt_validator();
-
-        info!("Spawning validator 2");
-        let mut spawner_2 = ValidatorSpawner::new(
-            /* db_path */ temp_dir.clone(),
-            /* key_path */ path.clone(),
-            /* genesis_path */ path.clone(),
-            /* validator_port */ utils::new_network_address(),
-            /* validator_name */ "validator-2".to_string(),
-        );
-        let _handler_2 = spawner_2.spawn_validator().await;
-        spawner_2.get_validator_state().unwrap().unhalt_validator();
-
-        info!("Spawning validator 3");
-        let mut spawner_3 = ValidatorSpawner::new(
-            /* db_path */ temp_dir.clone(),
-            /* key_path */ path.clone(),
-            /* genesis_path */ path.clone(),
-            /* validator_port */ utils::new_network_address(),
-            /* validator_name */ "validator-3".to_string(),
-        );
-        let _handler_3 = spawner_3.spawn_validator().await;
-        spawner_3.get_validator_state().unwrap().unhalt_validator();
-
-        info!("Sending transactions");
-        let key_file = path.join(format!("{}.key", spawner_0.get_validator_info().name));
-        let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
-        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-
-        let address = spawner_0.get_validator_address().as_ref().unwrap().clone();
-        info!("Connecting network client to address={:?}", address);
-
-        let mut client =
-            TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
-
-        let mut i = 1;
-        let mut signed_transactions = Vec::new();
-        let n_transactions_to_submit = 10;
-        while i < n_transactions_to_submit + 1 {
-            let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, i);
-            signed_transactions.push(signed_transaction.clone());
-            let transaction_proto = TransactionProto {
-                transaction: signed_transaction.serialize().unwrap().into(),
-            };
-            let _resp1 = client
-                .submit_transaction(transaction_proto)
-                .await
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
-                .unwrap();
-            i += 1;
-        }
-        // sleep to allow the network to propagate the transactions
-        tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
-        let validator_store = &spawner_1
-            .get_validator_state()
-            .as_ref()
-            .unwrap()
-            .clone()
-            .validator_store;
-
-        // check that every transaction entered the cache
-        for signed_transaction in signed_transactions.clone() {
-            assert!(validator_store.contains_transaction(&signed_transaction.get_transaction_payload()));
-        }
-
-        let mut total = 0;
-        let block_db = validator_store.block_store.iter(None).await;
-        let mut block_db_iter = block_db.iter();
-
-        while let Some(next_block) = block_db_iter.next() {
-            let block = next_block.1;
-            for serialized_transaction in &block.transactions {
-                let signed_transaction_db = SignedTransaction::deserialize(serialized_transaction.clone()).unwrap();
-                assert!(validator_store.contains_transaction(&signed_transaction_db.get_transaction_payload()));
-                total += 1;
-            }
-            // assert!(validator_store.contains_block_digest(&block.block_digest));
-        }
-
-        assert!(
-            total as u64 == n_transactions_to_submit,
-            "total transactions in db does not match total submitted"
-        );
+        self.genesis_state.clone()
     }
 }

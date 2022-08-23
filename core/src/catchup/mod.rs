@@ -28,7 +28,6 @@ pub mod mock_catchup_manager {
         error::GDEXError,
     };
     use std::sync::Arc;
-    use tracing::info;
 
     const MOCK_FETCH_TIME_IN_MS: u64 = 250;
 
@@ -243,10 +242,16 @@ impl CatchupManager {
     }
 }
 
+impl Default for CatchupManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 pub mod suite_catchup_tests {
-    use super::*;
     use super::mock_catchup_manager::*;
+    use super::*;
     use crate::{client, validator::spawner::ValidatorSpawner};
     use gdex_types::{
         account::account_test_functions::generate_keypair_vec,
@@ -374,7 +379,7 @@ pub mod suite_catchup_tests {
             .unwrap();
         println!("Catchup done");
     }
-        
+
     // TODO - use Paul cluster setup
     #[ignore]
     #[tokio::test(flavor = "multi_thread")]

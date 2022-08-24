@@ -30,10 +30,10 @@ pub mod mock_catchup_manager {
             MockRelayServer { mock_store }
         }
 
-        pub async fn fetch_latest_block_info(&self) -> Result<Block, GDEXError> {
+        pub async fn fetch_latest_block_info(&self) -> Result<BlockInfo, GDEXError> {
             let result = self
                 .mock_store
-                .last_block_store
+                .last_block_info_store
                 .read(0)
                 .await
                 .expect("Error fetching from the last block store")
@@ -151,7 +151,7 @@ pub mod mock_catchup_manager {
 
                     new_state
                         .validator_store
-                        .write_latest_block(next_block_info.block_certificate.clone(), next_block.transactions)
+                        .write_latest_block(next_block.block_certificate.clone(), next_block.transactions)
                         .await;
                 }
             }
@@ -190,7 +190,7 @@ pub mod mock_catchup_manager {
                 let latest_block_network = mock_server.fetch_latest_block_info().await?.clone();
                 let latest_block_local = new_state
                     .validator_store
-                    .last_block_store
+                    .last_block_info_store
                     .read(0)
                     .await
                     .expect("Error fetching last block store");

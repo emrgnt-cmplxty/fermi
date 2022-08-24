@@ -4,23 +4,55 @@ pub mod cluster_test_suite {
 
     // IMPORTS
 
-    // local
-    use gdex_core::catchup::manager::mock_catchup_manager::{MockCatchupManger, MockRelayServer};
+    // gdex
+    use gdex_core::{
+        catchup::manager::mock_catchup_manager::{MockCatchupManger, MockRelayServer},
+        client,
+    };
     use gdex_suite::test_utils::test_cluster::TestCluster;
     use gdex_types::{
+        account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair},
         asset::PRIMARY_ASSET_ID,
         crypto::{get_key_pair_from_rng, KeypairTraits},
-        transaction::SignedTransaction,
+        proto::{TransactionProto, TransactionsClient},
+        transaction::{transaction_test_functions::generate_signed_test_transaction, SignedTransaction},
+        utils,
     };
 
     // external
-    use tokio::time::{sleep, Duration};
+    use narwhal_crypto::Hash;
+    use std::io;
     use tracing::info;
+    //use tracing_subscriber::FmtSubscriber;
+    use tokio::time::{sleep, Duration};
 
     // TESTS
 
     #[tokio::test]
     pub async fn test_spawn_cluster() {
+        /*
+        let subscriber = FmtSubscriber::builder()
+            .with_env_filter("gdex_core=info, gdex_suite=info")
+            .finish();
+        tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+        */
+
+        info!("Creating test cluster");
+        let validator_count: usize = 4;
+        let mut cluster = TestCluster::spawn(validator_count, None).await;
+
+        info!("Sending transactions");
+        let working_dir = cluster.get_working_dir();
+        let spawner_0 = cluster.get_validator_spawner(0);
+        let key_file = working_dir.join(format!("{}.key", spawner_0.get_validator_info().name));
+        let _kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
+        let _kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
+
+        let address = spawner_0.get_validator_address().as_ref().unwrap().clone();
+        info!("Connecting network client to address={:?}", address);
+
+        let _client = TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
+
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
@@ -31,6 +63,22 @@ pub mod cluster_test_suite {
 
     #[tokio::test]
     pub async fn test_balance_state() {
+        info!("Creating test cluster");
+        let validator_count: usize = 4;
+        let mut cluster = TestCluster::spawn(validator_count, None).await;
+
+        info!("Sending transactions");
+        let working_dir = cluster.get_working_dir();
+        let spawner_0 = cluster.get_validator_spawner(0);
+        let key_file = working_dir.join(format!("{}.key", spawner_0.get_validator_info().name));
+        let _kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
+        let _kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
+
+        let address = spawner_0.get_validator_address().as_ref().unwrap().clone();
+        info!("Connecting network client to address={:?}", address);
+
+        let _client = TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
+
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
@@ -68,6 +116,37 @@ pub mod cluster_test_suite {
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         info!("Sending transactions");
+        let working_dir = cluster.get_working_dir();
+        let spawner_0 = cluster.get_validator_spawner(0);
+        let key_file = working_dir.join(format!("{}.key", spawner_0.get_validator_info().name));
+        let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
+        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
+
+        let address = spawner_0.get_validator_address().as_ref().unwrap().clone();
+        info!("Connecting network client to address={:?}", address);
+
+        let mut client =
+            TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
+
+        info!("Sending transactions");
+        let mut i = 0;
+        while i < 10 {
+            let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, i);
+            let transaction_proto = TransactionProto {
+                transaction: signed_transaction.serialize().unwrap().into(),
+            };
+            let _resp1 = client
+                .submit_transaction(transaction_proto)
+                .await
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+                .unwrap();
+            i += 1;
+        }
+        info!("Creating test cluster");
+        let validator_count: usize = 4;
+        let mut cluster = TestCluster::spawn(validator_count, None).await;
+
+        info!("Sending transactions");
         cluster.send_transactions(0, 1, 10, None).await;
 
         sleep(Duration::from_secs(1)).await;
@@ -82,7 +161,7 @@ pub mod cluster_test_suite {
         };
 
         let key = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
-        spawner
+        spawner_0
             .get_tx_reconfigure_consensus()
             .as_ref()
             .unwrap()
@@ -93,6 +172,48 @@ pub mod cluster_test_suite {
 
     #[tokio::test(flavor = "multi_thread")]
     pub async fn test_cache_transactions() {
+        /*
+        let subscriber = FmtSubscriber::builder()
+            .with_env_filter("gdex_core=info, gdex_suite=info")
+            .finish();
+        tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+        */
+
+        info!("Creating test cluster");
+        let validator_count: usize = 4;
+        let mut cluster = TestCluster::spawn(validator_count, None).await;
+
+        info!("Sending transactions");
+        let working_dir = cluster.get_working_dir();
+        let spawner_0 = cluster.get_validator_spawner(0);
+        let key_file = working_dir.join(format!("{}.key", spawner_0.get_validator_info().name));
+        let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
+        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
+
+        let address = spawner_0.get_validator_address().as_ref().unwrap().clone();
+        drop(spawner_0);
+        info!("Connecting network client to address={:?}", address);
+
+        let mut client =
+            TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
+
+        info!("Sending transactions");
+        let mut i = 0;
+        let mut signed_transactions = Vec::new();
+        let n_transactions_to_submit = 10;
+        while i < n_transactions_to_submit {
+            let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, i);
+            signed_transactions.push(signed_transaction.clone());
+            let transaction_proto = TransactionProto {
+                transaction: signed_transaction.serialize().unwrap().into(),
+            };
+            let _resp1 = client
+                .submit_transaction(transaction_proto)
+                .await
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+                .unwrap();
+            i += 1;
+        }
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
@@ -114,7 +235,7 @@ pub mod cluster_test_suite {
         // check that every transaction entered the cache
         info!("Verify that all transactions entered cache");
         for signed_transaction in signed_transactions.clone() {
-            assert!(validator_store.contains_transaction(&signed_transaction.get_transaction_payload()));
+            assert!(validator_store.cache_contains_transaction(&signed_transaction.get_transaction_payload()));
         }
 
         let mut total = 0;
@@ -126,9 +247,10 @@ pub mod cluster_test_suite {
             let block = next_block.1;
             for serialized_transaction in &block.transactions {
                 let signed_transaction_db = SignedTransaction::deserialize(serialized_transaction.clone()).unwrap();
-                assert!(validator_store.contains_transaction(&signed_transaction_db.get_transaction_payload()));
+                assert!(validator_store.cache_contains_transaction(&signed_transaction_db.get_transaction_payload()));
                 total += 1;
             }
+            assert!(validator_store.cache_contains_block_digest(&block.block_certificate.digest()));
         }
         assert!(
             total as u64 == signed_transactions.len() as u64,
@@ -190,7 +312,7 @@ pub mod cluster_test_suite {
 
         // Verify that blocks do not match before running catchup
         let latest_block_store_node_0 = validator_store_node_1
-            .last_block_store
+            .last_block_info_store
             .read(0)
             .await
             .expect("Error fetching from the last block store")
@@ -198,7 +320,7 @@ pub mod cluster_test_suite {
 
         let latest_block_store_target = restarted_validator_state
             .validator_store
-            .last_block_store
+            .last_block_info_store
             .read(0)
             .await
             .expect("Error fetching from the last block store")
@@ -221,7 +343,7 @@ pub mod cluster_test_suite {
 
         // Verify that blocks do match after running catchup
         let latest_block_store_node_1 = validator_store_node_1
-            .last_block_store
+            .last_block_info_store
             .read(0)
             .await
             .expect("Error fetching from the last block store")
@@ -229,7 +351,7 @@ pub mod cluster_test_suite {
 
         let latest_block_store_target = restarted_validator_state
             .validator_store
-            .last_block_store
+            .last_block_info_store
             .read(0)
             .await
             .expect("Error fetching from the last block store")

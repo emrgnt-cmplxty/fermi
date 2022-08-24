@@ -162,7 +162,7 @@ impl ValidatorService {
         mut rx_output: Receiver<(Result<(ConsensusOutput, ExecutionIndices), SubscriberError>, Vec<u8>)>,
         validator_state: Arc<ValidatorState>,
     ) {
-        // TODO load the actual last seq
+        // TODO load the actual last block
         let mut serialized_txns_buf = Vec::new();
         let store = &validator_state.validator_store;
         loop {
@@ -201,31 +201,26 @@ impl ValidatorService {
     ) -> Result<tonic::Response<Empty>, tonic::Status> {
         trace!("Handling a new transaction with ValidatorService",);
 
-        if state.is_halted() {
-            return Err(tonic::Status::new(tonic::Code::Unavailable, "Validator is halted"));
-        };
-
         let signed_transaction = SignedTransaction::deserialize(transaction_proto.transaction.to_vec())
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
         signed_transaction
             .verify()
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
 
-        // TODO change this to err flow
-        // if !state
-        //     .validator_store
-        //     .check_seen_certificate_digest(transaction.get_transaction_payload().get_recent_certificate_digest())
-        // {
-        //     tonic::Status::internal("Invalid recent certificate digest");
-        //     ();
+        // // TODO change this to err flow
+        // if !state.validator_store.cache_contains_block_digest(
+        //     signed_transaction
+        //         .get_transaction_payload()
+        //         .get_recent_certificate_digest(),
+        // ) {
+        //     return Err(tonic::Status::internal("Invalid recent certificate digest"));
         // }
         //
         // if state
         //     .validator_store
-        //     .check_seen_transaction(transaction.get_transaction_payload())
+        //     .cache_contains_transaction(signed_transaction.get_transaction_payload())
         // {
-        //     tonic::Status::internal("Duplicate transaction");
-        //     ();
+        //     return Err(tonic::Status::internal("Duplicate transaction"));
         // }
 
         let transaction_proto = narwhal_types::TransactionProto {

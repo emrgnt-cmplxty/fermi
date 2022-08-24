@@ -17,11 +17,13 @@ use gdex_types::{
 use mysten_store::{
     reopen,
     rocks::{open_cf, DBMap},
-    Store,
+    Map, Store,
 };
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::Hash;
 use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
+use narwhal_types::CertificateDigest;
+
 use std::{
     collections::HashMap,
     path::PathBuf,
@@ -43,7 +45,7 @@ pub struct ValidatorStore {
     pub block_info_store: Store<BlockNumber, BlockInfo>,
     pub block_number: AtomicU64,
     // singleton store that keeps only the most recent block info at key 0
-    pub last_block_store: Store<u64, Block>,
+    pub last_block_info_store: Store<u64, BlockInfo>,
 }
 
 impl ValidatorStore {
@@ -62,30 +64,54 @@ impl ValidatorStore {
         let (block_map, block_info_map, last_block_map) = reopen!(&rocksdb,
             Self::BLOCKS_CF;<BlockNumber, Block>,
             Self::BLOCK_INFO_CF;<BlockNumber, BlockInfo>,
-            Self::LAST_BLOCK_CF;<u64, Block>
+            Self::LAST_BLOCK_CF;<u64, BlockInfo>
         );
+
+        let block_number_from_dbmap = last_block_map.get(&(0 as u64));
 
         let block_store = Store::new(block_map);
         let block_info_store = Store::new(block_info_map);
-        let last_block_store = Store::new(last_block_map);
+        let last_block_info_store = Store::new(last_block_map);
+
+        // TODO load the state if last block is not 0, i.e. not at genesis
+        let block_number = match block_number_from_dbmap {
+            Ok(o) => {
+                if let Some(v) = o {
+                    v.block_number
+                    // mark for replay somehow here
+                } else {
+                    0
+                }
+            }
+            Err(_) => 0,
+        };
+
+        let block_digest_cache = Mutex::new(HashMap::new());
+        // TODO theres likely a better way to say what I'm saying here
+        if block_number == 0 {
+            block_digest_cache
+                .lock()
+                .unwrap()
+                .insert(CertificateDigest::new([0; 32]), 0);
+        }
 
         Self {
             transaction_cache: Mutex::new(HashMap::new()),
-            block_digest_cache: Mutex::new(HashMap::new()),
+            block_digest_cache,
             gc_depth: 50,
             block_store,
             block_info_store,
-            block_number: AtomicU64::new(0),
-            last_block_store,
+            block_number: AtomicU64::new(block_number),
+            last_block_info_store,
         }
     }
 
-    pub fn contains_transaction(&self, transaction: &Transaction) -> bool {
+    pub fn cache_contains_transaction(&self, transaction: &Transaction) -> bool {
         let transaction_digest = transaction.digest();
         return self.transaction_cache.lock().unwrap().contains_key(&transaction_digest);
     }
 
-    pub fn contains_block_digest(&self, block_digest: &BlockDigest) -> bool {
+    pub fn cache_contains_block_digest(&self, block_digest: &BlockDigest) -> bool {
         return self.block_digest_cache.lock().unwrap().contains_key(block_digest);
     }
 
@@ -122,19 +148,22 @@ impl ValidatorStore {
         // this would allow us to avoid separate commands to load and add to the counter
 
         let block_number = self.block_number.load(std::sync::atomic::Ordering::SeqCst);
+        let block_digest = block_certificate.digest();
+
         let block = Block {
-            block_number,
+            block_certificate: block_certificate.clone(),
             transactions,
         };
+
         let block_info = BlockInfo {
             block_number,
-            block_certificate,
+            block_digest,
         };
 
         // write-out the block information to associated stores
         self.block_store.write(block_number, block.clone()).await;
-        self.block_info_store.write(block_number, block_info).await;
-        self.last_block_store.write(0, block).await;
+        self.block_info_store.write(block_number, block_info.clone()).await;
+        self.last_block_info_store.write(0, block_info).await;
         // update the block number
         self.block_number.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
     }

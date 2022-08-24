@@ -2,51 +2,35 @@
 
 // local
 use crate::{
-    config::{
-        consensus::ConsensusConfig,
-        node::NodeConfig,
-        Genesis,
-        CONSENSUS_DB_NAME,
-        GDEX_DB_NAME
-    },
+    config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, GDEX_DB_NAME},
     genesis_ceremony::GENESIS_FILENAME,
     metrics::start_prometheus_server,
+    relayer::spawner::RelayerSpawner,
     validator::{
-        genesis_state::ValidatorGenesisState,
-        server::ValidatorServer,
-        server::ValidatorService,
-        state::ValidatorState,
+        genesis_state::ValidatorGenesisState, server::ValidatorServer, server::ValidatorService, state::ValidatorState,
     },
 };
 
 // gdex
-use gdex_types::{
-    node::ValidatorInfo,
-    utils
-};
+use gdex_types::{node::ValidatorInfo, utils};
 
 // external
+use futures::future::join_all;
 use multiaddr::Multiaddr;
-use std::{
-    path::PathBuf,
-    sync::Arc
-};
+use std::{path::PathBuf, sync::Arc};
 use tokio::{
     sync::mpsc::{Receiver, Sender},
     task::JoinHandle,
 };
 use tracing::info;
-use futures::future::join_all;
 
 // mysten
-use narwhal_config::{
-    Committee as ConsensusCommittee,
-    Parameters as ConsensusParameters
-};
+use narwhal_config::{Committee as ConsensusCommittee, Parameters as ConsensusParameters};
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
 
+// INTERFACE
 
-
+// TODO lets clean up these comments
 /// Can spawn a validator server handle at the internal address
 /// the server handle contains a validator api (grpc) that exposes a validator service
 pub struct ValidatorSpawner {
@@ -54,6 +38,7 @@ pub struct ValidatorSpawner {
     db_path: PathBuf,
     /// Relative path where validator keystore lives with convention {validator_name}.key
     key_path: PathBuf,
+
     /// Genesis state of the blockchain
     /// Note, it must contain corresponding information for this validator until more functionality is onboarded
     genesis_state: ValidatorGenesisState,
@@ -73,6 +58,8 @@ pub struct ValidatorSpawner {
     tx_reconfigure_consensus: Option<Sender<(ConsensusKeyPair, ConsensusCommittee)>>,
     /// Address for communication to the validator server
     validator_address: Option<Multiaddr>,
+    /// Address for communication to the relayer server
+    relayer_address: Option<Multiaddr>,
     /// Handle for the service related tasks
     service_handles: Option<Vec<JoinHandle<()>>>,
     /// Handle for the server related tasks
@@ -106,14 +93,20 @@ impl ValidatorSpawner {
             validator_info,
             validator_state: None,
             validator_address: None,
+            relayer_address: None,
             tx_reconfigure_consensus: None,
             service_handles: None,
             server_handles: None,
         }
     }
 
+    // GETTERS
     pub fn get_validator_address(&self) -> &Option<Multiaddr> {
         &self.validator_address
+    }
+
+    pub fn get_relayer_address(&self) -> &Option<Multiaddr> {
+        &self.relayer_address
     }
 
     pub fn get_validator_info(&self) -> &ValidatorInfo {
@@ -128,6 +121,19 @@ impl ValidatorSpawner {
         }
     }
 
+    pub fn get_genesis_state(&self) -> ValidatorGenesisState {
+        self.genesis_state.clone()
+    }
+
+    fn is_validator_service_spawned(&self) -> bool {
+        self.validator_state.is_some()
+    }
+
+    fn is_validator_server_spawned(&self) -> bool {
+        self.validator_address.is_some()
+    }
+
+    // SETTERS
     pub fn halt_validator(&mut self) {
         self.validator_state.as_mut().unwrap().halt_validator();
     }
@@ -142,14 +148,6 @@ impl ValidatorSpawner {
 
     fn set_validator_address(&mut self, address: Multiaddr) {
         self.validator_address = Some(address)
-    }
-
-    fn is_validator_service_spawned(&self) -> bool {
-        self.validator_state.is_some()
-    }
-
-    fn is_validator_server_spawned(&self) -> bool {
-        self.validator_address.is_some()
     }
 
     /// Internal helper function used to spawns the validator service
@@ -254,7 +252,14 @@ impl ValidatorSpawner {
         let validator_server_handle = validator_server.spawn().await.unwrap();
         self.set_validator_address(validator_server_handle.address().clone());
 
-        self.server_handles = Some(vec![validator_server_handle.get_handle()]);
+        let mut relayer_spawner = RelayerSpawner::new(self.validator_state.clone().unwrap());
+        let relayer_server_handle = relayer_spawner.spawn_relay_server().await.unwrap();
+        self.relayer_address = Some(relayer_server_handle.address().clone());
+
+        self.server_handles = Some(vec![
+            validator_server_handle.get_handle(),
+            relayer_server_handle.get_handle(),
+        ]);
     }
 
     pub async fn spawn_validator(&mut self) {
@@ -287,9 +292,5 @@ impl ValidatorSpawner {
 
     pub fn get_tx_reconfigure_consensus(&self) -> &Option<Sender<(ConsensusKeyPair, ConsensusCommittee)>> {
         &self.tx_reconfigure_consensus
-    }
-
-    pub fn get_genesis_state(&self) -> ValidatorGenesisState {
-        self.genesis_state.clone()
     }
 }

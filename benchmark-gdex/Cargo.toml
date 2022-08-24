@@ -17,7 +17,6 @@ clap = "2.34"
 futures = "0.3.21"
 multiaddr = "0.14.0"
 rand =  "0.8.5"
-store = { git = "https://github.com/mystenlabs/mysten-infra.git", package = "typed-store", rev = "8d090689be14078f2ca41c356e7bbc0af21f73ab" }
 thiserror = "1.0.31"
 tokio = { version = "1.20.1", features = ["full"] }
 tokio-stream = "0.1.9"
@@ -25,7 +24,6 @@ tokio-util = { version = "0.7.3", features = ["codec"] }
 tracing = "0.1.35"
 tracing-log = "0.1.3"
 tracing-subscriber = { version = "0.3.15", features = ["time", "env-filter"] }
-telemetry-subscribers = { git = "https://github.com/mystenlabs/mysten-infra.git", rev = "8d090689be14078f2ca41c356e7bbc0af21f73ab" }
 url = "2.2.2"
 log = "0.4"
 dhat = { version = "0.3.0", optional = true }
@@ -43,6 +41,8 @@ narwhal-primary = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611
 narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "types" }
 narwhal-worker = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "worker" }
 narwhal-network = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "network" }
+store = { git = "https://github.com/mystenlabs/mysten-infra.git", package = "typed-store", rev = "8d090689be14078f2ca41c356e7bbc0af21f73ab" }
+telemetry-subscribers = { git = "https://github.com/mystenlabs/mysten-infra.git", rev = "8d090689be14078f2ca41c356e7bbc0af21f73ab" }
 
 # local crates
 gdex-core = { path = "../core" }

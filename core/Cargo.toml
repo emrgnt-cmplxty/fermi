@@ -30,7 +30,6 @@ tonic-health = "0.6.0"
 tower = { version = "0.4.13", features = ["full"] }
 tower-http = { version = "0.3.4", features = ["trace", "set-header", "propagate-header"] }
 tracing = "0.1.36"
-tracing-subscriber = "0.2.0"
 tempfile = "3.3.0"
 
 # mysten crates
@@ -46,3 +45,6 @@ mysten-store = { git = "https://github.com/mystenlabs/mysten-infra.git", package
 gdex-controller = { path = "../controller" }
 gdex-types = { path = "../types", feature = "testing"}
 gdex-workspace-hack = { path = "../workspace-hack" }
+
+[features]
+testing = []

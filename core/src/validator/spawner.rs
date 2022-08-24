@@ -1,5 +1,30 @@
 // IMPORTS
 
+// local
+use crate::{
+    config::{
+        consensus::ConsensusConfig,
+        node::NodeConfig,
+        Genesis,
+        CONSENSUS_DB_NAME,
+        GDEX_DB_NAME
+    },
+    genesis_ceremony::GENESIS_FILENAME,
+    metrics::start_prometheus_server,
+    validator::{
+        genesis_state::ValidatorGenesisState,
+        server::ValidatorServer,
+        server::ValidatorService,
+        state::ValidatorState,
+    },
+};
+
+// gdex
+use gdex_types::{
+    node::ValidatorInfo,
+    utils
+};
+
 // external
 use multiaddr::Multiaddr;
 use std::{
@@ -20,61 +45,38 @@ use narwhal_config::{
 };
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
 
-// gdex
-use gdex_types::{
-    node::ValidatorInfo,
-    utils
-};
-
-// local
-use crate::{
-    config::{
-        consensus::ConsensusConfig,
-        node::NodeConfig,
-        Genesis,
-        CONSENSUS_DB_NAME,
-        GDEX_DB_NAME
-    },
-    genesis_ceremony::GENESIS_FILENAME,
-    metrics::start_prometheus_server,
-    validator::{
-        genesis_state::ValidatorGenesisState,
-        server::ValidatorServer,
-        server::ValidatorService,
-        state::ValidatorState,
-    },
-};
-
-// INTERFACE
 
 
-// TODO lets clean up these comments
 /// Can spawn a validator server handle at the internal address
 /// the server handle contains a validator api (grpc) that exposes a validator service
-/// NOTES:
-/// Genesis state must contain corresponding information for this validator until more functionality is onboarded
 pub struct ValidatorSpawner {
     /// Relative path where databases will be created and written to
     db_path: PathBuf,
     /// Relative path where validator keystore lives with convention {validator_name}.key
     key_path: PathBuf,
-     /// Genesis state of the blockchain
+    /// Genesis state of the blockchain
+    /// Note, it must contain corresponding information for this validator until more functionality is onboarded
     genesis_state: ValidatorGenesisState,
-    /// validator info, fetched from the genesis state according to initial name
+    /// Validator which is fetched from the genesis state according to initial name
     validator_info: ValidatorInfo,
     /// Port for the validator to serve over
     validator_port: Multiaddr,
 
+    /// Begin objects initialized after calling spawn_validator_service
+
     /// Validator state passed to the instances spawned
     validator_state: Option<Arc<ValidatorState>>,
+
+    /// Begin objects initialized after calling spawn_validator_service
+
+    /// Sender for the reconfiguration consensus service
+    tx_reconfigure_consensus: Option<Sender<(ConsensusKeyPair, ConsensusCommittee)>>,
     /// Address for communication to the validator server
     validator_address: Option<Multiaddr>,
-    /// Sender for ... TODO
-    tx_reconfigure_consensus: Option<Sender<(ConsensusKeyPair, ConsensusCommittee)>>,
-    /// Handle for the... TODO
+    /// Handle for the service related tasks
     service_handles: Option<Vec<JoinHandle<()>>>,
-    /// Handle for the... TODO
-    server_handles: Option<Vec<JoinHandle<()>>>
+    /// Handle for the server related tasks
+    server_handles: Option<Vec<JoinHandle<()>>>,
 }
 
 impl ValidatorSpawner {
@@ -106,11 +108,9 @@ impl ValidatorSpawner {
             validator_address: None,
             tx_reconfigure_consensus: None,
             service_handles: None,
-            server_handles: None
+            server_handles: None,
         }
     }
-
-    // GETTERS
 
     pub fn get_validator_address(&self) -> &Option<Multiaddr> {
         &self.validator_address
@@ -120,19 +120,21 @@ impl ValidatorSpawner {
         &self.validator_info
     }
 
-    pub fn get_validator_state(&mut self) -> &Option<Arc<ValidatorState>> {
-        &self.validator_state
+    pub fn get_validator_state(&self) -> Option<Arc<ValidatorState>> {
+        if self.validator_state.is_some() {
+            Some(Arc::clone(self.validator_state.as_ref().unwrap()))
+        } else {
+            None
+        }
     }
 
-    pub fn get_tx_reconfigure_consensus(&self) -> &Option<Sender<(ConsensusKeyPair, ConsensusCommittee)>> {
-        &self.tx_reconfigure_consensus
+    pub fn halt_validator(&mut self) {
+        self.validator_state.as_mut().unwrap().halt_validator();
     }
-    
-    pub fn get_genesis_state(&self) -> ValidatorGenesisState {
-        self.genesis_state.clone()
+
+    pub fn unhalt_validator(&mut self) {
+        self.validator_state.as_mut().unwrap().unhalt_validator();
     }
-    
-    // SETTERS
 
     fn set_validator_state(&mut self, validator_state: Arc<ValidatorState>) {
         self.validator_state = Some(validator_state)
@@ -141,8 +143,6 @@ impl ValidatorSpawner {
     fn set_validator_address(&mut self, address: Multiaddr) {
         self.validator_address = Some(address)
     }
-
-    // STATE CHECKERS
 
     fn is_validator_service_spawned(&self) -> bool {
         self.validator_state.is_some()
@@ -156,7 +156,7 @@ impl ValidatorSpawner {
     /// note, this function will fail if called twice from the same spawner
     async fn spawn_validator_service(
         &mut self,
-        rx_reconfigure_consensus: Receiver<(ConsensusKeyPair, ConsensusCommittee)>
+        rx_reconfigure_consensus: Receiver<(ConsensusKeyPair, ConsensusCommittee)>,
     ) {
         if self.is_validator_service_spawned() {
             panic!("The validator service has already been spawned");
@@ -230,16 +230,14 @@ impl ValidatorSpawner {
                 rx_reconfigure_consensus,
             )
             .await
-            .unwrap()
+            .unwrap(),
         );
         self.set_validator_state(validator_state);
     }
 
     /// Internal helper function used to spawns the validator server
     /// note, this function will fail if called twice from the same spawner
-    async fn spawn_validator_server(
-        &mut self
-    ) {
+    async fn spawn_validator_server(&mut self) {
         if self.is_validator_server_spawned() {
             panic!("The validator server already been spawned");
         };
@@ -265,10 +263,33 @@ impl ValidatorSpawner {
         self.tx_reconfigure_consensus = Some(tx_reconfigure_consensus);
         self.spawn_validator_service(rx_reconfigure_consensus).await;
         self.spawn_validator_server().await;
+        // Unwrap is safe since we have already launched the validator service
+        self.validator_state.as_ref().unwrap().halt_validator();
     }
-    
+
     pub async fn await_handles(&mut self) {
         join_all(self.service_handles.as_mut().unwrap()).await;
         join_all(self.server_handles.as_mut().unwrap()).await;
+    }
+
+    pub async fn stop(&mut self) {
+        if let Some(handles) = self.service_handles.as_mut() {
+            handles.iter().for_each(|h| h.abort());
+        }
+        if let Some(handles) = self.server_handles.as_mut() {
+            handles.iter().for_each(|h| h.abort());
+        }
+        self.validator_state = None;
+        self.validator_address = None;
+        self.server_handles = None;
+        self.service_handles = None;
+    }
+
+    pub fn get_tx_reconfigure_consensus(&self) -> &Option<Sender<(ConsensusKeyPair, ConsensusCommittee)>> {
+        &self.tx_reconfigure_consensus
+    }
+
+    pub fn get_genesis_state(&self) -> ValidatorGenesisState {
+        self.genesis_state.clone()
     }
 }

@@ -34,11 +34,36 @@ impl RelayerSpawner {
 pub mod suite_spawn_tests {
     use crate::relayer::spawner::RelayerSpawner;
     use crate::validator::spawner::ValidatorSpawner;
+    // use executor::ExecutionState;
+    use gdex_types::block::BlockDigest;
+    use gdex_types::crypto::KeypairTraits;
+    use gdex_types::crypto::Signer;
+    use gdex_types::transaction::create_asset_creation_transaction;
+    use gdex_types::transaction::SignedTransaction;
     use gdex_types::{
         proto::{RelayerClient, RelayerGetBlockInfoRequest, RelayerGetBlockRequest, RelayerGetLatestBlockInfoRequest},
         utils,
     };
+    use narwhal_consensus::ConsensusOutput;
+    use narwhal_crypto::generate_production_keypair;
+    use narwhal_crypto::Hash;
+    use narwhal_crypto::KeyPair;
+    use narwhal_crypto::DIGEST_LEN;
+    use narwhal_types::Certificate;
+    use narwhal_types::Header;
     use std::path::Path;
+
+    pub fn create_test_consensus_output() -> ConsensusOutput {
+        let dummy_header = Header::default();
+        let dummy_certificate = Certificate {
+            header: dummy_header,
+            votes: Vec::new(),
+        };
+        ConsensusOutput {
+            certificate: dummy_certificate,
+            consensus_index: 1,
+        }
+    }
 
     #[tokio::test]
     pub async fn spawn_and_ping_relay_server() {
@@ -57,10 +82,31 @@ pub mod suite_spawn_tests {
 
         let _handles = validator_spawner.spawn_validator_with_reconfigure().await;
 
-        let validator_state = validator_spawner.get_validator_state().clone();
+        let validator_state = validator_spawner.get_validator_state().clone().unwrap();
+
+        let dummy_consensus_output = create_test_consensus_output();
+        // create asset transaction
+        let sender_kp = generate_production_keypair::<KeyPair>();
+        let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
+        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
+        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
+        let signed_create_asset_txn =
+            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+
+        // preparing serialized txn buf
+        let mut serialized_txns_buf: Vec<Vec<u8>> = Vec::new();
+        for _ in 1..10 {
+            let serialized_txn = signed_create_asset_txn.serialize().unwrap();
+            serialized_txns_buf.push(serialized_txn)
+        }
+        // writing the latest block
+        validator_state
+            .validator_store
+            .write_latest_block(dummy_consensus_output.certificate, serialized_txns_buf)
+            .await;
 
         let mut relay_spawner = RelayerSpawner {
-            validator_state: validator_state,
+            validator_state: Some(validator_state),
         };
 
         tokio::spawn(async move {

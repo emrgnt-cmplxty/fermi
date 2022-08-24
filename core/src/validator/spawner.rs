@@ -83,7 +83,9 @@ impl ValidatorSpawner {
         &self.validator_address
     }
 
-    pub fn get_relayer_address(&self) -> &Option<Multiaddr> {&self.relayer_address}
+    pub fn get_relayer_address(&self) -> &Option<Multiaddr> {
+        &self.relayer_address
+    }
 
     pub fn get_validator_info(&self) -> &ValidatorInfo {
         &self.validator_info

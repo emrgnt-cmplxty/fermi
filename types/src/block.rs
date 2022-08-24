@@ -1,10 +1,6 @@
-
-
-
 use narwhal_executor::SerializedTransaction;
 use narwhal_types::{Certificate, CertificateDigest};
 use serde::{Deserialize, Serialize};
-
 
 pub type BlockNumber = u64;
 pub type BlockDigest = CertificateDigest;

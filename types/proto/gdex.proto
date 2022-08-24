@@ -34,26 +34,46 @@ message FaucetAirdropResponse {
     bool successful = 1;
 }
 
-
 // Relay service for relaying information outside
 service Relayer {
-    rpc ReadLatestBlockInfo (RelayerRequest) returns (RelayerResponse);
+    rpc GetLatestBlockInfo (RelayerGetLatestBlockInfoRequest) returns (RelayerBlockInfoResponse);
+    rpc GetBlockInfo (RelayerGetBlockInfoRequest) returns (RelayerBlockInfoResponse);
+    rpc GetBlock (RelayerGetBlockRequest) returns (RelayerBlockResponse);
 }
 
-message RelayerRequest {
-    string dummy_request = 1;
+// A message to get the latest block info
+message RelayerGetLatestBlockInfoRequest {}
+
+// A message to get a certain block info based on the block number
+message RelayerGetBlockInfoRequest {
+    uint64 block_number = 1;
 }
 
+// A message to get the actual block object based on the block number
+message RelayerGetBlockRequest {
+    uint64 block_number = 1;
+}
+
+// Structure for BlockInfo
 message BlockInfo {
     uint64 block_number = 1;
     bytes digest = 2;
 }
 
+// Structure for Block
+message Block {
+    bytes block = 1;
+}
+
+// Response from relayer with actual Block 
+message RelayerBlockResponse {
+    bool successful = 1;
+    Block block = 2;
+}
+
 // TODO figure out how to import from narwhal. It almost worked but it failed because ../ is not allowed
 // in the virtual path for some reason
-message RelayerResponse {
+message RelayerBlockInfoResponse {
     bool successful = 1;
     BlockInfo block_info = 2;
 }
-
-

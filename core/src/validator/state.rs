@@ -67,7 +67,7 @@ impl ValidatorStore {
             Self::LAST_BLOCK_CF;<u64, BlockInfo>
         );
 
-        let block_number_from_dbmap = last_block_map.get(&(0 as u64));
+        let block_number_from_dbmap = last_block_map.get(&0);
 
         let block_store = Store::new(block_map);
         let block_info_store = Store::new(block_info_map);

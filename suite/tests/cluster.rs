@@ -30,57 +30,16 @@ pub mod cluster_test_suite {
 
     #[tokio::test]
     pub async fn test_spawn_cluster() {
-        /*
-        let subscriber = FmtSubscriber::builder()
-            .with_env_filter("gdex_core=info, gdex_suite=info")
-            .finish();
-        tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-        */
-
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         info!("Sending transactions");
-        let working_dir = cluster.get_working_dir();
-        let spawner_0 = cluster.get_validator_spawner(0);
-        let key_file = working_dir.join(format!("{}.key", spawner_0.get_validator_info().name));
-        let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
-        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-
-        let address = spawner_0.get_validator_address().as_ref().unwrap().clone();
-        info!("Connecting network client to address={:?}", address);
-
-        let mut client =
-            TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
-
-        info!("Creating test cluster");
-        let validator_count: usize = 4;
-        let mut cluster = TestCluster::spawn(validator_count, None).await;
-
-        info!("Sending transactions");
-        cluster.send_transactions(0, 1, 1_000, None).await;
+        cluster.send_transactions(0, 1, 10, None).await;
     }
 
     #[tokio::test]
     pub async fn test_balance_state() {
-        info!("Creating test cluster");
-        let validator_count: usize = 4;
-        let mut cluster = TestCluster::spawn(validator_count, None).await;
-
-        info!("Sending transactions");
-        let working_dir = cluster.get_working_dir();
-        let spawner_0 = cluster.get_validator_spawner(0);
-        let key_file = working_dir.join(format!("{}.key", spawner_0.get_validator_info().name));
-        let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
-        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-
-        let address = spawner_0.get_validator_address().as_ref().unwrap().clone();
-        info!("Connecting network client to address={:?}", address);
-
-        let mut client =
-            TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
-
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;

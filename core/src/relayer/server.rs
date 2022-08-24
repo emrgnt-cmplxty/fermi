@@ -79,8 +79,7 @@ impl Relayer for RelayerService {
             .await
         {
             Ok(opt) => {
-                if opt.is_some() {
-                    let block_info = opt.unwrap();
+                if let Some(block_info) = opt {
                     Ok(Response::new(RelayerBlockInfoResponse {
                         successful: true,
                         block_info: Some(BlockInfoProto {
@@ -112,8 +111,7 @@ impl Relayer for RelayerService {
 
         match validator_state.validator_store.block_store.read(block_number).await {
             Ok(opt) => {
-                if opt.is_some() {
-                    let block = opt.unwrap();
+                if let Some(block) = opt {
                     let block_bytes = bincode::serialize(&block).unwrap().into();
                     Ok(Response::new(RelayerBlockResponse {
                         successful: true,

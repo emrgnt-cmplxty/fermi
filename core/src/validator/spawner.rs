@@ -83,6 +83,8 @@ impl ValidatorSpawner {
         &self.validator_address
     }
 
+    pub fn get_relayer_address(&self) -> &Option<Multiaddr> {&self.relayer_address}
+
     pub fn get_validator_info(&self) -> &ValidatorInfo {
         &self.validator_info
     }
@@ -223,7 +225,7 @@ impl ValidatorSpawner {
         let mut relayer_spawner = RelayerSpawner::new(self.validator_state.clone().unwrap());
         // TODO extract handle
         let relayer_server_handle = relayer_spawner.spawn_relay_server().await.unwrap();
-
+        self.relayer_address = Some(relayer_server_handle.address().clone());
         join_handles.push(server_handle.get_handle());
         join_handles.push(relayer_server_handle.get_handle());
         join_handles
@@ -241,7 +243,7 @@ impl ValidatorSpawner {
         let mut relayer_spawner = RelayerSpawner::new(self.validator_state.clone().unwrap());
         // TODO extract handle
         let relayer_server_handle = relayer_spawner.spawn_relay_server().await.unwrap();
-
+        self.relayer_address = Some(relayer_server_handle.address().clone());
         join_handles.push(server_handle.get_handle());
         join_handles.push(relayer_server_handle.get_handle());
         (join_handles, tx_reconfigure_consensus)

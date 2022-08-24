@@ -74,8 +74,8 @@ pub mod suite_spawn_tests {
         let mut relay_spawner = RelayerSpawner::new(validator_state.clone().unwrap());
 
         // TODO clean
-        let _handle = relay_spawner.spawn_relay_server().await.unwrap();
-        let address_ref = &address;
+        let address = validator_spawner.get_relayer_address();
+        let address_ref= &address.clone().unwrap();
         let target_endpoint = endpoint_from_multiaddr(address_ref).unwrap();
         let endpoint = target_endpoint.endpoint();
         let mut client = RelayerClient::connect(endpoint.clone()).await.unwrap();
@@ -86,6 +86,6 @@ pub mod suite_spawn_tests {
 
         let response = client.read_latest_block_info(request).await;
 
-        println!("RESPONSE={:?}", response);
+        assert!(response.unwrap().into_inner().successful)
     }
 }

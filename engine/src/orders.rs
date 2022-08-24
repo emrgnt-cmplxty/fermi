@@ -8,7 +8,7 @@ use std::time::SystemTime;
 /* Constructors */
 
 /// Create request for the new market order
-pub fn new_market_order_request(
+pub fn create_market_order_request(
     base_asset_id: AssetId,
     quote_asset_id: AssetId,
     side: OrderSide,
@@ -25,7 +25,7 @@ pub fn new_market_order_request(
 }
 
 /// Create request for the new limit order
-pub fn new_limit_order_request(
+pub fn create_limit_order_request(
     base_asset_id: AssetId,
     quote_asset_id: AssetId,
     side: OrderSide,
@@ -47,15 +47,19 @@ pub fn new_limit_order_request(
 ///
 /// Note: do not change order side!
 /// Instead cancel existing order and create a new one.
-pub fn update_order_request(
-    id: u64,
+pub fn create_update_order_request(
+    base_asset_id: AssetId,
+    quote_asset_id: AssetId,
+    order_id: u64,
     side: OrderSide,
     price: u64,
     quantity: u64,
     local_timestamp: SystemTime,
 ) -> OrderRequest {
     OrderRequest::Update {
-        id,
+        base_asset_id,
+        quote_asset_id,
+        order_id,
         side,
         price,
         quantity,
@@ -64,6 +68,18 @@ pub fn update_order_request(
 }
 
 /// Create request for cancelling active limit order
-pub fn limit_order_cancel_request(order_id: u64, side: OrderSide) -> OrderRequest {
-    OrderRequest::CancelOrder { id: order_id, side }
+pub fn create_cancel_order_request(
+    base_asset_id: AssetId,
+    quote_asset_id: AssetId,
+    order_id: u64,
+    side: OrderSide,
+    local_timestamp: SystemTime,
+) -> OrderRequest {
+    OrderRequest::CancelOrder {
+        base_asset_id,
+        quote_asset_id,
+        order_id,
+        side,
+        local_timestamp,
+    }
 }

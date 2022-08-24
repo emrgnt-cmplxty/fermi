@@ -39,6 +39,7 @@ pub struct ValidatorGenesisStateInfo {
     pub network_address: Multiaddr,
     /// validator stake amount
     pub stake: StakeUnit,
+    pub balance: u64,
     pub narwhal_primary_to_primary: Multiaddr,
     pub narwhal_worker_to_primary: Multiaddr,
     pub narwhal_primary_to_worker: Multiaddr,

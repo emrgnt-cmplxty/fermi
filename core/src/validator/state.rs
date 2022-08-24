@@ -12,7 +12,7 @@ use gdex_types::{
     block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},
     committee::{Committee, ValidatorName},
     error::GDEXError,
-    transaction::{SignedTransaction, TransactionDigest},
+    transaction::{OrderRequest, SignedTransaction, TransactionDigest, TransactionVariant},
 };
 use mysten_store::{
     reopen,
@@ -265,6 +265,91 @@ impl ExecutionState for ValidatorState {
         self.validator_store
             .insert_confirmed_transaction(transaction, consensus_output);
 
+        match transaction.get_variant() {
+            TransactionVariant::PaymentTransaction(payment) => {
+                self.master_controller.bank_controller.lock().unwrap().transfer(
+                    transaction.get_sender(),
+                    payment.get_receiver(),
+                    payment.get_asset_id(),
+                    payment.get_amount(),
+                )?
+            }
+            TransactionVariant::CreateAssetTransaction(_create_asset) => self
+                .master_controller
+                .bank_controller
+                .lock()
+                .unwrap()
+                .create_asset(transaction.get_sender())?,
+            TransactionVariant::CreateOrderbookTransaction(orderbook) => self
+                .master_controller
+                .spot_controller
+                .lock()
+                .unwrap()
+                .create_orderbook(orderbook.get_base_asset_id(), orderbook.get_quote_asset_id())?,
+            TransactionVariant::PlaceOrderTransaction(order) => {
+                match order {
+                    OrderRequest::Market {
+                        base_asset_id,
+                        quote_asset_id,
+                        side,
+                        quantity,
+                        ..
+                    } => {
+                        dbg!(base_asset_id, quote_asset_id, side, quantity);
+                    }
+                    OrderRequest::Limit {
+                        base_asset_id,
+                        quote_asset_id,
+                        side,
+                        price,
+                        quantity,
+                        ..
+                    } => {
+                        // TODO: find out why these u64 are references
+                        self.master_controller
+                            .spot_controller
+                            .lock()
+                            .unwrap()
+                            .place_limit_order(
+                                *base_asset_id,
+                                *quote_asset_id,
+                                transaction.get_sender(),
+                                *side,
+                                *quantity,
+                                *price,
+                            )?
+                    }
+                    OrderRequest::CancelOrder {
+                        base_asset_id,
+                        quote_asset_id,
+                        order_id,
+                        side,
+                        ..
+                    } => self
+                        .master_controller
+                        .spot_controller
+                        .lock()
+                        .unwrap()
+                        .place_cancel_order(
+                            *base_asset_id,
+                            *quote_asset_id,
+                            transaction.get_sender(),
+                            *order_id,
+                            *side,
+                        )?,
+                    OrderRequest::Update {
+                        order_id,
+                        side,
+                        price,
+                        quantity,
+                        ..
+                    } => {
+                        dbg!(order_id, side, price, quantity);
+                    }
+                }
+            }
+        };
+
         Ok((consensus_output.clone(), execution_indices))
     }
 
@@ -285,15 +370,18 @@ impl ExecutionState for ValidatorState {
 #[cfg(test)]
 mod test_validator_state {
     use super::*;
-    use crate::{builder::genesis_state::GenesisStateBuilder, genesis_ceremony::VALIDATOR_FUNDING_AMOUNT};
+    use crate::{
+        builder::genesis_state::GenesisStateBuilder,
+        genesis_ceremony::{VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
+    };
     use gdex_types::{
         account::ValidatorPubKeyBytes,
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
         node::ValidatorInfo,
         order_book::OrderSide,
         transaction::{
-            create_asset_creation_transaction, create_orderbook_creation_transaction, create_payment_transaction,
-            create_place_limit_order_transaction, SignedTransaction,
+            create_asset_creation_transaction, create_cancel_order_transaction, create_orderbook_creation_transaction,
+            create_payment_transaction, create_place_limit_order_transaction, SignedTransaction,
         },
         utils,
     };
@@ -314,6 +402,7 @@ mod test_validator_state {
             name: "0".into(),
             public_key: public_key.clone(),
             stake: VALIDATOR_FUNDING_AMOUNT,
+            balance: VALIDATOR_BALANCE,
             delegation: 0,
             network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),
@@ -348,6 +437,7 @@ mod test_validator_state {
             name: "0".into(),
             public_key: public_key.clone(),
             stake: VALIDATOR_FUNDING_AMOUNT,
+            balance: VALIDATOR_BALANCE,
             delegation: 0,
             network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),
@@ -507,7 +597,7 @@ mod test_validator_state {
     }
 
     #[tokio::test]
-    pub async fn process_place_limit_order_transaction() {
+    pub async fn process_place_limit_order_and_cancel_transaction() {
         let validator: ValidatorState = create_test_validator();
         let dummy_consensus_output = create_test_consensus_output();
         let dummy_execution_indices = create_test_execution_indices();
@@ -574,6 +664,29 @@ mod test_validator_state {
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
                 signed_place_limit_order_txn,
+            )
+            .await
+            .unwrap();
+
+        // cancel order
+        const TEST_ORDER_ID: u64 = 1;
+        let cancel_order_txn = create_cancel_order_transaction(
+            &sender_kp,
+            TEST_BASE_ASSET_ID,
+            TEST_QUOTE_ASSET_ID,
+            TEST_ORDER_ID,
+            OrderSide::Bid,
+            recent_block_hash,
+        );
+        let signed_digest = sender_kp.sign(&cancel_order_txn.digest().get_array()[..]);
+        let signed_cancel_order_txn =
+            SignedTransaction::new(sender_kp.public().clone(), cancel_order_txn, signed_digest);
+
+        validator
+            .handle_consensus_transaction(
+                &dummy_consensus_output,
+                dummy_execution_indices.clone(),
+                signed_cancel_order_txn,
             )
             .await
             .unwrap();

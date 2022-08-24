@@ -121,12 +121,12 @@ impl Serialize for ValidatorGenesisState {
         use serde::ser::Error;
 
         #[derive(Serialize)]
-        struct RawGeneis<'a> {
+        struct RawGenesis<'a> {
             master_controller: &'a MasterController,
             validator_set: &'a [ValidatorInfo],
         }
 
-        let raw_genesis = RawGeneis {
+        let raw_genesis = RawGenesis {
             master_controller: &self.master_controller,
             validator_set: &self.validator_set,
         };
@@ -150,7 +150,7 @@ impl<'de> Deserialize<'de> for ValidatorGenesisState {
         use serde::de::Error;
 
         #[derive(Deserialize)]
-        struct RawGeneis {
+        struct RawGenesis {
             master_controller: MasterController,
             validator_set: Vec<ValidatorInfo>,
         }
@@ -163,7 +163,7 @@ impl<'de> Deserialize<'de> for ValidatorGenesisState {
             data
         };
 
-        let raw_genesis: RawGeneis = bcs::from_bytes(&bytes).map_err(|e| Error::custom(e.to_string()))?;
+        let raw_genesis: RawGenesis = bcs::from_bytes(&bytes).map_err(|e| Error::custom(e.to_string()))?;
 
         Ok(ValidatorGenesisState {
             master_controller: raw_genesis.master_controller,
@@ -174,7 +174,10 @@ impl<'de> Deserialize<'de> for ValidatorGenesisState {
 #[cfg(test)]
 mod genesis_test {
     use super::*;
-    use crate::{config::genesis::GenesisConfig, genesis_ceremony::VALIDATOR_FUNDING_AMOUNT};
+    use crate::{
+        config::genesis::GenesisConfig,
+        genesis_ceremony::{VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
+    };
     use gdex_types::{
         account::ValidatorKeyPair,
         crypto::{get_key_pair_from_rng, KeypairTraits},
@@ -204,6 +207,7 @@ mod genesis_test {
             name: "0".into(),
             public_key: key.public().into(),
             stake: VALIDATOR_FUNDING_AMOUNT,
+            balance: VALIDATOR_BALANCE,
             delegation: 0,
             network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),

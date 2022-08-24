@@ -30,7 +30,7 @@ use tokio::{
     },
     task::JoinHandle,
 };
-use tracing::{debug, info, trace};
+use tracing::{info, trace};
 
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
@@ -178,7 +178,7 @@ impl ValidatorService {
                             // subtract round look-back from the latest round to get block number
                             let round_number = consensus_output.certificate.header.round;
                             let num_txns = serialized_txns_buf.len();
-                            debug!("Processing result from {round_number} with {num_txns} transactions");
+                            trace!("Processing result from {round_number} with {num_txns} transactions");
                             store.prune();
                             // write-out the new block to the validator store
                             store
@@ -187,7 +187,7 @@ impl ValidatorService {
                             serialized_txns_buf.clear();
                         }
                     }
-                    Err(e) => trace!("{:?}", e), // TODO
+                    Err(e) => info!("{:?}", e), // TODO
                 }
                 // NOTE: Notify the user that its transaction has been processed.
             }
@@ -290,7 +290,10 @@ impl Transactions for ValidatorService {
 #[cfg(test)]
 mod test_validator_server {
     use super::*;
-    use crate::{builder::genesis_state::GenesisStateBuilder, genesis_ceremony::VALIDATOR_FUNDING_AMOUNT};
+    use crate::{
+        builder::genesis_state::GenesisStateBuilder,
+        genesis_ceremony::{VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
+    };
     use gdex_controller::master::MasterController;
     use gdex_types::{
         account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair, ValidatorPubKeyBytes},
@@ -312,6 +315,7 @@ mod test_validator_server {
             name: "0".into(),
             public_key: public_key.clone(),
             stake: VALIDATOR_FUNDING_AMOUNT,
+            balance: VALIDATOR_BALANCE,
             delegation: 0,
             network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),
@@ -380,6 +384,7 @@ mod test_validator_server {
             name: "0".into(),
             public_key: public_key.clone(),
             stake: VALIDATOR_FUNDING_AMOUNT,
+            balance: VALIDATOR_BALANCE,
             delegation: 0,
             network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),

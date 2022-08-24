@@ -67,11 +67,9 @@ pub mod suite_spawn_tests {
             /* validator_name */ "validator-0".to_string(),
         );
 
-        let _handles = validator_spawner.spawn_validator_with_reconfigure().await;
+        validator_spawner.spawn_validator().await;
 
         let validator_state = validator_spawner.get_validator_state().clone();
-
-        let mut relay_spawner = RelayerSpawner::new(validator_state.clone().unwrap());
 
         // TODO clean
         let address = validator_spawner.get_relayer_address();

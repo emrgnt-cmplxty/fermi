@@ -99,7 +99,7 @@ impl Faucet for FaucetService {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Getting the address that is passed in
-    let addr = format!("127.0.0.1:{}", FAUCET_PORT.to_string());
+    let addr = format!("127.0.0.1:{}", FAUCET_PORT);
 
     // Parsing it into an address
     let addr = addr.parse::<SocketAddr>()?;

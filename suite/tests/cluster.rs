@@ -45,14 +45,13 @@ pub mod cluster_test_suite {
         let working_dir = cluster.get_working_dir();
         let spawner_0 = cluster.get_validator_spawner(0);
         let key_file = working_dir.join(format!("{}.key", spawner_0.get_validator_info().name));
-        let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
-        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
+        let _kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
+        let _kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
 
         let address = spawner_0.get_validator_address().as_ref().unwrap().clone();
         info!("Connecting network client to address={:?}", address);
 
-        let mut client =
-            TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
+        let _client = TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
 
         info!("Creating test cluster");
         let validator_count: usize = 4;
@@ -72,14 +71,13 @@ pub mod cluster_test_suite {
         let working_dir = cluster.get_working_dir();
         let spawner_0 = cluster.get_validator_spawner(0);
         let key_file = working_dir.join(format!("{}.key", spawner_0.get_validator_info().name));
-        let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
-        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
+        let _kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
+        let _kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
 
         let address = spawner_0.get_validator_address().as_ref().unwrap().clone();
         info!("Connecting network client to address={:?}", address);
 
-        let mut client =
-            TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
+        let _client = TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
 
         info!("Creating test cluster");
         let validator_count: usize = 4;

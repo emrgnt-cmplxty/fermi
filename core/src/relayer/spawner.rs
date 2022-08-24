@@ -131,7 +131,7 @@ pub mod suite_spawn_tests {
         // Act
         let specific_block_response = client.get_block(specific_block_request).await;
 
-        let latest_block_info_response = client.get_latest_block_info(latest_block_info_request).await;
+        let _latest_block_info_response = client.get_latest_block_info(latest_block_info_request).await;
 
         let block_bytes_returned = specific_block_response.unwrap().into_inner().block.unwrap().block;
 

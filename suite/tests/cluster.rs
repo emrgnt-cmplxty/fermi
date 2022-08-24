@@ -4,24 +4,22 @@ pub mod cluster_test_suite {
     // IMPORTS
 
     // local
+    use gdex_core::catchup::mock_catchup_manager::{MockCatchupManger, MockRelayServer};
     use gdex_suite::test_utils::test_cluster::TestCluster;
-    use gdex_core::{
-        catchup::mock_catchup_manager::{MockCatchupManger, MockRelayServer},
-    };
     use gdex_types::{
         asset::PRIMARY_ASSET_ID,
         crypto::{get_key_pair_from_rng, KeypairTraits},
         transaction::SignedTransaction,
+        utils,
     };
 
     // external
-    use tracing::info;
     use tokio::time::{sleep, Duration};
-
+    use tracing::info;
 
     // TESTS
 
-    #[tokio::test(flavor = "multi_thread")]
+    #[tokio::test]
     pub async fn test_spawn_cluster() {
         info!("Creating test cluster");
         let validator_count: usize = 4;
@@ -31,7 +29,7 @@ pub mod cluster_test_suite {
         cluster.send_transactions(0, 1, 1_000, None).await;
     }
 
-    #[tokio::test(flavor = "multi_thread")]
+    #[tokio::test]
     pub async fn test_balance_state() {
         info!("Creating test cluster");
         let validator_count: usize = 4;
@@ -63,7 +61,7 @@ pub mod cluster_test_suite {
         assert!(receiver_balance > 0, "Receiver balance must be greater than 0");
     }
 
-    #[tokio::test(flavor = "multi_thread")]
+    #[tokio::test]
     pub async fn test_reconfigure_validator() {
         info!("Creating test cluster");
         let validator_count: usize = 4;
@@ -158,14 +156,13 @@ pub mod cluster_test_suite {
 
     #[tokio::test(flavor = "multi_thread")]
     pub async fn test_catchup_new_node_mock() {
-        telemetry_subscribers::init_for_testing();
-
+        utils::set_testing_telemetry("gdex_core=info, gdex_suite=info");
         // submit more transactions than we can possibly process
         const N_TRANSACTIONS: u64 = 1_000_000;
-
         info!("Creating test cluster");
-        let validator_count: usize = 6;
+        let validator_count: usize = 5;
         let target_node = validator_count - 1;
+
         info!("Launching nodes 1 - {}", target_node);
         let mut cluster = TestCluster::spawn(validator_count, Some(target_node)).await;
 
@@ -178,11 +175,8 @@ pub mod cluster_test_suite {
         info!("Booting up node {}", target_node + 1);
         cluster.start(target_node).await;
 
-        info!("Sleeping 250ms to allow boot");
-        tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
-
-        let validator_store = &cluster
-            .get_validator_spawner(1)
+        let validator_store_node_1 = &cluster
+            .get_validator_spawner(0)
             .get_validator_state()
             .as_ref()
             .unwrap()
@@ -194,14 +188,55 @@ pub mod cluster_test_suite {
             .get_validator_state()
             .unwrap();
 
-        let mock_server = MockRelayServer::new(validator_store);
+        // Verify that blocks do not match before running catchup
+        let latest_block_store_node_0 = validator_store_node_1
+            .last_block_store
+            .read(0)
+            .await
+            .expect("Error fetching from the last block store")
+            .expect("Latest block info for node 0 was unexpectedly empty");
+
+        let latest_block_store_target = restarted_validator_state
+            .validator_store
+            .last_block_store
+            .read(0)
+            .await
+            .expect("Error fetching from the last block store")
+            // allow unwrap to default for this special case
+            .unwrap_or_default();
+
+        assert!(latest_block_store_node_0.block_number != latest_block_store_target.block_number);
+
+        let mock_server = MockRelayServer::new(validator_store_node_1);
         let mut mock_catchup_manager = MockCatchupManger::new(10);
         mock_catchup_manager
             .catchup_narwhal_mediated(&mock_server, &restarted_validator_state)
             .await
             .unwrap();
 
+        // drop the cluster to stop forward progress of consensus
         drop(cluster);
-        tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
+
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+
+        // Verify that blocks do match after running catchup
+        let latest_block_store_node_1 = validator_store_node_1
+            .last_block_store
+            .read(0)
+            .await
+            .expect("Error fetching from the last block store")
+            .expect("Latest block info for node 0 was unexpectedly empty");
+
+        let latest_block_store_target = restarted_validator_state
+            .validator_store
+            .last_block_store
+            .read(0)
+            .await
+            .expect("Error fetching from the last block store")
+            .expect("Latest block info for target node was unexpectedly empty");
+
+        // verify that blocks do match after running catchup
+        assert!(latest_block_store_node_1.block_number == latest_block_store_target.block_number);
+        info!("Success");
     }
 }

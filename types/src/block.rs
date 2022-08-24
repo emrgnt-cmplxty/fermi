@@ -6,7 +6,7 @@ pub type BlockNumber = u64;
 pub type BlockDigest = CertificateDigest;
 pub type BlockCertificate = Certificate;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
 pub struct Block {
     pub block_number: BlockNumber,
     pub transactions: Vec<SerializedTransaction>,

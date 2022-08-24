@@ -1,25 +1,46 @@
 use crate::validator::state::ValidatorState;
-use gdex_types::proto::{
-    BlockInfoProto, BlockProto, Relayer, RelayerBlockInfoResponse, RelayerBlockResponse, RelayerGetBlockInfoRequest,
-    RelayerGetBlockRequest, RelayerGetLatestBlockInfoRequest,
-};
+use gdex_types::proto::{*};
+use multiaddr::Multiaddr;
 use narwhal_types::CertificateDigestProto;
+
 use std::sync::Arc;
+use tokio::task::JoinHandle;
 use tonic::{Request, Response, Status};
 
 pub struct RelayerService {
     pub state: Arc<ValidatorState>,
 }
+// TODO make generic server handle
+pub struct RelayerServerHandle {
+    local_addr: Multiaddr,
+    handle: JoinHandle<()>,
+}
+
+impl RelayerServerHandle {
+    pub fn address(&self) -> &Multiaddr {
+        &self.local_addr
+    }
+
+    pub fn get_handle(self) -> JoinHandle<()> {
+        self.handle
+    }
+
+    pub fn new(local_addr: Multiaddr, handle: JoinHandle<()>) -> Self {
+        RelayerServerHandle { local_addr, handle }
+    }
+}
 
 #[tonic::async_trait]
 impl Relayer for RelayerService {
-    async fn read_latest_block_info(
+    async fn get_latest_block_info(
         &self,
         _request: Request<RelayerGetLatestBlockInfoRequest>,
     ) -> Result<Response<RelayerBlockInfoResponse>, Status> {
         let validator_state = &self.state;
+        let returned_value = validator_state.validator_store.last_block_store.read(0).await;
+        println!("{:?}", returned_value.as_ref().unwrap());
 
-        match validator_state.validator_store.last_block_store.read(0).await {
+        match returned_value {
             Ok(opt) => {
                 if let Some(block_info) = opt {
                     Ok(Response::new(RelayerBlockInfoResponse {

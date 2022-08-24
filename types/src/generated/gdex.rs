@@ -323,7 +323,7 @@ pub mod relayer_client {
             self.inner = self.inner.accept_gzip();
             self
         }
-        pub async fn read_latest_block_info(
+        pub async fn get_latest_block_info(
             &mut self,
             request: impl tonic::IntoRequest<super::RelayerGetLatestBlockInfoRequest>,
         ) -> Result<tonic::Response<super::RelayerBlockInfoResponse>, tonic::Status> {
@@ -338,7 +338,7 @@ pub mod relayer_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/gdex.Relayer/ReadLatestBlockInfo",
+                "/gdex.Relayer/GetLatestBlockInfo",
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
@@ -706,7 +706,7 @@ pub mod relayer_server {
     ///Generated trait containing gRPC methods that should be implemented for use with RelayerServer.
     #[async_trait]
     pub trait Relayer: Send + Sync + 'static {
-        async fn read_latest_block_info(
+        async fn get_latest_block_info(
             &self,
             request: tonic::Request<super::RelayerGetLatestBlockInfoRequest>,
         ) -> Result<tonic::Response<super::RelayerBlockInfoResponse>, tonic::Status>;
@@ -767,14 +767,14 @@ pub mod relayer_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
-                "/gdex.Relayer/ReadLatestBlockInfo" => {
+                "/gdex.Relayer/GetLatestBlockInfo" => {
                     #[allow(non_camel_case_types)]
-                    struct ReadLatestBlockInfoSvc<T: Relayer>(pub Arc<T>);
+                    struct GetLatestBlockInfoSvc<T: Relayer>(pub Arc<T>);
                     impl<
                         T: Relayer,
                     > tonic::server::UnaryService<
                         super::RelayerGetLatestBlockInfoRequest,
-                    > for ReadLatestBlockInfoSvc<T> {
+                    > for GetLatestBlockInfoSvc<T> {
                         type Response = super::RelayerBlockInfoResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
@@ -788,7 +788,7 @@ pub mod relayer_server {
                         ) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move {
-                                (*inner).read_latest_block_info(request).await
+                                (*inner).get_latest_block_info(request).await
                             };
                             Box::pin(fut)
                         }
@@ -798,7 +798,7 @@ pub mod relayer_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let inner = inner.0;
-                        let method = ReadLatestBlockInfoSvc(inner);
+                        let method = GetLatestBlockInfoSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

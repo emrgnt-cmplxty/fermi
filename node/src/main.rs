@@ -88,5 +88,6 @@ async fn run(matches: &ArgMatches<'_>) {
     );
 
     let handler = validator_spawner.spawn_validator().await;
+
     join_all(handler).await;
 }

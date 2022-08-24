@@ -36,7 +36,7 @@ message FaucetAirdropResponse {
 
 // Relay service for relaying information outside
 service Relayer {
-    rpc ReadLatestBlockInfo (RelayerGetLatestBlockInfoRequest) returns (RelayerBlockInfoResponse);
+    rpc GetLatestBlockInfo (RelayerGetLatestBlockInfoRequest) returns (RelayerBlockInfoResponse);
     rpc GetBlockInfo (RelayerGetBlockInfoRequest) returns (RelayerBlockInfoResponse);
     rpc GetBlock (RelayerGetBlockRequest) returns (RelayerBlockResponse);
 }

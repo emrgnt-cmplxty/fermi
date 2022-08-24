@@ -1,32 +1,42 @@
 use crate::{relayer::server::RelayerService, validator::state::ValidatorState};
-use gdex_types::proto::RelayerServer;
-use std::{net::SocketAddr, sync::Arc};
-use tonic::transport::Server;
+use gdex_types::proto::{*};
+use gdex_types::utils;
+
+use std::sync::Arc;
+
+use crate::relayer::server::RelayerServerHandle;
 
 pub struct RelayerSpawner {
-    pub validator_state: Option<Arc<ValidatorState>>,
+    validator_state: Arc<ValidatorState>,
 }
 
 impl RelayerSpawner {
-    pub async fn spawn_relay_server(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        // Putting the port to 8000
-        let addr = "127.0.0.1:8001";
+    pub fn new(state: Arc<ValidatorState>) -> Self {
+        RelayerSpawner { validator_state: state }
+    }
 
-        // Parsing it into an address
-        let addr = addr.parse::<SocketAddr>()?;
+    pub async fn spawn_relay_server(&mut self) -> Result<RelayerServerHandle, Box<dyn std::error::Error>> {
+        // Putting the port to 8000
+        let addr = utils::new_network_address();
 
         // Instantiating the faucet service
         let relay_service = RelayerService {
-            state: Arc::clone(self.validator_state.as_ref().unwrap()),
+            state: self.validator_state.clone(),
         };
 
-        // Start the faucet service
-        Server::builder()
-            .add_service(RelayerServer::new(relay_service))
-            .serve(addr)
-            .await?;
+        // Start the relay service
 
-        Ok(())
+        let server = crate::config::server::ServerConfig::new()
+            .server_builder()
+            .add_service(RelayerServer::new(relay_service))
+            .bind(&addr)
+            .await
+            .unwrap();
+
+        // let server = Server::builder().add_service(RelayerServer::new(relay_service));
+        let handle = tokio::spawn(async move { server.serve().await });
+        let server_handle = RelayerServerHandle::new(addr, handle);
+        Ok(server_handle)
     }
 }
 
@@ -41,7 +51,7 @@ pub mod suite_spawn_tests {
     use gdex_types::transaction::create_asset_creation_transaction;
     use gdex_types::transaction::SignedTransaction;
     use gdex_types::{
-        proto::{RelayerClient, RelayerGetBlockInfoRequest, RelayerGetBlockRequest, RelayerGetLatestBlockInfoRequest},
+        proto::{*},
         utils,
     };
     use narwhal_consensus::ConsensusOutput;
@@ -52,6 +62,8 @@ pub mod suite_spawn_tests {
     use narwhal_types::Certificate;
     use narwhal_types::Header;
     use std::path::Path;
+
+    use crate::client::endpoint_from_multiaddr;
 
     pub fn create_test_consensus_output() -> ConsensusOutput {
         let dummy_header = Header::default();
@@ -67,8 +79,8 @@ pub mod suite_spawn_tests {
 
     // cargo test --package gdex-core --lib -- relayer::spawner::suite_spawn_tests::spawn_and_ping_relay_server --exact --nocapture
     #[tokio::test]
-    pub async fn test_relay_get_block() {
-        // GETTING VALIDATOR STATE READY
+    pub async fn spawn_relay_server() {
+        // Arrange
         let dir = "../.proto";
         let path = Path::new(dir).to_path_buf();
         let address = utils::new_network_address();
@@ -82,7 +94,7 @@ pub mod suite_spawn_tests {
         let _handles = validator_spawner.spawn_validator_with_reconfigure().await;
         let validator_state = validator_spawner.get_validator_state().clone().unwrap();
 
-        // CREATING A CREATE ASSET TRANSACTION
+        // Create txns
         let dummy_consensus_output = create_test_consensus_output();
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
@@ -97,33 +109,34 @@ pub mod suite_spawn_tests {
         serialized_txns_buf.push(serialized_txn);
         let certificate = dummy_consensus_output.certificate;
 
-        // Cloning these values to construct a block later
         let initial_certificate = certificate.clone();
         let initial_serialized_txns_buf = serialized_txns_buf.clone();
 
-        // Writing the block
+        // Write the block
         validator_state
             .validator_store
             .write_latest_block(initial_certificate, initial_serialized_txns_buf)
             .await;
 
-        // LAUNCHING THE SERVER
-        let mut relay_spawner = RelayerSpawner {
-            validator_state: Some(validator_state),
-        };
-        tokio::spawn(async move {
-            relay_spawner.spawn_relay_server().await.unwrap();
-        });
-        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
-        // PINGING THE SERVER TO GET LATEST BLOCK
-        let addr = "http://127.0.0.1:8001";
-        let mut client = RelayerClient::connect(addr.to_string()).await.unwrap();
+        // TODO clean
+        // Connect client
+        let address = validator_spawner.get_relayer_address();
+        let address_ref= &address.clone().unwrap();
+        let target_endpoint = endpoint_from_multiaddr(address_ref).unwrap();
+        let endpoint = target_endpoint.endpoint();
+        let mut client = RelayerClient::connect(endpoint.clone()).await.unwrap();
+
         let specific_block_request = tonic::Request::new(RelayerGetBlockRequest { block_number: 0 });
+        let latest_block_info_request = tonic::Request::new(RelayerGetLatestBlockInfoRequest {});
+
+        // Act
         let specific_block_response = client.get_block(specific_block_request).await;
+        let latest_block_info_response = client.get_latest_block_info(latest_block_info_request).await;
         let block_bytes_returned = specific_block_response.unwrap().into_inner().block.unwrap().block;
 
-        // CHECKING THAT IT MATCHES WHAT WE PUT IN AT FIRST
+
+        // Assert
         let deserialized_block: Block = bincode::deserialize(&block_bytes_returned).unwrap();
         let final_certificate = certificate.clone();
         let final_serialized_txns_buf = serialized_txns_buf.clone();
@@ -134,15 +147,6 @@ pub mod suite_spawn_tests {
         assert!(block_to_check_against.block_certificate == deserialized_block.block_certificate);
         assert!(block_to_check_against.transactions == deserialized_block.transactions);
         // TODO TESTS FOR BLOCK INFO, CURRENTLY WE JUST PRINT
-        let latest_block_info_request = tonic::Request::new(RelayerGetLatestBlockInfoRequest {});
-        let latest_block_info_response = client.read_latest_block_info(latest_block_info_request).await;
-        println!("Response from latest block={:?}", latest_block_info_response);
-
-        let specific_block_info_request = tonic::Request::new(RelayerGetBlockInfoRequest { block_number: 0 });
-        let specific_block_info_response = client.get_block_info(specific_block_info_request).await;
-        println!(
-            "Response from specific block request = {:?}",
-            specific_block_info_response
-        );
+        assert!(latest_block_info_response.unwrap().into_inner().successful)
     }
 }

@@ -2,52 +2,29 @@
 pub mod cluster_test_suite {
 
     // IMPORTS
-    
+
     // external
-    use std::{
-        io
-    };
     use narwhal_crypto::Hash;
+    use std::io;
     use tracing::info;
     //use tracing_subscriber::FmtSubscriber;
-    use tokio::time::{
-        sleep,
-        Duration
-    };
-    
+    use tokio::time::{sleep, Duration};
+
     // mysten
-    
+
     // gdex
-    use gdex_core::{
-        client
-    };
+    use gdex_core::client;
     use gdex_types::{
-        account::{
-            account_test_functions::generate_keypair_vec,
-            ValidatorKeyPair
-        },
+        account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair},
         asset::PRIMARY_ASSET_ID,
-        proto::{
-            TransactionProto,
-            TransactionsClient
-        },
-        crypto::{
-            get_key_pair_from_rng,
-            KeypairTraits
-        },
-        transaction::{
-            transaction_test_functions::generate_signed_test_transaction,
-            SignedTransaction
-        },
+        crypto::{get_key_pair_from_rng, KeypairTraits},
+        proto::{TransactionProto, TransactionsClient},
+        transaction::{transaction_test_functions::generate_signed_test_transaction, SignedTransaction},
         utils,
     };
-    
+
     // local
-    use gdex_suite::{
-        test_utils::{
-            test_cluster::TestCluster
-        }
-    };
+    use gdex_suite::test_utils::test_cluster::TestCluster;
 
     // TESTS
 
@@ -59,11 +36,11 @@ pub mod cluster_test_suite {
             .finish();
         tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
         */
-    
+
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::new(validator_count).await;
-        
+
         info!("Sending transactions");
         let working_dir = cluster.get_working_dir();
         let spawner_0 = cluster.get_validator_spawner(0);
@@ -92,7 +69,7 @@ pub mod cluster_test_suite {
             i += 1;
         }
     }
-    
+
     #[tokio::test]
     pub async fn test_balance_state() {
         /*
@@ -101,11 +78,11 @@ pub mod cluster_test_suite {
             .finish();
         tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
         */
-    
+
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::new(validator_count).await;
-        
+
         info!("Sending transactions");
         let working_dir = cluster.get_working_dir();
         let spawner_0 = cluster.get_validator_spawner(0);
@@ -165,11 +142,11 @@ pub mod cluster_test_suite {
             .finish();
         tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
         */
-    
+
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::new(validator_count).await;
-        
+
         info!("Sending transactions");
         let working_dir = cluster.get_working_dir();
         let spawner_0 = cluster.get_validator_spawner(0);
@@ -197,7 +174,7 @@ pub mod cluster_test_suite {
                 .unwrap();
             i += 1;
         }
-        
+
         sleep(Duration::from_secs(1)).await;
 
         info!("Reconfiguring validator");
@@ -210,7 +187,13 @@ pub mod cluster_test_suite {
         };
 
         let key = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
-        spawner_0.get_tx_reconfigure_consensus().as_ref().unwrap().send((key, new_committee)).await.unwrap();
+        spawner_0
+            .get_tx_reconfigure_consensus()
+            .as_ref()
+            .unwrap()
+            .send((key, new_committee))
+            .await
+            .unwrap();
     }
 
     #[tokio::test]
@@ -221,11 +204,11 @@ pub mod cluster_test_suite {
             .finish();
         tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
         */
-    
+
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::new(validator_count).await;
-        
+
         info!("Sending transactions");
         let working_dir = cluster.get_working_dir();
         let spawner_0 = cluster.get_validator_spawner(0);
@@ -257,7 +240,7 @@ pub mod cluster_test_suite {
                 .unwrap();
             i += 1;
         }
-        
+
         info!("Sleep to allow all transactions to propagate");
         let spawner_1 = cluster.get_validator_spawner(1);
         sleep(Duration::from_secs(5)).await;
@@ -291,6 +274,5 @@ pub mod cluster_test_suite {
             total as u64 == n_transactions_to_submit,
             "total transactions in db does not match total submitted"
         );
-        
     }
 }

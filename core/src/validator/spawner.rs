@@ -1,53 +1,34 @@
 // IMPORTS
 
 // external
+use futures::future::join_all;
 use multiaddr::Multiaddr;
-use std::{
-    path::PathBuf,
-    sync::Arc
-};
+use std::{path::PathBuf, sync::Arc};
 use tokio::{
     sync::mpsc::{Receiver, Sender},
     task::JoinHandle,
 };
 use tracing::info;
-use futures::future::join_all;
 
 // mysten
-use narwhal_config::{
-    Committee as ConsensusCommittee,
-    Parameters as ConsensusParameters
-};
+use narwhal_config::{Committee as ConsensusCommittee, Parameters as ConsensusParameters};
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
 
 // gdex
-use gdex_types::{
-    node::ValidatorInfo,
-    utils
-};
+use gdex_types::{node::ValidatorInfo, utils};
 
 // local
+use crate::relayer::spawner::RelayerSpawner;
 use crate::{
-    config::{
-        consensus::ConsensusConfig,
-        node::NodeConfig,
-        Genesis,
-        CONSENSUS_DB_NAME,
-        GDEX_DB_NAME
-    },
+    config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, GDEX_DB_NAME},
     genesis_ceremony::GENESIS_FILENAME,
     metrics::start_prometheus_server,
     validator::{
-        genesis_state::ValidatorGenesisState,
-        server::ValidatorServer,
-        server::ValidatorService,
-        state::ValidatorState,
+        genesis_state::ValidatorGenesisState, server::ValidatorServer, server::ValidatorService, state::ValidatorState,
     },
 };
-use crate::relayer::spawner::RelayerSpawner;
 
 // INTERFACE
-
 
 // TODO lets clean up these comments
 /// Can spawn a validator server handle at the internal address
@@ -59,7 +40,7 @@ pub struct ValidatorSpawner {
     db_path: PathBuf,
     /// Relative path where validator keystore lives with convention {validator_name}.key
     key_path: PathBuf,
-     /// Genesis state of the blockchain
+    /// Genesis state of the blockchain
     genesis_state: ValidatorGenesisState,
     /// validator info, fetched from the genesis state according to initial name
     validator_info: ValidatorInfo,
@@ -78,7 +59,7 @@ pub struct ValidatorSpawner {
     /// Handle for the... TODO
     service_handles: Option<Vec<JoinHandle<()>>>,
     /// Handle for the... TODO
-    server_handles: Option<Vec<JoinHandle<()>>>
+    server_handles: Option<Vec<JoinHandle<()>>>,
 }
 
 impl ValidatorSpawner {
@@ -111,7 +92,7 @@ impl ValidatorSpawner {
             relayer_address: None,
             tx_reconfigure_consensus: None,
             service_handles: None,
-            server_handles: None
+            server_handles: None,
         }
     }
 
@@ -165,7 +146,7 @@ impl ValidatorSpawner {
     /// note, this function will fail if called twice from the same spawner
     async fn spawn_validator_service(
         &mut self,
-        rx_reconfigure_consensus: Receiver<(ConsensusKeyPair, ConsensusCommittee)>
+        rx_reconfigure_consensus: Receiver<(ConsensusKeyPair, ConsensusCommittee)>,
     ) {
         if self.is_validator_service_spawned() {
             panic!("The validator service has already been spawned");
@@ -239,16 +220,14 @@ impl ValidatorSpawner {
                 rx_reconfigure_consensus,
             )
             .await
-            .unwrap()
+            .unwrap(),
         );
         self.set_validator_state(validator_state);
     }
 
     /// Internal helper function used to spawns the validator server
     /// note, this function will fail if called twice from the same spawner
-    async fn spawn_validator_server(
-        &mut self
-    ) {
+    async fn spawn_validator_server(&mut self) {
         if self.is_validator_server_spawned() {
             panic!("The validator server already been spawned");
         };
@@ -269,7 +248,10 @@ impl ValidatorSpawner {
         let relayer_server_handle = relayer_spawner.spawn_relay_server().await.unwrap();
         self.relayer_address = Some(relayer_server_handle.address().clone());
 
-        self.server_handles = Some(vec![validator_server_handle.get_handle(), relayer_server_handle.get_handle()]);
+        self.server_handles = Some(vec![
+            validator_server_handle.get_handle(),
+            relayer_server_handle.get_handle(),
+        ]);
     }
 
     pub async fn spawn_validator(&mut self) {

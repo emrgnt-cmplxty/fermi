@@ -1,54 +1,30 @@
 // IMPORTS
 
 // external
-use std::{
-    path::Path,
-    path::PathBuf
-};
+use std::{path::Path, path::PathBuf};
 use tempfile::TempDir;
 
 // mysten
 
 // gdex
-use gdex_controller::{
-    bank::CREATED_ASSET_BALANCE,
-    master::MasterController
-};
+use gdex_controller::{bank::CREATED_ASSET_BALANCE, master::MasterController};
 use gdex_core::{
-    genesis_ceremony::{
-        VALIDATOR_FUNDING_AMOUNT,
-        GENESIS_FILENAME,
-        VALIDATOR_BALANCE
-    },
-    validator::{
-        genesis_state::ValidatorGenesisState,
-        spawner::ValidatorSpawner
-    },
-    
+    genesis_ceremony::{GENESIS_FILENAME, VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
+    validator::{genesis_state::ValidatorGenesisState, spawner::ValidatorSpawner},
 };
 use gdex_types::{
-    account::{
-        ValidatorKeyPair,
-        ValidatorPubKeyBytes,
-        ValidatorPubKey
-    },
+    account::{ValidatorKeyPair, ValidatorPubKey, ValidatorPubKeyBytes},
     asset::PRIMARY_ASSET_ID,
-    crypto::{
-        get_key_pair_from_rng,
-        KeypairTraits
-    },
+    crypto::{get_key_pair_from_rng, KeypairTraits},
     node::ValidatorInfo,
-    utils
+    utils,
 };
 
 // local
 
 // HELPER FUNCTIONS
 
-async fn create_genesis_state(
-    dir: &Path,
-    validator_count: usize
-) -> ValidatorGenesisState {
+async fn create_genesis_state(dir: &Path, validator_count: usize) -> ValidatorGenesisState {
     // initialize validator info
     let validators_info = (0..validator_count)
         .map(|i| {
@@ -71,7 +47,7 @@ async fn create_genesis_state(
             info
         })
         .collect::<Vec<_>>();
-    
+
     let master_controller = MasterController::default();
 
     // create primary asset
@@ -99,7 +75,7 @@ async fn create_genesis_state(
             )
             .unwrap();
     }
-    
+
     ValidatorGenesisState::new(master_controller, validators_info)
 }
 
@@ -108,13 +84,11 @@ async fn create_genesis_state(
 pub struct TestCluster {
     validator_count: usize,
     temp_working_dir: TempDir,
-    validator_spawners: Vec<ValidatorSpawner>
+    validator_spawners: Vec<ValidatorSpawner>,
 }
 
 impl TestCluster {
-    pub async fn new(
-        validator_count: usize,
-    ) -> Self {
+    pub async fn new(validator_count: usize) -> Self {
         // get temp dirs
         let temp_working_dir = tempfile::tempdir().unwrap();
         let working_dir = temp_working_dir.path().to_path_buf();
@@ -122,7 +96,7 @@ impl TestCluster {
         // create and save genesis state
         let genesis_state = create_genesis_state(working_dir.as_path(), validator_count).await;
         let _save_result = genesis_state.save(working_dir.join(GENESIS_FILENAME));
-    
+
         // create and spawn validators
         let mut validator_spawners: Vec<ValidatorSpawner> = Vec::new();
         for validator_info in genesis_state.validator_set() {
@@ -131,7 +105,7 @@ impl TestCluster {
                 working_dir.clone(), // key path
                 working_dir.clone(), // genesis path
                 validator_info.network_address.clone(),
-                validator_info.name.clone()
+                validator_info.name.clone(),
             );
             validator_spawner.spawn_validator().await;
             validator_spawners.push(validator_spawner);
@@ -139,28 +113,21 @@ impl TestCluster {
         Self {
             validator_count,
             temp_working_dir,
-            validator_spawners
+            validator_spawners,
         }
     }
-    
+
     // GETTERS
-    
-    pub fn get_validator_count(
-        &self
-    ) -> usize {
+
+    pub fn get_validator_count(&self) -> usize {
         self.validator_count
     }
-    
-    pub fn get_working_dir(
-        &self
-    ) -> PathBuf {
+
+    pub fn get_working_dir(&self) -> PathBuf {
         self.temp_working_dir.path().to_path_buf()
     }
-    
-    pub fn get_validator_spawner(
-        &mut self,
-        idx: usize
-    ) -> &mut ValidatorSpawner {
+
+    pub fn get_validator_spawner(&mut self, idx: usize) -> &mut ValidatorSpawner {
         &mut self.validator_spawners[idx]
     }
 }

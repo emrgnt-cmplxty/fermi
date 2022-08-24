@@ -151,7 +151,7 @@ pub mod mock_catchup_manager {
 
                     new_state
                         .validator_store
-                        .write_latest_block(next_block_info.block_certificate.clone(), next_block.transactions)
+                        .write_latest_block(next_block.block_certificate.clone(), next_block.transactions)
                         .await;
                 }
             }

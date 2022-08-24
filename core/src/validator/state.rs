@@ -152,12 +152,10 @@ impl ValidatorStore {
 
         let block = Block {
             block_certificate: block_certificate.clone(),
-            block_number,
             transactions,
         };
 
         let block_info = BlockInfo {
-            block_certificate,
             block_number,
             block_digest,
         };

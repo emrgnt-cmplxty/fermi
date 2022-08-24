@@ -87,5 +87,6 @@ async fn run(matches: &ArgMatches<'_>) {
     );
 
     validator_spawner.spawn_validator().await;
+    validator_spawner.get_validator_state().unwrap().unhalt_validator();
     validator_spawner.await_handles().await;
 }

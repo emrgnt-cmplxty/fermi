@@ -15,7 +15,6 @@ serde_json = "1.0"
 tempfile = "3.3.0"
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1.36"
-tracing-subscriber = "0.2.0"
 
 # mysten crates
 narwhal-config = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "config"}
@@ -23,7 +22,7 @@ narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611e
 narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "types" }
 
 # local crates
-gdex-core = { path = "../core" }
+gdex-core = { path = "../core", features=["testing"] }
 gdex-engine = { path = "../engine" }
 gdex-controller = { path = "../controller" }
 gdex-types = { path = "../types", features=["testing"] }

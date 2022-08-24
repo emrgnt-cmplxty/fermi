@@ -16,16 +16,15 @@ use gdex_core::{
     },
     genesis_ceremony::{run, Ceremony, CeremonyCommand},
 };
+use gdex_node::faucet_server::FAUCET_PORT;
 use gdex_types::{
     account::AccountKeyPair,
-    crypto::{get_key_pair_from_rng, KeypairTraits, ToFromBytes},
+    crypto::get_key_pair_from_rng,
     proto::{FaucetAirdropRequest, FaucetClient},
     utils,
 };
-
-use gdex_node::faucet_server::FAUCET_PORT;
 use multiaddr::Multiaddr;
-use std::{fs, io::Write, num::NonZeroUsize, path::PathBuf};
+use std::{fs, num::NonZeroUsize, path::PathBuf};
 use tracing::info;
 
 /// Note, the code in this struct is inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui/src/sui_commands.rs
@@ -393,8 +392,8 @@ impl GDEXCommand {
                 keystore_path,
                 keystore_name,
             } => {
-                let kp_sender: AccountKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
-                let private_keys = kp_sender.private().as_bytes().to_vec();
+                let keypair: AccountKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+
                 let keystore_path = keystore_path.unwrap_or(gdex_config_dir()?);
                 let keystore_name = keystore_name.unwrap_or_else(|| String::from(GDEX_KEYSTORE_FILENAME));
 
@@ -404,8 +403,8 @@ impl GDEXCommand {
 
                 let file_result = fs::File::create(&keystore_path.join(&keystore_name));
                 match file_result {
-                    Ok(mut file) => {
-                        file.write_all(&private_keys)?;
+                    Ok(..) => {
+                        utils::write_keypair_to_file(&keypair, &keystore_path.join(&keystore_name))?;
                     }
                     Err(..) => {
                         println!("A keystore already exists at {:?}.", &keystore_path);

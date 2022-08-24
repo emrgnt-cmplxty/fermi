@@ -136,6 +136,7 @@ pub mod suite_spawn_tests {
         let final_certificate = certificate.clone();
         let final_serialized_txns_buf = serialized_txns_buf.clone();
         let block_to_check_against = Block {
+            block_number: 0,
             block_certificate: final_certificate,
             transactions: final_serialized_txns_buf,
         };

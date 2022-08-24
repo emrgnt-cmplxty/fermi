@@ -2496,7 +2496,6 @@ dependencies = [
  "tower",
  "tower-http",
  "tracing",
- "tracing-subscriber 0.2.25",
  "typed-store",
  "types",
 ]
@@ -2552,7 +2551,6 @@ dependencies = [
  "tempfile",
  "tokio",
  "tracing",
- "tracing-subscriber 0.2.25",
  "types",
 ]
 
@@ -2585,6 +2583,8 @@ dependencies = [
  "thiserror",
  "tonic",
  "tonic-build 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tracing",
+ "tracing-subscriber 0.2.25",
  "types",
 ]
 

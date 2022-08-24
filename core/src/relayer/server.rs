@@ -37,7 +37,7 @@ impl Relayer for RelayerService {
         _request: Request<RelayerGetLatestBlockInfoRequest>,
     ) -> Result<Response<RelayerBlockInfoResponse>, Status> {
         let validator_state = &self.state;
-        let returned_value = validator_state.validator_store.last_block_store.read(0).await;
+        let returned_value = validator_state.validator_store.last_block_info_store.read(0).await;
         println!("{:?}", returned_value.as_ref().unwrap());
 
         match returned_value {

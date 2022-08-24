@@ -65,9 +65,19 @@ pub fn read_keypair_from_file<K: KeypairTraits, P: AsRef<std::path::Path>>(path:
     let contents = std::fs::read_to_string(path)?;
     K::decode_base64(contents.as_str().trim()).map_err(|e| anyhow!(e))
 }
+
 /// This function is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui/src/keytool.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 pub fn write_keypair_to_file<K: KeypairTraits, P: AsRef<std::path::Path>>(keypair: &K, path: P) -> anyhow::Result<()> {
     let contents = keypair.encode_base64();
     std::fs::write(path, contents)?;
     Ok(())
+}
+
+#[allow(unused_must_use)]
+pub fn set_testing_telemetry(filter: &str) {
+    let subscriber = tracing_subscriber::FmtSubscriber::builder()
+        .with_env_filter(filter)
+        .finish();
+    // unwrapping causes failure in tests, but is not a problem in production
+    tracing::subscriber::set_global_default(subscriber);
 }

@@ -1,7 +1,10 @@
 // IMPORTS
 
 // external
-use std::{path::Path, path::PathBuf};
+use std::{
+    io,
+    path::{Path, PathBuf},
+};
 use tempfile::TempDir;
 
 // mysten
@@ -9,16 +12,20 @@ use tempfile::TempDir;
 // gdex
 use gdex_controller::{bank::CREATED_ASSET_BALANCE, master::MasterController};
 use gdex_core::{
+    client,
     genesis_ceremony::{GENESIS_FILENAME, VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
     validator::{genesis_state::ValidatorGenesisState, spawner::ValidatorSpawner},
 };
 use gdex_types::{
-    account::{ValidatorKeyPair, ValidatorPubKey, ValidatorPubKeyBytes},
+    account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair, ValidatorPubKey, ValidatorPubKeyBytes},
     asset::PRIMARY_ASSET_ID,
     crypto::{get_key_pair_from_rng, KeypairTraits},
     node::ValidatorInfo,
+    proto::{TransactionProto, TransactionsClient},
+    transaction::{transaction_test_functions::generate_signed_test_transaction, SignedTransaction},
     utils,
 };
+use tokio::task::JoinHandle;
 
 // local
 
@@ -80,7 +87,6 @@ async fn create_genesis_state(dir: &Path, validator_count: usize) -> ValidatorGe
 }
 
 // INTERFACE
-
 pub struct TestCluster {
     validator_count: usize,
     temp_working_dir: TempDir,
@@ -130,5 +136,97 @@ impl TestCluster {
 
     pub fn get_validator_spawner(&mut self, idx: usize) -> &mut ValidatorSpawner {
         &mut self.validator_spawners[idx]
+    }
+
+    pub async fn stop(&mut self, index: usize) {
+        let spawner = self.get_validator_spawner(index);
+        spawner.stop().await;
+    }
+
+    pub async fn start(&mut self, index: usize) {
+        let spawner = self.get_validator_spawner(index);
+        // start the validator back up
+        spawner.spawn_validator().await;
+        spawner.get_validator_state().unwrap().unhalt_validator();
+    }
+
+    pub async fn send_transactions(
+        &mut self,
+        sending_validator: usize,
+        receiving_validator: usize,
+        n_transactions: u64,
+        fixed_amount: Option<u64>
+    ) -> (ValidatorKeyPair, ValidatorKeyPair, Vec<SignedTransaction>) {
+        let working_dir = self.get_working_dir();
+        let sender = self.get_validator_spawner(sending_validator);
+        let key_file = working_dir.join(format!("{}.key", sender.get_validator_info().name));
+
+        let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
+        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
+
+        let receiver = self.get_validator_spawner(receiving_validator);
+        let receiver_address = receiver.get_validator_address().as_ref().unwrap().clone();
+
+        let mut client =
+            TransactionsClient::new(client::connect_lazy(&receiver_address).expect("Failed to connect to consensus"));
+
+        let mut signed_transactions = Vec::new();
+        let mut i = 1;
+        while i < n_transactions + 1 {
+            let amount = fixed_amount.unwrap_or(i);
+            let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, amount);
+            signed_transactions.push(signed_transaction.clone());
+            let transaction_proto = TransactionProto {
+                transaction: signed_transaction.serialize().unwrap().into(),
+            };
+            let _resp1 = client
+                .submit_transaction(transaction_proto)
+                .await
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+                .unwrap();
+            i += 1;
+        }
+        (kp_sender, kp_receiver, signed_transactions)
+    }
+
+    pub async fn send_transactions_async(
+        &mut self,
+        sending_validator: usize,
+        receiving_validator: usize,
+        n_transactions: u64,
+        fixed_amount: Option<u64>
+    ) -> JoinHandle<()> {
+        let working_dir = self.get_working_dir();
+        let sender = self.get_validator_spawner(sending_validator);
+        let key_file = working_dir.join(format!("{}.key", sender.get_validator_info().name));
+
+        let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
+        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
+
+        let receiver = self.get_validator_spawner(receiving_validator);
+        let receiver_address = receiver.get_validator_address().as_ref().unwrap().clone();
+
+        let mut client =
+            TransactionsClient::new(client::connect_lazy(&receiver_address).expect("Failed to connect to consensus"));
+
+        let mut signed_transactions = Vec::new();
+        let mut i = 1;
+        let handle = tokio::spawn(async move {
+        while i < n_transactions + 1 {
+            let amount = fixed_amount.unwrap_or(i);
+            let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, amount);
+            signed_transactions.push(signed_transaction.clone());
+            let transaction_proto = TransactionProto {
+                transaction: signed_transaction.serialize().unwrap().into(),
+            };
+            let _resp1 = client
+                .submit_transaction(transaction_proto)
+                .await
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+                .unwrap();
+            i += 1;
+        }
+    });
+    handle
     }
 }

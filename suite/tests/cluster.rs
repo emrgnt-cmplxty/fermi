@@ -1,3 +1,4 @@
+// TODO - how do we get set_testing_telemetry to work well with tests?
 #[cfg(test)]
 pub mod cluster_test_suite {
 
@@ -10,7 +11,6 @@ pub mod cluster_test_suite {
         asset::PRIMARY_ASSET_ID,
         crypto::{get_key_pair_from_rng, KeypairTraits},
         transaction::SignedTransaction,
-        utils,
     };
 
     // external
@@ -156,7 +156,7 @@ pub mod cluster_test_suite {
 
     #[tokio::test(flavor = "multi_thread")]
     pub async fn test_catchup_new_node_mock() {
-        utils::set_testing_telemetry("gdex_core=info, gdex_suite=info");
+        // utils::set_testing_telemetry("gdex_core=info, gdex_suite=info");
         // submit more transactions than we can possibly process
         const N_TRANSACTIONS: u64 = 1_000_000;
         info!("Creating test cluster");
@@ -217,7 +217,7 @@ pub mod cluster_test_suite {
         // drop the cluster to stop forward progress of consensus
         drop(cluster);
 
-        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 
         // Verify that blocks do match after running catchup
         let latest_block_store_node_1 = validator_store_node_1
@@ -236,7 +236,12 @@ pub mod cluster_test_suite {
             .expect("Latest block info for target node was unexpectedly empty");
 
         // verify that blocks do match after running catchup
-        assert!(latest_block_store_node_1.block_number == latest_block_store_target.block_number);
+        assert!(
+            latest_block_store_node_1.block_number == latest_block_store_target.block_number,
+            "Failure, catchup node block number = {}, target node block number = {}",
+            latest_block_store_node_1.block_number,
+            latest_block_store_target.block_number
+        );
         info!("Success");
     }
 }

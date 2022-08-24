@@ -45,9 +45,9 @@ pub struct ValidatorSpawner {
     /// Address for communication to the validator server
     validator_address: Option<Multiaddr>,
     /// Handle for the service related tasks
-    pub service_handles: Option<Vec<JoinHandle<()>>>,
+    service_handles: Option<Vec<JoinHandle<()>>>,
     /// Handle for the server related tasks
-    pub server_handles: Option<Vec<JoinHandle<()>>>,
+    server_handles: Option<Vec<JoinHandle<()>>>,
 }
 
 impl ValidatorSpawner {

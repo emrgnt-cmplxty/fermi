@@ -17,11 +17,13 @@ use gdex_types::{
 use mysten_store::{
     reopen,
     rocks::{open_cf, DBMap},
-    Store,
+    Map, Store,
 };
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::Hash;
 use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
+use narwhal_types::CertificateDigest;
+
 use std::{
     collections::HashMap,
     path::PathBuf,
@@ -65,27 +67,51 @@ impl ValidatorStore {
             Self::LAST_BLOCK_CF;<u64, BlockInfo>
         );
 
+        let block_number_from_dbmap = last_block_map.get(&(0 as u64));
+
         let block_store = Store::new(block_map);
         let block_info_store = Store::new(block_info_map);
         let last_block_store = Store::new(last_block_map);
 
+        // TODO load the state if last block is not 0, i.e. not at genesis
+        let block_number = match block_number_from_dbmap {
+            Ok(o) => {
+                if let Some(v) = o {
+                    v.block_number
+                    // mark for replay somehow here
+                } else {
+                    0
+                }
+            }
+            Err(_) => 0,
+        };
+
+        let block_digest_cache = Mutex::new(HashMap::new());
+        // TODO theres likely a better way to say what I'm saying here
+        if block_number == 0 {
+            block_digest_cache
+                .lock()
+                .unwrap()
+                .insert(CertificateDigest::new([0; 32]), 0);
+        }
+
         Self {
             transaction_cache: Mutex::new(HashMap::new()),
-            block_digest_cache: Mutex::new(HashMap::new()),
+            block_digest_cache,
             gc_depth: 50,
             block_store,
             block_info_store,
-            block_number: AtomicU64::new(0),
+            block_number: AtomicU64::new(block_number),
             last_block_store,
         }
     }
 
-    pub fn contains_transaction(&self, transaction: &Transaction) -> bool {
+    pub fn cache_contains_transaction(&self, transaction: &Transaction) -> bool {
         let transaction_digest = transaction.digest();
         return self.transaction_cache.lock().unwrap().contains_key(&transaction_digest);
     }
 
-    pub fn contains_block_digest(&self, block_digest: &BlockDigest) -> bool {
+    pub fn cache_contains_block_digest(&self, block_digest: &BlockDigest) -> bool {
         return self.block_digest_cache.lock().unwrap().contains_key(block_digest);
     }
 

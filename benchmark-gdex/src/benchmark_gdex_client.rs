@@ -1,27 +1,33 @@
+use std::fmt::Debug;
+use std::net::SocketAddr;
 // Copyright (c) 2021, Facebook, Inc. and its affiliates
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 use anyhow::{Context, Result};
 use clap::{crate_name, crate_version, App, AppSettings};
 use futures::{future::join_all, StreamExt};
+use gdex_types::proto::{RelayerClient, RelayerRequest, RelayerResponse};
 use gdex_types::{
     account::AccountKeyPair,
     proto::{TransactionProto, TransactionsClient},
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
 };
+use log::debug;
 use narwhal_crypto::{
     traits::{KeyPair, Signer},
     Hash, DIGEST_LEN,
 };
-use narwhal_types::CertificateDigest;
+use narwhal_types::{CertificateDigest, CertificateDigestProto};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use tokio::{
     net::TcpStream,
     time::{interval, sleep, Duration, Instant},
 };
+use tonic::{Response, Status};
 use tracing::{info, subscriber::set_global_default, warn};
 use tracing_subscriber::filter::EnvFilter;
 use url::Url;
+
 const PRIMARY_ASSET_ID: u64 = 0;
 
 #[cfg(not(tarpaulin))]
@@ -136,9 +142,38 @@ impl Client {
         let interval = interval(Duration::from_millis(BURST_DURATION));
         tokio::pin!(interval);
 
-        // NOTE: This log entry is used to compute performance.
+        // // this is the wrong path
+        // let addr = "http://localhost:8000";
+        // let mut relay_client = RelayerClient::connect(addr)
+        //     .await
+        //     .context(format!("failed to connect to {}", addr))?;
+
         info!("Start sending transactions");
         'main: loop {
+            // let request = tonic::Request::new(RelayerRequest {
+            //     dummy_request: "hello world".to_string(),
+            // });
+            //
+            // let recent_block_info_response = relay_client.read_latest_block_info(request).await;
+
+            // TODO this is a clusterf and potentially a bottleneck
+            // let _recent_block_hash = match recent_block_info_response {
+            //     Ok(r) => {
+            //         let response_inner = r.into_inner();
+            //         if response_inner.successful && response_inner.clone().block_info.is_some() {
+            //             let block_info = response_inner.clone().block_info.unwrap();
+            //             let digest_bytes = block_info.clone().digest;
+            //             CertificateDigest::try_from(CertificateDigestProto { digest: digest_bytes })
+            //                 .expect("Failed to deserialize block digest")
+            //         } else {
+            //             CertificateDigest::new([0; 32])
+            //         }
+            //     }
+            //     Err(_) => {CertificateDigest::new([0; 32])}
+            // };
+            //
+            // info!("Recent {_recent_block_hash}");
+
             interval.as_mut().tick().await;
             let now = Instant::now();
 
@@ -156,15 +191,15 @@ impl Client {
             let stream = tokio_stream::iter(0..burst).map(move |x| {
                 let amount = if x == counter % burst {
                     // NOTE: This log entry is used to compute performance.
-                    info!("Sending sample transaction {counter}");
-                    counter
+                    info!("Sending sample transaction {r}");
+                    r
                 } else {
                     r += 1;
                     r
                 };
-                let signed_tranasction = create_signed_transaction(&kp_sender, &kp_receiver, amount);
+                let signed_transaction = create_signed_transaction(&kp_sender, &kp_receiver, amount);
                 TransactionProto {
-                    transaction: signed_tranasction.serialize().unwrap().into(),
+                    transaction: signed_transaction.serialize().unwrap().into(),
                 }
             });
 

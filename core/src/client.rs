@@ -30,7 +30,7 @@ pub(crate) fn connect_lazy_with_config(address: &Multiaddr, config: &ServerConfi
     Ok(channel)
 }
 
-fn endpoint_from_multiaddr(addr: &Multiaddr) -> Result<TargetEndpoint> {
+pub fn endpoint_from_multiaddr(addr: &Multiaddr) -> Result<TargetEndpoint> {
     let mut iter = addr.iter();
 
     let channel = match iter.next().ok_or_else(|| anyhow!("address is empty"))? {
@@ -63,7 +63,7 @@ fn endpoint_from_multiaddr(addr: &Multiaddr) -> Result<TargetEndpoint> {
 }
 
 /// Creates a new endpoint and facilitates connectivity
-struct TargetEndpoint {
+pub struct TargetEndpoint {
     endpoint: Endpoint,
     #[cfg(unix)]
     uds_connector: Option<std::path::PathBuf>,
@@ -76,6 +76,10 @@ impl TargetEndpoint {
             #[cfg(unix)]
             uds_connector: None,
         }
+    }
+
+    pub fn endpoint(&self) -> &Endpoint {
+        return &self.endpoint;
     }
 
     fn try_from_uri(uri: String) -> Result<Self> {

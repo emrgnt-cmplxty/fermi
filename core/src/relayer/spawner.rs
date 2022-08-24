@@ -1,32 +1,43 @@
 use crate::{relayer::server::RelayerService, validator::state::ValidatorState};
-use gdex_types::proto::RelayerServer;
-use std::{net::SocketAddr, sync::Arc};
-use tonic::transport::Server;
+use gdex_types::proto::{*};
+use gdex_types::utils;
+
+use std::sync::Arc;
+
+use crate::relayer::server::RelayerServerHandle;
 
 pub struct RelayerSpawner {
-    validator_state: Option<Arc<ValidatorState>>,
+    validator_state: Arc<ValidatorState>,
 }
 
 impl RelayerSpawner {
-    pub async fn spawn_relay_server(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        // Putting the port to 8000
-        let addr = "127.0.0.1:8000";
+    pub fn new(state: Arc<ValidatorState>) -> Self {
+        RelayerSpawner { validator_state: state }
+    }
 
-        // Parsing it into an address
-        let addr = addr.parse::<SocketAddr>()?;
+    pub async fn spawn_relay_server(&mut self) -> Result<RelayerServerHandle, Box<dyn std::error::Error>> {
+        // Putting the port to 8000
+        let addr = utils::new_network_address();
+        // let multiaddr = Multiaddr::from(addr);
 
         // Instantiating the faucet service
         let relay_service = RelayerService {
-            state: Arc::clone(self.validator_state.as_ref().unwrap()),
+            state: self.validator_state.clone(),
         };
 
-        // Start the faucet service
-        Server::builder()
-            .add_service(RelayerServer::new(relay_service))
-            .serve(addr)
-            .await?;
+        // Start the relay service
 
-        Ok(())
+        let server = crate::config::server::ServerConfig::new()
+            .server_builder()
+            .add_service(RelayerServer::new(relay_service))
+            .bind(&addr)
+            .await
+            .unwrap();
+
+        // let server = Server::builder().add_service(RelayerServer::new(relay_service));
+        let handle = tokio::spawn(async move { server.serve().await });
+        let server_handle = RelayerServerHandle::new(addr, handle);
+        Ok(server_handle)
     }
 }
 
@@ -35,13 +46,14 @@ pub mod suite_spawn_tests {
     use crate::relayer::spawner::RelayerSpawner;
     use crate::validator::spawner::ValidatorSpawner;
     use gdex_types::{
-        proto::{RelayerClient, RelayerRequest},
+        proto::{*},
         utils,
     };
     use std::path::Path;
 
+    use crate::client::endpoint_from_multiaddr;
+
     #[tokio::test]
-    #[ignore]
     pub async fn spawn_relay_server() {
         let dir = "../.proto";
         let path = Path::new(dir).to_path_buf();
@@ -59,18 +71,14 @@ pub mod suite_spawn_tests {
 
         let validator_state = validator_spawner.get_validator_state().clone();
 
-        let mut relay_spawner = RelayerSpawner {
-            validator_state: validator_state,
-        };
+        let mut relay_spawner = RelayerSpawner::new(validator_state.clone().unwrap());
 
-        let _result = relay_spawner.spawn_relay_server().await;
-    }
-
-    #[tokio::test]
-    #[ignore]
-    pub async fn ping_relay_server() {
-        let addr = "http://127.0.0.1:8000";
-        let mut client = RelayerClient::connect(addr.to_string()).await.unwrap();
+        // TODO clean
+        let address = validator_spawner.get_relayer_address();
+        let address_ref= &address.clone().unwrap();
+        let target_endpoint = endpoint_from_multiaddr(address_ref).unwrap();
+        let endpoint = target_endpoint.endpoint();
+        let mut client = RelayerClient::connect(endpoint.clone()).await.unwrap();
 
         let request = tonic::Request::new(RelayerRequest {
             dummy_request: "hello world".to_string(),
@@ -78,6 +86,6 @@ pub mod suite_spawn_tests {
 
         let response = client.read_latest_block_info(request).await;
 
-        println!("RESPONSE={:?}", response);
+        assert!(response.unwrap().into_inner().successful)
     }
 }

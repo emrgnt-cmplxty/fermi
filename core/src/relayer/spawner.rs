@@ -4,7 +4,7 @@ use std::{net::SocketAddr, sync::Arc};
 use tonic::transport::Server;
 
 pub struct RelayerSpawner {
-    validator_state: Option<Arc<ValidatorState>>,
+    pub validator_state: Option<Arc<ValidatorState>>,
 }
 
 impl RelayerSpawner {

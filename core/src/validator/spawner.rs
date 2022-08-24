@@ -1,22 +1,51 @@
+// IMPORTS
+
+// local
 use crate::{
-    config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, GDEX_DB_NAME},
+    config::{
+        consensus::ConsensusConfig,
+        node::NodeConfig,
+        Genesis,
+        CONSENSUS_DB_NAME,
+        GDEX_DB_NAME
+    },
     genesis_ceremony::GENESIS_FILENAME,
     metrics::start_prometheus_server,
     validator::{
-        genesis_state::ValidatorGenesisState, server::ValidatorServer, server::ValidatorService, state::ValidatorState,
+        genesis_state::ValidatorGenesisState,
+        server::ValidatorServer,
+        server::ValidatorService,
+        state::ValidatorState,
     },
 };
-use futures::future::join_all;
-use gdex_types::{node::ValidatorInfo, utils};
+
+// gdex
+use gdex_types::{
+    node::ValidatorInfo,
+    utils
+};
+
+// external
 use multiaddr::Multiaddr;
-use narwhal_config::{Committee as ConsensusCommittee, Parameters as ConsensusParameters};
-use narwhal_crypto::KeyPair as ConsensusKeyPair;
-use std::{path::PathBuf, sync::Arc};
+use std::{
+    path::PathBuf,
+    sync::Arc
+};
 use tokio::{
     sync::mpsc::{Receiver, Sender},
     task::JoinHandle,
 };
 use tracing::info;
+use futures::future::join_all;
+
+// mysten
+use narwhal_config::{
+    Committee as ConsensusCommittee,
+    Parameters as ConsensusParameters
+};
+use narwhal_crypto::KeyPair as ConsensusKeyPair;
+
+
 
 /// Can spawn a validator server handle at the internal address
 /// the server handle contains a validator api (grpc) that exposes a validator service

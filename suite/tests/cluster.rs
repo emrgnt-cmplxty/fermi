@@ -5,7 +5,7 @@ pub mod cluster_test_suite {
     // IMPORTS
 
     // local
-    use gdex_core::catchup::mock_catchup_manager::{MockCatchupManger, MockRelayServer};
+    use gdex_core::catchup::manager::mock_catchup_manager::{MockCatchupManger, MockRelayServer};
     use gdex_suite::test_utils::test_cluster::TestCluster;
     use gdex_types::{
         asset::PRIMARY_ASSET_ID,

@@ -14,7 +14,11 @@ use gdex_types::{
     error::GDEXError,
     transaction::{SignedTransaction, TransactionDigest},
 };
-use mysten_store::{Map, reopen, rocks::{open_cf, DBMap}, Store};
+use mysten_store::{
+    reopen,
+    rocks::{open_cf, DBMap},
+    Map, Store,
+};
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::Hash;
 use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
@@ -55,7 +59,7 @@ impl ValidatorStore {
             None,
             &[Self::BLOCKS_CF, Self::BLOCK_INFO_CF, Self::LAST_BLOCK_CF],
         )
-            .expect("Cannot open database");
+        .expect("Cannot open database");
 
         let (block_map, block_info_map, last_block_map) = reopen!(&rocksdb,
             Self::BLOCKS_CF;<BlockNumber, Block>,

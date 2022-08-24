@@ -22,7 +22,6 @@ use tokio::{
 use tracing::{info, subscriber::set_global_default, warn};
 use tracing_subscriber::filter::EnvFilter;
 use url::Url;
-use gdex_types::proto::{RelayerClient, RelayerRequest, RelayerResponse, TransactionProto, TransactionsClient};
 
 const PRIMARY_ASSET_ID: u64 = 0;
 
@@ -173,21 +172,6 @@ impl Client {
         let mut transaction_client = TransactionsClient::connect(self.target.as_str().to_owned())
             .await
             .context(format!("failed to connect to {}", self.target))?;
-
-        let mut relay_client = RelayerClient::connect(self.target.as_str().to_owned())
-            .await
-            .context(format!("failed to connect to {}", self.target))?;
-        let request = tonic::Request::new(RelayerRequest {
-            dummy_request: "hello world".to_string(),
-        });
-
-        let recent_block_info = relay_client.read_latest_block_info(request)
-            .await
-            .unwrap();
-
-        let recent_block_hash = match recent_block_info {
-            Response { .. } => {}
-        };
 
         // Submit all transactions.
         let burst = self.rate / PRECISION;

@@ -1,3 +1,4 @@
+use crate::relayer::spawner::RelayerSpawner;
 use crate::{
     config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, GDEX_DB_NAME},
     genesis_ceremony::GENESIS_FILENAME,
@@ -43,6 +44,9 @@ pub struct ValidatorSpawner {
 
     /// Address for communication to the validator server
     validator_address: Option<Multiaddr>,
+
+    /// Address for communication to the relayer server
+    relayer_address: Option<Multiaddr>
 }
 
 impl ValidatorSpawner {
@@ -71,6 +75,7 @@ impl ValidatorSpawner {
             validator_info,
             validator_state: None,
             validator_address: None,
+            relayer_address: None
         }
     }
 
@@ -214,7 +219,13 @@ impl ValidatorSpawner {
 
         let mut join_handles = self.spawn_validator_service(rx_reconfigure_consensus).await.unwrap();
         let server_handle = self.spawn_validator_server(tx_reconfigure_consensus).await;
+
+        let mut relayer_spawner = RelayerSpawner::new(self.validator_state.clone().unwrap());
+        // TODO extract handle
+        let relayer_server_handle = relayer_spawner.spawn_relay_server().await.unwrap();
+
         join_handles.push(server_handle.get_handle());
+        join_handles.push(relayer_server_handle.get_handle());
         join_handles
     }
 
@@ -226,7 +237,13 @@ impl ValidatorSpawner {
 
         let mut join_handles = self.spawn_validator_service(rx_reconfigure_consensus).await.unwrap();
         let server_handle = self.spawn_validator_server(tx_reconfigure_consensus.clone()).await;
+
+        let mut relayer_spawner = RelayerSpawner::new(self.validator_state.clone().unwrap());
+        // TODO extract handle
+        let relayer_server_handle = relayer_spawner.spawn_relay_server().await.unwrap();
+
         join_handles.push(server_handle.get_handle());
+        join_handles.push(relayer_server_handle.get_handle());
         (join_handles, tx_reconfigure_consensus)
     }
 
@@ -247,8 +264,8 @@ pub mod suite_spawn_tests {
         transaction::{transaction_test_functions::generate_signed_test_transaction, SignedTransaction},
         utils,
     };
-    use std::{io, path::Path};
     use narwhal_crypto::Hash;
+    use std::{io, path::Path};
 
     use tracing::info;
     use tracing_subscriber::FmtSubscriber;

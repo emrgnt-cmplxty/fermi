@@ -23,6 +23,7 @@ use narwhal_executor::{ExecutionIndices, SubscriberError};
 use prometheus::Registry;
 use std::{io, sync::Arc};
 
+
 use tokio::{
     sync::{
         mpsc::{channel, Receiver, Sender},
@@ -207,20 +208,21 @@ impl ValidatorService {
             .verify()
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
 
-        // TODO change this to err flow
-        if !state
-            .validator_store
-            .cache_contains_block_digest(signed_transaction.get_transaction_payload().get_recent_certificate_digest())
-        {
-            return Err(tonic::Status::internal("Invalid recent certificate digest"));
-        }
-
-        if state
-            .validator_store
-            .cache_contains_transaction(signed_transaction.get_transaction_payload())
-        {
-            return Err(tonic::Status::internal("Duplicate transaction"));
-        }
+        // // TODO change this to err flow
+        // if !state.validator_store.cache_contains_block_digest(
+        //     signed_transaction
+        //         .get_transaction_payload()
+        //         .get_recent_certificate_digest(),
+        // ) {
+        //     return Err(tonic::Status::internal("Invalid recent certificate digest"));
+        // }
+        //
+        // if state
+        //     .validator_store
+        //     .cache_contains_transaction(signed_transaction.get_transaction_payload())
+        // {
+        //     return Err(tonic::Status::internal("Duplicate transaction"));
+        // }
 
         let transaction_proto = narwhal_types::TransactionProto {
             transaction: transaction_proto.transaction,

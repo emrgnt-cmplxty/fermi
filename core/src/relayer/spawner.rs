@@ -1,5 +1,5 @@
 use crate::{relayer::server::RelayerService, validator::state::ValidatorState};
-use gdex_types::proto::{*};
+use gdex_types::proto::*;
 use gdex_types::utils;
 
 use std::sync::Arc;
@@ -42,7 +42,7 @@ impl RelayerSpawner {
 
 #[cfg(test)]
 pub mod suite_spawn_tests {
-    use crate::relayer::spawner::RelayerSpawner;
+    
     use crate::validator::spawner::ValidatorSpawner;
     use gdex_types::block::Block;
     use gdex_types::block::BlockDigest;
@@ -50,10 +50,7 @@ pub mod suite_spawn_tests {
     use gdex_types::crypto::Signer;
     use gdex_types::transaction::create_asset_creation_transaction;
     use gdex_types::transaction::SignedTransaction;
-    use gdex_types::{
-        proto::{*},
-        utils,
-    };
+    use gdex_types::{proto::*, utils};
     use narwhal_consensus::ConsensusOutput;
     use narwhal_crypto::generate_production_keypair;
     use narwhal_crypto::Hash;
@@ -118,11 +115,10 @@ pub mod suite_spawn_tests {
             .write_latest_block(initial_certificate, initial_serialized_txns_buf)
             .await;
 
-
         // TODO clean
         // Connect client
         let address = validator_spawner.get_relayer_address();
-        let address_ref= &address.clone().unwrap();
+        let address_ref = &address.clone().unwrap();
         let target_endpoint = endpoint_from_multiaddr(address_ref).unwrap();
         let endpoint = target_endpoint.endpoint();
         let mut client = RelayerClient::connect(endpoint.clone()).await.unwrap();
@@ -134,7 +130,6 @@ pub mod suite_spawn_tests {
         let specific_block_response = client.get_block(specific_block_request).await;
         let latest_block_info_response = client.get_latest_block_info(latest_block_info_request).await;
         let block_bytes_returned = specific_block_response.unwrap().into_inner().block.unwrap().block;
-
 
         // Assert
         let deserialized_block: Block = bincode::deserialize(&block_bytes_returned).unwrap();

@@ -1,5 +1,5 @@
 use crate::validator::state::ValidatorState;
-use gdex_types::proto::{*};
+use gdex_types::proto::*;
 use multiaddr::Multiaddr;
 use narwhal_types::CertificateDigestProto;
 

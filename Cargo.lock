@@ -2467,6 +2467,7 @@ dependencies = [
  "async-trait",
  "axum",
  "bcs",
+ "bincode",
  "camino",
  "clap 3.2.2",
  "config 0.1.0",

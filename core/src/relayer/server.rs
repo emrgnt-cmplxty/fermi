@@ -1,5 +1,5 @@
 use crate::validator::state::ValidatorState;
-use gdex_types::proto::{BlockInfoProto, Relayer, RelayerRequest, RelayerResponse};
+use gdex_types::proto::*;
 use multiaddr::Multiaddr;
 use narwhal_types::CertificateDigestProto;
 
@@ -32,19 +32,18 @@ impl RelayerServerHandle {
 
 #[tonic::async_trait]
 impl Relayer for RelayerService {
-    async fn read_latest_block_info(
+    async fn get_latest_block_info(
         &self,
-        _request: Request<RelayerRequest>,
-    ) -> Result<Response<RelayerResponse>, Status> {
+        _request: Request<RelayerGetLatestBlockInfoRequest>,
+    ) -> Result<Response<RelayerBlockInfoResponse>, Status> {
         let validator_state = &self.state;
         let returned_value = validator_state.validator_store.last_block_store.read(0).await;
         println!("{:?}", returned_value.as_ref().unwrap());
 
         match returned_value {
             Ok(opt) => {
-                if opt.is_some() {
-                    let block_info = opt.unwrap();
-                    Ok(Response::new(RelayerResponse {
+                if let Some(block_info) = opt {
+                    Ok(Response::new(RelayerBlockInfoResponse {
                         successful: true,
                         block_info: Some(BlockInfoProto {
                             block_number: block_info.block_number,
@@ -52,16 +51,85 @@ impl Relayer for RelayerService {
                         }),
                     }))
                 } else {
-                    Ok(Response::new(RelayerResponse {
+                    Ok(Response::new(RelayerBlockInfoResponse {
                         successful: true,
                         block_info: None,
                     }))
                 }
             }
             // TODO propagate error message to client
-            Err(_) => Ok(Response::new(RelayerResponse {
+            Err(_) => Ok(Response::new(RelayerBlockInfoResponse {
                 successful: false,
                 block_info: None,
+            })),
+        }
+    }
+    async fn get_block_info(
+        &self,
+        request: Request<RelayerGetBlockInfoRequest>,
+    ) -> Result<Response<RelayerBlockInfoResponse>, Status> {
+        let validator_state = &self.state;
+        let req = request.into_inner();
+        let block_number = req.block_number;
+
+        match validator_state
+            .validator_store
+            .block_info_store
+            .read(block_number)
+            .await
+        {
+            Ok(opt) => {
+                if opt.is_some() {
+                    let block_info = opt.unwrap();
+                    Ok(Response::new(RelayerBlockInfoResponse {
+                        successful: true,
+                        block_info: Some(BlockInfoProto {
+                            block_number: block_info.block_number,
+                            digest: CertificateDigestProto::from(block_info.block_digest).digest, // TODO egregious hack (MI)
+                        }),
+                    }))
+                } else {
+                    Ok(Response::new(RelayerBlockInfoResponse {
+                        successful: true,
+                        block_info: None,
+                    }))
+                }
+            }
+            // TODO propagate error message to client
+            Err(_) => Ok(Response::new(RelayerBlockInfoResponse {
+                successful: false,
+                block_info: None,
+            })),
+        }
+    }
+    async fn get_block(
+        &self,
+        request: Request<RelayerGetBlockRequest>,
+    ) -> Result<Response<RelayerBlockResponse>, Status> {
+        let validator_state = &self.state;
+        let req = request.into_inner();
+        let block_number = req.block_number;
+
+        match validator_state.validator_store.block_store.read(block_number).await {
+            Ok(opt) => {
+                if opt.is_some() {
+                    let block = opt.unwrap();
+                    let block_bytes = bincode::serialize(&block).unwrap().into();
+                    Ok(Response::new(RelayerBlockResponse {
+                        successful: true,
+                        block: Some(BlockProto { block: block_bytes }),
+                    }))
+                } else {
+                    Ok(Response::new(RelayerBlockResponse {
+                        successful: true,
+                        block: None,
+                    }))
+                }
+            }
+            // TODO propagate error message to client
+            Err(_) => Ok(Response::new(RelayerBlockResponse {
+                successful: false,
+                block: None,
             })),
         }
     }

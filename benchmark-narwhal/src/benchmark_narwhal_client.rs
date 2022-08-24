@@ -22,7 +22,6 @@ use tokio::{
 use tracing::{info, subscriber::set_global_default, warn};
 use tracing_subscriber::filter::EnvFilter;
 use url::Url;
-
 const PRIMARY_ASSET_ID: u64 = 0;
 
 #[cfg(not(tarpaulin))]
@@ -169,7 +168,7 @@ impl Client {
         }
 
         // Connect to the mempool.
-        let mut transaction_client = TransactionsClient::connect(self.target.as_str().to_owned())
+        let mut client = TransactionsClient::connect(self.target.as_str().to_owned())
             .await
             .context(format!("failed to connect to {}", self.target))?;
 
@@ -222,7 +221,7 @@ impl Client {
                 }
             });
 
-            if let Err(e) = transaction_client.submit_transaction_stream(stream).await {
+            if let Err(e) = client.submit_transaction_stream(stream).await {
                 warn!("Failed to send transaction: {e}");
                 break 'main;
             }

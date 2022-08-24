@@ -3,46 +3,39 @@ pub mod cluster_test_suite {
 
     // IMPORTS
 
-    // external
-    use std::io;
-    use tracing::info;
-    //use tracing_subscriber::FmtSubscriber;
-    use tokio::time::{sleep, Duration};
-
-    // mysten
-
-    // gdex
-    use gdex_core::{catchup::{CatchupManager, mock_catchup_manager::MockRelayServer}, client, validator::spawner::ValidatorSpawner};
-    use gdex_types::{
-        account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair},
-        asset::PRIMARY_ASSET_ID,
-        crypto::{get_key_pair_from_rng, KeypairTraits},
-        proto::{TransactionProto, TransactionsClient},
-        transaction::{transaction_test_functions::generate_signed_test_transaction, SignedTransaction},
-        utils,
-    };
-
     // local
     use gdex_suite::test_utils::test_cluster::TestCluster;
+    use gdex_core::{
+        catchup::mock_catchup_manager::{MockCatchupManger, MockRelayServer},
+    };
+    use gdex_types::{
+        asset::PRIMARY_ASSET_ID,
+        crypto::{get_key_pair_from_rng, KeypairTraits},
+        transaction::SignedTransaction,
+    };
+
+    // external
+    use tracing::info;
+    use tokio::time::{sleep, Duration};
+
 
     // TESTS
 
-    #[tokio::test]
+    #[tokio::test(flavor = "multi_thread")]
     pub async fn test_spawn_cluster() {
         info!("Creating test cluster");
         let validator_count: usize = 4;
-        let mut cluster = TestCluster::new(validator_count).await;
-        
+        let mut cluster = TestCluster::spawn(validator_count, None).await;
+
         info!("Sending transactions");
         cluster.send_transactions(0, 1, 1_000, None).await;
-
     }
 
-    #[tokio::test]
+    #[tokio::test(flavor = "multi_thread")]
     pub async fn test_balance_state() {
         info!("Creating test cluster");
         let validator_count: usize = 4;
-        let mut cluster = TestCluster::new(validator_count).await;
+        let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         info!("Sending transactions");
         let (kp_sender, kp_receiver, _) = cluster.send_transactions(0, 1, 20, Some(1_000_000)).await;
@@ -70,11 +63,11 @@ pub mod cluster_test_suite {
         assert!(receiver_balance > 0, "Receiver balance must be greater than 0");
     }
 
-    #[tokio::test]
+    #[tokio::test(flavor = "multi_thread")]
     pub async fn test_reconfigure_validator() {
         info!("Creating test cluster");
         let validator_count: usize = 4;
-        let mut cluster = TestCluster::new(validator_count).await;
+        let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         info!("Sending transactions");
         cluster.send_transactions(0, 1, 10, None).await;
@@ -100,18 +93,18 @@ pub mod cluster_test_suite {
             .unwrap();
     }
 
-    #[tokio::test]
+    #[tokio::test(flavor = "multi_thread")]
     pub async fn test_cache_transactions() {
         info!("Creating test cluster");
         let validator_count: usize = 4;
-        let mut cluster = TestCluster::new(validator_count).await;
+        let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         info!("Sending transactions");
         let (_, _, signed_transactions) = cluster.send_transactions(0, 1, 10, None).await;
 
         info!("Sleep to allow all transactions to propagate");
         sleep(Duration::from_secs(5)).await;
-        
+
         let spawner_1 = cluster.get_validator_spawner(1);
         let validator_store = &spawner_1
             .get_validator_state()
@@ -130,6 +123,7 @@ pub mod cluster_test_suite {
         let block_db = validator_store.block_store.iter(None).await;
         let mut block_db_iter = block_db.iter();
 
+        // TODO - more rigorously check exact match of transactions
         while let Some(next_block) = block_db_iter.next() {
             let block = next_block.1;
             for serialized_transaction in &block.transactions {
@@ -144,46 +138,70 @@ pub mod cluster_test_suite {
         );
     }
 
-    #[ignore]
+    /// TODO - This test currently fails because the stop function does not properly free the resources of the cluster
     #[tokio::test(flavor = "multi_thread")]
-    pub async fn test_node_catchup() {
+    #[ignore]
+    pub async fn test_stop_start_node() {
         let validator_count: usize = 4;
-        let mut cluster = TestCluster::new(validator_count).await;
-        cluster.stop(validator_count - 1).await;
-        // create a thread where 1_000_000 transactions are sent
-        let _handle = cluster.send_transactions_async(0, 1, 1_000_000, None).await;
+        let target_node = validator_count - 1;
+        let mut cluster = TestCluster::spawn(validator_count, None).await;
 
-        // tokio::spawn(async move {
-        //     let (_, _, signed_transactions) = cluster.send_transactions(0, 1, 10, None).await;
-        // });
-        println!("sleeping now..");
-        tokio::time::sleep(tokio::time::Duration::from_secs(4)).await;
-        println!("continuing now..");
-        cluster.start(validator_count - 1).await;
-        let spawner_0 = cluster.get_validator_spawner(0);
-        // let spawner_restarted = cluster.get_validator_spawner(validator_count - 1);
+        info!("Stoping target_node={target_node}");
+        cluster.stop(target_node).await;
+        info!("Sleeping 10s to give more than enough time for shutdown");
+        tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+        info!("Starting target_node={target_node}");
+        cluster.start(target_node).await;
+        info!("Sleeping 10s to give time for node to restart and have a potential error");
+        tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+    }
 
-        let validator_store = &spawner_0
-        .get_validator_state()
-        .as_ref()
-        .unwrap()
-        .clone()
-        .validator_store;
+    #[tokio::test(flavor = "multi_thread")]
+    pub async fn test_catchup_new_node_mock() {
+        telemetry_subscribers::init_for_testing();
 
-        let restarted_validator_state = cluster.get_validator_spawner(validator_count - 1).get_validator_state().unwrap();
+        // submit more transactions than we can possibly process
+        const N_TRANSACTIONS: u64 = 1_000_000;
 
+        info!("Creating test cluster");
+        let validator_count: usize = 6;
+        let target_node = validator_count - 1;
+        info!("Launching nodes 1 - {}", target_node);
+        let mut cluster = TestCluster::spawn(validator_count, Some(target_node)).await;
 
-        let mut mock_catchup_manager = CatchupManager::new();
+        info!("Begin Sending {N_TRANSACTIONS} transactions");
+        cluster.send_transactions_async(0, 1, N_TRANSACTIONS, None).await;
+
+        info!("Sleeping 5s to allow network to advance circulation");
+        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+
+        info!("Booting up node {}", target_node + 1);
+        cluster.start(target_node).await;
+
+        info!("Sleeping 250ms to allow boot");
+        tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
+
+        let validator_store = &cluster
+            .get_validator_spawner(1)
+            .get_validator_state()
+            .as_ref()
+            .unwrap()
+            .clone()
+            .validator_store;
+
+        let restarted_validator_state = cluster
+            .get_validator_spawner(target_node)
+            .get_validator_state()
+            .unwrap();
+
         let mock_server = MockRelayServer::new(validator_store);
+        let mut mock_catchup_manager = MockCatchupManger::new(10);
         mock_catchup_manager
-            .catchup_to_latest_block(&mock_server, &restarted_validator_state)
+            .catchup_narwhal_mediated(&mock_server, &restarted_validator_state)
             .await
             .unwrap();
 
-        // for i in 1..10000 {
-        //     println!("spawner_0 latest block = ", spawner_0.get_validator_state().validator_store.latest_block_id());
-        // }
-
-
+        drop(cluster);
+        tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
     }
 }

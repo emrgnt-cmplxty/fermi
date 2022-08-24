@@ -2548,6 +2548,7 @@ dependencies = [
  "rocksdb",
  "serde 1.0.143",
  "serde_json",
+ "telemetry-subscribers",
  "tempfile",
  "tokio",
  "tracing",

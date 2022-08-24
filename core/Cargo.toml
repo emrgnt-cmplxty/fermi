@@ -46,3 +46,6 @@ mysten-store = { git = "https://github.com/mystenlabs/mysten-infra.git", package
 gdex-controller = { path = "../controller" }
 gdex-types = { path = "../types", feature = "testing"}
 gdex-workspace-hack = { path = "../workspace-hack" }
+
+[features]
+testing = []

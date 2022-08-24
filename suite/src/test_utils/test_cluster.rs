@@ -6,6 +6,8 @@ use std::{
     path::{Path, PathBuf},
 };
 use tempfile::TempDir;
+use tokio::task::JoinHandle;
+use tracing::info;
 
 // mysten
 
@@ -25,9 +27,6 @@ use gdex_types::{
     transaction::{transaction_test_functions::generate_signed_test_transaction, SignedTransaction},
     utils,
 };
-use tokio::task::JoinHandle;
-
-// local
 
 // HELPER FUNCTIONS
 
@@ -94,7 +93,7 @@ pub struct TestCluster {
 }
 
 impl TestCluster {
-    pub async fn new(validator_count: usize) -> Self {
+    pub async fn spawn(validator_count: usize, max_spawn: Option<usize>) -> Self {
         // get temp dirs
         let temp_working_dir = tempfile::tempdir().unwrap();
         let working_dir = temp_working_dir.path().to_path_buf();
@@ -105,7 +104,10 @@ impl TestCluster {
 
         // create and spawn validators
         let mut validator_spawners: Vec<ValidatorSpawner> = Vec::new();
+        let mut validator_counter = 0;
         for validator_info in genesis_state.validator_set() {
+            validator_counter += 1;
+
             let mut validator_spawner = ValidatorSpawner::new(
                 working_dir.clone(), // db path
                 working_dir.clone(), // key path
@@ -113,8 +115,12 @@ impl TestCluster {
                 validator_info.network_address.clone(),
                 validator_info.name.clone(),
             );
-            validator_spawner.spawn_validator().await;
-            validator_spawner.get_validator_state().unwrap().unhalt_validator();
+
+            if validator_counter <= max_spawn.unwrap_or(validator_count) {
+                info!("Spawning validator {}", validator_counter);
+                validator_spawner.spawn_validator().await;
+                validator_spawner.get_validator_state().unwrap().unhalt_validator();
+            }
             validator_spawners.push(validator_spawner);
         }
         Self {
@@ -134,8 +140,8 @@ impl TestCluster {
         self.temp_working_dir.path().to_path_buf()
     }
 
-    pub fn get_validator_spawner(&mut self, idx: usize) -> &mut ValidatorSpawner {
-        &mut self.validator_spawners[idx]
+    pub fn get_validator_spawner(&mut self, index: usize) -> &mut ValidatorSpawner {
+        &mut self.validator_spawners[index]
     }
 
     pub async fn stop(&mut self, index: usize) {
@@ -155,7 +161,7 @@ impl TestCluster {
         sending_validator: usize,
         receiving_validator: usize,
         n_transactions: u64,
-        fixed_amount: Option<u64>
+        fixed_amount: Option<u64>,
     ) -> (ValidatorKeyPair, ValidatorKeyPair, Vec<SignedTransaction>) {
         let working_dir = self.get_working_dir();
         let sender = self.get_validator_spawner(sending_validator);
@@ -194,7 +200,7 @@ impl TestCluster {
         sending_validator: usize,
         receiving_validator: usize,
         n_transactions: u64,
-        fixed_amount: Option<u64>
+        fixed_amount: Option<u64>,
     ) -> JoinHandle<()> {
         let working_dir = self.get_working_dir();
         let sender = self.get_validator_spawner(sending_validator);
@@ -211,22 +217,21 @@ impl TestCluster {
 
         let mut signed_transactions = Vec::new();
         let mut i = 1;
-        let handle = tokio::spawn(async move {
-        while i < n_transactions + 1 {
-            let amount = fixed_amount.unwrap_or(i);
-            let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, amount);
-            signed_transactions.push(signed_transaction.clone());
-            let transaction_proto = TransactionProto {
-                transaction: signed_transaction.serialize().unwrap().into(),
-            };
-            let _resp1 = client
-                .submit_transaction(transaction_proto)
-                .await
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
-                .unwrap();
-            i += 1;
-        }
-    });
-    handle
+        tokio::spawn(async move {
+            while i < n_transactions + 1 {
+                let amount = fixed_amount.unwrap_or(i);
+                let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, amount);
+                signed_transactions.push(signed_transaction.clone());
+                let transaction_proto = TransactionProto {
+                    transaction: signed_transaction.serialize().unwrap().into(),
+                };
+                let _resp1 = client
+                    .submit_transaction(transaction_proto)
+                    .await
+                    .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+                    .unwrap();
+                i += 1;
+            }
+        })
     }
 }

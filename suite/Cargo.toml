@@ -21,9 +21,10 @@ tracing-subscriber = "0.2.0"
 narwhal-config = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "config"}
 narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "crypto", features=["copy_key"]}
 narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "types" }
+telemetry-subscribers = { git = "https://github.com/mystenlabs/mysten-infra.git", rev = "8d090689be14078f2ca41c356e7bbc0af21f73ab" }
 
 # local crates
-gdex-core = { path = "../core" }
+gdex-core = { path = "../core", features=["testing"] }
 gdex-engine = { path = "../engine" }
 gdex-controller = { path = "../controller" }
 gdex-types = { path = "../types", features=["testing"] }

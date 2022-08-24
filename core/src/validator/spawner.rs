@@ -45,9 +45,9 @@ pub struct ValidatorSpawner {
     /// Address for communication to the validator server
     validator_address: Option<Multiaddr>,
     /// Handle for the service related tasks
-    service_handles: Option<Vec<JoinHandle<()>>>,
+    pub service_handles: Option<Vec<JoinHandle<()>>>,
     /// Handle for the server related tasks
-    server_handles: Option<Vec<JoinHandle<()>>>,
+    pub server_handles: Option<Vec<JoinHandle<()>>>,
 }
 
 impl ValidatorSpawner {
@@ -244,15 +244,16 @@ impl ValidatorSpawner {
     }
 
     pub async fn stop(&mut self) {
+        if let Some(handles) = self.service_handles.as_mut() {
+            handles.iter().for_each(|h| h.abort());
+        }
+        if let Some(handles) = self.server_handles.as_mut() {
+            handles.iter().for_each(|h| h.abort());
+        }
         self.validator_state = None;
         self.validator_address = None;
-        
-        if let Some(handles) = self.service_handles.as_ref() {
-            handles.iter().for_each(|h|h.abort());
-        }
-        if let Some(handles) = self.server_handles.as_ref() {
-            handles.iter().for_each(|h|h.abort());
-        }
+        self.server_handles = None;
+        self.service_handles = None;
     }
 
     pub fn get_tx_reconfigure_consensus(&self) -> &Option<Sender<(ConsensusKeyPair, ConsensusCommittee)>> {

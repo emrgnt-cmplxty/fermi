@@ -6,7 +6,7 @@ use std::{fmt::Debug, time::SystemTime};
 
 pub type OrderId = u64;
 
-#[derive(Copy, Clone, Deserialize, Serialize, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Deserialize, Serialize, Debug)]
 pub enum OrderSide {
     Bid = 1,
     Ask = 2,
@@ -86,6 +86,8 @@ pub enum Success {
     Updated {
         order_id: u64,
         side: OrderSide,
+        previous_price: u64,
+        previous_quantity: u64,
         price: u64,
         quantity: u64,
         timestamp: SystemTime,

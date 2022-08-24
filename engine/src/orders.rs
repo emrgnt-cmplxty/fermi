@@ -75,7 +75,7 @@ pub fn create_cancel_order_request(
     side: OrderSide,
     local_timestamp: SystemTime,
 ) -> OrderRequest {
-    OrderRequest::CancelOrder {
+    OrderRequest::Cancel {
         base_asset_id,
         quote_asset_id,
         order_id,

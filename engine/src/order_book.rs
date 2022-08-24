@@ -139,7 +139,7 @@ impl Orderbook {
                 self.process_order_update(&mut process_result, order_id, side, price, quantity, local_timestamp);
             }
 
-            OrderRequest::CancelOrder { order_id, side, .. } => {
+            OrderRequest::Cancel { order_id, side, .. } => {
                 self.process_order_cancel(&mut process_result, order_id, side);
             }
         }
@@ -300,6 +300,10 @@ impl Orderbook {
             OrderSide::Ask => &mut self.ask_queue,
         };
 
+        let current_order = order_queue.get_order(order_id).unwrap();
+        let previous_quantity = current_order.get_quantity();
+        let previous_price = current_order.get_price();
+
         if order_queue.update(
             order_id,
             price,
@@ -316,6 +320,8 @@ impl Orderbook {
             results.push(Ok(Success::Updated {
                 order_id,
                 side,
+                previous_quantity,
+                previous_price,
                 price,
                 quantity,
                 timestamp: SystemTime::now(),

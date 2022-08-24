@@ -98,6 +98,7 @@ impl Faucet for FaucetService {
 
 #[allow(dead_code)]
 #[tokio::main]
+#[allow(dead_code)]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Getting the address that is passed in
     let addr = format!("127.0.0.1:{}", FAUCET_PORT);

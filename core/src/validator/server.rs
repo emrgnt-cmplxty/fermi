@@ -23,7 +23,6 @@ use narwhal_executor::{ExecutionIndices, SubscriberError};
 use prometheus::Registry;
 use std::{io, sync::Arc};
 
-
 use tokio::{
     sync::{
         mpsc::{channel, Receiver, Sender},

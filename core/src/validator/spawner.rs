@@ -46,7 +46,7 @@ pub struct ValidatorSpawner {
     validator_address: Option<Multiaddr>,
 
     /// Address for communication to the relayer server
-    relayer_address: Option<Multiaddr>
+    relayer_address: Option<Multiaddr>,
 }
 
 impl ValidatorSpawner {
@@ -75,7 +75,7 @@ impl ValidatorSpawner {
             validator_info,
             validator_state: None,
             validator_address: None,
-            relayer_address: None
+            relayer_address: None,
         }
     }
 

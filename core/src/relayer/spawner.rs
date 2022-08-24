@@ -1,9 +1,8 @@
 use crate::{relayer::server::RelayerService, validator::state::ValidatorState};
-use gdex_types::proto::RelayerServer;
+use gdex_types::proto::{*};
 use gdex_types::utils;
 
-use std::{sync::Arc};
-
+use std::sync::Arc;
 
 use crate::relayer::server::RelayerServerHandle;
 
@@ -36,7 +35,7 @@ impl RelayerSpawner {
             .unwrap();
 
         // let server = Server::builder().add_service(RelayerServer::new(relay_service));
-        let handle = tokio::spawn(async move { server.serve().await});
+        let handle = tokio::spawn(async move { server.serve().await });
         let server_handle = RelayerServerHandle::new(addr, handle);
         Ok(server_handle)
     }
@@ -47,13 +46,12 @@ pub mod suite_spawn_tests {
     use crate::relayer::spawner::RelayerSpawner;
     use crate::validator::spawner::ValidatorSpawner;
     use gdex_types::{
-        proto::{RelayerClient, RelayerRequest},
+        proto::{*},
         utils,
     };
     use std::path::Path;
-    
+
     use crate::client::endpoint_from_multiaddr;
-    
 
     #[tokio::test]
     pub async fn spawn_relay_server() {

@@ -1,7 +1,7 @@
 use crate::validator::state::ValidatorState;
 use gdex_types::proto::{BlockInfoProto, Relayer, RelayerRequest, RelayerResponse};
 use multiaddr::Multiaddr;
-use narwhal_types::{CertificateDigestProto};
+use narwhal_types::CertificateDigestProto;
 
 use std::sync::Arc;
 use tokio::task::JoinHandle;
@@ -17,7 +17,6 @@ pub struct RelayerServerHandle {
 }
 
 impl RelayerServerHandle {
-
     pub fn address(&self) -> &Multiaddr {
         &self.local_addr
     }

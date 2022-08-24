@@ -88,7 +88,7 @@ pub mod suite_spawn_tests {
             /* validator_port */ address.clone(),
             /* validator_name */ "validator-0".to_string(),
         );
-        let _handles = validator_spawner.spawn_validator_with_reconfigure().await;
+        validator_spawner.spawn_validator().await;
         let validator_state = validator_spawner.get_validator_state().clone().unwrap();
 
         // Create txns
@@ -141,7 +141,6 @@ pub mod suite_spawn_tests {
         };
         assert!(block_to_check_against.block_certificate == deserialized_block.block_certificate);
         assert!(block_to_check_against.transactions == deserialized_block.transactions);
-        // TODO TESTS FOR BLOCK INFO, CURRENTLY WE JUST PRINT
         assert!(latest_block_info_response.unwrap().into_inner().successful)
     }
 }

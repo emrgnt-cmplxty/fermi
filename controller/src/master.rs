@@ -1,38 +1,59 @@
 //! Master controller contains all relevant blockchain controllers
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
-use crate::{bank::BankController, consensus::ConsensusController, spot::SpotController, stake::StakeController};
+
+// IMPORTS
+
+// crate
+use crate::{
+    controller::Controller,
+    bank::BankController,
+    consensus::ConsensusController,
+    spot::SpotController,
+    stake::StakeController
+};
+
+// gdex
+
+// mysten
+
+// external
 use serde::{Deserialize, Serialize};
 use std::{
     sync::{Arc, Mutex},
-    time::Duration,
 };
 
-const DEFAULT_BATCH_SIZE: usize = 500_000;
-const DEFAULT_MAX_DELAY_MILLIS: u64 = 200; // .2 sec
+// INTERFACE
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MasterController {
-    pub consensus_controller: ConsensusController,
+    pub consensus_controller: Arc<Mutex<ConsensusController>>,
     pub bank_controller: Arc<Mutex<BankController>>,
-    pub stake_controller: StakeController,
+    pub stake_controller: Arc<Mutex<StakeController>>,
     pub spot_controller: Arc<Mutex<SpotController>>,
 }
 
 impl Default for MasterController {
     fn default() -> Self {
-        let bank_controller = BankController::default();
-        let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
-        let stake_controller = StakeController::new(Arc::clone(&bank_controller_ref));
-        let spot_controller = Arc::new(Mutex::new(SpotController::new(Arc::clone(&bank_controller_ref))));
+        let bank_controller = Arc::new(Mutex::new(BankController::default()));
+        let stake_controller = Arc::new(Mutex::new(StakeController::default()));
+        let spot_controller = Arc::new(Mutex::new(SpotController::default()));
+        let consensus_controller = Arc::new(Mutex::new(ConsensusController::default()));
+        
         Self {
-            consensus_controller: ConsensusController {
-                batch_size: DEFAULT_BATCH_SIZE,
-                max_batch_delay: Duration::from_millis(DEFAULT_MAX_DELAY_MILLIS),
-            },
-            bank_controller: bank_controller_ref,
-            stake_controller,
-            spot_controller,
+            consensus_controller: consensus_controller,
+            bank_controller: bank_controller,
+            stake_controller: stake_controller,
+            spot_controller: spot_controller
         }
+    }
+}
+
+impl MasterController {
+    pub fn initialize_controllers(&self) {
+        self.consensus_controller.lock().unwrap().initialize(&self);
+        self.bank_controller.lock().unwrap().initialize(&self);
+        self.stake_controller.lock().unwrap().initialize(&self);
+        self.spot_controller.lock().unwrap().initialize(&self);
     }
 }

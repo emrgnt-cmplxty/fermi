@@ -52,6 +52,7 @@ async fn create_genesis_state(dir: &Path, validator_count: usize) -> ValidatorGe
         .collect::<Vec<_>>();
 
     let master_controller = MasterController::default();
+    master_controller.initialize_controllers();
 
     // create primary asset
     let validator_creator_pubkey = ValidatorPubKey::try_from(validators_info[0].public_key).unwrap();

@@ -14,6 +14,7 @@
 // crate
 use crate::controller::Controller;
 use crate::master::MasterController;
+use crate::master::HandleConsensus;
 
 // gdex
 use gdex_types::{
@@ -21,6 +22,7 @@ use gdex_types::{
     asset::{Asset, AssetId},
     error::GDEXError,
     crypto::ToFromBytes,
+    transaction::{Transaction, TransactionVariant},
 };
 
 // mysten
@@ -176,6 +178,24 @@ impl BankController {
 
     pub fn get_num_assets(&mut self) -> u64 {
         self.n_assets
+    }
+}
+
+impl HandleConsensus for BankController {
+    fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
+        if let TransactionVariant::PaymentTransaction(payment) = transaction.get_variant() {
+            return self.transfer(
+                transaction.get_sender(),
+                payment.get_receiver(),
+                payment.get_asset_id(),
+                payment.get_amount(),
+            );
+        }
+        if let TransactionVariant::CreateAssetTransaction(_create_asset) = transaction.get_variant() {
+            return self.create_asset(transaction.get_sender());
+        }
+
+        Ok(())
     }
 }
 

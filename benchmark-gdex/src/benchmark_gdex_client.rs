@@ -4,6 +4,7 @@
 use anyhow::{Context, Result};
 use clap::{crate_name, crate_version, App, AppSettings};
 use futures::{future::join_all, StreamExt};
+use gdex_types::proto::{BlockInfoProto, RelayerClient, RelayerGetLatestBlockInfoRequest};
 use gdex_types::{
     account::AccountKeyPair,
     proto::{TransactionProto, TransactionsClient},
@@ -22,6 +23,8 @@ use tokio::{
 use tracing::{info, subscriber::set_global_default, warn};
 use tracing_subscriber::filter::EnvFilter;
 use url::Url;
+use gdex_types::block::{BlockDigest, BlockInfo};
+
 const PRIMARY_ASSET_ID: u64 = 0;
 
 #[cfg(not(tarpaulin))]
@@ -34,9 +37,9 @@ fn create_signed_transaction(
     kp_sender: &AccountKeyPair,
     kp_receiver: &AccountKeyPair,
     amount: u64,
+    block_digest: BlockDigest
 ) -> SignedTransaction {
     // use a dummy batch digest for initial benchmarking
-    let dummy_certificate_digest = CertificateDigest::new([0; DIGEST_LEN]);
 
     let transaction_variant = TransactionVariant::PaymentTransaction(PaymentRequest::new(
         kp_receiver.public().clone(),
@@ -45,7 +48,7 @@ fn create_signed_transaction(
     ));
     let transaction = Transaction::new(
         kp_sender.public().clone(),
-        dummy_certificate_digest,
+        block_digest,
         transaction_variant,
     );
 
@@ -61,6 +64,7 @@ async fn main() -> Result<()> {
         .version(crate_version!())
         .about("Benchmark client for Narwhal and Tusk.")
         .args_from_usage("<ADDR> 'The network address of the node where to send txs'")
+        .args_from_usage("--relayer=<ADDR> 'Relayer address to send requests to'")
         .args_from_usage("--rate=<INT> 'The rate (txs/s) at which to send the transactions'")
         .args_from_usage("--nodes=[ADDR]... 'Network addresses that must be reachable before starting the benchmark.'")
         .setting(AppSettings::ArgRequiredElseHelp)
@@ -86,6 +90,11 @@ async fn main() -> Result<()> {
     let target = target_str
         .parse::<Url>()
         .with_context(|| format!("Invalid url format {target_str}"))?;
+    let relayer = matches
+        .value_of("relayer")
+        .unwrap()
+        .parse::<Url>()
+        .context("Invalid relayer url")?;
     let rate = matches
         .value_of("rate")
         .unwrap()
@@ -102,7 +111,12 @@ async fn main() -> Result<()> {
     info!("Node address: {target}");
     info!("Transactions rate: {rate} tx/s");
 
-    let client = Client { target, rate, nodes };
+    let client = Client {
+        target,
+        rate,
+        nodes,
+        relayer,
+    };
 
     // Wait for all nodes to be online and synchronized.
     client.wait().await;
@@ -114,6 +128,7 @@ async fn main() -> Result<()> {
 /// TODO - add do_real_transaction as boolean field on client
 struct Client {
     target: Url,
+    relayer: Url,
     rate: u64,
     nodes: Vec<Url>,
 }
@@ -126,7 +141,8 @@ impl Client {
         let mut client = TransactionsClient::connect(self.target.as_str().to_owned())
             .await
             .unwrap();
-
+        let mut relayer_client = RelayerClient::connect(self.relayer.as_str().to_owned()).await.unwrap();
+        let request = RelayerGetLatestBlockInfoRequest {};
         // Submit all transactions.
         let burst = self.rate / PRECISION;
         let mut counter = 0;
@@ -141,12 +157,24 @@ impl Client {
         'main: loop {
             interval.as_mut().tick().await;
             let now = Instant::now();
-
             let kp_sender = keys([0; 32]).pop().unwrap();
             let kp_receiver = keys([1; 32]).pop().unwrap();
 
+            let response = relayer_client
+                .get_latest_block_info(request.clone())
+                .await
+                .unwrap()
+                .into_inner();
+
+            let block_digest: BlockDigest = if response.successful && response.block_info.is_some() {
+                bincode::deserialize(response.block_info.unwrap().digest.as_ref()).unwrap()
+            } else {
+                BlockDigest::new([0; 32])
+            };
+
+
             if counter == 0 {
-                let transaction_size = create_signed_transaction(&kp_sender, &kp_receiver, 1)
+                let transaction_size = create_signed_transaction(&kp_sender, &kp_receiver, 1, block_digest.clone())
                     .serialize()
                     .unwrap()
                     .len();
@@ -162,7 +190,7 @@ impl Client {
                     r += 1;
                     r
                 };
-                let signed_tranasction = create_signed_transaction(&kp_sender, &kp_receiver, amount);
+                let signed_tranasction = create_signed_transaction(&kp_sender, &kp_receiver, amount, block_digest);
                 TransactionProto {
                     transaction: signed_tranasction.serialize().unwrap().into(),
                 }

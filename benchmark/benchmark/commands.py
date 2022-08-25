@@ -96,13 +96,13 @@ class CommandMaker:
         return command
 
     @staticmethod
-    def run_gdex_client(address, rate, nodes):
+    def run_gdex_client(address, relayer_address, rate, nodes):
         assert isinstance(address, str)
         assert isinstance(rate, int) and rate >= 0
         assert isinstance(nodes, list)
         assert all(isinstance(x, str) for x in nodes)
         nodes = f'--nodes {" ".join(nodes)}' if nodes else ''
-        command = f'./benchmark_gdex_client {address}  --rate {rate} {nodes}'
+        command = f'./benchmark_gdex_client {address} --relayer {relayer_address}  --rate {rate} {nodes}'
         print("Returning execution command = ", command)
         return command
 

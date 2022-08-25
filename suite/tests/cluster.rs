@@ -48,7 +48,8 @@ pub mod cluster_test_suite {
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         info!("Sending transactions");
-        let (kp_sender, kp_receiver, _) = cluster.send_transactions(0, 1, 20, Some(1_000_000)).await;
+        // Can only send one here because otherwise we're submitting dupes
+        let (kp_sender, kp_receiver, _) = cluster.send_transactions(0, 1, 1, Some(1_000_000)).await;
 
         sleep(Duration::from_secs(3)).await;
 

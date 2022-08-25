@@ -189,7 +189,6 @@ pub mod cluster_test_suite {
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
 
         let address = spawner_0.get_validator_address().as_ref().unwrap().clone();
-        drop(spawner_0);
         info!("Connecting network client to address={:?}", address);
 
         let mut client =

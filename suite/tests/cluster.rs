@@ -49,9 +49,9 @@ pub mod cluster_test_suite {
 
         info!("Sending transactions");
         // Can only send one here because otherwise we're submitting dupes
-        let (kp_sender, kp_receiver, _) = cluster.send_transactions(0, 1, 1, Some(1_000_000_000_000)).await;
+        let (kp_sender, kp_receiver, _) = cluster.send_transactions(0, 1, 1, Some(1_000_000)).await;
 
-        sleep(Duration::from_secs(3)).await;
+        sleep(Duration::from_secs(5)).await;
 
         let genesis_state = cluster.get_validator_spawner(0).get_genesis_state();
         let sender_balance = genesis_state

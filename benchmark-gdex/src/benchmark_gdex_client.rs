@@ -5,9 +5,10 @@ use anyhow::{Context, Result};
 use clap::{crate_name, crate_version, App, AppSettings};
 use futures::{future::join_all, StreamExt};
 use gdex_types::{
-    account::AccountKeyPair,
+    account::{ValidatorKeyPair, AccountKeyPair},
     proto::{TransactionProto, TransactionsClient},
-    transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
+    transaction::{PaymentRequest, CreateAssetRequest, SignedTransaction, Transaction, TransactionVariant},
+    utils::{read_keypair_from_file}
 };
 use narwhal_crypto::{
     traits::{KeyPair, Signer},
@@ -22,6 +23,7 @@ use tokio::{
 use tracing::{info, subscriber::set_global_default, warn};
 use tracing_subscriber::filter::EnvFilter;
 use url::Url;
+use std::path::{PathBuf};
 const PRIMARY_ASSET_ID: u64 = 0;
 
 #[cfg(not(tarpaulin))]
@@ -55,6 +57,23 @@ fn create_signed_transaction(
     signed_transaction
 }
 
+fn create_signed_create_asset_transaction(
+    kp_sender: &AccountKeyPair
+) -> SignedTransaction {
+    // use a dummy batch digest for initial benchmarking
+    let dummy_certificate_digest = CertificateDigest::new([0; DIGEST_LEN]);
+    let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest {});
+    let transaction = Transaction::new(
+        kp_sender.public().clone(),
+        dummy_certificate_digest,
+        transaction_variant,
+    );
+    // sign digest and create signed transaction
+    let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
+    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest);
+    signed_transaction
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let matches = App::new(crate_name!())
@@ -62,6 +81,7 @@ async fn main() -> Result<()> {
         .about("Benchmark client for Narwhal and Tusk.")
         .args_from_usage("<ADDR> 'The network address of the node where to send txs'")
         .args_from_usage("--rate=<INT> 'The rate (txs/s) at which to send the transactions'")
+        .args_from_usage("--validator_key_fpath=<FILE> 'The validator key file'")
         .args_from_usage("--nodes=[ADDR]... 'Network addresses that must be reachable before starting the benchmark.'")
         .setting(AppSettings::ArgRequiredElseHelp)
         .get_matches();
@@ -91,6 +111,11 @@ async fn main() -> Result<()> {
         .unwrap()
         .parse::<u64>()
         .context("The rate of transactions must be a non-negative integer")?;
+    let validator_key_fpath = matches
+        .value_of("validator_key_fpath")
+        .unwrap()
+        .parse::<PathBuf>()
+        .context("The path to the validator key.")?;
     let nodes = matches
         .values_of("nodes")
         .unwrap_or_default()
@@ -102,7 +127,7 @@ async fn main() -> Result<()> {
     info!("Node address: {target}");
     info!("Transactions rate: {rate} tx/s");
 
-    let client = Client { target, rate, nodes };
+    let client = Client { target, rate, nodes, validator_key_fpath };
 
     // Wait for all nodes to be online and synchronized.
     client.wait().await;
@@ -116,6 +141,7 @@ struct Client {
     target: Url,
     rate: u64,
     nodes: Vec<Url>,
+    validator_key_fpath: PathBuf
 }
 
 impl Client {
@@ -136,6 +162,20 @@ impl Client {
         let interval = interval(Duration::from_millis(BURST_DURATION));
         tokio::pin!(interval);
 
+        // send payments from validator with assets
+        // read in private key
+        let keypair: ValidatorKeyPair = read_keypair_from_file(self.validator_key_fpath.clone())?;
+        // convert private key to key pair
+        //let kp_sender = keys([0; 32]).pop().unwrap();
+
+        /***let signed_create_asset_transaction = create_signed_create_asset_transaction(&kp_sender);
+        let tx = TransactionProto {
+            transaction: signed_create_asset_transaction.serialize().unwrap().into()
+        };
+        client.submit_transaction(tx).await.unwrap();***/
+
+        sleep(Duration::from_millis(10)).await;
+
         // NOTE: This log entry is used to compute performance.
         info!("Start sending transactions");
         'main: loop {
@@ -153,6 +193,7 @@ impl Client {
                 info!("Transactions size: {transaction_size} B");
             }
 
+            let keypair = keypair.copy();
             let stream = tokio_stream::iter(0..burst).map(move |x| {
                 let amount = if x == counter % burst {
                     // NOTE: This log entry is used to compute performance.
@@ -162,7 +203,7 @@ impl Client {
                     r += 1;
                     r
                 };
-                let signed_tranasction = create_signed_transaction(&kp_sender, &kp_receiver, amount);
+                let signed_tranasction = create_signed_transaction(&keypair, &kp_receiver, amount);
                 TransactionProto {
                     transaction: signed_tranasction.serialize().unwrap().into(),
                 }

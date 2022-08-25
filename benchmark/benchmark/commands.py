@@ -45,16 +45,17 @@ class CommandMaker:
         return command
 
     @staticmethod
-    def run_gdex_node(db_dir, genesis_dir, key_dir, validator_name, validator_port, debug=False):
+    def run_gdex_node(db_dir, genesis_dir, key_dir, validator_name, validator_address, relayer_address, debug=False):
         assert isinstance(db_dir, str)
         assert isinstance(genesis_dir, str)
         assert isinstance(key_dir, str)
         assert isinstance(validator_name, str)
-        assert isinstance(validator_port, str)
+        assert isinstance(validator_address, str)
+        assert isinstance(relayer_address, str)
         assert isinstance(debug, bool)
         v = '-vvv' if debug else '-vv'
         command = (f'./gdex-node {v} run --db-dir {db_dir} --genesis-dir  {genesis_dir} '
-                f'--key-dir {key_dir} --validator-name {validator_name} --validator-port {validator_port}')
+                f'--key-dir {key_dir} --validator-name {validator_name} --validator-address {validator_address} --relayer-address {relayer_address}')
         print("Returning execution command = ", command)
         return command
 

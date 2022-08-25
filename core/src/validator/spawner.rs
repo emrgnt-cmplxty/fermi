@@ -5,7 +5,6 @@ use crate::{
     config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, GDEX_DB_NAME},
     genesis_ceremony::GENESIS_FILENAME,
     metrics::start_prometheus_server,
-    relayer::spawner::RelayerSpawner,
     validator::{
         genesis_state::ValidatorGenesisState, server::ValidatorServer, server::ValidatorService, state::ValidatorState,
     },
@@ -44,8 +43,8 @@ pub struct ValidatorSpawner {
     genesis_state: ValidatorGenesisState,
     /// Validator which is fetched from the genesis state according to initial name
     validator_info: ValidatorInfo,
-    /// Port for the validator to serve over
-    validator_port: Multiaddr,
+    /// Address for communication to the validator server
+    validator_address: Multiaddr,
 
     /// Begin objects initialized after calling spawn_validator_service
 
@@ -56,10 +55,6 @@ pub struct ValidatorSpawner {
 
     /// Sender for the reconfiguration consensus service
     tx_reconfigure_consensus: Option<Sender<(ConsensusKeyPair, ConsensusCommittee)>>,
-    /// Address for communication to the validator server
-    validator_address: Option<Multiaddr>,
-    /// Address for communication to the relayer server
-    relayer_address: Option<Multiaddr>,
     /// Handle for the service related tasks
     service_handles: Option<Vec<JoinHandle<()>>>,
     /// Handle for the server related tasks
@@ -71,7 +66,7 @@ impl ValidatorSpawner {
         db_path: PathBuf,
         key_path: PathBuf,
         genesis_path: PathBuf,
-        validator_port: Multiaddr,
+        validator_address: Multiaddr,
         validator_name: String,
     ) -> Self {
         let genesis_state =
@@ -89,11 +84,9 @@ impl ValidatorSpawner {
             db_path,
             key_path,
             genesis_state,
-            validator_port,
             validator_info,
+            validator_address,
             validator_state: None,
-            validator_address: None,
-            relayer_address: None,
             tx_reconfigure_consensus: None,
             service_handles: None,
             server_handles: None,
@@ -101,12 +94,8 @@ impl ValidatorSpawner {
     }
 
     // GETTERS
-    pub fn get_validator_address(&self) -> &Option<Multiaddr> {
+    pub fn get_validator_address(&self) -> &Multiaddr {
         &self.validator_address
-    }
-
-    pub fn get_relayer_address(&self) -> &Option<Multiaddr> {
-        &self.relayer_address
     }
 
     pub fn get_validator_info(&self) -> &ValidatorInfo {
@@ -126,11 +115,11 @@ impl ValidatorSpawner {
     }
 
     fn is_validator_service_spawned(&self) -> bool {
-        self.validator_state.is_some()
+        self.service_handles.is_some()
     }
 
     fn is_validator_server_spawned(&self) -> bool {
-        self.validator_address.is_some()
+        self.server_handles.is_some()
     }
 
     // SETTERS
@@ -144,10 +133,6 @@ impl ValidatorSpawner {
 
     fn set_validator_state(&mut self, validator_state: Arc<ValidatorState>) {
         self.validator_state = Some(validator_state)
-    }
-
-    fn set_validator_address(&mut self, address: Multiaddr) {
-        self.validator_address = Some(address)
     }
 
     /// Internal helper function used to spawns the validator service
@@ -242,7 +227,7 @@ impl ValidatorSpawner {
 
         let consensus_address = self.validator_info.narwhal_consensus_address.clone();
         let validator_server = ValidatorServer::new(
-            self.validator_port.clone(),
+            self.validator_address.clone(),
             // unwrapping is safe as validator state must have been created in spawn_validator_service
             Arc::clone(self.validator_state.as_ref().unwrap()),
             consensus_address,
@@ -250,16 +235,8 @@ impl ValidatorSpawner {
         );
 
         let validator_server_handle = validator_server.spawn().await.unwrap();
-        self.set_validator_address(validator_server_handle.address().clone());
 
-        let mut relayer_spawner = RelayerSpawner::new(self.validator_state.clone().unwrap());
-        let relayer_server_handle = relayer_spawner.spawn_relay_server().await.unwrap();
-        self.relayer_address = Some(relayer_server_handle.address().clone());
-
-        self.server_handles = Some(vec![
-            validator_server_handle.get_handle(),
-            relayer_server_handle.get_handle(),
-        ]);
+        self.server_handles = Some(vec![validator_server_handle.get_handle()]);
     }
 
     pub async fn spawn_validator(&mut self) {
@@ -285,7 +262,6 @@ impl ValidatorSpawner {
             handles.iter().for_each(|h| h.abort());
         }
         self.validator_state = None;
-        self.validator_address = None;
         self.server_handles = None;
         self.service_handles = None;
     }

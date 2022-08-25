@@ -7,78 +7,42 @@ pub mod cluster_test_suite {
     // gdex
     use gdex_core::{
         catchup::manager::mock_catchup_manager::{MockCatchupManger, MockRelayServer},
-        client,
-    };
-    use gdex_suite::test_utils::test_cluster::TestCluster;
-    use gdex_types::{
-        account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair},
-        asset::PRIMARY_ASSET_ID,
-        crypto::{get_key_pair_from_rng, KeypairTraits},
-        proto::{TransactionProto, TransactionsClient},
-        transaction::{transaction_test_functions::generate_signed_test_transaction, SignedTransaction},
-        utils,
+        client::endpoint_from_multiaddr,
+        relayer::spawner::RelayerSpawner,
     };
 
+    use gdex_suite::test_utils::test_cluster::TestCluster;
+    use gdex_types::{
+        asset::PRIMARY_ASSET_ID,
+        block::{Block, BlockDigest},
+        crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
+        proto::{RelayerClient, RelayerGetBlockRequest, RelayerGetLatestBlockInfoRequest},
+        transaction::{create_asset_creation_transaction, SignedTransaction},
+        utils,
+    };
+    // mysten
+    use narwhal_consensus::ConsensusOutput;
+    use narwhal_crypto::{generate_production_keypair, Hash, KeyPair, DIGEST_LEN};
+    use narwhal_types::{Certificate, Header};
     // external
-    use narwhal_crypto::Hash;
-    use std::io;
-    use tracing::info;
-    //use tracing_subscriber::FmtSubscriber;
+    use std::sync::Arc;
     use tokio::time::{sleep, Duration};
+    use tracing::info;
 
     // TESTS
 
     #[tokio::test]
     pub async fn test_spawn_cluster() {
-        /*
-        let subscriber = FmtSubscriber::builder()
-            .with_env_filter("gdex_core=info, gdex_suite=info")
-            .finish();
-        tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-        */
-
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         info!("Sending transactions");
-        let working_dir = cluster.get_working_dir();
-        let spawner_0 = cluster.get_validator_spawner(0);
-        let key_file = working_dir.join(format!("{}.key", spawner_0.get_validator_info().name));
-        let _kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
-        let _kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-
-        let address = spawner_0.get_validator_address().as_ref().unwrap().clone();
-        info!("Connecting network client to address={:?}", address);
-
-        let _client = TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
-
-        info!("Creating test cluster");
-        let validator_count: usize = 4;
-        let mut cluster = TestCluster::spawn(validator_count, None).await;
-
-        info!("Sending transactions");
-        cluster.send_transactions(0, 1, 1_000, None).await;
+        cluster.send_transactions(0, 1, 10, None).await;
     }
 
     #[tokio::test]
     pub async fn test_balance_state() {
-        info!("Creating test cluster");
-        let validator_count: usize = 4;
-        let mut cluster = TestCluster::spawn(validator_count, None).await;
-
-        info!("Sending transactions");
-        let working_dir = cluster.get_working_dir();
-        let spawner_0 = cluster.get_validator_spawner(0);
-        let key_file = working_dir.join(format!("{}.key", spawner_0.get_validator_info().name));
-        let _kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
-        let _kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-
-        let address = spawner_0.get_validator_address().as_ref().unwrap().clone();
-        info!("Connecting network client to address={:?}", address);
-
-        let _client = TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
-
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
@@ -114,44 +78,13 @@ pub mod cluster_test_suite {
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         info!("Sending transactions");
-        let working_dir = cluster.get_working_dir();
-        let spawner_0 = cluster.get_validator_spawner(0);
-        let key_file = working_dir.join(format!("{}.key", spawner_0.get_validator_info().name));
-        let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
-        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-
-        let address = spawner_0.get_validator_address().as_ref().unwrap().clone();
-        info!("Connecting network client to address={:?}", address);
-
-        let mut client =
-            TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
-
-        info!("Sending transactions");
-        let mut i = 0;
-        while i < 10 {
-            let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, i);
-            let transaction_proto = TransactionProto {
-                transaction: signed_transaction.serialize().unwrap().into(),
-            };
-            let _resp1 = client
-                .submit_transaction(transaction_proto)
-                .await
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
-                .unwrap();
-            i += 1;
-        }
-        info!("Creating test cluster");
-        let validator_count: usize = 4;
-        let mut cluster = TestCluster::spawn(validator_count, None).await;
-
-        info!("Sending transactions");
         cluster.send_transactions(0, 1, 10, None).await;
 
         sleep(Duration::from_secs(1)).await;
 
         info!("Reconfiguring validator");
-        let spawner = cluster.get_validator_spawner(0);
-        let consensus_committee = spawner.get_genesis_state().narwhal_committee().load().clone();
+        let spawner_0 = cluster.get_validator_spawner(0);
+        let consensus_committee = spawner_0.get_genesis_state().narwhal_committee().load().clone();
         let new_committee: narwhal_config::Committee = narwhal_config::Committee::clone(&consensus_committee);
         let new_committee: narwhal_config::Committee = narwhal_config::Committee {
             authorities: new_committee.authorities,
@@ -166,52 +99,12 @@ pub mod cluster_test_suite {
             .send((key, new_committee))
             .await
             .unwrap();
+
+        sleep(Duration::from_secs(1)).await;
     }
 
     #[tokio::test(flavor = "multi_thread")]
     pub async fn test_cache_transactions() {
-        /*
-        let subscriber = FmtSubscriber::builder()
-            .with_env_filter("gdex_core=info, gdex_suite=info")
-            .finish();
-        tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-        */
-
-        info!("Creating test cluster");
-        let validator_count: usize = 4;
-        let mut cluster = TestCluster::spawn(validator_count, None).await;
-
-        info!("Sending transactions");
-        let working_dir = cluster.get_working_dir();
-        let spawner_0 = cluster.get_validator_spawner(0);
-        let key_file = working_dir.join(format!("{}.key", spawner_0.get_validator_info().name));
-        let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
-        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-
-        let address = spawner_0.get_validator_address().as_ref().unwrap().clone();
-        drop(spawner_0);
-        info!("Connecting network client to address={:?}", address);
-
-        let mut client =
-            TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
-
-        info!("Sending transactions");
-        let mut i = 0;
-        let mut signed_transactions = Vec::new();
-        let n_transactions_to_submit = 10;
-        while i < n_transactions_to_submit {
-            let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, i);
-            signed_transactions.push(signed_transaction.clone());
-            let transaction_proto = TransactionProto {
-                transaction: signed_transaction.serialize().unwrap().into(),
-            };
-            let _resp1 = client
-                .submit_transaction(transaction_proto)
-                .await
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
-                .unwrap();
-            i += 1;
-        }
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
@@ -272,6 +165,18 @@ pub mod cluster_test_suite {
         cluster.start(target_node).await;
         info!("Sleeping 10s to give time for node to restart and have a potential error");
         tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+    }
+
+    pub fn create_test_consensus_output() -> ConsensusOutput {
+        let dummy_header = Header::default();
+        let dummy_certificate = Certificate {
+            header: dummy_header,
+            votes: Vec::new(),
+        };
+        ConsensusOutput {
+            certificate: dummy_certificate,
+            consensus_index: 1,
+        }
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -363,5 +268,72 @@ pub mod cluster_test_suite {
             latest_block_store_target.block_number
         );
         info!("Success");
+    }
+    // TODO - move spawn relay to cluster deployment workflow
+    #[tokio::test]
+    pub async fn test_spawn_relayer() {
+        let validator_count: usize = 4;
+        let mut cluster = TestCluster::spawn(validator_count, None).await;
+
+        let spawner_1 = cluster.get_validator_spawner(1);
+        let validator_state = spawner_1.get_validator_state().clone().unwrap();
+
+        // Create txns
+        let dummy_consensus_output = create_test_consensus_output();
+        let sender_kp = generate_production_keypair::<KeyPair>();
+        let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
+        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
+        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
+        let signed_create_asset_txn =
+            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+
+        // Preparing serialized buf for transactions
+        let mut serialized_txns_buf: Vec<Vec<u8>> = Vec::new();
+        let serialized_txn = signed_create_asset_txn.serialize().unwrap();
+        serialized_txns_buf.push(serialized_txn);
+        let certificate = dummy_consensus_output.certificate;
+
+        let initial_certificate = certificate.clone();
+        let initial_serialized_txns_buf = serialized_txns_buf.clone();
+
+        // Write the block
+        validator_state
+            .validator_store
+            .write_latest_block(initial_certificate, initial_serialized_txns_buf)
+            .await;
+
+        // TODO clean
+        // Connect client
+        let relayer_address = utils::new_network_address();
+        let mut relayer = RelayerSpawner::new(Arc::clone(&validator_state), relayer_address.clone());
+        relayer.spawn_relayer().await.unwrap();
+
+        let target_endpoint = endpoint_from_multiaddr(&relayer_address).unwrap();
+        let endpoint = target_endpoint.endpoint();
+        let mut client = RelayerClient::connect(endpoint.clone()).await.unwrap();
+
+        let specific_block_request = tonic::Request::new(RelayerGetBlockRequest { block_number: 0 });
+        let latest_block_info_request = tonic::Request::new(RelayerGetLatestBlockInfoRequest {});
+
+        // Act
+        let specific_block_response = client.get_block(specific_block_request).await;
+
+        let _latest_block_info_response = client.get_latest_block_info(latest_block_info_request).await;
+
+        let block_bytes_returned = specific_block_response.unwrap().into_inner().block.unwrap().block;
+
+        // Assert
+        let deserialized_block: Block = bincode::deserialize(&block_bytes_returned).unwrap();
+
+        let final_certificate = certificate.clone();
+        let final_serialized_txns_buf = serialized_txns_buf.clone();
+        let block_to_check_against = Block {
+            block_certificate: final_certificate,
+            transactions: final_serialized_txns_buf,
+        };
+
+        assert!(block_to_check_against.block_certificate == deserialized_block.block_certificate);
+        assert!(block_to_check_against.transactions == deserialized_block.transactions);
+        // assert!(latest_block_info_response.unwrap().into_inner().successful)
     }
 }

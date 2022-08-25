@@ -146,20 +146,22 @@ impl Client {
         let interval = interval(Duration::from_millis(BURST_DURATION));
         tokio::pin!(interval);
 
-        let response = relayer_client
-            .get_latest_block_info(request.clone())
-            .await
-            .unwrap()
-            .into_inner();
-
-        let block_digest: BlockDigest = if response.successful && response.block_info.is_some() {
-            bincode::deserialize(response.block_info.unwrap().digest.as_ref()).unwrap()
-        } else {
-            BlockDigest::new([0; 32])
-        };
         // NOTE: This log entry is used to compute performance.
         info!("Start sending transactions");
         'main: loop {
+            // fetch recent block digest
+            let response = relayer_client
+                .get_latest_block_info(request.clone())
+                .await
+                .unwrap()
+                .into_inner();
+
+            let block_digest: BlockDigest = if response.successful && response.block_info.is_some() {
+                bincode::deserialize(response.block_info.unwrap().digest.as_ref()).unwrap()
+            } else {
+                BlockDigest::new([0; 32])
+            };
+
             interval.as_mut().tick().await;
             let now = Instant::now();
             let kp_sender = keys([0; 32]).pop().unwrap();
@@ -189,7 +191,7 @@ impl Client {
 
             if let Err(e) = client.submit_transaction_stream(stream).await {
                 warn!("Failed to send transaction: {e}");
-                break 'main;
+                //break 'main;
             }
 
             info!("now.elapsed().as_millis()={}", now.elapsed().as_millis());

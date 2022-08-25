@@ -94,6 +94,7 @@ class GDEXBench:
                     self.key_dir,
                     node_name,
                     url_to_multiaddr(nodes[node_name]),
+                    url_to_multiaddr(relayers[node_name]),
                     debug
                 )
                 print(cmd)

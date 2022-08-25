@@ -2,6 +2,7 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 use crate::{bank::BankController, consensus::ConsensusController, spot::SpotController, stake::StakeController};
+use gdex_types::{error::GDEXError, transaction::Transaction};
 use serde::{Deserialize, Serialize};
 use std::{
     sync::{Arc, Mutex},
@@ -21,18 +22,23 @@ pub struct MasterController {
 
 impl Default for MasterController {
     fn default() -> Self {
-        let bank_controller = BankController::default();
-        let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
-        let stake_controller = StakeController::new(Arc::clone(&bank_controller_ref));
-        let spot_controller = Arc::new(Mutex::new(SpotController::new(Arc::clone(&bank_controller_ref))));
+        let bank_controller = Arc::new(Mutex::new(BankController::default()));
+        let stake_controller = StakeController::new(Arc::clone(&bank_controller));
+        let spot_controller = Arc::new(Mutex::new(SpotController::new(Arc::clone(&bank_controller))));
+
         Self {
             consensus_controller: ConsensusController {
                 batch_size: DEFAULT_BATCH_SIZE,
                 max_batch_delay: Duration::from_millis(DEFAULT_MAX_DELAY_MILLIS),
             },
-            bank_controller: bank_controller_ref,
+            bank_controller,
             stake_controller,
             spot_controller,
         }
     }
+}
+
+// handle consensus trait for all controllers
+pub trait HandleConsensus {
+    fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError>;
 }

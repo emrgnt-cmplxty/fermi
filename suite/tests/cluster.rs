@@ -242,7 +242,7 @@ pub mod cluster_test_suite {
             .unwrap();
 
         // drop the cluster to stop forward progress of consensus
-        drop(cluster);
+        // drop(cluster);
 
         tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 

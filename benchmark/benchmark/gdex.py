@@ -72,21 +72,10 @@ class GDEXBench:
 
             # Run the clients (they will wait for the nodes to be ready).
             
-            # currently hard-coded for a single worker, for n-workers denom = n*len(nodes.keys())
-            rate_share = ceil(rate / len(nodes.keys()))
-            for id, address in enumerate(nodes.values()):
-                    cmd = CommandMaker.run_gdex_client(
-                        address,
-                        rate_share,
-                        [x for x in nodes.values() if x != address]
-                    )
-                    print(cmd)
-                    # currently hard-coded for a single worker, for n-workers 0 -> i
-                    log_file = PathMaker.client_log_file(id, 0)
-                    self._background_run(cmd, log_file)
 
             # Run the primaries
             for id, node_name in enumerate(nodes.keys()):
+                sleep(2)
                 cmd = CommandMaker.run_gdex_node(
                     self.db_dir,
                     self.genesis_dir,
@@ -99,6 +88,20 @@ class GDEXBench:
                 print(cmd)
                 log_file = PathMaker.primary_log_file(id)
                 self._background_run(cmd, log_file)
+
+            # currently hard-coded for a single worker, for n-workers denom = n*len(nodes.keys())
+            rate_share = ceil(rate / len(nodes.keys()))
+            for id, address in enumerate(nodes.values()):
+                    sleep(0.5)  # sleep to avoid weirdness
+                    cmd = CommandMaker.run_gdex_client(
+                        address,
+                        rate_share,
+                        [x for x in nodes.values() if x != address]
+                    )
+                    print(cmd)
+                    # currently hard-coded for a single worker, for n-workers 0 -> i
+                    log_file = PathMaker.client_log_file(id, 0)
+                    self._background_run(cmd, log_file)
 
             # Wait for all transactions to be processed.
             Print.info(f'Running benchmark ({self.duration} sec)...')

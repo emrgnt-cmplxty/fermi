@@ -2537,6 +2537,7 @@ dependencies = [
  "bcs",
  "bincode",
  "config 0.1.0",
+ "consensus",
  "criterion",
  "crypto",
  "gdex-controller",
@@ -2550,6 +2551,7 @@ dependencies = [
  "serde_json",
  "tempfile",
  "tokio",
+ "tonic",
  "tracing",
  "types",
 ]

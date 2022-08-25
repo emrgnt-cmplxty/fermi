@@ -54,7 +54,7 @@ class CommandMaker:
         assert isinstance(debug, bool)
         v = '-vvv' if debug else '-vv'
         command = (f'./gdex-node {v} run --db-dir {db_dir} --genesis-dir  {genesis_dir} '
-                f'--key-dir {key_dir} --validator-name {validator_name} --validator-port {validator_port}')
+                f'--key-dir {key_dir} --validator-name {validator_name} --validator-address {validator_port}')
         print("Returning execution command = ", command)
         return command
 

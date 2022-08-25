@@ -168,7 +168,7 @@ impl TestCluster {
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
 
         let receiver = self.get_validator_spawner(receiving_validator);
-        let receiver_address = receiver.get_validator_address().as_ref().unwrap().clone();
+        let receiver_address = receiver.get_validator_address().clone();
 
         let mut client =
             TransactionsClient::new(client::connect_lazy(&receiver_address).expect("Failed to connect to consensus"));
@@ -207,7 +207,7 @@ impl TestCluster {
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
 
         let receiver = self.get_validator_spawner(receiving_validator);
-        let receiver_address = receiver.get_validator_address().as_ref().unwrap().clone();
+        let receiver_address = receiver.get_validator_address().clone();
 
         let mut client =
             TransactionsClient::new(client::connect_lazy(&receiver_address).expect("Failed to connect to consensus"));

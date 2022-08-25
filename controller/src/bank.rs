@@ -59,9 +59,7 @@ impl Default for BankController {
 }
 
 impl Controller for BankController {
-    fn initialize(&mut self, _master_controller: &MasterController) {
-        return;
-    }
+    fn initialize(&mut self, _master_controller: &MasterController) {}
 }
 
 impl BankController {

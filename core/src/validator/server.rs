@@ -306,6 +306,7 @@ mod test_validator_server {
 
     async fn spawn_validator_server() -> Result<ValidatorServerHandle, io::Error> {
         let master_controller = MasterController::default();
+        master_controller.initialize_controllers();
 
         let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
         let public_key = ValidatorPubKeyBytes::from(key.public());
@@ -375,6 +376,7 @@ mod test_validator_server {
     #[tokio::test]
     pub async fn spawn() {
         let master_controller = MasterController::default();
+        master_controller.initialize_controllers();
 
         let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
         let public_key = ValidatorPubKeyBytes::from(key.public());

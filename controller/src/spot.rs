@@ -489,7 +489,7 @@ impl SpotController {
         if !self.check_orderbook_exists(base_asset_id, quote_asset_id) {
             self.orderbooks.insert(
                 lookup_string,
-                OrderbookInterface::new(base_asset_id, quote_asset_id, Arc::clone(&self.bank_controller.as_ref().unwrap())),
+                OrderbookInterface::new(base_asset_id, quote_asset_id, Arc::clone(self.bank_controller.as_ref().unwrap())),
             );
             Ok(())
         } else {

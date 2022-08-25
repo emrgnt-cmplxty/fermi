@@ -1,13 +1,5 @@
 // IMPORTS
 
-// external
-use std::{io, path::Path, path::PathBuf};
-use tempfile::TempDir;
-use tokio::task::JoinHandle;
-use tracing::info;
-
-// mysten
-
 // gdex
 use gdex_controller::{bank::CREATED_ASSET_BALANCE, master::MasterController};
 use gdex_core::{
@@ -24,6 +16,14 @@ use gdex_types::{
     transaction::{transaction_test_functions::generate_signed_test_transaction, SignedTransaction},
     utils,
 };
+
+// external
+use std::{io, path::Path, path::PathBuf};
+use tempfile::TempDir;
+use tokio::task::JoinHandle;
+use tracing::info;
+use tokio::time::{sleep, Duration};
+
 
 // HELPER FUNCTIONS
 
@@ -121,6 +121,10 @@ impl TestCluster {
             }
             validator_spawners.push(validator_spawner);
         }
+
+        // sleep
+        sleep(Duration::from_secs(1)).await;
+
         Self {
             validator_count,
             temp_working_dir,

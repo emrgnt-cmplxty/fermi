@@ -10,7 +10,6 @@ pub mod cluster_test_suite {
         client::endpoint_from_multiaddr,
         relayer::spawner::RelayerSpawner,
     };
-
     use gdex_suite::test_utils::test_cluster::TestCluster;
     use gdex_types::{
         asset::PRIMARY_ASSET_ID,
@@ -20,10 +19,12 @@ pub mod cluster_test_suite {
         transaction::{create_asset_creation_transaction, SignedTransaction},
         utils,
     };
+
     // mysten
     use narwhal_consensus::ConsensusOutput;
     use narwhal_crypto::{generate_production_keypair, Hash, KeyPair, DIGEST_LEN};
     use narwhal_types::{Certificate, Header};
+
     // external
     use std::sync::Arc;
     use tokio::time::{sleep, Duration};

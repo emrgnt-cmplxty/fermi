@@ -46,7 +46,5 @@ impl Default for ConsensusController {
 }
 
 impl Controller for ConsensusController {
-    fn initialize(&mut self, _master_controller: &MasterController) {
-        return;
-    }
+    fn initialize(&mut self, _master_controller: &MasterController) {}
 }

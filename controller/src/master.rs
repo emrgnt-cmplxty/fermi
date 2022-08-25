@@ -42,20 +42,20 @@ impl Default for MasterController {
         let consensus_controller = Arc::new(Mutex::new(ConsensusController::default()));
         
         Self {
-            consensus_controller: consensus_controller,
-            bank_controller: bank_controller,
-            stake_controller: stake_controller,
-            spot_controller: spot_controller
+            consensus_controller,
+            bank_controller,
+            stake_controller,
+            spot_controller
         }
     }
 }
 
 impl MasterController {
     pub fn initialize_controllers(&self) {
-        self.consensus_controller.lock().unwrap().initialize(&self);
-        self.bank_controller.lock().unwrap().initialize(&self);
-        self.stake_controller.lock().unwrap().initialize(&self);
-        self.spot_controller.lock().unwrap().initialize(&self);
+        self.consensus_controller.lock().unwrap().initialize(self);
+        self.bank_controller.lock().unwrap().initialize(self);
+        self.stake_controller.lock().unwrap().initialize(self);
+        self.spot_controller.lock().unwrap().initialize(self);
     }
 }
 

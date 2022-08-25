@@ -2455,7 +2455,6 @@ dependencies = [
  "gdex-workspace-hack",
  "rand 0.8.5",
  "serde 1.0.143",
- "tracing",
 ]
 
 [[package]]

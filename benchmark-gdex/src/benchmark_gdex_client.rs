@@ -5,10 +5,10 @@ use anyhow::{Context, Result};
 use clap::{crate_name, crate_version, App, AppSettings};
 use futures::{future::join_all, StreamExt};
 use gdex_types::{
-    account::{ValidatorKeyPair, AccountKeyPair},
+    account::{AccountKeyPair, ValidatorKeyPair},
     proto::{TransactionProto, TransactionsClient},
-    transaction::{PaymentRequest, CreateAssetRequest, SignedTransaction, Transaction, TransactionVariant},
-    utils::{read_keypair_from_file}
+    transaction::{CreateAssetRequest, PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
+    utils::read_keypair_from_file,
 };
 use narwhal_crypto::{
     traits::{KeyPair, Signer},
@@ -16,6 +16,7 @@ use narwhal_crypto::{
 };
 use narwhal_types::CertificateDigest;
 use rand::{rngs::StdRng, Rng, SeedableRng};
+use std::path::PathBuf;
 use tokio::{
     net::TcpStream,
     time::{interval, sleep, Duration, Instant},
@@ -23,7 +24,6 @@ use tokio::{
 use tracing::{info, subscriber::set_global_default, warn};
 use tracing_subscriber::filter::EnvFilter;
 use url::Url;
-use std::path::{PathBuf};
 const PRIMARY_ASSET_ID: u64 = 0;
 
 #[cfg(not(tarpaulin))]
@@ -57,9 +57,7 @@ fn create_signed_transaction(
     signed_transaction
 }
 
-fn create_signed_create_asset_transaction(
-    kp_sender: &AccountKeyPair
-) -> SignedTransaction {
+fn create_signed_create_asset_transaction(kp_sender: &AccountKeyPair) -> SignedTransaction {
     // use a dummy batch digest for initial benchmarking
     let dummy_certificate_digest = CertificateDigest::new([0; DIGEST_LEN]);
     let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest {});
@@ -127,7 +125,12 @@ async fn main() -> Result<()> {
     info!("Node address: {target}");
     info!("Transactions rate: {rate} tx/s");
 
-    let client = Client { target, rate, nodes, validator_key_fpath };
+    let client = Client {
+        target,
+        rate,
+        nodes,
+        validator_key_fpath,
+    };
 
     // Wait for all nodes to be online and synchronized.
     client.wait().await;
@@ -141,7 +144,7 @@ struct Client {
     target: Url,
     rate: u64,
     nodes: Vec<Url>,
-    validator_key_fpath: PathBuf
+    validator_key_fpath: PathBuf,
 }
 
 impl Client {

@@ -180,6 +180,7 @@ pub mod cluster_test_suite {
         }
     }
 
+    #[ignore]
     #[tokio::test(flavor = "multi_thread")]
     pub async fn test_catchup_new_node_mock() {
         // utils::set_testing_telemetry("gdex_core=info, gdex_suite=info");

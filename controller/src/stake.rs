@@ -200,6 +200,6 @@ pub mod stake_tests {
         );
         // staking without funding should create error
         let second = generate_keypair_vec([0; 32]).pop().unwrap();
-        stake_controller.stake(&second.public(), STAKE_AMOUNT).unwrap();
+        stake_controller.stake(second.public(), STAKE_AMOUNT).unwrap();
     }
 }

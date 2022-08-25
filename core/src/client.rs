@@ -79,7 +79,7 @@ impl TargetEndpoint {
     }
 
     pub fn endpoint(&self) -> &Endpoint {
-        return &self.endpoint;
+        &self.endpoint
     }
 
     fn try_from_uri(uri: String) -> Result<Self> {

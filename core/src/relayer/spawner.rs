@@ -90,7 +90,7 @@ pub mod suite_spawn_tests {
             /* validator_name */ "validator-0".to_string(),
         );
         validator_spawner.spawn_validator().await;
-        let validator_state = validator_spawner.get_validator_state().clone().unwrap();
+        let validator_state = validator_spawner.get_validator_state().unwrap();
 
         // Create txns
         let dummy_consensus_output = create_test_consensus_output();

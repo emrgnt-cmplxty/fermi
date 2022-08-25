@@ -172,7 +172,7 @@ pub mod config {
     pub fn create_persisted_config_save_read() {
         let dir = tempfile::TempDir::new().unwrap();
         let persisted_config = PersistedConfig {
-            path: dir.path().join("test.conf").into(),
+            path: dir.path().join("test.conf"),
             inner: TestGenesisConfig { dummy: 1_000 },
         };
 

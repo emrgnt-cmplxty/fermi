@@ -32,14 +32,14 @@ pub mod process_tests {
         let bid_size: u64 = 100;
         let bid_price: u64 = 100;
         orderbook_interface
-            .place_limit_order(&account.public(), OrderSide::Bid, bid_size, bid_price)
+            .place_limit_order(account.public(), OrderSide::Bid, bid_size, bid_price)
             .unwrap();
 
         assert_eq!(
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account.public(), BASE_ASSET_ID)
+                .get_balance(account.public(), BASE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE
         );
@@ -47,7 +47,7 @@ pub mod process_tests {
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account.public(), QUOTE_ASSET_ID)
+                .get_balance(account.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - bid_size * bid_price
         );
@@ -67,14 +67,14 @@ pub mod process_tests {
         let bid_size: u64 = 100;
         let bid_price: u64 = 100;
         orderbook_interface
-            .place_limit_order(&account.public(), OrderSide::Ask, bid_size, bid_price)
+            .place_limit_order(account.public(), OrderSide::Ask, bid_size, bid_price)
             .unwrap();
 
         assert_eq!(
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account.public(), QUOTE_ASSET_ID)
+                .get_balance(account.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE
         );
@@ -82,7 +82,7 @@ pub mod process_tests {
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account.public(), BASE_ASSET_ID)
+                .get_balance(account.public(), BASE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - bid_size
         );
@@ -99,7 +99,7 @@ pub mod process_tests {
         let orderbook_interface =
             OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
 
-        let result: GDEXError = orderbook_interface.get_account(&account.public()).unwrap_err();
+        let result: GDEXError = orderbook_interface.get_account(account.public()).unwrap_err();
 
         assert!(matches!(result, GDEXError::AccountLookup));
     }
@@ -114,8 +114,8 @@ pub mod process_tests {
 
         let mut orderbook_interface =
             OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
-        orderbook_interface.create_account(&account.public()).unwrap();
-        let result: GDEXError = orderbook_interface.create_account(&account.public()).unwrap_err();
+        orderbook_interface.create_account(account.public()).unwrap();
+        let result: GDEXError = orderbook_interface.create_account(account.public()).unwrap_err();
         assert!(matches!(result, GDEXError::AccountCreation));
     }
 
@@ -125,15 +125,15 @@ pub mod process_tests {
         let account_1 = generate_keypair_vec([1; 32]).pop().unwrap();
         let mut bank_controller = BankController::new();
 
-        bank_controller.create_asset(&account_0.public()).unwrap();
-        bank_controller.create_asset(&account_0.public()).unwrap();
+        bank_controller.create_asset(account_0.public()).unwrap();
+        bank_controller.create_asset(account_0.public()).unwrap();
         bank_controller
-            .transfer(&account_0.public(), &account_1.public(), BASE_ASSET_ID, TRANSFER_AMOUNT)
+            .transfer(account_0.public(), account_1.public(), BASE_ASSET_ID, TRANSFER_AMOUNT)
             .unwrap();
         bank_controller
             .transfer(
-                &account_0.public(),
-                &account_1.public(),
+                account_0.public(),
+                account_1.public(),
                 QUOTE_ASSET_ID,
                 TRANSFER_AMOUNT,
             )
@@ -146,20 +146,20 @@ pub mod process_tests {
         let bid_size_0: u64 = 100;
         let bid_price_0: u64 = 100;
         orderbook_interface
-            .place_limit_order(&account_0.public(), OrderSide::Bid, bid_size_0, bid_price_0)
+            .place_limit_order(account_0.public(), OrderSide::Bid, bid_size_0, bid_price_0)
             .unwrap();
 
         let bid_size_1: u64 = 110;
         let bid_price_1: u64 = 110;
         orderbook_interface
-            .place_limit_order(&account_1.public(), OrderSide::Bid, bid_size_1, bid_price_1)
+            .place_limit_order(account_1.public(), OrderSide::Bid, bid_size_1, bid_price_1)
             .unwrap();
 
         assert_eq!(
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account_0.public(), QUOTE_ASSET_ID)
+                .get_balance(account_0.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0
         );
@@ -167,7 +167,7 @@ pub mod process_tests {
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account_0.public(), BASE_ASSET_ID)
+                .get_balance(account_0.public(), BASE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT
         );
@@ -176,7 +176,7 @@ pub mod process_tests {
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account_1.public(), QUOTE_ASSET_ID)
+                .get_balance(account_1.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             TRANSFER_AMOUNT - bid_size_1 * bid_price_1
         );
@@ -184,7 +184,7 @@ pub mod process_tests {
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account_1.public(), BASE_ASSET_ID)
+                .get_balance(account_1.public(), BASE_ASSET_ID)
                 .unwrap(),
             TRANSFER_AMOUNT
         );
@@ -196,15 +196,15 @@ pub mod process_tests {
         let account_1 = generate_keypair_vec([1; 32]).pop().unwrap();
         let mut bank_controller = BankController::new();
 
-        bank_controller.create_asset(&account_0.public()).unwrap();
-        bank_controller.create_asset(&account_0.public()).unwrap();
+        bank_controller.create_asset(account_0.public()).unwrap();
+        bank_controller.create_asset(account_0.public()).unwrap();
         bank_controller
-            .transfer(&account_0.public(), &account_1.public(), BASE_ASSET_ID, TRANSFER_AMOUNT)
+            .transfer(account_0.public(), account_1.public(), BASE_ASSET_ID, TRANSFER_AMOUNT)
             .unwrap();
         bank_controller
             .transfer(
-                &account_0.public(),
-                &account_1.public(),
+                account_0.public(),
+                account_1.public(),
                 QUOTE_ASSET_ID,
                 TRANSFER_AMOUNT,
             )
@@ -217,20 +217,20 @@ pub mod process_tests {
         let bid_size_0: u64 = 95;
         let bid_price_0: u64 = 200;
         orderbook_interface
-            .place_limit_order(&account_0.public(), OrderSide::Bid, bid_size_0, bid_price_0)
+            .place_limit_order(account_0.public(), OrderSide::Bid, bid_size_0, bid_price_0)
             .unwrap();
 
         let bid_size_1: u64 = bid_size_0;
         let bid_price_1: u64 = bid_price_0 - 2;
         orderbook_interface
-            .place_limit_order(&account_1.public(), OrderSide::Bid, bid_size_1, bid_price_1)
+            .place_limit_order(account_1.public(), OrderSide::Bid, bid_size_1, bid_price_1)
             .unwrap();
 
         assert_eq!(
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account_0.public(), QUOTE_ASSET_ID)
+                .get_balance(account_0.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0
         );
@@ -238,7 +238,7 @@ pub mod process_tests {
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account_0.public(), BASE_ASSET_ID)
+                .get_balance(account_0.public(), BASE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT
         );
@@ -247,7 +247,7 @@ pub mod process_tests {
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account_1.public(), QUOTE_ASSET_ID)
+                .get_balance(account_1.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             TRANSFER_AMOUNT - bid_size_1 * bid_price_1
         );
@@ -255,7 +255,7 @@ pub mod process_tests {
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account_1.public(), BASE_ASSET_ID)
+                .get_balance(account_1.public(), BASE_ASSET_ID)
                 .unwrap(),
             TRANSFER_AMOUNT
         );
@@ -264,7 +264,7 @@ pub mod process_tests {
         let ask_size_0: u64 = bid_size_0;
         let ask_price_0: u64 = bid_price_0 - 1;
         orderbook_interface
-            .place_limit_order(&account_1.public(), OrderSide::Ask, ask_size_0, ask_price_0)
+            .place_limit_order(account_1.public(), OrderSide::Ask, ask_size_0, ask_price_0)
             .unwrap();
 
         // check account 0
@@ -275,7 +275,7 @@ pub mod process_tests {
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account_0.public(), QUOTE_ASSET_ID)
+                .get_balance(account_0.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0
         );
@@ -283,7 +283,7 @@ pub mod process_tests {
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account_0.public(), BASE_ASSET_ID)
+                .get_balance(account_0.public(), BASE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT + bid_size_0
         );
@@ -297,7 +297,7 @@ pub mod process_tests {
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account_1.public(), QUOTE_ASSET_ID)
+                .get_balance(account_1.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             TRANSFER_AMOUNT - bid_size_1 * bid_price_1 + bid_size_0 * bid_price_0
         );
@@ -305,7 +305,7 @@ pub mod process_tests {
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account_1.public(), BASE_ASSET_ID)
+                .get_balance(account_1.public(), BASE_ASSET_ID)
                 .unwrap(),
             TRANSFER_AMOUNT - bid_size_0
         );
@@ -314,7 +314,7 @@ pub mod process_tests {
         let ask_size_1: u64 = bid_size_1;
         let ask_price_1: u64 = bid_price_1 - 1;
         orderbook_interface
-            .place_limit_order(&account_1.public(), OrderSide::Ask, ask_size_1, ask_price_1)
+            .place_limit_order(account_1.public(), OrderSide::Ask, ask_size_1, ask_price_1)
             .unwrap();
 
         // check account 0
@@ -323,7 +323,7 @@ pub mod process_tests {
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account_0.public(), QUOTE_ASSET_ID)
+                .get_balance(account_0.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT - bid_size_0 * bid_price_0
         );
@@ -331,7 +331,7 @@ pub mod process_tests {
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account_0.public(), BASE_ASSET_ID)
+                .get_balance(account_0.public(), BASE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT + bid_size_0
         );
@@ -342,7 +342,7 @@ pub mod process_tests {
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account_1.public(), QUOTE_ASSET_ID)
+                .get_balance(account_1.public(), QUOTE_ASSET_ID)
                 .unwrap(),
             TRANSFER_AMOUNT + bid_size_0 * bid_price_0
         );
@@ -350,7 +350,7 @@ pub mod process_tests {
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account_1.public(), BASE_ASSET_ID)
+                .get_balance(account_1.public(), BASE_ASSET_ID)
                 .unwrap(),
             TRANSFER_AMOUNT - bid_size_0
         );

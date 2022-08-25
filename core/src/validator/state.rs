@@ -67,7 +67,7 @@ impl ValidatorStore {
             Self::LAST_BLOCK_CF;<u64, BlockInfo>
         );
 
-        let block_number_from_dbmap = last_block_map.get(&(0 as u64));
+        let block_number_from_dbmap = last_block_map.get(&0_u64);
 
         let block_store = Store::new(block_map);
         let block_info_store = Store::new(block_info_map);
@@ -420,7 +420,7 @@ mod test_validator_state {
 
         let validator = ValidatorInfo {
             name: "0".into(),
-            public_key: public_key.clone(),
+            public_key: public_key,
             stake: VALIDATOR_FUNDING_AMOUNT,
             balance: VALIDATOR_BALANCE,
             delegation: 0,
@@ -455,7 +455,7 @@ mod test_validator_state {
 
         let validator = ValidatorInfo {
             name: "0".into(),
-            public_key: public_key.clone(),
+            public_key: public_key,
             stake: VALIDATOR_FUNDING_AMOUNT,
             balance: VALIDATOR_BALANCE,
             delegation: 0,
@@ -475,9 +475,9 @@ mod test_validator_state {
         let store_path = tempfile::tempdir()
             .expect("Failed to open temporary directory")
             .into_path();
-        let validator = ValidatorState::new(public_key, secret, &genesis, &store_path);
+        
 
-        validator
+        ValidatorState::new(public_key, secret, &genesis, &store_path)
     }
 
     fn create_test_execution_indices() -> ExecutionIndices {

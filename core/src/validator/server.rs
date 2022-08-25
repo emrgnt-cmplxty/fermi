@@ -313,7 +313,7 @@ mod test_validator_server {
 
         let validator = ValidatorInfo {
             name: "0".into(),
-            public_key: public_key.clone(),
+            public_key: public_key,
             stake: VALIDATOR_FUNDING_AMOUNT,
             balance: VALIDATOR_BALANCE,
             delegation: 0,
@@ -357,7 +357,7 @@ mod test_validator_server {
         let handle_result = spawn_validator_server().await;
         let handle = handle_result.unwrap();
         let mut client =
-            TransactionsClient::new(client::connect_lazy(&handle.address()).expect("Failed to connect to consensus"));
+            TransactionsClient::new(client::connect_lazy(handle.address()).expect("Failed to connect to consensus"));
 
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
@@ -382,7 +382,7 @@ mod test_validator_server {
 
         let validator = ValidatorInfo {
             name: "0".into(),
-            public_key: public_key.clone(),
+            public_key: public_key,
             stake: VALIDATOR_FUNDING_AMOUNT,
             balance: VALIDATOR_BALANCE,
             delegation: 0,

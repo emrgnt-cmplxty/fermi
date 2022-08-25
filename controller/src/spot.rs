@@ -751,7 +751,7 @@ pub mod spot_tests {
             bank_controller_ref
                 .lock()
                 .unwrap()
-                .get_balance(&account_0.public(), BASE_ASSET_ID)
+                .get_balance(account_0.public(), BASE_ASSET_ID)
                 .unwrap(),
             CREATED_ASSET_BALANCE - TRANSFER_AMOUNT
         );

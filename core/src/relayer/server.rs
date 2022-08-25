@@ -1,33 +1,12 @@
 use crate::validator::state::ValidatorState;
 use gdex_types::proto::*;
-use multiaddr::Multiaddr;
 use narwhal_types::CertificateDigestProto;
 
 use std::sync::Arc;
-use tokio::task::JoinHandle;
 use tonic::{Request, Response, Status};
 
 pub struct RelayerService {
     pub state: Arc<ValidatorState>,
-}
-// TODO make generic server handle
-pub struct RelayerServerHandle {
-    local_addr: Multiaddr,
-    handle: JoinHandle<()>,
-}
-
-impl RelayerServerHandle {
-    pub fn address(&self) -> &Multiaddr {
-        &self.local_addr
-    }
-
-    pub fn get_handle(self) -> JoinHandle<()> {
-        self.handle
-    }
-
-    pub fn new(local_addr: Multiaddr, handle: JoinHandle<()>) -> Self {
-        RelayerServerHandle { local_addr, handle }
-    }
 }
 
 #[tonic::async_trait]

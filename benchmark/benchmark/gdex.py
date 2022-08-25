@@ -46,7 +46,7 @@ class GDEXBench:
 
         try:
             Print.info('Setting up testbed...')
-            nodes, rate = self.nodes, self.rate
+            nodes, relayers, rate = self.nodes, self.relayers, self.rate
 
             # Cleanup all files.
             cmd = f'{CommandMaker.clean_logs()} ; {CommandMaker.cleanup()}'
@@ -76,7 +76,7 @@ class GDEXBench:
             rate_share = ceil(rate / len(nodes.keys()))
             for id, address in enumerate(nodes.values()):
                     cmd = CommandMaker.run_gdex_client(
-                        address, #url_to_multiaddr(address),
+                        address,
                         rate_share,
                         [x for x in nodes.values() if x != address]
                     )
@@ -93,6 +93,7 @@ class GDEXBench:
                     self.key_dir,
                     node_name,
                     url_to_multiaddr(nodes[node_name]),
+                    url_to_multiaddr(relayers[node_name]),
                     debug
                 )
                 print(cmd)

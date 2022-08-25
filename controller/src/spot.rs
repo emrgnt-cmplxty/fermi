@@ -9,6 +9,7 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 use super::bank::BankController;
+use crate::master::{HandleConsensus};
 use gdex_engine::{
     order_book::Orderbook,
     orders::{create_cancel_order_request, create_limit_order_request, create_update_order_request},
@@ -18,6 +19,7 @@ use gdex_types::{
     asset::{AssetId, AssetPairKey},
     error::GDEXError,
     order_book::{OrderProcessingResult, OrderSide, OrderType, Success},
+    transaction::{TransactionVariant, Transaction, OrderRequest}
 };
 use narwhal_crypto::ed25519::Ed25519PublicKey;
 use serde::{Deserialize, Serialize};
@@ -541,6 +543,81 @@ impl SpotController {
 //         Self::new()
 //     }
 // }
+
+impl HandleConsensus for SpotController {
+
+    fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
+        if let TransactionVariant::CreateOrderbookTransaction(orderbook) = transaction.get_variant() {
+            return self.create_orderbook(orderbook.get_base_asset_id(), orderbook.get_quote_asset_id());
+        }
+        if let TransactionVariant::PlaceOrderTransaction(order) = transaction.get_variant() {
+            match order {
+                OrderRequest::Market {
+                    base_asset_id,
+                    quote_asset_id,
+                    side,
+                    quantity,
+                    ..
+                } => {
+                    dbg!(base_asset_id, quote_asset_id, side, quantity);
+                }
+                OrderRequest::Limit {
+                    base_asset_id,
+                    quote_asset_id,
+                    side,
+                    price,
+                    quantity,
+                    ..
+                } => {
+                    self.place_limit_order(
+                        *base_asset_id,
+                        *quote_asset_id,
+                        transaction.get_sender(),
+                        *side,
+                        *quantity,
+                        *price,
+                    )?
+                }
+                OrderRequest::Cancel {
+                    base_asset_id,
+                    quote_asset_id,
+                    order_id,
+                    side,
+                    ..
+                } => {
+                    self.place_cancel_order(
+                        *base_asset_id,
+                        *quote_asset_id,
+                        transaction.get_sender(),
+                        *order_id,
+                        *side,
+                    )?
+                }
+                OrderRequest::Update {
+                    base_asset_id,
+                    quote_asset_id,
+                    order_id,
+                    side,
+                    price,
+                    quantity,
+                    ..
+                } => {
+                    self.place_update_order(
+                        *base_asset_id,
+                        *quote_asset_id,
+                        transaction.get_sender(),
+                        *order_id,
+                        *side,
+                        *quantity,
+                        *price,
+                    )?
+                }
+            }
+        }
+
+        Ok(())
+    }
+}
 
 #[cfg(test)]
 pub mod spot_tests {

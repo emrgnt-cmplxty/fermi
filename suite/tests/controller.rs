@@ -131,12 +131,7 @@ pub mod process_tests {
             .transfer(account_0.public(), account_1.public(), BASE_ASSET_ID, TRANSFER_AMOUNT)
             .unwrap();
         bank_controller
-            .transfer(
-                account_0.public(),
-                account_1.public(),
-                QUOTE_ASSET_ID,
-                TRANSFER_AMOUNT,
-            )
+            .transfer(account_0.public(), account_1.public(), QUOTE_ASSET_ID, TRANSFER_AMOUNT)
             .unwrap();
 
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
@@ -202,12 +197,7 @@ pub mod process_tests {
             .transfer(account_0.public(), account_1.public(), BASE_ASSET_ID, TRANSFER_AMOUNT)
             .unwrap();
         bank_controller
-            .transfer(
-                account_0.public(),
-                account_1.public(),
-                QUOTE_ASSET_ID,
-                TRANSFER_AMOUNT,
-            )
+            .transfer(account_0.public(), account_1.public(), QUOTE_ASSET_ID, TRANSFER_AMOUNT)
             .unwrap();
 
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));

@@ -90,7 +90,6 @@ pub mod cluster_test_suite {
 
         let genesis_state = cluster.get_validator_spawner(0).get_genesis_state();
         let sender_balance = genesis_state
-            
             .master_controller()
             .bank_controller
             .lock()
@@ -98,7 +97,6 @@ pub mod cluster_test_suite {
             .get_balance(kp_sender.public(), PRIMARY_ASSET_ID)
             .unwrap();
         let receiver_balance = genesis_state
-            
             .master_controller()
             .bank_controller
             .lock()

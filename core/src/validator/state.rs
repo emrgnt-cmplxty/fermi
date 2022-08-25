@@ -475,7 +475,6 @@ mod test_validator_state {
         let store_path = tempfile::tempdir()
             .expect("Failed to open temporary directory")
             .into_path();
-        
 
         ValidatorState::new(public_key, secret, &genesis, &store_path)
     }

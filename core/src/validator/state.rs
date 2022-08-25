@@ -12,7 +12,7 @@ use gdex_types::{
     block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},
     committee::{Committee, ValidatorName},
     error::GDEXError,
-    transaction::{OrderRequest, SignedTransaction, TransactionDigest, TransactionVariant},
+    transaction::{SignedTransaction, TransactionDigest},
 };
 use mysten_store::{
     reopen,
@@ -271,103 +271,103 @@ impl ExecutionState for ValidatorState {
         self.validator_store
             .insert_confirmed_transaction(transaction, consensus_output);
 
-        match transaction.get_variant() {
-            TransactionVariant::PaymentTransaction(payment) => {
-                self.master_controller.bank_controller.lock().unwrap().transfer(
-                    transaction.get_sender(),
-                    payment.get_receiver(),
-                    payment.get_asset_id(),
-                    payment.get_amount(),
-                )?
-            }
-            TransactionVariant::CreateAssetTransaction(_create_asset) => self
-                .master_controller
-                .bank_controller
-                .lock()
-                .unwrap()
-                .create_asset(transaction.get_sender())?,
-            TransactionVariant::CreateOrderbookTransaction(orderbook) => self
-                .master_controller
-                .spot_controller
-                .lock()
-                .unwrap()
-                .create_orderbook(orderbook.get_base_asset_id(), orderbook.get_quote_asset_id())?,
-            TransactionVariant::PlaceOrderTransaction(order) => {
-                match order {
-                    OrderRequest::Market {
-                        base_asset_id,
-                        quote_asset_id,
-                        side,
-                        quantity,
-                        ..
-                    } => {
-                        dbg!(base_asset_id, quote_asset_id, side, quantity);
-                    }
-                    OrderRequest::Limit {
-                        base_asset_id,
-                        quote_asset_id,
-                        side,
-                        price,
-                        quantity,
-                        ..
-                    } => {
-                        // TODO: find out why these u64 are references
-                        self.master_controller
-                            .spot_controller
-                            .lock()
-                            .unwrap()
-                            .place_limit_order(
-                                *base_asset_id,
-                                *quote_asset_id,
-                                transaction.get_sender(),
-                                *side,
-                                *quantity,
-                                *price,
-                            )?
-                    }
-                    OrderRequest::Cancel {
-                        base_asset_id,
-                        quote_asset_id,
-                        order_id,
-                        side,
-                        ..
-                    } => self
-                        .master_controller
-                        .spot_controller
-                        .lock()
-                        .unwrap()
-                        .place_cancel_order(
-                            *base_asset_id,
-                            *quote_asset_id,
-                            transaction.get_sender(),
-                            *order_id,
-                            *side,
-                        )?,
-                    OrderRequest::Update {
-                        base_asset_id,
-                        quote_asset_id,
-                        order_id,
-                        side,
-                        price,
-                        quantity,
-                        ..
-                    } => self
-                        .master_controller
-                        .spot_controller
-                        .lock()
-                        .unwrap()
-                        .place_update_order(
-                            *base_asset_id,
-                            *quote_asset_id,
-                            transaction.get_sender(),
-                            *order_id,
-                            *side,
-                            *quantity,
-                            *price,
-                        )?,
-                }
-            }
-        }
+        // match transaction.get_variant() {
+        //     TransactionVariant::PaymentTransaction(payment) => {
+        //         self.master_controller.bank_controller.lock().unwrap().transfer(
+        //             transaction.get_sender(),
+        //             payment.get_receiver(),
+        //             payment.get_asset_id(),
+        //             payment.get_amount(),
+        //         )?
+        //     }
+        //     TransactionVariant::CreateAssetTransaction(_create_asset) => self
+        //         .master_controller
+        //         .bank_controller
+        //         .lock()
+        //         .unwrap()
+        //         .create_asset(transaction.get_sender())?,
+        //     TransactionVariant::CreateOrderbookTransaction(orderbook) => self
+        //         .master_controller
+        //         .spot_controller
+        //         .lock()
+        //         .unwrap()
+        //         .create_orderbook(orderbook.get_base_asset_id(), orderbook.get_quote_asset_id())?,
+        //     TransactionVariant::PlaceOrderTransaction(order) => {
+        //         match order {
+        //             OrderRequest::Market {
+        //                 base_asset_id,
+        //                 quote_asset_id,
+        //                 side,
+        //                 quantity,
+        //                 ..
+        //             } => {
+        //                 dbg!(base_asset_id, quote_asset_id, side, quantity);
+        //             }
+        //             OrderRequest::Limit {
+        //                 base_asset_id,
+        //                 quote_asset_id,
+        //                 side,
+        //                 price,
+        //                 quantity,
+        //                 ..
+        //             } => {
+        //                 // TODO: find out why these u64 are references
+        //                 self.master_controller
+        //                     .spot_controller
+        //                     .lock()
+        //                     .unwrap()
+        //                     .place_limit_order(
+        //                         *base_asset_id,
+        //                         *quote_asset_id,
+        //                         transaction.get_sender(),
+        //                         *side,
+        //                         *quantity,
+        //                         *price,
+        //                     )?
+        //             }
+        //             OrderRequest::Cancel {
+        //                 base_asset_id,
+        //                 quote_asset_id,
+        //                 order_id,
+        //                 side,
+        //                 ..
+        //             } => self
+        //                 .master_controller
+        //                 .spot_controller
+        //                 .lock()
+        //                 .unwrap()
+        //                 .place_cancel_order(
+        //                     *base_asset_id,
+        //                     *quote_asset_id,
+        //                     transaction.get_sender(),
+        //                     *order_id,
+        //                     *side,
+        //                 )?,
+        //             OrderRequest::Update {
+        //                 base_asset_id,
+        //                 quote_asset_id,
+        //                 order_id,
+        //                 side,
+        //                 price,
+        //                 quantity,
+        //                 ..
+        //             } => self
+        //                 .master_controller
+        //                 .spot_controller
+        //                 .lock()
+        //                 .unwrap()
+        //                 .place_update_order(
+        //                     *base_asset_id,
+        //                     *quote_asset_id,
+        //                     transaction.get_sender(),
+        //                     *order_id,
+        //                     *side,
+        //                     *quantity,
+        //                     *price,
+        //                 )?,
+        //         }
+        //     }
+        // }
 
         Ok((consensus_output.clone(), execution_indices))
     }

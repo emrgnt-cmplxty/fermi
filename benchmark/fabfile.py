@@ -17,20 +17,20 @@ def gdex(ctx, debug=True):
     bench_params = {
         'faults': 0,
         # must have corresponding info in genesis .proto
-        'node_info': {
-            ### direct line to wrapper node
+        'node_addresses': {
             'validator-0': 'http://localhost:62276',
             'validator-1': 'http://localhost:62378',
             'validator-2': 'http://localhost:62480',
             'validator-3': 'http://localhost:62582'
-            ### direct line to narwhal node
-            # 'validator-0': 'http://localhost:62238',
-            # 'validator-1': 'http://localhost:62250',
-            # 'validator-2': 'http://localhost:62262',
-            # 'validator-3': 'http://localhost:62274'
+        },
+        'relayer_addresses': {
+            'validator-0': 'http://localhost:62296',
+            'validator-1': 'http://localhost:62398',
+            'validator-2': 'http://localhost:62500',
+            'validator-3': 'http://localhost:62602'
         },
         'rate': 50_000,
-        'duration': 20,
+        'duration': 3_600,
         'mem_profiling': False,
         'genesis_dir': "../.proto/",
         'key_dir': "../.proto/",

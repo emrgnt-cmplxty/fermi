@@ -96,7 +96,6 @@ impl Faucet for FaucetService {
     }
 }
 
-#[allow(dead_code)]
 #[tokio::main]
 #[allow(dead_code)]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

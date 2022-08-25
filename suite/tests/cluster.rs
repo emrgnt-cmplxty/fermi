@@ -276,7 +276,7 @@ pub mod cluster_test_suite {
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         let spawner_1 = cluster.get_validator_spawner(1);
-        let validator_state = spawner_1.get_validator_state().clone().unwrap();
+        let validator_state = spawner_1.get_validator_state().unwrap();
 
         // Create txns
         let dummy_consensus_output = create_test_consensus_output();

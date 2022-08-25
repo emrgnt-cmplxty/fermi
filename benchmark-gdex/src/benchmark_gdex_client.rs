@@ -4,6 +4,7 @@
 use anyhow::{Context, Result};
 use clap::{crate_name, crate_version, App, AppSettings};
 use futures::{future::join_all, StreamExt};
+use gdex_types::block::{BlockDigest, BlockInfo};
 use gdex_types::proto::{BlockInfoProto, RelayerClient, RelayerGetLatestBlockInfoRequest};
 use gdex_types::{
     account::AccountKeyPair,
@@ -23,7 +24,6 @@ use tokio::{
 use tracing::{info, subscriber::set_global_default, warn};
 use tracing_subscriber::filter::EnvFilter;
 use url::Url;
-use gdex_types::block::{BlockDigest, BlockInfo};
 
 const PRIMARY_ASSET_ID: u64 = 0;
 
@@ -37,7 +37,7 @@ fn create_signed_transaction(
     kp_sender: &AccountKeyPair,
     kp_receiver: &AccountKeyPair,
     amount: u64,
-    block_digest: BlockDigest
+    block_digest: BlockDigest,
 ) -> SignedTransaction {
     // use a dummy batch digest for initial benchmarking
 
@@ -46,11 +46,7 @@ fn create_signed_transaction(
         PRIMARY_ASSET_ID,
         amount,
     ));
-    let transaction = Transaction::new(
-        kp_sender.public().clone(),
-        block_digest,
-        transaction_variant,
-    );
+    let transaction = Transaction::new(kp_sender.public().clone(), block_digest, transaction_variant);
 
     // sign digest and create signed transaction
     let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
@@ -171,7 +167,6 @@ impl Client {
             } else {
                 BlockDigest::new([0; 32])
             };
-
 
             if counter == 0 {
                 let transaction_size = create_signed_transaction(&kp_sender, &kp_receiver, 1, block_digest.clone())

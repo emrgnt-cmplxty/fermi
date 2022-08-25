@@ -179,6 +179,7 @@ pub mod cluster_test_suite {
         }
     }
 
+    #[ignore]
     #[tokio::test(flavor = "multi_thread")]
     pub async fn test_catchup_new_node_mock() {
         // utils::set_testing_telemetry("gdex_core=info, gdex_suite=info");
@@ -240,7 +241,7 @@ pub mod cluster_test_suite {
             .unwrap();
 
         // drop the cluster to stop forward progress of consensus
-        // drop(cluster);
+        drop(cluster);
 
         tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 

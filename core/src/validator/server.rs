@@ -313,7 +313,7 @@ mod test_validator_server {
 
         let validator = ValidatorInfo {
             name: "0".into(),
-            public_key: public_key,
+            public_key,
             stake: VALIDATOR_FUNDING_AMOUNT,
             balance: VALIDATOR_BALANCE,
             delegation: 0,
@@ -382,7 +382,7 @@ mod test_validator_server {
 
         let validator = ValidatorInfo {
             name: "0".into(),
-            public_key: public_key,
+            public_key,
             stake: VALIDATOR_FUNDING_AMOUNT,
             balance: VALIDATOR_BALANCE,
             delegation: 0,

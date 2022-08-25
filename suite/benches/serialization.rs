@@ -56,7 +56,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         // generate the signed digest for repeated use
         let signed_digest: AccountSignature = kp_sender.sign(&(transaction.digest().get_array())[..]);
 
-        SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest.clone())
+        SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest)
     }
 
     // bench serializing singletons
@@ -86,11 +86,11 @@ fn criterion_benchmark(c: &mut Criterion) {
     }
 
     c.bench_function("serialization_serialize_1_000", move |b| {
-        b.iter(|| serialize_1_000(black_box([0 as u8; 32]), black_box([1 as u8; 32])))
+        b.iter(|| serialize_1_000(black_box([0_u8; 32]), black_box([1_u8; 32])))
     });
 
     c.bench_function("serialization_deserialize_1_000", move |b| {
-        b.iter(|| deserialize_1_000(black_box([0 as u8; 32]), black_box([1 as u8; 32])))
+        b.iter(|| deserialize_1_000(black_box([0_u8; 32]), black_box([1_u8; 32])))
     });
 
     let mut i = 0;
@@ -104,7 +104,7 @@ fn criterion_benchmark(c: &mut Criterion) {
 
     // bench deserializing a batch w/ no verification
     fn deserialize_batch_method1(batch: &[u8]) {
-        let _ = match bincode::deserialize(batch).unwrap() {
+        match bincode::deserialize(batch).unwrap() {
             WorkerMessage::Batch(Batch(transactions)) => {
                 for transaction_padded in transactions {
                     let transaction: Vec<u8> = transaction_padded
@@ -124,7 +124,7 @@ fn criterion_benchmark(c: &mut Criterion) {
 
     // bench deserializing a batch w/ verification
     fn deserialize_batch_and_verify_method1(batch: &[u8]) {
-        let _ = match bincode::deserialize(batch).unwrap() {
+        match bincode::deserialize(batch).unwrap() {
             WorkerMessage::Batch(Batch(transactions)) => {
                 for transaction_padded in transactions {
                     let transaction: Vec<u8> = transaction_padded

@@ -95,7 +95,7 @@ pub mod mock_catchup_manager {
 
         /// This fetches the latest block from a mock relay server, e.g. from a coincident nodes validator store
         async fn fetch_latest_block(&mut self, mock_server: &MockRelayServer<'_>) -> Result<(), GDEXError> {
-            let latest_block = mock_server.fetch_latest_block_info().await?.clone();
+            let latest_block = mock_server.fetch_latest_block_info().await?;
 
             let latest_block_number = latest_block.block_number;
             for block_number in self.network_processed_block_number..latest_block_number {

@@ -41,7 +41,7 @@ mod consensus_tests {
     pub fn config() {
         let new_address = utils::new_network_address();
         let new_config = ConsensusConfig {
-            consensus_address: new_address.clone(),
+            consensus_address: new_address,
             consensus_db_path: PathBuf::from("test.conf"),
             narwhal_config: Default::default(),
         };

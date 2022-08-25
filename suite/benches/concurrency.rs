@@ -48,7 +48,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         let (tx, mut _rx) = channel(DEFAULT_CHANNEL_SIZE);
         let mut i = 0;
         while i < 1_000 {
-            let _ = tx.send(bytes_sent).await.unwrap();
+            tx.send(bytes_sent).await.unwrap();
             i += 1;
         }
     }
@@ -57,7 +57,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         let (tx, mut _rx) = channel(DEFAULT_CHANNEL_SIZE);
         let mut i = 0;
         while i < 1_000 {
-            let _ = tx.send(bytes_sent).await.unwrap();
+            tx.send(bytes_sent).await.unwrap();
             i += 1;
         }
     }
@@ -66,7 +66,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         let (tx, mut rx) = channel(DEFAULT_CHANNEL_SIZE);
         let mut i = 0;
         while i < 1_000 {
-            let _ = tx.send(bytes_sent).await.unwrap();
+            tx.send(bytes_sent).await.unwrap();
             let _ = rx.recv().await.unwrap();
             i += 1;
         }
@@ -76,7 +76,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         let (tx, mut rx) = channel(DEFAULT_CHANNEL_SIZE);
         let mut i = 0;
         while i < 1_000 {
-            let _ = tx.send(bytes_sent).await.unwrap();
+            tx.send(bytes_sent).await.unwrap();
             let _ = rx.recv().await.unwrap();
             i += 1;
         }
@@ -84,32 +84,32 @@ fn criterion_benchmark(c: &mut Criterion) {
 
     c.bench_function("concurrency_init_channel_64", move |b| {
         b.to_async(Runtime::new().unwrap())
-            .iter(|| init_channel_64(black_box([0 as u8; 64])))
+            .iter(|| init_channel_64(black_box([0_u8; 64])))
     });
 
     c.bench_function("concurrency_send_channel_64_1_000", move |b| {
         b.to_async(Runtime::new().unwrap())
-            .iter(|| send_channel_64_1_000(black_box([0 as u8; 64])))
+            .iter(|| send_channel_64_1_000(black_box([0_u8; 64])))
     });
 
     c.bench_function("concurrency_send_and_receive_channel_64_1_000", move |b| {
         b.to_async(Runtime::new().unwrap())
-            .iter(|| send_and_receive_channel_64_1_000(black_box([0 as u8; 64])))
+            .iter(|| send_and_receive_channel_64_1_000(black_box([0_u8; 64])))
     });
 
     c.bench_function("concurrency_init_channel_512_1_000", move |b| {
         b.to_async(Runtime::new().unwrap())
-            .iter(|| init_channel_512(black_box([0 as u8; 512])))
+            .iter(|| init_channel_512(black_box([0_u8; 512])))
     });
 
     c.bench_function("concurrency_send_channel_512_1_000", move |b| {
         b.to_async(Runtime::new().unwrap())
-            .iter(|| send_channel_512_1_000(black_box([0 as u8; 512])))
+            .iter(|| send_channel_512_1_000(black_box([0_u8; 512])))
     });
 
     c.bench_function("concurrency_send_and_receive_channel_512_1_000", move |b| {
         b.to_async(Runtime::new().unwrap())
-            .iter(|| send_and_receive_channel_512_1_000(black_box([0 as u8; 512])))
+            .iter(|| send_and_receive_channel_512_1_000(black_box([0_u8; 512])))
     });
 }
 

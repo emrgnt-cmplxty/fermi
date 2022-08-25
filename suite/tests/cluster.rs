@@ -63,20 +63,18 @@ pub mod cluster_test_suite {
 
         let genesis_state = cluster.get_validator_spawner(0).get_genesis_state();
         let sender_balance = genesis_state
-            .clone()
             .master_controller()
             .bank_controller
             .lock()
             .unwrap()
-            .get_balance(&kp_sender.public(), PRIMARY_ASSET_ID)
+            .get_balance(kp_sender.public(), PRIMARY_ASSET_ID)
             .unwrap();
         let receiver_balance = genesis_state
-            .clone()
             .master_controller()
             .bank_controller
             .lock()
             .unwrap()
-            .get_balance(&kp_receiver.public(), PRIMARY_ASSET_ID)
+            .get_balance(kp_receiver.public(), PRIMARY_ASSET_ID)
             .unwrap();
         assert_eq!(sender_balance + receiver_balance, 2_500_000_000_000_000);
         assert!(receiver_balance > 0, "Receiver balance must be greater than 0");
@@ -200,7 +198,7 @@ pub mod cluster_test_suite {
         // check that every transaction entered the cache
         info!("Verify that all transactions entered cache");
         for signed_transaction in signed_transactions.clone() {
-            assert!(validator_store.cache_contains_transaction(&signed_transaction.get_transaction_payload()));
+            assert!(validator_store.cache_contains_transaction(signed_transaction.get_transaction_payload()));
         }
 
         let mut total = 0;
@@ -208,11 +206,11 @@ pub mod cluster_test_suite {
         let mut block_db_iter = block_db.iter();
 
         // TODO - more rigorously check exact match of transactions
-        while let Some(next_block) = block_db_iter.next() {
+        for next_block in block_db_iter.by_ref() {
             let block = next_block.1;
             for serialized_transaction in &block.transactions {
                 let signed_transaction_db = SignedTransaction::deserialize(serialized_transaction.clone()).unwrap();
-                assert!(validator_store.cache_contains_transaction(&signed_transaction_db.get_transaction_payload()));
+                assert!(validator_store.cache_contains_transaction(signed_transaction_db.get_transaction_payload()));
                 total += 1;
             }
             assert!(validator_store.cache_contains_block_digest(&block.block_certificate.digest()));

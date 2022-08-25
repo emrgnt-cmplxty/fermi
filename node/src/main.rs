@@ -4,6 +4,7 @@
 use anyhow::Result;
 use clap::{crate_name, crate_version, App, AppSettings, ArgMatches, SubCommand};
 use gdex_core::{relayer::spawner::RelayerSpawner, validator::spawner::ValidatorSpawner};
+use gdex_types::utils;
 use multiaddr::Multiaddr;
 use std::{path::Path, str::FromStr, sync::Arc};
 use tracing::info;
@@ -92,6 +93,7 @@ async fn run(matches: &ArgMatches<'_>) {
         /* validator_name */ validator_name.to_string(),
     );
 
+    
     validator_spawner.spawn_validator().await;
 
     let validator_state = validator_spawner.get_validator_state().unwrap();

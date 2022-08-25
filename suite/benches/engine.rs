@@ -122,9 +122,9 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     // initialize market controller
     let mut account_to_pub_key: Vec<AccountPubKey> = Vec::new();
     let mut bank_controller: BankController = BankController::new();
-    bank_controller.create_asset(&primary.public()).unwrap();
+    bank_controller.create_asset(primary.public()).unwrap();
     let base_asset_id = 0;
-    bank_controller.create_asset(&primary.public()).unwrap();
+    bank_controller.create_asset(primary.public()).unwrap();
     let quote_asset_id = 1;
 
     let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
@@ -132,7 +132,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     let mut orderbook_interface =
         OrderbookInterface::new(base_asset_id, quote_asset_id, Arc::clone(&bank_controller_ref));
 
-    orderbook_interface.create_account(&primary.public()).unwrap();
+    orderbook_interface.create_account(primary.public()).unwrap();
     // other helpers
     let mut i_account: u64 = 0;
     let path: &str = "./db.rocks";
@@ -152,12 +152,12 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         bank_controller_ref
             .lock()
             .unwrap()
-            .transfer(&primary.public(), &receiver.public(), base_asset_id, TRANSFER_AMOUNT)
+            .transfer(primary.public(), receiver.public(), base_asset_id, TRANSFER_AMOUNT)
             .unwrap();
         bank_controller_ref
             .lock()
             .unwrap()
-            .transfer(&primary.public(), &receiver.public(), quote_asset_id, TRANSFER_AMOUNT)
+            .transfer(primary.public(), receiver.public(), quote_asset_id, TRANSFER_AMOUNT)
             .unwrap();
 
         // create initial asset

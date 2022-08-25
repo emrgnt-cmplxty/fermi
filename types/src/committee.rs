@@ -289,14 +289,14 @@ mod test {
 
         let validator = committee.sample();
         // sample should only return the single input validator
-        assert!(*validator == ValidatorPubKeyBytes::from(a1.clone()));
+        assert!(*validator == a1);
 
         assert!(committee.num_members() == 1);
 
         let mut members = committee.members();
         let member = members.next();
         // assert that members first returns the initial validator
-        assert!(member.unwrap().0.clone() == ValidatorPubKeyBytes::from(a1.clone()));
+        assert!(member.unwrap().0 == a1);
         let member = members.next();
         // assert that members returns None
         assert!(member == None);
@@ -304,7 +304,7 @@ mod test {
         let mut names = committee.names();
         let name = names.next();
         // assert that names first returns the initial validator
-        assert!(name.unwrap().clone() == ValidatorPubKeyBytes::from(a1.clone()));
+        assert!(*name.unwrap() == a1);
         let name = names.next();
         // assert that names next returns None
         assert!(name == None);
@@ -312,7 +312,7 @@ mod test {
         let mut stakes = committee.stakes();
         let stake = stakes.next();
         // assert that stakes first returns the initial validator staked (1)
-        assert!(stake.unwrap().clone() == 1);
+        assert!(stake.unwrap() == 1);
         let stake = names.next();
         // assert that stakes next returns None
         assert!(stake == None);

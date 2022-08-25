@@ -12,7 +12,7 @@ use gdex_types::{
     block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},
     committee::{Committee, ValidatorName},
     error::GDEXError,
-    transaction::{SignedTransaction, TransactionDigest},
+    transaction::{OrderRequest, SignedTransaction, TransactionDigest, TransactionVariant},
 };
 use mysten_store::{
     reopen,
@@ -67,7 +67,7 @@ impl ValidatorStore {
             Self::LAST_BLOCK_CF;<u64, BlockInfo>
         );
 
-        let block_number_from_dbmap = last_block_map.get(&0);
+        let block_number_from_dbmap = last_block_map.get(&0_u64);
 
         let block_store = Store::new(block_map);
         let block_info_store = Store::new(block_info_map);
@@ -271,103 +271,103 @@ impl ExecutionState for ValidatorState {
         self.validator_store
             .insert_confirmed_transaction(transaction, consensus_output);
 
-        // match transaction.get_variant() {
-        //     TransactionVariant::PaymentTransaction(payment) => {
-        //         self.master_controller.bank_controller.lock().unwrap().transfer(
-        //             transaction.get_sender(),
-        //             payment.get_receiver(),
-        //             payment.get_asset_id(),
-        //             payment.get_amount(),
-        //         )?
-        //     }
-        //     TransactionVariant::CreateAssetTransaction(_create_asset) => self
-        //         .master_controller
-        //         .bank_controller
-        //         .lock()
-        //         .unwrap()
-        //         .create_asset(transaction.get_sender())?,
-        //     TransactionVariant::CreateOrderbookTransaction(orderbook) => self
-        //         .master_controller
-        //         .spot_controller
-        //         .lock()
-        //         .unwrap()
-        //         .create_orderbook(orderbook.get_base_asset_id(), orderbook.get_quote_asset_id())?,
-        //     TransactionVariant::PlaceOrderTransaction(order) => {
-        //         match order {
-        //             OrderRequest::Market {
-        //                 base_asset_id,
-        //                 quote_asset_id,
-        //                 side,
-        //                 quantity,
-        //                 ..
-        //             } => {
-        //                 dbg!(base_asset_id, quote_asset_id, side, quantity);
-        //             }
-        //             OrderRequest::Limit {
-        //                 base_asset_id,
-        //                 quote_asset_id,
-        //                 side,
-        //                 price,
-        //                 quantity,
-        //                 ..
-        //             } => {
-        //                 // TODO: find out why these u64 are references
-        //                 self.master_controller
-        //                     .spot_controller
-        //                     .lock()
-        //                     .unwrap()
-        //                     .place_limit_order(
-        //                         *base_asset_id,
-        //                         *quote_asset_id,
-        //                         transaction.get_sender(),
-        //                         *side,
-        //                         *quantity,
-        //                         *price,
-        //                     )?
-        //             }
-        //             OrderRequest::Cancel {
-        //                 base_asset_id,
-        //                 quote_asset_id,
-        //                 order_id,
-        //                 side,
-        //                 ..
-        //             } => self
-        //                 .master_controller
-        //                 .spot_controller
-        //                 .lock()
-        //                 .unwrap()
-        //                 .place_cancel_order(
-        //                     *base_asset_id,
-        //                     *quote_asset_id,
-        //                     transaction.get_sender(),
-        //                     *order_id,
-        //                     *side,
-        //                 )?,
-        //             OrderRequest::Update {
-        //                 base_asset_id,
-        //                 quote_asset_id,
-        //                 order_id,
-        //                 side,
-        //                 price,
-        //                 quantity,
-        //                 ..
-        //             } => self
-        //                 .master_controller
-        //                 .spot_controller
-        //                 .lock()
-        //                 .unwrap()
-        //                 .place_update_order(
-        //                     *base_asset_id,
-        //                     *quote_asset_id,
-        //                     transaction.get_sender(),
-        //                     *order_id,
-        //                     *side,
-        //                     *quantity,
-        //                     *price,
-        //                 )?,
-        //         }
-        //     }
-        // }
+        match transaction.get_variant() {
+            TransactionVariant::PaymentTransaction(payment) => {
+                self.master_controller.bank_controller.lock().unwrap().transfer(
+                    transaction.get_sender(),
+                    payment.get_receiver(),
+                    payment.get_asset_id(),
+                    payment.get_amount(),
+                )?
+            }
+            TransactionVariant::CreateAssetTransaction(_create_asset) => self
+                .master_controller
+                .bank_controller
+                .lock()
+                .unwrap()
+                .create_asset(transaction.get_sender())?,
+            TransactionVariant::CreateOrderbookTransaction(orderbook) => self
+                .master_controller
+                .spot_controller
+                .lock()
+                .unwrap()
+                .create_orderbook(orderbook.get_base_asset_id(), orderbook.get_quote_asset_id())?,
+            TransactionVariant::PlaceOrderTransaction(order) => {
+                match order {
+                    OrderRequest::Market {
+                        base_asset_id,
+                        quote_asset_id,
+                        side,
+                        quantity,
+                        ..
+                    } => {
+                        dbg!(base_asset_id, quote_asset_id, side, quantity);
+                    }
+                    OrderRequest::Limit {
+                        base_asset_id,
+                        quote_asset_id,
+                        side,
+                        price,
+                        quantity,
+                        ..
+                    } => {
+                        // TODO: find out why these u64 are references
+                        self.master_controller
+                            .spot_controller
+                            .lock()
+                            .unwrap()
+                            .place_limit_order(
+                                *base_asset_id,
+                                *quote_asset_id,
+                                transaction.get_sender(),
+                                *side,
+                                *quantity,
+                                *price,
+                            )?
+                    }
+                    OrderRequest::Cancel {
+                        base_asset_id,
+                        quote_asset_id,
+                        order_id,
+                        side,
+                        ..
+                    } => self
+                        .master_controller
+                        .spot_controller
+                        .lock()
+                        .unwrap()
+                        .place_cancel_order(
+                            *base_asset_id,
+                            *quote_asset_id,
+                            transaction.get_sender(),
+                            *order_id,
+                            *side,
+                        )?,
+                    OrderRequest::Update {
+                        base_asset_id,
+                        quote_asset_id,
+                        order_id,
+                        side,
+                        price,
+                        quantity,
+                        ..
+                    } => self
+                        .master_controller
+                        .spot_controller
+                        .lock()
+                        .unwrap()
+                        .place_update_order(
+                            *base_asset_id,
+                            *quote_asset_id,
+                            transaction.get_sender(),
+                            *order_id,
+                            *side,
+                            *quantity,
+                            *price,
+                        )?,
+                }
+            }
+        }
 
         Ok((consensus_output.clone(), execution_indices))
     }
@@ -420,7 +420,7 @@ mod test_validator_state {
 
         let validator = ValidatorInfo {
             name: "0".into(),
-            public_key: public_key.clone(),
+            public_key: public_key,
             stake: VALIDATOR_FUNDING_AMOUNT,
             balance: VALIDATOR_BALANCE,
             delegation: 0,
@@ -455,7 +455,7 @@ mod test_validator_state {
 
         let validator = ValidatorInfo {
             name: "0".into(),
-            public_key: public_key.clone(),
+            public_key: public_key,
             stake: VALIDATOR_FUNDING_AMOUNT,
             balance: VALIDATOR_BALANCE,
             delegation: 0,
@@ -475,9 +475,8 @@ mod test_validator_state {
         let store_path = tempfile::tempdir()
             .expect("Failed to open temporary directory")
             .into_path();
-        let validator = ValidatorState::new(public_key, secret, &genesis, &store_path);
 
-        validator
+        ValidatorState::new(public_key, secret, &genesis, &store_path)
     }
 
     fn create_test_execution_indices() -> ExecutionIndices {

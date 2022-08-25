@@ -18,19 +18,19 @@ def gdex(ctx, debug=True):
         'faults': 0,
         # must have corresponding info in genesis .proto
         'node_addresses': {
-            'validator-0': 'http://localhost:62276',
-            'validator-1': 'http://localhost:62378',
-            'validator-2': 'http://localhost:62480',
-            'validator-3': 'http://localhost:62582'
+            'validator-0': 'http://localhost:3003',
+            'validator-1': 'http://localhost:3013',
+            'validator-2': 'http://localhost:3023',
+            'validator-3': 'http://localhost:3033'
         },
         'relayer_addresses': {
-            'validator-0': 'http://localhost:62296',
-            'validator-1': 'http://localhost:62398',
-            'validator-2': 'http://localhost:62500',
-            'validator-3': 'http://localhost:62602'
+            'validator-0': 'http://localhost:3004',
+            'validator-1': 'http://localhost:3014',
+            'validator-2': 'http://localhost:3024',
+            'validator-3': 'http://localhost:3034'
         },
         'rate': 50_000,
-        'duration': 3_600,
+        'duration': 20,
         'mem_profiling': False,
         'genesis_dir': "../.proto/",
         'key_dir': "../.proto/",

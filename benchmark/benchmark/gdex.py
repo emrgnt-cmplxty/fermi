@@ -70,8 +70,24 @@ class GDEXBench:
             print(cmd)
             subprocess.run([cmd], shell=True)
 
+            # Run the primaries
+            for id, node_name in enumerate(nodes.keys()):
+                sleep(2)
+                cmd = CommandMaker.run_gdex_node(
+                    self.db_dir,
+                    self.genesis_dir,
+                    self.key_dir,
+                    node_name,
+                    url_to_multiaddr(nodes[node_name]),
+                    url_to_multiaddr(relayers[node_name]),
+                    debug
+                )
+                print(cmd)
+                log_file = PathMaker.primary_log_file(id)
+                self._background_run(cmd, log_file)
+
             # Run the clients (they will wait for the nodes to be ready).
-            
+
             # currently hard-coded for a single worker, for n-workers denom = n*len(nodes.keys())
             rate_share = ceil(rate / len(nodes.keys()))
             for id, address in enumerate(nodes.values()):
@@ -85,21 +101,6 @@ class GDEXBench:
                     # currently hard-coded for a single worker, for n-workers 0 -> i
                     log_file = PathMaker.client_log_file(id, 0)
                     self._background_run(cmd, log_file)
-
-            # Run the primaries
-            for id, node_name in enumerate(nodes.keys()):
-                cmd = CommandMaker.run_gdex_node(
-                    self.db_dir,
-                    self.genesis_dir,
-                    self.key_dir,
-                    node_name,
-                    url_to_multiaddr(nodes[node_name]),
-                    url_to_multiaddr(relayers[node_name]),
-                    debug
-                )
-                print(cmd)
-                log_file = PathMaker.primary_log_file(id)
-                self._background_run(cmd, log_file)
 
             # Wait for all transactions to be processed.
             Print.info(f'Running benchmark ({self.duration} sec)...')

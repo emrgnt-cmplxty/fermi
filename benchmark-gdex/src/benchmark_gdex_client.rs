@@ -142,12 +142,21 @@ impl Client {
         // Submit all transactions.
         let burst = self.rate / PRECISION;
         let mut counter = 0;
-        // select a number from a range that is gaurenteed to be larger than the size of transactions submitted
         // but, not so large that we can exhaust the primary senders balance
-        let mut r = rand::thread_rng().gen_range(100_000 as u64..1_000_000 as u64);
         let interval = interval(Duration::from_millis(BURST_DURATION));
         tokio::pin!(interval);
 
+        let response = relayer_client
+            .get_latest_block_info(request.clone())
+            .await
+            .unwrap()
+            .into_inner();
+
+        let block_digest: BlockDigest = if response.successful && response.block_info.is_some() {
+            bincode::deserialize(response.block_info.unwrap().digest.as_ref()).unwrap()
+        } else {
+            BlockDigest::new([0; 32])
+        };
         // NOTE: This log entry is used to compute performance.
         info!("Start sending transactions");
         'main: loop {
@@ -156,17 +165,7 @@ impl Client {
             let kp_sender = keys([0; 32]).pop().unwrap();
             let kp_receiver = keys([1; 32]).pop().unwrap();
 
-            let response = relayer_client
-                .get_latest_block_info(request.clone())
-                .await
-                .unwrap()
-                .into_inner();
 
-            let block_digest: BlockDigest = if response.successful && response.block_info.is_some() {
-                bincode::deserialize(response.block_info.unwrap().digest.as_ref()).unwrap()
-            } else {
-                BlockDigest::new([0; 32])
-            };
 
             if counter == 0 {
                 let transaction_size = create_signed_transaction(&kp_sender, &kp_receiver, 1, block_digest.clone())
@@ -177,15 +176,14 @@ impl Client {
             }
 
             let stream = tokio_stream::iter(0..burst).map(move |x| {
-                let amount = if x == counter % burst {
+                let amount = rand::thread_rng().gen_range(100_000 as u64..5_000_000 as u64);
+                if x == counter % burst {
                     // NOTE: This log entry is used to compute performance.
                     info!("Sending sample transaction {counter}");
-                    counter
-                } else {
-                    r += 1;
-                    r
-                };
+                }
                 let signed_tranasction = create_signed_transaction(&kp_sender, &kp_receiver, amount, block_digest);
+                // let txn_digest = signed_tranasction.get_transaction_payload().digest().to_string();
+                // info!("Submitting {}", txn_digest);
                 TransactionProto {
                     transaction: signed_tranasction.serialize().unwrap().into(),
                 }

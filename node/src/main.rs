@@ -3,10 +3,13 @@
 // SPDX-License-Identifier: Apache-2.0
 use anyhow::Result;
 use clap::{crate_name, crate_version, App, AppSettings, ArgMatches, SubCommand};
-use gdex_core::validator::spawner::ValidatorSpawner;
+use gdex_core::{relayer::spawner::RelayerSpawner, validator::spawner::ValidatorSpawner};
 use multiaddr::Multiaddr;
-use std::{path::Path, str::FromStr};
+use std::{path::Path, str::FromStr, sync::Arc};
 use tracing::info;
+
+const DEFAULT_RELAY_MULTIADDR: &str = "/dns/localhost/tcp/62000/http";
+const DEFAULT_VALIDATOR_MULTIADDR: &str = "/dns/localhost/tcp/63000/http";
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -21,7 +24,8 @@ async fn main() -> Result<()> {
                 .args_from_usage("--key-dir=<FOLDER> 'The file containing the node keys'")
                 .args_from_usage("--genesis-dir=<FOLDER> 'The folder containing the genesis blob'")
                 .args_from_usage("--validator-name=<NAME> 'The validator name'")
-                .args_from_usage("--validator-port=<PORT> 'The validator port'"),
+                .args_from_usage("--validator-address=<PORT> 'The validator port'")
+                .args_from_usage("--relayer-address=<PORT> 'The relayer port'"),
         )
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .get_matches();
@@ -74,19 +78,31 @@ async fn run(matches: &ArgMatches<'_>) {
 
     let validator_name = matches.value_of("validator-name").unwrap();
 
-    let validator_port = matches.value_of("validator-port").unwrap();
-    let validator_port = Multiaddr::from_str(validator_port).unwrap();
+    let validator_address = matches
+        .value_of("validator-address")
+        .unwrap_or(DEFAULT_VALIDATOR_MULTIADDR);
+    let validator_address = Multiaddr::from_str(validator_address).unwrap();
 
-    info!("Spawning validator 0");
+    info!("Spawning validator and relayer");
     let mut validator_spawner = ValidatorSpawner::new(
         /* db_path */ db_path.clone(),
         /* key_path */ key_path.clone(),
         /* genesis_path */ genesis_path.clone(),
-        /* validator_port */ validator_port,
+        /* validator_address */ validator_address.clone(),
         /* validator_name */ validator_name.to_string(),
     );
 
     validator_spawner.spawn_validator().await;
-    validator_spawner.get_validator_state().unwrap().unhalt_validator();
+
+    let validator_state = validator_spawner.get_validator_state().unwrap();
+    validator_state.unhalt_validator();
+
+    let relayer_address = matches.value_of("relayer-address").unwrap_or(DEFAULT_RELAY_MULTIADDR);
+    let relayer_address = Multiaddr::from_str(relayer_address).unwrap();
+
+    let mut relayer_spawner = RelayerSpawner::new(Arc::clone(&validator_state), relayer_address);
+    relayer_spawner.spawn_relayer().await.unwrap();
+
     validator_spawner.await_handles().await;
+    relayer_spawner.await_handles().await;
 }

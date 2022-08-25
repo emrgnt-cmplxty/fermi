@@ -218,8 +218,6 @@ pub mod mock_catchup_manager {
     }
 }
 
-// TODO -
-// Mirror the above implmeentation after relay server is complete
 pub struct CatchupManager {}
 
 impl CatchupManager {

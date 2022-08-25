@@ -14,10 +14,12 @@ serde = { version = "1.0.124", features = ["derive"] }
 serde_json = "1.0"
 tempfile = "3.3.0"
 tokio = { version = "1", features = ["full"] }
+tonic = "0.7"
 tracing = "0.1.36"
 
 # mysten crates
 narwhal-config = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "config"}
+narwhal-consensus = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "consensus" }
 narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "crypto", features=["copy_key"]}
 narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "types" }
 

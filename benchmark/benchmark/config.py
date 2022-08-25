@@ -236,7 +236,8 @@ class GDEXBenchParameters:
     def __init__(self, json):
         try:
             self.faults = int(json['faults'])
-            self.nodes = json['node_info']
+            self.nodes = json['node_addresses']
+            self.relayers = json['relayer_addresses']
             self.rate = json['rate']
             self.genesis_dir = json['genesis_dir']
             self.key_dir = json['key_dir']

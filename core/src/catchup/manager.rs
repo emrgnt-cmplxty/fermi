@@ -5,7 +5,14 @@
 /// This module provides functionality to fetch the latest block given a mock relay sever
 /// moreover, the module then iterates until the latest block number of the passed validator  
 /// state matches the mock block number of the newly generated validator store
-use gdex_types::error::GDEXError;
+use crate::validator::state::ValidatorState;
+use gdex_types::{
+    error::GDEXError,
+    proto::{RelayerClient, RelayerGetLatestBlockInfoRequest},
+};
+use std::sync::Arc;
+use tonic::transport::Channel;
+use tracing::log::info;
 const SLEEP_PER_QUERY: u64 = 100;
 
 #[cfg(feature = "testing")]
@@ -116,7 +123,7 @@ pub mod mock_catchup_manager {
         ) -> Result<(), GDEXError> {
             while self.network_processed_block_number != self.catchup_processed_block_number {
                 // TODO - update to warn after finishing testing
-                println!("Processing until block {}", self.catchup_processed_block_number);
+                info!("Processing until block {}", self.catchup_processed_block_number);
                 let prev_chunk_start = self.catchup_processed_block_number;
 
                 self.catchup_processed_block_number = std::cmp::min(
@@ -141,7 +148,7 @@ pub mod mock_catchup_manager {
                         .expect("Failed to check local state for block info {next_block_info.block_number}")
                         .is_some()
                     {
-                        println!("Block {} already exists in the store, continuing", next_block_number);
+                        info!("Block {} already exists in the store, continuing", next_block_number);
                         continue;
                     }
 
@@ -165,7 +172,7 @@ pub mod mock_catchup_manager {
         ) -> Result<(), GDEXError> {
             loop {
                 self.fetch_latest_block(mock_server).await?;
-                println!(
+                info!(
                     "Catching up to block {} after processing block {}",
                     self.network_processed_block_number, self.catchup_processed_block_number
                 );
@@ -218,20 +225,52 @@ pub mod mock_catchup_manager {
     }
 }
 
-pub struct CatchupManager {}
+// TODO - implement catch-up logic inside of node/main.rs
+// TODO - think of smart way to address finding relayer port. This can likely be handled by the committee,
+// but how do we handle initial launch vs. late node catch-up?
+pub struct CatchupManager {
+    relayer_client: RelayerClient<Channel>,
+    validator_state: Arc<ValidatorState>,
+}
 
 impl CatchupManager {
-    pub fn new() -> Self {
-        CatchupManager {}
+    pub fn new(relayer_client: RelayerClient<Channel>, validator_state: Arc<ValidatorState>) -> Self {
+        CatchupManager {
+            relayer_client,
+            validator_state,
+        }
     }
 
     pub async fn catchup_narwhal_mediated(&mut self) -> Result<(), GDEXError> {
-        Ok(())
-    }
-}
+        info!("Catching up until fetched block matches latest network block");
+        loop {
+            let latest_block_info_request = tonic::Request::new(RelayerGetLatestBlockInfoRequest {});
+            let latest_block_info_response = self
+                .relayer_client
+                .get_latest_block_info(latest_block_info_request)
+                .await;
+            let block_info_returned = latest_block_info_response.unwrap().into_inner().block_info.unwrap();
 
-impl Default for CatchupManager {
-    fn default() -> Self {
-        Self::new()
+            let latest_block_local = self
+                .validator_state
+                .validator_store
+                .last_block_info_store
+                .read(0)
+                .await
+                .expect("Error fetching last block store");
+
+            if let Some(latest_block_local) = latest_block_local {
+                info!(
+                    "Catching up from block={} to block={}",
+                    latest_block_local.block_number, block_info_returned.block_number
+                );
+                if latest_block_local.block_number == block_info_returned.block_number {
+                    break;
+                }
+            }
+            tokio::time::sleep(tokio::time::Duration::from_millis(SLEEP_PER_QUERY)).await;
+        }
+
+        Ok(())
     }
 }

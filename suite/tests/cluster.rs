@@ -6,9 +6,11 @@ pub mod cluster_test_suite {
 
     // gdex
     use gdex_core::{
-        catchup::manager::mock_catchup_manager::{MockCatchupManger, MockRelayServer},
+        catchup::manager::{
+            mock_catchup_manager::{MockCatchupManger, MockRelayServer},
+            CatchupManager,
+        },
         client::endpoint_from_multiaddr,
-        relayer::spawner::RelayerSpawner,
     };
 
     use gdex_suite::test_utils::test_cluster::TestCluster;
@@ -18,7 +20,6 @@ pub mod cluster_test_suite {
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
         proto::{RelayerClient, RelayerGetBlockRequest, RelayerGetLatestBlockInfoRequest},
         transaction::{create_asset_creation_transaction, SignedTransaction},
-        utils,
     };
     // mysten
     use narwhal_consensus::ConsensusOutput;
@@ -269,14 +270,79 @@ pub mod cluster_test_suite {
         );
         info!("Success");
     }
-    // TODO - move spawn relay to cluster deployment workflow
+
+    // TODO - investigate buiding helper functions for relay client
+    // TODO - can we remove the ignore decorator without CI failures?
+    #[ignore]
+    #[tokio::test(flavor = "multi_thread")]
+    pub async fn test_catchup_new_node() {
+        // utils::set_testing_telemetry("gdex_core=info, gdex_suite=info");
+        // submit more transactions than we can possibly process
+        const N_TRANSACTIONS: u64 = 1_000_000;
+        info!("Creating test cluster");
+        let validator_count: usize = 5;
+        let target_node = validator_count - 1;
+
+        info!("Launching nodes 1 - {}", target_node);
+        let mut cluster = TestCluster::spawn(validator_count, Some(target_node)).await;
+
+        info!("Begin Sending {N_TRANSACTIONS} transactions");
+        cluster.send_transactions_async(0, 1, N_TRANSACTIONS, None).await;
+
+        info!("Sleeping 5s to allow network to advance circulation");
+        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+
+        info!("Booting up node {}", target_node + 1);
+        cluster.start(target_node).await;
+
+        // fetch the relay spawner prior to the node we are catching up with
+        let relayer_prev_target = cluster.spawn_single_relayer(target_node - 1).await;
+        let relayer_endpoint = endpoint_from_multiaddr(&relayer_prev_target.get_relayer_address()).unwrap();
+        let mut non_target_relayer = RelayerClient::connect(relayer_endpoint.endpoint().clone())
+            .await
+            .unwrap();
+
+        let spawner = cluster.get_validator_spawner(target_node);
+        let validator_state = spawner.get_validator_state().unwrap();
+
+        let relayer_target = cluster.spawn_single_relayer(target_node).await;
+        let relayer_endpoint = endpoint_from_multiaddr(&relayer_target.get_relayer_address()).unwrap();
+        let mut target_relayer = RelayerClient::connect(relayer_endpoint.endpoint().clone())
+            .await
+            .unwrap();
+
+        // do catch-up
+
+        let mut catchup_manager = CatchupManager::new(non_target_relayer.clone(), Arc::clone(&validator_state));
+        catchup_manager.catchup_narwhal_mediated().await.unwrap();
+
+        // drop the cluster to stop forward progress of consensus
+        drop(cluster);
+
+        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+
+        // check post-catchup states
+        let latest_block_info_request = tonic::Request::new(RelayerGetLatestBlockInfoRequest {});
+        let latest_block_info_response = non_target_relayer
+            .get_latest_block_info(latest_block_info_request)
+            .await;
+        let block_info_non_target = latest_block_info_response.unwrap().into_inner().block_info.unwrap();
+
+        let latest_block_info_request = tonic::Request::new(RelayerGetLatestBlockInfoRequest {});
+        let latest_block_info_response = target_relayer.get_latest_block_info(latest_block_info_request).await;
+        let block_info_target = latest_block_info_response.unwrap().into_inner().block_info.unwrap();
+
+        // check that we are fully caught up to the target node
+        assert!(block_info_non_target.block_number == block_info_target.block_number);
+    }
+
     #[tokio::test]
     pub async fn test_spawn_relayer() {
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         let spawner_1 = cluster.get_validator_spawner(1);
-        let validator_state = spawner_1.get_validator_state().clone().unwrap();
+        let validator_state_1 = spawner_1.get_validator_state().clone().unwrap();
 
         // Create txns
         let dummy_consensus_output = create_test_consensus_output();
@@ -297,18 +363,15 @@ pub mod cluster_test_suite {
         let initial_serialized_txns_buf = serialized_txns_buf.clone();
 
         // Write the block
-        validator_state
+        validator_state_1
             .validator_store
             .write_latest_block(initial_certificate, initial_serialized_txns_buf)
             .await;
 
         // TODO clean
-        // Connect client
-        let relayer_address = utils::new_network_address();
-        let mut relayer = RelayerSpawner::new(Arc::clone(&validator_state), relayer_address.clone());
-        relayer.spawn_relayer().await.unwrap();
 
-        let target_endpoint = endpoint_from_multiaddr(&relayer_address).unwrap();
+        let relayer_1 = cluster.spawn_single_relayer(1).await;
+        let target_endpoint = endpoint_from_multiaddr(&relayer_1.get_relayer_address()).unwrap();
         let endpoint = target_endpoint.endpoint();
         let mut client = RelayerClient::connect(endpoint.clone()).await.unwrap();
 

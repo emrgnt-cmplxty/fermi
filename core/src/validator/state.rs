@@ -272,8 +272,18 @@ impl ExecutionState for ValidatorState {
             .insert_confirmed_transaction(transaction, consensus_output);
 
         // handle transactions for bank controller
-        self.master_controller.bank_controller.lock().unwrap().handle_consensus_transaction(transaction).unwrap();
-        self.master_controller.spot_controller.lock().unwrap().handle_consensus_transaction(transaction).unwrap();
+        self.master_controller
+            .bank_controller
+            .lock()
+            .unwrap()
+            .handle_consensus_transaction(transaction)
+            .unwrap();
+        self.master_controller
+            .spot_controller
+            .lock()
+            .unwrap()
+            .handle_consensus_transaction(transaction)
+            .unwrap();
 
         Ok((consensus_output.clone(), execution_indices))
     }
@@ -381,7 +391,6 @@ mod test_validator_state {
         let store_path = tempfile::tempdir()
             .expect("Failed to open temporary directory")
             .into_path();
-        
 
         ValidatorState::new(public_key, secret, &genesis, &store_path)
     }

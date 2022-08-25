@@ -2,14 +2,11 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 use crate::{bank::BankController, consensus::ConsensusController, spot::SpotController, stake::StakeController};
-use gdex_types::{
-    transaction::{Transaction},
-    error::{GDEXError}
-};
+use gdex_types::{error::GDEXError, transaction::Transaction};
 use serde::{Deserialize, Serialize};
 use std::{
     sync::{Arc, Mutex},
-    time::Duration
+    time::Duration,
 };
 
 const DEFAULT_BATCH_SIZE: usize = 500_000;
@@ -20,7 +17,7 @@ pub struct MasterController {
     pub consensus_controller: ConsensusController,
     pub bank_controller: Arc<Mutex<BankController>>,
     pub stake_controller: StakeController,
-    pub spot_controller: Arc<Mutex<SpotController>>
+    pub spot_controller: Arc<Mutex<SpotController>>,
 }
 
 impl Default for MasterController {
@@ -36,7 +33,7 @@ impl Default for MasterController {
             },
             bank_controller,
             stake_controller,
-            spot_controller
+            spot_controller,
         }
     }
 }

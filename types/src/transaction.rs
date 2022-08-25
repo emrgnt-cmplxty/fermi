@@ -669,8 +669,7 @@ pub mod transaction_tests {
         let transaction = Transaction::new(kp_sender.public().clone(), dummy_batch_digest, transaction_variant);
         let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
 
-        let signed_transaction =
-            SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
+        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
 
         // check valid signature
         signed_transaction.verify().unwrap();
@@ -707,8 +706,7 @@ pub mod transaction_tests {
 
         let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
 
-        let signed_transaction =
-            SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
+        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
 
         // check valid signature
         signed_transaction.verify().unwrap();
@@ -761,8 +759,7 @@ pub mod transaction_tests {
 
         let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
 
-        let signed_transaction =
-            SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
+        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
 
         // check valid signature
         signed_transaction.verify().unwrap();
@@ -817,8 +814,7 @@ pub mod transaction_tests {
 
         let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
 
-        let signed_transaction =
-            SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
+        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
 
         // check valid signature
         signed_transaction.verify().unwrap();

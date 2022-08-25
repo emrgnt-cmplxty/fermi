@@ -8,15 +8,15 @@
 //!
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
+use crate::master::HandleConsensus;
 use gdex_types::{
     account::{AccountPubKey, BankAccount},
     asset::{Asset, AssetId},
     error::GDEXError,
-    transaction::{Transaction, TransactionVariant}
+    transaction::{Transaction, TransactionVariant},
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::master::{HandleConsensus};
 
 // TODO #0 //
 // 10 billion w/ 6 decimals, e.g. ALGO creation specs.
@@ -168,12 +168,10 @@ impl HandleConsensus for BankController {
                 payment.get_receiver(),
                 payment.get_asset_id(),
                 payment.get_amount(),
-            )
+            );
         }
         if let TransactionVariant::CreateAssetTransaction(_create_asset) = transaction.get_variant() {
-            return self.create_asset(
-                transaction.get_sender()
-            )
+            return self.create_asset(transaction.get_sender());
         }
 
         Ok(())

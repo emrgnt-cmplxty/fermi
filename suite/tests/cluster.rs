@@ -7,25 +7,17 @@ pub mod cluster_test_suite {
     // gdex
     use gdex_core::{
         catchup::manager::mock_catchup_manager::{MockCatchupManger, MockRelayServer},
-        client,
         client::endpoint_from_multiaddr,
         relayer::spawner::RelayerSpawner,
     };
 
     use gdex_suite::test_utils::test_cluster::TestCluster;
     use gdex_types::{
-        account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair},
         asset::PRIMARY_ASSET_ID,
         block::{Block, BlockDigest},
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
-        proto::{
-            RelayerClient, RelayerGetBlockRequest, RelayerGetLatestBlockInfoRequest, TransactionProto,
-            TransactionsClient,
-        },
-        transaction::{
-            create_asset_creation_transaction, transaction_test_functions::generate_signed_test_transaction,
-            SignedTransaction,
-        },
+        proto::{RelayerClient, RelayerGetBlockRequest, RelayerGetLatestBlockInfoRequest},
+        transaction::{create_asset_creation_transaction, SignedTransaction},
         utils,
     };
     // mysten
@@ -33,10 +25,9 @@ pub mod cluster_test_suite {
     use narwhal_crypto::{generate_production_keypair, Hash, KeyPair, DIGEST_LEN};
     use narwhal_types::{Certificate, Header};
     // external
-    use std::{io, sync::Arc};
-    use tracing::info;
-    //use tracing_subscriber::FmtSubscriber;
+    use std::sync::Arc;
     use tokio::time::{sleep, Duration};
+    use tracing::info;
 
     // TESTS
 
@@ -87,44 +78,13 @@ pub mod cluster_test_suite {
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         info!("Sending transactions");
-        let working_dir = cluster.get_working_dir();
-        let spawner_0 = cluster.get_validator_spawner(0);
-        let key_file = working_dir.join(format!("{}.key", spawner_0.get_validator_info().name));
-        let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
-        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-
-        let address = spawner_0.get_validator_address();
-        info!("Connecting network client to address={:?}", address);
-
-        let mut client =
-            TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
-
-        info!("Sending transactions");
-        let mut i = 0;
-        while i < 10 {
-            let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, i);
-            let transaction_proto = TransactionProto {
-                transaction: signed_transaction.serialize().unwrap().into(),
-            };
-            let _resp1 = client
-                .submit_transaction(transaction_proto)
-                .await
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
-                .unwrap();
-            i += 1;
-        }
-        info!("Creating test cluster");
-        let validator_count: usize = 4;
-        let mut cluster = TestCluster::spawn(validator_count, None).await;
-
-        info!("Sending transactions");
         cluster.send_transactions(0, 1, 10, None).await;
 
         sleep(Duration::from_secs(1)).await;
 
         info!("Reconfiguring validator");
-        let spawner = cluster.get_validator_spawner(0);
-        let consensus_committee = spawner.get_genesis_state().narwhal_committee().load().clone();
+        let spawner_0 = cluster.get_validator_spawner(0);
+        let consensus_committee = spawner_0.get_genesis_state().narwhal_committee().load().clone();
         let new_committee: narwhal_config::Committee = narwhal_config::Committee::clone(&consensus_committee);
         let new_committee: narwhal_config::Committee = narwhal_config::Committee {
             authorities: new_committee.authorities,
@@ -139,44 +99,12 @@ pub mod cluster_test_suite {
             .send((key, new_committee))
             .await
             .unwrap();
+
+        sleep(Duration::from_secs(1)).await;
     }
 
     #[tokio::test(flavor = "multi_thread")]
     pub async fn test_cache_transactions() {
-        info!("Creating test cluster");
-        let validator_count: usize = 4;
-        let mut cluster = TestCluster::spawn(validator_count, None).await;
-
-        info!("Sending transactions");
-        let working_dir = cluster.get_working_dir();
-        let spawner_0 = cluster.get_validator_spawner(0);
-        let key_file = working_dir.join(format!("{}.key", spawner_0.get_validator_info().name));
-        let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
-        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-
-        let address = spawner_0.get_validator_address();
-        info!("Connecting network client to address={:?}", address);
-
-        let mut client =
-            TransactionsClient::new(client::connect_lazy(&address).expect("Failed to connect to consensus"));
-
-        info!("Sending transactions");
-        let mut i = 0;
-        let mut signed_transactions = Vec::new();
-        let n_transactions_to_submit = 10;
-        while i < n_transactions_to_submit {
-            let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, i);
-            signed_transactions.push(signed_transaction.clone());
-            let transaction_proto = TransactionProto {
-                transaction: signed_transaction.serialize().unwrap().into(),
-            };
-            let _resp1 = client
-                .submit_transaction(transaction_proto)
-                .await
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
-                .unwrap();
-            i += 1;
-        }
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;

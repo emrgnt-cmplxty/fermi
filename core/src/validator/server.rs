@@ -213,8 +213,7 @@ impl ValidatorService {
             signed_transaction
                 .get_transaction_payload()
                 .get_recent_certificate_digest(),
-        )
-        {
+        ) {
             return Err(tonic::Status::internal("Invalid recent certificate digest"));
         }
 

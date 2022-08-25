@@ -165,8 +165,6 @@ impl Client {
             let kp_sender = keys([0; 32]).pop().unwrap();
             let kp_receiver = keys([1; 32]).pop().unwrap();
 
-
-
             if counter == 0 {
                 let transaction_size = create_signed_transaction(&kp_sender, &kp_receiver, 1, block_digest.clone())
                     .serialize()

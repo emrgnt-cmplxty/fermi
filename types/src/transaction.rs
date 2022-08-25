@@ -141,7 +141,7 @@ pub enum OrderRequest {
         local_timestamp: SystemTime,
     },
 
-    CancelOrder {
+    Cancel {
         base_asset_id: AssetId,
         quote_asset_id: AssetId,
         order_id: OrderId,
@@ -302,7 +302,7 @@ impl Hash for Transaction {
                     };
                     TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
                 }
-                OrderRequest::CancelOrder {
+                OrderRequest::Cancel {
                     base_asset_id,
                     quote_asset_id,
                     order_id,
@@ -472,7 +472,7 @@ pub fn create_place_limit_order_transaction(
     Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
 }
 
-pub fn create_cancel_order_transaction(
+pub fn create_place_cancel_order_transaction(
     sender_kp: &AccountKeyPair,
     base_asset_id: AssetId,
     quote_asset_id: AssetId,
@@ -481,11 +481,36 @@ pub fn create_cancel_order_transaction(
     recent_block_hash: CertificateDigest,
 ) -> Transaction {
     let local_timestamp = SystemTime::now();
-    let transaction_variant = TransactionVariant::PlaceOrderTransaction(OrderRequest::CancelOrder {
+    let transaction_variant = TransactionVariant::PlaceOrderTransaction(OrderRequest::Cancel {
         base_asset_id,
         quote_asset_id,
         order_id,
         side,
+        local_timestamp,
+    });
+
+    Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
+}
+
+#[cfg_attr(feature = "cargo-clippy", allow(clippy::too_many_arguments))]
+pub fn create_place_update_order_transaction(
+    sender_kp: &AccountKeyPair,
+    base_asset_id: AssetId,
+    quote_asset_id: AssetId,
+    order_id: OrderId,
+    side: OrderSide,
+    price: AssetPrice,
+    quantity: AssetAmount,
+    recent_block_hash: CertificateDigest,
+) -> Transaction {
+    let local_timestamp = SystemTime::now();
+    let transaction_variant = TransactionVariant::PlaceOrderTransaction(OrderRequest::Update {
+        base_asset_id,
+        quote_asset_id,
+        order_id,
+        side,
+        price,
+        quantity,
         local_timestamp,
     });
 
@@ -657,6 +682,174 @@ pub mod transaction_tests {
                 panic!("An unexpected error occurred while reading the payment transaction");
             }
         };
+    }
+
+    #[test]
+    fn create_limit_order_transaction() {
+        let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
+
+        let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
+
+        const TEST_BASE_ASSET_ID: u64 = 1;
+        const TEST_QUOTE_ASSET_ID: u64 = 2;
+        const TEST_ORDER_SIDE: OrderSide = OrderSide::Ask;
+        const TEST_QUANTITY: u64 = 10;
+        const TEST_PRICE: u64 = 10;
+        let transaction = create_place_limit_order_transaction(
+            &kp_sender,
+            TEST_BASE_ASSET_ID,
+            TEST_QUOTE_ASSET_ID,
+            TEST_ORDER_SIDE,
+            TEST_QUANTITY,
+            TEST_PRICE,
+            dummy_batch_digest,
+        );
+
+        let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
+
+        let signed_transaction =
+            SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest.clone());
+
+        // check valid signature
+        signed_transaction.verify().unwrap();
+
+        // check we can unpack transaction as expected
+        let limit_order_request = match signed_transaction.get_transaction_payload().get_variant() {
+            TransactionVariant::PlaceOrderTransaction(r) => r,
+            _ => {
+                panic!("An unexpected error occurred while reading the limit order transaction");
+            }
+        };
+
+        if let OrderRequest::Limit {
+            base_asset_id,
+            quote_asset_id,
+            side,
+            price,
+            quantity,
+            ..
+        } = limit_order_request
+        {
+            assert!(*base_asset_id == TEST_BASE_ASSET_ID, "Base asset is incorrect.");
+            assert!(*quote_asset_id == TEST_QUOTE_ASSET_ID, "Quote asset is incorrect.");
+            assert!(*side == TEST_ORDER_SIDE, "Order side is incorrect.");
+            assert!(*price == TEST_PRICE, "Order price is incorrect.");
+            assert!(*quantity == TEST_QUANTITY, "Order quantity is incorrect.");
+        } else {
+            panic!("Transaction variant for limit order wasn't correctly identified.")
+        }
+    }
+
+    #[test]
+    fn create_cancel_order_transaction() {
+        let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
+
+        let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
+
+        const TEST_BASE_ASSET_ID: u64 = 1;
+        const TEST_QUOTE_ASSET_ID: u64 = 2;
+        const TEST_ORDER_ID: u64 = 1;
+        const TEST_ORDER_SIDE: OrderSide = OrderSide::Ask;
+        let transaction = create_place_cancel_order_transaction(
+            &kp_sender,
+            TEST_BASE_ASSET_ID,
+            TEST_QUOTE_ASSET_ID,
+            TEST_ORDER_ID,
+            TEST_ORDER_SIDE,
+            dummy_batch_digest,
+        );
+
+        let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
+
+        let signed_transaction =
+            SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest.clone());
+
+        // check valid signature
+        signed_transaction.verify().unwrap();
+
+        // check we can unpack transaction as expected
+        let cancel_order_request = match signed_transaction.get_transaction_payload().get_variant() {
+            TransactionVariant::PlaceOrderTransaction(r) => r,
+            _ => {
+                panic!("An unexpected error occurred while reading the cancel order transaction");
+            }
+        };
+
+        if let OrderRequest::Cancel {
+            base_asset_id,
+            quote_asset_id,
+            order_id,
+            side,
+            ..
+        } = cancel_order_request
+        {
+            assert!(*base_asset_id == TEST_BASE_ASSET_ID, "Base asset is incorrect.");
+            assert!(*quote_asset_id == TEST_QUOTE_ASSET_ID, "Quote asset is incorrect.");
+            assert!(*order_id == TEST_ORDER_ID, "Order id is incorrect.");
+            assert!(*side == TEST_ORDER_SIDE, "Order side is incorrect.");
+        } else {
+            panic!("Transaction variant for cancel order wasn't correctly identified.")
+        }
+    }
+
+    #[test]
+    fn create_update_order_transaction() {
+        let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
+
+        let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
+
+        const TEST_BASE_ASSET_ID: u64 = 1;
+        const TEST_QUOTE_ASSET_ID: u64 = 2;
+        const TEST_ORDER_ID: u64 = 1;
+        const TEST_ORDER_SIDE: OrderSide = OrderSide::Ask;
+        const TEST_QUANTITY: u64 = 10;
+        const TEST_PRICE: u64 = 10;
+        let transaction = create_place_update_order_transaction(
+            &kp_sender,
+            TEST_BASE_ASSET_ID,
+            TEST_QUOTE_ASSET_ID,
+            TEST_ORDER_ID,
+            TEST_ORDER_SIDE,
+            TEST_QUANTITY,
+            TEST_PRICE,
+            dummy_batch_digest,
+        );
+
+        let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
+
+        let signed_transaction =
+            SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest.clone());
+
+        // check valid signature
+        signed_transaction.verify().unwrap();
+
+        // check we can unpack transaction as expected
+        let update_order_request = match signed_transaction.get_transaction_payload().get_variant() {
+            TransactionVariant::PlaceOrderTransaction(r) => r,
+            _ => {
+                panic!("An unexpected error occurred while reading the update order transaction");
+            }
+        };
+
+        if let OrderRequest::Update {
+            base_asset_id,
+            quote_asset_id,
+            order_id,
+            side,
+            price,
+            quantity,
+            ..
+        } = update_order_request
+        {
+            assert!(*base_asset_id == TEST_BASE_ASSET_ID, "Base asset is incorrect.");
+            assert!(*quote_asset_id == TEST_QUOTE_ASSET_ID, "Quote asset is incorrect.");
+            assert!(*order_id == TEST_ORDER_ID, "Order id is incorrect.");
+            assert!(*side == TEST_ORDER_SIDE, "Order side is incorrect.");
+            assert!(*price == TEST_PRICE, "Order price is incorrect.");
+            assert!(*quantity == TEST_QUANTITY, "Order quantity is incorrect.");
+        } else {
+            panic!("Transaction variant for update order wasn't correctly identified.")
+        }
     }
 
     #[test]

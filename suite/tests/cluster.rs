@@ -95,7 +95,7 @@ pub mod cluster_test_suite {
         let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
 
-        let address = spawner_0.get_validator_address().clone();
+        let address = spawner_0.get_validator_address();
         info!("Connecting network client to address={:?}", address);
 
         let mut client =
@@ -145,13 +145,6 @@ pub mod cluster_test_suite {
 
     #[tokio::test(flavor = "multi_thread")]
     pub async fn test_cache_transactions() {
-        /*
-        let subscriber = FmtSubscriber::builder()
-            .with_env_filter("gdex_core=info, gdex_suite=info")
-            .finish();
-        tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-        */
-
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
@@ -163,8 +156,7 @@ pub mod cluster_test_suite {
         let kp_sender: ValidatorKeyPair = utils::read_keypair_from_file(&key_file).unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
 
-        let address = spawner_0.get_validator_address().clone();
-        drop(spawner_0);
+        let address = spawner_0.get_validator_address();
         info!("Connecting network client to address={:?}", address);
 
         let mut client =
@@ -247,6 +239,18 @@ pub mod cluster_test_suite {
         cluster.start(target_node).await;
         info!("Sleeping 10s to give time for node to restart and have a potential error");
         tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+    }
+
+    pub fn create_test_consensus_output() -> ConsensusOutput {
+        let dummy_header = Header::default();
+        let dummy_certificate = Certificate {
+            header: dummy_header,
+            votes: Vec::new(),
+        };
+        ConsensusOutput {
+            certificate: dummy_certificate,
+            consensus_index: 1,
+        }
     }
 
     #[tokio::test(flavor = "multi_thread")]
@@ -339,20 +343,7 @@ pub mod cluster_test_suite {
         );
         info!("Success");
     }
-
-    pub fn create_test_consensus_output() -> ConsensusOutput {
-        let dummy_header = Header::default();
-        let dummy_certificate = Certificate {
-            header: dummy_header,
-            votes: Vec::new(),
-        };
-        ConsensusOutput {
-            certificate: dummy_certificate,
-            consensus_index: 1,
-        }
-    }
-
-    // TODO - move spawn relay to cluster deployment workflow 
+    // TODO - move spawn relay to cluster deployment workflow
     #[tokio::test]
     pub async fn test_spawn_relayer() {
         let validator_count: usize = 4;
@@ -411,7 +402,6 @@ pub mod cluster_test_suite {
         let final_certificate = certificate.clone();
         let final_serialized_txns_buf = serialized_txns_buf.clone();
         let block_to_check_against = Block {
-            block_number: 0,
             block_certificate: final_certificate,
             transactions: final_serialized_txns_buf,
         };

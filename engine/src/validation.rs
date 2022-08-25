@@ -61,7 +61,7 @@ impl OrderRequestValidator {
                 ..
             } => self.validate_update(order_id, price, quantity),
 
-            OrderRequest::CancelOrder { order_id, .. } => self.validate_cancel(order_id),
+            OrderRequest::Cancel { order_id, .. } => self.validate_cancel(order_id),
         }
     }
 

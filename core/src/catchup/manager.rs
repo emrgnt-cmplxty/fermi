@@ -226,9 +226,8 @@ pub mod mock_catchup_manager {
 }
 
 // TODO - implement catch-up logic inside of node/main.rs
-// TODO - think of smart way to address finding relayer port. This can likely be handled as follows:
-// Loop over the committee and if we locate good relayer(s) we use the "best" as a catch-up target
-// otherwise, we assume the network is still at genesis and we continue
+// TODO - think of smart way to address finding relayer address. This can likely be handled as follows:
+// Loop over a provided list of relayers and find the best relayer(s) to facilitate catching-up 
 pub struct CatchupManager {
     relayer_client: RelayerClient<Channel>,
     validator_state: Arc<ValidatorState>,

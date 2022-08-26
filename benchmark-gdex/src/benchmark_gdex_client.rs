@@ -7,7 +7,7 @@ use futures::{future::join_all, StreamExt};
 use gdex_types::{
     account::{AccountKeyPair, ValidatorKeyPair},
     proto::{TransactionProto, TransactionsClient},
-    transaction::{CreateAssetRequest, PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
+    transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
     utils::read_keypair_from_file,
 };
 use narwhal_crypto::{
@@ -51,21 +51,6 @@ fn create_signed_transaction(
         transaction_variant,
     );
 
-    // sign digest and create signed transaction
-    let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest);
-    signed_transaction
-}
-
-fn create_signed_create_asset_transaction(kp_sender: &AccountKeyPair) -> SignedTransaction {
-    // use a dummy batch digest for initial benchmarking
-    let dummy_certificate_digest = CertificateDigest::new([0; DIGEST_LEN]);
-    let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest {});
-    let transaction = Transaction::new(
-        kp_sender.public().clone(),
-        dummy_certificate_digest,
-        transaction_variant,
-    );
     // sign digest and create signed transaction
     let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
     let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest);
@@ -166,18 +151,8 @@ impl Client {
         tokio::pin!(interval);
 
         // send payments from validator with assets
-        // read in private key
+        // read in private key of validator who will send payment txns
         let keypair: ValidatorKeyPair = read_keypair_from_file(self.validator_key_fpath.clone())?;
-        // convert private key to key pair
-        //let kp_sender = keys([0; 32]).pop().unwrap();
-
-        /***let signed_create_asset_transaction = create_signed_create_asset_transaction(&kp_sender);
-        let tx = TransactionProto {
-            transaction: signed_create_asset_transaction.serialize().unwrap().into()
-        };
-        client.submit_transaction(tx).await.unwrap();***/
-
-        sleep(Duration::from_millis(10)).await;
 
         // NOTE: This log entry is used to compute performance.
         info!("Start sending transactions");

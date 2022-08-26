@@ -85,8 +85,8 @@ class GDEXBench:
                     url_to_multiaddr(relayers[node_name]),
                     debug
                 )
-                print(cmd)
                 log_file = PathMaker.primary_log_file(id)
+                print(cmd, ">>", log_file)
                 self._background_run(cmd, log_file)
 
             # currently hard-coded for a single worker, for n-workers denom = n*len(nodes.keys())
@@ -94,13 +94,14 @@ class GDEXBench:
             for id, address in enumerate(nodes.values()):
                     sleep(0.5)  # sleep to avoid weirdness
                     cmd = CommandMaker.run_gdex_client(
+                        id,
                         address,
                         rate_share,
                         [x for x in nodes.values() if x != address]
                     )
-                    print(cmd)
                     # currently hard-coded for a single worker, for n-workers 0 -> i
                     log_file = PathMaker.client_log_file(id, 0)
+                    print(cmd, ">>", log_file)
                     self._background_run(cmd, log_file)
 
             # Wait for all transactions to be processed.

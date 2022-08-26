@@ -42,7 +42,9 @@ impl Default for ConsensusController {
 }
 
 impl Controller for ConsensusController {
-    fn initialize(&mut self, _master_controller: &MasterController) {}
+    fn initialize(&mut self, _master_controller: &MasterController) -> Result<(), GDEXError> {
+        Ok(())
+    }
 
     fn handle_consensus_transaction(&mut self, _transaction: &Transaction) -> Result<(), GDEXError> {
         Ok(())

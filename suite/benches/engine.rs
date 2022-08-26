@@ -121,7 +121,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     // initialize market controller
     let mut account_to_pub_key: Vec<AccountPubKey> = Vec::new();
-    let mut bank_controller: BankController = BankController::new();
+    let mut bank_controller: BankController = BankController::default();
     bank_controller.create_asset(primary.public()).unwrap();
     let base_asset_id = 0;
     bank_controller.create_asset(primary.public()).unwrap();

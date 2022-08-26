@@ -196,7 +196,8 @@ impl Client {
                     // NOTE: This log entry is used to compute performance.
                     info!("Sending sample transaction {counter}");
                 }
-                let signed_tranasction = create_signed_transaction(&keypair, &kp_receiver, amount, block_digest.clone());
+                let signed_tranasction =
+                    create_signed_transaction(&keypair, &kp_receiver, amount, block_digest.clone());
                 // let txn_digest = signed_tranasction.get_transaction_payload().digest().to_string();
                 // info!("Submitting {}", txn_digest);
                 TransactionProto {

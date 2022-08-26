@@ -36,7 +36,7 @@ use std::sync::{Arc, Mutex};
 pub struct StakeController {
     controller_account: AccountPubKey,
     stake_accounts: HashMap<AccountPubKey, StakeAccount>,
-    bank_controller: Option<Arc<Mutex<BankController>>>,
+    bank_controller: Arc<Mutex<BankController>>,
     total_staked: u64,
 }
 
@@ -46,14 +46,19 @@ impl Default for StakeController {
             controller_account: AccountPubKey::from_bytes(b"STAKECONTROLLERAAAAAAAAAAAAAAAAA").unwrap(),
             stake_accounts: HashMap::new(),
             total_staked: 0,
-            bank_controller: None,
+            bank_controller: Arc::new(Mutex::new(BankController::default())), // TEMPORARY
         }
     }
 }
 
 impl Controller for StakeController {
-    fn initialize(&mut self, master_controller: &MasterController) {
-        self.bank_controller = Some(Arc::clone(&master_controller.bank_controller));
+    fn initialize(&mut self, master_controller: &MasterController) -> Result<(), GDEXError> {
+        self.bank_controller = Arc::clone(&master_controller.bank_controller);
+        self.bank_controller
+            .lock()
+            .unwrap()
+            .create_account(&self.controller_account)?;
+        Ok(())
     }
 
     fn handle_consensus_transaction(&mut self, _transaction: &Transaction) -> Result<(), GDEXError> {
@@ -82,7 +87,7 @@ impl StakeController {
 
     // stake funds to participate in consensus
     pub fn stake(&mut self, account_pub_key: &AccountPubKey, amount: u64) -> Result<(), GDEXError> {
-        self.bank_controller.as_ref().unwrap().lock().unwrap().update_balance(
+        self.bank_controller.lock().unwrap().update_balance(
             account_pub_key,
             PRIMARY_ASSET_ID,
             amount,
@@ -107,7 +112,7 @@ impl StakeController {
     // TODO #0 //
     pub fn unstake(&mut self, account_pub_key: &AccountPubKey, amount: u64) -> Result<(), GDEXError> {
         self.total_staked -= amount;
-        self.bank_controller.as_ref().unwrap().lock().unwrap().update_balance(
+        self.bank_controller.lock().unwrap().update_balance(
             account_pub_key,
             PRIMARY_ASSET_ID,
             amount,

@@ -46,9 +46,24 @@ impl Default for MasterController {
 
 impl MasterController {
     pub fn initialize_controllers(&self) {
-        self.consensus_controller.lock().unwrap().initialize(self);
-        self.bank_controller.lock().unwrap().initialize(self);
-        self.stake_controller.lock().unwrap().initialize(self);
-        self.spot_controller.lock().unwrap().initialize(self);
+        match self.consensus_controller.lock().unwrap().initialize(self) {
+            Ok(()) => (),
+            Err(err) => panic!("Failed to initialize consensus_controller: {:?}", err)
+        }
+        
+        match self.bank_controller.lock().unwrap().initialize(self) {
+            Ok(()) => (),
+            Err(err) => panic!("Failed to initialize bank_controller: {:?}", err)
+        }
+        
+        match self.stake_controller.lock().unwrap().initialize(self) {
+            Ok(()) => (),
+            Err(err) => panic!("Failed to initialize stake_controller: {:?}", err)
+        }
+        
+        match self.spot_controller.lock().unwrap().initialize(self) {
+            Ok(()) => (),
+            Err(err) => panic!("Failed to initialize spot_controller: {:?}", err)
+        }
     }
 }

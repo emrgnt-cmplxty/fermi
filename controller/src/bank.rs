@@ -58,7 +58,9 @@ impl Default for BankController {
 }
 
 impl Controller for BankController {
-    fn initialize(&mut self, _master_controller: &MasterController) {}
+    fn initialize(&mut self, _master_controller: &MasterController) -> Result<(), GDEXError> {
+        Ok(())
+    }
 
     fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
         if let TransactionVariant::PaymentTransaction(payment) = transaction.get_variant() {

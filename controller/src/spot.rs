@@ -451,7 +451,7 @@ impl OrderbookInterface {
 pub struct SpotController {
     controller_account: AccountPubKey,
     orderbooks: HashMap<AssetPairKey, OrderbookInterface>,
-    bank_controller: Option<Arc<Mutex<BankController>>>,
+    bank_controller: Arc<Mutex<BankController>>,
 }
 
 impl Default for SpotController {
@@ -459,14 +459,19 @@ impl Default for SpotController {
         Self {
             controller_account: AccountPubKey::from_bytes(b"SPOTCONTROLLERAAAAAAAAAAAAAAAAAA").unwrap(),
             orderbooks: HashMap::new(),
-            bank_controller: None,
+            bank_controller: Arc::new(Mutex::new(BankController::default())), // TEMPORARY
         }
     }
 }
 
 impl Controller for SpotController {
-    fn initialize(&mut self, master_controller: &MasterController) {
-        self.bank_controller = Some(Arc::clone(&master_controller.bank_controller));
+    fn initialize(&mut self, master_controller: &MasterController) -> Result<(), GDEXError> {
+        self.bank_controller = Arc::clone(&master_controller.bank_controller);
+        self.bank_controller
+            .lock()
+            .unwrap()
+            .create_account(&self.controller_account)?;
+        Ok(())
     }
 
     fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
@@ -556,7 +561,7 @@ impl SpotController {
                 OrderbookInterface::new(
                     base_asset_id,
                     quote_asset_id,
-                    Arc::clone(self.bank_controller.as_ref().unwrap()),
+                    Arc::clone(&self.bank_controller),
                 ),
             );
             Ok(())

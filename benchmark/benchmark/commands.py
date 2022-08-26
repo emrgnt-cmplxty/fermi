@@ -103,7 +103,7 @@ class CommandMaker:
         assert isinstance(nodes, list)
         assert all(isinstance(x, str) for x in nodes)
         nodes = f'--nodes {" ".join(nodes)}' if nodes else ''
-        command = f'./benchmark_gdex_client {address} --relayer {relayer_address}  --rate {rate} {nodes}'
+        command = f'./benchmark_gdex_client {address} --relayer {relayer_address} --validator_key_fpath ../.proto/validator-0.key --rate {rate} {nodes}'
         print("Returning execution command = ", command)
         return command
 

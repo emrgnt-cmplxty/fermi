@@ -8,10 +8,12 @@
 //!
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
+use crate::master::HandleConsensus;
 use gdex_types::{
     account::{AccountPubKey, BankAccount},
     asset::{Asset, AssetId},
     error::GDEXError,
+    transaction::{Transaction, TransactionVariant},
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -155,6 +157,24 @@ impl BankController {
 impl Default for BankController {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl HandleConsensus for BankController {
+    fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
+        if let TransactionVariant::PaymentTransaction(payment) = transaction.get_variant() {
+            return self.transfer(
+                transaction.get_sender(),
+                payment.get_receiver(),
+                payment.get_asset_id(),
+                payment.get_amount(),
+            );
+        }
+        if let TransactionVariant::CreateAssetTransaction(_create_asset) = transaction.get_variant() {
+            return self.create_asset(transaction.get_sender());
+        }
+
+        Ok(())
     }
 }
 

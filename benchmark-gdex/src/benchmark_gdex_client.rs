@@ -7,9 +7,10 @@ use futures::{future::join_all, StreamExt};
 use gdex_types::block::{BlockDigest, BlockInfo};
 use gdex_types::proto::{BlockInfoProto, RelayerClient, RelayerGetLatestBlockInfoRequest};
 use gdex_types::{
-    account::AccountKeyPair,
+    account::{AccountKeyPair, ValidatorKeyPair},
     proto::{TransactionProto, TransactionsClient},
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
+    utils::read_keypair_from_file,
 };
 use narwhal_crypto::{
     traits::{KeyPair, Signer},
@@ -17,6 +18,7 @@ use narwhal_crypto::{
 };
 use narwhal_types::CertificateDigest;
 use rand::{rngs::StdRng, Rng, SeedableRng};
+use std::path::PathBuf;
 use tokio::{
     net::TcpStream,
     time::{interval, sleep, Duration, Instant},
@@ -62,6 +64,7 @@ async fn main() -> Result<()> {
         .args_from_usage("<ADDR> 'The network address of the node where to send txs'")
         .args_from_usage("--relayer=<ADDR> 'Relayer address to send requests to'")
         .args_from_usage("--rate=<INT> 'The rate (txs/s) at which to send the transactions'")
+        .args_from_usage("--validator_key_fpath=<FILE> 'The validator key file'")
         .args_from_usage("--nodes=[ADDR]... 'Network addresses that must be reachable before starting the benchmark.'")
         .setting(AppSettings::ArgRequiredElseHelp)
         .get_matches();
@@ -96,6 +99,11 @@ async fn main() -> Result<()> {
         .unwrap()
         .parse::<u64>()
         .context("The rate of transactions must be a non-negative integer")?;
+    let validator_key_fpath = matches
+        .value_of("validator_key_fpath")
+        .unwrap()
+        .parse::<PathBuf>()
+        .context("The path to the validator key.")?;
     let nodes = matches
         .values_of("nodes")
         .unwrap_or_default()
@@ -112,6 +120,7 @@ async fn main() -> Result<()> {
         rate,
         nodes,
         relayer,
+        validator_key_fpath,
     };
 
     // Wait for all nodes to be online and synchronized.
@@ -127,6 +136,7 @@ struct Client {
     relayer: Url,
     rate: u64,
     nodes: Vec<Url>,
+    validator_key_fpath: PathBuf,
 }
 
 impl Client {
@@ -145,6 +155,10 @@ impl Client {
         // but, not so large that we can exhaust the primary senders balance
         let interval = interval(Duration::from_millis(BURST_DURATION));
         tokio::pin!(interval);
+
+        // send payments from validator with assets
+        // read in private key of validator who will send payment txns
+        let keypair: ValidatorKeyPair = read_keypair_from_file(self.validator_key_fpath.clone())?;
 
         // NOTE: This log entry is used to compute performance.
         info!("Start sending transactions");
@@ -175,6 +189,7 @@ impl Client {
                 info!("Transactions size: {transaction_size} B");
             }
 
+            let keypair = keypair.copy();
             let stream = tokio_stream::iter(0..burst).map(move |x| {
                 let amount = rand::thread_rng().gen_range(100_000 as u64..5_000_000 as u64);
                 if x == counter % burst {

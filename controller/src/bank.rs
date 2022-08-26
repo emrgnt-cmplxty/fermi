@@ -8,36 +8,76 @@
 //!
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
-use crate::master::HandleConsensus;
+
+// IMPORTS
+
+// crate
+use crate::controller::Controller;
+use crate::master::MasterController;
+
+// gdex
 use gdex_types::{
     account::{AccountPubKey, BankAccount},
     asset::{Asset, AssetId},
+    crypto::ToFromBytes,
     error::GDEXError,
     transaction::{Transaction, TransactionVariant},
 };
+
+// mysten
+
+// external
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+// CONSTANTS
 
 // TODO #0 //
 // 10 billion w/ 6 decimals, e.g. ALGO creation specs.
 pub const CREATED_ASSET_BALANCE: u64 = 10_000_000_000_000_000;
 
+// INTERFACE
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BankController {
+    controller_account: AccountPubKey,
     asset_id_to_asset: HashMap<AssetId, Asset>,
     bank_accounts: HashMap<AccountPubKey, BankAccount>,
     n_assets: u64,
 }
 
-impl BankController {
-    pub fn new() -> Self {
-        BankController {
+impl Default for BankController {
+    fn default() -> Self {
+        Self {
+            controller_account: AccountPubKey::from_bytes(b"STAKECONTROLLERAAAAAAAAAAAAAAAAA").unwrap(),
             asset_id_to_asset: HashMap::new(),
             bank_accounts: HashMap::new(),
             n_assets: 0,
         }
     }
+}
 
+impl Controller for BankController {
+    fn initialize(&mut self, _master_controller: &MasterController) {}
+
+    fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
+        if let TransactionVariant::PaymentTransaction(payment) = transaction.get_variant() {
+            return self.transfer(
+                transaction.get_sender(),
+                payment.get_receiver(),
+                payment.get_asset_id(),
+                payment.get_amount(),
+            );
+        }
+        if let TransactionVariant::CreateAssetTransaction(_create_asset) = transaction.get_variant() {
+            return self.create_asset(transaction.get_sender());
+        }
+
+        Ok(())
+    }
+}
+
+impl BankController {
     pub fn check_account_exists(&self, account_pub_key: &AccountPubKey) -> bool {
         self.bank_accounts.contains_key(account_pub_key)
     }
@@ -154,30 +194,6 @@ impl BankController {
     }
 }
 
-impl Default for BankController {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl HandleConsensus for BankController {
-    fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
-        if let TransactionVariant::PaymentTransaction(payment) = transaction.get_variant() {
-            return self.transfer(
-                transaction.get_sender(),
-                payment.get_receiver(),
-                payment.get_asset_id(),
-                payment.get_amount(),
-            );
-        }
-        if let TransactionVariant::CreateAssetTransaction(_create_asset) = transaction.get_variant() {
-            return self.create_asset(transaction.get_sender());
-        }
-
-        Ok(())
-    }
-}
-
 #[cfg(test)]
 pub mod spot_tests {
     use super::*;
@@ -185,7 +201,7 @@ pub mod spot_tests {
 
     #[test]
     fn create_and_check_accounts() {
-        let mut bank_controller = BankController::new();
+        let mut bank_controller = BankController::default();
         assert!(
             bank_controller.bank_accounts.is_empty(),
             "Bank accounts hashmap must be empty."
@@ -239,7 +255,7 @@ pub mod spot_tests {
 
     #[test]
     fn create_asset_and_transfer() {
-        let mut bank_controller = BankController::new();
+        let mut bank_controller = BankController::default();
         let user_kp = generate_production_keypair::<KeyPair>();
         const TEST_ASSET_ID: u64 = 0;
 

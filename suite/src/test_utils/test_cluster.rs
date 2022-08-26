@@ -1,13 +1,5 @@
 // IMPORTS
 
-// external
-use std::{io, path::Path, path::PathBuf, sync::Arc};
-use tempfile::TempDir;
-use tokio::task::JoinHandle;
-use tracing::info;
-
-// mysten
-
 // gdex
 use gdex_controller::{bank::CREATED_ASSET_BALANCE, master::MasterController};
 use gdex_core::{
@@ -25,6 +17,13 @@ use gdex_types::{
     transaction::{transaction_test_functions::generate_signed_test_transaction, SignedTransaction},
     utils,
 };
+
+// external
+use std::{io, path::Path, path::PathBuf, sync::Arc};
+use tempfile::TempDir;
+use tokio::task::JoinHandle;
+use tokio::time::{sleep, Duration};
+use tracing::info;
 
 // HELPER FUNCTIONS
 
@@ -53,6 +52,7 @@ async fn create_genesis_state(dir: &Path, validator_count: usize) -> ValidatorGe
         .collect::<Vec<_>>();
 
     let master_controller = MasterController::default();
+    master_controller.initialize_controllers();
 
     // create primary asset
     let validator_creator_pubkey = ValidatorPubKey::try_from(validators_info[0].public_key).unwrap();
@@ -123,6 +123,10 @@ impl TestCluster {
 
             validator_spawners.push(validator_spawner);
         }
+
+        // sleep
+        sleep(Duration::from_secs(1)).await;
+
         Self {
             validator_count,
             temp_working_dir,

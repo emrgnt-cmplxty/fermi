@@ -132,7 +132,8 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             let builder = GenesisStateBuilder::load(&dir)?;
 
             // Initialize controllers to default state
-            let mut master_controller = MasterController::default();
+            let master_controller = MasterController::default();
+            master_controller.initialize_controllers();
 
             // Create base asset of the blockchain with the null address as the owner
             let null_creator = ValidatorPubKey::try_from(ValidatorPubKeyBytes::from_bytes(&[0; 32])?)?;
@@ -153,6 +154,8 @@ pub fn run(cmd: Ceremony) -> Result<()> {
                 )?;
                 master_controller
                     .stake_controller
+                    .lock()
+                    .unwrap()
                     .stake(&validator_key, validator.stake)?;
             }
 

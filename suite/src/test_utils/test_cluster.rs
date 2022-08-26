@@ -175,7 +175,6 @@ impl TestCluster {
         sending_validator: usize,
         receiving_validator: usize,
         n_transactions: u64,
-        fixed_amount: Option<u64>,
     ) -> (ValidatorKeyPair, ValidatorKeyPair, Vec<SignedTransaction>) {
         let working_dir = self.get_working_dir();
         let sender = self.get_validator_spawner(sending_validator);
@@ -193,7 +192,7 @@ impl TestCluster {
         let mut signed_transactions = Vec::new();
         let mut i = 1;
         while i < n_transactions + 1 {
-            let amount = fixed_amount.unwrap_or(i);
+            let amount = i;
             let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, amount);
             signed_transactions.push(signed_transaction.clone());
             let transaction_proto = TransactionProto {

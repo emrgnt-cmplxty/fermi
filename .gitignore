@@ -38,3 +38,4 @@ scripts/build_and_fab
 ./justfile
 crypto/proptest-regressions/tests/secp256k1_tests.txt
 proto/*
+/gdex-core.iml

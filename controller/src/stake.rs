@@ -19,6 +19,7 @@ use gdex_types::{
     asset::PRIMARY_ASSET_ID,
     crypto::ToFromBytes,
     error::GDEXError,
+    transaction::Transaction,
 };
 
 // mysten
@@ -53,6 +54,10 @@ impl Default for StakeController {
 impl Controller for StakeController {
     fn initialize(&mut self, master_controller: &MasterController) {
         self.bank_controller = Some(Arc::clone(&master_controller.bank_controller));
+    }
+
+    fn handle_consensus_transaction(&mut self, _transaction: &Transaction) -> Result<(), GDEXError> {
+        Ok(())
     }
 }
 

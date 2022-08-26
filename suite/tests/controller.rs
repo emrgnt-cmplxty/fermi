@@ -21,7 +21,7 @@ pub mod process_tests {
     #[test]
     fn place_bid() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
-        let mut bank_controller = BankController::new();
+        let mut bank_controller = BankController::default();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
@@ -56,7 +56,7 @@ pub mod process_tests {
     #[test]
     fn place_ask() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
-        let mut bank_controller = BankController::new();
+        let mut bank_controller = BankController::default();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
@@ -91,7 +91,7 @@ pub mod process_tests {
     #[test]
     fn fail_on_invalid_account_lookup() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
-        let mut bank_controller = BankController::new();
+        let mut bank_controller = BankController::default();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
@@ -107,7 +107,7 @@ pub mod process_tests {
     #[test]
     fn fail_on_account_double_creation() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
-        let mut bank_controller = BankController::new();
+        let mut bank_controller = BankController::default();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
@@ -123,7 +123,7 @@ pub mod process_tests {
     fn multi_bid() {
         let account_0 = generate_keypair_vec([0; 32]).pop().unwrap();
         let account_1 = generate_keypair_vec([1; 32]).pop().unwrap();
-        let mut bank_controller = BankController::new();
+        let mut bank_controller = BankController::default();
 
         bank_controller.create_asset(account_0.public()).unwrap();
         bank_controller.create_asset(account_0.public()).unwrap();
@@ -189,7 +189,7 @@ pub mod process_tests {
     fn multi_bid_and_ask() {
         let account_0 = generate_keypair_vec([0; 32]).pop().unwrap();
         let account_1 = generate_keypair_vec([1; 32]).pop().unwrap();
-        let mut bank_controller = BankController::new();
+        let mut bank_controller = BankController::default();
 
         bank_controller.create_asset(account_0.public()).unwrap();
         bank_controller.create_asset(account_0.public()).unwrap();

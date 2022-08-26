@@ -14,7 +14,6 @@
 // crate
 use super::bank::BankController;
 use crate::controller::Controller;
-use crate::master::HandleConsensus;
 use crate::master::MasterController;
 
 // gdex
@@ -469,6 +468,72 @@ impl Controller for SpotController {
     fn initialize(&mut self, master_controller: &MasterController) {
         self.bank_controller = Some(Arc::clone(&master_controller.bank_controller));
     }
+
+    fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
+        if let TransactionVariant::CreateOrderbookTransaction(orderbook) = transaction.get_variant() {
+            return self.create_orderbook(orderbook.get_base_asset_id(), orderbook.get_quote_asset_id());
+        }
+        if let TransactionVariant::PlaceOrderTransaction(order) = transaction.get_variant() {
+            match order {
+                OrderRequest::Market {
+                    base_asset_id,
+                    quote_asset_id,
+                    side,
+                    quantity,
+                    ..
+                } => {
+                    dbg!(base_asset_id, quote_asset_id, side, quantity);
+                }
+                OrderRequest::Limit {
+                    base_asset_id,
+                    quote_asset_id,
+                    side,
+                    price,
+                    quantity,
+                    ..
+                } => self.place_limit_order(
+                    *base_asset_id,
+                    *quote_asset_id,
+                    transaction.get_sender(),
+                    *side,
+                    *quantity,
+                    *price,
+                )?,
+                OrderRequest::Cancel {
+                    base_asset_id,
+                    quote_asset_id,
+                    order_id,
+                    side,
+                    ..
+                } => self.place_cancel_order(
+                    *base_asset_id,
+                    *quote_asset_id,
+                    transaction.get_sender(),
+                    *order_id,
+                    *side,
+                )?,
+                OrderRequest::Update {
+                    base_asset_id,
+                    quote_asset_id,
+                    order_id,
+                    side,
+                    price,
+                    quantity,
+                    ..
+                } => self.place_update_order(
+                    *base_asset_id,
+                    *quote_asset_id,
+                    transaction.get_sender(),
+                    *order_id,
+                    *side,
+                    *quantity,
+                    *price,
+                )?,
+            }
+        }
+
+        Ok(())
+    }
 }
 
 impl SpotController {
@@ -570,80 +635,6 @@ impl SpotController {
             Ok(_ordering_processing_result) => Ok(()),
             Err(_err) => Err(GDEXError::OrderRequest),
         }
-    }
-}
-
-// impl Default for SpotController {
-//     fn default() -> Self {
-//         Self::new()
-//     }
-// }
-
-impl HandleConsensus for SpotController {
-    fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
-        if let TransactionVariant::CreateOrderbookTransaction(orderbook) = transaction.get_variant() {
-            return self.create_orderbook(orderbook.get_base_asset_id(), orderbook.get_quote_asset_id());
-        }
-        if let TransactionVariant::PlaceOrderTransaction(order) = transaction.get_variant() {
-            match order {
-                OrderRequest::Market {
-                    base_asset_id,
-                    quote_asset_id,
-                    side,
-                    quantity,
-                    ..
-                } => {
-                    dbg!(base_asset_id, quote_asset_id, side, quantity);
-                }
-                OrderRequest::Limit {
-                    base_asset_id,
-                    quote_asset_id,
-                    side,
-                    price,
-                    quantity,
-                    ..
-                } => self.place_limit_order(
-                    *base_asset_id,
-                    *quote_asset_id,
-                    transaction.get_sender(),
-                    *side,
-                    *quantity,
-                    *price,
-                )?,
-                OrderRequest::Cancel {
-                    base_asset_id,
-                    quote_asset_id,
-                    order_id,
-                    side,
-                    ..
-                } => self.place_cancel_order(
-                    *base_asset_id,
-                    *quote_asset_id,
-                    transaction.get_sender(),
-                    *order_id,
-                    *side,
-                )?,
-                OrderRequest::Update {
-                    base_asset_id,
-                    quote_asset_id,
-                    order_id,
-                    side,
-                    price,
-                    quantity,
-                    ..
-                } => self.place_update_order(
-                    *base_asset_id,
-                    *quote_asset_id,
-                    transaction.get_sender(),
-                    *order_id,
-                    *side,
-                    *quantity,
-                    *price,
-                )?,
-            }
-        }
-
-        Ok(())
     }
 }
 

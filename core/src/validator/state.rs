@@ -5,7 +5,7 @@
 use super::genesis_state::ValidatorGenesisState;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
-use gdex_controller::master::{HandleConsensus, MasterController};
+use gdex_controller::{controller::Controller, master::MasterController};
 use gdex_types::transaction::Transaction;
 use gdex_types::{
     account::ValidatorKeyPair,

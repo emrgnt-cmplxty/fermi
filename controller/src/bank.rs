@@ -13,7 +13,6 @@
 
 // crate
 use crate::controller::Controller;
-use crate::master::HandleConsensus;
 use crate::master::MasterController;
 
 // gdex
@@ -60,6 +59,22 @@ impl Default for BankController {
 
 impl Controller for BankController {
     fn initialize(&mut self, _master_controller: &MasterController) {}
+
+    fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
+        if let TransactionVariant::PaymentTransaction(payment) = transaction.get_variant() {
+            return self.transfer(
+                transaction.get_sender(),
+                payment.get_receiver(),
+                payment.get_asset_id(),
+                payment.get_amount(),
+            );
+        }
+        if let TransactionVariant::CreateAssetTransaction(_create_asset) = transaction.get_variant() {
+            return self.create_asset(transaction.get_sender());
+        }
+
+        Ok(())
+    }
 }
 
 impl BankController {
@@ -176,24 +191,6 @@ impl BankController {
 
     pub fn get_num_assets(&mut self) -> u64 {
         self.n_assets
-    }
-}
-
-impl HandleConsensus for BankController {
-    fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
-        if let TransactionVariant::PaymentTransaction(payment) = transaction.get_variant() {
-            return self.transfer(
-                transaction.get_sender(),
-                payment.get_receiver(),
-                payment.get_asset_id(),
-                payment.get_amount(),
-            );
-        }
-        if let TransactionVariant::CreateAssetTransaction(_create_asset) = transaction.get_variant() {
-            return self.create_asset(transaction.get_sender());
-        }
-
-        Ok(())
     }
 }
 

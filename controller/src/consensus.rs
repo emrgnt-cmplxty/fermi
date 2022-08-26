@@ -9,7 +9,7 @@ use crate::controller::Controller;
 use crate::master::MasterController;
 
 // gdex
-use gdex_types::{account::AccountPubKey, crypto::ToFromBytes};
+use gdex_types::{account::AccountPubKey, crypto::ToFromBytes, error::GDEXError, transaction::Transaction};
 
 // mysten
 
@@ -43,4 +43,8 @@ impl Default for ConsensusController {
 
 impl Controller for ConsensusController {
     fn initialize(&mut self, _master_controller: &MasterController) {}
+
+    fn handle_consensus_transaction(&mut self, _transaction: &Transaction) -> Result<(), GDEXError> {
+        Ok(())
+    }
 }

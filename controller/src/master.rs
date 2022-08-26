@@ -11,7 +11,6 @@ use crate::{
 };
 
 // gdex
-use gdex_types::{error::GDEXError, transaction::Transaction};
 
 // mysten
 
@@ -52,8 +51,4 @@ impl MasterController {
         self.stake_controller.lock().unwrap().initialize(self);
         self.spot_controller.lock().unwrap().initialize(self);
     }
-}
-
-pub trait HandleConsensus {
-    fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError>;
 }

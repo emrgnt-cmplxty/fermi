@@ -39,7 +39,7 @@ pub mod cluster_test_suite {
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         info!("Sending transactions");
-        cluster.send_transactions(0, 1, 10, None).await;
+        cluster.send_transactions(0, 1, 10).await;
     }
 
     #[tokio::test]
@@ -50,7 +50,7 @@ pub mod cluster_test_suite {
         sleep(Duration::from_secs(2)).await;
 
         info!("Sending transactions");
-        let (kp_sender, kp_receiver, _) = cluster.send_transactions(0, 1, 1, Some(1_000_000)).await;
+        let (kp_sender, kp_receiver, _) = cluster.send_transactions(0, 1, 20).await;
         sleep(Duration::from_secs(5)).await;
 
         let genesis_state = cluster.get_validator_spawner(0).get_genesis_state();
@@ -79,7 +79,7 @@ pub mod cluster_test_suite {
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         info!("Sending transactions");
-        cluster.send_transactions(0, 1, 10, None).await;
+        cluster.send_transactions(0, 1, 10).await;
 
         sleep(Duration::from_secs(1)).await;
 
@@ -111,7 +111,7 @@ pub mod cluster_test_suite {
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         info!("Sending transactions");
-        let (_, _, signed_transactions) = cluster.send_transactions(0, 1, 10, None).await;
+        let (_, _, signed_transactions) = cluster.send_transactions(0, 1, 10).await;
 
         info!("Sleep to allow all transactions to propagate");
         sleep(Duration::from_secs(5)).await;

@@ -12,10 +12,10 @@
 // IMPORTS
 
 // crate
-use crate::controller::Controller;
-use crate::master::MasterController;
 use super::bank::BankController;
+use crate::controller::Controller;
 use crate::master::HandleConsensus;
+use crate::master::MasterController;
 
 // gdex
 use gdex_engine::{
@@ -25,9 +25,9 @@ use gdex_engine::{
 use gdex_types::{
     account::{AccountPubKey, OrderAccount},
     asset::{AssetId, AssetPairKey},
+    crypto::ToFromBytes,
     error::GDEXError,
     order_book::{OrderProcessingResult, OrderSide, OrderType, Success},
-    crypto::ToFromBytes,
     transaction::{OrderRequest, Transaction, TransactionVariant},
 };
 
@@ -460,7 +460,7 @@ impl Default for SpotController {
         Self {
             controller_account: AccountPubKey::from_bytes(b"SPOTCONTROLLERAAAAAAAAAAAAAAAAAA").unwrap(),
             orderbooks: HashMap::new(),
-            bank_controller: None
+            bank_controller: None,
         }
     }
 }
@@ -472,7 +472,6 @@ impl Controller for SpotController {
 }
 
 impl SpotController {
-
     // Gets the order book key for a pair of assets
     fn _get_orderbook_key(&self, base_asset_id: AssetId, quote_asset_id: AssetId) -> AssetPairKey {
         format!("{}_{}", base_asset_id, quote_asset_id)
@@ -489,7 +488,11 @@ impl SpotController {
         if !self.check_orderbook_exists(base_asset_id, quote_asset_id) {
             self.orderbooks.insert(
                 lookup_string,
-                OrderbookInterface::new(base_asset_id, quote_asset_id, Arc::clone(self.bank_controller.as_ref().unwrap())),
+                OrderbookInterface::new(
+                    base_asset_id,
+                    quote_asset_id,
+                    Arc::clone(self.bank_controller.as_ref().unwrap()),
+                ),
             );
             Ok(())
         } else {
@@ -662,7 +665,7 @@ pub mod spot_tests {
     fn place_bid() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let mut bank_controller = BankController::new();
+        let mut bank_controller = BankeController::default();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
@@ -701,14 +704,32 @@ pub mod spot_tests {
         let mut master_controller = MasterController::default();
         master_controller.initialize_controllers();
 
-        master_controller.bank_controller.lock().unwrap().create_asset(account.public()).unwrap();
-        master_controller.bank_controller.lock().unwrap().create_asset(account.public()).unwrap();
+        master_controller
+            .bank_controller
+            .lock()
+            .unwrap()
+            .create_asset(account.public())
+            .unwrap();
+        master_controller
+            .bank_controller
+            .lock()
+            .unwrap()
+            .create_asset(account.public())
+            .unwrap();
 
-        master_controller.spot_controller.lock().unwrap().create_orderbook(BASE_ASSET_ID, QUOTE_ASSET_ID).unwrap();
+        master_controller
+            .spot_controller
+            .lock()
+            .unwrap()
+            .create_orderbook(BASE_ASSET_ID, QUOTE_ASSET_ID)
+            .unwrap();
 
         let bid_size = 100;
         let bid_price = 100;
-        master_controller.spot_controller.lock().unwrap()
+        master_controller
+            .spot_controller
+            .lock()
+            .unwrap()
             .place_limit_order(
                 BASE_ASSET_ID,
                 QUOTE_ASSET_ID,
@@ -741,7 +762,7 @@ pub mod spot_tests {
     fn place_ask() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let mut bank_controller = BankController::new();
+        let mut bank_controller = BankeController::default();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
@@ -777,7 +798,7 @@ pub mod spot_tests {
     fn fail_on_invalid_account_lookup() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let mut bank_controller = BankController::new();
+        let mut bank_controller = BankeController::default();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
@@ -794,7 +815,7 @@ pub mod spot_tests {
     fn fail_on_account_double_creation() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let mut bank_controller: BankController = BankController::new();
+        let mut bank_controller: BankController = BankeController::default();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
@@ -812,7 +833,7 @@ pub mod spot_tests {
         let account_0 = generate_keypair_vec([0; 32]).pop().unwrap();
         let account_1 = generate_keypair_vec([1; 32]).pop().unwrap();
 
-        let mut bank_controller: BankController = BankController::new();
+        let mut bank_controller: BankController = BankeController::default();
 
         bank_controller.create_asset(account_0.public()).unwrap();
         bank_controller.create_asset(account_0.public()).unwrap();
@@ -880,7 +901,7 @@ pub mod spot_tests {
         let account_0 = generate_keypair_vec([0; 32]).pop().unwrap();
         let account_1 = generate_keypair_vec([1; 32]).pop().unwrap();
 
-        let mut bank_controller: BankController = BankController::new();
+        let mut bank_controller: BankController = BankeController::default();
 
         bank_controller.create_asset(account_0.public()).unwrap();
         bank_controller.create_asset(account_0.public()).unwrap();
@@ -1043,7 +1064,7 @@ pub mod spot_tests {
     fn place_cancel_order() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let mut bank_controller = BankController::new();
+        let mut bank_controller = BankeController::default();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
@@ -1096,7 +1117,7 @@ pub mod spot_tests {
     fn place_update() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let mut bank_controller = BankController::new();
+        let mut bank_controller = BankeController::default();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));

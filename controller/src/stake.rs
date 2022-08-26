@@ -9,16 +9,16 @@
 // IMPORTS
 
 // crate
+use super::bank::BankController;
 use crate::controller::Controller;
 use crate::master::MasterController;
-use super::bank::BankController;
 
 // gdex
 use gdex_types::{
     account::{AccountPubKey, StakeAccount},
     asset::PRIMARY_ASSET_ID,
-    error::GDEXError,
     crypto::ToFromBytes,
+    error::GDEXError,
 };
 
 // mysten
@@ -45,7 +45,7 @@ impl Default for StakeController {
             controller_account: AccountPubKey::from_bytes(b"STAKECONTROLLERAAAAAAAAAAAAAAAAA").unwrap(),
             stake_accounts: HashMap::new(),
             total_staked: 0,
-            bank_controller: None
+            bank_controller: None,
         }
     }
 }
@@ -77,12 +77,12 @@ impl StakeController {
 
     // stake funds to participate in consensus
     pub fn stake(&mut self, account_pub_key: &AccountPubKey, amount: u64) -> Result<(), GDEXError> {
-        self.bank_controller
-            .as_ref()
-            .unwrap()
-            .lock()
-            .unwrap()
-            .update_balance(account_pub_key, PRIMARY_ASSET_ID, amount, false)?;
+        self.bank_controller.as_ref().unwrap().lock().unwrap().update_balance(
+            account_pub_key,
+            PRIMARY_ASSET_ID,
+            amount,
+            false,
+        )?;
         self.total_staked += amount;
         let lookup = self.stake_accounts.get_mut(account_pub_key);
         match lookup {
@@ -102,12 +102,12 @@ impl StakeController {
     // TODO #0 //
     pub fn unstake(&mut self, account_pub_key: &AccountPubKey, amount: u64) -> Result<(), GDEXError> {
         self.total_staked -= amount;
-        self.bank_controller
-            .as_ref()
-            .unwrap()
-            .lock()
-            .unwrap()
-            .update_balance(account_pub_key, PRIMARY_ASSET_ID, amount, true)?;
+        self.bank_controller.as_ref().unwrap().lock().unwrap().update_balance(
+            account_pub_key,
+            PRIMARY_ASSET_ID,
+            amount,
+            true,
+        )?;
         let stake_account = self
             .stake_accounts
             .get_mut(account_pub_key)
@@ -140,10 +140,25 @@ pub mod stake_tests {
 
         let mut master_controller = MasterController::default();
         master_controller.initialize_controllers();
-        master_controller.bank_controller.lock().unwrap().create_asset(account.public()).unwrap();
-        master_controller.bank_controller.lock().unwrap().create_asset(account.public()).unwrap();
+        master_controller
+            .bank_controller
+            .lock()
+            .unwrap()
+            .create_asset(account.public())
+            .unwrap();
+        master_controller
+            .bank_controller
+            .lock()
+            .unwrap()
+            .create_asset(account.public())
+            .unwrap();
 
-        master_controller.stake_controller.lock().unwrap().stake(sender.public(), STAKE_AMOUNT).unwrap();
+        master_controller
+            .stake_controller
+            .lock()
+            .unwrap()
+            .stake(sender.public(), STAKE_AMOUNT)
+            .unwrap();
         assert!(
             bank_controller_ref
                 .lock()
@@ -154,11 +169,24 @@ pub mod stake_tests {
             "unexpected balance"
         );
         assert!(
-            master_controller.stake_controller.lock().unwrap().get_accounts().keys().len() == 1,
+            master_controller
+                .stake_controller
+                .lock()
+                .unwrap()
+                .get_accounts()
+                .keys()
+                .len()
+                == 1,
             "unexpected number of accounts"
         );
         assert!(
-            *master_controller.stake_controller.lock().unwrap().get_staked(sender.public()).unwrap() == STAKE_AMOUNT,
+            *master_controller
+                .stake_controller
+                .lock()
+                .unwrap()
+                .get_staked(sender.public())
+                .unwrap()
+                == STAKE_AMOUNT,
             "unexpected stake amount"
         );
         assert!(
@@ -172,8 +200,18 @@ pub mod stake_tests {
 
         let mut master_controller = MasterController::default();
         master_controller.initialize_controllers();
-        master_controller.bank_controller.lock().unwrap().create_asset(account.public()).unwrap();
-        master_controller.bank_controller.lock().unwrap().create_asset(account.public()).unwrap();
+        master_controller
+            .bank_controller
+            .lock()
+            .unwrap()
+            .create_asset(account.public())
+            .unwrap();
+        master_controller
+            .bank_controller
+            .lock()
+            .unwrap()
+            .create_asset(account.public())
+            .unwrap();
 
         master_controller
             .stake_controller
@@ -199,7 +237,8 @@ pub mod stake_tests {
                 .unwrap()
                 .get_accounts()
                 .keys()
-                .len() == 1,
+                .len()
+                == 1,
             "unexpected number of accounts"
         );
 
@@ -209,16 +248,13 @@ pub mod stake_tests {
                 .lock()
                 .unwrap()
                 .get_staked(sender.public())
-                .unwrap() == STAKE_AMOUNT,
+                .unwrap()
+                == STAKE_AMOUNT,
             "unexpected stake amount"
         );
 
         assert!(
-            master_controller
-                .stake_controller
-                .lock()
-                .unwrap()
-                .get_total_staked() == STAKE_AMOUNT,
+            master_controller.stake_controller.lock().unwrap().get_total_staked() == STAKE_AMOUNT,
             "unexpected total staked amount"
         );
     }
@@ -231,8 +267,18 @@ pub mod stake_tests {
 
         let mut master_controller = MasterController::default();
         master_controller.initialize_controllers();
-        master_controller.bank_controller.lock().unwrap().create_asset(account.public()).unwrap();
-        master_controller.bank_controller.lock().unwrap().create_asset(account.public()).unwrap();
+        master_controller
+            .bank_controller
+            .lock()
+            .unwrap()
+            .create_asset(account.public())
+            .unwrap();
+        master_controller
+            .bank_controller
+            .lock()
+            .unwrap()
+            .create_asset(account.public())
+            .unwrap();
 
         assert!(
             bank_controller_ref

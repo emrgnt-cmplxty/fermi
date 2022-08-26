@@ -9,10 +9,7 @@ use crate::controller::Controller;
 use crate::master::MasterController;
 
 // gdex
-use gdex_types::{
-    account::AccountPubKey,
-    crypto::ToFromBytes,
-};
+use gdex_types::{account::AccountPubKey, crypto::ToFromBytes};
 
 // mysten
 
@@ -39,8 +36,7 @@ impl Default for ConsensusController {
         Self {
             controller_account: AccountPubKey::from_bytes(b"CONSENSUSCONTROLLERAAAAAAAAAAAAA").unwrap(),
             batch_size: DEFAULT_BATCH_SIZE,
-            max_batch_delay: Duration::from_millis(DEFAULT_MAX_DELAY_MILLIS)
-
+            max_batch_delay: Duration::from_millis(DEFAULT_MAX_DELAY_MILLIS),
         }
     }
 }

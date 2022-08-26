@@ -21,9 +21,8 @@ use gdex_types::{
 use std::{io, path::Path, path::PathBuf};
 use tempfile::TempDir;
 use tokio::task::JoinHandle;
-use tracing::info;
 use tokio::time::{sleep, Duration};
-
+use tracing::info;
 
 // HELPER FUNCTIONS
 

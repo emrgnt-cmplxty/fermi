@@ -13,15 +13,15 @@
 
 // crate
 use crate::controller::Controller;
-use crate::master::MasterController;
 use crate::master::HandleConsensus;
+use crate::master::MasterController;
 
 // gdex
 use gdex_types::{
     account::{AccountPubKey, BankAccount},
     asset::{Asset, AssetId},
-    error::GDEXError,
     crypto::ToFromBytes,
+    error::GDEXError,
     transaction::{Transaction, TransactionVariant},
 };
 

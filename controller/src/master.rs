@@ -6,11 +6,8 @@
 
 // crate
 use crate::{
-    controller::Controller,
-    bank::BankController,
-    consensus::ConsensusController,
-    spot::SpotController,
-    stake::StakeController
+    bank::BankController, consensus::ConsensusController, controller::Controller, spot::SpotController,
+    stake::StakeController,
 };
 
 // gdex
@@ -20,9 +17,7 @@ use gdex_types::{error::GDEXError, transaction::Transaction};
 
 // external
 use serde::{Deserialize, Serialize};
-use std::{
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
 // INTERFACE
 
@@ -40,12 +35,12 @@ impl Default for MasterController {
         let stake_controller = Arc::new(Mutex::new(StakeController::default()));
         let spot_controller = Arc::new(Mutex::new(SpotController::default()));
         let consensus_controller = Arc::new(Mutex::new(ConsensusController::default()));
-        
+
         Self {
             consensus_controller,
             bank_controller,
             stake_controller,
-            spot_controller
+            spot_controller,
         }
     }
 }

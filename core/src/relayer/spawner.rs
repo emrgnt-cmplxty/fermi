@@ -6,16 +6,16 @@ use tokio::task::JoinHandle;
 
 pub struct RelayerSpawner {
     validator_state: Arc<ValidatorState>,
-    address: Multiaddr,
+    relayer_address: Multiaddr,
     /// Handle for the server related tasks
     server_handles: Option<JoinHandle<()>>,
 }
 
 impl RelayerSpawner {
-    pub fn new(state: Arc<ValidatorState>, address: Multiaddr) -> Self {
+    pub fn new(state: Arc<ValidatorState>, relayer_address: Multiaddr) -> Self {
         RelayerSpawner {
             validator_state: state,
-            address,
+            relayer_address,
             server_handles: None,
         }
     }
@@ -31,7 +31,7 @@ impl RelayerSpawner {
         let server = crate::config::server::ServerConfig::new()
             .server_builder()
             .add_service(RelayerServer::new(relay_service))
-            .bind(&self.address)
+            .bind(&self.relayer_address)
             .await
             .unwrap();
 
@@ -39,6 +39,10 @@ impl RelayerSpawner {
         self.server_handles = Some(handle);
 
         Ok(())
+    }
+
+    pub fn get_relayer_address(&self) -> Multiaddr {
+        self.relayer_address.clone()
     }
 
     pub async fn await_handles(&mut self) {

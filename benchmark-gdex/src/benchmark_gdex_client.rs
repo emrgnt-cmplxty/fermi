@@ -5,9 +5,10 @@ use anyhow::{Context, Result};
 use clap::{crate_name, crate_version, App, AppSettings};
 use futures::{future::join_all, StreamExt};
 use gdex_types::{
-    account::AccountKeyPair,
+    account::{AccountKeyPair, ValidatorKeyPair},
     proto::{TransactionProto, TransactionsClient},
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
+    utils::read_keypair_from_file,
 };
 use narwhal_crypto::{
     traits::{KeyPair, Signer},
@@ -15,6 +16,7 @@ use narwhal_crypto::{
 };
 use narwhal_types::CertificateDigest;
 use rand::{rngs::StdRng, Rng, SeedableRng};
+use std::path::PathBuf;
 use tokio::{
     net::TcpStream,
     time::{interval, sleep, Duration, Instant},
@@ -62,6 +64,7 @@ async fn main() -> Result<()> {
         .about("Benchmark client for Narwhal and Tusk.")
         .args_from_usage("<ADDR> 'The network address of the node where to send txs'")
         .args_from_usage("--rate=<INT> 'The rate (txs/s) at which to send the transactions'")
+        .args_from_usage("--validator_key_fpath=<FILE> 'The validator key file'")
         .args_from_usage("--nodes=[ADDR]... 'Network addresses that must be reachable before starting the benchmark.'")
         .setting(AppSettings::ArgRequiredElseHelp)
         .get_matches();
@@ -91,6 +94,11 @@ async fn main() -> Result<()> {
         .unwrap()
         .parse::<u64>()
         .context("The rate of transactions must be a non-negative integer")?;
+    let validator_key_fpath = matches
+        .value_of("validator_key_fpath")
+        .unwrap()
+        .parse::<PathBuf>()
+        .context("The path to the validator key.")?;
     let nodes = matches
         .values_of("nodes")
         .unwrap_or_default()
@@ -102,7 +110,12 @@ async fn main() -> Result<()> {
     info!("Node address: {target}");
     info!("Transactions rate: {rate} tx/s");
 
-    let client = Client { target, rate, nodes };
+    let client = Client {
+        target,
+        rate,
+        nodes,
+        validator_key_fpath,
+    };
 
     // Wait for all nodes to be online and synchronized.
     client.wait().await;
@@ -116,6 +129,7 @@ struct Client {
     target: Url,
     rate: u64,
     nodes: Vec<Url>,
+    validator_key_fpath: PathBuf,
 }
 
 impl Client {
@@ -136,6 +150,10 @@ impl Client {
         let interval = interval(Duration::from_millis(BURST_DURATION));
         tokio::pin!(interval);
 
+        // send payments from validator with assets
+        // read in private key of validator who will send payment txns
+        let keypair: ValidatorKeyPair = read_keypair_from_file(self.validator_key_fpath.clone())?;
+
         // NOTE: This log entry is used to compute performance.
         info!("Start sending transactions");
         'main: loop {
@@ -153,6 +171,7 @@ impl Client {
                 info!("Transactions size: {transaction_size} B");
             }
 
+            let keypair = keypair.copy();
             let stream = tokio_stream::iter(0..burst).map(move |x| {
                 let amount = if x == counter % burst {
                     // NOTE: This log entry is used to compute performance.
@@ -162,7 +181,7 @@ impl Client {
                     r += 1;
                     r
                 };
-                let signed_tranasction = create_signed_transaction(&kp_sender, &kp_receiver, amount);
+                let signed_tranasction = create_signed_transaction(&keypair, &kp_receiver, amount);
                 TransactionProto {
                     transaction: signed_tranasction.serialize().unwrap().into(),
                 }

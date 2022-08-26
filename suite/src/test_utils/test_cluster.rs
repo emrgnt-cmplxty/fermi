@@ -5,6 +5,7 @@ use gdex_controller::{bank::CREATED_ASSET_BALANCE, master::MasterController};
 use gdex_core::{
     client,
     genesis_ceremony::{GENESIS_FILENAME, VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
+    relayer::spawner::RelayerSpawner,
     validator::{genesis_state::ValidatorGenesisState, spawner::ValidatorSpawner},
 };
 use gdex_types::{
@@ -18,7 +19,7 @@ use gdex_types::{
 };
 
 // external
-use std::{io, path::Path, path::PathBuf};
+use std::{io, path::Path, path::PathBuf, sync::Arc};
 use tempfile::TempDir;
 use tokio::task::JoinHandle;
 use tokio::time::{sleep, Duration};
@@ -100,7 +101,8 @@ impl TestCluster {
         let _save_result = genesis_state.save(working_dir.join(GENESIS_FILENAME));
 
         // create and spawn validators
-        let mut validator_spawners: Vec<ValidatorSpawner> = Vec::new();
+        let mut validator_spawners = Vec::new();
+
         let mut validator_counter = 0;
         for validator_info in genesis_state.validator_set() {
             validator_counter += 1;
@@ -118,6 +120,7 @@ impl TestCluster {
                 validator_spawner.spawn_validator().await;
                 validator_spawner.get_validator_state().unwrap().unhalt_validator();
             }
+
             validator_spawners.push(validator_spawner);
         }
 
@@ -155,6 +158,16 @@ impl TestCluster {
         // start the validator back up
         spawner.spawn_validator().await;
         spawner.get_validator_state().unwrap().unhalt_validator();
+    }
+
+    pub async fn spawn_single_relayer(&mut self, index: usize) -> RelayerSpawner {
+        let spawner = self.get_validator_spawner(index);
+        let validator_state = spawner.get_validator_state().unwrap();
+
+        let relayer_address = utils::new_network_address();
+        let mut relayer_spawner = RelayerSpawner::new(Arc::clone(&validator_state), relayer_address.clone());
+        relayer_spawner.spawn_relayer().await.unwrap();
+        relayer_spawner
     }
 
     pub async fn send_transactions(

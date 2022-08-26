@@ -47,11 +47,11 @@ pub mod cluster_test_suite {
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
+        sleep(Duration::from_secs(5)).await;
 
         info!("Sending transactions");
         let (kp_sender, kp_receiver, _) = cluster.send_transactions(0, 1, 1, Some(1_000_000)).await;
-
-        sleep(Duration::from_secs(3)).await;
+        sleep(Duration::from_secs(2)).await;
 
         let genesis_state = cluster.get_validator_spawner(0).get_genesis_state();
         let sender_balance = genesis_state

@@ -61,11 +61,11 @@ pub enum CeremonyCommand {
         #[clap(value_parser, long)]
         narwhal_worker_to_primary: Multiaddr,
         #[clap(value_parser, long)]
-        narwhal_primary_to_worker: Multiaddr,
+        narwhal_primary_to_worker: Vec<Multiaddr>,
         #[clap(value_parser, long)]
-        narwhal_worker_to_worker: Multiaddr,
+        narwhal_worker_to_worker: Vec<Multiaddr>,
         #[clap(value_parser, long)]
-        narwhal_consensus_address: Multiaddr,
+        narwhal_consensus_addresses: Vec<Multiaddr>,
     },
 
     AddControllers,
@@ -107,7 +107,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             narwhal_worker_to_primary,
             narwhal_primary_to_worker,
             narwhal_worker_to_worker,
-            narwhal_consensus_address,
+            narwhal_consensus_addresses,
         } => {
             let mut builder = GenesisStateBuilder::load(&dir)?;
             let keypair: ValidatorKeyPair = utils::read_keypair_from_file(key_file)?;
@@ -122,7 +122,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
                 narwhal_worker_to_primary,
                 narwhal_primary_to_worker,
                 narwhal_worker_to_worker,
-                narwhal_consensus_address,
+                narwhal_consensus_addresses,
             });
             builder.save(dir)?;
         }
@@ -278,9 +278,9 @@ mod test_genesis_ceremony {
                     network_address: utils::new_network_address(),
                     narwhal_primary_to_primary: utils::new_network_address(),
                     narwhal_worker_to_primary: utils::new_network_address(),
-                    narwhal_primary_to_worker: utils::new_network_address(),
-                    narwhal_worker_to_worker: utils::new_network_address(),
-                    narwhal_consensus_address: utils::new_network_address(),
+                    narwhal_primary_to_worker: vec![utils::new_network_address()],
+                    narwhal_worker_to_worker: vec![utils::new_network_address()],
+                    narwhal_consensus_addresses: vec![utils::new_network_address()],
                 };
                 let key_file = dir.path().join(format!("{}.key", info.name));
                 utils::write_keypair_to_file(&keypair, &key_file).unwrap();
@@ -309,7 +309,7 @@ mod test_genesis_ceremony {
                     narwhal_worker_to_primary: validator.narwhal_worker_to_primary.clone(),
                     narwhal_primary_to_worker: validator.narwhal_primary_to_worker.clone(),
                     narwhal_worker_to_worker: validator.narwhal_worker_to_worker.clone(),
-                    narwhal_consensus_address: validator.narwhal_consensus_address.clone(),
+                    narwhal_consensus_addresses: validator.narwhal_consensus_addresses.clone(),
                 },
             };
             command.run()?;

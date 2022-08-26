@@ -5,7 +5,7 @@
 use crate::{
     client,
     config::node::NodeConfig,
-    validator::{consensus_adapter::ConsensusAdapter, state::ValidatorState},
+    validator::{consensus_adapter::ConsensusAdapter, restarter::NodeRestarter, state::ValidatorState},
 };
 use anyhow::anyhow;
 use async_trait::async_trait;
@@ -60,15 +60,16 @@ impl ValidatorServer {
     pub fn new(
         address: Multiaddr,
         state: Arc<ValidatorState>,
-        consensus_address: Multiaddr,
+        consensus_addresses: Vec<Multiaddr>,
         tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
     ) -> Self {
+        // TODO - change consensus client to be a vector of clients
         let consensus_client = narwhal_types::TransactionsClient::new(
-            client::connect_lazy(&consensus_address).expect("Failed to connect to consensus"),
+            client::connect_lazy(&consensus_addresses.get(0).unwrap()).expect("Failed to connect to consensus"),
         );
         let consensus_adapter = ConsensusAdapter {
             consensus_client,
-            consensus_address,
+            consensus_addresses,
             tx_reconfigure_consensus,
         };
 
@@ -133,10 +134,12 @@ impl ValidatorService {
         let consensus_storage_base_path = consensus_config.db_path().to_path_buf();
         let consensus_parameters = consensus_config.narwhal_config().to_owned();
 
+        println!("consensus_committee = {:?}", consensus_committee);
+
         let state_ref = Arc::clone(&state);
         let registry = prometheus_registry.clone();
         let restarter_handle = tokio::spawn(async move {
-            narwhal_node::restarter::NodeRestarter::watch(
+            NodeRestarter::watch(
                 consensus_keypair,
                 &(&*consensus_committee).clone(),
                 consensus_storage_base_path,
@@ -304,7 +307,7 @@ mod test_validator_server {
         utils,
     };
 
-    async fn spawn_validator_server() -> Result<ValidatorServerHandle, io::Error> {
+    async fn spawn_test_validator_server() -> Result<ValidatorServerHandle, io::Error> {
         let master_controller = MasterController::default();
         master_controller.initialize_controllers();
 
@@ -321,9 +324,9 @@ mod test_validator_server {
             network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),
             narwhal_worker_to_primary: utils::new_network_address(),
-            narwhal_primary_to_worker: utils::new_network_address(),
-            narwhal_worker_to_worker: utils::new_network_address(),
-            narwhal_consensus_address: utils::new_network_address(),
+            narwhal_primary_to_worker: vec![utils::new_network_address()],
+            narwhal_worker_to_worker: vec![utils::new_network_address()],
+            narwhal_consensus_addresses: vec![utils::new_network_address()],
         };
         let network_address = validator.network_address.clone();
 
@@ -342,20 +345,20 @@ mod test_validator_server {
         let validator_server = ValidatorServer::new(
             new_addr.clone(),
             Arc::new(validator_state),
-            network_address,
+            vec![network_address],
             tx_reconfigure_consensus,
         );
         validator_server.spawn().await
     }
 
     #[tokio::test]
-    pub async fn server_init() {
-        spawn_validator_server().await.unwrap();
+    pub async fn server_test_init() {
+        spawn_test_validator_server().await.unwrap();
     }
 
     #[tokio::test]
     pub async fn server_process_transaction() {
-        let handle_result = spawn_validator_server().await;
+        let handle_result = spawn_test_validator_server().await;
         let handle = handle_result.unwrap();
         let mut client =
             TransactionsClient::new(client::connect_lazy(handle.address()).expect("Failed to connect to consensus"));
@@ -391,9 +394,9 @@ mod test_validator_server {
             network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),
             narwhal_worker_to_primary: utils::new_network_address(),
-            narwhal_primary_to_worker: utils::new_network_address(),
-            narwhal_worker_to_worker: utils::new_network_address(),
-            narwhal_consensus_address: utils::new_network_address(),
+            narwhal_primary_to_worker: vec![utils::new_network_address()],
+            narwhal_worker_to_worker: vec![utils::new_network_address()],
+            narwhal_consensus_addresses: vec![utils::new_network_address()],
         };
         let network_address = validator.network_address.clone();
 
@@ -411,7 +414,7 @@ mod test_validator_server {
         let validator_server = ValidatorServer::new(
             new_addr.clone(),
             Arc::new(validator_state),
-            network_address,
+            vec![network_address],
             tx_reconfigure_consensus.clone(),
         );
         validator_server.spawn().await.unwrap();

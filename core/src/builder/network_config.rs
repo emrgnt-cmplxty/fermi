@@ -96,9 +96,9 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
                 balance: DEFAULT_BALANCE,
                 narwhal_primary_to_primary: utils::new_network_address(),
                 narwhal_worker_to_primary: utils::new_network_address(),
-                narwhal_primary_to_worker: utils::new_network_address(),
-                narwhal_worker_to_worker: utils::new_network_address(),
-                narwhal_consensus_address: utils::new_network_address(),
+                narwhal_primary_to_worker: vec![utils::new_network_address()],
+                narwhal_worker_to_worker: vec![utils::new_network_address()],
+                narwhal_consensus_addresses: vec![utils::new_network_address()],
             })
             .collect::<Vec<_>>();
 
@@ -128,7 +128,7 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
                     narwhal_worker_to_primary: validator.narwhal_worker_to_primary.clone(),
                     narwhal_primary_to_worker: validator.narwhal_primary_to_worker.clone(),
                     narwhal_worker_to_worker: validator.narwhal_worker_to_worker.clone(),
-                    narwhal_consensus_address: validator.narwhal_consensus_address.clone(),
+                    narwhal_consensus_addresses: validator.narwhal_consensus_addresses.clone(),
                 }
             })
             .collect::<Vec<_>>();
@@ -153,7 +153,7 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
             .map(|validator| {
                 let public_key: ValidatorPubKeyBytes = validator.key_pair.public().into();
                 let network_address = validator.network_address;
-                let consensus_address = validator.narwhal_consensus_address;
+                let consensus_addresses = validator.narwhal_consensus_addresses;
                 let consensus_db_path = self
                     .config_directory
                     .join(CONSENSUS_DB_NAME)
@@ -163,7 +163,7 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
                     .join(GDEX_DB_NAME)
                     .join(utils::encode_bytes_hex(&public_key));
                 let consensus_config = ConsensusConfig {
-                    consensus_address,
+                    consensus_addresses,
                     consensus_db_path: consensus_db_path.clone(),
                     narwhal_config: Default::default(),
                 };

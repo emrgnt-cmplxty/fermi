@@ -58,16 +58,31 @@ impl ValidatorGenesisState {
                     primary_to_primary: validator.narwhal_primary_to_primary.clone(),
                     worker_to_primary: validator.narwhal_worker_to_primary.clone(),
                 };
-                let workers = [(
-                    0, // worker_id
-                    narwhal_config::WorkerInfo {
-                        primary_to_worker: validator.narwhal_primary_to_worker.clone(),
-                        transactions: validator.narwhal_consensus_address.clone(),
-                        worker_to_worker: validator.narwhal_worker_to_worker.clone(),
-                    },
-                )]
-                .into_iter()
-                .collect();
+
+                let mut worker_counter = 0;
+                let workers = validator
+                    .narwhal_primary_to_worker
+                    .iter()
+                    .zip(validator.narwhal_worker_to_worker.iter())
+                    .map(|(primary_to_worker, worker_to_worker)| {
+                        worker_counter += 1;
+                        let transactions_address = validator
+                            .narwhal_consensus_addresses
+                            .get(worker_counter - 1)
+                            .expect("Can't get worker consensus address")
+                            .clone();
+                        (
+                            // TODO - find a less hacky way to iterate over the workers
+                            (worker_counter - 1).try_into().unwrap(), // worker_id
+                            narwhal_config::WorkerInfo {
+                                primary_to_worker: primary_to_worker.clone(),
+                                // TODO - change to triple zip
+                                transactions: transactions_address,
+                                worker_to_worker: worker_to_worker.clone(),
+                            },
+                        )
+                    })
+                    .collect();
                 let validator = narwhal_config::Authority {
                     stake: validator.stake as narwhal_config::Stake, //TODO this should at least be the same size integer
                     primary,
@@ -77,6 +92,7 @@ impl ValidatorGenesisState {
                 (name, validator)
             })
             .collect();
+
         std::sync::Arc::new(arc_swap::ArcSwap::from_pointee(narwhal_config::Committee {
             authorities: narwhal_committee,
             epoch: self.epoch() as narwhal_config::Epoch,
@@ -212,9 +228,9 @@ mod genesis_test {
             network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),
             narwhal_worker_to_primary: utils::new_network_address(),
-            narwhal_primary_to_worker: utils::new_network_address(),
-            narwhal_worker_to_worker: utils::new_network_address(),
-            narwhal_consensus_address: utils::new_network_address(),
+            narwhal_primary_to_worker: vec![utils::new_network_address()],
+            narwhal_worker_to_worker: vec![utils::new_network_address()],
+            narwhal_consensus_addresses: vec![utils::new_network_address()],
         };
 
         let builder = GenesisStateBuilder::new()

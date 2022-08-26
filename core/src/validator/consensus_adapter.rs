@@ -11,7 +11,7 @@ pub struct ConsensusAdapter {
     /// A network client connecting to the consensus node of this authority.
     pub consensus_client: narwhal_types::TransactionsClient<tonic::transport::Channel>,
     /// The address of consensus
-    pub consensus_address: Multiaddr,
+    pub consensus_addresses: Vec<Multiaddr>,
     /// A channel to tell consensus to reconfigure.
     pub tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
 }

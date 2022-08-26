@@ -91,16 +91,17 @@ class GDEXBench:
             # currently hard-coded for a single worker, for n-workers denom = n*len(nodes.keys())
             rate_share = ceil(rate / len(nodes.keys()))
             for id, address in enumerate(nodes.values()):
-                    cmd = CommandMaker.run_gdex_client(
-                        address,
-                        relayers['validator-' + str(id)],
-                        rate_share,
-                        [x for x in nodes.values() if x != address]
-                    )
-                    print(cmd)
-                    # currently hard-coded for a single worker, for n-workers 0 -> i
-                    log_file = PathMaker.client_log_file(id, 0)
-                    self._background_run(cmd, log_file)
+                sleep(2)
+                cmd = CommandMaker.run_gdex_client(
+                    address,
+                    relayers['validator-' + str(id)],
+                    rate_share,
+                    [x for x in nodes.values() if x != address]
+                )
+                print(cmd)
+                # currently hard-coded for a single worker, for n-workers 0 -> i
+                log_file = PathMaker.client_log_file(id, 0)
+                self._background_run(cmd, log_file)
 
             # Wait for all transactions to be processed.
             Print.info(f'Running benchmark ({self.duration} sec)...')

@@ -138,19 +138,21 @@ pub mod stake_tests {
     fn stake() {
         let sender = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let mut master_controller = MasterController::default();
+        let master_controller = MasterController::default();
         master_controller.initialize_controllers();
+        let bank_controller_ref = Arc::clone(&master_controller.bank_controller);
+
         master_controller
             .bank_controller
             .lock()
             .unwrap()
-            .create_asset(account.public())
+            .create_asset(sender.public())
             .unwrap();
         master_controller
             .bank_controller
             .lock()
             .unwrap()
-            .create_asset(account.public())
+            .create_asset(sender.public())
             .unwrap();
 
         master_controller
@@ -198,19 +200,21 @@ pub mod stake_tests {
     fn stake_empty() {
         let sender = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let mut master_controller = MasterController::default();
+        let master_controller = MasterController::default();
         master_controller.initialize_controllers();
+        let bank_controller_ref = Arc::clone(&master_controller.bank_controller);
+
         master_controller
             .bank_controller
             .lock()
             .unwrap()
-            .create_asset(account.public())
+            .create_asset(sender.public())
             .unwrap();
         master_controller
             .bank_controller
             .lock()
             .unwrap()
-            .create_asset(account.public())
+            .create_asset(sender.public())
             .unwrap();
 
         master_controller
@@ -265,19 +269,21 @@ pub mod stake_tests {
     fn failed_stake() {
         let sender = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let mut master_controller = MasterController::default();
+        let master_controller = MasterController::default();
         master_controller.initialize_controllers();
+        let bank_controller_ref = Arc::clone(&master_controller.bank_controller);
+
         master_controller
             .bank_controller
             .lock()
             .unwrap()
-            .create_asset(account.public())
+            .create_asset(sender.public())
             .unwrap();
         master_controller
             .bank_controller
             .lock()
             .unwrap()
-            .create_asset(account.public())
+            .create_asset(sender.public())
             .unwrap();
 
         assert!(

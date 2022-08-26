@@ -665,7 +665,7 @@ pub mod spot_tests {
     fn place_bid() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let mut bank_controller = BankeController::default();
+        let mut bank_controller = BankController::default();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
@@ -701,7 +701,7 @@ pub mod spot_tests {
     fn place_bid_spot_controller() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let mut master_controller = MasterController::default();
+        let master_controller = MasterController::default();
         master_controller.initialize_controllers();
 
         master_controller
@@ -740,6 +740,8 @@ pub mod spot_tests {
             )
             .unwrap();
 
+        let bank_controller_ref = Arc::clone(&master_controller.bank_controller);
+
         assert_eq!(
             bank_controller_ref
                 .lock()
@@ -762,7 +764,7 @@ pub mod spot_tests {
     fn place_ask() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let mut bank_controller = BankeController::default();
+        let mut bank_controller = BankController::default();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
@@ -798,7 +800,7 @@ pub mod spot_tests {
     fn fail_on_invalid_account_lookup() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let mut bank_controller = BankeController::default();
+        let mut bank_controller = BankController::default();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
@@ -815,7 +817,7 @@ pub mod spot_tests {
     fn fail_on_account_double_creation() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let mut bank_controller: BankController = BankeController::default();
+        let mut bank_controller: BankController = BankController::default();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
@@ -833,7 +835,7 @@ pub mod spot_tests {
         let account_0 = generate_keypair_vec([0; 32]).pop().unwrap();
         let account_1 = generate_keypair_vec([1; 32]).pop().unwrap();
 
-        let mut bank_controller: BankController = BankeController::default();
+        let mut bank_controller: BankController = BankController::default();
 
         bank_controller.create_asset(account_0.public()).unwrap();
         bank_controller.create_asset(account_0.public()).unwrap();
@@ -901,7 +903,7 @@ pub mod spot_tests {
         let account_0 = generate_keypair_vec([0; 32]).pop().unwrap();
         let account_1 = generate_keypair_vec([1; 32]).pop().unwrap();
 
-        let mut bank_controller: BankController = BankeController::default();
+        let mut bank_controller: BankController = BankController::default();
 
         bank_controller.create_asset(account_0.public()).unwrap();
         bank_controller.create_asset(account_0.public()).unwrap();
@@ -1064,7 +1066,7 @@ pub mod spot_tests {
     fn place_cancel_order() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let mut bank_controller = BankeController::default();
+        let mut bank_controller = BankController::default();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
@@ -1117,7 +1119,7 @@ pub mod spot_tests {
     fn place_update() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let mut bank_controller = BankeController::default();
+        let mut bank_controller = BankController::default();
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));

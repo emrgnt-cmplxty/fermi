@@ -40,7 +40,7 @@ pub mod cluster_test_suite {
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         info!("Sending transactions");
-        cluster.send_transactions(0, 1, 10, None).await;
+        cluster.send_transactions(0, 1, 10).await;
     }
 
     #[tokio::test]
@@ -48,11 +48,11 @@ pub mod cluster_test_suite {
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
+        sleep(Duration::from_secs(2)).await;
 
         info!("Sending transactions");
-        let (kp_sender, kp_receiver, _) = cluster.send_transactions(0, 1, 20, Some(1_000_000)).await;
-
-        sleep(Duration::from_secs(3)).await;
+        let (kp_sender, kp_receiver, _) = cluster.send_transactions(0, 1, 20).await;
+        sleep(Duration::from_secs(5)).await;
 
         let genesis_state = cluster.get_validator_spawner(0).get_genesis_state();
         let sender_balance = genesis_state
@@ -80,7 +80,7 @@ pub mod cluster_test_suite {
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         info!("Sending transactions");
-        cluster.send_transactions(0, 1, 10, None).await;
+        cluster.send_transactions(0, 1, 10).await;
 
         sleep(Duration::from_secs(1)).await;
 
@@ -112,7 +112,7 @@ pub mod cluster_test_suite {
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         info!("Sending transactions");
-        let (_, _, signed_transactions) = cluster.send_transactions(0, 1, 10, None).await;
+        let (_, _, signed_transactions) = cluster.send_transactions(0, 1, 10).await;
 
         info!("Sleep to allow all transactions to propagate");
         sleep(Duration::from_secs(5)).await;
@@ -243,7 +243,7 @@ pub mod cluster_test_suite {
             .unwrap();
 
         // drop the cluster to stop forward progress of consensus
-        // drop(cluster);
+        drop(cluster);
 
         tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 
@@ -344,7 +344,7 @@ pub mod cluster_test_suite {
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         let spawner_1 = cluster.get_validator_spawner(1);
-        let validator_state_1 = spawner_1.get_validator_state().clone().unwrap();
+        let validator_state_1 = spawner_1.get_validator_state().unwrap();
 
         // Create txns
         let dummy_consensus_output = create_test_consensus_output();

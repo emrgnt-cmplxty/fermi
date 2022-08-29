@@ -2,10 +2,13 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui/src/genesis_ceremony.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
+
+// IMPORTS
+
+// crate
 use crate::{builder::genesis_state::GenesisStateBuilder, validator::genesis_state::ValidatorGenesisState};
-use anyhow::{Context, Result};
-use camino::Utf8PathBuf;
-use clap::Parser;
+
+// gdex
 use gdex_controller::master::MasterController;
 use gdex_types::{
     account::{AccountPubKey, ValidatorKeyPair, ValidatorPubKey, ValidatorPubKeyBytes, ValidatorSignature},
@@ -14,9 +17,18 @@ use gdex_types::{
     node::ValidatorInfo,
     utils,
 };
+
+// mysten
+
+// external
+use anyhow::{Context, Result};
+use camino::Utf8PathBuf;
+use clap::Parser;
 use multiaddr::Multiaddr;
 use std::convert::{TryFrom, TryInto};
 use std::{fs, path::PathBuf};
+
+// CONSTANTS
 
 pub const GENESIS_FILENAME: &str = "genesis.blob";
 pub const GENESIS_BUILDER_SIGNATURE_DIR: &str = "signatures";
@@ -134,6 +146,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             // Initialize controllers to default state
             let master_controller = MasterController::default();
             master_controller.initialize_controllers();
+            master_controller.initialize_controller_accounts();
 
             // Create base asset of the blockchain with the null address as the owner
             let null_creator = ValidatorPubKey::try_from(ValidatorPubKeyBytes::from_bytes(&[0; 32])?)?;

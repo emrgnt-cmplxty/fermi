@@ -29,6 +29,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
+// CONSTANTS
+
+pub const STAKE_CONTROLLER_ACCOUNT_PUBKEY: &[u8] = b"STAKECONTROLLERAAAAAAAAAAAAAAAAA";
+
 // INTERFACE
 
 /// The stake controller is responsible for accessing & modifying user balances
@@ -43,7 +47,7 @@ pub struct StakeController {
 impl Default for StakeController {
     fn default() -> Self {
         Self {
-            controller_account: AccountPubKey::from_bytes(b"STAKECONTROLLERAAAAAAAAAAAAAAAAA").unwrap(),
+            controller_account: AccountPubKey::from_bytes(STAKE_CONTROLLER_ACCOUNT_PUBKEY).unwrap(),
             stake_accounts: HashMap::new(),
             total_staked: 0,
             bank_controller: Arc::new(Mutex::new(BankController::default())), // TEMPORARY
@@ -52,8 +56,11 @@ impl Default for StakeController {
 }
 
 impl Controller for StakeController {
-    fn initialize(&mut self, master_controller: &MasterController) -> Result<(), GDEXError> {
+    fn initialize(&mut self, master_controller: &MasterController) {
         self.bank_controller = Arc::clone(&master_controller.bank_controller);
+    }
+
+    fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
         self.bank_controller
             .lock()
             .unwrap()
@@ -87,12 +94,10 @@ impl StakeController {
 
     // stake funds to participate in consensus
     pub fn stake(&mut self, account_pub_key: &AccountPubKey, amount: u64) -> Result<(), GDEXError> {
-        self.bank_controller.lock().unwrap().update_balance(
-            account_pub_key,
-            PRIMARY_ASSET_ID,
-            amount,
-            false,
-        )?;
+        self.bank_controller
+            .lock()
+            .unwrap()
+            .update_balance(account_pub_key, PRIMARY_ASSET_ID, amount, false)?;
         self.total_staked += amount;
         let lookup = self.stake_accounts.get_mut(account_pub_key);
         match lookup {
@@ -112,12 +117,10 @@ impl StakeController {
     // TODO #0 //
     pub fn unstake(&mut self, account_pub_key: &AccountPubKey, amount: u64) -> Result<(), GDEXError> {
         self.total_staked -= amount;
-        self.bank_controller.lock().unwrap().update_balance(
-            account_pub_key,
-            PRIMARY_ASSET_ID,
-            amount,
-            true,
-        )?;
+        self.bank_controller
+            .lock()
+            .unwrap()
+            .update_balance(account_pub_key, PRIMARY_ASSET_ID, amount, true)?;
         let stake_account = self
             .stake_accounts
             .get_mut(account_pub_key)
@@ -150,6 +153,7 @@ pub mod stake_tests {
 
         let master_controller = MasterController::default();
         master_controller.initialize_controllers();
+        master_controller.initialize_controller_accounts();
         let bank_controller_ref = Arc::clone(&master_controller.bank_controller);
 
         master_controller
@@ -212,6 +216,7 @@ pub mod stake_tests {
 
         let master_controller = MasterController::default();
         master_controller.initialize_controllers();
+        master_controller.initialize_controller_accounts();
         let bank_controller_ref = Arc::clone(&master_controller.bank_controller);
 
         master_controller
@@ -281,6 +286,7 @@ pub mod stake_tests {
 
         let master_controller = MasterController::default();
         master_controller.initialize_controllers();
+        master_controller.initialize_controller_accounts();
         let bank_controller_ref = Arc::clone(&master_controller.bank_controller);
 
         master_controller

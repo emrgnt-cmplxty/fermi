@@ -32,7 +32,9 @@ use std::collections::HashMap;
 
 // CONSTANTS
 
-// TODO #0 //
+// TODO need to find valid vanity address for bank controller
+pub const BANK_CONTROLLER_ACCOUNT_PUBKEY: &[u8] = b"STAKECONTROLLERAAAAAAAAAAAAAAAAA";
+
 // 10 billion w/ 6 decimals, e.g. ALGO creation specs.
 pub const CREATED_ASSET_BALANCE: u64 = 10_000_000_000_000_000;
 
@@ -49,7 +51,7 @@ pub struct BankController {
 impl Default for BankController {
     fn default() -> Self {
         Self {
-            controller_account: AccountPubKey::from_bytes(b"STAKECONTROLLERAAAAAAAAAAAAAAAAA").unwrap(),
+            controller_account: AccountPubKey::from_bytes(BANK_CONTROLLER_ACCOUNT_PUBKEY).unwrap(),
             asset_id_to_asset: HashMap::new(),
             bank_accounts: HashMap::new(),
             n_assets: 0,
@@ -58,7 +60,9 @@ impl Default for BankController {
 }
 
 impl Controller for BankController {
-    fn initialize(&mut self, _master_controller: &MasterController) -> Result<(), GDEXError> {
+    fn initialize(&mut self, _master_controller: &MasterController) {}
+
+    fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
         Ok(())
     }
 

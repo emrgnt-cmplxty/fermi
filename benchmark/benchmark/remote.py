@@ -16,7 +16,6 @@ from benchmark.commands import CommandMaker
 from benchmark.logs import LogParser, ParseError
 from benchmark.instance import InstanceManager
 
-
 class FabricError(Exception):
     ''' Wrapper for Fabric exception with a meaningfull error message. '''
 
@@ -38,6 +37,7 @@ class Bench:
             ctx.connect_kwargs.pkey = RSAKey.from_private_key_file(
                 self.manager.settings.key_path
             )
+            ctx.forward_agent = True
             self.connect = ctx.connect_kwargs
         except (IOError, PasswordRequiredException, SSHException) as e:
             raise BenchError('Failed to load SSH key', e)
@@ -71,12 +71,16 @@ class Bench:
             'sudo apt-get install -y clang',
 
             # Clone the repo.
+            f'ssh-keyscan -H github.com >> ~/.ssh/known_hosts',
             f'(git clone {self.settings.repo_url} || (cd {self.settings.repo_name} ; git pull))'
         ]
         hosts = self.manager.hosts(flat=True)
         try:
-            g = Group(*hosts, user='ubuntu', connect_kwargs=self.connect)
-            g.run(' && '.join(cmd), hide=True)
+            g = Group(*hosts, user='ubuntu', connect_kwargs=self.connect, forward_agent=True)
+            # TODO fix this hack
+            for c in g:
+                c._config.forward_agent = True
+            g.run(' && '.join(cmd), hide=False)
             Print.heading(f'Initialized testbed of {len(hosts)} nodes')
         except (GroupException, ExecutionError) as e:
             e = FabricError(e) if isinstance(e, GroupException) else e
@@ -150,7 +154,7 @@ class Bench:
             f'(cd {self.settings.repo_name} && git checkout -f {self.settings.branch})',
             f'(cd {self.settings.repo_name} && git pull -f)',
             'source $HOME/.cargo/env',
-            f'(cd {self.settings.repo_name}/node && {CommandMaker.compile()})',
+            f'(cd {self.settings.repo_name}/node && {CommandMaker.compile(False)})',
             CommandMaker.alias_binaries(
                 f'./{self.settings.repo_name}/target/release/'
             )
@@ -166,9 +170,9 @@ class Bench:
         subprocess.run([cmd], shell=True, stderr=subprocess.DEVNULL)
 
         # Recompile the latest code.
-        cmd = CommandMaker.compile(mem_profiling=self.mem_profile)
+        cmd = CommandMaker.compile(mem_profiling=False)
         Print.info(f"About to run {cmd}...")
-        subprocess.run(cmd, check=True, cwd=PathMaker.narwhal_node_crate_path())
+        #subprocess.run([cmd], check=True, cwd='narwhal')
 
         # Create alias for the client and nodes binary.
         cmd = CommandMaker.alias_binaries(PathMaker.binary_path())
@@ -211,7 +215,7 @@ class Bench:
 
         return committee
 
-    def _run_single(self, rate, committee, bench_parameters, debug=False):
+    def _run_single(self, rate, committee, bench_parameters, node_parameters, debug=False):
         faults = bench_parameters.faults
 
         # Kill any potentially unfinished run and delete logs.
@@ -222,15 +226,16 @@ class Bench:
         # Filter all faulty nodes from the client addresses (or they will wait
         # for the faulty nodes to be online).
         Print.info('Booting clients...')
-        workers_addresses = committee.load().workers_addresses(faults)
-        rate_share = ceil(rate / committee.load().workers())
+        workers_addresses = committee.workers_addresses(faults)
+        rate_share = ceil(rate / committee.workers())
         for i, addresses in enumerate(workers_addresses):
             for (id, address) in addresses:
                 host = Committee.ip(address)
-                cmd = CommandMaker.run_narwhal_client(
+                cmd = CommandMaker.run_client(
                     address,
                     bench_parameters.tx_size,
                     rate_share,
+                    node_parameters.json['execution'],
                     [x for y in workers_addresses for _, x in y]
                 )
                 log_file = PathMaker.client_log_file(i, id)
@@ -238,13 +243,14 @@ class Bench:
 
         # Run the primaries (except the faulty ones).
         Print.info('Booting primaries...')
-        for i, address in enumerate(committee.load().primary_addresses(faults)):
+        for i, address in enumerate(committee.primary_addresses(faults)):
             host = Committee.ip(address)
-            cmd = CommandMaker.run_narwhal_primary(
+            cmd = CommandMaker.run_primary(
                 PathMaker.key_file(i),
                 PathMaker.committee_file(),
                 PathMaker.db_path(i),
                 PathMaker.parameters_file(),
+                node_parameters.json['execution'],
                 debug=debug
             )
             log_file = PathMaker.primary_log_file(i)
@@ -255,11 +261,12 @@ class Bench:
         for i, addresses in enumerate(workers_addresses):
             for (id, address) in addresses:
                 host = Committee.ip(address)
-                cmd = CommandMaker.run_narwhal_worker(
+                cmd = CommandMaker.run_worker(
                     PathMaker.key_file(i),
                     PathMaker.committee_file(),
                     PathMaker.db_path(i, id),
                     PathMaker.parameters_file(),
+                    node_parameters.json['execution'],
                     id,  # The worker's id.
                     debug=debug
                 )
@@ -278,7 +285,7 @@ class Bench:
         subprocess.run([cmd], shell=True, stderr=subprocess.DEVNULL)
 
         # Download log files.
-        workers_addresses = committee.load().workers_addresses(faults)
+        workers_addresses = committee.workers_addresses(faults)
         progress = progress_bar(workers_addresses, prefix='Downloading workers logs:')
         for i, addresses in enumerate(progress):
             for id, address in addresses:
@@ -293,7 +300,7 @@ class Bench:
                     local=PathMaker.worker_log_file(i, id)
                 )
 
-        primary_addresses = committee.load().primary_addresses(faults)
+        primary_addresses = committee.primary_addresses(faults)
         progress = progress_bar(primary_addresses, prefix='Downloading primaries logs:')
         for i, address in enumerate(progress):
             host = Committee.ip(address)
@@ -351,7 +358,7 @@ class Bench:
                     Print.heading(f'Run {i+1}/{bench_parameters.runs}')
                     try:
                         self._run_single(
-                            r, committee_copy, bench_parameters, debug
+                            r, committee_copy, bench_parameters, node_parameters, debug
                         )
 
                         faults = bench_parameters.faults

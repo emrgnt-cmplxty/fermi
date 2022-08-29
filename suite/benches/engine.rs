@@ -1,10 +1,13 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
-use gdex_controller::{bank::BankController, spot::OrderbookInterface};
+use gdex_controller::{
+    bank::BankController,
+    spot::{OrderbookInterface, SPOT_CONTROLLER_ACCOUNT_PUBKEY}
+};
 use gdex_engine::{order_book::Orderbook, orders::create_limit_order_request};
 use gdex_types::transaction::OrderRequest;
 use gdex_types::{
     account::{account_test_functions::generate_keypair_vec, AccountPubKey},
-    crypto::KeypairTraits,
+    crypto::{ToFromBytes, KeypairTraits},
     order_book::{OrderProcessingResult, OrderSide, Success},
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
@@ -129,8 +132,11 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+    let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
+    let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
+
     let mut orderbook_interface =
-        OrderbookInterface::new(base_asset_id, quote_asset_id, Arc::clone(&bank_controller_ref));
+        OrderbookInterface::new(base_asset_id, quote_asset_id, controller_account, Arc::clone(&bank_controller_ref));
 
     orderbook_interface.create_account(primary.public()).unwrap();
     // other helpers

@@ -32,6 +32,9 @@ use std::collections::HashMap;
 
 // CONSTANTS
 
+const INCREMENT: bool = true;
+const DECREMENT: bool = false;
+
 // TODO need to find valid vanity address for bank controller
 pub const BANK_CONTROLLER_ACCOUNT_PUBKEY: &[u8] = b"STAKECONTROLLERAAAAAAAAAAAAAAAAA";
 
@@ -108,7 +111,7 @@ impl BankController {
         Ok(bank_account.get_balance(asset_id))
     }
 
-    pub fn update_balance(
+    fn update_balance(
         &mut self,
         account_pub_key: &AccountPubKey,
         asset_id: AssetId,
@@ -156,8 +159,8 @@ impl BankController {
             }
         };
 
-        self.update_balance(sender, asset_id, amount, false)?;
-        self.update_balance(receiver, asset_id, amount, true)?;
+        self.update_balance(sender, asset_id, amount, DECREMENT)?;
+        self.update_balance(receiver, asset_id, amount, INCREMENT)?;
 
         Ok(())
     }
@@ -184,7 +187,7 @@ impl BankController {
             },
         );
 
-        self.update_balance(owner_pub_key, self.n_assets, CREATED_ASSET_BALANCE, true)?;
+        self.update_balance(owner_pub_key, self.n_assets, CREATED_ASSET_BALANCE, INCREMENT)?;
         // increment asset counter & return less the increment
         self.n_assets += 1;
 

@@ -53,24 +53,31 @@ pub const SPOT_CONTROLLER_ACCOUNT_PUBKEY: &[u8] = b"SPOTCONTROLLERAAAAAAAAAAAAAA
 pub struct OrderbookInterface {
     base_asset_id: AssetId,
     quote_asset_id: AssetId,
+    controller_account: AccountPubKey,
+    bank_controller: Arc<Mutex<BankController>>,
     orderbook: Orderbook,
     accounts: HashMap<AccountPubKey, OrderAccount>,
     order_to_account: HashMap<OrderId, AccountPubKey>,
-    bank_controller: Arc<Mutex<BankController>>,
 }
 
 impl OrderbookInterface {
     // TODO #4 //
-    pub fn new(base_asset_id: AssetId, quote_asset_id: AssetId, bank_controller: Arc<Mutex<BankController>>) -> Self {
+    pub fn new(
+        base_asset_id: AssetId,
+        quote_asset_id: AssetId,
+        controller_account: AccountPubKey,
+        bank_controller: Arc<Mutex<BankController>>
+    ) -> Self {
         assert!(base_asset_id != quote_asset_id);
         let orderbook = Orderbook::new(base_asset_id, quote_asset_id);
         OrderbookInterface {
             base_asset_id,
             quote_asset_id,
+            controller_account,
+            bank_controller,
             orderbook,
             accounts: HashMap::new(),
             order_to_account: HashMap::new(),
-            bank_controller,
         }
     }
 
@@ -328,19 +335,19 @@ impl OrderbookInterface {
     ) -> Result<(), GDEXError> {
         if matches!(side, OrderSide::Ask) {
             // E.g. ask 1 BTC @ $20k moves 1 BTC (base) from balance to escrow
-            self.bank_controller.lock().unwrap().update_balance(
+            self.bank_controller.lock().unwrap().transfer(
                 account_pub_key,
+                &self.controller_account,
                 self.base_asset_id,
-                quantity,
-                false,
+                quantity
             )?;
         } else {
             // E.g. bid 1 BTC @ $20k moves 20k USD (quote) from balance to escrow
-            self.bank_controller.lock().unwrap().update_balance(
+            self.bank_controller.lock().unwrap().transfer(
                 account_pub_key,
+                &self.controller_account,
                 self.quote_asset_id,
-                quantity * price,
-                false,
+                quantity * price
             )?;
         }
         Ok(())
@@ -356,18 +363,20 @@ impl OrderbookInterface {
     ) -> Result<(), GDEXError> {
         if matches!(side, OrderSide::Ask) {
             // E.g. fill ask 1 BTC @ 20k adds 20k USD (quote) to bal, subtracts 1 BTC (base) from escrow
-            self.bank_controller.lock().unwrap().update_balance(
+            self.bank_controller.lock().unwrap().transfer(
+                &self.controller_account,
                 account_pub_key,
                 self.quote_asset_id,
-                quantity * price,
-                true,
+                quantity * price
             )?;
         } else {
             // E.g. fill bid 1 BTC @ 20k adds 1 BTC (base) to bal, subtracts 20k USD (quote) from escrow
-            self.bank_controller
-                .lock()
-                .unwrap()
-                .update_balance(account_pub_key, self.base_asset_id, quantity, true)?;
+            self.bank_controller.lock().unwrap().transfer(
+                &self.controller_account,
+                account_pub_key,
+                self.base_asset_id,
+                quantity
+            )?;
         }
         Ok(())
     }
@@ -384,36 +393,36 @@ impl OrderbookInterface {
         if matches!(side, OrderSide::Ask) {
             // E.g. fill ask 1 BTC @ 20k adds 20k USD (quote) to bal, subtracts 1 BTC (base) from escrow
             if quantity > previous_quantity {
-                self.bank_controller.lock().unwrap().update_balance(
+                self.bank_controller.lock().unwrap().transfer(
                     account_pub_key,
+                    &self.controller_account,
                     self.base_asset_id,
-                    quantity - previous_quantity,
-                    false,
+                    quantity - previous_quantity
                 )?;
             } else {
-                self.bank_controller.lock().unwrap().update_balance(
+                self.bank_controller.lock().unwrap().transfer(
+                    &self.controller_account,
                     account_pub_key,
                     self.base_asset_id,
-                    previous_quantity - quantity,
-                    true,
+                    previous_quantity - quantity
                 )?;
             }
         } else {
             // E.g. fill bid 1 BTC @ 20k adds 1 BTC (base) to bal, subtracts 20k USD (quote) from escrow
             if quantity * price > previous_quantity * previous_price {
                 dbg!(quantity * price - previous_quantity * previous_price);
-                self.bank_controller.lock().unwrap().update_balance(
+                self.bank_controller.lock().unwrap().transfer(
                     account_pub_key,
+                    &self.controller_account,
                     self.quote_asset_id,
-                    quantity * price - previous_quantity * previous_price,
-                    false,
+                    quantity * price - previous_quantity * previous_price
                 )?;
             } else {
-                self.bank_controller.lock().unwrap().update_balance(
+                self.bank_controller.lock().unwrap().transfer(
+                    &self.controller_account,
                     account_pub_key,
                     self.quote_asset_id,
-                    previous_quantity * previous_price - quantity * price,
-                    true,
+                    previous_quantity * previous_price - quantity * price
                 )?;
             }
         }
@@ -428,16 +437,18 @@ impl OrderbookInterface {
         quantity: u64,
     ) -> Result<(), GDEXError> {
         if matches!(side, OrderSide::Ask) {
-            self.bank_controller
-                .lock()
-                .unwrap()
-                .update_balance(account_pub_key, self.base_asset_id, quantity, true)?;
+            self.bank_controller.lock().unwrap().transfer(
+                &self.controller_account,
+                account_pub_key,
+                self.base_asset_id,
+                quantity
+            )?;
         } else {
-            self.bank_controller.lock().unwrap().update_balance(
+            self.bank_controller.lock().unwrap().transfer(
+                &self.controller_account,
                 account_pub_key,
                 self.quote_asset_id,
-                quantity * price,
-                true,
+                quantity * price
             )?;
         }
         Ok(())
@@ -565,7 +576,11 @@ impl SpotController {
         if !self.check_orderbook_exists(base_asset_id, quote_asset_id) {
             self.orderbooks.insert(
                 lookup_string,
-                OrderbookInterface::new(base_asset_id, quote_asset_id, Arc::clone(&self.bank_controller)),
+                OrderbookInterface::new(
+                    base_asset_id,
+                    quote_asset_id,
+                    self.controller_account.clone(),
+                    Arc::clone(&self.bank_controller)),
             );
             Ok(())
         } else {
@@ -669,8 +684,14 @@ pub mod spot_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
+        let _create_account_result = bank_controller_ref
+            .lock()
+            .unwrap()
+            .create_account(&controller_account);
+
         let mut orderbook_interface =
-            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, controller_account, Arc::clone(&bank_controller_ref));
 
         let bid_size = 100;
         let bid_price = 100;
@@ -769,8 +790,14 @@ pub mod spot_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
+        let _create_account_result = bank_controller_ref
+            .lock()
+            .unwrap()
+            .create_account(&controller_account);
+
         let mut orderbook_interface =
-            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, controller_account, Arc::clone(&bank_controller_ref));
 
         let bid_size = 100;
         let bid_price = 100;
@@ -805,8 +832,14 @@ pub mod spot_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
+        let _create_account_result = bank_controller_ref
+            .lock()
+            .unwrap()
+            .create_account(&controller_account);
+
         let orderbook_interface =
-            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, controller_account, Arc::clone(&bank_controller_ref));
 
         let result = orderbook_interface.get_account(account.public()).unwrap_err();
 
@@ -822,8 +855,14 @@ pub mod spot_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
+        let _create_account_result = bank_controller_ref
+            .lock()
+            .unwrap()
+            .create_account(&controller_account);
+
         let mut orderbook_interface =
-            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, controller_account, Arc::clone(&bank_controller_ref));
 
         orderbook_interface.create_account(account.public()).unwrap();
         let result = orderbook_interface.create_account(account.public()).unwrap_err();
@@ -848,8 +887,14 @@ pub mod spot_tests {
 
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
+        let _create_account_result = bank_controller_ref
+            .lock()
+            .unwrap()
+            .create_account(&controller_account);
+
         let mut orderbook_interface =
-            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, controller_account, Arc::clone(&bank_controller_ref));
 
         let bid_size_0: u64 = 100;
         let bid_price_0: u64 = 100;
@@ -916,8 +961,14 @@ pub mod spot_tests {
 
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
+        let _create_account_result = bank_controller_ref
+            .lock()
+            .unwrap()
+            .create_account(&controller_account);
+
         let mut orderbook_interface =
-            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, controller_account, Arc::clone(&bank_controller_ref));
 
         let bid_size_0: u64 = 95;
         let bid_price_0: u64 = 200;
@@ -1071,8 +1122,14 @@ pub mod spot_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
+        let _create_account_result = bank_controller_ref
+            .lock()
+            .unwrap()
+            .create_account(&controller_account);
+
         let mut orderbook_interface =
-            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, controller_account, Arc::clone(&bank_controller_ref));
 
         let bid_size = 100;
         let bid_price = 100;
@@ -1124,8 +1181,14 @@ pub mod spot_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
+        let _create_account_result = bank_controller_ref
+            .lock()
+            .unwrap()
+            .create_account(&controller_account);
+
         let mut orderbook_interface =
-            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, controller_account, Arc::clone(&bank_controller_ref));
 
         const TEST_QUANTITY: u64 = 100;
         const TEST_PRICE: u64 = 100;

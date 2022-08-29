@@ -94,10 +94,12 @@ impl StakeController {
 
     // stake funds to participate in consensus
     pub fn stake(&mut self, account_pub_key: &AccountPubKey, amount: u64) -> Result<(), GDEXError> {
-        self.bank_controller
-            .lock()
-            .unwrap()
-            .update_balance(account_pub_key, PRIMARY_ASSET_ID, amount, false)?;
+        self.bank_controller.lock().unwrap().transfer(
+            account_pub_key,
+            &self.controller_account,
+            PRIMARY_ASSET_ID,
+            amount
+        )?;
         self.total_staked += amount;
         let lookup = self.stake_accounts.get_mut(account_pub_key);
         match lookup {
@@ -117,10 +119,12 @@ impl StakeController {
     // TODO #0 //
     pub fn unstake(&mut self, account_pub_key: &AccountPubKey, amount: u64) -> Result<(), GDEXError> {
         self.total_staked -= amount;
-        self.bank_controller
-            .lock()
-            .unwrap()
-            .update_balance(account_pub_key, PRIMARY_ASSET_ID, amount, true)?;
+        self.bank_controller.lock().unwrap().transfer(
+            &self.controller_account,
+            account_pub_key,
+            PRIMARY_ASSET_ID,
+            amount
+        )?;
         let stake_account = self
             .stake_accounts
             .get_mut(account_pub_key)

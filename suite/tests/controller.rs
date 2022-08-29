@@ -6,9 +6,11 @@
 pub mod process_tests {
     use gdex_controller::{
         bank::{BankController, CREATED_ASSET_BALANCE},
-        spot::OrderbookInterface,
+        spot::{OrderbookInterface, SPOT_CONTROLLER_ACCOUNT_PUBKEY}
     };
     use gdex_types::{
+        account::AccountPubKey,
+        crypto::ToFromBytes,
         account::account_test_functions::generate_keypair_vec, asset::AssetId, crypto::KeypairTraits, error::GDEXError,
         order_book::OrderSide,
     };
@@ -26,8 +28,14 @@ pub mod process_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
+        let _create_account_result = bank_controller_ref
+            .lock()
+            .unwrap()
+            .create_account(&controller_account);
+
         let mut orderbook_interface =
-            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, controller_account, Arc::clone(&bank_controller_ref));
 
         let bid_size: u64 = 100;
         let bid_price: u64 = 100;
@@ -61,8 +69,14 @@ pub mod process_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
+        let _create_account_result = bank_controller_ref
+            .lock()
+            .unwrap()
+            .create_account(&controller_account);
+
         let mut orderbook_interface =
-            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, controller_account, Arc::clone(&bank_controller_ref));
 
         let bid_size: u64 = 100;
         let bid_price: u64 = 100;
@@ -96,8 +110,14 @@ pub mod process_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
+        let _create_account_result = bank_controller_ref
+            .lock()
+            .unwrap()
+            .create_account(&controller_account);
+
         let orderbook_interface =
-            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, controller_account, Arc::clone(&bank_controller_ref));
 
         let result: GDEXError = orderbook_interface.get_account(account.public()).unwrap_err();
 
@@ -112,8 +132,15 @@ pub mod process_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
+        let _create_account_result = bank_controller_ref
+            .lock()
+            .unwrap()
+            .create_account(&controller_account);
+
         let mut orderbook_interface =
-            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, controller_account, Arc::clone(&bank_controller_ref));
+
         orderbook_interface.create_account(account.public()).unwrap();
         let result: GDEXError = orderbook_interface.create_account(account.public()).unwrap_err();
         assert!(matches!(result, GDEXError::AccountCreation));
@@ -135,8 +162,15 @@ pub mod process_tests {
             .unwrap();
 
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
+        
+        let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
+        let _create_account_result = bank_controller_ref
+            .lock()
+            .unwrap()
+            .create_account(&controller_account);
+
         let mut orderbook_interface =
-            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, controller_account, Arc::clone(&bank_controller_ref));
 
         let bid_size_0: u64 = 100;
         let bid_price_0: u64 = 100;
@@ -201,8 +235,15 @@ pub mod process_tests {
             .unwrap();
 
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
+
+        let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
+        let _create_account_result = bank_controller_ref
+            .lock()
+            .unwrap()
+            .create_account(&controller_account);
+
         let mut orderbook_interface =
-            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, Arc::clone(&bank_controller_ref));
+            OrderbookInterface::new(BASE_ASSET_ID, QUOTE_ASSET_ID, controller_account, Arc::clone(&bank_controller_ref));
 
         let bid_size_0: u64 = 95;
         let bid_price_0: u64 = 200;

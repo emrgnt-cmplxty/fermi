@@ -201,6 +201,8 @@ mod genesis_test {
         let _genesis_config = GenesisConfig::for_local_testing();
 
         let master_controller = MasterController::default();
+        master_controller.initialize_controllers();
+        master_controller.initialize_controller_accounts();
 
         let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
         let validator = ValidatorInfo {

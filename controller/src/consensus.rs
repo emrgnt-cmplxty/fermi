@@ -19,6 +19,8 @@ use std::time::Duration;
 
 // CONSTANTS
 
+pub const CONSENSUS_CONTROLLER_ACCOUNT_PUBKEY: &[u8] = b"CONSENSUSCONTROLLERAAAAAAAAAAAAA";
+
 const DEFAULT_BATCH_SIZE: usize = 500_000;
 const DEFAULT_MAX_DELAY_MILLIS: u64 = 200; // .2 sec
 
@@ -34,7 +36,7 @@ pub struct ConsensusController {
 impl Default for ConsensusController {
     fn default() -> Self {
         Self {
-            controller_account: AccountPubKey::from_bytes(b"CONSENSUSCONTROLLERAAAAAAAAAAAAA").unwrap(),
+            controller_account: AccountPubKey::from_bytes(CONSENSUS_CONTROLLER_ACCOUNT_PUBKEY).unwrap(),
             batch_size: DEFAULT_BATCH_SIZE,
             max_batch_delay: Duration::from_millis(DEFAULT_MAX_DELAY_MILLIS),
         }
@@ -43,6 +45,10 @@ impl Default for ConsensusController {
 
 impl Controller for ConsensusController {
     fn initialize(&mut self, _master_controller: &MasterController) {}
+
+    fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
+        Ok(())
+    }
 
     fn handle_consensus_transaction(&mut self, _transaction: &Transaction) -> Result<(), GDEXError> {
         Ok(())

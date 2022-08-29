@@ -98,7 +98,7 @@ impl StakeController {
             account_pub_key,
             &self.controller_account,
             PRIMARY_ASSET_ID,
-            amount
+            amount,
         )?;
         self.total_staked += amount;
         let lookup = self.stake_accounts.get_mut(account_pub_key);
@@ -123,7 +123,7 @@ impl StakeController {
             &self.controller_account,
             account_pub_key,
             PRIMARY_ASSET_ID,
-            amount
+            amount,
         )?;
         let stake_account = self
             .stake_accounts

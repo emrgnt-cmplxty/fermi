@@ -9,7 +9,10 @@ narwhal-primary-to-primary: /dns/localhost/tcp/62454/http
 narwhal-worker-to-primary: /dns/localhost/tcp/62456/http
 narwhal-primary-to-worker:
   - /dns/localhost/tcp/62458/http
+  - /dns/localhost/tcp/61458/http
 narwhal-worker-to-worker:
   - /dns/localhost/tcp/62460/http
+  - /dns/localhost/tcp/61460/http
 narwhal-consensus-addresses:
   - /dns/localhost/tcp/62462/http
+  - /dns/localhost/tcp/61462/http

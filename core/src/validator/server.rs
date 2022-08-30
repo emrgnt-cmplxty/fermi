@@ -3,7 +3,6 @@
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-core/src/authority_server.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bcuse super::state::ValidatorState;
 use crate::{
-    client,
     config::node::NodeConfig,
     validator::{consensus_adapter::ConsensusAdapter, restarter::NodeRestarter, state::ValidatorState},
 };
@@ -22,7 +21,6 @@ use narwhal_crypto::{Hash, KeyPair as ConsensusKeyPair};
 use narwhal_executor::{ExecutionIndices, SubscriberError};
 use prometheus::Registry;
 use std::{io, sync::Arc};
-
 use tokio::{
     sync::{
         mpsc::{channel, Receiver, Sender},
@@ -63,15 +61,7 @@ impl ValidatorServer {
         consensus_addresses: Vec<Multiaddr>,
         tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
     ) -> Self {
-        // TODO - change consensus client to be a vector of clients
-        let consensus_client = narwhal_types::TransactionsClient::new(
-            client::connect_lazy(&consensus_addresses.get(0).unwrap()).expect("Failed to connect to consensus"),
-        );
-        let consensus_adapter = ConsensusAdapter {
-            consensus_client,
-            consensus_addresses,
-            tx_reconfigure_consensus,
-        };
+        let consensus_adapter = ConsensusAdapter::new(consensus_addresses, None, tx_reconfigure_consensus);
 
         Self {
             address,
@@ -235,7 +225,6 @@ impl ValidatorService {
         let _result = consensus_adapter
             .lock()
             .await
-            .consensus_client
             .submit_transaction(transaction_proto)
             .await
             .unwrap();
@@ -248,7 +237,7 @@ impl ValidatorService {
         Ok(tonic::Response::new(Empty {}))
     }
 
-    pub fn get_consensus_adapter(&self) -> &Arc<Mutex<ConsensusAdapter>> {
+    pub fn get_consensus_adapters(&self) -> &Arc<Mutex<ConsensusAdapter>> {
         &self.consensus_adapter
     }
 }
@@ -297,6 +286,7 @@ mod test_validator_server {
     use super::*;
     use crate::{
         builder::genesis_state::GenesisStateBuilder,
+        client,
         genesis_ceremony::{VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
     };
     use gdex_controller::master::MasterController;

@@ -4,8 +4,8 @@
 use anyhow::{Context, Result};
 use clap::{crate_name, crate_version, App, AppSettings};
 use futures::{future::join_all, StreamExt};
-use gdex_types::block::{BlockDigest, BlockInfo};
-use gdex_types::proto::{BlockInfoProto, RelayerClient, RelayerGetLatestBlockInfoRequest};
+use gdex_types::block::BlockDigest;
+use gdex_types::proto::{RelayerClient, RelayerGetLatestBlockInfoRequest};
 use gdex_types::{
     account::{AccountKeyPair, ValidatorKeyPair},
     proto::{TransactionProto, TransactionsClient},
@@ -14,9 +14,8 @@ use gdex_types::{
 };
 use narwhal_crypto::{
     traits::{KeyPair, Signer},
-    Hash, DIGEST_LEN,
+    Hash,
 };
-use narwhal_types::CertificateDigest;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use std::path::PathBuf;
 use tokio::{
@@ -162,7 +161,7 @@ impl Client {
 
         // NOTE: This log entry is used to compute performance.
         info!("Start sending transactions");
-        'main: loop {
+        loop {
             // fetch recent block digest
             let response = relayer_client
                 .get_latest_block_info(request.clone())

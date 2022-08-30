@@ -70,11 +70,11 @@ pub enum GDEXCommand {
         narwhal_primary_to_primary: Option<Multiaddr>,
         #[clap(value_parser, long, help = "Network worker to primary")]
         narwhal_worker_to_primary: Option<Multiaddr>,
-        #[clap(value_parser, long, help = "Network primary to worker")]
+        #[clap(value_parser, long, help = "Network primary to worker", value_delimiter = ',')]
         narwhal_primary_to_worker: Option<Vec<Multiaddr>>,
-        #[clap(value_parser, long, help = "Network worker to worker")]
+        #[clap(value_parser, long, help = "Network worker to worker", value_delimiter = ',')]
         narwhal_worker_to_worker: Option<Vec<Multiaddr>>,
-        #[clap(value_parser, long, help = "Network consensus address")]
+        #[clap(value_parser, long, help = "Network consensus address", value_delimiter = ',')]
         narwhal_consensus_addresses: Option<Vec<Multiaddr>>,
     },
     /// Add controllers to the genesis blob

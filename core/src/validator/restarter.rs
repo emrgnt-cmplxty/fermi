@@ -13,11 +13,13 @@ use futures::future::join_all;
 use prometheus::Registry;
 use std::{fmt::Debug, path::PathBuf, sync::Arc};
 use tokio::sync::mpsc::{Receiver, Sender};
+use tracing::info;
 
 // Module to start a node (primary, workers and default consensus), keep it running, and restarting it
 /// every time the committee changes.
 pub struct NodeRestarter;
 
+#[allow(clippy::too_many_arguments)]
 impl NodeRestarter {
     pub async fn watch<State>(
         keypair: KeyPair,
@@ -40,7 +42,7 @@ impl NodeRestarter {
         let mut task_managers = Vec::new();
         let mut primary_network = WorkerToPrimaryNetwork::default();
         let mut worker_network = PrimaryToWorkerNetwork::default();
-
+        info!("creating new node with committee={:?}", committee);
         // Listen for new committees.
         loop {
             tracing::info!("Starting epoch E{}", committee.epoch());
@@ -64,9 +66,18 @@ impl NodeRestarter {
             .await
             .unwrap();
 
+            // fetch corresponding authority
+            let authority = committee
+                .authorities
+                .iter()
+                .find(|a| a.0 == &name)
+                .expect("Failed to locate corresponding authority.")
+                .1;
+            let worker_ids = authority.workers.iter().map(|w| *w.0).collect::<Vec<u32>>();
+
             let workers = Node::spawn_workers(
                 name.clone(),
-                /* worker_ids */ vec![0],
+                worker_ids,
                 Arc::new(ArcSwap::new(Arc::new(committee.clone()))),
                 &store,
                 parameters.clone(),

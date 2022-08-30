@@ -16,7 +16,7 @@ use std::{
     convert::TryInto,
     {fs, path::Path},
 };
-use tracing::trace;
+use tracing::{info, trace};
 
 /// An object with the necessary state to initialize a new node at blockchain genesis
 #[derive(Clone, Debug)]
@@ -64,25 +64,25 @@ impl ValidatorGenesisState {
                     .narwhal_primary_to_worker
                     .iter()
                     .zip(validator.narwhal_worker_to_worker.iter())
-                    .map(|(primary_to_worker, worker_to_worker)| {
+                    .zip(validator.narwhal_consensus_addresses.iter())
+                    // map to triplet tuple
+                    .map(|((primary_to_worker, worker_to_worker), consensus_address)| {
+                        (primary_to_worker, worker_to_worker, consensus_address)
+                    })
+                    .map(|(primary_to_worker, worker_to_worker, consensus_address)| {
                         worker_counter += 1;
-                        let transactions_address = validator
-                            .narwhal_consensus_addresses
-                            .get(worker_counter - 1)
-                            .expect("Can't get worker consensus address")
-                            .clone();
                         (
-                            // TODO - find a less hacky way to iterate over the workers
+                            // unwrap is safe because we know worker_counter >= 0
                             (worker_counter - 1).try_into().unwrap(), // worker_id
                             narwhal_config::WorkerInfo {
                                 primary_to_worker: primary_to_worker.clone(),
-                                // TODO - change to triple zip
-                                transactions: transactions_address,
+                                transactions: consensus_address.clone(),
                                 worker_to_worker: worker_to_worker.clone(),
                             },
                         )
                     })
                     .collect();
+                info!("workers ={:?} ", workers);
                 let validator = narwhal_config::Authority {
                     stake: validator.stake as narwhal_config::Stake, //TODO this should at least be the same size integer
                     primary,

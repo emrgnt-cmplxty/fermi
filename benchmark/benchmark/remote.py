@@ -135,9 +135,9 @@ class Bench:
                 selected.append(ips)
             return selected
 
-    def _background_run(self, host, command, log_file):
+    def _background_run(self, host, command, log_file, cwd='~/gdex-core/benchmark'):
         name = splitext(basename(log_file))[0]
-        cmd = f'tmux new -d -s "{name}" "{command} |& tee {log_file}"'
+        cmd = f'(cd {cwd}) && tmux new -d -s "{name}" "{command} |& tee {log_file}"'
         c = Connection(host, user='ubuntu', connect_kwargs=self.connect)
         output = c.run(cmd, hide=True)
         self._check_stderr(output)
@@ -276,27 +276,29 @@ class Bench:
         # Run the clients (they will wait for the nodes to be ready).
         # Filter all faulty nodes from the client addresses (or they will wait
         # for the faulty nodes to be online).
-        Print.info('Booting clients...')
+        Print.info('Booting nodes...')
         workers_addresses = committee.workers_addresses(faults)
         rate_share = ceil(rate / committee.workers())
-        for i, addresses in enumerate(workers_addresses):
-            for (id, address) in addresses:
-                host = Committee.ip(address)
-                cmd = CommandMaker.run_gdex_node('./', './.proto', './.proto', PathMaker.key_file(i), address, relayers)
-                log_file = PathMaker.client_log_file(i, id)
-                self._background_run(host, cmd, log_file)
+        for i, name in enumerate(committee.json['authorities'].keys()):
+            validator_dict = committee.json['authorities'][name]
+            validator_address = validator_dict['network_address']
+            relayer_address = validator_dict['relayer_address']
+            host = Committee.ip_from_multi_address(validator_address)
+            cmd = CommandMaker.run_gdex_node('./', './.proto', './.proto', PathMaker.key_file(i), validator_address, relayer_address)
+            log_file = PathMaker.primary_log_file(i)
+            self._background_run(host, cmd, log_file)
 
+        sleep(1)
         # Run the primaries (except the faulty ones).
-        Print.info('Booting primaries...')
-        for i, address in enumerate(committee.primary_addresses(faults)):
-            host = Committee.ip(address)
-            cmd = CommandMaker.run_primary(
-                PathMaker.key_file(i),
-                PathMaker.committee_file(),
-                PathMaker.db_path(i),
-                PathMaker.parameters_file(),
-                node_parameters.json['execution'],
-                debug=debug
+        Print.info('Booting clients...')
+        for i, name in enumerate(committee.json['authorities'].keys()):
+            validator_dict = committee.json['authorities'][name]
+            validator_address = validator_dict['network_address']
+            relayer_address = validator_dict['relayer_address']
+            host = Committee.ip_from_multi_address(validator_address)
+
+            cmd = CommandMaker.run_gdex_client(
+                i, address
             )
             log_file = PathMaker.primary_log_file(i)
             self._background_run(host, cmd, log_file)

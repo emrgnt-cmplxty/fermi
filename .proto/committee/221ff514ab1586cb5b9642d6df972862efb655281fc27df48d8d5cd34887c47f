@@ -7,6 +7,9 @@ delegation: 0
 network-address: /dns/localhost/tcp/62564/http
 narwhal-primary-to-primary: /dns/localhost/tcp/62566/http
 narwhal-worker-to-primary: /dns/localhost/tcp/62568/http
-narwhal-primary-to-worker: /dns/localhost/tcp/62570/http
-narwhal-worker-to-worker: /dns/localhost/tcp/62572/http
-narwhal-consensus-address: /dns/localhost/tcp/62574/http
+narwhal-primary-to-worker:
+  - /dns/localhost/tcp/62570/http
+narwhal-worker-to-worker:
+  - /dns/localhost/tcp/62572/http
+narwhal-consensus-addresses:
+  - /dns/localhost/tcp/62574/http

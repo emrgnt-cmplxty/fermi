@@ -2578,6 +2578,7 @@ dependencies = [
  "rustversion",
  "schemars",
  "serde 1.0.143",
+ "serde_json",
  "serde_with 1.14.0",
  "sha3 0.10.2",
  "signature",

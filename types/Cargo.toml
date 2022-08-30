@@ -24,6 +24,7 @@ schemars = "0.8.10"
 sha3 = "0.10.2"
 serde = { version = "1.0.139", features = ["derive"] }
 serde_with = { version = "1.14.0", features = ["hex"] }
+serde_json = "1.0.82"
 sui-types = { git = "https://github.com/MystenLabs/sui", rev = "fa9fbc7c507b5ed305ac47f44c5c3d5025968d98", package = "sui-types" }
 thiserror = "1.0.31"
 tonic = { version = "0.7.2", features = ["tls"] }

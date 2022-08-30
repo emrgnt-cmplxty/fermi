@@ -9,7 +9,16 @@ class CommandMaker:
     @staticmethod
     def cleanup():
         return (
-            f'rm -r .db-* ;  rm -r *_db ; rm .*.json ; mkdir -p {PathMaker.results_path()}'
+            f'rm -r .db-* ;'
+            f'rm -r *_db ;'
+            f'rm -r .proto/committee ;'
+            f'rm -r .proto/signatures ;'
+            f'rm .proto/*.key ;'
+            f'rm -r .proto/*db ;'
+            f'rm .proto/*.blob'
+            f'rm ./proto/*controller'
+            f'rm .*.json ;'
+            f'mkdir -p {PathMaker.results_path()}'
         )
 
     @staticmethod
@@ -30,6 +39,55 @@ class CommandMaker:
     def generate_key(filename):
         assert isinstance(filename, str)
         return f'./benchmark-narwhal generate_keys --filename {filename}'
+
+    @staticmethod
+    def init_gdex_genesis(path):
+        assert isinstance(path, str)
+        return f'./gdex init-genesis --path {path}'
+
+    @staticmethod
+    def add_controllers_gdex_genesis(path):
+        return f'./gdex add-controllers-genesis --path {path}'
+
+    @staticmethod
+    def build_gdex_genesis(path):
+        return f'./gdex build-genesis --path {path}'
+
+    @staticmethod
+    def add_gdex_validator_genesis(
+            path,
+            name,
+            balance,
+            stake,
+            key_file,
+            network_address,
+            primary_to_primary_address,
+            worker_to_primary_address,
+            primary_to_worker_address,
+            worker_to_worker_address,
+            consensus_address
+    ):
+        assert isinstance(path, str)
+        return f'./gdex add-validator-genesis --path {path} --name {name} --balance {balance} --stake {stake}' \
+               f' --key-file {key_file} --network-address {network_address} --narwhal-primary-to-primary {primary_to_primary_address}' \
+               f' --narwhal-worker-to-primary {worker_to_primary_address} --narwhal-primary-to-worker {primary_to_worker_address}' \
+               f' --narwhal-worker-to-worker {worker_to_worker_address} --narwhal-consensus-address {consensus_address}'
+
+    @staticmethod
+    def verify_and_sign_gdex_genesis(path, filename):
+        assert isinstance(path, str)
+        assert isinstance(filename, str)
+        return f'./gdex verify-and-sign-genesis --path {path} --key-file {filename}'
+
+    @staticmethod
+    def finalize_genesis(path):
+        return f'./gdex finalize-genesis --path {path}'
+
+    @staticmethod
+    def generate_gdex_key(filename, path='.proto'):
+        assert isinstance(path, str)
+        assert isinstance(filename, str)
+        return f'./gdex generate-keystore {path} {filename}'
 
     @staticmethod
     def run_narwhal_primary(keys, committee, store, parameters, execution, debug=False):
@@ -129,5 +187,5 @@ class CommandMaker:
     def alias_binaries(origin):
         print("origin=", origin)
         assert isinstance(origin, str)
-        gdex_node, narwhal_node, narwhhal_client, gdex_client = join(origin, 'gdex-node'), join(origin, 'benchmark-narwhal'), join(origin, 'benchmark_narwhal_client'), join(origin, 'benchmark_gdex_client')
-        return f'rm gdex-node ; rm benchmark-narwhal ; rm benchmark_narwhal_client ; rm benchmark_gdex_client ; ln -s {gdex_node} . ; ln -s {narwhal_node} . ; ln -s {narwhhal_client}; ln -s {gdex_client} .'
+        gdex_node, narwhal_node, narwhhal_client, gdex_client, gdex = join(origin, 'gdex-node'), join(origin, 'benchmark-narwhal'), join(origin, 'benchmark_narwhal_client'), join(origin, 'benchmark_gdex_client'), join(origin, 'gdex')
+        return f'rm gdex-node ; rm benchmark-narwhal ; rm benchmark_narwhal_client ; rm benchmark_gdex_client ; rm gdex; ln -s {gdex_node} . ; ln -s {narwhal_node} . ; ln -s {narwhhal_client} . ; ln -s {gdex_client} . ; ln -s {gdex} . '

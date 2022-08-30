@@ -91,7 +91,7 @@ def seed(ctx, starting_data_port):
     ''' Run data seeder '''
     bench_params = {
         'faults': 0,
-        'nodes': 4,
+        'nodes': 2,
         'workers': 1,
         'rate': 50_000,
         'tx_size': 512,
@@ -104,7 +104,7 @@ def seed(ctx, starting_data_port):
 
 
 @task
-def create(ctx, nodes=2):
+def create(ctx, nodes=1):
     ''' Create a testbed'''
     try:
         InstanceManager.make().create_instances(nodes)
@@ -161,15 +161,32 @@ def install(ctx):
 def remote(ctx, debug=False):
     ''' Run benchmarks on AWS '''
     bench_params = {
-        'faults': 3,
-        'nodes': [4],
+        'faults': 0,
+        'nodes': 2,
         'workers': 1,
-        'collocate': True,
-        'rate': [10_000, 110_000],
-        'tx_size': 512,
-        'duration': 300,
-        'runs': 2,
+        'tx_size': 500,
+        # must have corresponding info in genesis .proto
+        'node_addresses': {
+            'validator-0': 'http://localhost:3003',
+            'validator-1': 'http://localhost:3013',
+            'validator-2': 'http://localhost:3023',
+            'validator-3': 'http://localhost:3033'
+        },
+        'relayer_addresses': {
+            'validator-0': 'http://localhost:3004',
+            'validator-1': 'http://localhost:3014',
+            'validator-2': 'http://localhost:3024',
+            'validator-3': 'http://localhost:3034'
+        },
+        'rate': 50_000,
+        'duration': 20,
+        'mem_profiling': False,
+        'genesis_dir': "../.proto/",
+        'key_dir': "../.proto/",
+        # the database dir will be whiped before running the benchmark
+        'db_dir': "."
     }
+
     node_params = {
         'header_size': 1_000,  # bytes
         'max_header_delay': '200ms',  # ms
@@ -177,6 +194,7 @@ def remote(ctx, debug=False):
         'sync_retry_delay': '10_000ms',  # ms
         'sync_retry_nodes': 3,  # number of nodes
         'batch_size': 500_000,  # bytes
+        'max_batch_delay': '200ms',  # ms,
         'block_synchronizer': {
             'certificates_synchronize_timeout': '2_000ms',
             'payload_synchronize_timeout': '2_000ms',
@@ -191,8 +209,10 @@ def remote(ctx, debug=False):
         'max_concurrent_requests': 500_000,
         'prometheus_metrics': {
             "socket_addr": "/ip4/127.0.0.1/tcp/0/http"
-        }
+        },
+        'execution': 'advanced'
     }
+
     try:
         Bench(ctx).run(bench_params, node_params, debug)
     except BenchError as e:

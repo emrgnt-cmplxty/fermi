@@ -1,4 +1,5 @@
 # Copyright(C) Facebook, Inc. and its affiliates.
+import os
 from collections import OrderedDict
 from fabric import Connection, ThreadingGroup as Group
 from fabric.exceptions import GroupException
@@ -10,7 +11,7 @@ from math import ceil
 from copy import deepcopy
 import subprocess
 
-from benchmark.config import Committee, Key, NodeParameters, BenchParameters, ConfigError
+from benchmark.config import Committee, Key, NodeParameters, BenchParameters, ConfigError, GDEXBenchParameters
 from benchmark.utils import BenchError, Print, PathMaker, progress_bar
 from benchmark.commands import CommandMaker
 from benchmark.logs import LogParser, ParseError
@@ -61,6 +62,7 @@ class Bench:
             # The following dependencies prevent the error: [error: linker `cc` not found].
             'sudo apt-get -y install build-essential',
             'sudo apt-get -y install cmake',
+            'sudo apt-get install libssl-dev',
 
             # Install rust (non-interactive).
             'curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y',
@@ -149,22 +151,23 @@ class Bench:
         Print.info(
             f'Updating {len(ips)} machines (branch "{self.settings.branch}")...'
         )
+        compile_cmd = ' '.join(CommandMaker.compile(False))
         cmd = [
             f'(cd {self.settings.repo_name} && git fetch -f)',
             f'(cd {self.settings.repo_name} && git checkout -f {self.settings.branch})',
             f'(cd {self.settings.repo_name} && git pull -f)',
             'source $HOME/.cargo/env',
-            f'(cd {self.settings.repo_name}/node && {CommandMaker.compile(False)})',
+            f'(cd {self.settings.repo_name} && {compile_cmd})',
             CommandMaker.alias_binaries(
                 f'./{self.settings.repo_name}/target/release/'
             )
         ]
-        g = Group(*ips, user='ubuntu', connect_kwargs=self.connect)
+        g = Group(*ips, user='ubuntu', connect_kwargs=self.connect, forward_agent=True)
         g.run(' && '.join(cmd), hide=True)
 
     def _config(self, hosts, node_parameters, bench_parameters):
         Print.info('Generating configuration files...')
-
+        breakpoint()
         # Cleanup all local configuration files.
         cmd = CommandMaker.cleanup()
         subprocess.run([cmd], shell=True, stderr=subprocess.DEVNULL)
@@ -178,13 +181,19 @@ class Bench:
         cmd = CommandMaker.alias_binaries(PathMaker.binary_path())
         subprocess.run([cmd], shell=True)
 
+        proto_dir = os.getcwd() + '/.proto/'
+        cmd = CommandMaker.init_gdex_genesis(proto_dir)
+        subprocess.run([cmd], shell=True)
+
         # Generate configuration files.
         keys = []
         key_files = [PathMaker.key_file(i) for i in range(len(hosts))]
+
+        # TODO create keys for gdex, write them in narwhal format
         for filename in key_files:
-            cmd = CommandMaker.generate_key(filename).split()
+            cmd = CommandMaker.generate_gdex_key(filename).split()
             subprocess.run(cmd, check=True)
-            keys += [Key.from_file(filename)]
+            keys += [Key.from_file('./.proto/' + filename)]
 
         names = [x.name for x in keys]
 
@@ -200,6 +209,47 @@ class Bench:
         committee = Committee(addresses, self.settings.base_port)
         committee.print(PathMaker.committee_file())
 
+        for i, name in enumerate(names):
+            path = proto_dir
+            validator_dict = committee.json["authorities"][name]
+            balance = 5000000000000
+            stake = validator_dict["stake"]
+            key_file = path + key_files[i]
+            network_address = validator_dict["network_address"]
+            primary_to_primary = validator_dict["primary"]["primary_to_primary"]
+            worker_to_primary = validator_dict["primary"]["worker_to_primary"]
+            # TODO
+            primary_to_worker = validator_dict["workers"][0]["primary_to_worker"]
+            worker_to_worker = validator_dict["workers"][0]["worker_to_worker"]
+            consensus_address = validator_dict["workers"][0]["transactions"]
+
+            cmd = CommandMaker.add_gdex_validator_genesis(
+                path,
+                name,
+                balance,
+                stake,
+                key_file,
+                network_address,
+                primary_to_primary,
+                worker_to_primary,
+                primary_to_worker,
+                worker_to_worker,
+                consensus_address
+            )
+            subprocess.run([cmd], shell=True)
+
+        cmd = CommandMaker.add_controllers_gdex_genesis(proto_dir)
+        subprocess.run([cmd], shell=True)
+
+        cmd = CommandMaker.build_gdex_genesis(proto_dir)
+        subprocess.run([cmd], shell=True)
+
+        for i, name in enumerate(names):
+            CommandMaker.verify_and_sign_gdex_genesis(proto_dir, key_files[i])
+
+        cmd = CommandMaker.finalize_genesis(proto_dir)
+        subprocess.run([cmd], shell=True)
+
         node_parameters.print(PathMaker.parameters_file())
 
         # Cleanup all nodes and upload configuration files.
@@ -207,10 +257,11 @@ class Bench:
         progress = progress_bar(names, prefix='Uploading config files:')
         for i, name in enumerate(progress):
             for ip in committee.ips(name):
+                print(i, name, ip)
                 c = Connection(ip, user='ubuntu', connect_kwargs=self.connect)
                 c.run(f'{CommandMaker.cleanup()} || true', hide=True)
                 c.put(PathMaker.committee_file(), '.')
-                c.put(PathMaker.key_file(i), '.')
+                c.put('./.proto/' + PathMaker.key_file(i), '.')
                 c.put(PathMaker.parameters_file(), '.')
 
         return committee
@@ -231,13 +282,7 @@ class Bench:
         for i, addresses in enumerate(workers_addresses):
             for (id, address) in addresses:
                 host = Committee.ip(address)
-                cmd = CommandMaker.run_client(
-                    address,
-                    bench_parameters.tx_size,
-                    rate_share,
-                    node_parameters.json['execution'],
-                    [x for y in workers_addresses for _, x in y]
-                )
+                cmd = CommandMaker.run_gdex_node('./', './.proto', './.proto', PathMaker.key_file(i), address, relayers)
                 log_file = PathMaker.client_log_file(i, id)
                 self._background_run(host, cmd, log_file)
 
@@ -315,6 +360,7 @@ class Bench:
         return LogParser.process(PathMaker.logs_path(), faults=faults)
 
     def run(self, bench_parameters_dict, node_parameters_dict, debug=False):
+        self.bench_parameters = GDEXBenchParameters(bench_parameters_dict)
         assert isinstance(debug, bool)
         Print.heading('Starting remote benchmark')
         try:

@@ -52,7 +52,7 @@ class NarwhalBench:
             sleep(0.5)  # Removing the store may take time.
 
             # Recompile the latest code.
-            cmd = CommandMaker.compile(mem_profiling=self.mem_profile)
+            cmd = CommandMaker.compile(mem_profiling=self.mem_profile, flamegraph=self.flamegraph)
             Print.info(f"About to run {cmd}...")
             subprocess.run(cmd, check=True, cwd=PathMaker.narwhal_node_crate_path())
 
@@ -99,7 +99,8 @@ class NarwhalBench:
                     PathMaker.db_path(i),
                     PathMaker.parameters_file(),
                     self.node_parameters.json['execution'],
-                    debug=debug
+                    debug=debug,
+                    flamegraph=self.bench_parameters.flamegraph
                 )
                 print(cmd)
                 log_file = PathMaker.primary_log_file(i)
@@ -115,7 +116,8 @@ class NarwhalBench:
                         PathMaker.parameters_file(),
                         self.node_parameters.json['execution'],
                         id,  # The worker's id.
-                        debug=debug
+                        debug=debug,
+                        flamegraph=self.bench_parameters.flamegraph
                     )
                     print(cmd)
                     log_file = PathMaker.worker_log_file(i, id)

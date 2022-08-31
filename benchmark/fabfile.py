@@ -32,7 +32,7 @@ def gdex(ctx, debug=True):
         'rate': 50_000,
         'duration': 20,
         'mem_profiling': False,
-        'flamegraph': False,
+        'flamegraph': None, # node or None
         'genesis_dir': "../.proto/",
         'key_dir': "../.proto/",
         # the database dir will be whiped before running the benchmark
@@ -55,7 +55,7 @@ def narwhal(ctx, debug=True):
         'tx_size': 512,
         'duration': 20,
         'mem_profiling': False,
-        'flamegraph': True
+        'flamegraph': "primary" # primary, worker, or None
     }
     node_params = {
         'header_size': 1_000,  # bytes

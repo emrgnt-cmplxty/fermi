@@ -34,22 +34,21 @@ class CommandMaker:
         return f'./benchmark-narwhal generate_keys --filename {filename}'
 
     @staticmethod
-    def run_narwhal_primary(keys, committee, store, parameters, execution, debug=False, flamegraph=False):
+    def run_narwhal_primary(keys, committee, store, parameters, execution, debug=False, flamegraph=None):
         assert isinstance(keys, str)
         assert isinstance(committee, str)
         assert isinstance(parameters, str)
         assert isinstance(execution, str)
         assert isinstance(debug, bool)
-        assert isinstance(flamegraph, bool)
         v = '-vvv' if debug else '-vv'
-        flamegraph = "flamegraph " if flamegraph else ""
+        flamegraph = "flamegraph -- " if flamegraph else ""
         command = (f'{flamegraph}./benchmark-narwhal {v} run --keys {keys} --committee {committee} '
                 f'--store {store} --parameters {parameters} --execution {execution} primary')
-        print("Returning execution command = ", command)
+
         return command
 
     @staticmethod
-    def run_gdex_node(db_dir, genesis_dir, key_dir, validator_name, validator_address, relayer_address, debug=False, flamegraph=False):
+    def run_gdex_node(db_dir, genesis_dir, key_dir, validator_name, validator_address, relayer_address, debug=False, flamegraph=None):
         assert isinstance(db_dir, str)
         assert isinstance(genesis_dir, str)
         assert isinstance(key_dir, str)
@@ -57,12 +56,11 @@ class CommandMaker:
         assert isinstance(validator_address, str)
         assert isinstance(relayer_address, str)
         assert isinstance(debug, bool)
-        assert isinstance(flamegraph, bool)
         v = '-vvv' if debug else '-vv'
-        flamegraph = "flamegraph " if flamegraph else ""
+        flamegraph = "flamegraph -- " if flamegraph else ""
         command = (f'{flamegraph}./gdex-node {v} run --db-dir {db_dir} --genesis-dir  {genesis_dir} '
                 f'--key-dir {key_dir} --validator-name {validator_name} --validator-address {validator_address} --relayer-address {relayer_address}')
-        print("Returning execution command = ", command)
+
         return command
 
     @staticmethod
@@ -76,19 +74,17 @@ class CommandMaker:
                 f'--store {store} --parameters {parameters} primary --consensus-disabled')
 
     @staticmethod
-    def run_narwhal_worker(keys, committee, store, parameters, execution, id, debug=False, flamegraph=False):
+    def run_narwhal_worker(keys, committee, store, parameters, execution, id, debug=False, flamegraph=None):
         assert isinstance(keys, str)
         assert isinstance(committee, str)
         assert isinstance(parameters, str)
         assert isinstance(execution, str)
         assert isinstance(debug, bool)
-        assert isinstance(flamegraph, bool)
         v = '-vvv' if debug else '-vv'
-        flamegraph = "flamegraph " if flamegraph else ""
+        flamegraph = "flamegraph -- " if flamegraph else ""
         command = (f'{flamegraph}./benchmark-narwhal {v} run --keys {keys} --committee {committee} '
                 f'--store {store} --parameters {parameters} --execution {execution} worker --id {id}')
 
-        print("Returning execution command = ", command)
         return command
 
     @staticmethod
@@ -101,7 +97,7 @@ class CommandMaker:
         assert all(isinstance(x, str) for x in nodes)
         nodes = f'--nodes {" ".join(nodes)}' if nodes else ''
         command = f'./benchmark_narwhal_client {address} --size {size} --rate {rate} --execution {execution} {nodes}'
-        print("Returning execution command = ", command)
+
         return command
 
     @staticmethod
@@ -112,7 +108,7 @@ class CommandMaker:
         assert all(isinstance(x, str) for x in nodes)
         nodes = f'--nodes {" ".join(nodes)}' if nodes else ''
         command = f'./benchmark_gdex_client {address} --relayer {relayer_address} --validator_key_fpath ../.proto/validator-{id}.key --rate {rate}  --nodes {nodes}'
-        print("Returning execution command = ", command)
+
         return command
 
     @staticmethod

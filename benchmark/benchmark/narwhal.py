@@ -100,7 +100,7 @@ class NarwhalBench:
                     PathMaker.parameters_file(),
                     self.node_parameters.json['execution'],
                     debug=debug,
-                    flamegraph=self.bench_parameters.flamegraph
+                    flamegraph=self.bench_parameters.flamegraph if (self.bench_parameters.flamegraph == "primary" and i == 0) else None
                 )
                 print(cmd)
                 log_file = PathMaker.primary_log_file(i)
@@ -117,7 +117,7 @@ class NarwhalBench:
                         self.node_parameters.json['execution'],
                         id,  # The worker's id.
                         debug=debug,
-                        flamegraph=self.bench_parameters.flamegraph
+                        flamegraph=self.bench_parameters.flamegraph if (self.bench_parameters.flamegraph == "worker" and i == 0) else None
                     )
                     print(cmd)
                     log_file = PathMaker.worker_log_file(i, id)

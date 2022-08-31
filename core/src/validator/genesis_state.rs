@@ -181,6 +181,8 @@ impl<'de> Deserialize<'de> for ValidatorGenesisState {
 
         let raw_genesis: RawGenesis = bcs::from_bytes(&bytes).map_err(|e| Error::custom(e.to_string()))?;
 
+        raw_genesis.master_controller.initialize_controllers();
+
         Ok(ValidatorGenesisState {
             master_controller: raw_genesis.master_controller,
             validator_set: raw_genesis.validator_set,

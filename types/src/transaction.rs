@@ -5,8 +5,9 @@
 //! each valid transaction corresponds to a unique state transition within
 //! the space of allowable blockchain transitions
 use crate::{
-    account::{AccountPubKey, AccountSignature},
+    account::{AccountKeyPair, AccountPubKey, AccountSignature},
     asset::{AssetAmount, AssetId, AssetPrice},
+    crypto::KeypairTraits,
     error::GDEXError,
     order_book::OrderId,
     order_book::OrderSide,
@@ -82,35 +83,6 @@ impl CreateOrderbookRequest {
         self.quote_asset_id
     }
 }
-
-/***#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct PlaceLimitOrderRequest {
-    side: OrderSide,
-    quantity: AssetAmount,
-    price: AssetPrice
-}
-
-impl PlaceLimitOrderRequest {
-    pub fn new (side: OrderSide, quantity: AssetAmount, price: AssetPrice) -> Self {
-        Self {
-            side,
-            quantity,
-            price
-        }
-    }
-
-    pub fn get_side(&self) -> OrderSide {
-        self.side
-    }
-
-    pub fn get_quantity(&self) -> AssetAmount {
-        self.quantity
-    }
-
-    pub fn get_price(&self) -> AssetPrice {
-        self.price
-    }
-}***/
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum OrderRequest {
@@ -413,41 +385,38 @@ impl SignedTransaction {
     }
 }
 
-use crate::account::AccountKeyPair;
-use crate::crypto::KeypairTraits;
-
 pub fn create_payment_transaction(
     sender_kp: &AccountKeyPair,
     receiver_kp: &AccountKeyPair,
     asset_id: u64,
     amount: u64,
-    recent_block_hash: CertificateDigest,
+    recent_block_digest: CertificateDigest,
 ) -> Transaction {
     let transaction_variant =
         TransactionVariant::PaymentTransaction(PaymentRequest::new(receiver_kp.public().clone(), asset_id, amount));
 
-    Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
+    Transaction::new(sender_kp.public().clone(), recent_block_digest, transaction_variant)
 }
 
 pub fn create_asset_creation_transaction(
     sender_kp: &AccountKeyPair,
-    recent_block_hash: CertificateDigest,
+    recent_block_digest: CertificateDigest,
 ) -> Transaction {
     let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest {});
 
-    Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
+    Transaction::new(sender_kp.public().clone(), recent_block_digest, transaction_variant)
 }
 
 pub fn create_orderbook_creation_transaction(
     sender_kp: &AccountKeyPair,
     base_asset_id: AssetId,
     quote_asset_id: AssetId,
-    recent_block_hash: CertificateDigest,
+    recent_block_digest: CertificateDigest,
 ) -> Transaction {
     let transaction_variant =
         TransactionVariant::CreateOrderbookTransaction(CreateOrderbookRequest::new(base_asset_id, quote_asset_id));
 
-    Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
+    Transaction::new(sender_kp.public().clone(), recent_block_digest, transaction_variant)
 }
 
 pub fn create_place_limit_order_transaction(
@@ -457,7 +426,7 @@ pub fn create_place_limit_order_transaction(
     side: OrderSide,
     price: AssetPrice,
     quantity: AssetAmount,
-    recent_block_hash: CertificateDigest,
+    recent_block_digest: CertificateDigest,
 ) -> Transaction {
     let local_timestamp = SystemTime::now();
     let transaction_variant = TransactionVariant::PlaceOrderTransaction(OrderRequest::Limit {
@@ -469,7 +438,7 @@ pub fn create_place_limit_order_transaction(
         local_timestamp,
     });
 
-    Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
+    Transaction::new(sender_kp.public().clone(), recent_block_digest, transaction_variant)
 }
 
 pub fn create_place_cancel_order_transaction(
@@ -478,7 +447,7 @@ pub fn create_place_cancel_order_transaction(
     quote_asset_id: AssetId,
     order_id: OrderId,
     side: OrderSide,
-    recent_block_hash: CertificateDigest,
+    recent_block_digest: CertificateDigest,
 ) -> Transaction {
     let local_timestamp = SystemTime::now();
     let transaction_variant = TransactionVariant::PlaceOrderTransaction(OrderRequest::Cancel {
@@ -489,7 +458,7 @@ pub fn create_place_cancel_order_transaction(
         local_timestamp,
     });
 
-    Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
+    Transaction::new(sender_kp.public().clone(), recent_block_digest, transaction_variant)
 }
 
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::too_many_arguments))]
@@ -501,7 +470,7 @@ pub fn create_place_update_order_transaction(
     side: OrderSide,
     price: AssetPrice,
     quantity: AssetAmount,
-    recent_block_hash: CertificateDigest,
+    recent_block_digest: CertificateDigest,
 ) -> Transaction {
     let local_timestamp = SystemTime::now();
     let transaction_variant = TransactionVariant::PlaceOrderTransaction(OrderRequest::Update {
@@ -514,7 +483,7 @@ pub fn create_place_update_order_transaction(
         local_timestamp,
     });
 
-    Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
+    Transaction::new(sender_kp.public().clone(), recent_block_digest, transaction_variant)
 }
 
 /// Begin externally available testing functions
@@ -874,12 +843,12 @@ pub mod transaction_tests {
 
         assert!(
             transaction.digest() == transaction_deserialized.digest(),
-            "transaction hash does not match after deserialize"
+            "transaction digest does not match after deserialize"
         );
 
         assert!(
             transaction.get_sender() == transaction_deserialized.get_sender(),
-            "transaction hash does not match"
+            "transaction digest does not match"
         );
 
         // verify transaction variant matches previous values

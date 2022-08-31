@@ -29,9 +29,9 @@ fn create_signed_payment_transaction(
     amount: u64,
     block_digest: BlockDigest,
 ) -> SignedTransaction {
-    let transaction = create_payment_transaction(&kp_sender, &kp_receiver, asset_id, amount, block_digest);
+    let transaction = create_payment_transaction(kp_sender, kp_receiver, asset_id, amount, block_digest);
     let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest);
+    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
     signed_transaction
 }
 
@@ -40,9 +40,9 @@ fn create_signed_asset_creation_transaction(
     block_digest: BlockDigest,
     dummy: u8,
 ) -> SignedTransaction {
-    let transaction = create_asset_creation_transaction(&kp_sender, block_digest, dummy);
+    let transaction = create_asset_creation_transaction(kp_sender, block_digest, dummy);
     let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest);
+    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
     signed_transaction
 }
 
@@ -52,9 +52,9 @@ fn create_signed_orderbook_transaction(
     quote_asset_id: u64,
     block_digest: BlockDigest,
 ) -> SignedTransaction {
-    let transaction = create_orderbook_creation_transaction(&kp_sender, base_asset_id, quote_asset_id, block_digest);
+    let transaction = create_orderbook_creation_transaction(kp_sender, base_asset_id, quote_asset_id, block_digest);
     let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest);
+    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
     signed_transaction
 }
 
@@ -68,7 +68,7 @@ fn create_signed_limit_order_transaction(
     block_digest: BlockDigest,
 ) -> SignedTransaction {
     let transaction = create_place_limit_order_transaction(
-        &kp_sender,
+        kp_sender,
         base_asset_id,
         quote_asset_id,
         order_side,
@@ -77,7 +77,7 @@ fn create_signed_limit_order_transaction(
         block_digest,
     );
     let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest);
+    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
     signed_transaction
 }
 
@@ -156,12 +156,12 @@ impl BenchHelper {
         let quote_asset_id = self.quote_asset_id;
 
         let stream = tokio_stream::iter(0..burst).map(move |x| {
-            let mut amount = rand::thread_rng().gen_range(1 as u64..100 as u64);
+            let mut amount = rand::thread_rng().gen_range(1_u64..100_u64);
 
             let (order_side, mut price) = if x % 2 == 0 {
-                (OrderSide::Bid, rand::thread_rng().gen_range(101 as u64..200 as u64))
+                (OrderSide::Bid, rand::thread_rng().gen_range(101_u64..200_u64))
             } else {
-                (OrderSide::Ask, rand::thread_rng().gen_range(1 as u64..100 as u64))
+                (OrderSide::Ask, rand::thread_rng().gen_range(1_u64..100_u64))
             };
 
             // cross the spread for one unit of quanitty at MATCH_FREQUENCY
@@ -181,7 +181,7 @@ impl BenchHelper {
             );
 
             TransactionProto {
-                transaction: signed_transaction.clone().serialize().unwrap().into(),
+                transaction: signed_transaction.serialize().unwrap().into(),
             }
         });
 
@@ -239,26 +239,26 @@ impl BenchHelper {
             // initialize the account by sending the primary asset
             let transaction = create_signed_payment_transaction(
                 &self.primary_keypair,
-                &receiver_keypair,
+                receiver_keypair,
                 0,
                 1_000_000,
-                recent_block_hash.clone(),
+                recent_block_hash,
             );
             transactions.push(transaction);
             let transaction = create_signed_payment_transaction(
                 &self.primary_keypair,
-                &receiver_keypair,
+                receiver_keypair,
                 self.base_asset_id,
                 Self::AMOUNT_TO_FUND,
-                recent_block_hash.clone(),
+                recent_block_hash,
             );
             transactions.push(transaction);
             let transaction = create_signed_payment_transaction(
                 &self.primary_keypair,
-                &receiver_keypair,
+                receiver_keypair,
                 self.quote_asset_id,
                 Self::AMOUNT_TO_FUND,
-                recent_block_hash.clone(),
+                recent_block_hash,
             );
             transactions.push(transaction);
         }

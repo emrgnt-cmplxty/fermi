@@ -35,8 +35,6 @@ pub struct ValidatorGenesisStateInfo {
     /// TODO - how can a keypair be stored for other validators on network?
     #[serde_as(as = "KeyPairBase64")]
     pub key_pair: ValidatorKeyPair,
-    /// network address of validator
-    pub network_address: Multiaddr,
     /// validator stake amount
     pub stake: StakeUnit,
     pub balance: u64,

@@ -91,7 +91,6 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
             .map(|_| get_key_pair_from_rng(&mut self.rng).1)
             .map(|key_pair: ValidatorKeyPair| ValidatorGenesisStateInfo {
                 key_pair,
-                network_address: utils::new_network_address(),
                 stake: DEFAULT_STAKE,
                 balance: DEFAULT_BALANCE,
                 narwhal_primary_to_primary: utils::new_network_address(),
@@ -115,7 +114,6 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
                 let public_key: ValidatorPubKeyBytes = validator.key_pair.public().into();
                 let stake = validator.stake;
                 let balance = validator.balance;
-                let network_address = validator.network_address.clone();
 
                 ValidatorInfo {
                     name,
@@ -123,7 +121,6 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
                     stake,
                     balance,
                     delegation: 0, // no delegation yet at genesis
-                    network_address,
                     narwhal_primary_to_primary: validator.narwhal_primary_to_primary.clone(),
                     narwhal_worker_to_primary: validator.narwhal_worker_to_primary.clone(),
                     narwhal_primary_to_worker: validator.narwhal_primary_to_worker.clone(),
@@ -152,7 +149,6 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
             .into_iter()
             .map(|validator| {
                 let public_key: ValidatorPubKeyBytes = validator.key_pair.public().into();
-                let network_address = validator.network_address;
                 let consensus_address = validator.narwhal_consensus_address;
                 let consensus_db_path = self
                     .config_directory
@@ -172,7 +168,6 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
                     key_pair: Arc::new(validator.key_pair),
                     consensus_db_path,
                     gdex_db_path,
-                    network_address,
                     metrics_address: utils::available_local_socket_address(),
                     admin_interface_port: utils::get_available_port(),
                     json_rpc_address: utils::available_local_socket_address(),

@@ -117,7 +117,6 @@ class Committee:
 
     def ips(self, name=None):
         ''' Returns all the ips associated with an authority (in any order). '''
-        breakpoint()
         if name is None:
             names = list(self.json['authorities'].keys())
         else:

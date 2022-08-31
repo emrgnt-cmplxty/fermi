@@ -146,7 +146,6 @@ impl ValidatorSpawner {
         };
 
         // create config directory
-        let network_address = self.validator_info.network_address.clone();
         let consensus_address = self.validator_info.narwhal_consensus_address.clone();
         let pubilc_key = self.validator_info.public_key();
 
@@ -191,7 +190,6 @@ impl ValidatorSpawner {
             key_pair,
             consensus_db_path,
             gdex_db_path,
-            network_address,
             metrics_address: utils::available_local_socket_address(),
             admin_interface_port: utils::get_available_port(),
             json_rpc_address: utils::available_local_socket_address(),

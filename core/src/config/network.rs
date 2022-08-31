@@ -79,7 +79,6 @@ impl NetworkConfig {
             key_pair,
             consensus_db_path: db_path.join(CONSENSUS_DB_NAME),
             gdex_db_path: db_path.join(GDEX_DB_NAME),
-            network_address: utils::new_network_address(),
             metrics_address: utils::available_local_socket_address(),
             admin_interface_port: utils::get_available_port(),
             json_rpc_address: utils::available_local_socket_address(),

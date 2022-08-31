@@ -138,6 +138,7 @@ class Bench:
     def _background_run(self, host, command, log_file, cwd='~/gdex-core/benchmark'):
         name = splitext(basename(log_file))[0]
         cmd = f'(cd {cwd}) && tmux new -d -s "{name}" "{command} |& tee {log_file}"'
+        breakpoint()
         c = Connection(host, user='ubuntu', connect_kwargs=self.connect)
         output = c.run(cmd, hide=True)
         self._check_stderr(output)
@@ -167,7 +168,6 @@ class Bench:
 
     def _config(self, hosts, node_parameters, bench_parameters):
         Print.info('Generating configuration files...')
-        breakpoint()
         # Cleanup all local configuration files.
         cmd = CommandMaker.cleanup()
         subprocess.run([cmd], shell=True, stderr=subprocess.DEVNULL)
@@ -218,11 +218,10 @@ class Bench:
             network_address = validator_dict["network_address"]
             primary_to_primary = validator_dict["primary"]["primary_to_primary"]
             worker_to_primary = validator_dict["primary"]["worker_to_primary"]
-            # TODO
             primary_to_worker = validator_dict["workers"][0]["primary_to_worker"]
+
             worker_to_worker = validator_dict["workers"][0]["worker_to_worker"]
             consensus_address = validator_dict["workers"][0]["transactions"]
-
             cmd = CommandMaker.add_gdex_validator_genesis(
                 path,
                 name,
@@ -245,7 +244,8 @@ class Bench:
         subprocess.run([cmd], shell=True)
 
         for i, name in enumerate(names):
-            CommandMaker.verify_and_sign_gdex_genesis(proto_dir, key_files[i])
+            cmd = CommandMaker.verify_and_sign_gdex_genesis(proto_dir, proto_dir + key_files[i])
+            subprocess.run([cmd], shell=True)
 
         cmd = CommandMaker.finalize_genesis(proto_dir)
         subprocess.run([cmd], shell=True)
@@ -259,10 +259,21 @@ class Bench:
             for ip in committee.ips(name):
                 print(i, name, ip)
                 c = Connection(ip, user='ubuntu', connect_kwargs=self.connect)
-                c.run(f'{CommandMaker.cleanup()} || true', hide=True)
-                c.put(PathMaker.committee_file(), '.')
-                c.put('./.proto/' + PathMaker.key_file(i), '.')
+                c.run(f'(cd gdex-core && {CommandMaker.cleanup()}) || true', hide=False)
+                c.put(proto_dir + "genesis.blob", 'gdex-core/.proto/')
+                c.put(proto_dir + PathMaker.key_file(i), 'gdex-core/.proto/')
                 c.put(PathMaker.parameters_file(), '.')
+                c.put(proto_dir + "master_controller", 'gdex-core/.proto/')
+                committee_dir = proto_dir + 'committee/'
+                for fname in os.listdir(committee_dir):
+                    c.put(committee_dir + fname, 'gdex-core/.proto/committee/')
+
+                signatures_dir = proto_dir + "signatures/"
+
+                for fname in os.listdir(signatures_dir):
+                    c.put(signatures_dir + fname, 'gdex-core/.proto/signatures/')
+
+
 
         return committee
 
@@ -284,7 +295,7 @@ class Bench:
             validator_address = validator_dict['network_address']
             relayer_address = validator_dict['relayer_address']
             host = Committee.ip_from_multi_address(validator_address)
-            cmd = CommandMaker.run_gdex_node('./', './.proto', './.proto', PathMaker.key_file(i), validator_address, relayer_address)
+            cmd = CommandMaker.run_gdex_node('gdex-core/.proto', 'gdex-core/.proto', 'gdex-core/.proto/' + PathMaker.key_file(i), name, validator_address, relayer_address)
             log_file = PathMaker.primary_log_file(i)
             self._background_run(host, cmd, log_file)
 
@@ -293,32 +304,36 @@ class Bench:
         Print.info('Booting clients...')
         for i, name in enumerate(committee.json['authorities'].keys()):
             validator_dict = committee.json['authorities'][name]
-            validator_address = validator_dict['network_address']
+            validator_address = validator_dict['network_address'] # <------
             relayer_address = validator_dict['relayer_address']
             host = Committee.ip_from_multi_address(validator_address)
 
             cmd = CommandMaker.run_gdex_client(
-                i, address
+                validator_address,
+                relayer_address,
+                "../.proto/" + name,
+                rate_share,
+                [node['network_address'] for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
             )
-            log_file = PathMaker.primary_log_file(i)
+            log_file = PathMaker.client_log_file(i, 0)
             self._background_run(host, cmd, log_file)
 
-        # Run the workers (except the faulty ones).
-        Print.info('Booting workers...')
-        for i, addresses in enumerate(workers_addresses):
-            for (id, address) in addresses:
-                host = Committee.ip(address)
-                cmd = CommandMaker.run_worker(
-                    PathMaker.key_file(i),
-                    PathMaker.committee_file(),
-                    PathMaker.db_path(i, id),
-                    PathMaker.parameters_file(),
-                    node_parameters.json['execution'],
-                    id,  # The worker's id.
-                    debug=debug
-                )
-                log_file = PathMaker.worker_log_file(i, id)
-                self._background_run(host, cmd, log_file)
+        # # Run the workers (except the faulty ones).
+        # Print.info('Booting workers...')
+        # for i, addresses in enumerate(workers_addresses):
+        #     for (id, address) in addresses:
+        #         host = Committee.ip(address)
+        #         cmd = CommandMaker.run_worker(
+        #             PathMaker.key_file(i),
+        #             PathMaker.committee_file(),
+        #             PathMaker.db_path(i, id),
+        #             PathMaker.parameters_file(),
+        #             node_parameters.json['execution'],
+        #             id,  # The worker's id.
+        #             debug=debug
+        #         )
+        #         log_file = PathMaker.worker_log_file(i, id)
+        #         self._background_run(host, cmd, log_file)
 
         # Wait for all transactions to be processed.
         duration = bench_parameters.duration

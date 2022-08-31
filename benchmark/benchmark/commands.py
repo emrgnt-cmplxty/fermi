@@ -11,14 +11,14 @@ class CommandMaker:
         return (
             f'rm -r .db-* ;'
             f'rm -r *_db ;'
-            f'rm -r .proto/committee ;'
-            f'rm -r .proto/signatures ;'
+            f'rm .proto/committee/* ;'
+            f'rm .proto/signatures/* ;'
             f'rm .proto/*.key ;'
             f'rm -r .proto/*db ;'
-            f'rm .proto/*.blob'
-            f'rm ./proto/*controller'
-            f'rm .*.json ;'
-            f'mkdir -p {PathMaker.results_path()}'
+            f'rm .proto/*.blob ;'
+            f'rm .proto/*controller ;'
+            f'rm .proto/.*.json ;'
+            f'mkdir -p {PathMaker.results_path()} ;'
         )
 
     @staticmethod
@@ -69,7 +69,7 @@ class CommandMaker:
     ):
         assert isinstance(path, str)
         return f'./gdex add-validator-genesis --path {path} --name {name} --balance {balance} --stake {stake}' \
-               f' --key-file {key_file} --network-address {network_address} --narwhal-primary-to-primary {primary_to_primary_address}' \
+               f' --key-file {key_file} --narwhal-primary-to-primary {primary_to_primary_address}' \
                f' --narwhal-worker-to-primary {worker_to_primary_address} --narwhal-primary-to-worker {primary_to_worker_address}' \
                f' --narwhal-worker-to-worker {worker_to_worker_address} --narwhal-consensus-address {consensus_address}'
 
@@ -103,17 +103,17 @@ class CommandMaker:
         return command
 
     @staticmethod
-    def run_gdex_node(db_dir, genesis_dir, key_dir, validator_name, validator_address, relayer_address, debug=False):
+    def run_gdex_node(db_dir, genesis_dir, key_path, validator_name, validator_address, relayer_address, debug=False):
         assert isinstance(db_dir, str)
         assert isinstance(genesis_dir, str)
-        assert isinstance(key_dir, str)
+        assert isinstance(key_path, str)
         assert isinstance(validator_name, str)
         assert isinstance(validator_address, str)
         assert isinstance(relayer_address, str)
         assert isinstance(debug, bool)
         v = '-vvv' if debug else '-vv'
         command = (f'./gdex-node {v} run --db-dir {db_dir} --genesis-dir  {genesis_dir} '
-                f'--key-dir {key_dir} --validator-name {validator_name} --validator-address {validator_address} --relayer-address {relayer_address}')
+                f'--key-path {key_path} --validator-name {validator_name} --validator-address {validator_address} --relayer-address {relayer_address}')
         print("Returning execution command = ", command)
         return command
 
@@ -155,13 +155,13 @@ class CommandMaker:
         return command
 
     @staticmethod
-    def run_gdex_client(id, address, relayer_address, rate, nodes):
+    def run_gdex_client(address, relayer_address, validator_key_path, rate, nodes):
         assert isinstance(address, str)
         assert isinstance(rate, int) and rate >= 0
         assert isinstance(nodes, list)
         assert all(isinstance(x, str) for x in nodes)
         nodes = f'--nodes {" ".join(nodes)}' if nodes else ''
-        command = f'./benchmark_gdex_client {address} --relayer {relayer_address} --validator_key_fpath ../.proto/validator-{id}.key --rate {rate}  --nodes {nodes}'
+        command = f'./benchmark_gdex_client {address} --relayer {relayer_address} --validator_key_fpath {validator_key_path} --rate {rate}  --nodes {nodes}'
         print("Returning execution command = ", command)
         return command
 

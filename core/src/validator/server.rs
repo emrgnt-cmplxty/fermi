@@ -79,6 +79,7 @@ impl ValidatorServer {
         }
     }
 
+    // TODO this is kinda dumb
     pub async fn spawn(self) -> Result<ValidatorServerHandle, io::Error> {
         let address = self.address.clone();
         info!(
@@ -87,7 +88,6 @@ impl ValidatorServer {
         );
         self.run(address).await
     }
-
     pub async fn run(self, address: Multiaddr) -> Result<ValidatorServerHandle, io::Error> {
         let server = crate::config::server::ServerConfig::new()
             .server_builder()
@@ -321,14 +321,12 @@ mod test_validator_server {
             stake: VALIDATOR_FUNDING_AMOUNT,
             balance: VALIDATOR_BALANCE,
             delegation: 0,
-            network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),
             narwhal_worker_to_primary: utils::new_network_address(),
             narwhal_primary_to_worker: utils::new_network_address(),
             narwhal_worker_to_worker: utils::new_network_address(),
             narwhal_consensus_address: utils::new_network_address(),
         };
-        let network_address = validator.network_address.clone();
 
         let builder = GenesisStateBuilder::new()
             .set_master_controller(master_controller)
@@ -345,7 +343,7 @@ mod test_validator_server {
         let validator_server = ValidatorServer::new(
             new_addr.clone(),
             Arc::new(validator_state),
-            network_address,
+            new_addr,
             tx_reconfigure_consensus,
         );
         validator_server.spawn().await
@@ -392,14 +390,12 @@ mod test_validator_server {
             stake: VALIDATOR_FUNDING_AMOUNT,
             balance: VALIDATOR_BALANCE,
             delegation: 0,
-            network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),
             narwhal_worker_to_primary: utils::new_network_address(),
             narwhal_primary_to_worker: utils::new_network_address(),
             narwhal_worker_to_worker: utils::new_network_address(),
             narwhal_consensus_address: utils::new_network_address(),
         };
-        let network_address = validator.network_address.clone();
 
         let builder = GenesisStateBuilder::new()
             .set_master_controller(master_controller)
@@ -415,7 +411,7 @@ mod test_validator_server {
         let validator_server = ValidatorServer::new(
             new_addr.clone(),
             Arc::new(validator_state),
-            network_address,
+            utils::new_network_address(),
             tx_reconfigure_consensus.clone(),
         );
         validator_server.spawn().await.unwrap();

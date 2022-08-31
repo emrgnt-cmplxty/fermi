@@ -19,7 +19,6 @@ pub struct ValidatorInfo {
     pub stake: StakeUnit,
     pub balance: u64,
     pub delegation: StakeUnit,
-    pub network_address: Multiaddr,
     pub narwhal_primary_to_primary: Multiaddr,
 
     //TODO remove all of these as they shouldn't be needed to be encoded in genesis
@@ -50,10 +49,6 @@ impl ValidatorInfo {
         self.delegation
     }
 
-    pub fn network_address(&self) -> &Multiaddr {
-        &self.network_address
-    }
-
     pub fn voting_rights(validator_set: &[Self]) -> BTreeMap<ValidatorPubKeyBytes, u64> {
         validator_set
             .iter()
@@ -79,14 +74,12 @@ pub mod node_tests {
         let stake = 1;
         let balance = 2;
         let delegation = 0;
-        let network_address = utils::new_network_address();
         let validator = ValidatorInfo {
             name: name.into(),
             public_key: kp.public().into(),
             stake,
             balance,
             delegation,
-            network_address: network_address.clone(),
             narwhal_primary_to_primary: utils::new_network_address(),
             narwhal_worker_to_primary: utils::new_network_address(),
             narwhal_primary_to_worker: utils::new_network_address(),
@@ -98,7 +91,6 @@ pub mod node_tests {
         assert!(GDEXAddress::from(kp.public()) == validator.gdex_address());
         assert!(validator.stake() == stake);
         assert!(validator.delegation() == delegation);
-        assert!(validator.network_address().to_vec() == network_address.to_vec());
 
         let _ = ValidatorInfo::voting_rights(&[validator]);
     }

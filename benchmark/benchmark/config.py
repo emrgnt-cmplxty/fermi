@@ -243,6 +243,7 @@ class GDEXBenchParameters:
             self.key_dir = json['key_dir']
             self.db_dir = json['db_dir']
             self.duration = int(json['duration'])
+            self.order_bench = bool(json['do_orderbook'])
 
             if 'mem_profiling' in json:
                 self.mem_profile = bool(json['mem_profiling'])

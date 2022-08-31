@@ -6,15 +6,8 @@
 use anyhow::{Context, Result};
 use benchmark_gdex::bench_helper::BenchHelper;
 use clap::{crate_name, crate_version, App, AppSettings};
-use futures::{future::join_all};
-use gdex_types::{
-    account::AccountKeyPair,
-    utils::read_keypair_from_file,
-};
-use narwhal_crypto::{
-    traits::KeyPair,
-};
-use rand::{rngs::StdRng, SeedableRng};
+use futures::future::join_all;
+use gdex_types::utils::read_keypair_from_file;
 use std::path::PathBuf;
 use tokio::{
     net::TcpStream,
@@ -26,17 +19,11 @@ use url::Url;
 
 const ACCOUNTS_TO_GENERATE: u64 = 100;
 
-#[cfg(not(tarpaulin))]
-fn keys(seed: [u8; 32]) -> Vec<AccountKeyPair> {
-    let mut rng = StdRng::from_seed(seed);
-    (0..4).map(|_| AccountKeyPair::generate(&mut rng)).collect()
-}
-
 #[tokio::main]
 async fn main() -> Result<()> {
     let matches = App::new(crate_name!())
         .version(crate_version!())
-        .about("Benchmark client for Narwhal and Tusk.")
+        .about("Benchmark client for GDEX Orderbook.")
         .args_from_usage("<ADDR> 'The network address of the node where to send txs'")
         .args_from_usage("--relayer=<ADDR> 'Relayer address to send requests to'")
         .args_from_usage("--rate=<INT> 'The rate (txs/s) at which to send the transactions'")
@@ -103,8 +90,11 @@ async fn main() -> Result<()> {
     // Wait for all nodes to be online and synchronized.
     client.wait().await;
 
-    // initialize the client
+    // initialize the orderbook if running validator 0
+    // TODO - find a more intelligent way to avoid double-initialization of the orderbook client
     client.initialize(validator_url, relayer_url).await.unwrap();
+
+    info!("Starting to send transactions...");
 
     // Start the benchmark.
     client.send().await;

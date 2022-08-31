@@ -38,8 +38,9 @@ fn create_signed_payment_transaction(
 fn create_signed_asset_creation_transaction(
     kp_sender: &AccountKeyPair,
     block_digest: BlockDigest,
+    dummy: u8,
 ) -> SignedTransaction {
-    let transaction = create_asset_creation_transaction(&kp_sender, block_digest);
+    let transaction = create_asset_creation_transaction(&kp_sender, block_digest, dummy);
     let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
     let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest);
     signed_transaction
@@ -100,6 +101,7 @@ impl BenchHelper {
             accounts: Vec::new(),
             validator_client: None::<TransactionsClient<Channel>>,
             relayer_client: None::<RelayerClient<Channel>>,
+            // TODO - avoid hard coding by directly calculating created assets...
             base_asset_id: 1,
             quote_asset_id: 2,
         }
@@ -204,9 +206,9 @@ impl BenchHelper {
 
     /// Create a new asset in the bench helper
     // TODO - Fetch created asset number to build this stack properly.
-    pub async fn create_new_asset(&mut self) {
+    pub async fn create_new_asset(&mut self, dummy: u8) {
         let recent_block_hash = self.get_recent_block_digest().await;
-        let transaction = create_signed_asset_creation_transaction(&self.primary_keypair, recent_block_hash);
+        let transaction = create_signed_asset_creation_transaction(&self.primary_keypair, recent_block_hash, dummy);
         self.submit_transaction(transaction)
             .await
             .expect("Failed to successfully submit asset creation transaction");
@@ -287,7 +289,7 @@ impl BenchHelper {
         // log the transaction size to help python client calculate throughput
         // note, any transaction type works here because all enumes have the same size
         let recent_block_hash = self.get_recent_block_digest().await;
-        let transaction_size = create_signed_asset_creation_transaction(&self.primary_keypair, recent_block_hash)
+        let transaction_size = create_signed_asset_creation_transaction(&self.primary_keypair, recent_block_hash, 0)
             .serialize()
             .unwrap()
             .len();
@@ -296,9 +298,9 @@ impl BenchHelper {
 
     pub async fn prepare_orderbook(&mut self) {
         info!("Creating first asset...");
-        self.create_new_asset().await;
+        self.create_new_asset(0).await;
         info!("Creating second asset...");
-        self.create_new_asset().await;
+        self.create_new_asset(1).await;
         sleep(Duration::from_millis(2_000)).await;
         info!("Creating orderbook...");
         self.create_orderbook().await;

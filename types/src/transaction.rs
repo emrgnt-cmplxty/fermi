@@ -26,8 +26,12 @@ use std::{
 
 pub const SERIALIZED_TRANSACTION_LENGTH: usize = 280;
 
+// TODO - remove dummy after adding more fields to create asset request
+// dummy has been added to allow us to submit multiple txns w/out collisions in bench
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct CreateAssetRequest {}
+pub struct CreateAssetRequest {
+    pub dummy: u8,
+}
 
 /// A valid payment transaction causes a state transition inside of
 /// the BankController object, e.g. it creates a fund transfer from
@@ -216,8 +220,9 @@ impl Hash for Transaction {
                 };
                 TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
             }
-            TransactionVariant::CreateAssetTransaction(_create_asset) => {
+            TransactionVariant::CreateAssetTransaction(create_asset) => {
                 let hasher_update = |hasher: &mut VarBlake2b| {
+                    hasher.update(create_asset.dummy.to_le_bytes());
                     hasher.update(self.get_sender().0.to_bytes());
                     hasher.update(self.get_recent_certificate_digest().to_string())
                     // TODO this doesn't really make sense but the contents are private
@@ -401,8 +406,9 @@ pub fn create_payment_transaction(
 pub fn create_asset_creation_transaction(
     sender_kp: &AccountKeyPair,
     recent_block_digest: CertificateDigest,
+    dummy: u8,
 ) -> Transaction {
-    let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest {});
+    let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest { dummy });
 
     Transaction::new(sender_kp.public().clone(), recent_block_digest, transaction_variant)
 }
@@ -633,7 +639,7 @@ pub mod transaction_tests {
 
         let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
 
-        let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest {});
+        let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest { dummy: 0 });
 
         let transaction = Transaction::new(kp_sender.public().clone(), dummy_batch_digest, transaction_variant);
         let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);

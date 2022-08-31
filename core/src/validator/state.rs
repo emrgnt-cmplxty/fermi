@@ -272,18 +272,22 @@ impl ExecutionState for ValidatorState {
             .insert_confirmed_transaction(transaction, consensus_output);
 
         // handle transactions for bank controller
-        self.master_controller
+        self
+            .master_controller
             .bank_controller
             .lock()
             .unwrap()
-            .handle_consensus_transaction(transaction)
-            .unwrap();
-        self.master_controller
+            .handle_consensus_transaction(transaction)?;
+
+
+        // handle transactions for spot controller
+        self
+            .master_controller
             .spot_controller
             .lock()
             .unwrap()
-            .handle_consensus_transaction(transaction)
-            .unwrap();
+            .handle_consensus_transaction(transaction)?;
+
 
         Ok((consensus_output.clone(), execution_indices))
     }

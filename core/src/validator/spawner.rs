@@ -78,7 +78,7 @@ impl ValidatorSpawner {
             .filter(|v| v.name == validator_name)
             .collect::<Vec<&ValidatorInfo>>()
             .pop()
-            .expect("Could not locate validator")
+            .expect("Could not locate validator {validator_name}")
             .clone();
         Self {
             db_path,
@@ -152,7 +152,7 @@ impl ValidatorSpawner {
 
         // TODO - can we avoid consuming the private key twice in the network setup?
         // Note, this awkwardness is due to my inferred understanding of Arc pin.
-        let key_file = self.key_path.join(format!("{}.key", self.validator_info.name));
+        let key_file = self.key_path.join(format!("{}", self.validator_info.name));
         let consensus_db_path = self
             .db_path
             .join(format!("{}-{}", self.validator_info.name, CONSENSUS_DB_NAME));

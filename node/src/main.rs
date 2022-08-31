@@ -21,7 +21,7 @@ async fn main() -> Result<()> {
             SubCommand::with_name("run")
                 .about("Run a node")
                 .args_from_usage("--db-dir=<FOLDER> 'The folder containing a the database'")
-                .args_from_usage("--key-dir=<FOLDER> 'The file containing the node keys'")
+                .args_from_usage("--key-path=<FILE> 'The file containing the node keys'")
                 .args_from_usage("--genesis-dir=<FOLDER> 'The folder containing the genesis blob'")
                 .args_from_usage("--validator-name=<NAME> 'The validator name'")
                 .args_from_usage("--validator-address=<PORT> 'The validator port'")
@@ -73,8 +73,7 @@ async fn run(matches: &ArgMatches<'_>) {
     let genesis_dir = matches.value_of("genesis-dir").unwrap();
     let genesis_path = Path::new(genesis_dir).to_path_buf();
 
-    let key_dir = matches.value_of("key-dir").unwrap();
-    let key_path = Path::new(key_dir).to_path_buf();
+    let key_path = Path::new(matches.value_of("key-path").unwrap()).to_path_buf();
 
     let validator_name = matches.value_of("validator-name").unwrap();
 

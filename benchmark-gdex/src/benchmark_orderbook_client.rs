@@ -1,13 +1,17 @@
 // Copyright (c) 2021, Facebook, Inc. and its affiliates
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
+// benchmark % ../target/release/benchmark_orderbook_client http://localhost:3003 --relayer http://localhost:3004 --validator_key_fpath ../.proto/validator-3.key --rate 12500
+
 use anyhow::{Context, Result};
+use benchmark_gdex::bench_helper::BenchHelper;
 use clap::{crate_name, crate_version, App, AppSettings};
 use futures::{future::join_all, StreamExt};
+use gdex_types::block::BlockDigest;
+use gdex_types::proto::{RelayerClient, RelayerGetLatestBlockInfoRequest};
 use gdex_types::{
     account::{AccountKeyPair, ValidatorKeyPair},
-    block::BlockDigest,
-    proto::{RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionProto, TransactionsClient},
+    proto::{TransactionProto, TransactionsClient},
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
     utils::read_keypair_from_file,
 };
@@ -31,27 +35,6 @@ const PRIMARY_ASSET_ID: u64 = 0;
 fn keys(seed: [u8; 32]) -> Vec<AccountKeyPair> {
     let mut rng = StdRng::from_seed(seed);
     (0..4).map(|_| AccountKeyPair::generate(&mut rng)).collect()
-}
-
-fn create_signed_transaction(
-    kp_sender: &AccountKeyPair,
-    kp_receiver: &AccountKeyPair,
-    amount: u64,
-    block_digest: BlockDigest,
-) -> SignedTransaction {
-    // use a dummy batch digest for initial benchmarking
-
-    let transaction_variant = TransactionVariant::PaymentTransaction(PaymentRequest::new(
-        kp_receiver.public().clone(),
-        PRIMARY_ASSET_ID,
-        amount,
-    ));
-    let transaction = Transaction::new(kp_sender.public().clone(), block_digest, transaction_variant);
-
-    // sign digest and create signed transaction
-    let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest);
-    signed_transaction
 }
 
 #[tokio::main]
@@ -84,10 +67,10 @@ async fn main() -> Result<()> {
     set_global_default(subscriber).expect("Failed to set subscriber");
 
     let target_str = matches.value_of("ADDR").unwrap();
-    let target = target_str
+    let validator_url = target_str
         .parse::<Url>()
         .with_context(|| format!("Invalid url format {target_str}"))?;
-    let relayer = matches
+    let relayer_url = matches
         .value_of("relayer")
         .unwrap()
         .parse::<Url>()
@@ -110,19 +93,23 @@ async fn main() -> Result<()> {
         .collect::<Result<Vec<_>, _>>()
         .with_context(|| format!("Invalid url format {target_str}"))?;
 
-    info!("Node address: {target}");
+    info!("Node URL: {validator_url}");
+    info!("Relayer URL: {relayer_url}");
     info!("Transactions rate: {rate} tx/s");
 
-    let client = Client {
-        target,
+    let primary_keypair = read_keypair_from_file(validator_key_fpath).unwrap();
+
+    let mut client = Client {
         rate,
         nodes,
-        relayer,
-        validator_key_fpath,
+        bench_helper: BenchHelper::new(primary_keypair),
     };
 
     // Wait for all nodes to be online and synchronized.
     client.wait().await;
+
+    // initialize the client
+    client.initialize(validator_url, relayer_url).await;
 
     // Start the benchmark.
     client.send().await.context("Failed to submit transactions")
@@ -130,92 +117,38 @@ async fn main() -> Result<()> {
 
 /// TODO - add do_real_transaction as boolean field on client
 struct Client {
-    target: Url,
-    relayer: Url,
     rate: u64,
     nodes: Vec<Url>,
-    validator_key_fpath: PathBuf,
+    bench_helper: BenchHelper,
 }
 
 impl Client {
-    pub async fn send(&self) -> Result<()> {
+    pub async fn initialize(&mut self, validator_url: Url, relayer_url: Url) -> Result<()> {
+        self.bench_helper
+            .initialize(validator_url, relayer_url, [0u8; 32], 100)
+            .await;
+
+        self.bench_helper.prepare_orderbook().await;
+
+        Ok(())
+    }
+
+    pub async fn send(&mut self) -> Result<()> {
         const PRECISION: u64 = 20; // Sample precision.
         const BURST_DURATION: u64 = 1000 / PRECISION;
 
-        let mut client = TransactionsClient::connect(self.target.as_str().to_owned())
-            .await
-            .unwrap();
-        let mut relayer_client = RelayerClient::connect(self.relayer.as_str().to_owned()).await.unwrap();
-        let block_info_request = RelayerGetLatestBlockInfoRequest {};
-
-        // Submit all transactions.
-        let burst = self.rate / PRECISION;
-        let mut counter = 0;
         // but, not so large that we can exhaust the primary senders balance
         let interval = interval(Duration::from_millis(BURST_DURATION));
         tokio::pin!(interval);
 
-        // send payments from validator with assets
-        // read in private key of validator who will send payment txns
-        let keypair: ValidatorKeyPair = read_keypair_from_file(self.validator_key_fpath.clone())?;
-
-        // NOTE: This log entry is used to compute performance.
-        info!("Start sending transactions");
         loop {
-            // fetch recent block digest before starting another round of payments
-            let response = relayer_client
-                .get_latest_block_info(block_info_request.clone())
-                .await
-                .unwrap()
-                .into_inner();
-
-            let block_digest: BlockDigest = if response.successful && response.block_info.is_some() {
-                bincode::deserialize(response.block_info.unwrap().digest.as_ref()).unwrap()
-            } else {
-                BlockDigest::new([0; 32])
-            };
-
             interval.as_mut().tick().await;
             let now = Instant::now();
-            let keypair = keypair.copy();
-            let kp_receiver = keys([1; 32]).pop().unwrap();
 
-            if counter == 0 {
-                let transaction_size = create_signed_transaction(&keypair, &kp_receiver, 1, block_digest.clone())
-                    .serialize()
-                    .unwrap()
-                    .len();
-                info!("Transactions size: {transaction_size} B");
-            }
-
-            let stream = tokio_stream::iter(0..burst).map(move |x| {
-                let amount = rand::thread_rng().gen_range(100_000 as u64..5_000_000 as u64);
-                if x == counter % burst {
-                    // NOTE: This log entry is used to compute performance.
-                    info!("Sending sample transaction {counter}");
-                }
-                let signed_tranasction =
-                    create_signed_transaction(&keypair, &kp_receiver, amount, block_digest.clone());
-                // let txn_digest = signed_tranasction.get_transaction_payload().digest().to_string();
-                // info!("Submitting {}", txn_digest);
-                TransactionProto {
-                    transaction: signed_tranasction.serialize().unwrap().into(),
-                }
-            });
-
-            if let Err(e) = client.submit_transaction_stream(stream).await {
-                warn!("Failed to send transaction: {e}");
-                //break 'main;
-            }
-
-            info!("now.elapsed().as_millis()={}", now.elapsed().as_millis());
-            info!("submitted tps={}", burst * 1000 / (now.elapsed().as_millis() as u64));
-            if now.elapsed().as_millis() > BURST_DURATION as u128 {
-                // NOTE: This log entry is used to compute performance.
-                warn!("Transaction rate too high for this client");
-            }
-            counter += 1;
+            let burst = self.rate / PRECISION;
+            self.bench_helper.burst_orderbook(burst).await;
         }
+        Ok(())
     }
 
     pub async fn wait(&self) {

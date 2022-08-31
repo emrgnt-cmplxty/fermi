@@ -128,7 +128,7 @@ async fn main() -> Result<()> {
     client.send().await.context("Failed to submit transactions")
 }
 
-/// TODO - add do_real_transaction as boolean field on client
+/// TODO - cleanup client to use bench helper
 struct Client {
     target: Url,
     relayer: Url,

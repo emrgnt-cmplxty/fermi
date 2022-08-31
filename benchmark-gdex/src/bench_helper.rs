@@ -1,4 +1,3 @@
-use futures::stream::{Map, Iter};
 use gdex_types::{
     account::AccountKeyPair,
     block::BlockDigest,
@@ -6,7 +5,7 @@ use gdex_types::{
     proto::{Empty, RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionProto, TransactionsClient},
     transaction::{
         create_asset_creation_transaction, create_orderbook_creation_transaction, create_payment_transaction,
-        create_place_limit_order_transaction, SignedTransaction, Transaction
+        create_place_limit_order_transaction, SignedTransaction,
     },
 };
 use narwhal_crypto::{
@@ -14,14 +13,14 @@ use narwhal_crypto::{
     Hash,
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use std::ops::Range;
 use tokio::time::{sleep, Duration};
-use tokio_stream::{StreamExt};
+use tokio_stream::StreamExt;
 use tonic::transport::Channel;
 use tracing::{info, warn};
 use url::Url;
 
 const BLOCK_INFO_REQUEST: RelayerGetLatestBlockInfoRequest = RelayerGetLatestBlockInfoRequest {};
+const MATCH_FREQUENCY: u64 = 100;
 
 fn create_signed_payment_transaction(
     kp_sender: &AccountKeyPair,
@@ -145,19 +144,30 @@ impl BenchHelper {
 
     // PUBLIC
 
-    pub async fn burst_orderbook(&mut self, burst: u64) { 
+    pub async fn burst_orderbook(&mut self, burst: u64) {
         info!("bursting client now...");
         let recent_block_hash = self.get_recent_block_digest().await;
 
+        // prepare copies of self variables before moving into closure
         let keypair_copy = self.primary_keypair.copy();
         let base_asset_id = self.base_asset_id;
         let quote_asset_id = self.quote_asset_id;
 
         let stream = tokio_stream::iter(0..burst).map(move |x| {
-            let amount = rand::thread_rng().gen_range(100_000 as u64..5_000_000 as u64);
-            let price = rand::thread_rng().gen_range(100_000 as u64..200_000 as u64);
+            let mut amount = rand::thread_rng().gen_range(1 as u64..100 as u64);
 
-            let order_side = if x%2 == 0 { OrderSide::Bid } else { OrderSide::Ask };
+            let (order_side, mut price) = if x % 2 == 0 {
+                (OrderSide::Bid, rand::thread_rng().gen_range(101 as u64..200 as u64))
+            } else {
+                (OrderSide::Ask, rand::thread_rng().gen_range(1 as u64..100 as u64))
+            };
+
+            // cross the spread for one unit of quanitty at MATCH_FREQUENCY
+            if x % MATCH_FREQUENCY == 0 && x > 0 {
+                price = 100;
+                amount = 1;
+            }
+
             let signed_transaction = create_signed_limit_order_transaction(
                 &keypair_copy.copy(),
                 base_asset_id,
@@ -172,8 +182,14 @@ impl BenchHelper {
                 transaction: signed_transaction.clone().serialize().unwrap().into(),
             }
         });
-        
-        if let Err(e) = self.validator_client.as_mut().expect("Failed to load the validator client").submit_transaction_stream(stream).await {
+
+        if let Err(e) = self
+            .validator_client
+            .as_mut()
+            .expect("Failed to load the validator client")
+            .submit_transaction_stream(stream)
+            .await
+        {
             warn!("Failed to send transaction: {e}");
         }
     }
@@ -187,7 +203,7 @@ impl BenchHelper {
     }
 
     /// Create a new asset in the bench helper
-    // TODO - We need a way to get the created asset number to build this stack properly?
+    // TODO - Fetch created asset number to build this stack properly.
     pub async fn create_new_asset(&mut self) {
         let recent_block_hash = self.get_recent_block_digest().await;
         let transaction = create_signed_asset_creation_transaction(&self.primary_keypair, recent_block_hash);
@@ -197,7 +213,7 @@ impl BenchHelper {
     }
 
     /// Create a new asset in the bench helper
-    // TODO - We need a way to get the created asset number to build this stack properly?
+    // TODO - Fetch created asset number to build this stack properly.
     pub async fn create_orderbook(&mut self) {
         let recent_block_hash = self.get_recent_block_digest().await;
         let transaction = create_signed_orderbook_transaction(
@@ -218,6 +234,15 @@ impl BenchHelper {
         let recent_block_hash = self.get_recent_block_digest().await;
 
         for receiver_keypair in &self.accounts {
+            // initialize the account by sending the primary asset
+            let transaction = create_signed_payment_transaction(
+                &self.primary_keypair,
+                &receiver_keypair,
+                0,
+                1_000_000,
+                recent_block_hash.clone(),
+            );
+            transactions.push(transaction);
             let transaction = create_signed_payment_transaction(
                 &self.primary_keypair,
                 &receiver_keypair,
@@ -225,7 +250,6 @@ impl BenchHelper {
                 Self::AMOUNT_TO_FUND,
                 recent_block_hash.clone(),
             );
-            // self.submit_transaction(transaction).await.expect("Failed to successfuly fund account {account} with asset 1");
             transactions.push(transaction);
             let transaction = create_signed_payment_transaction(
                 &self.primary_keypair,
@@ -234,13 +258,10 @@ impl BenchHelper {
                 Self::AMOUNT_TO_FUND,
                 recent_block_hash.clone(),
             );
-            // self.submit_transaction(transaction).await.expect("Failed to successfuly fund account {account} with asset 2");
             transactions.push(transaction);
         }
 
         for transaction in transactions {
-            info!("Executing a transaction...");
-
             self.submit_transaction(transaction)
                 .await
                 .expect("Failed to successfuly submit a funding transaction");
@@ -276,7 +297,6 @@ impl BenchHelper {
     pub async fn prepare_orderbook(&mut self) {
         info!("Creating first asset...");
         self.create_new_asset().await;
-        sleep(Duration::from_millis(2_000)).await;
         info!("Creating second asset...");
         self.create_new_asset().await;
         sleep(Duration::from_millis(2_000)).await;

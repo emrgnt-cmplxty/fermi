@@ -80,6 +80,7 @@ fn place_orders_engine(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn place_orders_engine_account(
     n_orders: u64,
     base_asset_id: u64,

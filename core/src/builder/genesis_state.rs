@@ -108,7 +108,7 @@ impl GenesisStateBuilder {
 
         for (_pubkey, validator) in self.validators {
             let validator_info_bytes = serde_yaml::to_vec(&validator)?;
-            let hex_name = utils::encode_bytes_hex(&validator.public_key());
+            let hex_name = validator.name();
             fs::write(committee_dir.join(hex_name), validator_info_bytes)?;
         }
 

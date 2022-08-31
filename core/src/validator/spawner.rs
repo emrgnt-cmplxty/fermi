@@ -152,7 +152,7 @@ impl ValidatorSpawner {
 
         // TODO - can we avoid consuming the private key twice in the network setup?
         // Note, this awkwardness is due to my inferred understanding of Arc pin.
-        let key_file = self.key_path.join(format!("{}", self.validator_info.name));
+        let key_file = &self.key_path;
         let consensus_db_path = self
             .db_path
             .join(format!("{}-{}", self.validator_info.name, CONSENSUS_DB_NAME));

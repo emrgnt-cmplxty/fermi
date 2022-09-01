@@ -171,7 +171,7 @@ class Bench:
         Print.info('Generating configuration files...')
         # Cleanup all local configuration files.
         cmd = CommandMaker.cleanup()
-        subprocess.run([cmd], shell=True, stderr=subprocess.DEVNULL)
+        subprocess.run([cmd], shell=True, stderr=subprocess.DEVNULL, cwd='.')
 
         # Recompile the latest code.
         cmd = CommandMaker.compile(mem_profiling=False)
@@ -190,11 +190,10 @@ class Bench:
         keys = []
         key_files = [PathMaker.key_file(i) for i in range(len(hosts))]
 
-        # TODO create keys for gdex, write them in narwhal format
         for filename in key_files:
             cmd = CommandMaker.generate_gdex_key(filename).split()
             subprocess.run(cmd, check=True)
-            keys += [Key.from_file('./.proto/' + filename)]
+            keys += [Key.from_file(proto_dir + filename)]
         sleep(2)
         names = [x.name for x in keys]
 
@@ -209,9 +208,8 @@ class Bench:
             )
         committee = Committee(addresses, self.settings.base_port)
         committee.print(PathMaker.committee_file())
-
         for i, name in enumerate(names):
-            sleep(1)
+            sleep(5)
             path = proto_dir
             validator_dict = committee.json["authorities"][name]
             balance = 5000000000000
@@ -239,10 +237,10 @@ class Bench:
         sleep(2)
         cmd = CommandMaker.add_controllers_gdex_genesis(proto_dir)
         subprocess.run([cmd], shell=True)
-
+        sleep(2)
         cmd = CommandMaker.build_gdex_genesis(proto_dir)
         subprocess.run([cmd], shell=True)
-        sleep(3)
+        sleep(5)
         for i, name in enumerate(names):
             cmd = CommandMaker.verify_and_sign_gdex_genesis(proto_dir, proto_dir + key_files[i])
             subprocess.run([cmd], shell=True)
@@ -288,7 +286,6 @@ class Bench:
         # Filter all faulty nodes from the client addresses (or they will wait
         # for the faulty nodes to be online).
         Print.info('Booting nodes...')
-        workers_addresses = committee.workers_addresses(faults)
         rate_share = ceil(rate / committee.workers())
         for i, name in enumerate(committee.json['authorities'].keys()):
             validator_dict = committee.json['authorities'][name]
@@ -310,7 +307,6 @@ class Bench:
             validator_address = validator_dict['network_address']
             relayer_address = validator_dict['relayer_address']
             host = Committee.ip_from_multi_address(validator_address)
-            breakpoint()
             cmd = CommandMaker.run_gdex_client(
                 multiaddr_to_url_data(validator_address),
                 multiaddr_to_url_data(relayer_address),
@@ -321,28 +317,10 @@ class Bench:
             log_file = PathMaker.client_log_file(i, 0)
             self._background_run(host, cmd, log_file)
 
-        # # Run the workers (except the faulty ones).
-        # Print.info('Booting workers...')
-        # for i, addresses in enumerate(workers_addresses):
-        #     for (id, address) in addresses:
-        #         host = Committee.ip(address)
-        #         cmd = CommandMaker.run_worker(
-        #             PathMaker.key_file(i),
-        #             PathMaker.committee_file(),
-        #             PathMaker.db_path(i, id),
-        #             PathMaker.parameters_file(),
-        #             node_parameters.json['execution'],
-        #             id,  # The worker's id.
-        #             debug=debug
-        #         )
-        #         log_file = PathMaker.worker_log_file(i, id)
-        #         self._background_run(host, cmd, log_file)
-
         # Wait for all transactions to be processed.
         duration = bench_parameters.duration
         for _ in progress_bar(range(20), prefix=f'Running benchmark ({duration} sec):'):
             sleep(ceil(duration / 20))
-        breakpoint()
         self.kill(hosts=hosts, delete_logs=False)
 
     def _logs(self, committee, faults):
@@ -358,24 +336,17 @@ class Bench:
                 host = Committee.ip(address)
                 c = Connection(host, user='ubuntu', connect_kwargs=self.connect)
                 c.get(
-                    PathMaker.client_log_file(i, id),
-                    local=PathMaker.client_log_file(i, id)
+                    PathMaker.client_log_file(i, 0),
+                    local=PathMaker.client_log_file(i, 0)
                 )
                 c.get(
-                    PathMaker.worker_log_file(i, id),
-                    local=PathMaker.worker_log_file(i, id)
+                    PathMaker.primary_log_file(i),
+                    local=PathMaker.primary_log_file(i)
                 )
-
-        primary_addresses = committee.primary_addresses(faults)
-        progress = progress_bar(primary_addresses, prefix='Downloading primaries logs:')
-        for i, address in enumerate(progress):
-            host = Committee.ip(address)
-            c = Connection(host, user='ubuntu', connect_kwargs=self.connect)
-            c.get(
-                PathMaker.primary_log_file(i),
-                local=PathMaker.primary_log_file(i)
-            )
-
+                c.get(
+                    PathMaker.primary_log_file(i),
+                    local=PathMaker.worker_log_file(i, 0)
+                )
         # Parse logs and return the parser.
         Print.info('Parsing logs and computing performance...')
         return LogParser.process(PathMaker.logs_path(), faults=faults)

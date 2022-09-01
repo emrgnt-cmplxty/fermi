@@ -165,19 +165,6 @@ def remote(ctx, debug=False):
         'nodes': 2,
         'workers': 1,
         'tx_size': 500,
-        # must have corresponding info in genesis .proto
-        'node_addresses': {
-            'validator-0': 'http://localhost:3003',
-            'validator-1': 'http://localhost:3013',
-            'validator-2': 'http://localhost:3023',
-            'validator-3': 'http://localhost:3033'
-        },
-        'relayer_addresses': {
-            'validator-0': 'http://localhost:3004',
-            'validator-1': 'http://localhost:3014',
-            'validator-2': 'http://localhost:3024',
-            'validator-3': 'http://localhost:3034'
-        },
         'rate': 50_000,
         'duration': 20,
         'mem_profiling': False,

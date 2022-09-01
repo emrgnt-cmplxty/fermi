@@ -424,6 +424,7 @@ mod test_validator_state {
         }
     }
 
+    #[allow(unused_must_use)]
     #[tokio::test]
     pub async fn process_create_asset_txn() {
         let validator: ValidatorState = create_test_validator();
@@ -448,6 +449,7 @@ mod test_validator_state {
             .unwrap();
     }
 
+    #[allow(unused_must_use)]
     #[tokio::test]
     pub async fn process_payment_txn() {
         let validator: ValidatorState = create_test_validator();
@@ -490,6 +492,7 @@ mod test_validator_state {
             .unwrap();
     }
 
+    #[allow(unused_must_use)]
     #[tokio::test]
     pub async fn process_create_orderbook_transaction() {
         let validator: ValidatorState = create_test_validator();
@@ -505,7 +508,7 @@ mod test_validator_state {
             let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
             let signed_create_asset_txn =
                 SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
-    
+
             validator
                 .handle_consensus_transaction(
                     &dummy_consensus_output,
@@ -541,6 +544,7 @@ mod test_validator_state {
             .unwrap();
     }
 
+    #[allow(unused_must_use)]
     #[tokio::test]
     pub async fn process_place_limit_order_and_cancel_transaction() {
         let validator: ValidatorState = create_test_validator();
@@ -638,6 +642,7 @@ mod test_validator_state {
             .unwrap();
     }
 
+    #[allow(unused_must_use)]
     #[tokio::test]
     pub async fn process_place_limit_order_and_update_transaction() {
         let validator: ValidatorState = create_test_validator();

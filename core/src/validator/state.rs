@@ -329,7 +329,7 @@ mod test_validator_state {
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 
-        let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let key: ValidatorKeyPair = get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         let public_key = ValidatorPubKeyBytes::from(key.public());
         let secret = Arc::pin(key);
 
@@ -366,7 +366,7 @@ mod test_validator_state {
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 
-        let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let key: ValidatorKeyPair = get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         let public_key = ValidatorPubKeyBytes::from(key.public());
         let secret = Arc::pin(key);
 

@@ -54,7 +54,7 @@ impl From<tonic::Status> for GDEXError {
 
 #[async_trait]
 impl ExecutionStateError for GDEXError {
-    // TODO - implement
+    // TODO - implement node error
     fn node_error(&self) -> bool {
         false
     }

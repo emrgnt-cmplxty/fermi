@@ -222,7 +222,7 @@ mod genesis_test {
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 
-        let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let key: ValidatorKeyPair = get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         let validator = ValidatorInfo {
             name: "0".into(),
             public_key: key.public().into(),

@@ -27,7 +27,7 @@ use std::{
 pub const SERIALIZED_TRANSACTION_LENGTH: usize = 280;
 
 // TODO - remove dummy after adding more fields to create asset request
-// dummy has been added to allow us to submit multiple txns w/out collisions in bench
+// Note, dummy has been added to allow us to submit multiple txns w/out collisions in bench
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CreateAssetRequest {
     pub dummy: u8,
@@ -215,8 +215,8 @@ impl Hash for Transaction {
                     hasher.update(payment.get_receiver().0.as_bytes());
                     hasher.update(payment.get_asset_id().to_le_bytes());
                     hasher.update(payment.get_amount().to_le_bytes());
+                    // TODO - hashing the string is suboptimal, but cert digest bytes are private
                     hasher.update(self.get_recent_certificate_digest().to_string());
-                    // TODO this doesn't really make sense but the contents are private
                 };
                 TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
             }
@@ -225,7 +225,6 @@ impl Hash for Transaction {
                     hasher.update(create_asset.dummy.to_le_bytes());
                     hasher.update(self.get_sender().0.to_bytes());
                     hasher.update(self.get_recent_certificate_digest().to_string())
-                    // TODO this doesn't really make sense but the contents are private
                 };
                 TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
             }
@@ -508,7 +507,6 @@ pub mod transaction_test_functions {
         kp_receiver: &AccountKeyPair,
         amount: u64,
     ) -> SignedTransaction {
-        // TODO replace this with latest
         let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
         let transaction_variant = TransactionVariant::PaymentTransaction(PaymentRequest::new(
             kp_receiver.public().clone(),
@@ -527,6 +525,8 @@ pub mod transaction_test_functions {
 /// Begin the testing suite for transactions
 #[cfg(test)]
 pub mod transaction_tests {
+    use narwhal_crypto::traits::ToFromBytes;
+
     use super::transaction_test_functions::*;
     use super::*;
     use crate::account::account_test_functions::generate_keypair_vec;
@@ -836,12 +836,11 @@ pub mod transaction_tests {
         let signed_transaction_deserialized: SignedTransaction = SignedTransaction::deserialize(serialized).unwrap();
         // verify signed transaction matches previous values
 
-        // TODO - why does this fail?
-        // assert!(
-        //     signed_transaction.get_transaction_signature()
-        //         == signed_transaction_deserialized.get_transaction_signature(),
-        //     "signed transaction signature does not match after deserialize"
-        // );
+        assert!(
+            signed_transaction.get_transaction_signature().as_bytes()
+                == signed_transaction_deserialized.get_transaction_signature().as_bytes(),
+            "signed transaction signature does not match after deserialize"
+        );
 
         // verify transaction matches previous values
         let transaction = signed_transaction.get_transaction_payload();

@@ -15,7 +15,7 @@ pub mod cluster_test_suite {
     use gdex_node::faucet_server::{FaucetService, FAUCET_PORT};
     use gdex_suite::test_utils::test_cluster::TestCluster;
     use gdex_types::{
-        account::AccountKeyPair,
+        account::{AccountKeyPair, ValidatorKeyPair},
         asset::PRIMARY_ASSET_ID,
         block::{Block, BlockDigest},
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
@@ -100,7 +100,7 @@ pub mod cluster_test_suite {
             epoch: 1,
         };
 
-        let key = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let key = get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         spawner_0
             .get_tx_reconfigure_consensus()
             .as_ref()
@@ -451,7 +451,7 @@ pub mod cluster_test_suite {
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
-        let keypair: AccountKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let keypair: AccountKeyPair = get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         let key_path = temp_dir.path().to_path_buf();
         let keystore_name = "validator-0.key";
 

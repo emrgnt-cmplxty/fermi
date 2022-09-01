@@ -60,7 +60,6 @@ class CommandMaker:
             balance,
             stake,
             key_file,
-            network_address,
             primary_to_primary_address,
             worker_to_primary_address,
             primary_to_worker_address,
@@ -161,7 +160,7 @@ class CommandMaker:
         assert isinstance(nodes, list)
         assert all(isinstance(x, str) for x in nodes)
         nodes = f'--nodes {" ".join(nodes)}' if nodes else ''
-        command = f'./benchmark_gdex_client {address} --relayer {relayer_address} --validator_key_fpath {validator_key_path} --rate {rate}  --nodes {nodes}'
+        command = f'./benchmark_gdex_client {address} --relayer {relayer_address} --validator_key_fpath {validator_key_path} --rate {rate} {nodes}'
         print("Returning execution command = ", command)
         return command
 

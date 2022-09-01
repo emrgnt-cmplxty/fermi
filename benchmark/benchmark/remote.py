@@ -12,7 +12,7 @@ from copy import deepcopy
 import subprocess
 
 from benchmark.config import Committee, Key, NodeParameters, BenchParameters, ConfigError, GDEXBenchParameters
-from benchmark.utils import BenchError, Print, PathMaker, progress_bar
+from benchmark.utils import BenchError, Print, PathMaker, progress_bar, multiaddr_to_url_data
 from benchmark.commands import CommandMaker
 from benchmark.logs import LogParser, ParseError
 from benchmark.instance import InstanceManager
@@ -71,9 +71,11 @@ class Bench:
 
             # This is missing from the Rocksdb installer (needed for Rocksdb).
             'sudo apt-get install -y clang',
+            'sudo apt-get install openssl',
+            'sudo apt-get install pkg-config',
 
             # Clone the repo.
-            f'ssh-keyscan -H github.com >> ~/.ssh/known_hosts',
+            'ssh-keyscan -H github.com >> ~/.ssh/known_hosts',
             f'(git clone {self.settings.repo_url} || (cd {self.settings.repo_name} ; git pull))'
         ]
         hosts = self.manager.hosts(flat=True)
@@ -138,7 +140,6 @@ class Bench:
     def _background_run(self, host, command, log_file, cwd='~/gdex-core/benchmark'):
         name = splitext(basename(log_file))[0]
         cmd = f'(cd {cwd}) && tmux new -d -s "{name}" "{command} |& tee {log_file}"'
-        breakpoint()
         c = Connection(host, user='ubuntu', connect_kwargs=self.connect)
         output = c.run(cmd, hide=True)
         self._check_stderr(output)
@@ -194,7 +195,7 @@ class Bench:
             cmd = CommandMaker.generate_gdex_key(filename).split()
             subprocess.run(cmd, check=True)
             keys += [Key.from_file('./.proto/' + filename)]
-
+        sleep(2)
         names = [x.name for x in keys]
 
         if bench_parameters.collocate:
@@ -210,12 +211,12 @@ class Bench:
         committee.print(PathMaker.committee_file())
 
         for i, name in enumerate(names):
+            sleep(1)
             path = proto_dir
             validator_dict = committee.json["authorities"][name]
             balance = 5000000000000
             stake = validator_dict["stake"]
             key_file = path + key_files[i]
-            network_address = validator_dict["network_address"]
             primary_to_primary = validator_dict["primary"]["primary_to_primary"]
             worker_to_primary = validator_dict["primary"]["worker_to_primary"]
             primary_to_worker = validator_dict["workers"][0]["primary_to_worker"]
@@ -228,7 +229,6 @@ class Bench:
                 balance,
                 stake,
                 key_file,
-                network_address,
                 primary_to_primary,
                 worker_to_primary,
                 primary_to_worker,
@@ -236,13 +236,13 @@ class Bench:
                 consensus_address
             )
             subprocess.run([cmd], shell=True)
-
+        sleep(2)
         cmd = CommandMaker.add_controllers_gdex_genesis(proto_dir)
         subprocess.run([cmd], shell=True)
 
         cmd = CommandMaker.build_gdex_genesis(proto_dir)
         subprocess.run([cmd], shell=True)
-
+        sleep(3)
         for i, name in enumerate(names):
             cmd = CommandMaker.verify_and_sign_gdex_genesis(proto_dir, proto_dir + key_files[i])
             subprocess.run([cmd], shell=True)
@@ -292,28 +292,31 @@ class Bench:
         rate_share = ceil(rate / committee.workers())
         for i, name in enumerate(committee.json['authorities'].keys()):
             validator_dict = committee.json['authorities'][name]
-            validator_address = validator_dict['network_address']
-            relayer_address = validator_dict['relayer_address']
-            host = Committee.ip_from_multi_address(validator_address)
+            validator_address = validator_dict['network_address'].split('/')
+            validator_address[2] = '0.0.0.0'
+            validator_address = '/'.join(validator_address)
+            relayer_address = validator_dict['relayer_address'].split('/')
+            relayer_address[2] = '0.0.0.0'
+            relayer_address = '/'.join(relayer_address)
+            host = Committee.ip_from_multi_address(validator_dict['network_address'])
             cmd = CommandMaker.run_gdex_node('gdex-core/.proto', 'gdex-core/.proto', 'gdex-core/.proto/' + PathMaker.key_file(i), name, validator_address, relayer_address)
             log_file = PathMaker.primary_log_file(i)
             self._background_run(host, cmd, log_file)
 
-        sleep(1)
         # Run the primaries (except the faulty ones).
         Print.info('Booting clients...')
         for i, name in enumerate(committee.json['authorities'].keys()):
             validator_dict = committee.json['authorities'][name]
-            validator_address = validator_dict['network_address'] # <------
+            validator_address = validator_dict['network_address']
             relayer_address = validator_dict['relayer_address']
             host = Committee.ip_from_multi_address(validator_address)
-
+            breakpoint()
             cmd = CommandMaker.run_gdex_client(
-                validator_address,
-                relayer_address,
-                "../.proto/" + name,
+                multiaddr_to_url_data(validator_address),
+                multiaddr_to_url_data(relayer_address),
+                "gdex-core/.proto/" + PathMaker.key_file(i),
                 rate_share,
-                [node['network_address'] for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
+                [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
             )
             log_file = PathMaker.client_log_file(i, 0)
             self._background_run(host, cmd, log_file)
@@ -339,6 +342,7 @@ class Bench:
         duration = bench_parameters.duration
         for _ in progress_bar(range(20), prefix=f'Running benchmark ({duration} sec):'):
             sleep(ceil(duration / 20))
+        breakpoint()
         self.kill(hosts=hosts, delete_logs=False)
 
     def _logs(self, committee, faults):

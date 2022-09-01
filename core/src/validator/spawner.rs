@@ -147,7 +147,7 @@ impl ValidatorSpawner {
 
         // create config directory
         let network_address = self.validator_info.network_address.clone();
-        let consensus_address = self.validator_info.narwhal_consensus_address.clone();
+        let consensus_addresses = self.validator_info.narwhal_consensus_addresses.clone();
         let pubilc_key = self.validator_info.public_key();
 
         // TODO - can we avoid consuming the private key twice in the network setup?
@@ -182,7 +182,7 @@ impl ValidatorSpawner {
         );
 
         let consensus_config = ConsensusConfig {
-            consensus_address,
+            consensus_addresses,
             consensus_db_path: consensus_db_path.clone(),
             narwhal_config,
         };
@@ -225,12 +225,12 @@ impl ValidatorSpawner {
             panic!("The validator server already been spawned");
         };
 
-        let consensus_address = self.validator_info.narwhal_consensus_address.clone();
+        let consensus_addresses = self.validator_info.narwhal_consensus_addresses.clone();
         let validator_server = ValidatorServer::new(
             self.validator_address.clone(),
             // unwrapping is safe as validator state must have been created in spawn_validator_service
             Arc::clone(self.validator_state.as_ref().unwrap()),
-            consensus_address,
+            consensus_addresses,
             self.tx_reconfigure_consensus.as_ref().unwrap().clone(),
         );
 

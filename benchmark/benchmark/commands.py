@@ -112,6 +112,17 @@ class CommandMaker:
         return command
 
     @staticmethod
+    def run_gdex_orderbook_client(id, address, relayer_address, rate, nodes):
+        assert isinstance(address, str)
+        assert isinstance(rate, int) and rate >= 0
+        assert isinstance(nodes, list)
+        assert all(isinstance(x, str) for x in nodes)
+        nodes = f'--nodes {" ".join(nodes)}' if nodes else ''
+        command = f'./benchmark_orderbook_client {address} --relayer {relayer_address} --validator_key_fpath ../.proto/validator-0.key --rate {rate}  --nodes {nodes}'
+        print("Returning execution command = ", command)
+        return command
+
+    @staticmethod
     def alias_demo_binaries(origin):
         assert isinstance(origin, str)
         client = join(origin, 'demo_client')
@@ -131,7 +142,6 @@ class CommandMaker:
 
     @staticmethod
     def alias_binaries(origin):
-        print("origin=", origin)
         assert isinstance(origin, str)
-        gdex_node, narwhal_node, narwhhal_client, gdex_client = join(origin, 'gdex-node'), join(origin, 'benchmark-narwhal'), join(origin, 'benchmark_narwhal_client'), join(origin, 'benchmark_gdex_client')
-        return f'rm gdex-node ; rm benchmark-narwhal ; rm benchmark_narwhal_client ; rm benchmark_gdex_client ; ln -s {gdex_node} . ; ln -s {narwhal_node} . ; ln -s {narwhhal_client}; ln -s {gdex_client} .'
+        gdex_node, narwhal_node, narwhhal_client, gdex_client, orderbook_client = join(origin, 'gdex-node'), join(origin, 'benchmark-narwhal'), join(origin, 'benchmark_narwhal_client'), join(origin, 'benchmark_gdex_client'), join(origin, 'benchmark_orderbook_client')
+        return f'rm gdex-node ; rm benchmark-narwhal ; rm benchmark_narwhal_client ; rm benchmark_gdex_client ; ln -s {gdex_node} . ; ln -s {narwhal_node} . ; ln -s {narwhhal_client}; ln -s {gdex_client} .; ln -s {orderbook_client} .'

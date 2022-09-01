@@ -357,7 +357,7 @@ pub mod cluster_test_suite {
         let dummy_consensus_output = create_test_consensus_output();
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
+        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, 0);
         let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
         let signed_create_asset_txn =
             SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
@@ -410,6 +410,41 @@ pub mod cluster_test_suite {
     }
 
     #[tokio::test]
+    pub async fn test_metrics() {
+        let validator_count: usize = 4;
+        const N_TRANSACTIONS: u64 = 1_000_000;
+
+        let mut cluster = TestCluster::spawn(validator_count, None).await;
+        cluster.send_transactions(0, 1, 10).await;
+
+        let metrics_0 = &cluster.get_validator_spawner(0).get_validator_state().unwrap().metrics;
+        let metrics_1 = &cluster.get_validator_spawner(1).get_validator_state().unwrap().metrics;
+        assert!(metrics_0.num_transactions_rec.load(std::sync::atomic::Ordering::SeqCst) == 0);
+        assert!(metrics_1.num_transactions_rec.load(std::sync::atomic::Ordering::SeqCst) == 10);
+
+        cluster.send_transactions_async(1, 0, N_TRANSACTIONS, None).await;
+
+        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+        let init_time = metrics_0
+            .latest_system_epoch_time_in_ms
+            .load(std::sync::atomic::Ordering::SeqCst);
+        let init_transactions = metrics_0
+            .num_transactions_consensus
+            .load(std::sync::atomic::Ordering::SeqCst);
+        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+        let time_delta = metrics_0
+            .latest_system_epoch_time_in_ms
+            .load(std::sync::atomic::Ordering::SeqCst)
+            - init_time;
+        let transactions_delta = metrics_0
+            .num_transactions_consensus
+            .load(std::sync::atomic::Ordering::SeqCst)
+            - init_transactions;
+
+        // assert tps was greater than 5, I see 30 TPS locally on 1 thread
+        assert!(transactions_delta as f64 / (time_delta as f64 / 1000.) > 5.);
+    }
+
     pub async fn test_spawn_faucet() {
         let temp_dir = tempfile::tempdir().unwrap();
 

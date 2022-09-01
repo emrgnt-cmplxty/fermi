@@ -8,7 +8,8 @@ use gdex_types::block::BlockDigest;
 use gdex_types::proto::{RelayerClient, RelayerGetLatestBlockInfoRequest};
 use gdex_types::{
     account::{AccountKeyPair, ValidatorKeyPair},
-    proto::{TransactionProto, TransactionsClient},
+    block::BlockDigest,
+    proto::{RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionProto, TransactionsClient},
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
     utils::read_keypair_from_file,
 };
@@ -16,7 +17,6 @@ use narwhal_crypto::{
     traits::{KeyPair, Signer},
     Hash,
 };
-use narwhal_types::CertificateDigest;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use std::path::PathBuf;
 use tokio::{
@@ -130,7 +130,7 @@ async fn main() -> Result<()> {
     client.send().await.context("Failed to submit transactions")
 }
 
-/// TODO - add do_real_transaction as boolean field on client
+/// TODO - cleanup client to use bench helper
 struct Client {
     target: Url,
     relayer: Url,
@@ -148,7 +148,8 @@ impl Client {
             .await
             .unwrap();
         let mut relayer_client = RelayerClient::connect(self.relayer.as_str().to_owned()).await.unwrap();
-        let request = RelayerGetLatestBlockInfoRequest {};
+        let block_info_request = RelayerGetLatestBlockInfoRequest {};
+
         // Submit all transactions.
         let burst = self.rate / PRECISION;
         let mut counter = 0;
@@ -163,9 +164,9 @@ impl Client {
         // NOTE: This log entry is used to compute performance.
         info!("Start sending transactions");
         loop {
-            // fetch recent block digest
+            // fetch recent block digest before starting another round of payments
             let response = relayer_client
-                .get_latest_block_info(request.clone())
+                .get_latest_block_info(block_info_request.clone())
                 .await
                 .unwrap()
                 .into_inner();
@@ -178,18 +179,17 @@ impl Client {
 
             interval.as_mut().tick().await;
             let now = Instant::now();
-            let kp_sender = keys([0; 32]).pop().unwrap();
+            let keypair = keypair.copy();
             let kp_receiver = keys([1; 32]).pop().unwrap();
 
             if counter == 0 {
-                let transaction_size = create_signed_transaction(&kp_sender, &kp_receiver, 1, block_digest.clone())
+                let transaction_size = create_signed_transaction(&keypair, &kp_receiver, 1, block_digest.clone())
                     .serialize()
                     .unwrap()
                     .len();
                 info!("Transactions size: {transaction_size} B");
             }
 
-            let keypair = keypair.copy();
             let stream = tokio_stream::iter(0..burst).map(move |x| {
                 let amount = rand::thread_rng().gen_range(100_000 as u64..5_000_000 as u64);
                 if x == counter % burst {

@@ -461,4 +461,8 @@ pub mod cluster_test_suite {
 
         assert!(response.successful == true);
     }
+
+    // TODO - implement test after merging metrics...
+    #[tokio::test]
+    pub async fn test_submit_twice() {}
 }

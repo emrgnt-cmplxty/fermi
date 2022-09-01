@@ -34,6 +34,8 @@ pub enum GDEXError {
     TransactionSerialization,
     #[error("Failed to deserialize into a signed transaction")]
     TransactionDeserialization,
+    #[error("Failed to process duplicate transaction")]
+    TransactionDuplicate,
 
     // Consensus output errors
     #[error("Failed to execute transaction")]

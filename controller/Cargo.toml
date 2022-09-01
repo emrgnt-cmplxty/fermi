@@ -9,7 +9,7 @@ rand =  "0.8.5"
 serde = { version = "1.0.141", features = ["derive"] }
 
 # mysten crates
-narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "e54611ee0387735b1963eecfc4fdc120ee8ac509", package = "crypto" }
+narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "crypto" }
 
 # local crates
 gdex-engine = { path = "../engine" }

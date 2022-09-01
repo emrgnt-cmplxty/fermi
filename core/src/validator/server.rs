@@ -200,6 +200,7 @@ impl ValidatorService {
         transaction_proto: TransactionProto,
     ) -> Result<tonic::Response<Empty>, tonic::Status> {
         trace!("Handling a new transaction with ValidatorService",);
+        state.metrics.increment_num_transactions_rec();
 
         let signed_transaction = SignedTransaction::deserialize(transaction_proto.transaction.to_vec())
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
@@ -214,13 +215,15 @@ impl ValidatorService {
                 .get_transaction_payload()
                 .get_recent_certificate_digest(),
         ) {
+            state.metrics.increment_num_transactions_rec_failed();
             return Err(tonic::Status::internal("Invalid recent certificate digest"));
         }
-
+        info!("signed_transaction={:?}", signed_transaction);
         if state
             .validator_store
             .cache_contains_transaction(signed_transaction.get_transaction_payload())
         {
+            state.metrics.increment_num_transactions_rec_failed();
             let digest = signed_transaction.get_transaction_payload().digest().to_string();
             return Err(tonic::Status::internal("Duplicate transaction ".to_owned() + &digest));
         }

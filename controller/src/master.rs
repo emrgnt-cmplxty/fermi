@@ -14,6 +14,7 @@ use crate::{
 
 // mysten
 
+use gdex_types::{error::GDEXError, transaction::Transaction};
 // external
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -74,5 +75,29 @@ impl MasterController {
             Ok(()) => (),
             Err(err) => panic!("Failed to initialize spot_controller account: {:?}", err),
         }
+    }
+
+    pub fn handle_consensus_transaction(&self, transaction: &Transaction) -> Result<(), GDEXError> {
+        self.consensus_controller
+            .lock()
+            .unwrap()
+            .handle_consensus_transaction(transaction)?;
+
+        self.bank_controller
+            .lock()
+            .unwrap()
+            .handle_consensus_transaction(transaction)?;
+
+        self.stake_controller
+            .lock()
+            .unwrap()
+            .handle_consensus_transaction(transaction)?;
+
+        self.spot_controller
+            .lock()
+            .unwrap()
+            .handle_consensus_transaction(transaction)?;
+        
+        Ok(())
     }
 }

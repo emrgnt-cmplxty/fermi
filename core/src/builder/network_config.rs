@@ -26,7 +26,7 @@ use std::{
 };
 
 /// A config builder class which is used in the genesis process to generate a NetworkConfig
-pub struct NetworkConfigBuilder{
+pub struct NetworkConfigBuilder {
     /// Associated random number generator
     rng: OsRng,
     /// Directory of created config

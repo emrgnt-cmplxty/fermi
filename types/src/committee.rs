@@ -111,7 +111,6 @@ impl Committee {
 
     pub fn public_key(&self, validator: &ValidatorName) -> GDEXResult<ValidatorPubKey> {
         match self.expanded_keys.get(validator) {
-            // TODO: Check if this is unnecessary copying.
             Some(v) => Ok(v.clone()),
             None => (*validator)
                 .try_into()

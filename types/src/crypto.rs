@@ -142,13 +142,15 @@ pub mod crypto_tests {
 
     #[test]
     pub fn get_keypairs() {
-        let _key1: ValidatorKeyPair = get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
+        let _key1: ValidatorKeyPair =
+            get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         let _key2: ValidatorKeyPair = get_random_key_pair();
     }
 
     #[test]
     pub fn to_and_from_bytes() {
-        let key: ValidatorKeyPair = get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
+        let key: ValidatorKeyPair =
+            get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         let gdex_addr = GDEXAddress::from(key.public());
         let key_bytes = gdex_addr.as_ref();
         let gdex_addr_from_bytes: GDEXAddress = GDEXAddress::try_from(key_bytes).unwrap();

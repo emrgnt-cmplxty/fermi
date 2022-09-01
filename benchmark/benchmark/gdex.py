@@ -54,13 +54,13 @@ class GDEXBench:
             sleep(0.5)  # Removing the store may take time.
 
             # Recompile the latest code.
-            cmd = CommandMaker.compile(mem_profiling=self.mem_profile)
+            cmd = CommandMaker.compile(mem_profiling=self.mem_profile, flamegraph=self.flamegraph)
             Print.info(f"About to run {cmd}...")
             subprocess.run(cmd, check=True, cwd=PathMaker.gdex_build_path())
             sleep(0.5)  # Removing the store may take time.
 
             # Recompile the latest code.
-            cmd = CommandMaker.compile(mem_profiling=self.mem_profile, benchmark=False)
+            cmd = CommandMaker.compile(mem_profiling=self.mem_profile, flamegraph=self.flamegraph, benchmark=False)
             Print.info(f"About to run {cmd}...")
             subprocess.run(cmd, check=True, cwd=PathMaker.gdex_build_path())
             sleep(0.5)  # Removing the store may take time.
@@ -80,7 +80,8 @@ class GDEXBench:
                     node_name,
                     url_to_multiaddr(nodes[node_name]),
                     url_to_multiaddr(relayers[node_name]),
-                    debug
+                    debug,
+                    self.flamegraph
                 )
                 log_file = PathMaker.primary_log_file(id)
                 print(cmd, ">>", log_file)

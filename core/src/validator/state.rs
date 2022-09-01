@@ -34,6 +34,8 @@ use std::{
     },
 };
 use tracing::{info, trace};
+type ExecutionResult = Result<(), GDEXError>;
+
 /// Tracks recently submitted transactions to implement transaction gating
 pub struct ValidatorStore {
     /// The transaction map tracks recently submitted transactions
@@ -152,7 +154,7 @@ impl ValidatorStore {
     pub async fn write_latest_block(
         &self,
         block_certificate: BlockCertificate,
-        transactions: Vec<SerializedTransaction>,
+        transactions: Vec<(SerializedTransaction, ExecutionResult)>,
     ) {
         // TODO - is there a way to acquire a mutable reference to the block-number without demanding &mut self?
         // this would allow us to avoid separate commands to load and add to the counter
@@ -268,7 +270,7 @@ impl ValidatorState {
 impl ExecutionState for ValidatorState {
     type Transaction = SignedTransaction;
     type Error = GDEXError;
-    type Outcome = (ConsensusOutput, ExecutionIndices);
+    type Outcome = (ConsensusOutput, ExecutionIndices, ExecutionResult);
 
     async fn handle_consensus_transaction(
         &self,
@@ -295,7 +297,7 @@ impl ExecutionState for ValidatorState {
             .handle_consensus_transaction(transaction)
             .unwrap();
 
-        Ok((consensus_output.clone(), execution_indices))
+        Ok((consensus_output.clone(), execution_indices, Ok(())))
     }
 
     fn ask_consensus_write_lock(&self) -> bool {

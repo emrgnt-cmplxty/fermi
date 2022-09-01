@@ -66,6 +66,36 @@ pub struct RelayerBlockInfoResponse {
     #[prost(message, optional, tag="2")]
     pub block_info: ::core::option::Option<BlockInfo>,
 }
+/// A message to get the latest orderbook snap
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RelayerGetOrderbookSnapRequest {
+    #[prost(uint64, tag="1")]
+    pub base_asset_id: u64,
+    #[prost(uint64, tag="2")]
+    pub quote_asset_id: u64,
+    #[prost(uint64, tag="3")]
+    pub depth: u64,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Bid {
+    #[prost(uint64, tag="1")]
+    pub price: u64,
+    #[prost(uint64, tag="2")]
+    pub quantity: u64,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Ask {
+    #[prost(uint64, tag="1")]
+    pub price: u64,
+    #[prost(uint64, tag="2")]
+    pub quantity: u64,
+}
+/// A response of the latest orderbook snap
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RelayerOrderbookSnapResponse {
+    #[prost(message, repeated, tag="2")]
+    pub block_info: ::prost::alloc::vec::Vec<BlockInfo>,
+}
 /// Generated client implementations.
 pub mod transactions_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
@@ -376,6 +406,28 @@ pub mod relayer_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static("/gdex.Relayer/GetBlock");
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        pub async fn get_orderbook_snap(
+            &mut self,
+            request: impl tonic::IntoRequest<super::RelayerGetOrderbookSnapRequest>,
+        ) -> Result<
+            tonic::Response<super::RelayerOrderbookSnapResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/gdex.Relayer/GetOrderbookSnap",
+            );
             self.inner.unary(request.into_request(), path, codec).await
         }
     }
@@ -718,6 +770,10 @@ pub mod relayer_server {
             &self,
             request: tonic::Request<super::RelayerGetBlockRequest>,
         ) -> Result<tonic::Response<super::RelayerBlockResponse>, tonic::Status>;
+        async fn get_orderbook_snap(
+            &self,
+            request: tonic::Request<super::RelayerGetOrderbookSnapRequest>,
+        ) -> Result<tonic::Response<super::RelayerOrderbookSnapResponse>, tonic::Status>;
     }
     /// Relay service for relaying information outside
     #[derive(Debug)]
@@ -877,6 +933,48 @@ pub mod relayer_server {
                     let fut = async move {
                         let inner = inner.0;
                         let method = GetBlockSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/gdex.Relayer/GetOrderbookSnap" => {
+                    #[allow(non_camel_case_types)]
+                    struct GetOrderbookSnapSvc<T: Relayer>(pub Arc<T>);
+                    impl<
+                        T: Relayer,
+                    > tonic::server::UnaryService<super::RelayerGetOrderbookSnapRequest>
+                    for GetOrderbookSnapSvc<T> {
+                        type Response = super::RelayerOrderbookSnapResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<
+                                super::RelayerGetOrderbookSnapRequest,
+                            >,
+                        ) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut = async move {
+                                (*inner).get_orderbook_snap(request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = GetOrderbookSnapSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

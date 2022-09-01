@@ -39,6 +39,7 @@ service Relayer {
     rpc GetLatestBlockInfo (RelayerGetLatestBlockInfoRequest) returns (RelayerBlockInfoResponse);
     rpc GetBlockInfo (RelayerGetBlockInfoRequest) returns (RelayerBlockInfoResponse);
     rpc GetBlock (RelayerGetBlockRequest) returns (RelayerBlockResponse);
+    rpc GetOrderbookSnap (RelayerGetOrderbookSnapRequest) returns (RelayerOrderbookSnapResponse);
 }
 
 // A message to get the latest block info
@@ -76,4 +77,27 @@ message RelayerBlockResponse {
 message RelayerBlockInfoResponse {
     bool successful = 1;
     BlockInfo block_info = 2;
+}
+
+// A message to get the latest orderbook snap
+message RelayerGetOrderbookSnapRequest {
+    uint64 base_asset_id = 1;
+    uint64 quote_asset_id = 2;
+    uint64 depth = 3;
+}
+
+message Bid {
+    uint64 price = 1;
+    uint64 quantity = 2;
+}
+
+message Ask {
+    uint64 price = 1;
+    uint64 quantity = 2;
+}
+
+// A response of the latest orderbook snap
+message RelayerOrderbookSnapResponse {
+    repeated Bid bids = 1;
+    repeated Ask asks = 2;
 }

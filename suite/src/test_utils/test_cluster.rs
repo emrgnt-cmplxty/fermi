@@ -108,9 +108,9 @@ impl TestCluster {
             validator_counter += 1;
             let key_file = format!("{}.key", validator_info.name);
             let mut validator_spawner = ValidatorSpawner::new(
-                working_dir.clone(), // db path
+                working_dir.clone(),                                                               // db path
                 PathBuf::from(working_dir.to_str().unwrap().to_owned() + "/" + key_file.as_str()), // key path
-                working_dir.clone(), // genesis path
+                working_dir.clone(),                                                               // genesis path
                 utils::new_network_address(),
                 validator_info.name.clone(),
             );

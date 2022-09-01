@@ -6,7 +6,7 @@ use crate::validator::genesis_state::ValidatorGenesisState;
 use anyhow::{bail, Result};
 use camino::Utf8Path;
 use gdex_controller::master::MasterController;
-use gdex_types::{account::ValidatorPubKeyBytes, node::ValidatorInfo, utils};
+use gdex_types::{account::ValidatorPubKeyBytes, node::ValidatorInfo};
 use std::{
     collections::BTreeMap,
     convert::TryInto,

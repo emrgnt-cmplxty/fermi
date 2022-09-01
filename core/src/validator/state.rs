@@ -278,9 +278,9 @@ impl ExecutionState for ValidatorState {
 
         let result = self.master_controller.handle_consensus_transaction(transaction);
 
-        if result.is_err() {
+        if let Err(err) = result {
             self.metrics.increment_num_transactions_consensus_failed();
-            return Err(result.unwrap_err());
+            return Err(err);
         }
         Ok((consensus_output.clone(), execution_indices))
     }
@@ -342,9 +342,9 @@ mod test_validator_state {
             network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),
             narwhal_worker_to_primary: utils::new_network_address(),
-            narwhal_primary_to_worker: vec![utils::new_network_address()],
-            narwhal_worker_to_worker: vec![utils::new_network_address()],
-            narwhal_consensus_addresses: vec![utils::new_network_address()],
+            narwhal_primary_to_worker: utils::new_network_address(),
+            narwhal_worker_to_worker: utils::new_network_address(),
+            narwhal_consensus_address: utils::new_network_address(),
         };
 
         let builder = GenesisStateBuilder::new()
@@ -379,9 +379,9 @@ mod test_validator_state {
             network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),
             narwhal_worker_to_primary: utils::new_network_address(),
-            narwhal_primary_to_worker: vec![utils::new_network_address()],
-            narwhal_worker_to_worker: vec![utils::new_network_address()],
-            narwhal_consensus_addresses: vec![utils::new_network_address()],
+            narwhal_primary_to_worker: utils::new_network_address(),
+            narwhal_worker_to_worker: utils::new_network_address(),
+            narwhal_consensus_address: utils::new_network_address(),
         };
 
         let builder = GenesisStateBuilder::new()

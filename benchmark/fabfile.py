@@ -35,6 +35,7 @@ def gdex(ctx, debug=True):
         'flamegraph': None, # node or None
         'genesis_dir': "../.proto/",
         'key_dir': "../.proto/",
+        'do_orderbook': True,
         # the database dir will be whiped before running the benchmark
         'db_dir': "."
     }

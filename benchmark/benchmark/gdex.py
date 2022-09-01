@@ -93,13 +93,22 @@ class GDEXBench:
             rate_share = ceil(rate / len(nodes.keys()))
             for id, address in enumerate(nodes.values()):
                 sleep(2)
-                cmd = CommandMaker.run_gdex_client(
-                    id,
-                    address,
-                    relayers['validator-' + str(id)],
-                    rate_share,
-                    [x for x in nodes.values() if x != address]
-                )
+                if self.order_bench:
+                    cmd = CommandMaker.run_gdex_orderbook_client(
+                        id,
+                        address,
+                        relayers['validator-' + str(id)],
+                        rate_share,
+                        [x for x in nodes.values() if x != address]
+                    )
+                else:
+                    cmd = CommandMaker.run_gdex_client(
+                        id,
+                        address,
+                        relayers['validator-' + str(id)],
+                        rate_share,
+                        [x for x in nodes.values() if x != address]
+                    )
                 # currently hard-coded for a single worker, for n-workers 0 -> i
                 log_file = PathMaker.client_log_file(id, 0)
                 print(cmd, ">>", log_file)

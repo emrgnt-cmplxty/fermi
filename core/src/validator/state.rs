@@ -3,9 +3,10 @@
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-core/src/authority.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bcuse super::state::ValidatorState;
 use super::genesis_state::ValidatorGenesisState;
+use crate::validator::metrics::ValidatorMetrics;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
-use gdex_controller::{controller::Controller, master::MasterController};
+use gdex_controller::master::MasterController;
 use gdex_types::transaction::Transaction;
 use gdex_types::{
     account::ValidatorKeyPair,
@@ -87,7 +88,7 @@ impl ValidatorStore {
         };
 
         let block_digest_cache = Mutex::new(HashMap::new());
-        // TODO theres likely a better way to say what I'm saying here
+        // TODO - cleanup writing dummy block
         if block_number == 0 {
             block_digest_cache
                 .lock()
@@ -218,8 +219,10 @@ pub struct ValidatorState {
     /// NodeConfig for this node
     /// Controller of various blockchain modules
     pub master_controller: MasterController,
-    // A map of transactions which have been seen
+    /// A map of transactions which have been seen
     pub validator_store: ValidatorStore,
+    /// Metrics around blockchain operations
+    pub metrics: ValidatorMetrics,
 }
 
 impl ValidatorState {
@@ -238,6 +241,7 @@ impl ValidatorState {
             committee: ArcSwap::from(Arc::new(genesis.committee().unwrap())),
             master_controller: genesis.master_controller().clone(),
             validator_store: ValidatorStore::reopen(store_db_path),
+            metrics: ValidatorMetrics::default(),
         }
     }
 
@@ -276,25 +280,18 @@ impl ExecutionState for ValidatorState {
         execution_indices: ExecutionIndices,
         signed_transaction: Self::Transaction,
     ) -> Result<Self::Outcome, Self::Error> {
+        self.metrics.increment_num_transactions_consensus();
         let transaction = signed_transaction.get_transaction_payload();
 
         self.validator_store
             .insert_confirmed_transaction(transaction, consensus_output)?;
 
-        // handle transactions for bank controller
-        self.master_controller
-            .bank_controller
-            .lock()
-            .unwrap()
-            .handle_consensus_transaction(transaction)
-            .unwrap();
-        self.master_controller
-            .spot_controller
-            .lock()
-            .unwrap()
-            .handle_consensus_transaction(transaction)
-            .unwrap();
+        let result = self.master_controller.handle_consensus_transaction(transaction);
 
+        if let Err(err) = result {
+            self.metrics.increment_num_transactions_consensus_failed();
+            return Err(err);
+        }
         Ok((consensus_output.clone(), execution_indices))
     }
 
@@ -355,9 +352,9 @@ mod test_validator_state {
             network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),
             narwhal_worker_to_primary: utils::new_network_address(),
-            narwhal_primary_to_worker: utils::new_network_address(),
-            narwhal_worker_to_worker: utils::new_network_address(),
-            narwhal_consensus_address: utils::new_network_address(),
+            narwhal_primary_to_worker: vec![utils::new_network_address()],
+            narwhal_worker_to_worker: vec![utils::new_network_address()],
+            narwhal_consensus_addresses: vec![utils::new_network_address()],
         };
 
         let builder = GenesisStateBuilder::new()
@@ -392,9 +389,9 @@ mod test_validator_state {
             network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),
             narwhal_worker_to_primary: utils::new_network_address(),
-            narwhal_primary_to_worker: utils::new_network_address(),
-            narwhal_worker_to_worker: utils::new_network_address(),
-            narwhal_consensus_address: utils::new_network_address(),
+            narwhal_primary_to_worker: vec![utils::new_network_address()],
+            narwhal_worker_to_worker: vec![utils::new_network_address()],
+            narwhal_consensus_addresses: vec![utils::new_network_address()],
         };
 
         let builder = GenesisStateBuilder::new()
@@ -438,7 +435,7 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
+        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, 0);
         let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
         let signed_create_asset_txn =
             SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
@@ -462,7 +459,7 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
+        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, 0);
         let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
         let signed_create_asset_txn =
             SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
@@ -504,12 +501,13 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
-        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
-        let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
 
-        for _ in 0..5 {
+        for asset_number in 0..5 {
+            let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, asset_number);
+            let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
+            let signed_create_asset_txn =
+                SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+    
             validator
                 .handle_consensus_transaction(
                     &dummy_consensus_output,
@@ -554,12 +552,13 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
-        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
-        let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
 
-        for _ in 0..5 {
+        for asset_number in 0..5 {
+            let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, asset_number);
+            let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
+            let signed_create_asset_txn =
+                SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+
             validator
                 .handle_consensus_transaction(
                     &dummy_consensus_output,
@@ -650,12 +649,13 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
-        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
-        let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
 
-        for _ in 0..5 {
+        for asset_number in 0..5 {
+            let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, asset_number);
+            let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
+            let signed_create_asset_txn =
+                SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+
             validator
                 .handle_consensus_transaction(
                     &dummy_consensus_output,

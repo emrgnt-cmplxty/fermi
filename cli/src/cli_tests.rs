@@ -3,7 +3,7 @@
 //! SPDX-License-Identifier: Apache-2.0
 //! Note, the code in this file is inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui/src/unit_tests/cli_tests.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 #[cfg(test)]
-mod cli_tests {
+mod cli_test_suite {
     use gdex_cli::command::GDEXCommand;
     use gdex_core::config::{
         network::NetworkConfig, PersistedConfig, GDEX_FULLNODE_CONFIG, GDEX_GATEWAY_CONFIG, GDEX_GENESIS_FILENAME,

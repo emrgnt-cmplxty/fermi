@@ -28,6 +28,8 @@ pub enum GDEXError {
     OrderRequest,
     #[error("Orderbook creation failed")]
     OrderBookCreation,
+    #[error("Insufficient balance to place order")]
+    OrderExceedsBalance,
     #[error("Payment request failed")]
     PaymentRequest,
     #[error("Failed to serialize the signed transaction")]

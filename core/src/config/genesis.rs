@@ -42,9 +42,9 @@ pub struct ValidatorGenesisStateInfo {
     pub balance: u64,
     pub narwhal_primary_to_primary: Multiaddr,
     pub narwhal_worker_to_primary: Multiaddr,
-    pub narwhal_primary_to_worker: Multiaddr,
-    pub narwhal_worker_to_worker: Multiaddr,
-    pub narwhal_consensus_address: Multiaddr,
+    pub narwhal_primary_to_worker: Vec<Multiaddr>,
+    pub narwhal_worker_to_worker: Vec<Multiaddr>,
+    pub narwhal_consensus_addresses: Vec<Multiaddr>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

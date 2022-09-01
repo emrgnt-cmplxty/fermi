@@ -24,9 +24,9 @@ pub struct ValidatorInfo {
 
     //TODO remove all of these as they shouldn't be needed to be encoded in genesis
     pub narwhal_worker_to_primary: Multiaddr,
-    pub narwhal_primary_to_worker: Multiaddr,
-    pub narwhal_worker_to_worker: Multiaddr,
-    pub narwhal_consensus_address: Multiaddr,
+    pub narwhal_primary_to_worker: Vec<Multiaddr>,
+    pub narwhal_worker_to_worker: Vec<Multiaddr>,
+    pub narwhal_consensus_addresses: Vec<Multiaddr>,
 }
 
 impl ValidatorInfo {
@@ -89,9 +89,9 @@ pub mod node_tests {
             network_address: network_address.clone(),
             narwhal_primary_to_primary: utils::new_network_address(),
             narwhal_worker_to_primary: utils::new_network_address(),
-            narwhal_primary_to_worker: utils::new_network_address(),
-            narwhal_worker_to_worker: utils::new_network_address(),
-            narwhal_consensus_address: utils::new_network_address(),
+            narwhal_primary_to_worker: vec![utils::new_network_address()],
+            narwhal_worker_to_worker: vec![utils::new_network_address()],
+            narwhal_consensus_addresses: vec![utils::new_network_address()],
         };
 
         assert!(name == validator.name());

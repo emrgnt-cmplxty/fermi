@@ -412,19 +412,29 @@ pub mod cluster_test_suite {
 
         let metrics_0 = &cluster.get_validator_spawner(0).get_validator_state().unwrap().metrics;
         let metrics_1 = &cluster.get_validator_spawner(1).get_validator_state().unwrap().metrics;
-        assert!(metrics_0.num_transactions_rec.load(std::sync::atomic::Ordering::SeqCst)==0);
-        assert!(metrics_1.num_transactions_rec.load(std::sync::atomic::Ordering::SeqCst)==10);
+        assert!(metrics_0.num_transactions_rec.load(std::sync::atomic::Ordering::SeqCst) == 0);
+        assert!(metrics_1.num_transactions_rec.load(std::sync::atomic::Ordering::SeqCst) == 10);
 
         cluster.send_transactions_async(1, 0, N_TRANSACTIONS, None).await;
 
         tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-        let init_time = metrics_0.latest_system_epoch_time_in_ms.load(std::sync::atomic::Ordering::SeqCst);
-        let init_transactions = metrics_0.num_transactions_consensus.load(std::sync::atomic::Ordering::SeqCst);
+        let init_time = metrics_0
+            .latest_system_epoch_time_in_ms
+            .load(std::sync::atomic::Ordering::SeqCst);
+        let init_transactions = metrics_0
+            .num_transactions_consensus
+            .load(std::sync::atomic::Ordering::SeqCst);
         tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-        let time_delta = metrics_0.latest_system_epoch_time_in_ms.load(std::sync::atomic::Ordering::SeqCst) - init_time;
-        let transactions_delta = metrics_0.num_transactions_consensus.load(std::sync::atomic::Ordering::SeqCst) - init_transactions;
+        let time_delta = metrics_0
+            .latest_system_epoch_time_in_ms
+            .load(std::sync::atomic::Ordering::SeqCst)
+            - init_time;
+        let transactions_delta = metrics_0
+            .num_transactions_consensus
+            .load(std::sync::atomic::Ordering::SeqCst)
+            - init_transactions;
 
         // assert tps was greater than 5, I see 30 TPS locally on 1 thread
-        assert!( transactions_delta as f64 / (time_delta as f64 / 1000. ) > 5.);
+        assert!(transactions_delta as f64 / (time_delta as f64 / 1000.) > 5.);
     }
 }

@@ -218,7 +218,6 @@ impl ValidatorService {
             state.metrics.increment_num_transactions_rec_failed();
             return Err(tonic::Status::internal("Invalid recent certificate digest"));
         }
-        info!("signed_transaction={:?}", signed_transaction);
         if state
             .validator_store
             .cache_contains_transaction(signed_transaction.get_transaction_payload())

@@ -97,7 +97,7 @@ impl MasterController {
             .lock()
             .unwrap()
             .handle_consensus_transaction(transaction)?;
-        
+
         Ok(())
     }
 }

@@ -2,8 +2,8 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-core/src/authority.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bcuse super::state::ValidatorState;
-use crate::validator::metrics::ValidatorMetrics;
 use super::genesis_state::ValidatorGenesisState;
+use crate::validator::metrics::ValidatorMetrics;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
 use gdex_controller::master::MasterController;
@@ -212,7 +212,7 @@ pub struct ValidatorState {
     /// A map of transactions which have been seen
     pub validator_store: ValidatorStore,
     /// Metrics around blockchain operations
-    pub metrics: ValidatorMetrics
+    pub metrics: ValidatorMetrics,
 }
 
 impl ValidatorState {
@@ -278,7 +278,7 @@ impl ExecutionState for ValidatorState {
 
         let result = self.master_controller.handle_consensus_transaction(transaction);
 
-        if let Err(err) = result{
+        if let Err(err) = result {
             self.metrics.increment_num_transactions_consensus_failed();
             return Err(err);
         }

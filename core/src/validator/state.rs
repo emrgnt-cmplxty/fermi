@@ -278,9 +278,9 @@ impl ExecutionState for ValidatorState {
 
         let result = self.master_controller.handle_consensus_transaction(transaction);
 
-        if let Err(err) = result {
+        if result.is_err() {
             self.metrics.increment_num_transactions_consensus_failed();
-            return Err(err);
+            return Err(result.unwrap_err());
         }
         Ok((consensus_output.clone(), execution_indices))
     }

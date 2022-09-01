@@ -3,9 +3,10 @@
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-core/src/authority.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bcuse super::state::ValidatorState;
 use super::genesis_state::ValidatorGenesisState;
+use crate::validator::metrics::ValidatorMetrics;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
-use gdex_controller::{controller::Controller, master::MasterController};
+use gdex_controller::master::MasterController;
 use gdex_types::transaction::Transaction;
 use gdex_types::{
     account::ValidatorKeyPair,
@@ -87,7 +88,7 @@ impl ValidatorStore {
         };
 
         let block_digest_cache = Mutex::new(HashMap::new());
-        // TODO theres likely a better way to say what I'm saying here
+        // TODO - cleanup writing dummy block
         if block_number == 0 {
             block_digest_cache
                 .lock()
@@ -208,8 +209,10 @@ pub struct ValidatorState {
     /// NodeConfig for this node
     /// Controller of various blockchain modules
     pub master_controller: MasterController,
-    // A map of transactions which have been seen
+    /// A map of transactions which have been seen
     pub validator_store: ValidatorStore,
+    /// Metrics around blockchain operations
+    pub metrics: ValidatorMetrics,
 }
 
 impl ValidatorState {
@@ -228,6 +231,7 @@ impl ValidatorState {
             committee: ArcSwap::from(Arc::new(genesis.committee().unwrap())),
             master_controller: genesis.master_controller().clone(),
             validator_store: ValidatorStore::reopen(store_db_path),
+            metrics: ValidatorMetrics::default(),
         }
     }
 
@@ -266,25 +270,18 @@ impl ExecutionState for ValidatorState {
         execution_indices: ExecutionIndices,
         signed_transaction: Self::Transaction,
     ) -> Result<Self::Outcome, Self::Error> {
+        self.metrics.increment_num_transactions_consensus();
         let transaction = signed_transaction.get_transaction_payload();
 
         self.validator_store
             .insert_confirmed_transaction(transaction, consensus_output);
 
-        // handle transactions for bank controller
-        self.master_controller
-            .bank_controller
-            .lock()
-            .unwrap()
-            .handle_consensus_transaction(transaction)?;
+        let result = self.master_controller.handle_consensus_transaction(transaction);
 
-        // handle transactions for spot controller
-        self.master_controller
-            .spot_controller
-            .lock()
-            .unwrap()
-            .handle_consensus_transaction(transaction)?;
-
+        if let Err(err) = result {
+            self.metrics.increment_num_transactions_consensus_failed();
+            return Err(err);
+        }
         Ok((consensus_output.clone(), execution_indices))
     }
 

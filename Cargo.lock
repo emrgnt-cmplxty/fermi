@@ -2480,6 +2480,7 @@ dependencies = [
  "gdex-workspace-hack",
  "http",
  "multiaddr",
+ "network",
  "node",
  "once_cell",
  "prometheus",

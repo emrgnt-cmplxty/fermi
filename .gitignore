@@ -18,6 +18,8 @@ benchmark/db-*
 benchmark/benchmark_narwhal_client
 benchmark/benchmark_gdex_client
 benchmark/benchmark-narwhal
+benchmark/perf.data
+benchmark/*.svg
 suite/db.rocks
 target/
 !/**/src/**/target/

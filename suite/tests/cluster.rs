@@ -33,10 +33,7 @@ pub mod cluster_test_suite {
     use narwhal_types::{Certificate, Header};
 
     // external
-    use std::{
-        net::SocketAddr,
-        sync::Arc,
-    };
+    use std::{net::SocketAddr, sync::Arc};
     use tokio::time::{sleep, Duration};
     use tonic::transport::Server;
     use tracing::info;

@@ -145,6 +145,7 @@ impl TestCluster {
         self.temp_working_dir.path().to_path_buf()
     }
 
+    // TODO - we need a non-mut instance of this function for testing.
     pub fn get_validator_spawner(&mut self, index: usize) -> &mut ValidatorSpawner {
         &mut self.validator_spawners[index]
     }

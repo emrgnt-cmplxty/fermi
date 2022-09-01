@@ -34,6 +34,8 @@ class Bench:
     def __init__(self, ctx):
         self.manager = InstanceManager.make()
         self.settings = self.manager.settings
+        self.local_proto_dir = os.getcwd() + '/.proto/'
+        self.remote_proto_dir = self.settings.repo_name + "/.proto/"
         try:
             ctx.connect_kwargs.pkey = RSAKey.from_private_key_file(
                 self.manager.settings.key_path
@@ -176,14 +178,13 @@ class Bench:
         # Recompile the latest code.
         cmd = CommandMaker.compile(mem_profiling=False)
         Print.info(f"About to run {cmd}...")
-        #subprocess.run([cmd], check=True, cwd='narwhal')
+        subprocess.run(cmd, check=True, cwd='../')
 
         # Create alias for the client and nodes binary.
         cmd = CommandMaker.alias_binaries(PathMaker.binary_path())
         subprocess.run([cmd], shell=True)
 
-        proto_dir = os.getcwd() + '/.proto/'
-        cmd = CommandMaker.init_gdex_genesis(proto_dir)
+        cmd = CommandMaker.init_gdex_genesis(self.local_proto_dir)
         subprocess.run([cmd], shell=True)
 
         # Generate configuration files.
@@ -193,7 +194,7 @@ class Bench:
         for filename in key_files:
             cmd = CommandMaker.generate_gdex_key(filename).split()
             subprocess.run(cmd, check=True)
-            keys += [Key.from_file(proto_dir + filename)]
+            keys += [Key.from_file(self.local_proto_dir + filename)]
         sleep(2)
         names = [x.name for x in keys]
 
@@ -210,19 +211,19 @@ class Bench:
         committee.print(PathMaker.committee_file())
         for i, name in enumerate(names):
             sleep(5)
-            path = proto_dir
             validator_dict = committee.json["authorities"][name]
             balance = 5000000000000
             stake = validator_dict["stake"]
-            key_file = path + key_files[i]
+            key_file = self.local_proto_dir + key_files[i]
+
             primary_to_primary = validator_dict["primary"]["primary_to_primary"]
             worker_to_primary = validator_dict["primary"]["worker_to_primary"]
-            primary_to_worker = validator_dict["workers"][0]["primary_to_worker"]
 
+            primary_to_worker = validator_dict["workers"][0]["primary_to_worker"]
             worker_to_worker = validator_dict["workers"][0]["worker_to_worker"]
             consensus_address = validator_dict["workers"][0]["transactions"]
             cmd = CommandMaker.add_gdex_validator_genesis(
-                path,
+                self.local_proto_dir,
                 name,
                 balance,
                 stake,
@@ -235,22 +236,27 @@ class Bench:
             )
             subprocess.run([cmd], shell=True)
         sleep(2)
-        cmd = CommandMaker.add_controllers_gdex_genesis(proto_dir)
+        cmd = CommandMaker.add_controllers_gdex_genesis(self.local_proto_dir)
         subprocess.run([cmd], shell=True)
         sleep(2)
-        cmd = CommandMaker.build_gdex_genesis(proto_dir)
+        cmd = CommandMaker.build_gdex_genesis(self.local_proto_dir)
         subprocess.run([cmd], shell=True)
         sleep(5)
         for i, name in enumerate(names):
-            cmd = CommandMaker.verify_and_sign_gdex_genesis(proto_dir, proto_dir + key_files[i])
+            cmd = CommandMaker.verify_and_sign_gdex_genesis(self.local_proto_dir, self.local_proto_dir + key_files[i])
             subprocess.run([cmd], shell=True)
 
-        cmd = CommandMaker.finalize_genesis(proto_dir)
+        cmd = CommandMaker.finalize_genesis(self.local_proto_dir)
         subprocess.run([cmd], shell=True)
 
         node_parameters.print(PathMaker.parameters_file())
 
         # Cleanup all nodes and upload configuration files.
+        local_committee_dir = self.local_proto_dir + 'committee/'
+        remote_committee_dir = self.remote_proto_dir + 'committee/'
+        local_signatures_dir = self.local_proto_dir + 'signatures/'
+        remote_signatures_dir = self.remote_proto_dir + 'signatures/'
+
         names = names[:len(names)-bench_parameters.faults]
         progress = progress_bar(names, prefix='Uploading config files:')
         for i, name in enumerate(progress):
@@ -258,18 +264,15 @@ class Bench:
                 print(i, name, ip)
                 c = Connection(ip, user='ubuntu', connect_kwargs=self.connect)
                 c.run(f'(cd gdex-core && {CommandMaker.cleanup()}) || true', hide=False)
-                c.put(proto_dir + "genesis.blob", 'gdex-core/.proto/')
-                c.put(proto_dir + PathMaker.key_file(i), 'gdex-core/.proto/')
-                c.put(PathMaker.parameters_file(), '.')
-                c.put(proto_dir + "master_controller", 'gdex-core/.proto/')
-                committee_dir = proto_dir + 'committee/'
-                for fname in os.listdir(committee_dir):
-                    c.put(committee_dir + fname, 'gdex-core/.proto/committee/')
+                c.put(self.local_proto_dir + "genesis.blob", self.remote_proto_dir)
+                c.put(self.local_proto_dir + PathMaker.key_file(i), self.remote_proto_dir)
+                c.put(self.local_proto_dir + "master_controller", self.remote_proto_dir)
 
-                signatures_dir = proto_dir + "signatures/"
+                for fname in os.listdir(local_committee_dir):
+                    c.put(local_committee_dir + fname, remote_committee_dir)
 
-                for fname in os.listdir(signatures_dir):
-                    c.put(signatures_dir + fname, 'gdex-core/.proto/signatures/')
+                for fname in os.listdir(local_signatures_dir):
+                    c.put(local_signatures_dir + fname, remote_signatures_dir)
 
 
 
@@ -296,7 +299,15 @@ class Bench:
             relayer_address[2] = '0.0.0.0'
             relayer_address = '/'.join(relayer_address)
             host = Committee.ip_from_multi_address(validator_dict['network_address'])
-            cmd = CommandMaker.run_gdex_node('gdex-core/.proto', 'gdex-core/.proto', 'gdex-core/.proto/' + PathMaker.key_file(i), name, validator_address, relayer_address)
+            cmd = CommandMaker.run_gdex_node(
+                self.remote_proto_dir,
+                self.remote_proto_dir,
+                self.remote_proto_dir + PathMaker.key_file(i),
+                name,
+                validator_address,
+                relayer_address
+            )
+
             log_file = PathMaker.primary_log_file(i)
             self._background_run(host, cmd, log_file)
 
@@ -310,7 +321,7 @@ class Bench:
             cmd = CommandMaker.run_gdex_client(
                 multiaddr_to_url_data(validator_address),
                 multiaddr_to_url_data(relayer_address),
-                "gdex-core/.proto/" + PathMaker.key_file(i),
+                self.remote_proto_dir + PathMaker.key_file(i),
                 rate_share,
                 [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
             )
@@ -352,7 +363,6 @@ class Bench:
         return LogParser.process(PathMaker.logs_path(), faults=faults)
 
     def run(self, bench_parameters_dict, node_parameters_dict, debug=False):
-        self.bench_parameters = GDEXBenchParameters(bench_parameters_dict)
         assert isinstance(debug, bool)
         Print.heading('Starting remote benchmark')
         try:

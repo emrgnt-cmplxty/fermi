@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package spot_requests;
+
+// REQUESTS
+
+message CreateOrderbookRequest {
+    uint64 base_asset_id = 1;
+    uint64 quote_asset_id = 2;
+}
+
+message MarketOrderRequest {
+    uint64 base_asset_id = 1;
+    uint64 quote_asset_id = 2;
+    uint64 side = 3;
+    uint64 quantity = 4;
+    uint64 local_timestamp = 5;
+}
+
+message LimitOrderRequest {
+    uint64 base_asset_id = 1;
+    uint64 quote_asset_id = 2;
+    uint64 side = 3;
+    uint64 price = 4;
+    uint64 quantity = 5;
+    uint64 local_timestamp = 6;
+}
+
+message UpdateOrderRequest {
+    uint64 base_asset_id = 1;
+    uint64 quote_asset_id = 2;
+    uint64 side = 3;
+    uint64 price = 4;
+    uint64 quantity = 5;
+    uint64 local_timestamp = 6;
+    uint64 order_id = 7;
+}
+
+message CancelOrderRequest {
+    uint64 base_asset_id = 1;
+    uint64 quote_asset_id = 2;
+    uint64 quantity = 3;
+    uint64 local_timestamp = 4;
+    uint64 order_id = 5;
+}

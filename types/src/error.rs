@@ -42,6 +42,15 @@ pub enum GDEXError {
     // server errors
     #[error("Failed to process the inbound transaction")]
     RpcFailure(String),
+    
+    // proto errors
+    #[error("Failed to serialize object")]
+    SerializationError,
+    #[error("Failed to deserialize object")]
+    DeserializationError,
+    
+    #[error("Failed to verify transaction signature")]
+    TransactionSignatureVerificationError,
 }
 
 impl From<tonic::Status> for GDEXError {

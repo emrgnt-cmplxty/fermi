@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package new_block;
+
+// IMPORTS
+
+import "new_transaction.proto";
+
+// INTERFACE
+
+message NewBlock {
+    bytes block_certificate = 1;
+    repeated new_transaction.NewSignedTransaction transactions = 2;
+}
+
+message NewRelayerBlockResponse {
+    bool successful = 1;
+    NewBlock block = 2;
+}
+
+message NewBlockInfo {
+   uint64 block_number = 1; 
+   bytes block_digest = 2;
+}
+
+message NewRelayerBlockInfoResponse {
+    bool successful = 1;
+    NewBlockInfo block_info = 2;
+}

@@ -19,6 +19,7 @@ pub use signature::Signer;
 pub use signature::Verifier;
 pub use sui_types::crypto::KeypairTraits;
 pub use sui_types::crypto::ToFromBytes;
+pub use sui_types::crypto::SigningKey;
 
 /// The number of bytes in an address.
 /// Default to 16 bytes, can be set to 20 bytes with address20 feature.

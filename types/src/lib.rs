@@ -22,4 +22,6 @@ pub mod serialization;
 
 pub mod transaction;
 
+pub mod new_transaction;
+
 pub mod utils;

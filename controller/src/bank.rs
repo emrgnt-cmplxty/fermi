@@ -84,6 +84,8 @@ impl Controller for BankController {
 
         Ok(())
     }
+
+    fn post_process(&mut self, _block_number: u64) {}
 }
 
 impl BankController {

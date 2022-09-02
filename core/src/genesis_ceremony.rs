@@ -27,7 +27,6 @@ use clap::Parser;
 use multiaddr::Multiaddr;
 use std::convert::{TryFrom, TryInto};
 use std::{fs, path::PathBuf};
-use gdex_types::utils::decode_bytes_hex;
 
 // CONSTANTS
 

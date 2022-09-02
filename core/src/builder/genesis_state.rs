@@ -6,14 +6,14 @@ use crate::validator::genesis_state::ValidatorGenesisState;
 use anyhow::{bail, Result};
 use camino::Utf8Path;
 use gdex_controller::master::MasterController;
+use gdex_types::utils::encode_bytes_hex;
 use gdex_types::{account::ValidatorPubKeyBytes, node::ValidatorInfo};
 use std::{
     collections::BTreeMap,
     convert::TryInto,
     {fs, path::Path},
 };
-use tracing::{debug, trace};
-use gdex_types::utils::{decode_bytes_hex, encode_bytes_hex};
+use tracing::trace;
 
 /***fn create_genesis_objects() -> MasterController {
     MasterController::default()

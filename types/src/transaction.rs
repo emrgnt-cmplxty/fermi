@@ -15,7 +15,7 @@ use crate::{
     serialization::Encoding,
 };
 use blake2::{digest::Update, VarBlake2b};
-use narwhal_crypto::{Digest, Hash, Verifier, DIGEST_LEN};
+use fastcrypto::{Digest, Hash, Verifier, DIGEST_LEN};
 use narwhal_types::CertificateDigest;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -218,7 +218,7 @@ impl Hash for Transaction {
                     // TODO - hashing the string is suboptimal, but cert digest bytes are private
                     hasher.update(self.get_recent_certificate_digest().to_string());
                 };
-                TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
+                TransactionDigest(fastcrypto::blake2b_256(hasher_update))
             }
             TransactionVariant::CreateAssetTransaction(create_asset) => {
                 let hasher_update = |hasher: &mut VarBlake2b| {
@@ -226,7 +226,7 @@ impl Hash for Transaction {
                     hasher.update(self.get_sender().0.to_bytes());
                     hasher.update(self.get_recent_certificate_digest().to_string())
                 };
-                TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
+                TransactionDigest(fastcrypto::blake2b_256(hasher_update))
             }
             TransactionVariant::CreateOrderbookTransaction(create_orderbook) => {
                 let hasher_update = |hasher: &mut VarBlake2b| {
@@ -235,7 +235,7 @@ impl Hash for Transaction {
                     hasher.update(create_orderbook.quote_asset_id.to_le_bytes());
                     hasher.update(self.get_recent_certificate_digest().to_string());
                 };
-                TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
+                TransactionDigest(fastcrypto::blake2b_256(hasher_update))
             }
             TransactionVariant::PlaceOrderTransaction(order) => match order {
                 OrderRequest::Limit {
@@ -257,7 +257,7 @@ impl Hash for Transaction {
                         hasher.update(ts.to_le_bytes());
                         hasher.update(self.get_recent_certificate_digest().to_string());
                     };
-                    TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
+                    TransactionDigest(fastcrypto::blake2b_256(hasher_update))
                 }
                 OrderRequest::Market {
                     base_asset_id,
@@ -276,7 +276,7 @@ impl Hash for Transaction {
                         hasher.update(ts.to_le_bytes());
                         hasher.update(self.get_recent_certificate_digest().to_string());
                     };
-                    TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
+                    TransactionDigest(fastcrypto::blake2b_256(hasher_update))
                 }
                 OrderRequest::Cancel {
                     base_asset_id,
@@ -295,7 +295,7 @@ impl Hash for Transaction {
                         hasher.update(ts.to_le_bytes());
                         hasher.update(self.get_recent_certificate_digest().to_string());
                     };
-                    TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
+                    TransactionDigest(fastcrypto::blake2b_256(hasher_update))
                 }
                 OrderRequest::Update {
                     base_asset_id,
@@ -318,7 +318,7 @@ impl Hash for Transaction {
                         hasher.update(ts.to_le_bytes());
                         hasher.update(self.get_recent_certificate_digest().to_string());
                     };
-                    TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
+                    TransactionDigest(fastcrypto::blake2b_256(hasher_update))
                 }
             },
         }

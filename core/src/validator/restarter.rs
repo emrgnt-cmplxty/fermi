@@ -1,8 +1,9 @@
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 // narwhal imports
+use fastcrypto::{traits::KeyPair as _};
 use narwhal_config::{Committee, Parameters};
-use narwhal_crypto::{traits::KeyPair as _, KeyPair};
+use narwhal_crypto::KeyPair;
 use narwhal_executor::{ExecutionState, ExecutorOutput};
 use narwhal_network::{PrimaryToWorkerNetwork, ReliableNetwork, UnreliableNetwork, WorkerToPrimaryNetwork};
 use narwhal_node::{Node, NodeStorage};
@@ -39,7 +40,7 @@ impl NodeRestarter {
         let mut name = keypair.public().clone();
         let mut committee = committee.clone();
 
-        let mut task_managers = Vec::new();
+        let mut handles = Vec::new();
         let mut primary_network = WorkerToPrimaryNetwork::default();
         let mut worker_network = PrimaryToWorkerNetwork::default();
         info!("creating new node with committee={:?}", committee);
@@ -84,8 +85,8 @@ impl NodeRestarter {
                 registry,
             );
 
-            task_managers.push(primary);
-            task_managers.push(workers);
+            handles.extend(primary);
+            handles.extend(workers);
 
             // Wait for a committee change.
             let (new_keypair, new_committee) = match rx_reconfigure.recv().await {
@@ -120,7 +121,7 @@ impl NodeRestarter {
             worker_network.cleanup(committee.network_diff(&new_committee));
 
             // Wait for the components to shut down.
-            join_all(task_managers.drain(..)).await;
+            join_all(handles.drain(..)).await;
             tracing::debug!("All tasks successfully exited");
 
             // Give it an extra second in case the last task to exit is a network server. The OS

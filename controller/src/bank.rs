@@ -31,9 +31,11 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 // CONSTANTS
-
-const INCREMENT: bool = true;
-const DECREMENT: bool = false;
+#[derive(PartialEq)]
+enum Modifier {
+    Increment,
+    Decrement
+}
 
 // TODO need to find valid vanity address for bank controller
 pub const BANK_CONTROLLER_ACCOUNT_PUBKEY: &[u8] = b"STAKECONTROLLERAAAAAAAAAAAAAAAAA";
@@ -116,7 +118,7 @@ impl BankController {
         account_pub_key: &AccountPubKey,
         asset_id: AssetId,
         amount: u64,
-        increment: bool,
+        increment: Modifier,
     ) -> Result<(), GDEXError> {
         let bank_account = self
             .bank_accounts
@@ -125,7 +127,7 @@ impl BankController {
         let current_balance: u64 = bank_account.get_balance(asset_id);
 
         // if decrementing balance, check if amount exceeds existing balance
-        if !increment {
+        if increment == Modifier::Decrement {
             if amount > current_balance {
                 return Err(GDEXError::PaymentRequest);
             };
@@ -159,8 +161,8 @@ impl BankController {
             }
         };
 
-        self.update_balance(sender, asset_id, amount, DECREMENT)?;
-        self.update_balance(receiver, asset_id, amount, INCREMENT)?;
+        self.update_balance(sender, asset_id, amount, Modifier::Decrement)?;
+        self.update_balance(receiver, asset_id, amount, Modifier::Increment)?;
 
         Ok(())
     }
@@ -187,7 +189,7 @@ impl BankController {
             },
         );
 
-        self.update_balance(owner_pub_key, self.n_assets, CREATED_ASSET_BALANCE, INCREMENT)?;
+        self.update_balance(owner_pub_key, self.n_assets, CREATED_ASSET_BALANCE, Modifier::Increment)?;
         // increment asset counter & return less the increment
         self.n_assets += 1;
 

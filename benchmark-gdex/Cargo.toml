@@ -42,8 +42,8 @@ narwhal-primary = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2
 narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "types" }
 narwhal-worker = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "worker" }
 narwhal-network = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "network" }
-store = { git = "https://github.com/mystenlabs/mysten-infra.git", package = "typed-store", rev = "8d090689be14078f2ca41c356e7bbc0af21f73ab" }
-telemetry-subscribers = { git = "https://github.com/mystenlabs/mysten-infra.git", rev = "8d090689be14078f2ca41c356e7bbc0af21f73ab" }
+store = { git = "https://github.com/mystenlabs/mysten-infra.git", package = "typed-store", rev = "7ef7415a4e11cf68fa68ce9db884c46e704e0445" }
+telemetry-subscribers = { git = "https://github.com/mystenlabs/mysten-infra.git", rev = "7ef7415a4e11cf68fa68ce9db884c46e704e0445" }
 
 # local crates
 gdex-core = { path = "../core" }
@@ -59,7 +59,7 @@ serde-reflection = "0.3.6"
 serde_yaml = "0.8.26"
 structopt = "0.3.26"
 test_utils = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "test_utils" }
-mysten-network = { git = "https://github.com/mystenlabs/mysten-infra.git", rev = "8d090689be14078f2ca41c356e7bbc0af21f73ab" }
+mysten-network = { git = "https://github.com/mystenlabs/mysten-infra.git", rev = "7ef7415a4e11cf68fa68ce9db884c46e704e0445" }
 
 [features]
 benchmark = ["narwhal-worker/benchmark", "narwhal-primary/benchmark", "narwhal-consensus/benchmark"]

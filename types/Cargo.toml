@@ -14,9 +14,6 @@ digest = "0.10.3"
 hex = "0.4.3"
 itertools = "0.10.3"
 multiaddr = "0.14.0"
-narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "crypto"}
-narwhal-executor = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "executor" }
-narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "types" }
 prost = "0.10.4"
 rand = { version = "0.8.5" }
 signature = "1.5.0"
@@ -24,7 +21,6 @@ schemars = "0.8.10"
 sha3 = "0.10.2"
 serde = { version = "1.0.141", features = ["derive"] }
 serde_with = { version = "1.14.0", features = ["hex"] }
-sui-types = { git = "https://github.com/MystenLabs/sui", rev = "fa9fbc7c507b5ed305ac47f44c5c3d5025968d98", package = "sui-types" }
 thiserror = "1.0.31"
 tonic = { version = "0.7.2", features = ["tls"] }
 tracing = "0.1.36"
@@ -32,6 +28,13 @@ tracing-subscriber = "0.2.0"
 
 # local crates
 gdex-workspace-hack = { path = "../workspace-hack" }
+
+# mysten crates
+fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "c022a2ae23ca7cc2778293fd3b1db42e8cd02d3b" }
+narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "crypto"}
+narwhal-executor = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "executor" }
+narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "types" }
+sui-types = { git = "https://github.com/MystenLabs/sui", rev = "cdfeb12391cfac5ce2ba2e245673beaa3f674219", package = "sui-types" }
 
 [build-dependencies]
 prost-build = "0.10.4"

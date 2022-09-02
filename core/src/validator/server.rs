@@ -8,6 +8,7 @@ use crate::{
 };
 use anyhow::anyhow;
 use async_trait::async_trait;
+use fastcrypto::{Hash};
 use futures::StreamExt;
 use gdex_types::{
     crypto::KeypairTraits,
@@ -17,7 +18,7 @@ use gdex_types::{
 use multiaddr::Multiaddr;
 use narwhal_config::Committee as ConsensusCommittee;
 use narwhal_consensus::ConsensusOutput;
-use narwhal_crypto::{Hash, KeyPair as ConsensusKeyPair};
+use narwhal_crypto::KeyPair as ConsensusKeyPair;
 use narwhal_executor::{ExecutionIndices, SubscriberError};
 use prometheus::Registry;
 use std::{io, sync::Arc};

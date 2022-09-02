@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 use async_trait::async_trait;
 use gdex_controller::bank::BankController;
+use fastcrypto::{ed25519::Ed25519KeyPair, traits::KeyPair};
 use narwhal_consensus::ConsensusOutput;
-use narwhal_crypto::ed25519::Ed25519KeyPair;
-use narwhal_crypto::traits::KeyPair;
 use narwhal_executor::{ExecutionIndices, ExecutionState, ExecutionStateError};
 use std::{fmt, fmt::Display, path::Path, sync::Mutex};
 use store::{
@@ -99,6 +98,10 @@ impl ExecutionState for AdvancedExecutionState {
             .unwrap()
             .unwrap_or_default();
         Ok(indices)
+    }
+    
+    fn deserialize(bytes: &[u8]) -> Result<Self::Transaction, bincode::Error> {
+        bincode::deserialize(bytes)
     }
 }
 

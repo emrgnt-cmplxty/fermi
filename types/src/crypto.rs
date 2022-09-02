@@ -13,12 +13,9 @@ use sha3::Sha3_256;
 use sui_types::sui_serde::{Hex, Readable};
 
 // declare public traits for external consumption
-pub use narwhal_crypto::traits::Error;
-pub use narwhal_crypto::traits::VerifyingKey;
-pub use signature::Signer;
-pub use signature::Verifier;
-pub use sui_types::crypto::KeypairTraits;
-pub use sui_types::crypto::ToFromBytes;
+pub use fastcrypto::traits::{Error, VerifyingKey};
+pub use signature::{Signer, Verifier};
+pub use sui_types::crypto::{KeypairTraits, ToFromBytes};
 
 /// The number of bytes in an address.
 /// Default to 16 bytes, can be set to 20 bytes with address20 feature.

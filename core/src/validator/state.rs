@@ -6,6 +6,7 @@ use super::genesis_state::ValidatorGenesisState;
 use crate::validator::metrics::ValidatorMetrics;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
+use fastcrypto::Hash;
 use gdex_controller::master::MasterController;
 use gdex_types::transaction::Transaction;
 use gdex_types::{
@@ -21,7 +22,6 @@ use mysten_store::{
     Map, Store,
 };
 use narwhal_consensus::ConsensusOutput;
-use narwhal_crypto::Hash;
 use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
 use narwhal_types::CertificateDigest;
 
@@ -296,6 +296,10 @@ impl ExecutionState for ValidatorState {
 
     async fn load_execution_indices(&self) -> Result<ExecutionIndices, Self::Error> {
         Ok(ExecutionIndices::default())
+    }
+
+    fn deserialize(bytes: &[u8]) -> Result<Self::Transaction, bincode::Error> {
+        bincode::deserialize(bytes)
     }
 }
 

@@ -9,16 +9,16 @@ class CommandMaker:
     @staticmethod
     def cleanup():
         return (
-            f'rm -r .db-* ;'
-            f'rm -r *_db ;'
-            f'rm .proto/committee/* ;'
-            f'rm .proto/signatures/* ;'
-            f'rm .proto/*.key ;'
-            f'rm -r .proto/*db ;'
-            f'rm .proto/*.blob ;'
-            f'rm .proto/*controller ;'
-            f'rm .proto/.*.json ;'
-            f'mkdir -p {PathMaker.results_path()} ;'
+            f'rm -r .db-* ; '
+            f'rm -r *_db ; '
+            f'rm .proto/committee/* ; '
+            f'rm .proto/signatures/* ; '
+            f'rm .proto/*.key ; '
+            f'rm -r .proto/*db ; '
+            f'rm .proto/*.blob ; '
+            f'rm .proto/*controller ; '
+            f'rm .proto/.*.json ; '
+            f'mkdir -p {PathMaker.results_path()} ; '
         )
 
     @staticmethod

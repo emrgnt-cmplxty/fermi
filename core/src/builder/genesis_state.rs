@@ -12,7 +12,8 @@ use std::{
     convert::TryInto,
     {fs, path::Path},
 };
-use tracing::trace;
+use tracing::{debug, trace};
+use gdex_types::utils::{decode_bytes_hex, encode_bytes_hex};
 
 /***fn create_genesis_objects() -> MasterController {
     MasterController::default()
@@ -108,8 +109,8 @@ impl GenesisStateBuilder {
 
         for (_pubkey, validator) in self.validators {
             let validator_info_bytes = serde_yaml::to_vec(&validator)?;
-            let hex_name = validator.name();
-            fs::write(committee_dir.join(hex_name), validator_info_bytes)?;
+            let hex_name = encode_bytes_hex(validator.public_key());
+            fs::write(committee_dir.join(hex_name.as_str()), validator_info_bytes)?;
         }
 
         Ok(())

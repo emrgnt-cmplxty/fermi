@@ -250,7 +250,6 @@ class Bench:
         subprocess.run([cmd], shell=True)
 
         node_parameters.print(PathMaker.parameters_file())
-
         # Cleanup all nodes and upload configuration files.
         local_committee_dir = self.local_proto_dir + 'committee/'
         remote_committee_dir = self.remote_proto_dir + 'committee/'

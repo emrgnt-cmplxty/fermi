@@ -1,5 +1,7 @@
 # Copyright(C) Facebook, Inc. and its affiliates.
+import os
 import subprocess
+from collections import OrderedDict
 from math import ceil
 from os.path import basename, splitext
 from time import sleep
@@ -8,6 +10,10 @@ from benchmark.commands import CommandMaker
 from benchmark.config import Key, LocalCommittee, NodeParameters, BenchParameters, GDEXBenchParameters, ConfigError
 from benchmark.gdex_logs import LogParser, ParseError
 from benchmark.utils import Print, BenchError, PathMaker
+
+from benchmark.config import Committee
+from benchmark.utils import multiaddr_to_url_data
+
 
 def url_to_multiaddr(url):
     assert isinstance(url, str)
@@ -49,10 +55,12 @@ class GDEXBench:
             nodes, relayers, rate = self.nodes, self.relayers, self.rate
 
             # Cleanup all files.
-            cmd = f'{CommandMaker.clean_logs()} ; {CommandMaker.cleanup()}'
-            subprocess.run([cmd], shell=True, stderr=subprocess.DEVNULL)
+            cmd = f'{CommandMaker.clean_logs()} ;'
+            subprocess.run([cmd], shell=True)
+            cmd = CommandMaker.cleanup()
+            subprocess.run([cmd], shell=True, cwd=PathMaker.gdex_build_path())
             sleep(0.5)  # Removing the store may take time.
-
+            breakpoint()
             # Recompile the latest code.
             cmd = CommandMaker.compile(mem_profiling=self.mem_profile)
             Print.info(f"About to run {cmd}...")
@@ -63,44 +71,107 @@ class GDEXBench:
             cmd = CommandMaker.compile(mem_profiling=self.mem_profile, benchmark=False)
             Print.info(f"About to run {cmd}...")
             subprocess.run(cmd, check=True, cwd=PathMaker.gdex_build_path())
-            sleep(0.5)  # Removing the store may take time.
+            sleep(5)  # Removing the store may take time.
 
             # Create alias for the client and nodes binary.
             cmd = CommandMaker.alias_binaries(PathMaker.binary_path())
             print(cmd)
             subprocess.run([cmd], shell=True)
+            sleep(5)
+
+            cmd = CommandMaker.init_gdex_genesis(os.path.abspath(self.bench_parameters.key_dir))
+            subprocess.run([cmd], shell=True)
+            sleep(5)
+            # Generate configuration files.
+            keys = []
+            key_files = [PathMaker.key_file(i) for i in range(len(self.bench_parameters.nodes))]
+
+            for filename in key_files:
+                sleep(2)
+                cmd = CommandMaker.generate_gdex_key(filename, os.path.abspath(self.bench_parameters.key_dir)).split()
+                subprocess.run(cmd, check=True)
+                keys += [Key.from_file(os.path.abspath(self.bench_parameters.key_dir + filename))]
+
+            names = [x.name for x in keys]
+
+            workers = 1 # todo
+
+            committee = LocalCommittee(names, 3000, workers)
+            committee.print(PathMaker.committee_file())
+
+            for i, name in enumerate(names):
+                validator_dict = committee.json["authorities"][name]
+                balance = 5000000000000
+                stake = validator_dict["stake"]
+                key_file = os.path.abspath(self.bench_parameters.key_dir + key_files[i])
+
+                primary_to_primary = validator_dict["primary"]["primary_to_primary"]
+                worker_to_primary = validator_dict["primary"]["worker_to_primary"]
+
+                primary_to_worker = validator_dict["workers"][0]["primary_to_worker"]
+                worker_to_worker = validator_dict["workers"][0]["worker_to_worker"]
+                consensus_address = validator_dict["workers"][0]["transactions"]
+                cmd = CommandMaker.add_gdex_validator_genesis(
+                    self.bench_parameters.key_dir,
+                    name,
+                    balance,
+                    stake,
+                    key_file,
+                    primary_to_primary,
+                    worker_to_primary,
+                    primary_to_worker,
+                    worker_to_worker,
+                    consensus_address
+                )
+                print(cmd)
+                subprocess.run([cmd], shell=True)
+
+            cmd = CommandMaker.add_controllers_gdex_genesis(os.path.abspath(self.bench_parameters.key_dir))
+            subprocess.run([cmd], shell=True)
+            cmd = CommandMaker.build_gdex_genesis(os.path.abspath(self.bench_parameters.key_dir))
+            subprocess.run([cmd], shell=True)
+
+            for i, name in enumerate(committee.json['authorities'].keys())  :
+                cmd = CommandMaker.verify_and_sign_gdex_genesis(os.path.abspath(self.bench_parameters.key_dir), os.path.abspath(self.bench_parameters.key_dir + key_files[i]))
+                breakpoint()
+                subprocess.run([cmd], shell=True)
+            breakpoint()
+            cmd = CommandMaker.finalize_genesis(os.path.abspath(self.bench_parameters.key_dir))
+            subprocess.run([cmd], shell=True)
 
             # Run the primaries
-            for id, node_name in enumerate(nodes.keys()):
-                sleep(2)
+            # currently hard-coded for a single worker, for n-workers denom = n*len(nodes.keys())
+            Print.info('Booting nodes...')
+            rate_share = ceil(rate / committee.workers())
+            for i, name in enumerate(committee.json['authorities'].keys()):
+                validator_dict = committee.json['authorities'][name]
+                validator_address = validator_dict['network_address']
+                relayer_address = validator_dict['relayer_address']
                 cmd = CommandMaker.run_gdex_node(
-                    self.db_dir,
-                    self.genesis_dir,
-                    self.key_dir,
-                    node_name,
-                    url_to_multiaddr(nodes[node_name]),
-                    url_to_multiaddr(relayers[node_name]),
-                    debug
+                    os.path.abspath(self.bench_parameters.key_dir),
+                    os.path.abspath(self.bench_parameters.key_dir),
+                    os.path.abspath(self.bench_parameters.key_dir) + PathMaker.key_file(i),
+                    name,
+                    url_to_multiaddr(validator_address),
+                    url_to_multiaddr(relayer_address)
                 )
-                log_file = PathMaker.primary_log_file(id)
+                log_file = PathMaker.primary_log_file(i)
                 print(cmd, ">>", log_file)
                 self._background_run(cmd, log_file)
 
-            # Run the clients (they will wait for the nodes to be ready).
-
-            # currently hard-coded for a single worker, for n-workers denom = n*len(nodes.keys())
-            rate_share = ceil(rate / len(nodes.keys()))
-            for id, address in enumerate(nodes.values()):
-                sleep(2)
+            Print.info('Booting clients...')
+            for i, name in enumerate(committee.json['authorities'].keys()):
+                validator_dict = committee.json['authorities'][name]
+                validator_address = validator_dict['network_address']
+                relayer_address = validator_dict['relayer_address']
                 cmd = CommandMaker.run_gdex_client(
-                    id,
-                    address,
-                    relayers['validator-' + str(id)],
+                    multiaddr_to_url_data(validator_address),
+                    multiaddr_to_url_data(relayer_address),
+                    os.path.abspath(self.bench_parameters.key_dir) + PathMaker.key_file(i),
                     rate_share,
-                    [x for x in nodes.values() if x != address]
+                    [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
                 )
-                # currently hard-coded for a single worker, for n-workers 0 -> i
-                log_file = PathMaker.client_log_file(id, 0)
+                log_file = PathMaker.client_log_file(i, 0)
                 print(cmd, ">>", log_file)
                 self._background_run(cmd, log_file)
 

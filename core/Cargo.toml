@@ -46,7 +46,7 @@ mysten-store = { git = "https://github.com/mystenlabs/mysten-infra.git", rev = "
 
 # local crates
 gdex-controller = { path = "../controller" }
-gdex-types = { path = "../types", feature = "testing"}
+gdex-types = { path = "../types" }
 gdex-workspace-hack = { path = "../workspace-hack" }
 
 [features]

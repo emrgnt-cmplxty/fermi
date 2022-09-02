@@ -44,6 +44,8 @@ pub enum GDEXError {
     RpcFailure(String),
     
     // proto errors
+    #[error("Failed to sign transaction")]
+    SigningError,
     #[error("Failed to serialize object")]
     SerializationError,
     #[error("Failed to deserialize object")]

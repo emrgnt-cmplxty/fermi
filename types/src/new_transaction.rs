@@ -27,15 +27,15 @@ use crate::{
 use narwhal_crypto::{
     Verifier,
     DIGEST_LEN,
-    traits::{KeyPair, Signer}
+    traits::Signer
 };
-use narwhal_types::CertificateDigest;
+use narwhal_types::{CertificateDigest, CertificateDigestProto};
 
 // external
 use prost::bytes::Bytes;
 use std::io::Cursor;
 use prost::Message;
-use blake2::{digest::Update, VarBlake2b};
+use blake2::digest::Update;
 use serde::{Deserialize, Serialize};
 use std::{
     fmt,
@@ -116,7 +116,7 @@ pub fn create_transaction(
         sender: Bytes::from(sender.as_ref().to_vec()),
         target_controller: target_controller as i32,
         request_type: request_type as i32,
-        recent_block_hash: Bytes::from(recent_block_hash.0.to_vec()),
+        recent_block_hash: CertificateDigestProto::from(recent_block_hash).digest,
         gas,
         request_bytes: Bytes::from(request_bytes)
     }
@@ -410,10 +410,10 @@ pub fn create_cancel_order_transaction(
 
 pub fn get_signed_transaction_body(
     signed_transaction: &NewSignedTransaction
-) -> Result<NewTransaction, GDEXError> {
+) -> Result<&NewTransaction, GDEXError> {
     match signed_transaction.transaction {
         None => Err(GDEXError::DeserializationError),
-        Some(transaction) => Ok(signed_transaction.transaction.unwrap())
+        Some(_) => Ok(signed_transaction.transaction.as_ref().unwrap())
     }
 }
 
@@ -443,21 +443,19 @@ pub fn get_signed_transaction_signature(
 pub fn hash_transaction(
     transaction: &NewTransaction
 ) -> NewTransactionDigest {
-    let transaction_bytes = serialize_protobuf(transaction);
-    NewTransactionDigest::new(narwhal_crypto::blake2b_256(|hasher| {hasher.update(transaction_bytes) }))
+    NewTransactionDigest::new(narwhal_crypto::blake2b_256(|hasher| {hasher.update(serialize_protobuf(transaction)) }))
 }
 
 pub fn sign_transaction(
     sender_kp: &AccountKeyPair,
     transaction: NewTransaction
-) -> NewSignedTransaction {
+) -> Result<NewSignedTransaction, GDEXError> {
     let transaction_hash = hash_transaction(&transaction);
-    let signature: [u8; 64] = sender_kp.private().sign(&transaction_hash.get_array()[..]).to_bytes();
-
-    create_signed_transaction(
-        transaction,
-        &signature
-    )
+    let signature_result: Result<AccountSignature, signature::Error> = sender_kp.try_sign(&transaction_hash.get_array()[..]);
+    match signature_result {
+        Ok(result) => Ok(create_signed_transaction(transaction, &result.sig.to_bytes())),
+        Err(..) => Err(GDEXError::SigningError)
+    }
 }
 
 pub fn verify_signature(
@@ -469,7 +467,7 @@ pub fn verify_signature(
     let signature = get_signed_transaction_signature(&signed_transaction)?;
     let verify_signature_result = sender.verify(&transaction_hash.get_array()[..], &signature);
     match verify_signature_result {
-        Ok(result) => Ok(()),
+        Ok(_) => Ok(()),
         Err(..) => Err(GDEXError::TransactionSignatureVerificationError)
     }
 }

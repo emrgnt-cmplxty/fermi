@@ -17,9 +17,12 @@ pub mod cluster_test_suite {
         asset::PRIMARY_ASSET_ID,
         block::{Block, BlockDigest},
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
-        proto::{RelayerClient, RelayerGetBlockRequest, RelayerGetLatestBlockInfoRequest, RelayerGetLatestOrderbookSnapRequest},
+        order_book::{Depth, OrderbookSnap},
+        proto::{
+            RelayerClient, RelayerGetBlockRequest, RelayerGetLatestBlockInfoRequest,
+            RelayerGetLatestOrderbookSnapRequest,
+        },
         transaction::{create_asset_creation_transaction, SignedTransaction},
-        order_book::{OrderbookSnap, Depth}
     };
 
     // mysten
@@ -28,8 +31,8 @@ pub mod cluster_test_suite {
     use narwhal_types::{Certificate, Header};
 
     // external
+    use std::collections::HashMap;
     use std::sync::Arc;
-    use std::collections::{HashMap};
     use tokio::time::{sleep, Duration};
     use tracing::info;
 
@@ -423,21 +426,15 @@ pub mod cluster_test_suite {
         for i in 1..TEST_MID {
             bids.push(Depth {
                 price: i,
-                quantity: 10*i
+                quantity: 10 * i,
             });
             asks.push(Depth {
                 price: TEST_MID + i,
-                quantity: 10*i
+                quantity: 10 * i,
             });
         }
-        let orderbook_snap = OrderbookSnap {
-            bids,
-            asks
-        };
-        orderbook_snaps.insert(
-            orderbook_key,
-            orderbook_snap
-        );
+        let orderbook_snap = OrderbookSnap { bids, asks };
+        orderbook_snaps.insert(orderbook_key, orderbook_snap);
 
         validator_state_1
             .validator_store
@@ -454,7 +451,7 @@ pub mod cluster_test_suite {
         let latest_orderbook_snap_request = tonic::Request::new(RelayerGetLatestOrderbookSnapRequest {
             base_asset_id,
             quote_asset_id,
-            depth: 5
+            depth: 5,
         });
 
         // Act

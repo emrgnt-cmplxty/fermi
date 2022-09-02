@@ -14,8 +14,8 @@ pub use gdex::{
     relayer_server::{Relayer, RelayerServer},
     transactions_client::TransactionsClient,
     transactions_server::{Transactions, TransactionsServer},
-    Block as BlockProto, BlockInfo as BlockInfoProto, Depth, Empty, FaucetAirdropRequest, FaucetAirdropResponse,
-    RelayerBlockInfoResponse, RelayerBlockResponse, RelayerGetBlockInfoRequest, RelayerGetBlockRequest,
-    RelayerGetLatestBlockInfoRequest, RelayerGetLatestOrderbookSnapRequest, RelayerLatestOrderbookSnapResponse,
-    Transaction as TransactionProto, Depth as DepthProto
+    Block as BlockProto, BlockInfo as BlockInfoProto, Depth, Depth as DepthProto, Empty, FaucetAirdropRequest,
+    FaucetAirdropResponse, RelayerBlockInfoResponse, RelayerBlockResponse, RelayerGetBlockInfoRequest,
+    RelayerGetBlockRequest, RelayerGetLatestBlockInfoRequest, RelayerGetLatestOrderbookSnapRequest,
+    RelayerLatestOrderbookSnapResponse, Transaction as TransactionProto,
 };

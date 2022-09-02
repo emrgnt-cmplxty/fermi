@@ -18,8 +18,8 @@ use gdex_types::{
     transaction::OrderRequest,
 };
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::time::SystemTime;
-use std::collections::{HashMap};
 
 const MIN_SEQUENCE_ID: u64 = 1;
 const MAX_SEQUENCE_ID: u64 = 1_000_000;
@@ -64,20 +64,26 @@ impl Orderbook {
         let mut asks_map: HashMap<u64, u64> = HashMap::new();
 
         // aggregate bids + asks
-        for (_, order) in &self.bid_queue.orders {
+        for order in self.bid_queue.orders.values() {
             let price = order.get_price();
-            if bids_map.contains_key(&price) {
-                bids_map.insert(price, *bids_map.get(&price).unwrap() + order.get_quantity());
-            } else {
-                bids_map.insert(price, order.get_quantity());
+            match bids_map.entry(price) {
+                std::collections::hash_map::Entry::Occupied(mut e) => {
+                    e.insert(e.get() + order.get_quantity());
+                }
+                std::collections::hash_map::Entry::Vacant(e) => {
+                    e.insert(order.get_quantity());
+                }
             }
         }
-        for (_, order) in &self.ask_queue.orders {
+        for order in self.ask_queue.orders.values() {
             let price = order.get_price();
-            if asks_map.contains_key(&price) {
-                asks_map.insert(price, *asks_map.get(&price).unwrap() + order.get_quantity());
-            } else {
-                asks_map.insert(price, order.get_quantity());
+            match asks_map.entry(price) {
+                std::collections::hash_map::Entry::Occupied(mut e) => {
+                    e.insert(e.get() + order.get_quantity());
+                }
+                std::collections::hash_map::Entry::Vacant(e) => {
+                    e.insert(order.get_quantity());
+                }
             }
         }
 
@@ -87,19 +93,19 @@ impl Orderbook {
         for (price, quantity) in &bids_map {
             bids.push(Depth {
                 price: *price,
-                quantity: *quantity
+                quantity: *quantity,
             });
         }
         for (price, quantity) in &asks_map {
             asks.push(Depth {
                 price: *price,
-                quantity: *quantity
+                quantity: *quantity,
             });
         }
 
         bids.sort_by(|a, b| a.price.partial_cmp(&b.price).unwrap());
         asks.sort_by(|a, b| a.price.partial_cmp(&b.price).unwrap());
-        
+
         OrderbookSnap { bids, asks }
     }
 

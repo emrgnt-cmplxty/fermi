@@ -1294,10 +1294,10 @@ pub mod spot_tests {
         for i in 1..3 {
             for _ in 0..TEST_NUM_ORDERS {
                 orderbook_interface
-                    .place_limit_order(account.public(), OrderSide::Bid, u64::pow(10 - i, 2), TEST_MID-i)
+                    .place_limit_order(account.public(), OrderSide::Bid, u64::pow(10 - i, 2), TEST_MID - i)
                     .unwrap();
                 orderbook_interface
-                    .place_limit_order(account.public(), OrderSide::Ask, u64::pow(10 - i, 2), TEST_MID+i)
+                    .place_limit_order(account.public(), OrderSide::Ask, u64::pow(10 - i, 2), TEST_MID + i)
                     .unwrap();
             }
         }

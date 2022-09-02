@@ -149,7 +149,7 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
             .into_iter()
             .map(|validator| {
                 let public_key: ValidatorPubKeyBytes = validator.key_pair.public().into();
-                let consensus_address = validator.narwhal_consensus_address;
+                let consensus_addresses = validator.narwhal_consensus_addresses;
                 let consensus_db_path = self
                     .config_directory
                     .join(CONSENSUS_DB_NAME)

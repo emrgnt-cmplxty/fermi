@@ -309,7 +309,7 @@ mod test_validator_server {
         let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
         let public_key = ValidatorPubKeyBytes::from(key.public());
         let secret = Arc::pin(key);
-
+        let consensus_addresses = vec![utils::new_network_address()];
         let validator = ValidatorInfo {
             name: "0".into(),
             public_key,
@@ -320,7 +320,7 @@ mod test_validator_server {
             narwhal_worker_to_primary: utils::new_network_address(),
             narwhal_primary_to_worker: vec![utils::new_network_address()],
             narwhal_worker_to_worker: vec![utils::new_network_address()],
-            narwhal_consensus_addresses: vec![utils::new_network_address()],
+            narwhal_consensus_addresses: consensus_addresses.clone(),
         };
 
         let builder = GenesisStateBuilder::new()
@@ -338,7 +338,7 @@ mod test_validator_server {
         let validator_server = ValidatorServer::new(
             new_addr.clone(),
             Arc::new(validator_state),
-            vec![network_address],
+            consensus_addresses,
             tx_reconfigure_consensus,
         );
         validator_server.spawn().await
@@ -378,6 +378,7 @@ mod test_validator_server {
         let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
         let public_key = ValidatorPubKeyBytes::from(key.public());
         let secret = Arc::pin(key);
+        let consensus_addresses = vec![utils::new_network_address()];
 
         let validator = ValidatorInfo {
             name: "0".into(),
@@ -389,7 +390,7 @@ mod test_validator_server {
             narwhal_worker_to_primary: utils::new_network_address(),
             narwhal_primary_to_worker: vec![utils::new_network_address()],
             narwhal_worker_to_worker: vec![utils::new_network_address()],
-            narwhal_consensus_addresses: vec![utils::new_network_address()],
+            narwhal_consensus_addresses: consensus_addresses.clone(),
         };
 
         let builder = GenesisStateBuilder::new()
@@ -406,7 +407,7 @@ mod test_validator_server {
         let validator_server = ValidatorServer::new(
             new_addr.clone(),
             Arc::new(validator_state),
-            vec![network_address],
+            consensus_addresses,
             tx_reconfigure_consensus.clone(),
         );
         validator_server.spawn().await.unwrap();

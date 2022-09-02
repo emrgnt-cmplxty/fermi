@@ -494,6 +494,6 @@ pub mod cluster_test_suite {
 
         let response = client.airdrop(request).await.unwrap().into_inner();
 
-        assert!(response.successful == true);
+        assert!(response.successful);
     }
 }

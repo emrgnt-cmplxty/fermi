@@ -26,7 +26,7 @@ use gdex_types::{
     asset::{AssetId, AssetPairKey},
     crypto::ToFromBytes,
     error::GDEXError,
-    order_book::{OrderProcessingResult, OrderSide, OrderType, Success, OrderbookSnap, Depth},
+    order_book::{OrderProcessingResult, OrderSide, OrderType, OrderbookSnap, Success},
     transaction::{OrderRequest, Transaction, TransactionVariant},
 };
 
@@ -1262,5 +1262,54 @@ pub mod spot_tests {
                 CREATED_ASSET_BALANCE - (TEST_QUANTITY + 1) * TEST_PRICE
             );
         }
+    }
+    #[test]
+    fn get_orderbook_snap() {
+        let account = generate_keypair_vec([0; 32]).pop().unwrap();
+
+        let mut bank_controller = BankController::default();
+        bank_controller.create_asset(account.public()).unwrap();
+        bank_controller.create_asset(account.public()).unwrap();
+        let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
+
+        let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
+        let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
+
+        let mut orderbook_interface = OrderbookInterface::new(
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
+            controller_account,
+            Arc::clone(&bank_controller_ref),
+        );
+
+        let bid_size = 100;
+        let bid_price = 100;
+        orderbook_interface
+            .place_limit_order(account.public(), OrderSide::Bid, bid_size, bid_price)
+            .unwrap();
+
+        const TEST_MID: u64 = 5;
+        const TEST_NUM_ORDERS: u64 = 2;
+
+        for i in 1..TEST_MID {
+            for _ in 0..TEST_NUM_ORDERS {
+                dbg!(i);
+                orderbook_interface
+                    .place_limit_order(account.public(), OrderSide::Bid, u64::pow(i, 2), i)
+                    .unwrap();
+            }
+        }
+
+        for i in TEST_MID + 1..2 * TEST_MID {
+            for _ in 0..TEST_NUM_ORDERS {
+                dbg!(i);
+                orderbook_interface
+                    .place_limit_order(account.public(), OrderSide::Ask, u64::pow(2 * TEST_MID + 1 - i, 2), i)
+                    .unwrap();
+            }
+        }
+
+        let orderbook_snap = orderbook_interface.get_orderbook_snap();
+        dbg!(orderbook_snap);
     }
 }

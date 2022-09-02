@@ -116,9 +116,6 @@ impl Relayer for RelayerService {
     ) -> Result<Response<RelayerOrderbookSnapResponse>, Status> {
         let bids: Vec<Depth> = Vec::new();
         let asks: Vec<Depth> = Vec::new();
-        Ok(Response::new(RelayerOrderbookSnapResponse {
-            bids,
-            asks
-        }))
+        Ok(Response::new(RelayerOrderbookSnapResponse { bids, asks }))
     }
 }

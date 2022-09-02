@@ -14,7 +14,7 @@ use super::sequence;
 use super::validation::OrderRequestValidator;
 use gdex_types::{
     asset::AssetId,
-    order_book::{Failed, Order, OrderProcessingResult, OrderSide, OrderType, Success, OrderbookSnap, Depth},
+    order_book::{Depth, Failed, Order, OrderProcessingResult, OrderSide, OrderType, OrderbookSnap, Success},
     transaction::OrderRequest,
 };
 use serde::{Deserialize, Serialize};
@@ -63,11 +63,10 @@ impl Orderbook {
         let asks: Vec<Depth> = Vec::new();
 
         // generate snapshot by depth
+        dbg!(&self.bid_queue);
+        dbg!(&self.ask_queue);
 
-        OrderbookSnap{
-            bids,
-            asks
-        }
+        OrderbookSnap { bids, asks }
     }
 
     pub fn process_order(&mut self, order: OrderRequest) -> OrderProcessingResult {

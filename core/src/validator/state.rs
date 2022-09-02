@@ -12,8 +12,8 @@ use gdex_types::{
     block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},
     committee::{Committee, ValidatorName},
     error::GDEXError,
+    order_book::OrderbookSnap,
     transaction::{SignedTransaction, TransactionDigest},
-    order_book::{OrderbookSnap}
 };
 use mysten_store::{
     reopen,
@@ -48,7 +48,7 @@ pub struct ValidatorStore {
     // singleton store that keeps only the most recent block info at key 0
     pub last_block_info_store: Store<u64, BlockInfo>,
     // store of orderbook snaps
-    pub orderbook_snap_store: Store<String, OrderbookSnap>
+    pub orderbook_snap_store: Store<String, OrderbookSnap>,
 }
 
 impl ValidatorStore {
@@ -108,7 +108,7 @@ impl ValidatorStore {
             block_info_store,
             block_number: AtomicU64::new(block_number),
             last_block_info_store,
-            orderbook_snap_store
+            orderbook_snap_store,
         }
     }
 
@@ -174,14 +174,13 @@ impl ValidatorStore {
         self.block_number.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
     }
 
-    pub async fn write_orderbook_snaps(
-        &self,
-        orderbook_snaps: HashMap<String, OrderbookSnap>
-    ) {
+    pub async fn write_orderbook_snaps(&self, orderbook_snaps: HashMap<String, OrderbookSnap>) {
         let block_number = self.block_number.load(std::sync::atomic::Ordering::SeqCst);
         for (asset_pair, orderbook_snap) in orderbook_snaps {
             let orderbook_snap_key = format!("{}_{}", asset_pair, block_number);
-            self.orderbook_snap_store.write(orderbook_snap_key, orderbook_snap.clone()).await;
+            self.orderbook_snap_store
+                .write(orderbook_snap_key, orderbook_snap.clone())
+                .await;
         }
     }
 

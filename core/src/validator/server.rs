@@ -193,8 +193,15 @@ impl ValidatorService {
                             serialized_txns_buf.clear();
 
                             // write out orderbook snap every ORDERBOOK_SNAP_FREQUENCY
-                            if store.block_number.load(std::sync::atomic::Ordering::SeqCst) % ORDERBOOK_SNAP_FREQUENCY == 0 {
-                                let orderbook_snaps = validator_state.master_controller.spot_controller.lock().unwrap().generate_orderbook_snaps();
+                            if store.block_number.load(std::sync::atomic::Ordering::SeqCst) % ORDERBOOK_SNAP_FREQUENCY
+                                == 0
+                            {
+                                let orderbook_snaps = validator_state
+                                    .master_controller
+                                    .spot_controller
+                                    .lock()
+                                    .unwrap()
+                                    .generate_orderbook_snaps();
                                 store.write_orderbook_snaps(orderbook_snaps).await;
                             }
                         }

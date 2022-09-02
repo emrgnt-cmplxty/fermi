@@ -110,4 +110,15 @@ impl Relayer for RelayerService {
             })),
         }
     }
+    async fn get_orderbook_snap(
+        &self,
+        _request: Request<RelayerGetOrderbookSnapRequest>,
+    ) -> Result<Response<RelayerOrderbookSnapResponse>, Status> {
+        let bids: Vec<Depth> = Vec::new();
+        let asks: Vec<Depth> = Vec::new();
+        Ok(Response::new(RelayerOrderbookSnapResponse {
+            bids,
+            asks
+        }))
+    }
 }

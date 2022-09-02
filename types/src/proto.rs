@@ -17,4 +17,5 @@ pub use gdex::{
     Block as BlockProto, BlockInfo as BlockInfoProto, Empty, FaucetAirdropRequest, FaucetAirdropResponse,
     RelayerBlockInfoResponse, RelayerBlockResponse, RelayerGetBlockInfoRequest, RelayerGetBlockRequest,
     RelayerGetLatestBlockInfoRequest, Transaction as TransactionProto,
+    RelayerGetOrderbookSnapRequest, RelayerOrderbookSnapResponse, Depth
 };

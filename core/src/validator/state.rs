@@ -13,6 +13,7 @@ use gdex_types::{
     committee::{Committee, ValidatorName},
     error::GDEXError,
     transaction::{SignedTransaction, TransactionDigest},
+    order_book::{OrderbookSnap}
 };
 use mysten_store::{
     reopen,
@@ -46,6 +47,8 @@ pub struct ValidatorStore {
     pub block_number: AtomicU64,
     // singleton store that keeps only the most recent block info at key 0
     pub last_block_info_store: Store<u64, BlockInfo>,
+    // store of orderbook snaps
+    pub orderbook_snap_store: Store<String, OrderbookSnap>
 }
 
 impl ValidatorStore {
@@ -61,10 +64,11 @@ impl ValidatorStore {
         )
         .expect("Cannot open database");
 
-        let (block_map, block_info_map, last_block_map) = reopen!(&rocksdb,
+        let (block_map, block_info_map, last_block_map, orderbook_snap_map) = reopen!(&rocksdb,
             Self::BLOCKS_CF;<BlockNumber, Block>,
             Self::BLOCK_INFO_CF;<BlockNumber, BlockInfo>,
-            Self::LAST_BLOCK_CF;<u64, BlockInfo>
+            Self::LAST_BLOCK_CF;<u64, BlockInfo>,
+            Self::LAST_BLOCK_CF;<String, OrderbookSnap>
         );
 
         let block_number_from_dbmap = last_block_map.get(&0_u64);
@@ -72,6 +76,7 @@ impl ValidatorStore {
         let block_store = Store::new(block_map);
         let block_info_store = Store::new(block_info_map);
         let last_block_info_store = Store::new(last_block_map);
+        let orderbook_snap_store = Store::new(orderbook_snap_map);
 
         // TODO load the state if last block is not 0, i.e. not at genesis
         let block_number = match block_number_from_dbmap {
@@ -103,6 +108,7 @@ impl ValidatorStore {
             block_info_store,
             block_number: AtomicU64::new(block_number),
             last_block_info_store,
+            orderbook_snap_store
         }
     }
 
@@ -166,6 +172,17 @@ impl ValidatorStore {
         self.last_block_info_store.write(0, block_info).await;
         // update the block number
         self.block_number.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    }
+
+    pub async fn write_orderbook_snaps(
+        &self,
+        orderbook_snaps: HashMap<String, OrderbookSnap>
+    ) {
+        let block_number = self.block_number.load(std::sync::atomic::Ordering::SeqCst);
+        for (asset_pair, orderbook_snap) in orderbook_snaps {
+            let orderbook_snap_key = format!("{}_{}", asset_pair, block_number);
+            self.orderbook_snap_store.write(orderbook_snap_key, orderbook_snap.clone()).await;
+        }
     }
 
     pub fn prune(&self) {

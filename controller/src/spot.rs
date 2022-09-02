@@ -26,7 +26,7 @@ use gdex_types::{
     asset::{AssetId, AssetPairKey},
     crypto::ToFromBytes,
     error::GDEXError,
-    order_book::{OrderProcessingResult, OrderSide, OrderType, Success},
+    order_book::{OrderProcessingResult, OrderSide, OrderType, Success, OrderbookSnap, Depth},
     transaction::{OrderRequest, Transaction, TransactionVariant},
 };
 
@@ -454,6 +454,10 @@ impl OrderbookInterface {
         Ok(())
     }
 
+    pub fn get_orderbook_snap(&self) -> OrderbookSnap {
+        self.orderbook.get_orderbook_snap()
+    }
+
     // TODO #2 //
     pub fn overwrite_orderbook(&mut self, new_orderbook: Orderbook) {
         self.orderbook = new_orderbook;
@@ -569,6 +573,15 @@ impl SpotController {
     pub fn check_orderbook_exists(&self, base_asset_id: AssetId, quote_asset_id: AssetId) -> bool {
         let lookup_string = self._get_orderbook_key(base_asset_id, quote_asset_id);
         self.orderbooks.contains_key(&lookup_string)
+    }
+
+    pub fn generate_orderbook_snaps(&self) -> HashMap<AssetPairKey, OrderbookSnap> {
+        let mut orderbook_snaps: HashMap<AssetPairKey, OrderbookSnap> = HashMap::new();
+        for (asset_pair, orderbook) in &self.orderbooks {
+            orderbook_snaps.insert(asset_pair.clone(), orderbook.get_orderbook_snap());
+        }
+
+        orderbook_snaps
     }
 
     pub fn create_orderbook(&mut self, base_asset_id: AssetId, quote_asset_id: AssetId) -> Result<(), GDEXError> {

@@ -86,18 +86,13 @@ message RelayerGetOrderbookSnapRequest {
     uint64 depth = 3;
 }
 
-message Bid {
-    uint64 price = 1;
-    uint64 quantity = 2;
-}
-
-message Ask {
+message Depth {
     uint64 price = 1;
     uint64 quantity = 2;
 }
 
 // A response of the latest orderbook snap
 message RelayerOrderbookSnapResponse {
-    repeated Bid bids = 1;
-    repeated Ask asks = 2;
+    repeated Depth bids = 1;
+    repeated Depth asks = 2;
 }

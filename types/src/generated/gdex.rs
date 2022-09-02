@@ -77,14 +77,7 @@ pub struct RelayerGetOrderbookSnapRequest {
     pub depth: u64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct Bid {
-    #[prost(uint64, tag="1")]
-    pub price: u64,
-    #[prost(uint64, tag="2")]
-    pub quantity: u64,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct Ask {
+pub struct Depth {
     #[prost(uint64, tag="1")]
     pub price: u64,
     #[prost(uint64, tag="2")]
@@ -93,8 +86,10 @@ pub struct Ask {
 /// A response of the latest orderbook snap
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RelayerOrderbookSnapResponse {
+    #[prost(message, repeated, tag="1")]
+    pub bids: ::prost::alloc::vec::Vec<Depth>,
     #[prost(message, repeated, tag="2")]
-    pub block_info: ::prost::alloc::vec::Vec<BlockInfo>,
+    pub asks: ::prost::alloc::vec::Vec<Depth>,
 }
 /// Generated client implementations.
 pub mod transactions_client {

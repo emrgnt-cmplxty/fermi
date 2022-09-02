@@ -69,17 +69,6 @@ impl NetworkConfigBuilder {
         self.initial_accounts_config = Some(initial_accounts_config);
         self
     }
-
-    // /// Set the rng and return a new object
-    // pub fn rng<N: ::rand::RngCore + ::rand::CryptoRng>(self, rng: N) -> NetworkConfigBuilder<N> {
-    //     NetworkConfigBuilder {
-    //         rng,
-    //         config_directory: self.config_directory,
-    //         randomize_ports: self.randomize_ports,
-    //         committee_size: self.committee_size,
-    //         initial_accounts_config: self.initial_accounts_config,
-    //     }
-    // }
 }
 
 impl NetworkConfigBuilder {

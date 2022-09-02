@@ -17,8 +17,9 @@ pub mod cluster_test_suite {
         asset::PRIMARY_ASSET_ID,
         block::{Block, BlockDigest},
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
-        proto::{RelayerClient, RelayerGetBlockRequest, RelayerGetLatestBlockInfoRequest},
+        proto::{RelayerClient, RelayerGetBlockRequest, RelayerGetLatestBlockInfoRequest, RelayerGetLatestOrderbookSnapRequest},
         transaction::{create_asset_creation_transaction, SignedTransaction},
+        order_book::{OrderbookSnap, Depth}
     };
 
     // mysten
@@ -28,6 +29,7 @@ pub mod cluster_test_suite {
 
     // external
     use std::sync::Arc;
+    use std::collections::{HashMap};
     use tokio::time::{sleep, Duration};
     use tracing::info;
 
@@ -399,6 +401,67 @@ pub mod cluster_test_suite {
 
         assert!(block_to_check_against.block_certificate == deserialized_block.block_certificate);
         assert!(block_to_check_against.transactions == deserialized_block.transactions);
+        // assert!(latest_block_info_response.unwrap().into_inner().successful)
+    }
+
+    #[tokio::test]
+    pub async fn test_spawn_relayer_orderbook_snaps() {
+        let validator_count: usize = 4;
+        let mut cluster = TestCluster::spawn(validator_count, None).await;
+
+        let spawner_1 = cluster.get_validator_spawner(1);
+        let validator_state_1 = spawner_1.get_validator_state().unwrap();
+
+        // Write the orderbook snap down
+        let base_asset_id: u64 = 1;
+        let quote_asset_id: u64 = 2;
+        let orderbook_key: String = format!("{}_{}", base_asset_id, quote_asset_id);
+        let mut orderbook_snaps: HashMap<String, OrderbookSnap> = HashMap::new();
+        let mut bids: Vec<Depth> = Vec::new();
+        let mut asks: Vec<Depth> = Vec::new();
+        const TEST_MID: u64 = 10;
+        for i in 1..TEST_MID {
+            bids.push(Depth {
+                price: i,
+                quantity: 10*i
+            });
+            asks.push(Depth {
+                price: TEST_MID + i,
+                quantity: 10*i
+            });
+        }
+        let orderbook_snap = OrderbookSnap {
+            bids,
+            asks
+        };
+        orderbook_snaps.insert(
+            orderbook_key,
+            orderbook_snap
+        );
+
+        validator_state_1
+            .validator_store
+            .write_latest_orderbook_snaps(orderbook_snaps)
+            .await;
+
+        // TODO clean
+
+        let relayer_1 = cluster.spawn_single_relayer(1).await;
+        let target_endpoint = endpoint_from_multiaddr(&relayer_1.get_relayer_address()).unwrap();
+        let endpoint = target_endpoint.endpoint();
+        let mut client = RelayerClient::connect(endpoint.clone()).await.unwrap();
+
+        let latest_orderbook_snap_request = tonic::Request::new(RelayerGetLatestOrderbookSnapRequest {
+            base_asset_id,
+            quote_asset_id,
+            depth: 5
+        });
+
+        // Act
+        let latest_orderbook_snap_response = client.get_latest_orderbook_snap(latest_orderbook_snap_request).await;
+
+        let latest_orderbook_snap_response_bids = latest_orderbook_snap_response.unwrap().into_inner().bids;
+
         // assert!(latest_block_info_response.unwrap().into_inner().successful)
     }
 }

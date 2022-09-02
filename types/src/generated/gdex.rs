@@ -68,7 +68,7 @@ pub struct RelayerBlockInfoResponse {
 }
 /// A message to get the latest orderbook snap
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct RelayerGetOrderbookSnapRequest {
+pub struct RelayerGetLatestOrderbookSnapRequest {
     #[prost(uint64, tag="1")]
     pub base_asset_id: u64,
     #[prost(uint64, tag="2")]
@@ -85,7 +85,7 @@ pub struct Depth {
 }
 /// A response of the latest orderbook snap
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct RelayerOrderbookSnapResponse {
+pub struct RelayerLatestOrderbookSnapResponse {
     #[prost(message, repeated, tag="1")]
     pub bids: ::prost::alloc::vec::Vec<Depth>,
     #[prost(message, repeated, tag="2")]
@@ -403,11 +403,11 @@ pub mod relayer_client {
             let path = http::uri::PathAndQuery::from_static("/gdex.Relayer/GetBlock");
             self.inner.unary(request.into_request(), path, codec).await
         }
-        pub async fn get_orderbook_snap(
+        pub async fn get_latest_orderbook_snap(
             &mut self,
-            request: impl tonic::IntoRequest<super::RelayerGetOrderbookSnapRequest>,
+            request: impl tonic::IntoRequest<super::RelayerGetLatestOrderbookSnapRequest>,
         ) -> Result<
-            tonic::Response<super::RelayerOrderbookSnapResponse>,
+            tonic::Response<super::RelayerLatestOrderbookSnapResponse>,
             tonic::Status,
         > {
             self.inner
@@ -421,7 +421,7 @@ pub mod relayer_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/gdex.Relayer/GetOrderbookSnap",
+                "/gdex.Relayer/GetLatestOrderbookSnap",
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
@@ -765,10 +765,13 @@ pub mod relayer_server {
             &self,
             request: tonic::Request<super::RelayerGetBlockRequest>,
         ) -> Result<tonic::Response<super::RelayerBlockResponse>, tonic::Status>;
-        async fn get_orderbook_snap(
+        async fn get_latest_orderbook_snap(
             &self,
-            request: tonic::Request<super::RelayerGetOrderbookSnapRequest>,
-        ) -> Result<tonic::Response<super::RelayerOrderbookSnapResponse>, tonic::Status>;
+            request: tonic::Request<super::RelayerGetLatestOrderbookSnapRequest>,
+        ) -> Result<
+            tonic::Response<super::RelayerLatestOrderbookSnapResponse>,
+            tonic::Status,
+        >;
     }
     /// Relay service for relaying information outside
     #[derive(Debug)]
@@ -939,14 +942,15 @@ pub mod relayer_server {
                     };
                     Box::pin(fut)
                 }
-                "/gdex.Relayer/GetOrderbookSnap" => {
+                "/gdex.Relayer/GetLatestOrderbookSnap" => {
                     #[allow(non_camel_case_types)]
-                    struct GetOrderbookSnapSvc<T: Relayer>(pub Arc<T>);
+                    struct GetLatestOrderbookSnapSvc<T: Relayer>(pub Arc<T>);
                     impl<
                         T: Relayer,
-                    > tonic::server::UnaryService<super::RelayerGetOrderbookSnapRequest>
-                    for GetOrderbookSnapSvc<T> {
-                        type Response = super::RelayerOrderbookSnapResponse;
+                    > tonic::server::UnaryService<
+                        super::RelayerGetLatestOrderbookSnapRequest,
+                    > for GetLatestOrderbookSnapSvc<T> {
+                        type Response = super::RelayerLatestOrderbookSnapResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
@@ -954,12 +958,12 @@ pub mod relayer_server {
                         fn call(
                             &mut self,
                             request: tonic::Request<
-                                super::RelayerGetOrderbookSnapRequest,
+                                super::RelayerGetLatestOrderbookSnapRequest,
                             >,
                         ) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move {
-                                (*inner).get_orderbook_snap(request).await
+                                (*inner).get_latest_orderbook_snap(request).await
                             };
                             Box::pin(fut)
                         }
@@ -969,7 +973,7 @@ pub mod relayer_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let inner = inner.0;
-                        let method = GetOrderbookSnapSvc(inner);
+                        let method = GetLatestOrderbookSnapSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

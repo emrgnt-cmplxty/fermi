@@ -180,6 +180,19 @@ impl ValidatorService {
 
                         // if next_transaction_index == 0 then the block is complete and we may write-out
                         if execution_indices.next_transaction_index == 0 {
+                            // write out orderbook snap every ORDERBOOK_SNAP_FREQUENCY
+                            if store.block_number.load(std::sync::atomic::Ordering::SeqCst) % ORDERBOOK_SNAP_FREQUENCY
+                                == 0
+                            {
+                                let orderbook_snaps = validator_state
+                                    .master_controller
+                                    .spot_controller
+                                    .lock()
+                                    .unwrap()
+                                    .generate_orderbook_snaps();
+                                store.write_latest_orderbook_snaps(orderbook_snaps).await;
+                            }
+
                             // subtract round look-back from the latest round to get block number
                             let round_number = consensus_output.certificate.header.round;
 
@@ -191,19 +204,6 @@ impl ValidatorService {
                                 .write_latest_block(consensus_output.certificate, serialized_txns_buf.clone())
                                 .await;
                             serialized_txns_buf.clear();
-
-                            // write out orderbook snap every ORDERBOOK_SNAP_FREQUENCY
-                            if store.block_number.load(std::sync::atomic::Ordering::SeqCst) % ORDERBOOK_SNAP_FREQUENCY
-                                == 0
-                            {
-                                let orderbook_snaps = validator_state
-                                    .master_controller
-                                    .spot_controller
-                                    .lock()
-                                    .unwrap()
-                                    .generate_orderbook_snaps();
-                                store.write_orderbook_snaps(orderbook_snaps).await;
-                            }
                         }
                     }
                     Err(e) => info!("{:?}", e), // TODO

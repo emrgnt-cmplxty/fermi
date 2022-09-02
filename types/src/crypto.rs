@@ -127,8 +127,7 @@ where
     R: rand::CryptoRng + rand::RngCore,
     <KP as KeypairTraits>::PubKey: GDEXPublicKey,
 {
-    let kp = KP::generate(csprng);
-    kp
+    KP::generate(csprng)
 }
 
 /// Begin the testing suite for serialization

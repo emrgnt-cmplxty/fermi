@@ -69,18 +69,8 @@ impl NodeRestarter {
             .await
             .unwrap();
 
-            // fetch corresponding authority
-            let authority = committee
-                .authorities
-                .iter()
-                .find(|a| a.0 == &name)
-                .expect("Failed to locate corresponding authority.")
-                .1;
-            
-            let worker_ids = worker_cache.load().workers.iter().filter(|(k, _)| *k == &name).next().unwrap().1.0.keys().cloned().collect::<Vec<u32>>();
+            let worker_ids = worker_cache.load().workers.iter().find(|(k, _)| *k == &name).unwrap().1.0.keys().cloned().collect::<Vec<u32>>();
 
-            // let worker_ids = vec![1];//::new();//worker_cache .load().workers.iter().map(|w| *w.1).collect::<Vec<u32>>();
-    
             let workers = Node::spawn_workers(
                 name.clone(),
                 worker_ids,

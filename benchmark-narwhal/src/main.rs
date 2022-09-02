@@ -158,77 +158,77 @@ async fn run(matches: &ArgMatches<'_>) -> Result<(), eyre::Report> {
     let store = NodeStorage::reopen(store_path);
 
     // The channel returning the result for each transaction's execution.
-    // let (tx_transaction_confirmation, rx_transaction_confirmation) = channel(Node::CHANNEL_CAPACITY);
+    let (tx_transaction_confirmation, rx_transaction_confirmation) = channel(Node::CHANNEL_CAPACITY);
 
-    // let registry;
+    let registry;
 
     debug!("input consenus parameters={:?}", parameters.clone());
 
-    // // Check whether to run a primary, a worker, or an entire authority.
-    // let handle = match matches.subcommand() {
-    //     // Spawn the primary and consensus core.
-    //     ("primary", Some(sub_matches)) => {
-    //         registry = primary_metrics_registry(keypair.public().clone());
-    //         // can we condense into a single spawn_primary call? I found type errors when trying to do the if else inline or similar
-    //         if is_advanced_execution {
-    //             Node::spawn_primary(
-    //                 keypair,
-    //                 committee,
-    //                 &store,
-    //                 parameters.clone(),
-    //                 /* consensus */ !sub_matches.is_present("consensus-disabled"),
-    //                 /* execution_state */ Arc::new(AdvancedExecutionState::default()),
-    //                 tx_transaction_confirmation,
-    //                 &registry,
-    //             )
-    //             .await?
-    //         } else {
-    //             Node::spawn_primary(
-    //                 keypair,
-    //                 committee,
-    //                 &store,
-    //                 parameters.clone(),
-    //                 /* consensus */ !sub_matches.is_present("consensus-disabled"),
-    //                 /* execution_state */ Arc::new(SimpleExecutionState),
-    //                 tx_transaction_confirmation,
-    //                 &registry,
-    //             )
-    //             .await?
-    //         }
-    //     }
+    // Check whether to run a primary, a worker, or an entire authority.
+    let handle = match matches.subcommand() {
+        // Spawn the primary and consensus core.
+        ("primary", Some(sub_matches)) => {
+            registry = primary_metrics_registry(keypair.public().clone());
+            // can we condense into a single spawn_primary call? I found type errors when trying to do the if else inline or similar
+            if is_advanced_execution {
+                Node::spawn_primary(
+                    keypair,
+                    committee,
+                    &store,
+                    parameters.clone(),
+                    /* consensus */ !sub_matches.is_present("consensus-disabled"),
+                    /* execution_state */ Arc::new(AdvancedExecutionState::default()),
+                    tx_transaction_confirmation,
+                    &registry,
+                )
+                .await?
+            } else {
+                Node::spawn_primary(
+                    keypair,
+                    committee,
+                    &store,
+                    parameters.clone(),
+                    /* consensus */ !sub_matches.is_present("consensus-disabled"),
+                    /* execution_state */ Arc::new(SimpleExecutionState),
+                    tx_transaction_confirmation,
+                    &registry,
+                )
+                .await?
+            }
+        }
 
-    //     // Spawn a single worker.
-    //     ("worker", Some(sub_matches)) => {
-    //         let id = sub_matches
-    //             .value_of("id")
-    //             .unwrap()
-    //             .parse::<WorkerId>()
-    //             .context("The worker id must be a positive integer")?;
+        // Spawn a single worker.
+        ("worker", Some(sub_matches)) => {
+            let id = sub_matches
+                .value_of("id")
+                .unwrap()
+                .parse::<WorkerId>()
+                .context("The worker id must be a positive integer")?;
 
-    //         registry = worker_metrics_registry(id, keypair.public().clone());
+            registry = worker_metrics_registry(id, keypair.public().clone());
 
-    //         Node::spawn_workers(
-    //             /* name */
-    //             keypair.public().clone(),
-    //             vec![id],
-    //             committee,
-    //             &store,
-    //             parameters.clone(),
-    //             &registry,
-    //         )
-    //     }
-    //     _ => unreachable!(),
-    // };
+            Node::spawn_workers(
+                /* name */
+                keypair.public().clone(),
+                vec![id],
+                committee,
+                &store,
+                parameters.clone(),
+                &registry,
+            )
+        }
+        _ => unreachable!(),
+    };
 
-    // // spin up prometheus server exporter
-    // let prom_address = parameters.prometheus_metrics.socket_addr;
-    // info!("Starting Prometheus HTTP metrics endpoint at {}", prom_address);
-    // let _metrics_server_handle = start_prometheus_server(prom_address, &registry);
+    // spin up prometheus server exporter
+    let prom_address = parameters.prometheus_metrics.socket_addr;
+    info!("Starting Prometheus HTTP metrics endpoint at {}", prom_address);
+    let _metrics_server_handle = start_prometheus_server(prom_address, &registry);
 
-    // // Analyze the consensus' output.
-    // analyze(rx_transaction_confirmation).await;
-    // // Await execution of the primary
-    // join_all(handle);
+    // Analyze the consensus' output.
+    analyze(rx_transaction_confirmation).await;
+    // Await execution of the primary
+    join_all(handle);
     // If this expression is reached, the program ends and all other tasks terminate.
     Ok(())
 

@@ -16,7 +16,7 @@ use std::{
     convert::TryInto,
     {fs, path::Path},
 };
-use tracing::{info, trace};
+use tracing::trace;
 
 /// An object with the necessary state to initialize a new node at blockchain genesis
 #[derive(Clone, Debug)]

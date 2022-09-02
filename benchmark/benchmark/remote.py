@@ -235,13 +235,10 @@ class Bench:
                 consensus_address
             )
             subprocess.run([cmd], shell=True)
-        sleep(2)
         cmd = CommandMaker.add_controllers_gdex_genesis(self.local_proto_dir)
         subprocess.run([cmd], shell=True)
-        sleep(2)
         cmd = CommandMaker.build_gdex_genesis(self.local_proto_dir)
         subprocess.run([cmd], shell=True)
-        sleep(5)
         for i, name in enumerate(names):
             cmd = CommandMaker.verify_and_sign_gdex_genesis(self.local_proto_dir, self.local_proto_dir + key_files[i])
             subprocess.run([cmd], shell=True)

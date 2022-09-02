@@ -485,6 +485,7 @@ dependencies = [
  "dhat",
  "ed25519-dalek",
  "executor",
+ "fastcrypto",
  "futures",
  "gdex-controller",
  "gdex-core",
@@ -2482,6 +2483,7 @@ dependencies = [
 name = "gdex-controller"
 version = "0.1.0"
 dependencies = [
+ "crypto",
  "fastcrypto",
  "gdex-engine",
  "gdex-types",
@@ -2552,6 +2554,7 @@ dependencies = [
  "anyhow",
  "clap 2.34.0",
  "crypto",
+ "fastcrypto",
  "futures",
  "gdex-core",
  "gdex-types",
@@ -2575,6 +2578,7 @@ dependencies = [
  "consensus",
  "criterion",
  "crypto",
+ "fastcrypto",
  "gdex-controller",
  "gdex-core",
  "gdex-engine",

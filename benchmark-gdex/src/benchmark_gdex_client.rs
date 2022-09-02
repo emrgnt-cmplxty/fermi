@@ -11,7 +11,7 @@ use gdex_types::{
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
     utils::read_keypair_from_file,
 };
-use narwhal_crypto::{
+use fastcrypto::{
     traits::{KeyPair, Signer},
     Hash,
 };

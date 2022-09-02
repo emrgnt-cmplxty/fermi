@@ -208,7 +208,8 @@ impl BankController {
 #[cfg(test)]
 pub mod spot_tests {
     use super::*;
-    use narwhal_crypto::{generate_production_keypair, traits::KeyPair as _, KeyPair};
+    use fastcrypto::{generate_production_keypair, traits::KeyPair as _};
+    use narwhal_crypto::KeyPair;
 
     #[test]
     fn create_and_check_accounts() {

@@ -122,22 +122,24 @@ impl ValidatorService {
             .ok_or_else(|| anyhow!("Validator is missing consensus config"))?;
         let consensus_keypair = config.key_pair().copy();
         let consensus_committee = config.genesis()?.narwhal_committee().load();
+        let consensus_worker_cache = config.genesis()?.narwhal_worker_cache();
+        let consensus_execution_state = Arc::clone(&state);
         let consensus_storage_base_path = consensus_config.db_path().to_path_buf();
         let consensus_parameters = consensus_config.narwhal_config().to_owned();
 
         println!("consensus_committee = {:?}", consensus_committee);
 
-        let state_ref = Arc::clone(&state);
         let registry = prometheus_registry.clone();
         let restarter_handle = tokio::spawn(async move {
             NodeRestarter::watch(
                 consensus_keypair,
-                &(&*consensus_committee).clone(),
+                &*consensus_committee,
+                consensus_worker_cache,
                 consensus_storage_base_path,
-                /* execution_state */ state_ref,
+                consensus_execution_state,
                 consensus_parameters,
                 rx_reconfigure_consensus,
-                /* tx_output */ tx_consensus_to_gdex,
+                tx_consensus_to_gdex,
                 &registry,
             )
             .await

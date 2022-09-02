@@ -16,9 +16,10 @@ hex = "0.4.3"
 tracing = "0.1.36"
 
 # mysten crates
-telemetry-subscribers = { git = "https://github.com/MystenLabs/mysten-infra", rev = "7ef7415a4e11cf68fa68ce9db884c46e704e0445" }
+fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "c022a2ae23ca7cc2778293fd3b1db42e8cd02d3b" }
 narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "types" }
 narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "crypto"}
+telemetry-subscribers = { git = "https://github.com/MystenLabs/mysten-infra", rev = "7ef7415a4e11cf68fa68ce9db884c46e704e0445" }
 # local crates
 gdex-core = { path = "../core" }
 gdex-types = { path = "../types" }

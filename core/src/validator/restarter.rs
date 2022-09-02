@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // narwhal imports
 use fastcrypto::{traits::KeyPair as _};
-use narwhal_config::{Committee, Parameters};
+use narwhal_config::{Committee, Parameters, SharedWorkerCache};
 use narwhal_crypto::KeyPair;
 use narwhal_executor::{ExecutionState, ExecutorOutput};
 use narwhal_network::{PrimaryToWorkerNetwork, ReliableNetwork, UnreliableNetwork, WorkerToPrimaryNetwork};
@@ -25,6 +25,7 @@ impl NodeRestarter {
     pub async fn watch<State>(
         keypair: KeyPair,
         committee: &Committee,
+        worker_cache: SharedWorkerCache,
         storage_base_path: PathBuf,
         execution_state: Arc<State>,
         parameters: Parameters,
@@ -57,6 +58,7 @@ impl NodeRestarter {
             let primary = Node::spawn_primary(
                 keypair,
                 Arc::new(ArcSwap::new(Arc::new(committee.clone()))),
+                worker_cache.clone(),
                 &store,
                 parameters.clone(),
                 /* consensus */ true,
@@ -74,12 +76,16 @@ impl NodeRestarter {
                 .find(|a| a.0 == &name)
                 .expect("Failed to locate corresponding authority.")
                 .1;
-            let worker_ids = authority.workers.iter().map(|w| *w.0).collect::<Vec<u32>>();
+            
+            let worker_ids = worker_cache.load().workers.iter().filter(|(k, _)| *k == &name).next().unwrap().1.0.keys().cloned().collect::<Vec<u32>>();
 
+            // let worker_ids = vec![1];//::new();//worker_cache .load().workers.iter().map(|w| *w.1).collect::<Vec<u32>>();
+    
             let workers = Node::spawn_workers(
                 name.clone(),
                 worker_ids,
                 Arc::new(ArcSwap::new(Arc::new(committee.clone()))),
+                worker_cache.clone(),
                 &store,
                 parameters.clone(),
                 registry,
@@ -103,7 +109,8 @@ impl NodeRestarter {
             let message = WorkerPrimaryMessage::Reconfigure(ReconfigureNotification::Shutdown);
             let primary_cancel_handle = primary_network.send(address, &message).await;
 
-            let addresses = committee
+            let addresses = worker_cache
+                .load()
                 .our_workers(&name)
                 .expect("Our key is not in the committee")
                 .into_iter()

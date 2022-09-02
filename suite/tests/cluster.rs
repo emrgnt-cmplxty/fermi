@@ -28,8 +28,9 @@ pub mod cluster_test_suite {
     };
 
     // mysten
+    use fastcrypto::{generate_production_keypair, Hash, DIGEST_LEN};
     use narwhal_consensus::ConsensusOutput;
-    use narwhal_crypto::{generate_production_keypair, Hash, KeyPair, DIGEST_LEN};
+    use narwhal_crypto::{KeyPair};
     use narwhal_types::{Certificate, Header};
 
     // external

@@ -310,6 +310,7 @@ mod test_validator_state {
         builder::genesis_state::GenesisStateBuilder,
         genesis_ceremony::{VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
     };
+    use fastcrypto::{generate_production_keypair, DIGEST_LEN};
     use gdex_types::{
         account::ValidatorPubKeyBytes,
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
@@ -323,7 +324,7 @@ mod test_validator_state {
         utils,
     };
     use narwhal_consensus::ConsensusOutput;
-    use narwhal_crypto::{generate_production_keypair, Hash, KeyPair, DIGEST_LEN};
+    use narwhal_crypto::{KeyPair};
     use narwhal_executor::ExecutionIndices;
     use narwhal_types::{Certificate, Header};
 

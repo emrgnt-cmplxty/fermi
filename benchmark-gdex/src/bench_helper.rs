@@ -8,7 +8,7 @@ use gdex_types::{
         create_place_limit_order_transaction, SignedTransaction,
     },
 };
-use narwhal_crypto::{
+use fastcrypto::{
     traits::{KeyPair, Signer},
     Hash,
 };

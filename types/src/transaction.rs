@@ -525,12 +525,12 @@ pub mod transaction_test_functions {
 /// Begin the testing suite for transactions
 #[cfg(test)]
 pub mod transaction_tests {
-    use narwhal_crypto::traits::ToFromBytes;
-
     use super::transaction_test_functions::*;
     use super::*;
     use crate::account::account_test_functions::generate_keypair_vec;
     use crate::crypto::{KeypairTraits, Signer};
+    
+    use fastcrypto::traits::ToFromBytes;
 
     #[test]
     // test that transaction returns expected fields, validates a good signature, and has deterministic hashing

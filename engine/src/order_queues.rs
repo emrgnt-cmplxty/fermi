@@ -61,7 +61,7 @@ impl Eq for OrderIndex {}
 pub struct OrderQueue<T> {
     // use Option in order to replace heap in mutable borrow
     idx_queue: Option<BinaryHeap<OrderIndex>>,
-    orders: HashMap<u64, T>,
+    pub orders: HashMap<u64, T>,
     op_counter: u64,
     max_stalled: u64,
     queue_side: OrderSide,

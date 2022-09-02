@@ -114,6 +114,9 @@ impl Relayer for RelayerService {
         &self,
         _request: Request<RelayerGetOrderbookSnapRequest>,
     ) -> Result<Response<RelayerOrderbookSnapResponse>, Status> {
+        let req = request.into_inner();
+        let block_number = req.block_number;
+
         let bids: Vec<Depth> = Vec::new();
         let asks: Vec<Depth> = Vec::new();
         Ok(Response::new(RelayerOrderbookSnapResponse { bids, asks }))

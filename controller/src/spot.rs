@@ -1288,28 +1288,20 @@ pub mod spot_tests {
             .place_limit_order(account.public(), OrderSide::Bid, bid_size, bid_price)
             .unwrap();
 
-        const TEST_MID: u64 = 5;
+        const TEST_MID: u64 = 100;
         const TEST_NUM_ORDERS: u64 = 2;
 
-        for i in 1..TEST_MID {
+        for i in 1..3 {
             for _ in 0..TEST_NUM_ORDERS {
-                dbg!(i);
                 orderbook_interface
-                    .place_limit_order(account.public(), OrderSide::Bid, u64::pow(i, 2), i)
+                    .place_limit_order(account.public(), OrderSide::Bid, u64::pow(10 - i, 2), TEST_MID-i)
+                    .unwrap();
+                orderbook_interface
+                    .place_limit_order(account.public(), OrderSide::Ask, u64::pow(10 - i, 2), TEST_MID+i)
                     .unwrap();
             }
         }
 
-        for i in TEST_MID + 1..2 * TEST_MID {
-            for _ in 0..TEST_NUM_ORDERS {
-                dbg!(i);
-                orderbook_interface
-                    .place_limit_order(account.public(), OrderSide::Ask, u64::pow(2 * TEST_MID + 1 - i, 2), i)
-                    .unwrap();
-            }
-        }
-
-        let orderbook_snap = orderbook_interface.get_orderbook_snap();
-        dbg!(orderbook_snap);
+        let _orderbook_snap = orderbook_interface.get_orderbook_snap();
     }
 }

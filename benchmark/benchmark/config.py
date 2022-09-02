@@ -220,6 +220,11 @@ class BenchParameters:
                 self.mem_profile = bool(json['mem_profiling'])
             else:
                 self.mem_profile = False
+            
+            if 'flamegraph' in json:
+                self.flamegraph = json['flamegraph']
+            else:
+                self.flamegraph = None
 
             self.runs = int(json['runs']) if 'runs' in json else 1
         except KeyError as e:
@@ -243,11 +248,17 @@ class GDEXBenchParameters:
             self.key_dir = json['key_dir']
             self.db_dir = json['db_dir']
             self.duration = int(json['duration'])
+            self.order_bench = bool(json['do_orderbook'])
 
             if 'mem_profiling' in json:
                 self.mem_profile = bool(json['mem_profiling'])
             else:
                 self.mem_profile = False
+            
+            if 'flamegraph' in json:
+                self.flamegraph = json['flamegraph']
+            else:
+                self.flamegraph = None
 
         except KeyError as e:
             raise ConfigError(f'Malformed bench parameters: missing key {e}')

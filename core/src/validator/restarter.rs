@@ -1,7 +1,7 @@
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 // narwhal imports
-use fastcrypto::{traits::KeyPair as _};
+use fastcrypto::traits::KeyPair as _;
 use narwhal_config::{Committee, Parameters, SharedWorkerCache};
 use narwhal_crypto::KeyPair;
 use narwhal_executor::{ExecutionState, ExecutorOutput};
@@ -69,7 +69,17 @@ impl NodeRestarter {
             .await
             .unwrap();
 
-            let worker_ids = worker_cache.load().workers.iter().find(|(k, _)| *k == &name).unwrap().1.0.keys().cloned().collect::<Vec<u32>>();
+            let worker_ids = worker_cache
+                .load()
+                .workers
+                .iter()
+                .find(|(k, _)| *k == &name)
+                .unwrap()
+                .1
+                 .0
+                .keys()
+                .cloned()
+                .collect::<Vec<u32>>();
 
             let workers = Node::spawn_workers(
                 name.clone(),

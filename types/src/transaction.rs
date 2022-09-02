@@ -529,7 +529,7 @@ pub mod transaction_tests {
     use super::*;
     use crate::account::account_test_functions::generate_keypair_vec;
     use crate::crypto::{KeypairTraits, Signer};
-    
+
     use fastcrypto::traits::ToFromBytes;
 
     #[test]

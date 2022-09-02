@@ -56,10 +56,7 @@ impl ValidatorGenesisState {
                 // Strong requirement here for narwhal and sui to be on the same version of fastcrypto
                 // for AuthorityPublicBytes to cast to type alias PublicKey defined in narwhal to
                 // construct narwhal Committee struct.
-                let name = validator
-                    .public_key()
-                    .try_into()
-                    .expect("Can't get narwhal public key");
+                let name = validator.public_key().try_into().expect("Can't get narwhal public key");
                 let primary = narwhal_config::PrimaryAddresses {
                     primary_to_primary: validator.narwhal_primary_to_primary.clone(),
                     worker_to_primary: validator.narwhal_worker_to_primary.clone(),
@@ -83,10 +80,7 @@ impl ValidatorGenesisState {
             .validator_set
             .iter()
             .map(|validator| {
-                let name = validator
-                    .public_key()
-                    .try_into()
-                    .expect("Can't get narwhal public key");
+                let name = validator.public_key().try_into().expect("Can't get narwhal public key");
 
                 let mut worker_counter = 0;
 

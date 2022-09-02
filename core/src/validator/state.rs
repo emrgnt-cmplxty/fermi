@@ -324,7 +324,7 @@ mod test_validator_state {
         utils,
     };
     use narwhal_consensus::ConsensusOutput;
-    use narwhal_crypto::{KeyPair};
+    use narwhal_crypto::KeyPair;
     use narwhal_executor::ExecutionIndices;
     use narwhal_types::{Certificate, Header};
 

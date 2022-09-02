@@ -34,7 +34,7 @@ use std::collections::HashMap;
 #[derive(PartialEq)]
 enum Modifier {
     Increment,
-    Decrement
+    Decrement,
 }
 
 // TODO need to find valid vanity address for bank controller

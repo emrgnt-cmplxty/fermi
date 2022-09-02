@@ -8,7 +8,7 @@ use crate::{
 };
 use anyhow::anyhow;
 use async_trait::async_trait;
-use fastcrypto::{Hash};
+use fastcrypto::Hash;
 use futures::StreamExt;
 use gdex_types::{
     crypto::KeypairTraits,

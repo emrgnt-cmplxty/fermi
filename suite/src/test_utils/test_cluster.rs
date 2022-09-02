@@ -40,9 +40,9 @@ async fn create_genesis_state(dir: &Path, validator_count: usize) -> ValidatorGe
                 delegation: 0,
                 narwhal_primary_to_primary: utils::new_network_address(),
                 narwhal_worker_to_primary: utils::new_network_address(),
-                narwhal_primary_to_worker: utils::new_network_address(),
-                narwhal_worker_to_worker: utils::new_network_address(),
-                narwhal_consensus_address: utils::new_network_address(),
+                narwhal_primary_to_worker: vec![utils::new_network_address()],
+                narwhal_worker_to_worker: vec![utils::new_network_address()],
+                narwhal_consensus_addresses: vec![utils::new_network_address()],
             };
             let key_file = dir.join(format!("{}.key", info.name));
             utils::write_keypair_to_file(&keypair, &key_file).unwrap();
@@ -144,6 +144,7 @@ impl TestCluster {
         self.temp_working_dir.path().to_path_buf()
     }
 
+    // TODO - we need a non-mut instance of this function for testing.
     pub fn get_validator_spawner(&mut self, index: usize) -> &mut ValidatorSpawner {
         &mut self.validator_spawners[index]
     }

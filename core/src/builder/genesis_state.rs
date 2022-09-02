@@ -15,10 +15,6 @@ use std::{
 };
 use tracing::trace;
 
-/***fn create_genesis_objects() -> MasterController {
-    MasterController::default()
-}***/
-
 const GENESIS_BUILDER_CONTROLLER_OUT: &str = "master_controller";
 const GENESIS_BUILDER_COMMITTEE_DIR: &str = "committee";
 

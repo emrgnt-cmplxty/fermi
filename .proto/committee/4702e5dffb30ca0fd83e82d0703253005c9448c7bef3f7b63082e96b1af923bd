@@ -1,0 +1,11 @@
+---
+name: RwLl3/swyg/YPoLQcDJTAFyUSMe+8/e2MILpaxr5I70=
+public-key: RwLl3/swyg/YPoLQcDJTAFyUSMe+8/e2MILpaxr5I70=
+stake: 1
+balance: 5000000000000
+delegation: 0
+narwhal-primary-to-primary: /ip4/127.0.0.1/tcp/3014/http
+narwhal-worker-to-primary: /ip4/127.0.0.1/tcp/3015/http
+narwhal-primary-to-worker: /ip4/127.0.0.1/tcp/3016/http
+narwhal-worker-to-worker: /ip4/127.0.0.1/tcp/3018/http
+narwhal-consensus-address: /ip4/127.0.0.1/tcp/3017/http

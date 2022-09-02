@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 #[serde(rename_all = "kebab-case")]
 pub struct ConsensusConfig {
     /// The address for communicating with other nodes in the network
-    pub consensus_address: Multiaddr,
+    pub consensus_addresses: Vec<Multiaddr>,
     /// Path to the consensus database
     pub consensus_db_path: PathBuf,
     /// Narwhal consensus parameters
@@ -20,8 +20,8 @@ pub struct ConsensusConfig {
 }
 
 impl ConsensusConfig {
-    pub fn address(&self) -> &Multiaddr {
-        &self.consensus_address
+    pub fn addresses(&self) -> &Vec<Multiaddr> {
+        &self.consensus_addresses
     }
 
     pub fn db_path(&self) -> &Path {
@@ -41,12 +41,12 @@ mod consensus_tests {
     pub fn config() {
         let new_address = utils::new_network_address();
         let new_config = ConsensusConfig {
-            consensus_address: new_address,
+            consensus_addresses: vec![new_address],
             consensus_db_path: PathBuf::from("test.conf"),
             narwhal_config: Default::default(),
         };
         // quick checks on newly created config
-        assert!(!new_config.address().is_empty());
+        assert!(!new_config.addresses().is_empty());
         assert!(new_config.db_path() == PathBuf::from("test.conf"));
         assert!(new_config.narwhal_config().batch_size > 0);
     }

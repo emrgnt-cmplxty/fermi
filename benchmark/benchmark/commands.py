@@ -26,9 +26,11 @@ class CommandMaker:
         return f'rm -r {PathMaker.logs_path()} ; mkdir -p {PathMaker.logs_path()}'
 
     @staticmethod
-    def compile(mem_profiling, benchmark=True):
+    def compile(mem_profiling, flamegraph, benchmark=True):
         if mem_profiling:
             params = ["--profile", "bench-profiling", "--features", "benchmark dhat-heap"]
+        elif flamegraph:
+            params = ["--profile", "flamegraph-profiling", "--features", "benchmark"]
         elif benchmark:
             params = ["--release", "--features", "benchmark"]
         else:
@@ -89,20 +91,21 @@ class CommandMaker:
         return f'./gdex generate-keystore {path} {filename}'
 
     @staticmethod
-    def run_narwhal_primary(keys, committee, store, parameters, execution, debug=False):
+    def run_narwhal_primary(keys, committee, store, parameters, execution, debug=False, flamegraph=None):
         assert isinstance(keys, str)
         assert isinstance(committee, str)
         assert isinstance(parameters, str)
         assert isinstance(execution, str)
         assert isinstance(debug, bool)
         v = '-vvv' if debug else '-vv'
-        command = (f'./benchmark-narwhal {v} run --keys {keys} --committee {committee} '
+        flamegraph = "flamegraph -- " if flamegraph else ""
+        command = (f'{flamegraph}./benchmark-narwhal {v} run --keys {keys} --committee {committee} '
                 f'--store {store} --parameters {parameters} --execution {execution} primary')
-        print("Returning execution command = ", command)
+
         return command
 
     @staticmethod
-    def run_gdex_node(db_dir, genesis_dir, key_path, validator_name, validator_address, relayer_address, debug=False):
+    def run_gdex_node(db_dir, genesis_dir, key_path, validator_name, validator_address, relayer_address, debug=False, flamegraph=None):
         assert isinstance(db_dir, str)
         assert isinstance(genesis_dir, str)
         assert isinstance(key_path, str)
@@ -111,7 +114,9 @@ class CommandMaker:
         assert isinstance(relayer_address, str)
         assert isinstance(debug, bool)
         v = '-vvv' if debug else '-vv'
-        command = (f'./gdex-node {v} run --db-dir {db_dir} --genesis-dir  {genesis_dir} '
+        flamegraph = "flamegraph -- " if flamegraph else ""
+
+        command = (f'{flamegraph}./gdex-node {v} run --db-dir {db_dir} --genesis-dir  {genesis_dir} '
                 f'--key-path {key_path} --validator-name {validator_name} --validator-address {validator_address} --relayer-address {relayer_address}')
         print("Returning execution command = ", command)
         return command
@@ -127,17 +132,17 @@ class CommandMaker:
                 f'--store {store} --parameters {parameters} primary --consensus-disabled')
 
     @staticmethod
-    def run_narwhal_worker(keys, committee, store, parameters, execution, id, debug=False):
+    def run_narwhal_worker(keys, committee, store, parameters, execution, id, debug=False, flamegraph=None):
         assert isinstance(keys, str)
         assert isinstance(committee, str)
         assert isinstance(parameters, str)
         assert isinstance(execution, str)
         assert isinstance(debug, bool)
         v = '-vvv' if debug else '-vv'
-        command = (f'./benchmark-narwhal {v} run --keys {keys} --committee {committee} '
+        flamegraph = "flamegraph -- " if flamegraph else ""
+        command = (f'{flamegraph}./benchmark-narwhal {v} run --keys {keys} --committee {committee} '
                 f'--store {store} --parameters {parameters} --execution {execution} worker --id {id}')
 
-        print("Returning execution command = ", command)
         return command
 
     @staticmethod
@@ -150,7 +155,7 @@ class CommandMaker:
         assert all(isinstance(x, str) for x in nodes)
         nodes = f'--nodes {" ".join(nodes)}' if nodes else ''
         command = f'./benchmark_narwhal_client {address} --size {size} --rate {rate} --execution {execution} {nodes}'
-        print("Returning execution command = ", command)
+
         return command
 
     @staticmethod
@@ -161,6 +166,17 @@ class CommandMaker:
         assert all(isinstance(x, str) for x in nodes)
         nodes = f'--nodes {" ".join(nodes)}' if nodes else ''
         command = f'./benchmark_gdex_client {address} --relayer {relayer_address} --validator_key_fpath {validator_key_path} --rate {rate} {nodes}'
+        print("Returning execution command = ", command)
+        return command
+
+    @staticmethod
+    def run_gdex_orderbook_client(id, address, relayer_address, rate, nodes):
+        assert isinstance(address, str)
+        assert isinstance(rate, int) and rate >= 0
+        assert isinstance(nodes, list)
+        assert all(isinstance(x, str) for x in nodes)
+        nodes = f'--nodes {" ".join(nodes)}' if nodes else ''
+        command = f'./benchmark_orderbook_client {address} --relayer {relayer_address} --validator_key_fpath ../.proto/validator-0.key --rate {rate}  --nodes {nodes}'
         print("Returning execution command = ", command)
         return command
 
@@ -184,7 +200,6 @@ class CommandMaker:
 
     @staticmethod
     def alias_binaries(origin):
-        print("origin=", origin)
         assert isinstance(origin, str)
-        gdex_node, narwhal_node, narwhhal_client, gdex_client, gdex = join(origin, 'gdex-node'), join(origin, 'benchmark-narwhal'), join(origin, 'benchmark_narwhal_client'), join(origin, 'benchmark_gdex_client'), join(origin, 'gdex')
-        return f'rm gdex-node ; rm benchmark-narwhal ; rm benchmark_narwhal_client ; rm benchmark_gdex_client ; rm gdex; ln -s {gdex_node} . ; ln -s {narwhal_node} . ; ln -s {narwhhal_client} . ; ln -s {gdex_client} . ; ln -s {gdex} . '
+        gdex_node, narwhal_node, narwhhal_client, gdex_client, gdex, orderbook_client = join(origin, 'gdex-node'), join(origin, 'benchmark-narwhal'), join(origin, 'benchmark_narwhal_client'), join(origin, 'benchmark_gdex_client'), join(origin, 'gdex'), join(origin, 'benchmark_orderbook_client')
+        return f'rm gdex-node ; rm benchmark-narwhal ; rm benchmark_narwhal_client ; rm benchmark_gdex_client ; rm gdex; ln -s {gdex_node} . ; ln -s {narwhal_node} . ; ln -s {narwhhal_client} . ; ln -s {gdex_client} . ; ln -s {gdex} . ; ln -s {orderbook_client} .'

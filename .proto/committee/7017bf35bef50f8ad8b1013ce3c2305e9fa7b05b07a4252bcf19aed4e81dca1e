@@ -1,0 +1,11 @@
+---
+name: cBe/Nb71D4rYsQE848IwXp+nsFsHpCUrzxmu1Ogdyh4=
+public-key: cBe/Nb71D4rYsQE848IwXp+nsFsHpCUrzxmu1Ogdyh4=
+stake: 1
+balance: 5000000000000
+delegation: 0
+narwhal-primary-to-primary: /ip4/127.0.0.1/tcp/3000/http
+narwhal-worker-to-primary: /ip4/127.0.0.1/tcp/3001/http
+narwhal-primary-to-worker: /ip4/127.0.0.1/tcp/3002/http
+narwhal-worker-to-worker: /ip4/127.0.0.1/tcp/3004/http
+narwhal-consensus-address: /ip4/127.0.0.1/tcp/3003/http

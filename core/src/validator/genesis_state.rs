@@ -16,7 +16,7 @@ use std::{
     convert::TryInto,
     {fs, path::Path},
 };
-use tracing::trace;
+use tracing::{info, trace};
 
 /// An object with the necessary state to initialize a new node at blockchain genesis
 #[derive(Clone, Debug)]
@@ -58,16 +58,31 @@ impl ValidatorGenesisState {
                     primary_to_primary: validator.narwhal_primary_to_primary.clone(),
                     worker_to_primary: validator.narwhal_worker_to_primary.clone(),
                 };
-                let workers = [(
-                    0, // worker_id
-                    narwhal_config::WorkerInfo {
-                        primary_to_worker: validator.narwhal_primary_to_worker.clone(),
-                        transactions: validator.narwhal_consensus_address.clone(),
-                        worker_to_worker: validator.narwhal_worker_to_worker.clone(),
-                    },
-                )]
-                .into_iter()
-                .collect();
+
+                let mut worker_counter = 0;
+                let workers = validator
+                    .narwhal_primary_to_worker
+                    .iter()
+                    .zip(validator.narwhal_worker_to_worker.iter())
+                    .zip(validator.narwhal_consensus_addresses.iter())
+                    // map to triplet tuple
+                    .map(|((primary_to_worker, worker_to_worker), consensus_address)| {
+                        (primary_to_worker, worker_to_worker, consensus_address)
+                    })
+                    .map(|(primary_to_worker, worker_to_worker, consensus_address)| {
+                        worker_counter += 1;
+                        (
+                            // unwrap is safe because we know worker_counter >= 0
+                            (worker_counter - 1).try_into().unwrap(), // worker_id
+                            narwhal_config::WorkerInfo {
+                                primary_to_worker: primary_to_worker.clone(),
+                                transactions: consensus_address.clone(),
+                                worker_to_worker: worker_to_worker.clone(),
+                            },
+                        )
+                    })
+                    .collect();
+                info!("workers ={:?} ", workers);
                 let validator = narwhal_config::Authority {
                     stake: validator.stake as narwhal_config::Stake, //TODO this should at least be the same size integer
                     primary,
@@ -77,6 +92,7 @@ impl ValidatorGenesisState {
                 (name, validator)
             })
             .collect();
+
         std::sync::Arc::new(arc_swap::ArcSwap::from_pointee(narwhal_config::Committee {
             authorities: narwhal_committee,
             epoch: self.epoch() as narwhal_config::Epoch,
@@ -165,6 +181,8 @@ impl<'de> Deserialize<'de> for ValidatorGenesisState {
 
         let raw_genesis: RawGenesis = bcs::from_bytes(&bytes).map_err(|e| Error::custom(e.to_string()))?;
 
+        raw_genesis.master_controller.initialize_controllers();
+
         Ok(ValidatorGenesisState {
             master_controller: raw_genesis.master_controller,
             validator_set: raw_genesis.validator_set,
@@ -213,9 +231,9 @@ mod genesis_test {
             delegation: 0,
             narwhal_primary_to_primary: utils::new_network_address(),
             narwhal_worker_to_primary: utils::new_network_address(),
-            narwhal_primary_to_worker: utils::new_network_address(),
-            narwhal_worker_to_worker: utils::new_network_address(),
-            narwhal_consensus_address: utils::new_network_address(),
+            narwhal_primary_to_worker: vec![utils::new_network_address()],
+            narwhal_worker_to_worker: vec![utils::new_network_address()],
+            narwhal_consensus_addresses: vec![utils::new_network_address()],
         };
 
         let builder = GenesisStateBuilder::new()

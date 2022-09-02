@@ -61,13 +61,13 @@ class GDEXBench:
             subprocess.run([cmd], shell=True, cwd=PathMaker.gdex_build_path())
             sleep(0.5)  # Removing the store may take time.
             # Recompile the latest code.
-            cmd = CommandMaker.compile(mem_profiling=self.mem_profile)
+            cmd = CommandMaker.compile(mem_profiling=self.mem_profile, flamegraph=self.flamegraph)
             Print.info(f"About to run {cmd}...")
             subprocess.run(cmd, check=True, cwd=PathMaker.gdex_build_path())
             sleep(0.5)  # Removing the store may take time.
 
             # Recompile the latest code.
-            cmd = CommandMaker.compile(mem_profiling=self.mem_profile, benchmark=False)
+            cmd = CommandMaker.compile(mem_profiling=self.mem_profile, flamegraph=self.flamegraph, benchmark=False)
             Print.info(f"About to run {cmd}...")
             subprocess.run(cmd, check=True, cwd=PathMaker.gdex_build_path())
             sleep(5)  # Removing the store may take time.
@@ -149,7 +149,9 @@ class GDEXBench:
                     os.path.abspath(self.bench_parameters.key_dir + PathMaker.key_file(i)),
                     name,
                     validator_address,
-                    relayer_address
+                    relayer_address,
+                    debug,
+                    self.flamegraph
                 )
                 log_file = PathMaker.primary_log_file(i)
                 print(cmd, ">>", log_file)
@@ -160,13 +162,22 @@ class GDEXBench:
                 validator_dict = committee.json['authorities'][name]
                 validator_address = validator_dict['network_address']
                 relayer_address = validator_dict['relayer_address']
-                cmd = CommandMaker.run_gdex_client(
-                    multiaddr_to_url_data(validator_address),
-                    multiaddr_to_url_data(relayer_address),
-                    os.path.abspath(self.bench_parameters.key_dir + PathMaker.key_file(i)),
-                    rate_share,
-                    [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
-                )
+                if self.order_bench:
+                    cmd = CommandMaker.run_gdex_orderbook_client(
+                        id,
+                        address,
+                        relayers['validator-' + str(id)],
+                        rate_share,
+                        [x for x in nodes.values() if x != address]
+                    )
+                else:
+                    cmd = CommandMaker.run_gdex_client(
+                        multiaddr_to_url_data(validator_address),
+                        multiaddr_to_url_data(relayer_address),
+                        os.path.abspath(self.bench_parameters.key_dir + PathMaker.key_file(i)),
+                            rate_share,
+                        [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
+                        )
                 log_file = PathMaker.client_log_file(i, 0)
                 print(cmd, ">>", log_file)
                 self._background_run(cmd, log_file)

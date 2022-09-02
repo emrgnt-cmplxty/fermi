@@ -11,3 +11,7 @@ members = [
     "benchmark-narwhal",
     "workspace-hack"
 ]
+
+[profile.flamegraph-profiling]
+inherits = "release"
+debug = true

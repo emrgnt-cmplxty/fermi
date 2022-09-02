@@ -78,16 +78,15 @@ pub fn serialize_protobuf<T>(
     buf
 }
 
-//pub fn deserialize_protobuf<T: Message + std::default::Default>(
-//    buf: &[u8]
-//) -> Result<T, GDEXError> {
-//    let message_result = T::decode(&mut Cursor::new(buf));
-//    let message: T = match message_result {
-//        Ok(result) => &result.ok().unwrap()[..],
-//        Err(..) => Err(GDEXError::DeserializationError)
-//    };
-//    Ok(message)
-//}
+pub fn deserialize_protobuf<T: Message + std::default::Default>(
+    buf: &[u8]
+) -> Result<T, GDEXError> {
+    let message_result = T::decode(&mut Cursor::new(buf));
+    match message_result {
+        Ok(message) => Ok(message),
+        Err(..) => Err(GDEXError::DeserializationError)
+    }
+}
 
 // SIGNED TRANSACTION
 

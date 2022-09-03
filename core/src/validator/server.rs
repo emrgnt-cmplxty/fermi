@@ -161,6 +161,7 @@ impl ValidatorService {
         // TODO load the actual last block
         let mut serialized_txns_buf = Vec::new();
         let store = &validator_state.validator_store;
+        let metrics = &validator_state.metrics;
         loop {
             while let Some(message) = rx_output.recv().await {
                 trace!("Received a finalized consensus transaction for post processing",);
@@ -177,9 +178,10 @@ impl ValidatorService {
                             trace!("Processing result from {round_number} with {num_txns} transactions");
                             store.prune();
                             // write-out the new block to the validator store
-                            store
+                            let (block, block_info) = store
                                 .write_latest_block(consensus_output.certificate, serialized_txns_buf.clone())
                                 .await;
+                            metrics.update_block_data(&block, &block_info);
                             serialized_txns_buf.clear();
                         }
                     }

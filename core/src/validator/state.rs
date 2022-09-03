@@ -144,7 +144,7 @@ impl ValidatorStore {
         &self,
         block_certificate: BlockCertificate,
         transactions: Vec<SerializedTransaction>,
-    ) {
+    ) -> (Block, BlockInfo) {
         // TODO - is there a way to acquire a mutable reference to the block-number without demanding &mut self?
         // this would allow us to avoid separate commands to load and add to the counter
 
@@ -164,9 +164,10 @@ impl ValidatorStore {
         // write-out the block information to associated stores
         self.block_store.write(block_number, block.clone()).await;
         self.block_info_store.write(block_number, block_info.clone()).await;
-        self.last_block_info_store.write(0, block_info).await;
+        self.last_block_info_store.write(0, block_info.clone()).await;
         // update the block number
         self.block_number.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        (block, block_info)
     }
 
     pub fn prune(&self) {

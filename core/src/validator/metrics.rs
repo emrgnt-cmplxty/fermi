@@ -2,6 +2,7 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-core/src/authority.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bcuse super::state::ValidatorState;
+use gdex_types::block::{Block, BlockInfo};
 use std::{
     sync::atomic::{AtomicU64, Ordering},
     time::{SystemTime, UNIX_EPOCH},
@@ -20,6 +21,9 @@ pub struct ValidatorMetrics {
     pub num_transactions_consensus_failed: AtomicU64,
     /// Latest system epoch time in ms
     pub latest_system_epoch_time_in_ms: AtomicU64,
+    /// Previous block epoch time in ms
+    pub prev_block_epoch_time_in_ms: AtomicU64,
+    /// Latest tps
 }
 
 impl ValidatorMetrics {
@@ -50,6 +54,14 @@ impl ValidatorMetrics {
         self.latest_system_epoch_time_in_ms
             .store(since_the_epoch.as_millis().try_into().unwrap(), Ordering::Relaxed);
     }
+
+    // pub fn update_block_data(&self, block: &Block, block_info: &BlockInfo) {
+    //     let prev_epoch_time_in_ms = self.latest_system_epoch_time_in_ms.load(Ordering::Relaxed);
+    //     self.update_latest_time();
+    //     let latest_epoch_time_in_ms = self.latest_system_epoch_time_in_ms.load(Ordering::Relaxed);
+
+    //     self.prev_block_epoch_time_in_ms.store(latest_epoch_time_in_ms, Ordering::Relaxed);
+    // }
 }
 
 impl Default for ValidatorMetrics {

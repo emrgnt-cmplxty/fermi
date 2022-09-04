@@ -19,6 +19,7 @@ type ClusterTPS = f64;
 type BlockLatencyInMilis = u64;
 
 /// Track end to end transaction pipeline metrics
+// TODO - think about how to keep num_transactions_consensus up to date after catch up
 pub struct ValidatorMetrics {
     // Continuously updated information
     /// The number of transactions submitted to the validator

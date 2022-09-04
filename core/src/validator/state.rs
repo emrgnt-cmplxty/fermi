@@ -33,6 +33,7 @@ use std::{
         atomic::{AtomicBool, AtomicU64, Ordering},
         Arc, Mutex,
     },
+    time::{SystemTime, UNIX_EPOCH},
 };
 use tracing::{info, trace};
 /// Tracks recently submitted transactions to implement transaction gating
@@ -148,6 +149,14 @@ impl ValidatorStore {
         // TODO - is there a way to acquire a mutable reference to the block-number without demanding &mut self?
         // this would allow us to avoid separate commands to load and add to the counter
 
+        let start = SystemTime::now();
+        let validator_system_epoch_time_in_ms = start
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis()
+            .try_into()
+            .unwrap();
+
         let block_number = self.block_number.load(std::sync::atomic::Ordering::SeqCst);
         let block_digest = block_certificate.digest();
 
@@ -159,6 +168,7 @@ impl ValidatorStore {
         let block_info = BlockInfo {
             block_number,
             block_digest,
+            validator_system_epoch_time_in_ms,
         };
 
         // write-out the block information to associated stores

@@ -14,4 +14,6 @@ pub trait Controller {
     fn initialize_controller_account(&mut self) -> Result<(), GDEXError>;
 
     fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError>;
+
+    fn post_process(&mut self, block_number: u64);
 }

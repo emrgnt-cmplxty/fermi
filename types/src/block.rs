@@ -16,4 +16,5 @@ pub struct Block {
 pub struct BlockInfo {
     pub block_number: BlockNumber,
     pub block_digest: BlockDigest,
+    pub validator_system_epoch_time_in_ms: u64,
 }

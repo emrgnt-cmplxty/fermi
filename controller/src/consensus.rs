@@ -53,4 +53,6 @@ impl Controller for ConsensusController {
     fn handle_consensus_transaction(&mut self, _transaction: &Transaction) -> Result<(), GDEXError> {
         Ok(())
     }
+
+    fn post_process(&mut self, _block_number: u64) {}
 }

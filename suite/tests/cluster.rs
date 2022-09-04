@@ -432,8 +432,11 @@ pub mod cluster_test_suite {
             .load(std::sync::atomic::Ordering::SeqCst)
             - init_transactions;
 
+        // TODO - Can we make more rigorous testing for TPS and Latency?
         // assert tps was greater than 0
         assert!(transactions_delta as f64 / (time_delta as f64 / 1000.) > 0.);
+        assert!(metrics_0.get_average_tps() > 0.);
+        assert!(metrics_0.get_average_latency_in_milis() > 0);
     }
 
     pub async fn test_spawn_faucet() {

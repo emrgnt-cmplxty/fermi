@@ -159,6 +159,7 @@ class GDEXBench:
                 )
                 log_file = PathMaker.primary_log_file(i)
                 print(cmd, ">>", log_file)
+                breakpoint()
                 self._background_run(cmd, log_file)
 
             Print.info('Booting clients...')

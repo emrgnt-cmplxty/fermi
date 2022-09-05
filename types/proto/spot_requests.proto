@@ -39,7 +39,7 @@ message UpdateOrderRequest {
 message CancelOrderRequest {
     uint64 base_asset_id = 1;
     uint64 quote_asset_id = 2;
-    uint64 quantity = 3;
+    uint64 side = 3;
     uint64 local_timestamp = 4;
     uint64 order_id = 5;
 }

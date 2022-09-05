@@ -8,6 +8,7 @@ use futures::{future::join_all, StreamExt};
 use gdex_types::{
     account::AccountKeyPair,
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
+    new_transaction::{NewSignedTransaction, NewTransaction, new_create_payment_transaction, sign_transaction},
 };
 use narwhal_crypto::{
     traits::{KeyPair, Signer},
@@ -54,7 +55,16 @@ fn create_signed_padded_transaction(
 
         // sign digest and create signed transaction
         let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest);
+        
+        // TODO CRUFT
+        let gas: u64 = 1000;
+        let new_transaction = new_create_payment_transaction(kp_sender.public().clone(), kp_receiver.public(), PRIMARY_ASSET_ID, amount, gas, dummy_certificate_digest);
+        let new_signed_transaction = match sign_transaction(kp_sender, new_transaction) {
+            Ok(t) => t,
+            _ => panic!("Error signing transaction"),
+        };
+        
+        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest, new_signed_transaction);
 
         // serialize and resize the transaction for channel distribution
         let mut padded_signed_transaction = signed_transaction.serialize().unwrap();

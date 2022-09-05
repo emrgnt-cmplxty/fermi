@@ -24,6 +24,7 @@ pub mod cluster_test_suite {
             RelayerGetLatestBlockInfoRequest,
         },
         transaction::{create_asset_creation_transaction, SignedTransaction},
+        new_transaction::{NewSignedTransaction, NewTransaction, new_create_create_asset_transaction, sign_transaction},
         utils,
     };
 
@@ -359,8 +360,17 @@ pub mod cluster_test_suite {
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
         let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, 0);
         let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
+
+        // TODO CRUFT
+        let gas: u64 = 1000;
+        let new_transaction = new_create_create_asset_transaction(sender_kp.public().clone(), gas, recent_block_hash);
+        let new_signed_transaction = match sign_transaction(&sender_kp, new_transaction) {
+            Ok(t) => t,
+            _ => panic!("Error signing transaction"),
+        };
+
         let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest, new_signed_transaction);
 
         // Preparing serialized buf for transactions
         let mut serialized_txns_buf: Vec<Vec<u8>> = Vec::new();

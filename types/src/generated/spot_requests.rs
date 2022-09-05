@@ -59,7 +59,7 @@ pub struct CancelOrderRequest {
     #[prost(uint64, tag="2")]
     pub quote_asset_id: u64,
     #[prost(uint64, tag="3")]
-    pub quantity: u64,
+    pub side: u64,
     #[prost(uint64, tag="4")]
     pub local_timestamp: u64,
     #[prost(uint64, tag="5")]

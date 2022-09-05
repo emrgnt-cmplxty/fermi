@@ -13,6 +13,12 @@ use crate::{
     order_book::OrderSide,
     serialization::Base64,
     serialization::Encoding,
+    new_transaction::{
+        NewSignedTransaction, NewTransaction, new_create_payment_transaction,
+        new_create_create_asset_transaction, new_create_limit_order_transaction,
+        new_create_update_order_transaction, new_create_cancel_order_transaction,
+        sign_transaction, serialize_protobuf
+    }
 };
 use blake2::{digest::Update, VarBlake2b};
 use narwhal_crypto::{Digest, Hash, Verifier, DIGEST_LEN};
@@ -334,6 +340,7 @@ pub struct SignedTransaction {
     sender: AccountPubKey,
     transaction_payload: Transaction,
     transaction_signature: AccountSignature,
+    signed_transaction_bytes: Vec<u8>,
 }
 
 impl SignedTransaction {
@@ -341,11 +348,13 @@ impl SignedTransaction {
         sender: AccountPubKey,
         transaction_payload: Transaction,
         transaction_signature: AccountSignature,
+        new_signed_transaction: NewSignedTransaction
     ) -> Self {
         SignedTransaction {
             sender,
             transaction_payload,
             transaction_signature,
+            signed_transaction_bytes: serialize_protobuf(&new_signed_transaction) // TODO CRUFT
         }
     }
 
@@ -520,7 +529,15 @@ pub mod transaction_test_functions {
 
         let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
 
-        SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest)
+        // TODO CRUFT
+        let gas: u64 = 1000;
+        let new_transaction = new_create_payment_transaction(kp_sender.public().clone(), kp_receiver.public(), PRIMARY_ASSET_ID, amount, gas, dummy_batch_digest);
+        let new_signed_transaction = match sign_transaction(&kp_sender, new_transaction) {
+            Ok(t) => t,
+            _ => panic!("Error signing transaction"),
+        };
+
+        SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest, new_signed_transaction)
     }
 }
 
@@ -551,7 +568,15 @@ pub mod transaction_tests {
         // sign the wrong payload
         let signed_digest = kp_sender.sign(dummy_batch_digest.to_string().as_bytes());
 
-        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
+        // TODO CRUFT
+        let gas: u64 = 1000;
+        let new_transaction = new_create_payment_transaction(kp_sender.public().clone(), kp_receiver.public(), PRIMARY_ASSET_ID, 10, gas, dummy_batch_digest);
+        let new_signed_transaction = match sign_transaction(&kp_sender, new_transaction) {
+            Ok(t) => t,
+            _ => panic!("Error signing transaction"),
+        };
+
+        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest, new_signed_transaction);
         let verify_result = signed_transaction.verify();
 
         // check that verification fails
@@ -644,7 +669,15 @@ pub mod transaction_tests {
         let transaction = Transaction::new(kp_sender.public().clone(), dummy_batch_digest, transaction_variant);
         let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
 
-        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
+        // TODO CRUFT
+        let gas: u64 = 1000;
+        let new_transaction = new_create_create_asset_transaction(kp_sender.public().clone(), gas, dummy_batch_digest);
+        let new_signed_transaction = match sign_transaction(&kp_sender, new_transaction) {
+            Ok(t) => t,
+            _ => panic!("Error signing transaction"),
+        };
+
+        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest, new_signed_transaction);
 
         // check valid signature
         signed_transaction.verify().unwrap();
@@ -681,7 +714,16 @@ pub mod transaction_tests {
 
         let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
 
-        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
+        // TODO CRUFT
+        let local_timestamp: u64 = 16000000;
+        let gas: u64 = 1000;
+        let new_transaction = new_create_limit_order_transaction(kp_sender.public().clone(), TEST_BASE_ASSET_ID, TEST_QUOTE_ASSET_ID, TEST_ORDER_SIDE as u64, TEST_PRICE, TEST_QUANTITY, local_timestamp, gas, dummy_batch_digest);
+        let new_signed_transaction = match sign_transaction(&kp_sender, new_transaction) {
+            Ok(t) => t,
+            _ => panic!("Error signing transaction"),
+        };
+
+        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest, new_signed_transaction);
 
         // check valid signature
         signed_transaction.verify().unwrap();
@@ -734,7 +776,16 @@ pub mod transaction_tests {
 
         let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
 
-        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
+        // TODO CRUFT
+        let local_timestamp: u64 = 16000000;
+        let gas: u64 = 1000;
+        let new_transaction = new_create_cancel_order_transaction(kp_sender.public().clone(), TEST_BASE_ASSET_ID, TEST_QUOTE_ASSET_ID, TEST_ORDER_SIDE as u64, local_timestamp, TEST_ORDER_ID, gas, dummy_batch_digest);
+        let new_signed_transaction = match sign_transaction(&kp_sender, new_transaction) {
+            Ok(t) => t,
+            _ => panic!("Error signing transaction"),
+        };
+
+        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest, new_signed_transaction);
 
         // check valid signature
         signed_transaction.verify().unwrap();
@@ -789,7 +840,16 @@ pub mod transaction_tests {
 
         let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
 
-        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
+        // TODO CRUFT
+        let local_timestamp: u64 = 16000000;
+        let gas: u64 = 1000;
+        let new_transaction = new_create_update_order_transaction(kp_sender.public().clone(), TEST_BASE_ASSET_ID, TEST_QUOTE_ASSET_ID, TEST_ORDER_SIDE as u64, TEST_PRICE, TEST_QUANTITY, local_timestamp, TEST_ORDER_ID, gas, dummy_batch_digest);
+        let new_signed_transaction = match sign_transaction(&kp_sender, new_transaction) {
+            Ok(t) => t,
+            _ => panic!("Error signing transaction"),
+        };
+
+        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest, new_signed_transaction);
 
         // check valid signature
         signed_transaction.verify().unwrap();

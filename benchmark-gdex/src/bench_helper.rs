@@ -7,6 +7,9 @@ use gdex_types::{
         create_asset_creation_transaction, create_orderbook_creation_transaction, create_payment_transaction,
         create_place_limit_order_transaction, SignedTransaction,
     },
+    new_transaction::{new_create_payment_transaction,
+                      new_create_create_orderbook_transaction, new_create_create_asset_transaction,
+                      new_create_limit_order_transaction, sign_transaction},
 };
 use narwhal_crypto::{
     traits::{KeyPair, Signer},
@@ -31,7 +34,16 @@ fn create_signed_payment_transaction(
 ) -> SignedTransaction {
     let transaction = create_payment_transaction(kp_sender, kp_receiver, asset_id, amount, block_digest);
     let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
+    
+    // TODO CRUFT
+    let gas: u64 = 1000;
+    let new_transaction = new_create_payment_transaction(kp_sender.public().clone(), kp_receiver.public(), asset_id, amount, gas, block_digest);
+    let new_signed_transaction = match sign_transaction(kp_sender, new_transaction) {
+        Ok(t) => t,
+        _ => panic!("Error signing transaction"),
+    };
+    
+    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest, new_signed_transaction);
     signed_transaction
 }
 
@@ -42,7 +54,16 @@ fn create_signed_asset_creation_transaction(
 ) -> SignedTransaction {
     let transaction = create_asset_creation_transaction(kp_sender, block_digest, dummy);
     let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
+
+    // TODO CRUFT
+    let gas: u64 = 1000;
+    let new_transaction = new_create_create_asset_transaction(kp_sender.public().clone(), gas, block_digest);
+    let new_signed_transaction = match sign_transaction(kp_sender, new_transaction) {
+        Ok(t) => t,
+        _ => panic!("Error signing transaction"),
+    };
+
+    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest, new_signed_transaction);
     signed_transaction
 }
 
@@ -54,7 +75,16 @@ fn create_signed_orderbook_transaction(
 ) -> SignedTransaction {
     let transaction = create_orderbook_creation_transaction(kp_sender, base_asset_id, quote_asset_id, block_digest);
     let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
+
+    // TODO CRUFT
+    let gas: u64 = 1000;
+    let new_transaction = new_create_create_orderbook_transaction(kp_sender.public().clone(), base_asset_id, quote_asset_id, gas, block_digest);
+    let new_signed_transaction = match sign_transaction(kp_sender, new_transaction) {
+        Ok(t) => t,
+        _ => panic!("Error signing transaction"),
+    };
+
+    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest, new_signed_transaction);
     signed_transaction
 }
 
@@ -77,7 +107,17 @@ fn create_signed_limit_order_transaction(
         block_digest,
     );
     let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
+
+    // TODO CRUFT
+    let local_timestamp: u64 = 16000000;
+    let gas: u64 = 1000;
+    let new_transaction = new_create_limit_order_transaction(kp_sender.public().clone(), base_asset_id, quote_asset_id, order_side as u64, price, amount, local_timestamp, gas, block_digest);
+    let new_signed_transaction = match sign_transaction(kp_sender, new_transaction) {
+        Ok(t) => t,
+        _ => panic!("Error signing transaction"),
+    };
+
+    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest, new_signed_transaction);
     signed_transaction
 }
 

@@ -12,6 +12,7 @@ use gdex_types::{
     crypto::{KeypairTraits, Signer},
     error::GDEXError,
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant, SERIALIZED_TRANSACTION_LENGTH},
+    new_transaction::{NewSignedTransaction, NewTransaction, new_create_payment_transaction, sign_transaction}
 };
 use narwhal_crypto::{Hash, DIGEST_LEN};
 use narwhal_types::{Batch, CertificateDigest, WorkerMessage};
@@ -56,7 +57,15 @@ fn criterion_benchmark(c: &mut Criterion) {
         // generate the signed digest for repeated use
         let signed_digest: AccountSignature = kp_sender.sign(&(transaction.digest().get_array())[..]);
 
-        SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest)
+        // TODO CRUFT
+        let gas: u64 = 1000;
+        let new_transaction = new_create_payment_transaction(kp_sender.public().clone(), kp_receiver.public(), 0, amount, gas, certificate_digest);
+        let new_signed_transaction = match sign_transaction(kp_sender, new_transaction) {
+            Ok(t) => t,
+            _ => panic!("Error signing transaction"),
+        };
+
+        SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest, new_signed_transaction)
     }
 
     // bench serializing singletons

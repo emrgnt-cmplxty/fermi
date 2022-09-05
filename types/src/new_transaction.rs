@@ -11,14 +11,15 @@
 use crate::{
     account::{AccountKeyPair, AccountPubKey, AccountSignature},
     error::GDEXError,
-    proto::{
-        Controller, RequestType, Version, NewSignedTransaction,
-        NewTransaction, PaymentRequest, CreateAssetRequest,
-        CreateOrderbookRequest, MarketOrderRequest, LimitOrderRequest,
-        UpdateOrderRequest, CancelOrderRequest
-    },
     serialization::{Base64, Encoding},
     crypto::{ToFromBytes},
+};
+
+pub use crate::proto::{
+    Controller, RequestType, Version, NewSignedTransaction,
+    NewTransaction, PaymentRequest, CreateAssetRequest,
+    CreateOrderbookRequest, MarketOrderRequest, LimitOrderRequest,
+    UpdateOrderRequest, CancelOrderRequest
 };
 
 // gdex
@@ -208,14 +209,14 @@ pub fn create_update_order_request(
 pub fn create_cancel_order_request(
     base_asset_id: u64,
     quote_asset_id: u64,
-    quantity: u64,
+    side: u64,
     local_timestamp: u64,
     order_id: u64
 ) -> CancelOrderRequest {
     CancelOrderRequest {
         base_asset_id,
         quote_asset_id,
-        quantity,
+        side,
         local_timestamp,
         order_id
     }
@@ -223,8 +224,8 @@ pub fn create_cancel_order_request(
 
 // TRANSACTION BUILDERS
 
-pub fn create_payment_transaction(
-    sender: AccountPubKey,
+pub fn new_create_payment_transaction(
+    sender: AccountPubKey, // TODO can be ref?
     receiver: &AccountPubKey,
     asset_id: u64,
     amount: u64,
@@ -247,7 +248,7 @@ pub fn create_payment_transaction(
     )
 }
 
-pub fn create_create_asset_transaction(
+pub fn new_create_create_asset_transaction(
     sender: AccountPubKey,
     gas: u64,
     recent_block_hash: CertificateDigest,
@@ -264,7 +265,7 @@ pub fn create_create_asset_transaction(
     )
 }
 
-pub fn create_create_orderbook_transaction(
+pub fn new_create_create_orderbook_transaction(
     sender: AccountPubKey,
     base_asset_id: u64,
     quote_asset_id: u64,
@@ -287,7 +288,7 @@ pub fn create_create_orderbook_transaction(
 }
 
 
-pub fn create_market_order_transaction(
+pub fn new_create_market_order_transaction(
     sender: AccountPubKey,
     base_asset_id: u64,
     quote_asset_id: u64,
@@ -315,7 +316,7 @@ pub fn create_market_order_transaction(
     )
 }
 
-pub fn create_limit_order_transaction(
+pub fn new_create_limit_order_transaction(
     sender: AccountPubKey,
     base_asset_id: u64,
     quote_asset_id: u64,
@@ -345,7 +346,7 @@ pub fn create_limit_order_transaction(
     )
 }
 
-pub fn create_update_order_transaction(
+pub fn new_create_update_order_transaction(
     sender: AccountPubKey,
     base_asset_id: u64,
     quote_asset_id: u64,
@@ -377,11 +378,11 @@ pub fn create_update_order_transaction(
     )
 }
 
-pub fn create_cancel_order_transaction(
+pub fn new_create_cancel_order_transaction(
     sender: AccountPubKey,
     base_asset_id: u64,
     quote_asset_id: u64,
-    quantity: u64,
+    side: u64,
     local_timestamp: u64,
     order_id: u64,
     gas: u64,
@@ -390,7 +391,7 @@ pub fn create_cancel_order_transaction(
     let request = create_cancel_order_request(
         base_asset_id,
         quote_asset_id,
-        quantity,
+        side,
         local_timestamp,
         order_id,
     );

@@ -72,7 +72,7 @@ class CommandMaker:
         return f'./gdex add-validator-genesis --path {path} --name {name} --balance {balance} --stake {stake}' \
                f' --key-file {key_file} --narwhal-primary-to-primary {primary_to_primary_address}' \
                f' --narwhal-worker-to-primary {worker_to_primary_address} --narwhal-primary-to-worker {primary_to_worker_address}' \
-               f' --narwhal-worker-to-worker {worker_to_worker_address} --narwhal-consensus-address {consensus_address}'
+               f' --narwhal-worker-to-worker {worker_to_worker_address} --narwhal-consensus-addresses {consensus_address}'
 
     @staticmethod
     def verify_and_sign_gdex_genesis(path, filename):

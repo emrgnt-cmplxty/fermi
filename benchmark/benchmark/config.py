@@ -252,7 +252,7 @@ class GDEXBenchParameters:
     def __init__(self, json):
         try:
             self.faults = int(json['faults'])
-            self.nodes = json['node_addresses']
+            self.nodes = int(json['nodes'])
             self.relayers = json['relayer_addresses']
             self.rate = json['rate']
             self.genesis_dir = json['genesis_dir']
@@ -260,6 +260,7 @@ class GDEXBenchParameters:
             self.db_dir = json['db_dir']
             self.duration = int(json['duration'])
             self.order_bench = bool(json['do_orderbook'])
+            self.workers = json['workers']
 
             if 'mem_profiling' in json:
                 self.mem_profile = bool(json['mem_profiling'])

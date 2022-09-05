@@ -16,19 +16,10 @@ def gdex(ctx, debug=True):
     ''' Run benchmarks on Narwhal node. '''
     bench_params = {
         'faults': 0,
-        # must have corresponding info in genesis .proto
-        'node_addresses': {
-            'validator-0': 'http://localhost:3003',
-            'validator-1': 'http://localhost:3013',
-            'validator-2': 'http://localhost:3023',
-            'validator-3': 'http://localhost:3033'
-        },
-        'relayer_addresses': {
-            'validator-0': 'http://localhost:3004',
-            'validator-1': 'http://localhost:3014',
-            'validator-2': 'http://localhost:3024',
-            'validator-3': 'http://localhost:3034'
-        },
+        'workers': 2,
+        'nodes': 2,
+        'node_addresses': {},
+        'relayer_addresses': {},
         'rate': 50_000,
         'duration': 20,
         'mem_profiling': False,

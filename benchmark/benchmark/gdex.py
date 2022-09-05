@@ -76,13 +76,12 @@ class GDEXBench:
             cmd = CommandMaker.alias_binaries(PathMaker.binary_path())
             print(cmd)
             subprocess.run([cmd], shell=True)
-            sleep(5)
 
             cmd = CommandMaker.init_gdex_genesis(os.path.abspath(self.bench_parameters.key_dir))
             subprocess.run([cmd], shell=True)
             # Generate configuration files.
             keys = []
-            key_files = [PathMaker.key_file(i) for i in range(len(self.bench_parameters.nodes))]
+            key_files = [PathMaker.key_file(i) for i in range(self.bench_parameters.nodes)]
 
             for filename in key_files:
                 sleep(2)
@@ -92,11 +91,11 @@ class GDEXBench:
 
             names = [x.name for x in keys]
 
-            workers = 1 # todo
-
+            breakpoint()
+            workers = self.bench_parameters.workers # todo
             committee = LocalCommittee(names, 3000, workers)
             committee.print(PathMaker.committee_file())
-
+            breakpoint()
             for i, name in enumerate(names):
                 validator_dict = committee.json["authorities"][name]
                 balance = 5000000000000
@@ -105,10 +104,14 @@ class GDEXBench:
 
                 primary_to_primary = validator_dict["primary"]["primary_to_primary"]
                 worker_to_primary = validator_dict["primary"]["worker_to_primary"]
+                primary_to_worker = []
+                worker_to_worker = []
+                consensus_address = []
+                for i in range(self.bench_parameters.workers):
+                    primary_to_worker.append(validator_dict["workers"][i]["primary_to_worker"])
+                    worker_to_worker.append(validator_dict["workers"][i]["worker_to_worker"])
+                    consensus_address.append(validator_dict["workers"][i]["transactions"])
 
-                primary_to_worker = validator_dict["workers"][0]["primary_to_worker"]
-                worker_to_worker = validator_dict["workers"][0]["worker_to_worker"]
-                consensus_address = validator_dict["workers"][0]["transactions"]
                 cmd = CommandMaker.add_gdex_validator_genesis(
                     self.bench_parameters.key_dir,
                     name,
@@ -117,11 +120,12 @@ class GDEXBench:
                     key_file,
                     primary_to_primary,
                     worker_to_primary,
-                    primary_to_worker,
-                    worker_to_worker,
-                    consensus_address
+                    ','.join(primary_to_worker),
+                    ','.join(worker_to_worker),
+                    ','.join(consensus_address)
                 )
                 print(cmd)
+                breakpoint()
                 subprocess.run([cmd], shell=True)
 
             cmd = CommandMaker.add_controllers_gdex_genesis(os.path.abspath(self.bench_parameters.key_dir))
@@ -164,20 +168,20 @@ class GDEXBench:
                 relayer_address = validator_dict['relayer_address']
                 if self.order_bench:
                     cmd = CommandMaker.run_gdex_orderbook_client(
-                        id,
-                        address,
-                        relayers['validator-' + str(id)],
+                        i,
+                        multiaddr_to_url_data(validator_address),
+                        multiaddr_to_url_data(relayer_address),
                         rate_share,
-                        [x for x in nodes.values() if x != address]
+                        [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
                     )
                 else:
                     cmd = CommandMaker.run_gdex_client(
                         multiaddr_to_url_data(validator_address),
                         multiaddr_to_url_data(relayer_address),
                         os.path.abspath(self.bench_parameters.key_dir + PathMaker.key_file(i)),
-                            rate_share,
+                        rate_share,
                         [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
-                        )
+                    )
                 log_file = PathMaker.client_log_file(i, 0)
                 print(cmd, ">>", log_file)
                 self._background_run(cmd, log_file)

@@ -56,7 +56,7 @@ impl From<tonic::Status> for GDEXError {
 
 #[async_trait]
 impl ExecutionStateError for GDEXError {
-    // TODO - implement
+    // TODO - implement node error
     fn node_error(&self) -> bool {
         false
     }
@@ -97,7 +97,7 @@ pub type GDEXResult<T = ()> = Result<T, GDEXError>;
 
 #[derive(Debug)]
 pub enum SignedTransactionError {
-    FailedVerification(narwhal_crypto::traits::Error),
+    FailedVerification(fastcrypto::traits::Error),
     Serialization(Box<bincode::ErrorKind>),
     Deserialization(Box<bincode::ErrorKind>),
 }

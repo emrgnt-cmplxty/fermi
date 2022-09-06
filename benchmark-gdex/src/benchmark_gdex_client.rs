@@ -3,6 +3,10 @@
 // SPDX-License-Identifier: Apache-2.0
 use anyhow::{Context, Result};
 use clap::{crate_name, crate_version, App, AppSettings};
+use fastcrypto::{
+    traits::{KeyPair, Signer},
+    Hash,
+};
 use futures::{future::join_all, StreamExt};
 use gdex_types::block::BlockDigest;
 use gdex_types::proto::{RelayerClient, RelayerGetLatestBlockInfoRequest};
@@ -12,10 +16,6 @@ use gdex_types::{
     proto::{RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionProto, TransactionsClient},
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
     utils::read_keypair_from_file,
-};
-use narwhal_crypto::{
-    traits::{KeyPair, Signer},
-    Hash,
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use std::path::PathBuf;

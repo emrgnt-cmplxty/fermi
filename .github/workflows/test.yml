@@ -20,6 +20,8 @@ jobs:
       run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
+    - name: Install clippy
+      run: rustup component add clippy --toolchain 1.63.0-x86_64-unknown-linux-gnu
     - name: Run clippy
       run: cargo clippy -- --D warnings
     - name: Run fmt

@@ -1,8 +1,9 @@
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 // narwhal imports
-use narwhal_config::{Committee, Parameters};
-use narwhal_crypto::{traits::KeyPair as _, KeyPair};
+use fastcrypto::traits::KeyPair as _;
+use narwhal_config::{Committee, Parameters, SharedWorkerCache};
+use narwhal_crypto::KeyPair;
 use narwhal_executor::{ExecutionState, ExecutorOutput};
 use narwhal_network::{PrimaryToWorkerNetwork, ReliableNetwork, UnreliableNetwork, WorkerToPrimaryNetwork};
 use narwhal_node::{Node, NodeStorage};
@@ -24,6 +25,7 @@ impl NodeRestarter {
     pub async fn watch<State>(
         keypair: KeyPair,
         committee: &Committee,
+        worker_cache: SharedWorkerCache,
         storage_base_path: PathBuf,
         execution_state: Arc<State>,
         parameters: Parameters,
@@ -39,7 +41,7 @@ impl NodeRestarter {
         let mut name = keypair.public().clone();
         let mut committee = committee.clone();
 
-        let mut task_managers = Vec::new();
+        let mut handles = Vec::new();
         let mut primary_network = WorkerToPrimaryNetwork::default();
         let mut worker_network = PrimaryToWorkerNetwork::default();
         info!("creating new node with committee={:?}", committee);
@@ -56,6 +58,7 @@ impl NodeRestarter {
             let primary = Node::spawn_primary(
                 keypair,
                 Arc::new(ArcSwap::new(Arc::new(committee.clone()))),
+                worker_cache.clone(),
                 &store,
                 parameters.clone(),
                 /* consensus */ true,
@@ -66,26 +69,30 @@ impl NodeRestarter {
             .await
             .unwrap();
 
-            // fetch corresponding authority
-            let authority = committee
-                .authorities
+            let worker_ids = worker_cache
+                .load()
+                .workers
                 .iter()
-                .find(|a| a.0 == &name)
-                .expect("Failed to locate corresponding authority.")
-                .1;
-            let worker_ids = authority.workers.iter().map(|w| *w.0).collect::<Vec<u32>>();
+                .find(|(k, _)| *k == &name)
+                .unwrap()
+                .1
+                 .0
+                .keys()
+                .cloned()
+                .collect::<Vec<u32>>();
 
             let workers = Node::spawn_workers(
                 name.clone(),
                 worker_ids,
                 Arc::new(ArcSwap::new(Arc::new(committee.clone()))),
+                worker_cache.clone(),
                 &store,
                 parameters.clone(),
                 registry,
             );
 
-            task_managers.push(primary);
-            task_managers.push(workers);
+            handles.extend(primary);
+            handles.extend(workers);
 
             // Wait for a committee change.
             let (new_keypair, new_committee) = match rx_reconfigure.recv().await {
@@ -102,7 +109,8 @@ impl NodeRestarter {
             let message = WorkerPrimaryMessage::Reconfigure(ReconfigureNotification::Shutdown);
             let primary_cancel_handle = primary_network.send(address, &message).await;
 
-            let addresses = committee
+            let addresses = worker_cache
+                .load()
                 .our_workers(&name)
                 .expect("Our key is not in the committee")
                 .into_iter()
@@ -120,7 +128,7 @@ impl NodeRestarter {
             worker_network.cleanup(committee.network_diff(&new_committee));
 
             // Wait for the components to shut down.
-            join_all(task_managers.drain(..)).await;
+            join_all(handles.drain(..)).await;
             tracing::debug!("All tasks successfully exited");
 
             // Give it an extra second in case the last task to exit is a network server. The OS

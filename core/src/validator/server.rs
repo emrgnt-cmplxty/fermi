@@ -8,6 +8,7 @@ use crate::{
 };
 use anyhow::anyhow;
 use async_trait::async_trait;
+use fastcrypto::Hash;
 use futures::StreamExt;
 use gdex_types::{
     crypto::KeypairTraits,
@@ -18,7 +19,7 @@ use gdex_types::{
 use multiaddr::Multiaddr;
 use narwhal_config::Committee as ConsensusCommittee;
 use narwhal_consensus::ConsensusOutput;
-use narwhal_crypto::{Hash, KeyPair as ConsensusKeyPair};
+use narwhal_crypto::KeyPair as ConsensusKeyPair;
 use narwhal_executor::{ExecutionIndices, SerializedTransaction, SubscriberError};
 use prometheus::Registry;
 use std::{io, sync::Arc};
@@ -125,22 +126,24 @@ impl ValidatorService {
             .ok_or_else(|| anyhow!("Validator is missing consensus config"))?;
         let consensus_keypair = config.key_pair().copy();
         let consensus_committee = config.genesis()?.narwhal_committee().load();
+        let consensus_worker_cache = config.genesis()?.narwhal_worker_cache();
+        let consensus_execution_state = Arc::clone(&state);
         let consensus_storage_base_path = consensus_config.db_path().to_path_buf();
         let consensus_parameters = consensus_config.narwhal_config().to_owned();
 
         println!("consensus_committee = {:?}", consensus_committee);
 
-        let state_ref = Arc::clone(&state);
         let registry = prometheus_registry.clone();
         let restarter_handle = tokio::spawn(async move {
             NodeRestarter::watch(
                 consensus_keypair,
-                &(&*consensus_committee).clone(),
+                &*consensus_committee,
+                consensus_worker_cache,
                 consensus_storage_base_path,
-                /* execution_state */ state_ref,
+                consensus_execution_state,
                 consensus_parameters,
                 rx_reconfigure_consensus,
-                /* tx_output */ tx_consensus_to_gdex,
+                tx_consensus_to_gdex,
                 &registry,
             )
             .await
@@ -309,7 +312,8 @@ mod test_validator_server {
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 
-        let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let key: ValidatorKeyPair =
+            get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         let public_key = ValidatorPubKeyBytes::from(key.public());
         let secret = Arc::pin(key);
 
@@ -380,7 +384,8 @@ mod test_validator_server {
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 
-        let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let key: ValidatorKeyPair =
+            get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         let public_key = ValidatorPubKeyBytes::from(key.public());
         let secret = Arc::pin(key);
 

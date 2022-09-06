@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 use arc_swap::ArcSwap;
 use bytes::Bytes;
+use fastcrypto::{traits::KeyPair as _};
 use futures::future::join_all;
 use narwhal_config::{Committee, Parameters};
 use narwhal_consensus::ConsensusOutput;
-use narwhal_crypto::{traits::KeyPair as _, KeyPair, PublicKey};
+use narwhal_crypto::{KeyPair, PublicKey};
 use narwhal_executor::{ExecutionIndices, ExecutionState, ExecutionStateError};
 use narwhal_network::{PrimaryToWorkerNetwork, ReliableNetwork, UnreliableNetwork, WorkerToPrimaryNetwork};
 use narwhal_node::{restarter::NodeRestarter, Node, NodeStorage};
@@ -85,6 +86,11 @@ impl ExecutionState for SimpleExecutionState {
     async fn load_execution_indices(&self) -> Result<ExecutionIndices, Self::Error> {
         Ok(ExecutionIndices::default())
     }
+
+    fn deserialize(bytes: &[u8]) -> Result<Self::Transaction, bincode::Error> {
+        bincode::deserialize(bytes)
+    }
+
 }
 
 /// A simple/dumb execution error.

@@ -2,7 +2,7 @@ use crate::validator::state::ValidatorState;
 use gdex_types::proto::*;
 use narwhal_types::CertificateDigestProto;
 
-use std::sync::{atomic::Ordering, Arc};
+use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
 pub struct RelayerService {
@@ -182,10 +182,6 @@ impl Relayer for RelayerService {
         let metrics = &validator_state.metrics;
 
         Ok(Response::new(RelayerMetricsResponse {
-            num_transactions_rec: metrics.num_transactions_rec.load(Ordering::Relaxed),
-            num_transactions_failed: metrics.num_transactions_rec_failed.load(Ordering::Relaxed),
-            num_transactions_consensus: metrics.num_transactions_consensus.load(Ordering::Relaxed),
-            num_transactions_consensus_failed: metrics.num_transactions_consensus_failed.load(Ordering::Relaxed),
             average_latency: metrics.get_average_latency_in_milis(),
             average_tps: metrics.get_average_tps(),
         }))

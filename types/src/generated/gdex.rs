@@ -99,16 +99,8 @@ pub struct RelayerMetricsRequest {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RelayerMetricsResponse {
     #[prost(uint64, tag="1")]
-    pub num_transactions_rec: u64,
-    #[prost(uint64, tag="2")]
-    pub num_transactions_failed: u64,
-    #[prost(uint64, tag="3")]
-    pub num_transactions_consensus: u64,
-    #[prost(uint64, tag="4")]
-    pub num_transactions_consensus_failed: u64,
-    #[prost(uint64, tag="5")]
     pub average_latency: u64,
-    #[prost(double, tag="6")]
+    #[prost(double, tag="2")]
     pub average_tps: f64,
 }
 /// Generated client implementations.

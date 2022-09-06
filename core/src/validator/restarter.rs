@@ -94,7 +94,7 @@ impl NodeRestarter {
             // spin up prometheus server exporter
             let prom_address = parameters.prometheus_metrics.socket_addr.clone();
             info!("Starting Prometheus HTTP metrics endpoint at {}", prom_address);
-            let metrics = start_prometheus_server(prom_address, &registry);
+            let metrics = start_prometheus_server(prom_address, registry);
 
             handles.extend(primary);
             handles.extend(workers);

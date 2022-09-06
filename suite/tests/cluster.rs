@@ -543,7 +543,7 @@ pub mod cluster_test_suite {
         // Act
         let latest_orderbook_snap_response = client.get_latest_orderbook_snap(latest_orderbook_snap_request).await;
 
-        let latest_orderbook_snap_response_bids = latest_orderbook_snap_response.unwrap().into_inner().bids;
+        let _latest_orderbook_snap_response_bids = latest_orderbook_snap_response.unwrap().into_inner().bids;
 
         // assert!(latest_block_info_response.unwrap().into_inner().successful)
     }

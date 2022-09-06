@@ -256,7 +256,7 @@ impl ValidatorState {
             committee: ArcSwap::from(Arc::new(genesis.committee().unwrap())),
             master_controller: genesis.master_controller().clone(),
             validator_store: ValidatorStore::reopen(store_db_path),
-            metrics: metrics,
+            metrics,
         }
     }
 

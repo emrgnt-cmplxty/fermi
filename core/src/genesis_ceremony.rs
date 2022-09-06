@@ -277,7 +277,8 @@ mod test_genesis_ceremony {
 
         let validators = (0..10)
             .map(|i| {
-                let keypair: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+                let keypair: ValidatorKeyPair =
+                    get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
                 let info = ValidatorInfo {
                     name: format!("validator-{i}"),
                     public_key: ValidatorPubKeyBytes::from(keypair.public()),

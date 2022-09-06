@@ -1,3 +1,7 @@
+use fastcrypto::{
+    traits::{KeyPair, Signer},
+    Hash,
+};
 use gdex_types::{
     account::AccountKeyPair,
     block::BlockDigest,
@@ -7,10 +11,6 @@ use gdex_types::{
         create_asset_creation_transaction, create_orderbook_creation_transaction, create_payment_transaction,
         create_place_limit_order_transaction, SignedTransaction,
     },
-};
-use narwhal_crypto::{
-    traits::{KeyPair, Signer},
-    Hash,
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use tokio::time::{sleep, Duration};

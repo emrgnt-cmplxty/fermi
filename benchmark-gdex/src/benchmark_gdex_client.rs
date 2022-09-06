@@ -3,17 +3,19 @@
 // SPDX-License-Identifier: Apache-2.0
 use anyhow::{Context, Result};
 use clap::{crate_name, crate_version, App, AppSettings};
+use fastcrypto::{
+    traits::{KeyPair, Signer},
+    Hash,
+};
 use futures::{future::join_all, StreamExt};
+use gdex_types::block::BlockDigest;
+use gdex_types::proto::{RelayerClient, RelayerGetLatestBlockInfoRequest};
 use gdex_types::{
     account::{AccountKeyPair, ValidatorKeyPair},
     block::BlockDigest,
     proto::{RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionProto, TransactionsClient},
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
     utils::read_keypair_from_file,
-};
-use narwhal_crypto::{
-    traits::{KeyPair, Signer},
-    Hash,
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use std::path::PathBuf;
@@ -205,7 +207,6 @@ impl Client {
 
             if let Err(e) = client.submit_transaction_stream(stream).await {
                 warn!("Failed to send transaction: {e}");
-                //break 'main;
             }
 
             info!("now.elapsed().as_millis()={}", now.elapsed().as_millis());

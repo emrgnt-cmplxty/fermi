@@ -51,25 +51,21 @@ impl NetworkConfig {
         self.validator_configs
     }
 
-    pub fn generate_with_rng<R: rand::CryptoRng + rand::RngCore>(
-        config_dir: &Path,
-        quorum_size: usize,
-        rng: R,
-    ) -> Self {
+    pub fn generate_with_rng(config_dir: &Path, quorum_size: usize) -> Self {
         NetworkConfigBuilder::new(config_dir)
             .committee_size(NonZeroUsize::new(quorum_size).unwrap())
-            .rng(rng)
             .build()
     }
 
     pub fn generate(config_dir: &Path, quorum_size: usize) -> Self {
-        Self::generate_with_rng(config_dir, quorum_size, OsRng)
+        Self::generate_with_rng(config_dir, quorum_size)
     }
 
     /// Generate a fullnode config based on this `NetworkConfig`. This is useful if you want to run
     /// a fullnode and have it connect to a network defined by this `NetworkConfig`.
     pub fn generate_fullnode_config(&self) -> NodeConfig {
-        let key_pair: Arc<ValidatorKeyPair> = Arc::new(get_key_pair_from_rng(&mut OsRng).1);
+        let key_pair: Arc<ValidatorKeyPair> =
+            Arc::new(get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut OsRng));
         let validator_config = &self.validator_configs[0];
 
         let mut db_path = validator_config.consensus_db_path.clone();

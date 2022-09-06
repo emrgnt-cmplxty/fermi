@@ -15,7 +15,7 @@ pub mod cluster_test_suite {
     use gdex_node::faucet_server::{FaucetService, FAUCET_PORT};
     use gdex_suite::test_utils::test_cluster::TestCluster;
     use gdex_types::{
-        account::AccountKeyPair,
+        account::{AccountKeyPair, ValidatorKeyPair},
         asset::PRIMARY_ASSET_ID,
         block::{Block, BlockDigest},
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
@@ -28,8 +28,9 @@ pub mod cluster_test_suite {
     };
 
     // mysten
+    use fastcrypto::{generate_production_keypair, Hash, DIGEST_LEN};
     use narwhal_consensus::ConsensusOutput;
-    use narwhal_crypto::{generate_production_keypair, Hash, KeyPair, DIGEST_LEN};
+    use narwhal_crypto::KeyPair;
     use narwhal_types::{Certificate, Header};
 
     // external
@@ -100,7 +101,7 @@ pub mod cluster_test_suite {
             epoch: 1,
         };
 
-        let key = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let key = get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         spawner_0
             .get_tx_reconfigure_consensus()
             .as_ref()
@@ -146,7 +147,7 @@ pub mod cluster_test_suite {
         for next_block in block_db_iter.by_ref() {
             let block = next_block.1;
             for serialized_transaction in &block.transactions {
-                let signed_transaction_db = SignedTransaction::deserialize(serialized_transaction.clone()).unwrap();
+                let signed_transaction_db = SignedTransaction::deserialize(serialized_transaction.0.clone()).unwrap();
                 assert!(validator_store.cache_contains_transaction(signed_transaction_db.get_transaction_payload()));
                 total += 1;
             }
@@ -280,8 +281,7 @@ pub mod cluster_test_suite {
         info!("Success");
     }
 
-    // TODO - investigate buiding helper functions for relay client
-    // TODO - can we remove the ignore decorator without CI failures?
+    // TODO - Move to regression tests
     #[ignore]
     #[tokio::test(flavor = "multi_thread")]
     pub async fn test_catchup_new_node() {
@@ -363,9 +363,9 @@ pub mod cluster_test_suite {
             SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
 
         // Preparing serialized buf for transactions
-        let mut serialized_txns_buf: Vec<Vec<u8>> = Vec::new();
+        let mut serialized_txns_buf = Vec::new();
         let serialized_txn = signed_create_asset_txn.serialize().unwrap();
-        serialized_txns_buf.push(serialized_txn);
+        serialized_txns_buf.push((serialized_txn, Ok(())));
         let certificate = dummy_consensus_output.certificate;
 
         let initial_certificate = certificate.clone();
@@ -451,7 +451,8 @@ pub mod cluster_test_suite {
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
-        let keypair: AccountKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let keypair: AccountKeyPair =
+            get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         let key_path = temp_dir.path().to_path_buf();
         let keystore_name = "validator-0.key";
 
@@ -496,4 +497,8 @@ pub mod cluster_test_suite {
 
         assert!(response.successful);
     }
+
+    // TODO - implement test after merging metrics...
+    #[tokio::test]
+    pub async fn test_submit_twice() {}
 }

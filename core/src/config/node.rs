@@ -11,7 +11,6 @@ use gdex_types::account::{ValidatorKeyPair, ValidatorPubKeyBytes};
 use gdex_types::crypto::GDEXAddress;
 use gdex_types::crypto::KeypairTraits;
 use gdex_types::serialization::KeyPairBase64;
-use multiaddr::Multiaddr;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use std::net::SocketAddr;
@@ -55,11 +54,6 @@ pub struct NodeConfig {
 
 fn default_key_pair() -> Arc<ValidatorKeyPair> {
     Arc::new(gdex_types::crypto::get_key_pair().1)
-}
-
-fn default_grpc_address() -> Multiaddr {
-    use multiaddr::multiaddr;
-    multiaddr!(Ip4([0, 0, 0, 0]), Tcp(8080u16))
 }
 
 fn default_metrics_address() -> SocketAddr {

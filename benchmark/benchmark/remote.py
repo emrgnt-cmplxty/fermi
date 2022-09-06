@@ -83,9 +83,10 @@ class Bench:
         hosts = self.manager.hosts(flat=True)
         try:
             g = Group(*hosts, user='ubuntu', connect_kwargs=self.connect, forward_agent=True)
-            # TODO fix this hack
+
             for c in g:
                 c._config.forward_agent = True
+
             g.run(' && '.join(cmd), hide=False)
             Print.heading(f'Initialized testbed of {len(hosts)} nodes')
         except (GroupException, ExecutionError) as e:
@@ -210,9 +211,7 @@ class Bench:
 
         committee = Committee(addresses, self.settings.base_port)
         committee.print(PathMaker.committee_file())
-        breakpoint()
         for i, name in enumerate(names):
-            sleep(5)
             validator_dict = committee.json["authorities"][name]
             balance = 5000000000000
             stake = validator_dict["stake"]
@@ -268,6 +267,8 @@ class Bench:
                 print(i, name, ip)
                 c = Connection(ip, user='ubuntu', connect_kwargs=self.connect)
                 c.run(f'(cd gdex-core && {CommandMaker.cleanup()}) || true', hide=False)
+                c.run(f'(mkdir {remote_committee_dir}) || true')
+                c.run(f'(mkdir {remote_signatures_dir}) || true')
                 c.put(self.local_proto_dir + "genesis.blob", self.remote_proto_dir)
                 c.put(self.local_proto_dir + PathMaker.key_file(i), self.remote_proto_dir)
                 c.put(self.local_proto_dir + "master_controller", self.remote_proto_dir)
@@ -409,7 +410,7 @@ class Bench:
                     Print.heading(f'Run {i+1}/{bench_parameters.runs}')
                     try:
                         self._run_single(
-                            r, committee_copy, bench_parameters, node_parameters, debug
+                            r, committee_copy, bench_parameters
                         )
 
                         faults = bench_parameters.faults

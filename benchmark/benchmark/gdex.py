@@ -91,11 +91,9 @@ class GDEXBench:
 
             names = [x.name for x in keys]
 
-            breakpoint()
-            workers = self.bench_parameters.workers # todo
+            workers = self.bench_parameters.workers
             committee = LocalCommittee(names, 3000, workers)
             committee.print(PathMaker.committee_file())
-            breakpoint()
             for i, name in enumerate(names):
                 validator_dict = committee.json["authorities"][name]
                 balance = 5000000000000
@@ -158,7 +156,6 @@ class GDEXBench:
                 )
                 log_file = PathMaker.primary_log_file(i)
                 print(cmd, ">>", log_file)
-                breakpoint()
                 self._background_run(cmd, log_file)
 
             Print.info('Booting clients...')

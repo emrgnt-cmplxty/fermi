@@ -18,8 +18,6 @@ def gdex(ctx, debug=True):
         'faults': 0,
         'workers': 2,
         'nodes': 2,
-        'node_addresses': {},
-        'relayer_addresses': {},
         'rate': 50_000,
         'duration': 20,
         'mem_profiling': False,

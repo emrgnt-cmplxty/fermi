@@ -52,7 +52,7 @@ class GDEXBench:
 
         try:
             Print.info('Setting up testbed...')
-            nodes, relayers, rate = self.nodes, self.relayers, self.rate
+            nodes, rate = self.nodes, self.rate
 
             # Cleanup all files.
             cmd = f'{CommandMaker.clean_logs()} ;'

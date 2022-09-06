@@ -417,7 +417,7 @@ pub mod cluster_test_suite {
         cluster.send_transactions_async(1, 0, N_TRANSACTIONS, None).await;
 
         tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-        
+
         assert!(metrics_0.get_average_tps() > 0.);
         assert!(metrics_0.get_average_latency_in_milis() > 0);
     }

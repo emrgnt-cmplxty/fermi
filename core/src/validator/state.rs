@@ -163,17 +163,17 @@ impl ValidatorStore {
         };
 
         let start = SystemTime::now();
-        let validator_system_epoch_time_in_ms = start
+        let validator_system_epoch_time_in_micros = start
             .duration_since(UNIX_EPOCH)
             .unwrap()
-            .as_millis()
+            .as_micros()
             .try_into()
             .unwrap();
 
         let block_info = BlockInfo {
             block_number,
             block_digest,
-            validator_system_epoch_time_in_ms,
+            validator_system_epoch_time_in_micros,
         };
 
         // write-out the block information to associated stores

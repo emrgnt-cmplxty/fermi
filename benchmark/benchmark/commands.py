@@ -144,4 +144,4 @@ class CommandMaker:
     def alias_binaries(origin):
         assert isinstance(origin, str)
         gdex_node, narwhal_node, narwhhal_client, gdex_client, orderbook_client = join(origin, 'gdex-node'), join(origin, 'benchmark-narwhal'), join(origin, 'benchmark_narwhal_client'), join(origin, 'benchmark_gdex_client'), join(origin, 'benchmark_orderbook_client')
-        return f'rm gdex-node ; rm benchmark-narwhal ; rm benchmark_narwhal_client ; rm benchmark_gdex_client ; ln -s {gdex_node} . ; ln -s {narwhal_node} . ; ln -s {narwhhal_client}; ln -s {gdex_client} .; ln -s {orderbook_client} .'
+        return f'rm gdex-node ; rm benchmark-narwhal ; rm benchmark_narwhal_client ; rm benchmark_gdex_client ; rm benchmark_orderbook_client ; ln -s {gdex_node} . ; ln -s {narwhal_node} . ; ln -s {narwhhal_client}; ln -s {gdex_client} .; ln -s {orderbook_client} .'

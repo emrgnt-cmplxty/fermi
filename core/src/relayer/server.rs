@@ -182,7 +182,7 @@ impl Relayer for RelayerService {
         let metrics = &validator_state.metrics;
 
         Ok(Response::new(RelayerMetricsResponse {
-            average_latency: metrics.get_average_latency_in_milis(),
+            average_latency: metrics.get_average_latency_in_micros(),
             average_tps: metrics.get_average_tps(),
         }))
     }

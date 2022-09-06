@@ -3,14 +3,18 @@
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-core/src/authority.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bcuse super::state::ValidatorState;
 use gdex_types::block::{Block, BlockInfo};
-use prometheus::{register_int_counter_with_registry, register_histogram_with_registry, Histogram, IntCounter, Registry};
+use prometheus::{
+    register_histogram_with_registry, register_int_counter_with_registry, register_int_gauge_with_registry, Histogram,
+    IntCounter, IntGauge, Registry,
+};
 use ringbuffer::{AllocRingBuffer, RingBufferExt, RingBufferWrite};
 use std::sync::{Arc, Mutex};
-
+use tracing::info;
 /// Capacitate must be of form 2^n
 const TPS_CAPACITY: usize = 128;
 
 type ClusterTPS = f64;
+type BlockSize = usize;
 type BlockLatencyInMilis = u64;
 
 /// Track end to end transaction pipeline metrics
@@ -24,17 +28,32 @@ pub struct ValidatorMetricsAndHealth {
     pub num_transactions_consensus: IntCounter,
     /// The number of transactions submitted from consensus that failed state execution
     pub num_transactions_consensus_failed: IntCounter,
+    /// The number of blocks processed
+    pub num_blocks_processed: IntCounter,
+    /// The validator system epoch time
+    pub validator_system_epoch_time_in_micros: IntGauge,
     /// The block latency in miliseconds
-    pub block_latency_ms: Histogram,
+    pub block_latency_micros: Histogram,
     /// The transactions per second of the cluster
     pub cluster_tps: Histogram,
+    /// The validator transaction processing time
+    pub transaction_rec_latency_in_micros: Histogram,
     /// Facilitators in calculating recent TPS and latency
-    tps_ring_buffer: Arc<Mutex<AllocRingBuffer<(ClusterTPS, BlockLatencyInMilis)>>>,
+    tps_ring_buffer: Arc<Mutex<AllocRingBuffer<(ClusterTPS, BlockSize, BlockLatencyInMilis)>>>,
     prev_block_info: Arc<Mutex<BlockInfo>>,
 }
 
 impl ValidatorMetricsAndHealth {
     pub fn new(registry: &Registry) -> Self {
+        // step from 0 to 3M micros
+        let block_latency_buckets: Vec<f64> = (0..3_000).map(|i| i as f64 * 1_000.).collect();
+
+        // step from 0 to 20k micros
+        let transaction_latency_buckets: Vec<f64> = (0..2_000).map(|i| i as f64 * 10.).collect();
+
+        // cluster TPS from 0 to 200k
+        let cluster_tps_buckets: Vec<f64> = (0..2_000).map(|i| i as f64 * 100.).collect();
+
         Self {
             num_transactions_rec: register_int_counter_with_registry!(
                 "num_transactions_rec",
@@ -60,15 +79,36 @@ impl ValidatorMetricsAndHealth {
                 registry
             )
             .unwrap(),
-            block_latency_ms: register_histogram_with_registry!(
-                "block_latency_ms",
-                "The latency between blocks in miliseconds",
+            num_blocks_processed: register_int_counter_with_registry!(
+                "num_blocks_processed",
+                "The number of blocks created from consensus.",
+                registry
+            )
+            .unwrap(),
+            validator_system_epoch_time_in_micros: register_int_gauge_with_registry!(
+                "validator_system_epoch_time_in_micros",
+                "The system epoch time of the validator in micro seconds.",
+                registry
+            )
+            .unwrap(),
+            block_latency_micros: register_histogram_with_registry!(
+                "block_latency_micros",
+                "The latency between blocks in microseconds",
+                block_latency_buckets,
+                registry,
+            )
+            .unwrap(),
+            transaction_rec_latency_in_micros: register_histogram_with_registry!(
+                "transaction_rec_latency_in_micros",
+                "The latency between receiving and processing a transaction",
+                transaction_latency_buckets,
                 registry,
             )
             .unwrap(),
             cluster_tps: register_histogram_with_registry!(
                 "cluster_tps",
                 "The transactions per second of the cluster",
+                cluster_tps_buckets,
                 registry,
             )
             .unwrap(),
@@ -78,18 +118,27 @@ impl ValidatorMetricsAndHealth {
     }
 
     pub fn process_new_block(&self, block: Block, block_info: BlockInfo) {
+        self.num_blocks_processed.inc();
         let mut prev_block_info = self.prev_block_info.lock().unwrap();
 
         // Check that default block info is not stored in prev_block_info
-        if prev_block_info.validator_system_epoch_time_in_ms != 0 {
+        if prev_block_info.validator_system_epoch_time_in_micros != 0 {
             let num_transactions = block.transactions.len();
-            let time_delta_in_ms =
-                block_info.validator_system_epoch_time_in_ms - prev_block_info.validator_system_epoch_time_in_ms;
-            let calculated_tps = num_transactions as f64 / (time_delta_in_ms as f64 / 1000.0);
-            self.tps_ring_buffer.lock().unwrap().push((calculated_tps, time_delta_in_ms));
-
-            self.block_latency_ms.observe(time_delta_in_ms as f64);
-            self.cluster_tps.observe(calculated_tps);
+            let time_delta_in_micros = block_info.validator_system_epoch_time_in_micros
+                - prev_block_info.validator_system_epoch_time_in_micros;
+            let calculated_tps = num_transactions as f64 / (time_delta_in_micros as f64 / 1_000_000.0);
+            self.tps_ring_buffer
+                .lock()
+                .unwrap()
+                .push((calculated_tps, num_transactions, time_delta_in_micros));
+            self.validator_system_epoch_time_in_micros.set(
+                (block_info.validator_system_epoch_time_in_micros as u64)
+                    .try_into()
+                    .unwrap(),
+            );
+            self.block_latency_micros
+                .observe(self.get_average_latency_in_micros() as f64);
+            self.cluster_tps.observe(self.get_average_tps());
         }
 
         *prev_block_info = block_info;
@@ -97,18 +146,18 @@ impl ValidatorMetricsAndHealth {
 
     pub fn get_average_tps(&self) -> f64 {
         let mut sum = 0.0;
-        let mut count = 0;
-        for (tps, _latency) in self.tps_ring_buffer.lock().unwrap().iter() {
-            sum += tps;
-            count += 1;
+        let mut count = 0.0;
+        for (_tps, block_size, latency) in self.tps_ring_buffer.lock().unwrap().iter() {
+            sum += (*block_size) as f64;
+            count += (*latency) as f64;
         }
-        sum / count as f64
+        sum / count * 1_000_000.0
     }
 
-    pub fn get_average_latency_in_milis(&self) -> u64 {
+    pub fn get_average_latency_in_micros(&self) -> u64 {
         let mut sum = 0;
         let mut count = 0;
-        for (_tps, time_delta) in self.tps_ring_buffer.lock().unwrap().iter() {
+        for (_tps, _block_size, time_delta) in self.tps_ring_buffer.lock().unwrap().iter() {
             sum += time_delta;
             count += 1;
         }

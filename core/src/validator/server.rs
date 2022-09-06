@@ -21,7 +21,7 @@ use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
 use narwhal_executor::{ExecutionIndices, SubscriberError};
 use prometheus::Registry;
-use std::{io, sync::Arc};
+use std::{io, sync::Arc, time::SystemTime};
 use tokio::{
     sync::{
         mpsc::{channel, Receiver, Sender},
@@ -219,6 +219,7 @@ impl ValidatorService {
         state: Arc<ValidatorState>,
         transaction_proto: TransactionProto,
     ) -> Result<tonic::Response<Empty>, tonic::Status> {
+        let start = SystemTime::now();
         trace!("Handling a new transaction with ValidatorService",);
         state.metrics.num_transactions_rec.inc();
 
@@ -262,6 +263,18 @@ impl ValidatorService {
             .handle_pre_consensus_transaction(&signed_transaction)
             // .instrument(span)
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
+
+        let processing_time_in_micros: u64 = SystemTime::now()
+            .duration_since(start)
+            .unwrap()
+            .as_micros()
+            .try_into()
+            .unwrap();
+
+        state
+            .metrics
+            .transaction_rec_latency_in_micros
+            .observe(processing_time_in_micros as f64);
 
         Ok(tonic::Response::new(Empty {}))
     }

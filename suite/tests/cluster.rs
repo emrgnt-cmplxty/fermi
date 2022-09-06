@@ -401,44 +401,26 @@ pub mod cluster_test_suite {
         // assert!(latest_block_info_response.unwrap().into_inner().successful)
     }
 
-    // #[tokio::test]
-    // pub async fn test_metrics() {
-    //     let validator_count: usize = 4;
-    //     const N_TRANSACTIONS: u64 = 1_000_000;
+    #[tokio::test]
+    pub async fn test_metrics() {
+        let validator_count: usize = 4;
+        const N_TRANSACTIONS: u64 = 1_000_000;
 
-    //     let mut cluster = TestCluster::spawn(validator_count, None).await;
-    //     cluster.send_transactions(0, 1, 10).await;
+        let mut cluster = TestCluster::spawn(validator_count, None).await;
+        cluster.send_transactions(0, 1, 10).await;
 
-    //     let metrics_0 = &cluster.get_validator_spawner(0).get_validator_state().unwrap().metrics;
-    //     let metrics_1 = &cluster.get_validator_spawner(1).get_validator_state().unwrap().metrics;
-    //     assert!(metrics_0.num_transactions_rec.load(std::sync::atomic::Ordering::SeqCst) == 0);
-    //     assert!(metrics_1.num_transactions_rec.load(std::sync::atomic::Ordering::SeqCst) == 10);
+        let metrics_0 = &cluster.get_validator_spawner(0).get_validator_state().unwrap().metrics;
+        let metrics_1 = &cluster.get_validator_spawner(1).get_validator_state().unwrap().metrics;
+        assert!(metrics_0.num_transactions_rec.get() == 0);
+        assert!(metrics_1.num_transactions_rec.get() == 10);
 
-    //     cluster.send_transactions_async(1, 0, N_TRANSACTIONS, None).await;
+        cluster.send_transactions_async(1, 0, N_TRANSACTIONS, None).await;
 
-    //     tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-    //     let init_time = metrics_0
-    //         .latest_system_epoch_time_in_ms
-    //         .load(std::sync::atomic::Ordering::SeqCst);
-    //     let init_transactions = metrics_0
-    //         .num_transactions_consensus
-    //         .load(std::sync::atomic::Ordering::SeqCst);
-    //     tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-    //     let time_delta = metrics_0
-    //         .latest_system_epoch_time_in_ms
-    //         .load(std::sync::atomic::Ordering::SeqCst)
-    //         - init_time;
-    //     let transactions_delta = metrics_0
-    //         .num_transactions_consensus
-    //         .load(std::sync::atomic::Ordering::SeqCst)
-    //         - init_transactions;
-
-    //     // TODO - Can we make more rigorous testing for TPS and Latency?
-    //     // assert tps was greater than 0
-    //     assert!(transactions_delta as f64 / (time_delta as f64 / 1000.) > 0.);
-    //     assert!(metrics_0.get_average_tps() > 0.);
-    //     assert!(metrics_0.get_average_latency_in_milis() > 0);
-    // }
+        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+        
+        assert!(metrics_0.get_average_tps() > 0.);
+        assert!(metrics_0.get_average_latency_in_milis() > 0);
+    }
 
     pub async fn test_spawn_faucet() {
         let temp_dir = tempfile::tempdir().unwrap();

@@ -296,7 +296,7 @@ class Bench:
         # Filter all faulty nodes from the client addresses (or they will wait
         # for the faulty nodes to be online).
         Print.info('Booting nodes...')
-        rate_share = ceil(rate / committee.workers())
+        rate_share = ceil(rate / len(committee.json['authorities']))
         for i, name in enumerate(committee.json['authorities'].keys()):
             validator_dict = committee.json['authorities'][name]
             validator_address = validator_dict['network_address'].split('/')

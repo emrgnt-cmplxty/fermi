@@ -76,7 +76,7 @@ class GDEXBench:
             subprocess.run([cmd], shell=True)
             # Generate configuration files.
             keys = []
-            key_files = [PathMaker.key_file(i) for i in range(self.bench_parameters.nodes.pop())]
+            key_files = [PathMaker.key_file(i) for i in range(self.bench_parameters.nodes[0])]
 
             for filename in key_files:
                 sleep(2)
@@ -133,7 +133,7 @@ class GDEXBench:
 
             # Run the primaries
             Print.info('Booting clients...')
-            rate_share = ceil(self.rate.pop() / committee.workers())
+            rate_share = ceil(self.rate[0] / self.bench_parameters.nodes[0])
             for i, name in enumerate(committee.json['authorities'].keys()):
                 validator_dict = committee.json['authorities'][name]
                 validator_address = validator_dict['network_address']

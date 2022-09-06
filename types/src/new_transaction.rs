@@ -13,10 +13,11 @@ use crate::{
     error::GDEXError,
     serialization::{Base64, Encoding},
     crypto::{ToFromBytes},
+    order_book::OrderSide,
 };
 
 pub use crate::proto::{
-    Controller, RequestType, Version, NewSignedTransaction,
+    ControllerType, RequestType, Version, NewSignedTransaction,
     NewTransaction, PaymentRequest, CreateAssetRequest,
     CreateOrderbookRequest, MarketOrderRequest, LimitOrderRequest,
     UpdateOrderRequest, CancelOrderRequest
@@ -106,7 +107,7 @@ pub fn create_signed_transaction(
 
 pub fn create_transaction(
     sender: AccountPubKey,
-    target_controller: Controller,
+    target_controller: ControllerType,
     request_type: RequestType,
     recent_block_hash: CertificateDigest,
     gas: u64,
@@ -245,7 +246,7 @@ pub fn new_create_payment_transaction(
 
     create_transaction(
         sender,
-        Controller::Bank,
+        ControllerType::Bank,
         RequestType::Payment,
         recent_block_hash,
         gas,
@@ -264,7 +265,7 @@ pub fn new_create_create_asset_transaction(
     
     create_transaction(
         sender,
-        Controller::Bank,
+        ControllerType::Bank,
         RequestType::CreateAsset,
         recent_block_hash,
         gas,
@@ -286,7 +287,7 @@ pub fn new_create_create_orderbook_transaction(
 
     create_transaction(
         sender,
-        Controller::Spot,
+        ControllerType::Spot,
         RequestType::CreateOrderbook,
         recent_block_hash,
         gas,
@@ -315,7 +316,7 @@ pub fn new_create_market_order_transaction(
     
     create_transaction(
         sender,
-        Controller::Spot,
+        ControllerType::Spot,
         RequestType::MarketOrder,
         recent_block_hash,
         gas,
@@ -345,7 +346,7 @@ pub fn new_create_limit_order_transaction(
     
     create_transaction(
         sender,
-        Controller::Spot,
+        ControllerType::Spot,
         RequestType::LimitOrder,
         recent_block_hash,
         gas,
@@ -377,7 +378,7 @@ pub fn new_create_update_order_transaction(
     
     create_transaction(
         sender,
-        Controller::Spot,
+        ControllerType::Spot,
         RequestType::UpdateOrder,
         recent_block_hash,
         gas,
@@ -405,7 +406,7 @@ pub fn new_create_cancel_order_transaction(
     
     create_transaction(
         sender,
-        Controller::Spot,
+        ControllerType::Spot,
         RequestType::CancelOrder,
         recent_block_hash,
         gas,
@@ -414,6 +415,8 @@ pub fn new_create_cancel_order_transaction(
 }
 
 // GETTERS
+
+// - SIGNED TRANSACTION
 
 pub fn get_signed_transaction_body(
     signed_transaction: &NewSignedTransaction
@@ -428,11 +431,7 @@ pub fn get_signed_transaction_sender(
     signed_transaction: &NewSignedTransaction
 ) -> Result<AccountPubKey, GDEXError> {
     let transaction = get_signed_transaction_body(signed_transaction)?;
-    let sender_result = AccountPubKey::from_bytes(&transaction.sender);
-    match sender_result {
-        Ok(result) => Ok(result),
-        Err(..) => Err(GDEXError::DeserializationError)
-    }
+    get_transaction_sender(&transaction)
 }
 
 pub fn get_signed_transaction_signature(
@@ -460,6 +459,31 @@ pub fn get_signed_transaction_transaction_hash(
 ) -> Result<NewTransactionDigest, GDEXError> {
     let transaction = get_signed_transaction_body(signed_transaction)?;
     Ok(hash_transaction(transaction))
+}
+
+// - TRANSACTION
+
+
+pub fn get_transaction_sender(
+    transaction: &NewTransaction
+) -> Result<AccountPubKey, GDEXError> {
+    let sender_result = AccountPubKey::from_bytes(&transaction.sender);
+    match sender_result {
+        Ok(result) => Ok(result),
+        Err(..) => Err(GDEXError::DeserializationError)
+    }
+}
+
+// - PAYMENT REQUEST
+
+pub fn get_payment_receiver(
+    request: &PaymentRequest
+) -> Result<AccountPubKey, GDEXError> {
+    let receiver_result = AccountPubKey::from_bytes(&request.receiver);
+    match receiver_result {
+        Ok(result) => Ok(result),
+        Err(..) => Err(GDEXError::DeserializationError)
+    }
 }
 
 // HELPERS
@@ -493,5 +517,45 @@ pub fn verify_signature(
     match verify_signature_result {
         Ok(_) => Ok(()),
         Err(..) => Err(GDEXError::TransactionSignatureVerificationError)
+    }
+}
+
+// ENUM CONVERSIONS
+// TODO gotta be a better way to do this
+
+pub fn parse_target_controller(
+    target_controller: i32
+) -> Result<ControllerType, GDEXError> {
+    match target_controller {
+        0 => Ok(ControllerType::Bank),
+        1 => Ok(ControllerType::Stake),
+        2 => Ok(ControllerType::Spot),
+        3 => Ok(ControllerType::Consensus),
+        _ => Err(GDEXError::DeserializationError)
+    }
+}
+
+pub fn parse_request_type(
+    request_type: i32
+) -> Result<RequestType, GDEXError> {
+    match request_type {
+        0 => Ok(RequestType::Payment),
+        1 => Ok(RequestType::CreateAsset),
+        2 => Ok(RequestType::CreateOrderbook),
+        3 => Ok(RequestType::MarketOrder),
+        4 => Ok(RequestType::LimitOrder),
+        5 => Ok(RequestType::UpdateOrder),
+        6 => Ok(RequestType::CancelOrder),
+        _ => Err(GDEXError::DeserializationError)
+    }
+}
+
+pub fn parse_order_side(
+    side: u64
+) -> Result<OrderSide, GDEXError> {
+    match side {
+        1 => Ok(OrderSide::Bid),
+        2 => Ok(OrderSide::Ask),
+        _ => Err(GDEXError::DeserializationError)
     }
 }

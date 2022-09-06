@@ -53,6 +53,12 @@ pub enum GDEXError {
     #[error("Failed to deserialize object")]
     DeserializationError,
     
+    // controller errors
+    #[error("Target controller not found")]
+    InvalidControllerError,
+    #[error("Controller can not handle request type")]
+    InvalidRequestTypeError,
+    
     #[error("Failed to verify transaction signature")]
     TransactionSignatureVerificationError,
 }

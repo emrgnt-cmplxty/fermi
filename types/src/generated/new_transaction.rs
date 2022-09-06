@@ -26,7 +26,7 @@ pub struct NewTransaction {
     pub version: ::core::option::Option<Version>,
     #[prost(bytes="bytes", tag="2")]
     pub sender: ::prost::bytes::Bytes,
-    #[prost(enumeration="Controller", tag="3")]
+    #[prost(enumeration="ControllerType", tag="3")]
     pub target_controller: i32,
     #[prost(enumeration="RequestType", tag="4")]
     pub request_type: i32,
@@ -41,7 +41,7 @@ pub struct NewTransaction {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
-pub enum Controller {
+pub enum ControllerType {
     Bank = 0,
     Stake = 1,
     Spot = 2,

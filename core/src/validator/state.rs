@@ -295,11 +295,7 @@ impl ExecutionState for ValidatorState {
         self.validator_store
             .insert_confirmed_transaction(new_transaction, consensus_output);
 
-
-
-        let transaction = signed_transaction.get_transaction_payload();
-
-        let result = self.master_controller.handle_consensus_transaction(transaction);
+        let result = self.master_controller.handle_consensus_transaction(new_transaction);
 
         if let Err(err) = result {
             self.metrics.increment_num_transactions_consensus_failed();

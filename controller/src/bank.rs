@@ -22,6 +22,7 @@ use gdex_types::{
     crypto::ToFromBytes,
     error::GDEXError,
     transaction::{Transaction, TransactionVariant},
+    new_transaction::{NewTransaction, RequestType, CreateAssetRequest, PaymentRequest, get_transaction_sender, deserialize_protobuf, get_payment_receiver, parse_request_type},
 };
 
 // mysten
@@ -69,20 +70,29 @@ impl Controller for BankController {
         Ok(())
     }
 
-    fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
-        if let TransactionVariant::PaymentTransaction(payment) = transaction.get_variant() {
-            return self.transfer(
-                transaction.get_sender(),
-                payment.get_receiver(),
-                payment.get_asset_id(),
-                payment.get_amount(),
-            );
+    fn handle_consensus_transaction(&mut self, transaction: &NewTransaction) -> Result<(), GDEXError> {
+        let request_type = parse_request_type(transaction.request_type)?;
+        match request_type {
+            RequestType::CreateAsset => {
+                let _request: CreateAssetRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                let sender = get_transaction_sender(&transaction)?;
+                return self.create_asset(
+                    &sender
+                );
+            },
+            RequestType::Payment => {
+                let request: PaymentRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                let sender = get_transaction_sender(&transaction)?;
+                let receiver = get_payment_receiver(&request)?;
+                return self.transfer(
+                    &sender,
+                    &receiver,
+                    request.asset_id,
+                    request.amount
+                );
+            },
+            _ => Err(GDEXError::InvalidRequestTypeError)
         }
-        if let TransactionVariant::CreateAssetTransaction(_create_asset) = transaction.get_variant() {
-            return self.create_asset(transaction.get_sender());
-        }
-
-        Ok(())
     }
 }
 

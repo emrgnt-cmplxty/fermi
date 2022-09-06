@@ -47,7 +47,7 @@ pub use new_block:: {
 mod new_transaction;
 
 pub use new_transaction::{
-    Controller,
+    ControllerType,
     RequestType,
     Version,
     NewSignedTransaction,

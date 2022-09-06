@@ -4,7 +4,7 @@
 use crate::master::MasterController;
 
 // gdex
-use gdex_types::{error::GDEXError, transaction::Transaction};
+use gdex_types::{error::GDEXError, new_transaction::NewTransaction};
 
 // TRAIT
 
@@ -13,5 +13,5 @@ pub trait Controller {
 
     fn initialize_controller_account(&mut self) -> Result<(), GDEXError>;
 
-    fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError>;
+    fn handle_consensus_transaction(&mut self, transaction: &NewTransaction) -> Result<(), GDEXError>;
 }

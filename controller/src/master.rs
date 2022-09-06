@@ -14,7 +14,14 @@ use crate::{
 
 // mysten
 
-use gdex_types::{error::GDEXError, transaction::Transaction};
+use gdex_types::{
+    error::GDEXError,
+    new_transaction::{
+        NewTransaction,
+        ControllerType,
+        parse_target_controller
+    }
+};
 // external
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -77,27 +84,33 @@ impl MasterController {
         }
     }
 
-    pub fn handle_consensus_transaction(&self, transaction: &Transaction) -> Result<(), GDEXError> {
-        self.consensus_controller
-            .lock()
-            .unwrap()
-            .handle_consensus_transaction(transaction)?;
-
-        self.bank_controller
-            .lock()
-            .unwrap()
-            .handle_consensus_transaction(transaction)?;
-
-        self.stake_controller
-            .lock()
-            .unwrap()
-            .handle_consensus_transaction(transaction)?;
-
-        self.spot_controller
-            .lock()
-            .unwrap()
-            .handle_consensus_transaction(transaction)?;
-
-        Ok(())
+    pub fn handle_consensus_transaction(&self, transaction: &NewTransaction) -> Result<(), GDEXError> {
+        let target_controller = parse_target_controller(transaction.target_controller)?;
+        match target_controller {
+            ControllerType::Consensus => {
+                return self.consensus_controller
+                    .lock()
+                    .unwrap()
+                    .handle_consensus_transaction(transaction);
+            },
+            ControllerType::Bank => {
+                return self.bank_controller
+                    .lock()
+                    .unwrap()
+                    .handle_consensus_transaction(transaction);
+            },
+            ControllerType::Stake => {
+                return self.stake_controller
+                    .lock()
+                    .unwrap()
+                    .handle_consensus_transaction(transaction);
+            },
+            ControllerType::Spot => {
+                return self.spot_controller
+                    .lock()
+                    .unwrap()
+                    .handle_consensus_transaction(transaction);
+            }
+        }
     }
 }

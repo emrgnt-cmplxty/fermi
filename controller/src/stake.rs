@@ -19,7 +19,7 @@ use gdex_types::{
     asset::PRIMARY_ASSET_ID,
     crypto::ToFromBytes,
     error::GDEXError,
-    transaction::Transaction,
+    new_transaction::{NewTransaction, RequestType, parse_request_type},
 };
 
 // mysten
@@ -68,8 +68,11 @@ impl Controller for StakeController {
         Ok(())
     }
 
-    fn handle_consensus_transaction(&mut self, _transaction: &Transaction) -> Result<(), GDEXError> {
-        Ok(())
+    fn handle_consensus_transaction(&mut self, transaction: &NewTransaction) -> Result<(), GDEXError> {
+        let request_type = parse_request_type(transaction.request_type)?;
+        match transaction.request_type {
+            _ => Err(GDEXError::InvalidRequestTypeError)
+        }
     }
 }
 

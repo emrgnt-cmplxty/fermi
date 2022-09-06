@@ -4,7 +4,7 @@ package new_transaction;
 
 // ENUMS
 
-enum Controller {
+enum ControllerType {
     BANK = 0;
     STAKE = 1;
     SPOT = 2;
@@ -41,7 +41,7 @@ message NewSignedTransaction {
 message NewTransaction {
     Version version = 1;
     bytes sender = 2;
-    Controller target_controller = 3;
+    ControllerType target_controller = 3;
     RequestType request_type = 4;
     bytes recent_block_hash = 5;
     uint64 gas = 6;

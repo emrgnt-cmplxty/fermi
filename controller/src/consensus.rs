@@ -9,7 +9,12 @@ use crate::controller::Controller;
 use crate::master::MasterController;
 
 // gdex
-use gdex_types::{account::AccountPubKey, crypto::ToFromBytes, error::GDEXError, transaction::Transaction};
+use gdex_types::{
+    account::AccountPubKey,
+    crypto::ToFromBytes,
+    error::GDEXError,
+    new_transaction::{NewTransaction, RequestType, parse_request_type}
+};
 
 // mysten
 
@@ -50,7 +55,10 @@ impl Controller for ConsensusController {
         Ok(())
     }
 
-    fn handle_consensus_transaction(&mut self, _transaction: &Transaction) -> Result<(), GDEXError> {
-        Ok(())
+    fn handle_consensus_transaction(&mut self, transaction: &NewTransaction) -> Result<(), GDEXError> {
+        let request_type = parse_request_type(transaction.request_type)?;
+        match request_type {
+            _ => Err(GDEXError::InvalidRequestTypeError)
+        }
     }
 }

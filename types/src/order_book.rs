@@ -7,6 +7,7 @@ use std::{fmt::Debug, time::SystemTime};
 pub type OrderId = u64;
 
 #[derive(Copy, Clone, PartialEq, Eq, Deserialize, Serialize, Debug)]
+#[repr(u64)]
 pub enum OrderSide {
     Bid = 1,
     Ask = 2,

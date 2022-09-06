@@ -28,6 +28,19 @@ use gdex_types::{
     error::GDEXError,
     order_book::{OrderProcessingResult, OrderSide, OrderType, Success},
     transaction::{OrderRequest, Transaction, TransactionVariant},
+    new_transaction::{
+        NewTransaction,
+        RequestType,
+        CreateOrderbookRequest,
+        MarketOrderRequest,
+        LimitOrderRequest,
+        UpdateOrderRequest,
+        CancelOrderRequest,
+        deserialize_protobuf,
+        get_transaction_sender,
+        parse_order_side,
+        parse_request_type
+    }
 };
 
 // mysten
@@ -495,70 +508,63 @@ impl Controller for SpotController {
         Ok(())
     }
 
-    fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
-        if let TransactionVariant::CreateOrderbookTransaction(orderbook) = transaction.get_variant() {
-            return self.create_orderbook(orderbook.get_base_asset_id(), orderbook.get_quote_asset_id());
+    fn handle_consensus_transaction(&mut self, transaction: &NewTransaction) -> Result<(), GDEXError> {
+        let request_type = parse_request_type(transaction.request_type)?;
+        match request_type {
+            RequestType::CreateOrderbook => {
+                let request: CreateOrderbookRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                return self.create_orderbook(
+                    request.base_asset_id,
+                    request.quote_asset_id
+                );
+            },
+            RequestType::MarketOrder => {
+                let request: MarketOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                dbg!(request.base_asset_id, request.quote_asset_id, request.side, request.quantity);
+                Ok(())
+            },
+            RequestType::LimitOrder => {
+                let request: LimitOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                let sender = get_transaction_sender(&transaction)?;
+                let side = parse_order_side(request.side)?;
+                return self.place_limit_order(
+                    request.base_asset_id,
+                    request.quote_asset_id,
+                    &sender,
+                    side,
+                    request.quantity,
+                    request.price
+                );
+            },
+            RequestType::UpdateOrder => {
+                let request: UpdateOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                let sender = get_transaction_sender(&transaction)?;
+                let side = parse_order_side(request.side)?;
+                return self.place_update_order(
+                    request.base_asset_id,
+                    request.quote_asset_id,
+                    &sender,
+                    request.order_id,
+                    side,
+                    request.quantity,
+                    request.price
+                );
+                
+            },
+            RequestType::CancelOrder => {
+                let request: CancelOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                let sender = get_transaction_sender(&transaction)?;
+                let side = parse_order_side(request.side)?;
+                return self.place_cancel_order(
+                    request.base_asset_id,
+                    request.quote_asset_id,
+                    &sender,
+                    request.order_id,
+                    side
+                );
+            },
+            _ => Err(GDEXError::InvalidRequestTypeError)
         }
-        if let TransactionVariant::PlaceOrderTransaction(order) = transaction.get_variant() {
-            match order {
-                OrderRequest::Market {
-                    base_asset_id,
-                    quote_asset_id,
-                    side,
-                    quantity,
-                    ..
-                } => {
-                    dbg!(base_asset_id, quote_asset_id, side, quantity);
-                }
-                OrderRequest::Limit {
-                    base_asset_id,
-                    quote_asset_id,
-                    side,
-                    price,
-                    quantity,
-                    ..
-                } => self.place_limit_order(
-                    *base_asset_id,
-                    *quote_asset_id,
-                    transaction.get_sender(),
-                    *side,
-                    *quantity,
-                    *price,
-                )?,
-                OrderRequest::Cancel {
-                    base_asset_id,
-                    quote_asset_id,
-                    order_id,
-                    side,
-                    ..
-                } => self.place_cancel_order(
-                    *base_asset_id,
-                    *quote_asset_id,
-                    transaction.get_sender(),
-                    *order_id,
-                    *side,
-                )?,
-                OrderRequest::Update {
-                    base_asset_id,
-                    quote_asset_id,
-                    order_id,
-                    side,
-                    price,
-                    quantity,
-                    ..
-                } => self.place_update_order(
-                    *base_asset_id,
-                    *quote_asset_id,
-                    transaction.get_sender(),
-                    *order_id,
-                    *side,
-                    *quantity,
-                    *price,
-                )?,
-            }
-        }
-
-        Ok(())
     }
 }
 

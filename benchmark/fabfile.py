@@ -157,7 +157,7 @@ def remote(ctx, debug=False):
     bench_params = {
         'faults': 0,
         'nodes': 2,
-        'workers': 1,
+        'workers': 2,
         'tx_size': 500,
         'rate': 50_000,
         'duration': 20,

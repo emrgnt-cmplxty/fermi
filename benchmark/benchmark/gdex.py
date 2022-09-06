@@ -125,7 +125,6 @@ class GDEXBench:
                     ','.join(consensus_address)
                 )
                 print(cmd)
-                breakpoint()
                 subprocess.run([cmd], shell=True)
 
             cmd = CommandMaker.add_controllers_gdex_genesis(os.path.abspath(self.bench_parameters.key_dir))

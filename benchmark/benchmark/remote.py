@@ -155,7 +155,7 @@ class Bench:
         Print.info(
             f'Updating {len(ips)} machines (branch "{self.settings.branch}")...'
         )
-        compile_cmd = ' '.join(CommandMaker.compile(False))
+        compile_cmd = ' '.join(CommandMaker.compile(False, None))
         cmd = [
             f'(cd {self.settings.repo_name} && git fetch -f)',
             f'(cd {self.settings.repo_name} && git checkout -f {self.settings.branch})',
@@ -176,7 +176,7 @@ class Bench:
         subprocess.run([cmd], shell=True, stderr=subprocess.DEVNULL, cwd='.')
 
         # Recompile the latest code.
-        cmd = CommandMaker.compile(mem_profiling=False)
+        cmd = CommandMaker.compile(False, None, False)
         Print.info(f"About to run {cmd}...")
         subprocess.run(cmd, check=True, cwd='../')
 
@@ -207,8 +207,10 @@ class Bench:
             addresses = OrderedDict(
                 (x, y) for x, y in zip(names, hosts)
             )
+
         committee = Committee(addresses, self.settings.base_port)
         committee.print(PathMaker.committee_file())
+        breakpoint()
         for i, name in enumerate(names):
             sleep(5)
             validator_dict = committee.json["authorities"][name]
@@ -219,9 +221,15 @@ class Bench:
             primary_to_primary = validator_dict["primary"]["primary_to_primary"]
             worker_to_primary = validator_dict["primary"]["worker_to_primary"]
 
-            primary_to_worker = validator_dict["workers"][0]["primary_to_worker"]
-            worker_to_worker = validator_dict["workers"][0]["worker_to_worker"]
-            consensus_address = validator_dict["workers"][0]["transactions"]
+            primary_to_worker = []
+            worker_to_worker = []
+            consensus_address = []
+
+            for i in range(workers):
+                primary_to_worker.append(validator_dict["workers"][i]["primary_to_worker"])
+                worker_to_worker.append(validator_dict["workers"][i]["worker_to_worker"])
+                consensus_address.append(validator_dict["workers"][i]["transactions"])
+
             cmd = CommandMaker.add_gdex_validator_genesis(
                 self.local_proto_dir,
                 name,
@@ -230,9 +238,9 @@ class Bench:
                 key_file,
                 primary_to_primary,
                 worker_to_primary,
-                primary_to_worker,
-                worker_to_worker,
-                consensus_address
+                ','.join(primary_to_worker),
+                ','.join(worker_to_worker),
+                ','.join(consensus_address)
             )
             subprocess.run([cmd], shell=True)
         cmd = CommandMaker.add_controllers_gdex_genesis(self.local_proto_dir)
@@ -274,8 +282,7 @@ class Bench:
 
         return committee
 
-    def _run_single(self, rate, committee, bench_parameters, node_parameters, debug=False):
-        faults = bench_parameters.faults
+    def _run_single(self, rate, committee, bench_parameters):
 
         # Kill any potentially unfinished run and delete logs.
         hosts = committee.ips()

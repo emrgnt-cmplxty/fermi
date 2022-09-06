@@ -133,14 +133,13 @@ class GDEXBench:
 
             # Run the primaries
             Print.info('Booting clients...')
-            breakpoint()
             rate_share = ceil(self.rate.pop() / committee.workers())
             for i, name in enumerate(committee.json['authorities'].keys()):
                 validator_dict = committee.json['authorities'][name]
                 validator_address = validator_dict['network_address']
                 relayer_address = validator_dict['relayer_address']
                 cmd = CommandMaker.run_gdex_node(
-                    os.path.abspath(self.bench_parameters.key_dir),
+                    os.path.abspath(self.bench_parameters.db_dir),
                     os.path.abspath(self.bench_parameters.key_dir),
                     os.path.abspath(self.bench_parameters.key_dir + PathMaker.key_file(i)),
                     name,

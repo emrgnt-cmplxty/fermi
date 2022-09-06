@@ -159,9 +159,9 @@ class GDEXBench:
                 relayer_address = validator_dict['relayer_address']
                 if self.order_bench:
                     cmd = CommandMaker.run_gdex_orderbook_client(
-                        i,
                         multiaddr_to_url_data(validator_address),
                         multiaddr_to_url_data(relayer_address),
+                        os.path.abspath(self.bench_parameters.key_dir + PathMaker.key_file(i)),
                         rate_share,
                         [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
                     )

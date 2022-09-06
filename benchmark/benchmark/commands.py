@@ -12,7 +12,7 @@ class CommandMaker:
             f"rm -r *_db ; "
             f"rm .proto/committee/* ; "
             f"rm .proto/signatures/* ; "
-            f"rm .proto/db/* ; "
+            f"rm -r .proto/db/* ; "
             f"rm .proto/*.key ; "
             f"rm .proto/*.blob ; "
             f"rm .proto/*controller ; "
@@ -197,13 +197,13 @@ class CommandMaker:
         return command
 
     @staticmethod
-    def run_gdex_orderbook_client(id, address, relayer_address, rate, nodes):
+    def run_gdex_orderbook_client(address, relayer_address, validator_key_path, rate, nodes):
         assert isinstance(address, str)
         assert isinstance(rate, int) and rate >= 0
         assert isinstance(nodes, list)
         assert all(isinstance(x, str) for x in nodes)
         nodes = f'--nodes {" ".join(nodes)}' if nodes else ""
-        command = f"./benchmark_orderbook_client {address} --relayer {relayer_address} --validator_key_fpath ../.proto/validator-0.key --rate {rate}  --nodes {nodes}"
+        command = f"./benchmark_orderbook_client {address} --relayer {relayer_address} --validator_key_fpath {validator_key_path} --rate {rate}  --nodes {nodes}"
         print("Returning execution command = ", command)
         return command
 

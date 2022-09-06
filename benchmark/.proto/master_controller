@@ -12,12 +12,8 @@ bank_controller:
       asset_id: 0
       owner_pubkey: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
   bank_accounts:
-    VJiMPIKGfy3WMUi2tnOgVHGX3WBP/svZuKEgeY6jOeE=:
-      account_pub_key: VJiMPIKGfy3WMUi2tnOgVHGX3WBP/svZuKEgeY6jOeE=
-      balances:
-        0: 4999999999999
-    Yk9USIhpFAUn/9SHG+cvKLf14ntQnDcMZaQuaIqvGl0=:
-      account_pub_key: Yk9USIhpFAUn/9SHG+cvKLf14ntQnDcMZaQuaIqvGl0=
+    aZMn+kYxFEilnVPqoXzX8q0mgGOtGZPvEHOFgURoemI=:
+      account_pub_key: aZMn+kYxFEilnVPqoXzX8q0mgGOtGZPvEHOFgURoemI=
       balances:
         0: 4999999999999
     U1RBS0VDT05UUk9MTEVSQUFBQUFBQUFBQUFBQUFBQUE=:
@@ -28,6 +24,10 @@ bank_controller:
       account_pub_key: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
       balances:
         0: 9990000000000000
+    xh5Xrorg/SnuWG01sI9Mdwfvz89eFdz79tHmFfz3HX8=:
+      account_pub_key: xh5Xrorg/SnuWG01sI9Mdwfvz89eFdz79tHmFfz3HX8=
+      balances:
+        0: 4999999999999
     U1BPVENPTlRST0xMRVJBQUFBQUFBQUFBQUFBQUFBQUE=:
       account_pub_key: U1BPVENPTlRST0xMRVJBQUFBQUFBQUFBQUFBQUFBQUE=
       balances: {}
@@ -35,11 +35,11 @@ bank_controller:
 stake_controller:
   controller_account: U1RBS0VDT05UUk9MTEVSQUFBQUFBQUFBQUFBQUFBQUE=
   stake_accounts:
-    VJiMPIKGfy3WMUi2tnOgVHGX3WBP/svZuKEgeY6jOeE=:
-      account_pub_key: VJiMPIKGfy3WMUi2tnOgVHGX3WBP/svZuKEgeY6jOeE=
+    xh5Xrorg/SnuWG01sI9Mdwfvz89eFdz79tHmFfz3HX8=:
+      account_pub_key: xh5Xrorg/SnuWG01sI9Mdwfvz89eFdz79tHmFfz3HX8=
       staked_amount: 1
-    Yk9USIhpFAUn/9SHG+cvKLf14ntQnDcMZaQuaIqvGl0=:
-      account_pub_key: Yk9USIhpFAUn/9SHG+cvKLf14ntQnDcMZaQuaIqvGl0=
+    aZMn+kYxFEilnVPqoXzX8q0mgGOtGZPvEHOFgURoemI=:
+      account_pub_key: aZMn+kYxFEilnVPqoXzX8q0mgGOtGZPvEHOFgURoemI=
       staked_amount: 1
   bank_controller:
     controller_account: U1RBS0VDT05UUk9MTEVSQUFBQUFBQUFBQUFBQUFBQUE=
@@ -48,12 +48,8 @@ stake_controller:
         asset_id: 0
         owner_pubkey: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
     bank_accounts:
-      VJiMPIKGfy3WMUi2tnOgVHGX3WBP/svZuKEgeY6jOeE=:
-        account_pub_key: VJiMPIKGfy3WMUi2tnOgVHGX3WBP/svZuKEgeY6jOeE=
-        balances:
-          0: 4999999999999
-      Yk9USIhpFAUn/9SHG+cvKLf14ntQnDcMZaQuaIqvGl0=:
-        account_pub_key: Yk9USIhpFAUn/9SHG+cvKLf14ntQnDcMZaQuaIqvGl0=
+      aZMn+kYxFEilnVPqoXzX8q0mgGOtGZPvEHOFgURoemI=:
+        account_pub_key: aZMn+kYxFEilnVPqoXzX8q0mgGOtGZPvEHOFgURoemI=
         balances:
           0: 4999999999999
       U1RBS0VDT05UUk9MTEVSQUFBQUFBQUFBQUFBQUFBQUE=:
@@ -64,6 +60,10 @@ stake_controller:
         account_pub_key: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
         balances:
           0: 9990000000000000
+      xh5Xrorg/SnuWG01sI9Mdwfvz89eFdz79tHmFfz3HX8=:
+        account_pub_key: xh5Xrorg/SnuWG01sI9Mdwfvz89eFdz79tHmFfz3HX8=
+        balances:
+          0: 4999999999999
       U1BPVENPTlRST0xMRVJBQUFBQUFBQUFBQUFBQUFBQUE=:
         account_pub_key: U1BPVENPTlRST0xMRVJBQUFBQUFBQUFBQUFBQUFBQUE=
         balances: {}
@@ -79,12 +79,8 @@ spot_controller:
         asset_id: 0
         owner_pubkey: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
     bank_accounts:
-      VJiMPIKGfy3WMUi2tnOgVHGX3WBP/svZuKEgeY6jOeE=:
-        account_pub_key: VJiMPIKGfy3WMUi2tnOgVHGX3WBP/svZuKEgeY6jOeE=
-        balances:
-          0: 4999999999999
-      Yk9USIhpFAUn/9SHG+cvKLf14ntQnDcMZaQuaIqvGl0=:
-        account_pub_key: Yk9USIhpFAUn/9SHG+cvKLf14ntQnDcMZaQuaIqvGl0=
+      aZMn+kYxFEilnVPqoXzX8q0mgGOtGZPvEHOFgURoemI=:
+        account_pub_key: aZMn+kYxFEilnVPqoXzX8q0mgGOtGZPvEHOFgURoemI=
         balances:
           0: 4999999999999
       U1RBS0VDT05UUk9MTEVSQUFBQUFBQUFBQUFBQUFBQUE=:
@@ -95,6 +91,10 @@ spot_controller:
         account_pub_key: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
         balances:
           0: 9990000000000000
+      xh5Xrorg/SnuWG01sI9Mdwfvz89eFdz79tHmFfz3HX8=:
+        account_pub_key: xh5Xrorg/SnuWG01sI9Mdwfvz89eFdz79tHmFfz3HX8=
+        balances:
+          0: 4999999999999
       U1BPVENPTlRST0xMRVJBQUFBQUFBQUFBQUFBQUFBQUE=:
         account_pub_key: U1BPVENPTlRST0xMRVJBQUFBQUFBQUFBQUFBQUFBQUE=
         balances: {}

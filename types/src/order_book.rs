@@ -111,3 +111,15 @@ pub enum Failed {
 }
 
 pub type OrderProcessingResult = Vec<Result<Success, Failed>>;
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Depth {
+    pub price: u64,
+    pub quantity: u64,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct OrderbookSnap {
+    pub bids: Vec<Depth>,
+    pub asks: Vec<Depth>,
+}

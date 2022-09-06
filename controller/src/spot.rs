@@ -26,7 +26,7 @@ use gdex_types::{
     asset::{AssetId, AssetPairKey},
     crypto::ToFromBytes,
     error::GDEXError,
-    order_book::{OrderProcessingResult, OrderSide, OrderType, Success},
+    order_book::{OrderProcessingResult, OrderSide, OrderType, OrderbookSnap, Success},
     transaction::{OrderRequest, Transaction, TransactionVariant},
 };
 
@@ -457,6 +457,10 @@ impl OrderbookInterface {
         Ok(())
     }
 
+    pub fn get_orderbook_snap(&self) -> OrderbookSnap {
+        self.orderbook.get_orderbook_snap()
+    }
+
     // TODO #2 //
     pub fn overwrite_orderbook(&mut self, new_orderbook: Orderbook) {
         self.orderbook = new_orderbook;
@@ -574,6 +578,15 @@ impl SpotController {
     pub fn check_orderbook_exists(&self, base_asset_id: AssetId, quote_asset_id: AssetId) -> bool {
         let lookup_string = self._get_orderbook_key(base_asset_id, quote_asset_id);
         self.orderbooks.contains_key(&lookup_string)
+    }
+
+    pub fn generate_orderbook_snaps(&self) -> HashMap<AssetPairKey, OrderbookSnap> {
+        let mut orderbook_snaps: HashMap<AssetPairKey, OrderbookSnap> = HashMap::new();
+        for (asset_pair, orderbook) in &self.orderbooks {
+            orderbook_snaps.insert(asset_pair.clone(), orderbook.get_orderbook_snap());
+        }
+
+        orderbook_snaps
     }
 
     pub fn create_orderbook(&mut self, base_asset_id: AssetId, quote_asset_id: AssetId) -> Result<(), GDEXError> {
@@ -1254,5 +1267,46 @@ pub mod spot_tests {
                 CREATED_ASSET_BALANCE - (TEST_QUANTITY + 1) * TEST_PRICE
             );
         }
+    }
+    #[test]
+    fn get_orderbook_snap() {
+        let account = generate_keypair_vec([0; 32]).pop().unwrap();
+
+        let mut bank_controller = BankController::default();
+        bank_controller.create_asset(account.public()).unwrap();
+        bank_controller.create_asset(account.public()).unwrap();
+        let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
+
+        let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
+        let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
+
+        let mut orderbook_interface = OrderbookInterface::new(
+            BASE_ASSET_ID,
+            QUOTE_ASSET_ID,
+            controller_account,
+            Arc::clone(&bank_controller_ref),
+        );
+
+        let bid_size = 100;
+        let bid_price = 100;
+        orderbook_interface
+            .place_limit_order(account.public(), OrderSide::Bid, bid_size, bid_price)
+            .unwrap();
+
+        const TEST_MID: u64 = 100;
+        const TEST_NUM_ORDERS: u64 = 2;
+
+        for i in 1..3 {
+            for _ in 0..TEST_NUM_ORDERS {
+                orderbook_interface
+                    .place_limit_order(account.public(), OrderSide::Bid, u64::pow(10 - i, 2), TEST_MID - i)
+                    .unwrap();
+                orderbook_interface
+                    .place_limit_order(account.public(), OrderSide::Ask, u64::pow(10 - i, 2), TEST_MID + i)
+                    .unwrap();
+            }
+        }
+
+        let _orderbook_snap = orderbook_interface.get_orderbook_snap();
     }
 }

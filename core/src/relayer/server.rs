@@ -2,7 +2,7 @@ use crate::validator::state::ValidatorState;
 use gdex_types::proto::*;
 use narwhal_types::CertificateDigestProto;
 
-use std::sync::Arc;
+use std::sync::{atomic::Ordering, Arc};
 use tonic::{Request, Response, Status};
 
 pub struct RelayerService {
@@ -109,5 +109,85 @@ impl Relayer for RelayerService {
                 block: None,
             })),
         }
+    }
+    async fn get_latest_orderbook_snap(
+        &self,
+        request: Request<RelayerGetLatestOrderbookSnapRequest>,
+    ) -> Result<Response<RelayerLatestOrderbookSnapResponse>, Status> {
+        let validator_state = &self.state;
+        let req = request.into_inner();
+
+        // request params
+        let depth = req.depth;
+        let base_asset_id = req.base_asset_id;
+        let quote_asset_id = req.quote_asset_id;
+        let orderbook_snap_key = format!("{}_{}", base_asset_id, quote_asset_id);
+
+        let returned_value = validator_state
+            .validator_store
+            .latest_orderbook_snap_store
+            .read(orderbook_snap_key)
+            .await;
+        println!("{:?}", returned_value.as_ref().unwrap());
+
+        match returned_value {
+            Ok(opt) => {
+                if let Some(orderbook_snap) = opt {
+                    let mut bids: Vec<DepthProto> = Vec::new();
+                    let mut asks: Vec<DepthProto> = Vec::new();
+
+                    let mut counter: u64 = 0;
+                    for i in 0..orderbook_snap.bids.len() {
+                        if counter >= depth {
+                            break;
+                        }
+                        let bid = &orderbook_snap.bids[orderbook_snap.bids.len() - 1 - i];
+                        bids.push(DepthProto {
+                            price: bid.price,
+                            quantity: bid.quantity,
+                        });
+                        counter += 1;
+                    }
+                    for i in 0..orderbook_snap.asks.len() {
+                        if counter >= depth {
+                            break;
+                        }
+                        let ask = &orderbook_snap.asks[orderbook_snap.asks.len() - 1 - i];
+                        asks.push(DepthProto {
+                            price: ask.price,
+                            quantity: ask.quantity,
+                        });
+                        counter += 1;
+                    }
+                    return Ok(Response::new(RelayerLatestOrderbookSnapResponse { bids, asks }));
+                } else {
+                    let bids: Vec<Depth> = Vec::new();
+                    let asks: Vec<Depth> = Vec::new();
+                    return Ok(Response::new(RelayerLatestOrderbookSnapResponse { bids, asks }));
+                }
+            }
+            // TODO propagate error message to client
+            Err(_) => {
+                let bids: Vec<Depth> = Vec::new();
+                let asks: Vec<Depth> = Vec::new();
+                return Ok(Response::new(RelayerLatestOrderbookSnapResponse { bids, asks }));
+            }
+        }
+    }
+    async fn get_latest_metrics(
+        &self,
+        _request: Request<RelayerMetricsRequest>,
+    ) -> Result<Response<RelayerMetricsResponse>, Status> {
+        let validator_state = &self.state;
+        let metrics = &validator_state.metrics;
+
+        Ok(Response::new(RelayerMetricsResponse {
+            num_transactions_rec: metrics.num_transactions_rec.load(Ordering::Relaxed),
+            num_transactions_failed: metrics.num_transactions_rec_failed.load(Ordering::Relaxed),
+            num_transactions_consensus: metrics.num_transactions_consensus.load(Ordering::Relaxed),
+            num_transactions_consensus_failed: metrics.num_transactions_consensus_failed.load(Ordering::Relaxed),
+            average_latency: metrics.get_average_latency_in_milis(),
+            average_tps: metrics.get_average_tps(),
+        }))
     }
 }

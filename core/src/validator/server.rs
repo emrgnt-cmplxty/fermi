@@ -31,6 +31,11 @@ use tokio::{
 };
 use tracing::{info, trace};
 
+// constants
+
+// frequency of orderbook snaps (rounds)
+const ORDERBOOK_SNAP_FREQUENCY: u64 = 10;
+
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
     local_addr: Multiaddr,
@@ -173,8 +178,22 @@ impl ValidatorService {
 
                         // if next_transaction_index == 0 then the block is complete and we may write-out
                         if execution_indices.next_transaction_index == 0 {
+                            // write out orderbook snap every ORDERBOOK_SNAP_FREQUENCY
+                            if store.block_number.load(std::sync::atomic::Ordering::SeqCst) % ORDERBOOK_SNAP_FREQUENCY
+                                == 0
+                            {
+                                let orderbook_snaps = validator_state
+                                    .master_controller
+                                    .spot_controller
+                                    .lock()
+                                    .unwrap()
+                                    .generate_orderbook_snaps();
+                                store.write_latest_orderbook_snaps(orderbook_snaps).await;
+                            }
+
                             // subtract round look-back from the latest round to get block number
                             let round_number = consensus_output.certificate.header.round;
+
                             let num_txns = serialized_txns_buf.len();
                             trace!("Processing result from {round_number} with {num_txns} transactions");
                             store.prune();

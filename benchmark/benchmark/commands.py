@@ -202,7 +202,7 @@ class CommandMaker:
         assert isinstance(rate, int) and rate >= 0
         assert isinstance(nodes, list)
         assert all(isinstance(x, str) for x in nodes)
-        nodes = f'--nodes {" ".join(nodes)}' if nodes else ""
+        nodes = f'{" ".join(nodes)}' if nodes else ""
         command = f"./benchmark_orderbook_client {address} --relayer {relayer_address} --validator_key_fpath {validator_key_path} --rate {rate}  --nodes {nodes}"
         print("Returning execution command = ", command)
         return command

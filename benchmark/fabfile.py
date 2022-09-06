@@ -156,8 +156,8 @@ def remote(ctx, debug=False):
     bench_params = {
         'faults': 0,
         'nodes': 2,
-        'workers': 2,
-        'tx_size': 500,
+        'workers': 5,
+        'tx_size': 213,
         'rate': 50_000,
         'duration': 20,
         'mem_profiling': False,
@@ -165,7 +165,7 @@ def remote(ctx, debug=False):
         'key_dir': "/.proto/",
         # the database dir will be whiped before running the benchmark
         'db_dir': "/.proto/db",
-        'do_orderbook': True
+        'do_orderbook': False
     }
 
     node_params = {

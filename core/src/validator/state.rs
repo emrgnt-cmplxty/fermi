@@ -14,6 +14,11 @@ use gdex_types::{
     committee::{Committee, ValidatorName},
     error::GDEXError,
     transaction::{SignedTransaction, TransactionDigest},
+    new_transaction::{
+        NewSignedTransaction, NewTransaction, NewTransactionDigest,
+        get_signed_transaction_body, hash_transaction, deserialize_protobuf,
+        verify_signature
+    }
 };
 use mysten_store::{
     reopen,
@@ -38,7 +43,7 @@ use tracing::{info, trace};
 /// Tracks recently submitted transactions to implement transaction gating
 pub struct ValidatorStore {
     /// The transaction map tracks recently submitted transactions
-    transaction_cache: Mutex<HashMap<TransactionDigest, Option<BlockDigest>>>,
+    transaction_cache: Mutex<HashMap<NewTransactionDigest, Option<BlockDigest>>>,
     block_digest_cache: Mutex<HashMap<BlockDigest, BlockNumber>>,
     // garbage collection depth
     gc_depth: u64,
@@ -107,8 +112,8 @@ impl ValidatorStore {
         }
     }
 
-    pub fn cache_contains_transaction(&self, transaction: &Transaction) -> bool {
-        let transaction_digest = transaction.digest();
+    pub fn cache_contains_transaction(&self, transaction: &NewTransaction) -> bool {
+        let transaction_digest = hash_transaction(transaction);
         return self.transaction_cache.lock().unwrap().contains_key(&transaction_digest);
     }
 
@@ -116,16 +121,16 @@ impl ValidatorStore {
         return self.block_digest_cache.lock().unwrap().contains_key(block_digest);
     }
 
-    pub fn insert_unconfirmed_transaction(&self, transaction: &Transaction) {
-        let transaction_digest = transaction.digest();
+    pub fn insert_unconfirmed_transaction(&self, transaction: &NewTransaction) {
+        let transaction_digest = hash_transaction(transaction);
         self.transaction_cache.lock().unwrap().insert(
             transaction_digest,
             None, // Insert with no block digest, a digest will be added after confirmation
         );
     }
 
-    pub fn insert_confirmed_transaction(&self, transaction: &Transaction, consensus_output: &ConsensusOutput) {
-        let transaction_digest = transaction.digest();
+    pub fn insert_confirmed_transaction(&self, transaction: &NewTransaction, consensus_output: &ConsensusOutput) {
+        let transaction_digest = hash_transaction(transaction);
         let block_digest = consensus_output.certificate.digest();
         let mut locked_block_digest_cache = self.block_digest_cache.lock().unwrap();
         let max_seq_num_so_far = locked_block_digest_cache.values().max();
@@ -250,10 +255,11 @@ impl ValidatorState {
 
 impl ValidatorState {
     /// Initiate a new transaction.
-    pub fn handle_pre_consensus_transaction(&self, transaction: &SignedTransaction) -> Result<(), GDEXError> {
+    pub fn handle_pre_consensus_transaction(&self, signed_transaction: &NewSignedTransaction) -> Result<(), GDEXError> {
         trace!("Handling a new pre-consensus transaction with the ValidatorState",);
+        let transaction = get_signed_transaction_body(signed_transaction)?;
         self.validator_store
-            .insert_unconfirmed_transaction(transaction.get_transaction_payload());
+            .insert_unconfirmed_transaction(transaction);
         Ok(())
     }
 }
@@ -271,10 +277,27 @@ impl ExecutionState for ValidatorState {
         signed_transaction: Self::Transaction,
     ) -> Result<Self::Outcome, Self::Error> {
         self.metrics.increment_num_transactions_consensus();
-        let transaction = signed_transaction.get_transaction_payload();
 
+        // TODO CRUFT
+        
+        // deserialize signed transaction
+        let new_signed_transaction: NewSignedTransaction = deserialize_protobuf(&signed_transaction.signed_transaction_bytes)
+            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        let _ = verify_signature(&new_signed_transaction)
+            .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
+
+        // get transaction
+        let new_transaction = get_signed_transaction_body(&new_signed_transaction)?;
+
+        // TODO we need to dedupe here
+
+        // cache confirmed transaction
         self.validator_store
-            .insert_confirmed_transaction(transaction, consensus_output);
+            .insert_confirmed_transaction(new_transaction, consensus_output);
+
+
+
+        let transaction = signed_transaction.get_transaction_payload();
 
         let result = self.master_controller.handle_consensus_transaction(transaction);
 
@@ -434,7 +457,7 @@ mod test_validator_state {
 
         // TODO CRUFT
         let gas: u64 = 1000;
-        let new_transaction = new_create_create_asset_transaction(sender_kp.public().clone(), gas, recent_block_hash);
+        let new_transaction = new_create_create_asset_transaction(sender_kp.public().clone(), 0, gas, recent_block_hash);
         let new_signed_transaction = match sign_transaction(&sender_kp, new_transaction) {
             Ok(t) => t,
             _ => panic!("Error signing transaction"),
@@ -467,7 +490,7 @@ mod test_validator_state {
 
         // TODO CRUFT
         let gas: u64 = 1000;
-        let new_transaction = new_create_create_asset_transaction(sender_kp.public().clone(), gas, recent_block_hash);
+        let new_transaction = new_create_create_asset_transaction(sender_kp.public().clone(), 0, gas, recent_block_hash);
         let new_signed_transaction = match sign_transaction(&sender_kp, new_transaction) {
             Ok(t) => t,
             _ => panic!("Error signing transaction"),
@@ -527,7 +550,7 @@ mod test_validator_state {
 
         // TODO CRUFT
         let gas: u64 = 1000;
-        let new_transaction = new_create_create_asset_transaction(sender_kp.public().clone(), gas, recent_block_hash);
+        let new_transaction = new_create_create_asset_transaction(sender_kp.public().clone(), 0, gas, recent_block_hash);
         let new_signed_transaction = match sign_transaction(&sender_kp, new_transaction) {
             Ok(t) => t,
             _ => panic!("Error signing transaction"),
@@ -595,7 +618,7 @@ mod test_validator_state {
 
         // TODO CRUFT
         let gas: u64 = 1000;
-        let new_transaction = new_create_create_asset_transaction(sender_kp.public().clone(), gas, recent_block_hash);
+        let new_transaction = new_create_create_asset_transaction(sender_kp.public().clone(), 0, gas, recent_block_hash);
         let new_signed_transaction = match sign_transaction(&sender_kp, new_transaction) {
             Ok(t) => t,
             _ => panic!("Error signing transaction"),
@@ -729,7 +752,7 @@ mod test_validator_state {
 
         // TODO CRUFT
         let gas: u64 = 1000;
-        let new_transaction = new_create_create_asset_transaction(sender_kp.public().clone(), gas, recent_block_hash);
+        let new_transaction = new_create_create_asset_transaction(sender_kp.public().clone(), 0, gas, recent_block_hash);
         let new_signed_transaction = match sign_transaction(&sender_kp, new_transaction) {
             Ok(t) => t,
             _ => panic!("Error signing transaction"),

@@ -13,6 +13,11 @@ use gdex_types::{
     crypto::KeypairTraits,
     proto::{Empty, TransactionProto, Transactions, TransactionsServer},
     transaction::SignedTransaction,
+    new_transaction::{
+        NewSignedTransaction, deserialize_protobuf, verify_signature,
+        serialize_protobuf, get_signed_transaction_recent_block_hash,
+        get_signed_transaction_transaction_hash, get_signed_transaction_body
+    }
 };
 use multiaddr::Multiaddr;
 use narwhal_config::Committee as ConsensusCommittee;
@@ -200,26 +205,30 @@ impl ValidatorService {
         signed_transaction
             .verify()
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
+        
+        // TODO CRUFT
+        let new_signed_transaction: NewSignedTransaction = deserialize_protobuf(&signed_transaction.signed_transaction_bytes)
+            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        let _ = verify_signature(&new_signed_transaction)
+            .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
 
-        // TODO change this to err flow
-        // TODO there is a ton of contention here
-        if !state.validator_store.cache_contains_block_digest(
-            signed_transaction
-                .get_transaction_payload()
-                .get_recent_certificate_digest(),
-        ) {
+        // check recent block hash is valid : TODO seems maybe problematic to do this just here?
+        let recent_block_hash = get_signed_transaction_recent_block_hash(&new_signed_transaction)
+            .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
+        if !state.validator_store.cache_contains_block_digest(&recent_block_hash) {
             state.metrics.increment_num_transactions_rec_failed();
             return Err(tonic::Status::internal("Invalid recent certificate digest"));
         }
-        if state
-            .validator_store
-            .cache_contains_transaction(signed_transaction.get_transaction_payload())
-        {
+        
+        // check transaction is not a duplicate
+        let new_transaction = get_signed_transaction_body(&new_signed_transaction)
+            .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
+        if state.validator_store.cache_contains_transaction(new_transaction) {
             state.metrics.increment_num_transactions_rec_failed();
-            let digest = signed_transaction.get_transaction_payload().digest().to_string();
-            return Err(tonic::Status::internal("Duplicate transaction ".to_owned() + &digest));
+            return Err(tonic::Status::internal("Invalid duplicate transaction"));
         }
-
+        
+        // submit transaction
         let transaction_proto = narwhal_types::TransactionProto {
             transaction: transaction_proto.transaction,
         };
@@ -232,7 +241,7 @@ impl ValidatorService {
             .unwrap();
 
         state
-            .handle_pre_consensus_transaction(&signed_transaction)
+            .handle_pre_consensus_transaction(&new_signed_transaction)
             // .instrument(span)
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 

@@ -4,7 +4,9 @@ package bank_requests;
 
 // REQUESTS
 
-message CreateAssetRequest {}
+message CreateAssetRequest {
+    uint64 dummy = 1;
+}
 
 message PaymentRequest {
     bytes receiver = 1;

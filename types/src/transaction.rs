@@ -340,7 +340,7 @@ pub struct SignedTransaction {
     sender: AccountPubKey,
     transaction_payload: Transaction,
     transaction_signature: AccountSignature,
-    signed_transaction_bytes: Vec<u8>,
+    pub signed_transaction_bytes: Vec<u8>,
 }
 
 impl SignedTransaction {
@@ -671,7 +671,7 @@ pub mod transaction_tests {
 
         // TODO CRUFT
         let gas: u64 = 1000;
-        let new_transaction = new_create_create_asset_transaction(kp_sender.public().clone(), gas, dummy_batch_digest);
+        let new_transaction = new_create_create_asset_transaction(kp_sender.public().clone(), 0, gas, dummy_batch_digest);
         let new_signed_transaction = match sign_transaction(&kp_sender, new_transaction) {
             Ok(t) => t,
             _ => panic!("Error signing transaction"),

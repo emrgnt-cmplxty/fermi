@@ -24,7 +24,11 @@ pub mod cluster_test_suite {
             RelayerGetLatestBlockInfoRequest,
         },
         transaction::{create_asset_creation_transaction, SignedTransaction},
-        new_transaction::{NewSignedTransaction, NewTransaction, new_create_create_asset_transaction, sign_transaction},
+        new_transaction::{
+            NewSignedTransaction, NewTransaction,
+            new_create_create_asset_transaction,
+            sign_transaction, deserialize_protobuf, get_signed_transaction_body
+        },
         utils,
     };
 
@@ -136,7 +140,15 @@ pub mod cluster_test_suite {
         // check that every transaction entered the cache
         info!("Verify that all transactions entered cache");
         for signed_transaction in signed_transactions.clone() {
-            assert!(validator_store.cache_contains_transaction(signed_transaction.get_transaction_payload()));
+            let new_signed_transaction = match deserialize_protobuf(&signed_transaction.signed_transaction_bytes) {
+                Ok(t) => t,
+                _ => panic!("Error deserializing signed transaction")
+            };
+            let new_transaction = match get_signed_transaction_body(&new_signed_transaction) {
+                Ok(t) => t,
+                _ => panic!("Error deserializing signed transaction")
+            };
+            assert!(validator_store.cache_contains_transaction(new_transaction));
         }
 
         let mut total = 0;
@@ -148,7 +160,15 @@ pub mod cluster_test_suite {
             let block = next_block.1;
             for serialized_transaction in &block.transactions {
                 let signed_transaction_db = SignedTransaction::deserialize(serialized_transaction.clone()).unwrap();
-                assert!(validator_store.cache_contains_transaction(signed_transaction_db.get_transaction_payload()));
+                let new_signed_transaction = match deserialize_protobuf(&signed_transaction_db.signed_transaction_bytes) {
+                    Ok(t) => t,
+                    _ => panic!("Error deserializing signed transaction")
+                };
+                let new_transaction = match get_signed_transaction_body(&new_signed_transaction) {
+                    Ok(t) => t,
+                    _ => panic!("Error deserializing signed transaction")
+                };
+                assert!(validator_store.cache_contains_transaction(new_transaction));
                 total += 1;
             }
             assert!(validator_store.cache_contains_block_digest(&block.block_certificate.digest()));
@@ -363,7 +383,7 @@ pub mod cluster_test_suite {
 
         // TODO CRUFT
         let gas: u64 = 1000;
-        let new_transaction = new_create_create_asset_transaction(sender_kp.public().clone(), gas, recent_block_hash);
+        let new_transaction = new_create_create_asset_transaction(sender_kp.public().clone(), 0, gas, recent_block_hash);
         let new_signed_transaction = match sign_transaction(&sender_kp, new_transaction) {
             Ok(t) => t,
             _ => panic!("Error signing transaction"),

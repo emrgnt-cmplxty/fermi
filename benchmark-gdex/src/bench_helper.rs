@@ -57,7 +57,7 @@ fn create_signed_asset_creation_transaction(
 
     // TODO CRUFT
     let gas: u64 = 1000;
-    let new_transaction = new_create_create_asset_transaction(kp_sender.public().clone(), gas, block_digest);
+    let new_transaction = new_create_create_asset_transaction(kp_sender.public().clone(), dummy as u64, gas, block_digest);
     let new_signed_transaction = match sign_transaction(kp_sender, new_transaction) {
         Ok(t) => t,
         _ => panic!("Error signing transaction"),

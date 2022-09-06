@@ -2,6 +2,8 @@
 
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CreateAssetRequest {
+    #[prost(uint64, tag="1")]
+    pub dummy: u64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct PaymentRequest {

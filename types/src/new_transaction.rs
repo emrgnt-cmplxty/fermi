@@ -35,6 +35,7 @@ use narwhal_types::{CertificateDigest, CertificateDigestProto};
 // external
 use prost::bytes::Bytes;
 use std::io::Cursor;
+use std::ops::Deref;
 use prost::Message;
 use blake2::digest::Update;
 use serde::{Deserialize, Serialize};
@@ -124,8 +125,12 @@ pub fn create_transaction(
 
 // BANK REQUESTS
 
-pub fn create_create_asset_request() -> CreateAssetRequest {
-    CreateAssetRequest {}
+pub fn create_create_asset_request(
+    dummy: u64,
+) -> CreateAssetRequest {
+    CreateAssetRequest {
+        dummy
+    }
 }
 
 pub fn create_payment_request(
@@ -248,12 +253,14 @@ pub fn new_create_payment_transaction(
     )
 }
 
+// TODO get rid of dummy thing (pretty gross)
 pub fn new_create_create_asset_transaction(
     sender: AccountPubKey,
+    dummy: u64,
     gas: u64,
     recent_block_hash: CertificateDigest,
 ) -> NewTransaction {
-    let request = create_create_asset_request();
+    let request = create_create_asset_request(dummy);
     
     create_transaction(
         sender,
@@ -436,6 +443,23 @@ pub fn get_signed_transaction_signature(
         Ok(result) => Ok(result),
         Err(..) => Err(GDEXError::DeserializationError)
     }
+}
+
+pub fn get_signed_transaction_recent_block_hash(
+    signed_transaction: &NewSignedTransaction
+) -> Result<CertificateDigest, GDEXError> {
+    let transaction = get_signed_transaction_body(signed_transaction)?;
+    match transaction.recent_block_hash.deref().try_into() {
+        Ok(digest) => Ok(CertificateDigest::new(digest)),
+        Err(..) => Err(GDEXError::DeserializationError)
+    }
+}
+
+pub fn get_signed_transaction_transaction_hash(
+    signed_transaction: &NewSignedTransaction
+) -> Result<NewTransactionDigest, GDEXError> {
+    let transaction = get_signed_transaction_body(signed_transaction)?;
+    Ok(hash_transaction(transaction))
 }
 
 // HELPERS

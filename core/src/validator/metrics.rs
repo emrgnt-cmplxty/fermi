@@ -9,7 +9,7 @@ use prometheus::{
 };
 use ringbuffer::{AllocRingBuffer, RingBufferExt, RingBufferWrite};
 use std::sync::{Arc, Mutex};
-use tracing::info;
+
 /// Capacitate must be of form 2^n
 const TPS_CAPACITY: usize = 128;
 

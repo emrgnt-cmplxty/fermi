@@ -419,7 +419,7 @@ pub mod cluster_test_suite {
         tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
 
         assert!(metrics_0.get_average_tps() > 0.);
-        assert!(metrics_0.get_average_latency_in_milis() > 0);
+        assert!(metrics_0.get_average_latency_in_micros() > 0);
     }
 
     pub async fn test_spawn_faucet() {

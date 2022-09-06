@@ -42,3 +42,5 @@ scripts/build_and_fab
 crypto/proptest-regressions/tests/secp256k1_tests.txt
 proto/*
 /gdex-core.iml
+/.proto/committee/
+/.proto/signatures/

@@ -201,7 +201,7 @@ impl ValidatorService {
         transaction_proto: TransactionProto,
     ) -> Result<tonic::Response<Empty>, tonic::Status> {
         trace!("Handling a new transaction with ValidatorService",);
-        state.metrics.increment_num_transactions_rec();
+        state.metrics.num_transactions_rec.inc();
 
         let signed_transaction = SignedTransaction::deserialize(transaction_proto.transaction.to_vec())
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
@@ -216,14 +216,14 @@ impl ValidatorService {
                 .get_transaction_payload()
                 .get_recent_certificate_digest(),
         ) {
-            state.metrics.increment_num_transactions_rec_failed();
+            state.metrics.num_transactions_rec_failed.inc();
             return Err(tonic::Status::internal("Invalid recent certificate digest"));
         }
         if state
             .validator_store
             .cache_contains_transaction(signed_transaction.get_transaction_payload())
         {
-            state.metrics.increment_num_transactions_rec_failed();
+            state.metrics.num_transactions_rec_failed.inc();
             let digest = signed_transaction.get_transaction_payload().digest().to_string();
             return Err(tonic::Status::internal("Duplicate transaction ".to_owned() + &digest));
         }
@@ -298,6 +298,7 @@ mod test_validator_server {
         builder::genesis_state::GenesisStateBuilder,
         client,
         genesis_ceremony::{VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
+        validator::metrics::ValidatorMetricsAndHealth,
     };
     use gdex_controller::master::MasterController;
     use gdex_types::{
@@ -342,8 +343,9 @@ mod test_validator_server {
         let store_path = tempfile::tempdir()
             .expect("Failed to open temporary directory")
             .into_path();
-
-        let validator_state = ValidatorState::new(public_key, secret, &genesis, &store_path);
+        let registry = Registry::default();
+        let metrics = Arc::new(ValidatorMetricsAndHealth::new(&registry));
+        let validator_state = ValidatorState::new(public_key, secret, &genesis, &store_path, metrics);
         let new_addr = utils::new_network_address();
         let (tx_reconfigure_consensus, _rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
         let validator_server = ValidatorServer::new(
@@ -414,7 +416,10 @@ mod test_validator_server {
         let store_path = tempfile::tempdir()
             .expect("Failed to open temporary directory")
             .into_path();
-        let validator_state = ValidatorState::new(public_key, secret, &genesis, &store_path);
+
+        let registry = Registry::default();
+        let metrics = Arc::new(ValidatorMetricsAndHealth::new(&registry));
+        let validator_state = ValidatorState::new(public_key, secret, &genesis, &store_path, metrics);
         let new_addr = utils::new_network_address();
         let (tx_reconfigure_consensus, _rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
         let validator_server = ValidatorServer::new(

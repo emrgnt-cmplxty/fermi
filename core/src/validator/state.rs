@@ -3,7 +3,7 @@
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-core/src/authority.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bcuse super::state::ValidatorState;
 use super::genesis_state::ValidatorGenesisState;
-use crate::validator::metrics::ValidatorMetrics;
+use crate::validator::metrics::ValidatorMetricsAndHealth;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
 use fastcrypto::Hash;
@@ -24,7 +24,6 @@ use mysten_store::{
 use narwhal_consensus::ConsensusOutput;
 use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
 use narwhal_types::CertificateDigest;
-
 use std::{
     collections::HashMap,
     path::PathBuf,
@@ -149,14 +148,6 @@ impl ValidatorStore {
         // TODO - is there a way to acquire a mutable reference to the block-number without demanding &mut self?
         // this would allow us to avoid separate commands to load and add to the counter
 
-        let start = SystemTime::now();
-        let validator_system_epoch_time_in_ms = start
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_millis()
-            .try_into()
-            .unwrap();
-
         let block_number = self.block_number.load(std::sync::atomic::Ordering::SeqCst);
         let block_digest = block_certificate.digest();
 
@@ -164,6 +155,14 @@ impl ValidatorStore {
             block_certificate: block_certificate.clone(),
             transactions,
         };
+
+        let start = SystemTime::now();
+        let validator_system_epoch_time_in_ms = start
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis()
+            .try_into()
+            .unwrap();
 
         let block_info = BlockInfo {
             block_number,
@@ -223,7 +222,7 @@ pub struct ValidatorState {
     /// A map of transactions which have been seen
     pub validator_store: ValidatorStore,
     /// Metrics around blockchain operations
-    pub metrics: ValidatorMetrics,
+    pub metrics: Arc<ValidatorMetricsAndHealth>,
 }
 
 impl ValidatorState {
@@ -234,6 +233,7 @@ impl ValidatorState {
         secret: StableSyncValidatorSigner,
         genesis: &ValidatorGenesisState,
         store_db_path: &PathBuf,
+        metrics: Arc<ValidatorMetricsAndHealth>,
     ) -> Self {
         ValidatorState {
             name,
@@ -242,7 +242,7 @@ impl ValidatorState {
             committee: ArcSwap::from(Arc::new(genesis.committee().unwrap())),
             master_controller: genesis.master_controller().clone(),
             validator_store: ValidatorStore::reopen(store_db_path),
-            metrics: ValidatorMetrics::default(),
+            metrics: metrics,
         }
     }
 
@@ -281,7 +281,7 @@ impl ExecutionState for ValidatorState {
         execution_indices: ExecutionIndices,
         signed_transaction: Self::Transaction,
     ) -> Result<Self::Outcome, Self::Error> {
-        self.metrics.increment_num_transactions_consensus();
+        self.metrics.num_transactions_consensus.inc();
         let transaction = signed_transaction.get_transaction_payload();
 
         self.validator_store
@@ -290,7 +290,7 @@ impl ExecutionState for ValidatorState {
         let result = self.master_controller.handle_consensus_transaction(transaction);
 
         if let Err(err) = result {
-            self.metrics.increment_num_transactions_consensus_failed();
+            self.metrics.num_transactions_consensus_failed.inc();
             return Err(err);
         }
         Ok((consensus_output.clone(), execution_indices))
@@ -338,6 +338,7 @@ mod test_validator_state {
     use narwhal_crypto::KeyPair;
     use narwhal_executor::ExecutionIndices;
     use narwhal_types::{Certificate, Header};
+    use prometheus::Registry;
 
     #[tokio::test]
     pub async fn single_node_init() {
@@ -372,7 +373,10 @@ mod test_validator_state {
         let store_path = tempfile::tempdir()
             .expect("Failed to open temporary directory")
             .into_path();
-        let validator = ValidatorState::new(public_key, secret, &genesis, &store_path);
+
+        let registry = Registry::default();
+        let metrics = Arc::new(ValidatorMetricsAndHealth::new(&registry));
+        let validator = ValidatorState::new(public_key, secret, &genesis, &store_path, metrics);
 
         validator.halt_validator();
         validator.unhalt_validator();
@@ -410,8 +414,9 @@ mod test_validator_state {
         let store_path = tempfile::tempdir()
             .expect("Failed to open temporary directory")
             .into_path();
-
-        ValidatorState::new(public_key, secret, &genesis, &store_path)
+        let registry = Registry::default();
+        let metrics = Arc::new(ValidatorMetricsAndHealth::new(&registry));
+        ValidatorState::new(public_key, secret, &genesis, &store_path, metrics)
     }
 
     fn create_test_execution_indices() -> ExecutionIndices {

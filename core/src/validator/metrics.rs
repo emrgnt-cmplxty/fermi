@@ -3,66 +3,62 @@
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-core/src/authority.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bcuse super::state::ValidatorState;
 use gdex_types::block::{Block, BlockInfo};
+use prometheus::{register_int_counter_with_registry, IntCounter, Registry};
 use ringbuffer::{AllocRingBuffer, RingBufferExt, RingBufferWrite};
-use std::{
-    sync::{
-        atomic::{AtomicU64, Ordering},
-        Arc, Mutex,
-    },
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::sync::{Arc, Mutex};
 
 /// Capacitate must be of form 2^n
-const TPX_CAPACITY: usize = 128;
+const TPS_CAPACITY: usize = 128;
 
 type ClusterTPS = f64;
 type BlockLatencyInMilis = u64;
 
 /// Track end to end transaction pipeline metrics
-pub struct ValidatorMetrics {
+pub struct ValidatorMetricsAndHealth {
     // Continuously updated information
     /// The number of transactions submitted to the validator
-    pub num_transactions_rec: AtomicU64,
+    pub num_transactions_rec: IntCounter,
     /// The number of transactions submitted to the validator that were not executed
-    pub num_transactions_rec_failed: AtomicU64,
+    pub num_transactions_rec_failed: IntCounter,
     /// The number of transactions submitted from consensus
-    pub num_transactions_consensus: AtomicU64,
+    pub num_transactions_consensus: IntCounter,
     /// The number of transactions submitted from consensus that failed state execution
-    pub num_transactions_consensus_failed: AtomicU64,
-    /// Latest system epoch time in ms
-    pub latest_system_epoch_time_in_ms: AtomicU64,
+    pub num_transactions_consensus_failed: IntCounter,
     /// Facilitators in calculating recent TPS and latency
     tps_ring_buffer: Arc<Mutex<AllocRingBuffer<(ClusterTPS, BlockLatencyInMilis)>>>,
     prev_block_info: Arc<Mutex<BlockInfo>>,
 }
 
-impl ValidatorMetrics {
-    // incrementers
-    pub fn increment_num_transactions_rec(&self) {
-        self.update_latest_time();
-        self.num_transactions_rec.fetch_add(1, Ordering::Relaxed);
-    }
-
-    pub fn increment_num_transactions_rec_failed(&self) {
-        self.update_latest_time();
-        self.num_transactions_rec_failed.fetch_add(1, Ordering::Relaxed);
-    }
-
-    pub fn increment_num_transactions_consensus(&self) {
-        self.update_latest_time();
-        self.num_transactions_consensus.fetch_add(1, Ordering::Relaxed);
-    }
-
-    pub fn increment_num_transactions_consensus_failed(&self) {
-        self.update_latest_time();
-        self.num_transactions_consensus_failed.fetch_add(1, Ordering::Relaxed);
-    }
-
-    pub fn update_latest_time(&self) {
-        let start = SystemTime::now();
-        let since_the_epoch = start.duration_since(UNIX_EPOCH).unwrap();
-        self.latest_system_epoch_time_in_ms
-            .store(since_the_epoch.as_millis().try_into().unwrap(), Ordering::Relaxed);
+impl ValidatorMetricsAndHealth {
+    pub fn new(registry: &Registry) -> Self {
+        Self {
+            num_transactions_rec: register_int_counter_with_registry!(
+                "num_transactions_rec",
+                "The number of transactions sent to this validator.",
+                registry
+            )
+            .unwrap(),
+            num_transactions_rec_failed: register_int_counter_with_registry!(
+                "num_transactions_rec_failed",
+                "The number of transactions sent to this validator that failed execution.",
+                registry
+            )
+            .unwrap(),
+            num_transactions_consensus: register_int_counter_with_registry!(
+                "num_transactions_consensus",
+                "The number of transactions processed by this validator through consensus.",
+                registry
+            )
+            .unwrap(),
+            num_transactions_consensus_failed: register_int_counter_with_registry!(
+                "num_transactions_consensus_failed",
+                "The number of transactions processed by this validator through consensus which failed execution.",
+                registry
+            )
+            .unwrap(),
+            tps_ring_buffer: Arc::new(Mutex::new(AllocRingBuffer::with_capacity(TPS_CAPACITY))),
+            prev_block_info: Arc::new(Mutex::new(BlockInfo::default())),
+        }
     }
 
     pub fn process_new_block(&self, block: Block, block_info: BlockInfo) {
@@ -98,22 +94,5 @@ impl ValidatorMetrics {
             count += 1;
         }
         sum / count
-    }
-}
-
-impl Default for ValidatorMetrics {
-    fn default() -> Self {
-        let start = SystemTime::now();
-        let since_the_epoch = start.duration_since(UNIX_EPOCH).unwrap();
-
-        ValidatorMetrics {
-            num_transactions_rec: AtomicU64::new(0),
-            num_transactions_rec_failed: AtomicU64::new(0),
-            num_transactions_consensus: AtomicU64::new(0),
-            num_transactions_consensus_failed: AtomicU64::new(0),
-            latest_system_epoch_time_in_ms: AtomicU64::new(since_the_epoch.as_millis().try_into().unwrap()),
-            tps_ring_buffer: Arc::new(Mutex::new(AllocRingBuffer::with_capacity(TPX_CAPACITY))),
-            prev_block_info: Arc::new(Mutex::new(BlockInfo::default())),
-        }
     }
 }

@@ -6,7 +6,8 @@ use crate::{
     genesis_ceremony::GENESIS_FILENAME,
     metrics::start_prometheus_server,
     validator::{
-        genesis_state::ValidatorGenesisState, server::ValidatorServer, server::ValidatorService, state::ValidatorState,
+        genesis_state::ValidatorGenesisState, metrics::ValidatorMetricsAndHealth, server::ValidatorServer,
+        server::ValidatorService, state::ValidatorState,
     },
 };
 
@@ -160,14 +161,6 @@ impl ValidatorSpawner {
             .db_path
             .join(format!("{}-{}", self.validator_info.name, GDEX_DB_NAME));
 
-        let key_pair = Arc::pin(utils::read_keypair_from_file(&key_file).unwrap());
-        let validator_state = Arc::new(ValidatorState::new(
-            pubilc_key,
-            key_pair,
-            &self.genesis_state,
-            &gdex_db_path,
-        ));
-
         info!(
             "Spawning a validator with the initial validator info = {:?}",
             self.validator_info
@@ -186,11 +179,12 @@ impl ValidatorSpawner {
             consensus_db_path: consensus_db_path.clone(),
             narwhal_config,
         };
+
         let key_pair = Arc::new(utils::read_keypair_from_file(&key_file).unwrap());
         let node_config = NodeConfig {
             key_pair,
             consensus_db_path,
-            gdex_db_path,
+            gdex_db_path: gdex_db_path.clone(),
             network_address,
             metrics_address: utils::available_local_socket_address(),
             admin_interface_port: utils::get_available_port(),
@@ -202,7 +196,16 @@ impl ValidatorSpawner {
             enable_reconfig: false,
             genesis: Genesis::new(self.genesis_state.clone()),
         };
+
         let prometheus_registry = start_prometheus_server(node_config.metrics_address);
+        let metrics = Arc::new(ValidatorMetricsAndHealth::new(&prometheus_registry));
+        let validator_state = Arc::new(ValidatorState::new(
+            pubilc_key,
+            Arc::pin(utils::read_keypair_from_file(&key_file).unwrap()),
+            &self.genesis_state,
+            &gdex_db_path,
+            metrics,
+        ));
 
         // spawn the validator service, e.g. Narwhal consensus
         self.service_handles = Some(

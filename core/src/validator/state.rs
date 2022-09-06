@@ -35,6 +35,8 @@ use std::{
     },
 };
 use tracing::{info, trace};
+type ExecutionResult = Result<(), GDEXError>;
+
 /// Tracks recently submitted transactions to implement transaction gating
 pub struct ValidatorStore {
     /// The transaction map tracks recently submitted transactions
@@ -153,7 +155,7 @@ impl ValidatorStore {
     pub async fn write_latest_block(
         &self,
         block_certificate: BlockCertificate,
-        transactions: Vec<SerializedTransaction>,
+        transactions: Vec<(SerializedTransaction, ExecutionResult)>,
     ) {
         // TODO - is there a way to acquire a mutable reference to the block-number without demanding &mut self?
         // this would allow us to avoid separate commands to load and add to the counter
@@ -272,7 +274,7 @@ impl ValidatorState {
 impl ExecutionState for ValidatorState {
     type Transaction = SignedTransaction;
     type Error = GDEXError;
-    type Outcome = (ConsensusOutput, ExecutionIndices);
+    type Outcome = (ConsensusOutput, ExecutionIndices, ExecutionResult);
 
     async fn handle_consensus_transaction(
         &self,
@@ -288,11 +290,7 @@ impl ExecutionState for ValidatorState {
 
         let result = self.master_controller.handle_consensus_transaction(transaction);
 
-        if let Err(err) = result {
-            self.metrics.increment_num_transactions_consensus_failed();
-            return Err(err);
-        }
-        Ok((consensus_output.clone(), execution_indices))
+        Ok((consensus_output.clone(), execution_indices, result))
     }
 
     fn ask_consensus_write_lock(&self) -> bool {
@@ -426,6 +424,7 @@ mod test_validator_state {
         }
     }
 
+    #[allow(unused_must_use)]
     #[tokio::test]
     pub async fn process_create_asset_txn() {
         let validator: ValidatorState = create_test_validator();
@@ -450,6 +449,7 @@ mod test_validator_state {
             .unwrap();
     }
 
+    #[allow(unused_must_use)]
     #[tokio::test]
     pub async fn process_payment_txn() {
         let validator: ValidatorState = create_test_validator();
@@ -492,6 +492,7 @@ mod test_validator_state {
             .unwrap();
     }
 
+    #[allow(unused_must_use)]
     #[tokio::test]
     pub async fn process_create_orderbook_transaction() {
         let validator: ValidatorState = create_test_validator();
@@ -507,7 +508,7 @@ mod test_validator_state {
             let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
             let signed_create_asset_txn =
                 SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
-    
+
             validator
                 .handle_consensus_transaction(
                     &dummy_consensus_output,
@@ -543,6 +544,7 @@ mod test_validator_state {
             .unwrap();
     }
 
+    #[allow(unused_must_use)]
     #[tokio::test]
     pub async fn process_place_limit_order_and_cancel_transaction() {
         let validator: ValidatorState = create_test_validator();
@@ -640,6 +642,7 @@ mod test_validator_state {
             .unwrap();
     }
 
+    #[allow(unused_must_use)]
     #[tokio::test]
     pub async fn process_place_limit_order_and_update_transaction() {
         let validator: ValidatorState = create_test_validator();

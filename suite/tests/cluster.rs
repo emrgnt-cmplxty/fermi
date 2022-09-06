@@ -146,7 +146,7 @@ pub mod cluster_test_suite {
         for next_block in block_db_iter.by_ref() {
             let block = next_block.1;
             for serialized_transaction in &block.transactions {
-                let signed_transaction_db = SignedTransaction::deserialize(serialized_transaction.clone()).unwrap();
+                let signed_transaction_db = SignedTransaction::deserialize(serialized_transaction.0.clone()).unwrap();
                 assert!(validator_store.cache_contains_transaction(signed_transaction_db.get_transaction_payload()));
                 total += 1;
             }
@@ -363,9 +363,9 @@ pub mod cluster_test_suite {
             SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
 
         // Preparing serialized buf for transactions
-        let mut serialized_txns_buf: Vec<Vec<u8>> = Vec::new();
+        let mut serialized_txns_buf = Vec::new();
         let serialized_txn = signed_create_asset_txn.serialize().unwrap();
-        serialized_txns_buf.push(serialized_txn);
+        serialized_txns_buf.push((serialized_txn, Ok(())));
         let certificate = dummy_consensus_output.certificate;
 
         let initial_certificate = certificate.clone();

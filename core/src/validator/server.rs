@@ -11,6 +11,7 @@ use async_trait::async_trait;
 use futures::StreamExt;
 use gdex_types::{
     crypto::KeypairTraits,
+    error::GDEXError,
     proto::{Empty, TransactionProto, Transactions, TransactionsServer},
     transaction::SignedTransaction,
 };
@@ -18,7 +19,7 @@ use multiaddr::Multiaddr;
 use narwhal_config::Committee as ConsensusCommittee;
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::{Hash, KeyPair as ConsensusKeyPair};
-use narwhal_executor::{ExecutionIndices, SubscriberError};
+use narwhal_executor::{ExecutionIndices, SerializedTransaction, SubscriberError};
 use prometheus::Registry;
 use std::{io, sync::Arc};
 use tokio::{
@@ -29,6 +30,9 @@ use tokio::{
     task::JoinHandle,
 };
 use tracing::{info, trace};
+
+type ExecutionResult = Result<(), GDEXError>;
+type HandledTransaction = Result<(ConsensusOutput, ExecutionIndices, ExecutionResult), SubscriberError>;
 
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
@@ -150,9 +154,8 @@ impl ValidatorService {
     }
 
     /// Receives an ordered list of certificates and apply any application-specific logic.
-    #[allow(clippy::type_complexity)]
     async fn post_process(
-        mut rx_output: Receiver<(Result<(ConsensusOutput, ExecutionIndices), SubscriberError>, Vec<u8>)>,
+        mut rx_output: Receiver<(HandledTransaction, SerializedTransaction)>,
         validator_state: Arc<ValidatorState>,
     ) {
         // TODO load the actual last block
@@ -163,8 +166,8 @@ impl ValidatorService {
                 trace!("Received a finalized consensus transaction for post processing",);
                 let (result, serialized_txn) = message;
                 match result {
-                    Ok((consensus_output, execution_indices)) => {
-                        serialized_txns_buf.push(serialized_txn);
+                    Ok((consensus_output, execution_indices, execution_result)) => {
+                        serialized_txns_buf.push((serialized_txn, execution_result));
 
                         // if next_transaction_index == 0 then the block is complete and we may write-out
                         if execution_indices.next_transaction_index == 0 {

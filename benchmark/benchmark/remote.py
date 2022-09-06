@@ -216,7 +216,7 @@ class Bench:
         committee.print(PathMaker.committee_file())
         for i, name in enumerate(names):
             validator_dict = committee.json["authorities"][name]
-            balance = 5000000000000
+            balance = self.bench_parameters.starting_balance
             stake = validator_dict["stake"]
             key_file = self.local_proto_dir + key_files[i]
 
@@ -274,6 +274,9 @@ class Bench:
                 c.run(f'(mkdir {remote_signatures_dir}) || true')
                 c.put(self.local_proto_dir + "genesis.blob", self.remote_proto_dir)
                 c.put(self.local_proto_dir + PathMaker.key_file(i), self.remote_proto_dir)
+                # TODO
+                if i > 0:
+                    c.put(self.local_proto_dir + PathMaker.key_file(0), self.remote_proto_dir)
                 c.put(self.local_proto_dir + "master_controller", self.remote_proto_dir)
 
                 for fname in os.listdir(local_committee_dir):
@@ -329,7 +332,7 @@ class Bench:
                 cmd = CommandMaker.run_gdex_orderbook_client(
                     multiaddr_to_url_data(validator_address),
                     multiaddr_to_url_data(relayer_address),
-                    self.remote_proto_dir + PathMaker.key_file(i),
+                    self.remote_proto_dir + PathMaker.key_file(0),
                     rate_share,
                     [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
                 )

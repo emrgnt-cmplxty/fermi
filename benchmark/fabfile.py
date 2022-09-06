@@ -27,7 +27,8 @@ def gdex(ctx, debug=True):
         'key_dir': "../.proto/",
         'do_orderbook': True,
         # the database dir will be wiped before running the benchmark
-        'db_dir': "../.proto/db"
+        'db_dir': "../.proto/db",
+        'starting_balance': 5000000000
     }
     try:
         ret = GDEXBench(bench_params).run(debug)
@@ -165,7 +166,8 @@ def remote(ctx, debug=False):
         'key_dir': "/.proto/",
         # the database dir will be whiped before running the benchmark
         'db_dir': "/.proto/db",
-        'do_orderbook': False
+        'do_orderbook': True,
+        'starting_balance': 5000000000
     }
 
     node_params = {

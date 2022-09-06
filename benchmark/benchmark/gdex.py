@@ -91,7 +91,7 @@ class GDEXBench:
             committee.print(PathMaker.committee_file())
             for i, name in enumerate(names):
                 validator_dict = committee.json["authorities"][name]
-                balance = 5000000000000
+                balance = self.bench_parameters.starting_balance
                 stake = validator_dict["stake"]
                 key_file = os.path.abspath(self.bench_parameters.key_dir + key_files[i])
 
@@ -132,7 +132,7 @@ class GDEXBench:
             subprocess.run([cmd], shell=True)
 
             # Run the primaries
-            Print.info('Booting clients...')
+            Print.info('Booting nodes...')
             rate_share = ceil(self.rate[0] / self.bench_parameters.nodes[0])
             for i, name in enumerate(committee.json['authorities'].keys()):
                 validator_dict = committee.json['authorities'][name]
@@ -161,7 +161,7 @@ class GDEXBench:
                     cmd = CommandMaker.run_gdex_orderbook_client(
                         multiaddr_to_url_data(validator_address),
                         multiaddr_to_url_data(relayer_address),
-                        os.path.abspath(self.bench_parameters.key_dir + PathMaker.key_file(i)),
+                        os.path.abspath(self.bench_parameters.key_dir + PathMaker.key_file(0)),
                         rate_share,
                         [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
                     )

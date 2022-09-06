@@ -257,6 +257,7 @@ class GDEXBenchParameters(BenchParameters):
             self.db_dir = json['db_dir']
             self.duration = int(json['duration'])
             self.order_bench = bool(json['do_orderbook'])
+            self.starting_balance = int(json['starting_balance'])
         except KeyError as e:
             raise ConfigError(f'Malformed bench parameters: missing key {e}')
 

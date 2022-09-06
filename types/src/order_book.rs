@@ -119,7 +119,7 @@ pub struct Depth {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct OrderbookSnap {
+pub struct OrderbookDepth {
     pub bids: Vec<Depth>,
     pub asks: Vec<Depth>,
 }

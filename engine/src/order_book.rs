@@ -14,7 +14,7 @@ use super::sequence;
 use super::validation::OrderRequestValidator;
 use gdex_types::{
     asset::AssetId,
-    order_book::{Depth, Failed, Order, OrderProcessingResult, OrderSide, OrderType, OrderbookSnap, Success},
+    order_book::{Depth, Failed, Order, OrderProcessingResult, OrderSide, OrderType, OrderbookDepth, Success},
     transaction::OrderRequest,
 };
 use serde::{Deserialize, Serialize};
@@ -59,7 +59,7 @@ impl Orderbook {
         }
     }
 
-    pub fn get_orderbook_snap(&self) -> OrderbookSnap {
+    pub fn get_orderbook_depth(&self) -> OrderbookDepth {
         let mut bids_map: HashMap<u64, u64> = HashMap::new();
         let mut asks_map: HashMap<u64, u64> = HashMap::new();
 
@@ -106,7 +106,7 @@ impl Orderbook {
         bids.sort_by(|a, b| a.price.partial_cmp(&b.price).unwrap());
         asks.sort_by(|a, b| a.price.partial_cmp(&b.price).unwrap());
 
-        OrderbookSnap { bids, asks }
+        OrderbookDepth { bids, asks }
     }
 
     pub fn process_order(&mut self, order: OrderRequest) -> OrderProcessingResult {

@@ -26,7 +26,7 @@ use gdex_types::{
     asset::{AssetId, AssetPairKey},
     crypto::ToFromBytes,
     error::GDEXError,
-    order_book::{OrderProcessingResult, OrderSide, OrderType, OrderbookSnap, Success},
+    order_book::{OrderProcessingResult, OrderSide, OrderType, OrderbookDepth, Success},
     transaction::{OrderRequest, Transaction, TransactionVariant},
 };
 
@@ -454,8 +454,8 @@ impl OrderbookInterface {
         Ok(())
     }
 
-    pub fn get_orderbook_snap(&self) -> OrderbookSnap {
-        self.orderbook.get_orderbook_snap()
+    pub fn get_orderbook_depth(&self) -> OrderbookDepth {
+        self.orderbook.get_orderbook_depth()
     }
 
     // TODO #2 //
@@ -565,27 +565,27 @@ impl Controller for SpotController {
 
 impl SpotController {
     // Gets the order book key for a pair of assets
-    fn _get_orderbook_key(&self, base_asset_id: AssetId, quote_asset_id: AssetId) -> AssetPairKey {
+    pub fn get_orderbook_key(&self, base_asset_id: AssetId, quote_asset_id: AssetId) -> AssetPairKey {
         format!("{}_{}", base_asset_id, quote_asset_id)
     }
 
     // check if the orderbook has been created
     pub fn check_orderbook_exists(&self, base_asset_id: AssetId, quote_asset_id: AssetId) -> bool {
-        let lookup_string = self._get_orderbook_key(base_asset_id, quote_asset_id);
+        let lookup_string = self.get_orderbook_key(base_asset_id, quote_asset_id);
         self.orderbooks.contains_key(&lookup_string)
     }
 
-    pub fn generate_orderbook_snaps(&self) -> HashMap<AssetPairKey, OrderbookSnap> {
-        let mut orderbook_snaps: HashMap<AssetPairKey, OrderbookSnap> = HashMap::new();
+    pub fn generate_orderbook_depths(&self) -> HashMap<AssetPairKey, OrderbookDepth> {
+        let mut orderbook_depths: HashMap<AssetPairKey, OrderbookDepth> = HashMap::new();
         for (asset_pair, orderbook) in &self.orderbooks {
-            orderbook_snaps.insert(asset_pair.clone(), orderbook.get_orderbook_snap());
+            orderbook_depths.insert(asset_pair.clone(), orderbook.get_orderbook_depth());
         }
 
-        orderbook_snaps
+        orderbook_depths
     }
 
     pub fn create_orderbook(&mut self, base_asset_id: AssetId, quote_asset_id: AssetId) -> Result<(), GDEXError> {
-        let lookup_string = self._get_orderbook_key(base_asset_id, quote_asset_id);
+        let lookup_string = self.get_orderbook_key(base_asset_id, quote_asset_id);
         if !self.check_orderbook_exists(base_asset_id, quote_asset_id) {
             self.orderbooks.insert(
                 lookup_string,
@@ -608,7 +608,7 @@ impl SpotController {
         base_asset_id: AssetId,
         quote_asset_id: AssetId,
     ) -> Result<&mut OrderbookInterface, GDEXError> {
-        let lookup_string = self._get_orderbook_key(base_asset_id, quote_asset_id);
+        let lookup_string = self.get_orderbook_key(base_asset_id, quote_asset_id);
         self.orderbooks.get_mut(&lookup_string).ok_or(GDEXError::AccountLookup)
     }
 
@@ -1264,7 +1264,7 @@ pub mod spot_tests {
         }
     }
     #[test]
-    fn get_orderbook_snap() {
+    fn get_orderbook_depth() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
 
         let mut bank_controller = BankController::default();
@@ -1302,6 +1302,6 @@ pub mod spot_tests {
             }
         }
 
-        let _orderbook_snap = orderbook_interface.get_orderbook_snap();
+        let _orderbook_depth = orderbook_interface.get_orderbook_depth();
     }
 }

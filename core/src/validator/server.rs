@@ -34,8 +34,8 @@ use tracing::{info, trace};
 
 // constants
 
-// frequency of orderbook snaps (rounds)
-const ORDERBOOK_SNAP_FREQUENCY: u64 = 10;
+// frequency of orderbook depth writes (rounds)
+const ORDERBOOK_DEPTH_FREQUENCY: u64 = 10;
 
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
@@ -180,17 +180,17 @@ impl ValidatorService {
 
                         // if next_transaction_index == 0 then the block is complete and we may write-out
                         if execution_indices.next_transaction_index == 0 {
-                            // write out orderbook snap every ORDERBOOK_SNAP_FREQUENCY
-                            if store.block_number.load(std::sync::atomic::Ordering::SeqCst) % ORDERBOOK_SNAP_FREQUENCY
+                            // write out orderbook depth every ORDERBOOK_DEPTH_FREQUENCY
+                            if store.block_number.load(std::sync::atomic::Ordering::SeqCst) % ORDERBOOK_DEPTH_FREQUENCY
                                 == 0
                             {
-                                let orderbook_snaps = validator_state
+                                let orderbook_depths = validator_state
                                     .master_controller
                                     .spot_controller
                                     .lock()
                                     .unwrap()
-                                    .generate_orderbook_snaps();
-                                store.write_latest_orderbook_snaps(orderbook_snaps).await;
+                                    .generate_orderbook_depths();
+                                store.write_latest_orderbook_depths(orderbook_depths).await;
                             }
 
                             // subtract round look-back from the latest round to get block number

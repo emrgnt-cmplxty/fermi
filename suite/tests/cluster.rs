@@ -17,10 +17,10 @@ pub mod cluster_test_suite {
         asset::PRIMARY_ASSET_ID,
         block::{Block, BlockDigest},
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
-        order_book::{Depth, OrderbookSnap},
+        order_book::{Depth, OrderbookDepth},
         proto::{
             RelayerClient, RelayerGetBlockRequest, RelayerGetLatestBlockInfoRequest,
-            RelayerGetLatestOrderbookSnapRequest,
+            RelayerGetLatestOrderbookDepthRequest,
         },
         transaction::{create_asset_creation_transaction, SignedTransaction},
     };
@@ -408,18 +408,18 @@ pub mod cluster_test_suite {
     }
 
     #[tokio::test]
-    pub async fn test_spawn_relayer_orderbook_snaps() {
+    pub async fn test_spawn_relayer_orderbook_depths() {
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         let spawner_1 = cluster.get_validator_spawner(1);
         let validator_state_1 = spawner_1.get_validator_state().unwrap();
 
-        // Write the orderbook snap down
+        // Write the orderbook depth down
         let base_asset_id: u64 = 1;
         let quote_asset_id: u64 = 2;
         let orderbook_key: String = format!("{}_{}", base_asset_id, quote_asset_id);
-        let mut orderbook_snaps: HashMap<String, OrderbookSnap> = HashMap::new();
+        let mut orderbook_depths: HashMap<String, OrderbookDepth> = HashMap::new();
         let mut bids: Vec<Depth> = Vec::new();
         let mut asks: Vec<Depth> = Vec::new();
         const TEST_MID: u64 = 10;
@@ -433,12 +433,12 @@ pub mod cluster_test_suite {
                 quantity: 10 * i,
             });
         }
-        let orderbook_snap = OrderbookSnap { bids, asks };
-        orderbook_snaps.insert(orderbook_key, orderbook_snap);
+        let orderbook_depth = OrderbookDepth { bids, asks };
+        orderbook_depths.insert(orderbook_key, orderbook_depth);
 
         validator_state_1
             .validator_store
-            .write_latest_orderbook_snaps(orderbook_snaps)
+            .write_latest_orderbook_depths(orderbook_depths)
             .await;
 
         // TODO clean
@@ -448,16 +448,16 @@ pub mod cluster_test_suite {
         let endpoint = target_endpoint.endpoint();
         let mut client = RelayerClient::connect(endpoint.clone()).await.unwrap();
 
-        let latest_orderbook_snap_request = tonic::Request::new(RelayerGetLatestOrderbookSnapRequest {
+        let latest_orderbook_depth_request = tonic::Request::new(RelayerGetLatestOrderbookDepthRequest {
             base_asset_id,
             quote_asset_id,
             depth: 5,
         });
 
         // Act
-        let latest_orderbook_snap_response = client.get_latest_orderbook_snap(latest_orderbook_snap_request).await;
+        let latest_orderbook_depth_response = client.get_latest_orderbook_depth(latest_orderbook_depth_request).await;
 
-        let latest_orderbook_snap_response_bids = latest_orderbook_snap_response.unwrap().into_inner().bids;
+        let latest_orderbook_depth_response_bids = latest_orderbook_depth_response.unwrap().into_inner().bids;
 
         // assert!(latest_block_info_response.unwrap().into_inner().successful)
     }

@@ -165,7 +165,7 @@ def remote(ctx, debug=False):
         'key_dir': "/.proto/",
         # the database dir will be whiped before running the benchmark
         'db_dir': "/.proto/db",
-        'do_orderbook': False
+        'do_orderbook': True
     }
 
     node_params = {

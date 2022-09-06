@@ -325,13 +325,22 @@ class Bench:
             validator_address = validator_dict['network_address']
             relayer_address = validator_dict['relayer_address']
             host = Committee.ip_from_multi_address(validator_address)
-            cmd = CommandMaker.run_gdex_client(
-                multiaddr_to_url_data(validator_address),
-                multiaddr_to_url_data(relayer_address),
-                self.remote_proto_dir + PathMaker.key_file(i),
-                rate_share,
-                [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
-            )
+            if self.bench_parameters.order_bench:
+                cmd = CommandMaker.run_gdex_orderbook_client(
+                    multiaddr_to_url_data(validator_address),
+                    multiaddr_to_url_data(relayer_address),
+                    self.remote_proto_dir + PathMaker.key_file(i),
+                    rate_share,
+                    [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
+                )
+            else:
+                cmd = CommandMaker.run_gdex_client(
+                    multiaddr_to_url_data(validator_address),
+                    multiaddr_to_url_data(relayer_address),
+                    self.remote_proto_dir + PathMaker.key_file(i),
+                    rate_share,
+                    [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
+                )
             log_file = PathMaker.client_log_file(i, 0)
             self._background_run(host, cmd, log_file)
 

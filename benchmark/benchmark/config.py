@@ -248,29 +248,15 @@ class BenchParameters:
             raise ConfigError('There should be more nodes than faults')
 
 
-class GDEXBenchParameters:
+class GDEXBenchParameters(BenchParameters):
     def __init__(self, json):
         try:
-            self.faults = int(json['faults'])
-            self.nodes = int(json['nodes'])
-            self.rate = json['rate']
+            super().__init__(json)
             self.genesis_dir = json['genesis_dir']
             self.key_dir = json['key_dir']
             self.db_dir = json['db_dir']
             self.duration = int(json['duration'])
             self.order_bench = bool(json['do_orderbook'])
-            self.workers = json['workers']
-
-            if 'mem_profiling' in json:
-                self.mem_profile = bool(json['mem_profiling'])
-            else:
-                self.mem_profile = False
-            
-            if 'flamegraph' in json:
-                self.flamegraph = json['flamegraph']
-            else:
-                self.flamegraph = None
-
         except KeyError as e:
             raise ConfigError(f'Malformed bench parameters: missing key {e}')
 

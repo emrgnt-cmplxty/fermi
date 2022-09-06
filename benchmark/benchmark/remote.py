@@ -14,7 +14,7 @@ import subprocess
 from benchmark.config import Committee, Key, NodeParameters, BenchParameters, ConfigError, GDEXBenchParameters
 from benchmark.utils import BenchError, Print, PathMaker, progress_bar, multiaddr_to_url_data
 from benchmark.commands import CommandMaker
-from benchmark.logs import LogParser, ParseError
+from benchmark.gdex_logs import LogParser, ParseError
 from benchmark.instance import InstanceManager
 
 class FabricError(Exception):
@@ -31,11 +31,14 @@ class ExecutionError(Exception):
 
 
 class Bench:
-    def __init__(self, ctx):
+    def __init__(self, ctx, bench_parameters, node_parameters, debug=False):
         self.manager = InstanceManager.make()
         self.settings = self.manager.settings
-        self.local_proto_dir = os.getcwd() + '/.proto/'
-        self.remote_proto_dir = self.settings.repo_name + "/.proto/"
+        self.bench_parameters = GDEXBenchParameters(bench_parameters)
+        self.node_parameters = NodeParameters(node_parameters)
+        self.debug = debug
+        self.local_proto_dir = os.getcwd() + self.bench_parameters.key_dir
+        self.remote_proto_dir = self.settings.repo_name + self.bench_parameters.key_dir
         try:
             ctx.connect_kwargs.pkey = RSAKey.from_private_key_file(
                 self.manager.settings.key_path
@@ -358,32 +361,22 @@ class Bench:
                     PathMaker.primary_log_file(i),
                     local=PathMaker.primary_log_file(i)
                 )
-                c.get(
-                    PathMaker.primary_log_file(i),
-                    local=PathMaker.worker_log_file(i, 0)
-                )
         # Parse logs and return the parser.
         Print.info('Parsing logs and computing performance...')
         return LogParser.process(PathMaker.logs_path(), faults=faults)
 
-    def run(self, bench_parameters_dict, node_parameters_dict, debug=False):
-        assert isinstance(debug, bool)
+    def run(self):
         Print.heading('Starting remote benchmark')
-        try:
-            bench_parameters = BenchParameters(bench_parameters_dict)
-            node_parameters = NodeParameters(node_parameters_dict)
-        except ConfigError as e:
-            raise BenchError('Invalid nodes or bench parameters', e)
 
         # Select which hosts to use.
-        selected_hosts = self._select_hosts(bench_parameters)
+        selected_hosts = self._select_hosts(self.bench_parameters)
         if not selected_hosts:
             Print.warn('There are not enough instances available')
             return
 
         # Update nodes.
         try:
-            self._update(selected_hosts, bench_parameters.collocate)
+            self._update(selected_hosts, self.bench_parameters.collocate)
         except (GroupException, ExecutionError) as e:
             e = FabricError(e) if isinstance(e, GroupException) else e
             raise BenchError('Failed to update nodes', e)
@@ -391,37 +384,37 @@ class Bench:
         # Upload all configuration files.
         try:
             committee = self._config(
-                selected_hosts, node_parameters, bench_parameters
+                selected_hosts, self.node_parameters, self.bench_parameters
             )
         except (subprocess.SubprocessError, GroupException) as e:
             e = FabricError(e) if isinstance(e, GroupException) else e
             raise BenchError('Failed to configure nodes', e)
 
         # Run benchmarks.
-        for n in bench_parameters.nodes:
+        for n in self.bench_parameters.nodes:
             committee_copy = deepcopy(committee)
             committee_copy.remove_nodes(committee.size() - n)
 
-            for r in bench_parameters.rate:
+            for r in self.bench_parameters.rate:
                 Print.heading(f'\nRunning {n} nodes (input rate: {r:,} tx/s)')
 
                 # Run the benchmark.
-                for i in range(bench_parameters.runs):
-                    Print.heading(f'Run {i+1}/{bench_parameters.runs}')
+                for i in range(self.bench_parameters.runs):
+                    Print.heading(f'Run {i+1}/{self.bench_parameters.runs}')
                     try:
                         self._run_single(
-                            r, committee_copy, bench_parameters
+                            r, committee_copy, self.bench_parameters
                         )
 
-                        faults = bench_parameters.faults
+                        faults = self.bench_parameters.faults
                         logger = self._logs(committee_copy, faults)
                         logger.print(PathMaker.result_file(
                             faults,
                             n,
-                            bench_parameters.workers,
-                            bench_parameters.collocate,
+                            self.bench_parameters.workers,
+                            self.bench_parameters.collocate,
                             r,
-                            bench_parameters.tx_size,
+                            self.bench_parameters.tx_size,
                         ))
                     except (subprocess.SubprocessError, GroupException, ParseError) as e:
                         self.kill(hosts=selected_hosts)

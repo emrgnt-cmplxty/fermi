@@ -19,6 +19,7 @@ def gdex(ctx, debug=True):
         'workers': 2,
         'nodes': 2,
         'rate': 50_000,
+        'tx_size': 280,
         'duration': 20,
         'mem_profiling': False,
         'flamegraph': None, # node or None
@@ -160,8 +161,8 @@ def remote(ctx, debug=False):
         'rate': 50_000,
         'duration': 20,
         'mem_profiling': False,
-        'genesis_dir': "../.proto/",
-        'key_dir': "../.proto/",
+        'genesis_dir': "/.proto/",
+        'key_dir': "/.proto/",
         # the database dir will be whiped before running the benchmark
         'db_dir': "."
     }
@@ -193,7 +194,7 @@ def remote(ctx, debug=False):
     }
 
     try:
-        Bench(ctx).run(bench_params, node_params, debug)
+        Bench(ctx, bench_params, node_params, debug).run()
     except BenchError as e:
         Print.error(e)
 

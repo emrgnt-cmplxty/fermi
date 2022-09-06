@@ -12,19 +12,15 @@ from benchmark.gdex_logs import LogParser, ParseError
 from benchmark.utils import Print, BenchError, PathMaker
 
 from benchmark.config import Committee
-from benchmark.utils import multiaddr_to_url_data
+from benchmark.utils import multiaddr_to_url_data, url_to_multiaddr
 
-
-def url_to_multiaddr(url):
-    assert isinstance(url, str)
-    return '/dns/localhost/tcp/%s/http' % (url.split(':')[-1])
 
 class GDEXBench:
     BASE_PORT = 3000
 
-    def __init__(self, bench_parameters_dict):
+    def __init__(self, bench_parameters):
         try:
-            self.bench_parameters = GDEXBenchParameters(bench_parameters_dict)
+            self.bench_parameters = GDEXBenchParameters(bench_parameters)
         except ConfigError as e:
             raise BenchError('Invalid nodes or bench parameters', e)
 
@@ -52,7 +48,6 @@ class GDEXBench:
 
         try:
             Print.info('Setting up testbed...')
-            nodes, rate = self.nodes, self.rate
 
             # Cleanup all files.
             cmd = f'{CommandMaker.clean_logs()} ;'
@@ -81,7 +76,7 @@ class GDEXBench:
             subprocess.run([cmd], shell=True)
             # Generate configuration files.
             keys = []
-            key_files = [PathMaker.key_file(i) for i in range(self.bench_parameters.nodes)]
+            key_files = [PathMaker.key_file(i) for i in range(self.bench_parameters.nodes.pop())]
 
             for filename in key_files:
                 sleep(2)
@@ -137,9 +132,9 @@ class GDEXBench:
             subprocess.run([cmd], shell=True)
 
             # Run the primaries
-            # currently hard-coded for a single worker, for n-workers denom = n*len(nodes.keys())
-            Print.info('Booting nodes...')
-            rate_share = ceil(rate / committee.workers())
+            Print.info('Booting clients...')
+            breakpoint()
+            rate_share = ceil(self.rate.pop() / committee.workers())
             for i, name in enumerate(committee.json['authorities'].keys()):
                 validator_dict = committee.json['authorities'][name]
                 validator_address = validator_dict['network_address']

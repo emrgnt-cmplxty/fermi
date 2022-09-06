@@ -44,3 +44,4 @@ proto/*
 /gdex-core.iml
 /.proto/committee/
 /.proto/signatures/
+/.proto/*.json

@@ -103,10 +103,6 @@ message RelayerMetricsRequest {}
 
 // Response message containing latest metrics
 message RelayerMetricsResponse {
-    uint64 num_transactions_rec = 1;
-    uint64 num_transactions_failed = 2;
-    uint64 num_transactions_consensus = 3;
-    uint64 num_transactions_consensus_failed = 4;
-    uint64 average_latency = 5;
-    double average_tps = 6;
+    uint64 average_latency = 1;
+    double average_tps = 2;
 }

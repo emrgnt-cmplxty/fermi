@@ -13,12 +13,9 @@ use sha3::Sha3_256;
 use sui_types::sui_serde::{Hex, Readable};
 
 // declare public traits for external consumption
-pub use narwhal_crypto::traits::Error;
-pub use narwhal_crypto::traits::VerifyingKey;
-pub use signature::Signer;
-pub use signature::Verifier;
-pub use sui_types::crypto::KeypairTraits;
-pub use sui_types::crypto::ToFromBytes;
+pub use fastcrypto::traits::{Error, VerifyingKey};
+pub use signature::{Signer, Verifier};
+pub use sui_types::crypto::{KeypairTraits, ToFromBytes};
 
 /// The number of bytes in an address.
 /// Default to 16 bytes, can be set to 20 bytes with address20 feature.
@@ -115,9 +112,8 @@ impl From<&ValidatorPubKeyBytes> for GDEXAddress {
 }
 
 /// This function is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-types/src/crypto.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
-// TODO: get_key_pair() and get_key_pair_from_bytes() should return KeyPair only.
-// TODO: rename to random_key_pair
-pub fn get_key_pair<KP: KeypairTraits>() -> (GDEXAddress, KP)
+// TODO: get_random_key_pair() and get_key_pair_from_bytes() should return KeyPair only.
+pub fn get_random_key_pair<KP: KeypairTraits>() -> KP
 where
     <KP as KeypairTraits>::PubKey: GDEXPublicKey,
 {
@@ -126,13 +122,12 @@ where
 
 /// This function is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-types/src/crypto.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 /// Generate a keypair from the specified RNG (useful for testing with seedable rngs).
-pub fn get_key_pair_from_rng<KP: KeypairTraits, R>(csprng: &mut R) -> (GDEXAddress, KP)
+pub fn get_key_pair_from_rng<KP: KeypairTraits, R>(csprng: &mut R) -> KP
 where
     R: rand::CryptoRng + rand::RngCore,
     <KP as KeypairTraits>::PubKey: GDEXPublicKey,
 {
-    let kp = KP::generate(csprng);
-    (kp.public().into(), kp)
+    KP::generate(csprng)
 }
 
 /// Begin the testing suite for serialization
@@ -143,13 +138,15 @@ pub mod crypto_tests {
 
     #[test]
     pub fn get_keypairs() {
-        let _key1: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
-        let (_, _key2): (_, ValidatorKeyPair) = get_key_pair();
+        let _key1: ValidatorKeyPair =
+            get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
+        let _key2: ValidatorKeyPair = get_random_key_pair();
     }
 
     #[test]
     pub fn to_and_from_bytes() {
-        let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let key: ValidatorKeyPair =
+            get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         let gdex_addr = GDEXAddress::from(key.public());
         let key_bytes = gdex_addr.as_ref();
         let gdex_addr_from_bytes: GDEXAddress = GDEXAddress::try_from(key_bytes).unwrap();

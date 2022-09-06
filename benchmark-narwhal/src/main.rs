@@ -5,9 +5,11 @@
 
 use arc_swap::ArcSwap;
 use clap::{crate_name, crate_version, App, AppSettings, ArgMatches, SubCommand};
-use eyre::{eyre, Context};
+use eyre::Context;
+use fastcrypto::{generate_production_keypair, traits::KeyPair as _};
+use futures::future::join_all;
 use narwhal_config::{Committee, Import, Parameters, WorkerId};
-use narwhal_crypto::{generate_production_keypair, traits::KeyPair as _, KeyPair};
+use narwhal_crypto::KeyPair;
 use narwhal_executor::{SerializedTransaction, SubscriberResult};
 use narwhal_node::{
     //execution_state::SimpleExecutionState,
@@ -163,7 +165,7 @@ async fn run(matches: &ArgMatches<'_>) -> Result<(), eyre::Report> {
     debug!("input consenus parameters={:?}", parameters.clone());
 
     // Check whether to run a primary, a worker, or an entire authority.
-    let task_manager = match matches.subcommand() {
+    let handle = match matches.subcommand() {
         // Spawn the primary and consensus core.
         ("primary", Some(sub_matches)) => {
             registry = primary_metrics_registry(keypair.public().clone());
@@ -225,16 +227,11 @@ async fn run(matches: &ArgMatches<'_>) -> Result<(), eyre::Report> {
 
     // Analyze the consensus' output.
     analyze(rx_transaction_confirmation).await;
-
-    // Await on the completion handles of all the nodes we have launched
-    // Await on the completion handles of all the nodes we have launched
-    task_manager.await.map_err(|err| match err {
-        task_group::RuntimeError::Panic { name: n, panic: p } => eyre!("{} paniced: {:?}", n, p),
-        task_group::RuntimeError::Application { name: n, error: e } => {
-            eyre!("{} error: {:?}", n, e)
-        }
-    })
+    // Await execution of the primary
+    join_all(handle);
     // If this expression is reached, the program ends and all other tasks terminate.
+    Ok(())
+
 }
 
 /// Receives an ordered list of certificates and apply any application-specific logic.

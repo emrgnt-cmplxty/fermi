@@ -111,7 +111,6 @@ impl Committee {
 
     pub fn public_key(&self, validator: &ValidatorName) -> GDEXResult<ValidatorPubKey> {
         match self.expanded_keys.get(validator) {
-            // TODO: Check if this is unnecessary copying.
             Some(v) => Ok(v.clone()),
             None => (*validator)
                 .try_into()
@@ -252,7 +251,7 @@ impl PartialEq for Committee {
 mod test {
     use super::*;
     use crate::account::ValidatorKeyPair;
-    use crate::crypto::{get_key_pair, KeypairTraits};
+    use crate::crypto::{get_random_key_pair, KeypairTraits};
 
     #[test]
     #[should_panic]
@@ -265,7 +264,7 @@ mod test {
     #[should_panic]
     fn unstaked_committee() {
         let mut authorities = BTreeMap::new();
-        let (_, sec1): (_, ValidatorKeyPair) = get_key_pair();
+        let sec1: ValidatorKeyPair = get_random_key_pair();
         let a1: ValidatorName = sec1.public().into();
         authorities.insert(a1, 0);
 
@@ -275,7 +274,7 @@ mod test {
     #[test]
     fn single_committee_workflow() {
         let mut authorities = BTreeMap::new();
-        let (_, sec1): (_, ValidatorKeyPair) = get_key_pair();
+        let sec1: ValidatorKeyPair = get_random_key_pair();
         let a1: ValidatorName = sec1.public().into();
         authorities.insert(a1, 1);
 
@@ -319,7 +318,7 @@ mod test {
 
         // check validator exists workflow
         assert!(committee.validator_exists(&a1));
-        let (_, sec2): (_, ValidatorKeyPair) = get_key_pair();
+        let sec2: ValidatorKeyPair = get_random_key_pair();
         let a2: ValidatorName = sec2.public().into();
 
         assert!(!committee.validator_exists(&a2));
@@ -331,9 +330,9 @@ mod test {
 
     #[test]
     fn test_shuffle_by_weight() {
-        let (_, sec1): (_, ValidatorKeyPair) = get_key_pair();
-        let (_, sec2): (_, ValidatorKeyPair) = get_key_pair();
-        let (_, sec3): (_, ValidatorKeyPair) = get_key_pair();
+        let sec1: ValidatorKeyPair = get_random_key_pair();
+        let sec2: ValidatorKeyPair = get_random_key_pair();
+        let sec3: ValidatorKeyPair = get_random_key_pair();
         let a1: ValidatorName = sec1.public().into();
         let a2: ValidatorName = sec2.public().into();
         let a3: ValidatorName = sec3.public().into();
@@ -374,10 +373,10 @@ mod test {
 
     #[test]
     fn test_robust_value() {
-        let (_, sec1): (_, ValidatorKeyPair) = get_key_pair();
-        let (_, sec2): (_, ValidatorKeyPair) = get_key_pair();
-        let (_, sec3): (_, ValidatorKeyPair) = get_key_pair();
-        let (_, sec4): (_, ValidatorKeyPair) = get_key_pair();
+        let sec1: ValidatorKeyPair = get_random_key_pair();
+        let sec2: ValidatorKeyPair = get_random_key_pair();
+        let sec3: ValidatorKeyPair = get_random_key_pair();
+        let sec4: ValidatorKeyPair = get_random_key_pair();
         let a1: ValidatorName = sec1.public().into();
         let a2: ValidatorName = sec2.public().into();
         let a3: ValidatorName = sec3.public().into();

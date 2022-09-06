@@ -9,7 +9,7 @@ use gdex_types::{
     account::AccountKeyPair,
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
 };
-use narwhal_crypto::{
+use fastcrypto::{
     traits::{KeyPair, Signer},
     Hash, DIGEST_LEN,
 };

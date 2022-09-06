@@ -6,6 +6,7 @@ use super::genesis_state::ValidatorGenesisState;
 use crate::validator::metrics::ValidatorMetrics;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
+use fastcrypto::Hash;
 use gdex_controller::master::MasterController;
 use gdex_types::transaction::Transaction;
 use gdex_types::{
@@ -21,7 +22,6 @@ use mysten_store::{
     Map, Store,
 };
 use narwhal_consensus::ConsensusOutput;
-use narwhal_crypto::Hash;
 use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
 use narwhal_types::CertificateDigest;
 
@@ -305,6 +305,10 @@ impl ExecutionState for ValidatorState {
     async fn load_execution_indices(&self) -> Result<ExecutionIndices, Self::Error> {
         Ok(ExecutionIndices::default())
     }
+
+    fn deserialize(bytes: &[u8]) -> Result<Self::Transaction, bincode::Error> {
+        bincode::deserialize(bytes)
+    }
 }
 
 #[cfg(test)]
@@ -314,6 +318,7 @@ mod test_validator_state {
         builder::genesis_state::GenesisStateBuilder,
         genesis_ceremony::{VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
     };
+    use fastcrypto::{generate_production_keypair, DIGEST_LEN};
     use gdex_types::{
         account::ValidatorPubKeyBytes,
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
@@ -327,7 +332,7 @@ mod test_validator_state {
         utils,
     };
     use narwhal_consensus::ConsensusOutput;
-    use narwhal_crypto::{generate_production_keypair, Hash, KeyPair, DIGEST_LEN};
+    use narwhal_crypto::KeyPair;
     use narwhal_executor::ExecutionIndices;
     use narwhal_types::{Certificate, Header};
 
@@ -337,7 +342,8 @@ mod test_validator_state {
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 
-        let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let key: ValidatorKeyPair =
+            get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         let public_key = ValidatorPubKeyBytes::from(key.public());
         let secret = Arc::pin(key);
 
@@ -374,7 +380,8 @@ mod test_validator_state {
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 
-        let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let key: ValidatorKeyPair =
+            get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         let public_key = ValidatorPubKeyBytes::from(key.public());
         let secret = Arc::pin(key);
 

@@ -3,7 +3,7 @@
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-core/src/authority.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bcuse super::state::ValidatorState;
 use gdex_types::block::{Block, BlockInfo};
-use prometheus::{register_int_counter_with_registry, IntCounter, Registry};
+use prometheus::{register_int_counter_with_registry, register_histogram_with_registry, Histogram, IntCounter, Registry};
 use ringbuffer::{AllocRingBuffer, RingBufferExt, RingBufferWrite};
 use std::sync::{Arc, Mutex};
 
@@ -24,6 +24,10 @@ pub struct ValidatorMetricsAndHealth {
     pub num_transactions_consensus: IntCounter,
     /// The number of transactions submitted from consensus that failed state execution
     pub num_transactions_consensus_failed: IntCounter,
+    /// The block latency in miliseconds
+    pub block_latency_ms: Histogram,
+    /// The transactions per second of the cluster
+    pub cluster_tps: Histogram,
     /// Facilitators in calculating recent TPS and latency
     tps_ring_buffer: Arc<Mutex<AllocRingBuffer<(ClusterTPS, BlockLatencyInMilis)>>>,
     prev_block_info: Arc<Mutex<BlockInfo>>,
@@ -56,6 +60,18 @@ impl ValidatorMetricsAndHealth {
                 registry
             )
             .unwrap(),
+            block_latency_ms: register_histogram_with_registry!(
+                "block_latency_ms",
+                "The latency between blocks in miliseconds",
+                registry,
+            )
+            .unwrap(),
+            cluster_tps: register_histogram_with_registry!(
+                "cluster_tps",
+                "The transactions per second of the cluster",
+                registry,
+            )
+            .unwrap(),
             tps_ring_buffer: Arc::new(Mutex::new(AllocRingBuffer::with_capacity(TPS_CAPACITY))),
             prev_block_info: Arc::new(Mutex::new(BlockInfo::default())),
         }
@@ -67,10 +83,13 @@ impl ValidatorMetricsAndHealth {
         // Check that default block info is not stored in prev_block_info
         if prev_block_info.validator_system_epoch_time_in_ms != 0 {
             let num_transactions = block.transactions.len();
-            let time_delta =
+            let time_delta_in_ms =
                 block_info.validator_system_epoch_time_in_ms - prev_block_info.validator_system_epoch_time_in_ms;
-            let calculated_tps = num_transactions as f64 / (time_delta as f64 / 1000.0);
-            self.tps_ring_buffer.lock().unwrap().push((calculated_tps, time_delta));
+            let calculated_tps = num_transactions as f64 / (time_delta_in_ms as f64 / 1000.0);
+            self.tps_ring_buffer.lock().unwrap().push((calculated_tps, time_delta_in_ms));
+
+            self.block_latency_ms.observe(time_delta_in_ms as f64);
+            self.cluster_tps.observe(calculated_tps);
         }
 
         *prev_block_info = block_info;

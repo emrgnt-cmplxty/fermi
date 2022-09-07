@@ -245,7 +245,7 @@ impl ValidatorService {
             state.metrics.num_transactions_rec_failed.inc();
             cfg_if::cfg_if! {
                 if #[cfg(feature = "benchmark")] {
-                    debug!("A submitted transaction digest was invalid");
+                    trace!("A submitted transaction digest was invalid");
                 } else {
                     return Err(tonic::Status::internal("Invalid recent certificate digest"));
                 }
@@ -262,7 +262,7 @@ impl ValidatorService {
             // TODO - make sure benchmark flag is removed from node Cargo.toml in the future
             cfg_if::cfg_if! {
                 if #[cfg(feature = "benchmark")] {
-                    debug!("Duplicate transaction id = {}", digest);
+                    trace!("Duplicate transaction id = {}", digest);
                 } else {
                     return Err(tonic::Status::internal("Duplicate transaction ".to_owned() + &digest));
                 }

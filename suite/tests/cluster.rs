@@ -441,24 +441,46 @@ pub mod cluster_test_suite {
             .write_latest_orderbook_depths(orderbook_depths)
             .await;
 
-        // TODO clean
 
         let relayer_1 = cluster.spawn_single_relayer(1).await;
         let target_endpoint = endpoint_from_multiaddr(&relayer_1.get_relayer_address()).unwrap();
         let endpoint = target_endpoint.endpoint();
         let mut client = RelayerClient::connect(endpoint.clone()).await.unwrap();
 
+
+        // generate successful orderbook depth request
         let latest_orderbook_depth_request = tonic::Request::new(RelayerGetLatestOrderbookDepthRequest {
             base_asset_id,
             quote_asset_id,
             depth: 5,
         });
-
-        // Act
         let latest_orderbook_depth_response = client.get_latest_orderbook_depth(latest_orderbook_depth_request).await;
+        let _latest_orderbook_depth_response_bids = latest_orderbook_depth_response.unwrap().into_inner().bids;
 
-        let latest_orderbook_depth_response_bids = latest_orderbook_depth_response.unwrap().into_inner().bids;
+        // TODO: check the bids
 
-        // assert!(latest_block_info_response.unwrap().into_inner().successful)
+        // generate failed depth request
+        let bad_base_asset_id = 2;
+        let bad_quote_asset_id = 3;
+        let bad_latest_orderbook_depth_request = tonic::Request::new(RelayerGetLatestOrderbookDepthRequest {
+            base_asset_id: bad_base_asset_id,
+            quote_asset_id: bad_quote_asset_id,
+            depth: 5,
+        });
+        let bad_latest_orderbook_depth_response = client.get_latest_orderbook_depth(bad_latest_orderbook_depth_request).await;
+        assert!(
+            bad_latest_orderbook_depth_response.is_err(),
+            "This request must fail as base and quote assets do not exist."
+        );
+        if let Err(err) = bad_latest_orderbook_depth_response {
+            assert_eq!(
+                err.message(),
+                "Orderbook depth was not found."
+            );
+            assert_eq!(
+                tonic::Code::NotFound,
+                err.code()
+            );
+        }
     }
 }

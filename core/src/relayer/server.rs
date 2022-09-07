@@ -1,5 +1,6 @@
 use crate::validator::state::ValidatorState;
 use gdex_types::proto::*;
+use mysten_store::rocks::TypedStoreError;
 use narwhal_types::CertificateDigestProto;
 
 use std::sync::Arc;
@@ -120,7 +121,12 @@ impl Relayer for RelayerService {
         let depth = req.depth;
         let base_asset_id = req.base_asset_id;
         let quote_asset_id = req.quote_asset_id;
-        let orderbook_depth_key = validator_state.master_controller.spot_controller.lock().unwrap().get_orderbook_key(base_asset_id, quote_asset_id);
+        let orderbook_depth_key = validator_state
+            .master_controller
+            .spot_controller
+            .lock()
+            .unwrap()
+            .get_orderbook_key(base_asset_id, quote_asset_id);
 
         let returned_value = validator_state
             .validator_store
@@ -159,17 +165,11 @@ impl Relayer for RelayerService {
                     }
                     return Ok(Response::new(RelayerLatestOrderbookDepthResponse { bids, asks }));
                 } else {
-                    let bids: Vec<Depth> = Vec::new();
-                    let asks: Vec<Depth> = Vec::new();
-                    return Ok(Response::new(RelayerLatestOrderbookDepthResponse { bids, asks }));
+                    Err(Status::not_found("Orderbook depth was not found."))
                 }
             }
-            // TODO propagate error message to client
-            Err(_) => {
-                let bids: Vec<Depth> = Vec::new();
-                let asks: Vec<Depth> = Vec::new();
-                return Ok(Response::new(RelayerLatestOrderbookDepthResponse { bids, asks }));
-            }
+            // Propogate a tonic error to client
+            Err(err) => Err(Status::unknown(err.to_string()))
         }
     }
 }

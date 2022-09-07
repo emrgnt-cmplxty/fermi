@@ -296,7 +296,6 @@ impl OrderbookInterface {
                     ..
                 }) => {
                     let existing_pub_key = self.get_pub_key_from_order(order_id);
-                    dbg!(*previous_price, *previous_quantity, *price, *quantity);
                     self.update_balances_on_update(
                         &existing_pub_key,
                         *side,
@@ -410,7 +409,6 @@ impl OrderbookInterface {
         } else {
             // E.g. fill bid 1 BTC @ 20k adds 1 BTC (base) to bal, subtracts 20k USD (quote) from escrow
             if quantity * price > previous_quantity * previous_price {
-                dbg!(quantity * price - previous_quantity * previous_price);
                 self.bank_controller.lock().unwrap().transfer(
                     account_pub_key,
                     &self.controller_account,

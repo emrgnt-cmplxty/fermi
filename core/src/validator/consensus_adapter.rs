@@ -5,12 +5,16 @@ use crate::client;
 use multiaddr::Multiaddr;
 use narwhal_config::Committee as ConsensusCommittee;
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
-use std::sync::{Arc, atomic::{AtomicU64, Ordering}};
+use std::sync::{
+    atomic::{AtomicU64, Ordering},
+    Arc,
+};
 use tokio::sync::mpsc::Sender;
 use tokio::sync::Mutex;
 
 /// Default transaction rate at which to rotate target worker
 const TRANSACTIONS_PER_WORKER: usize = 1;
+const CLIENTS_PER_WORKER: usize = 4;
 
 /// Submit transactions to the Narwhal consensus.
 pub struct ConsensusAdapter {
@@ -32,13 +36,19 @@ impl ConsensusAdapter {
         _transactions_per_rotation: Option<usize>,
         _tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
     ) -> Self {
-        let consensus_clients = consensus_addresses
-            .iter()
-            .map(|addr| {
-                let client = client::connect_lazy(addr).unwrap();
-                Mutex::new(narwhal_types::TransactionsClient::new(client))
-            })
-            .collect();
+        let mut consensus_clients: Vec<Mutex<narwhal_types::TransactionsClient<tonic::transport::Channel>>> =
+            Vec::new();
+        for _i in 0..CLIENTS_PER_WORKER {
+            let iter_clients: Vec<Mutex<narwhal_types::TransactionsClient<tonic::transport::Channel>>> =
+                consensus_addresses
+                    .iter()
+                    .map(|addr| {
+                        let client = client::connect_lazy(addr).unwrap();
+                        Mutex::new(narwhal_types::TransactionsClient::new(client))
+                    })
+                    .collect();
+            consensus_clients.extend(iter_clients);
+        }
 
         Self {
             consensus_clients,

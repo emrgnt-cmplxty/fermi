@@ -173,6 +173,9 @@ class AddressError(multiaddr.exceptions.Error):
         multiaddr.exceptions.Error.__init__(
             self, "Unsupported Multiaddr pattern: {0!r}".format(addr))
 
+def url_to_multiaddr(url):
+    assert isinstance(url, str)
+    return '/dns/localhost/tcp/%s/http' % (url.split(':')[-1])
 
 def multiaddr_to_url_data(addr: str):  # noqa: C901
     try:

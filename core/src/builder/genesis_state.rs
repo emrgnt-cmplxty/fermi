@@ -6,7 +6,8 @@ use crate::validator::genesis_state::ValidatorGenesisState;
 use anyhow::{bail, Result};
 use camino::Utf8Path;
 use gdex_controller::master::MasterController;
-use gdex_types::{account::ValidatorPubKeyBytes, node::ValidatorInfo, utils};
+use gdex_types::utils::encode_bytes_hex;
+use gdex_types::{account::ValidatorPubKeyBytes, node::ValidatorInfo};
 use std::{
     collections::BTreeMap,
     convert::TryInto,
@@ -104,8 +105,8 @@ impl GenesisStateBuilder {
 
         for (_pubkey, validator) in self.validators {
             let validator_info_bytes = serde_yaml::to_vec(&validator)?;
-            let hex_name = utils::encode_bytes_hex(&validator.public_key());
-            fs::write(committee_dir.join(hex_name), validator_info_bytes)?;
+            let hex_name = encode_bytes_hex(validator.public_key());
+            fs::write(committee_dir.join(hex_name.as_str()), validator_info_bytes)?;
         }
 
         Ok(())

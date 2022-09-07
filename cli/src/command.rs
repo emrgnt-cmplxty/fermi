@@ -64,8 +64,6 @@ pub enum GDEXCommand {
         balance: u64,
         #[clap(value_parser, long, help = "Validator keystore path")]
         key_file: PathBuf,
-        #[clap(value_parser, long, help = "Network address")]
-        network_address: Option<Multiaddr>,
         #[clap(value_parser, long, help = "Narwhal primary to primary port")]
         narwhal_primary_to_primary: Option<Multiaddr>,
         #[clap(value_parser, long, help = "Network worker to primary")]
@@ -185,7 +183,6 @@ impl GDEXCommand {
                 stake,
                 balance,
                 key_file,
-                network_address,
                 narwhal_primary_to_primary,
                 narwhal_worker_to_primary,
                 narwhal_primary_to_worker,
@@ -199,7 +196,6 @@ impl GDEXCommand {
                         key_file,
                         stake,
                         balance,
-                        network_address: network_address.unwrap_or_else(|| utils::new_network_address()),
                         narwhal_primary_to_primary: narwhal_primary_to_primary
                             .unwrap_or_else(|| utils::new_network_address()),
                         narwhal_worker_to_primary: narwhal_worker_to_primary

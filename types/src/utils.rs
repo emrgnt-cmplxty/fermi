@@ -3,6 +3,8 @@
 //! SPDX-License-Identifier: Apache-2.0
 use crate::crypto::KeypairTraits;
 use anyhow::anyhow;
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 use std::net::{TcpListener, TcpStream};
 
 /// This class is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/utils.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
@@ -61,14 +63,19 @@ pub fn decode_bytes_hex<T: for<'a> TryFrom<&'a [u8]>>(s: &str) -> Result<T, anyh
 }
 
 /// This function is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui/src/keytool.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
-pub fn read_keypair_from_file<K: KeypairTraits, P: AsRef<std::path::Path>>(path: P) -> anyhow::Result<K> {
+pub fn read_keypair_from_file<K: KeypairTraits + DeserializeOwned, P: AsRef<std::path::Path>>(
+    path: P,
+) -> anyhow::Result<K> {
     let contents = std::fs::read_to_string(path)?;
-    K::decode_base64(contents.as_str().trim()).map_err(|e| anyhow!(e))
+    serde_json::from_str(contents.as_str().trim()).map_err(|e| anyhow!(e))
 }
 
 /// This function is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui/src/keytool.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
-pub fn write_keypair_to_file<K: KeypairTraits, P: AsRef<std::path::Path>>(keypair: &K, path: P) -> anyhow::Result<()> {
-    let contents = keypair.encode_base64();
+pub fn write_keypair_to_file<K: KeypairTraits + Serialize, P: AsRef<std::path::Path>>(
+    keypair: &K,
+    path: P,
+) -> anyhow::Result<()> {
+    let contents = serde_json::to_string_pretty(keypair)?;
     std::fs::write(path, contents)?;
     Ok(())
 }

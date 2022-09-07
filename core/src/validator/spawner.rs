@@ -28,6 +28,8 @@ use tracing::info;
 use narwhal_config::{Committee as ConsensusCommittee, Parameters as ConsensusParameters};
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
 
+use super::consensus_adapter::ConsensusAdapter;
+
 // INTERFACE
 
 // TODO lets clean up these comments
@@ -51,6 +53,7 @@ pub struct ValidatorSpawner {
 
     /// Validator state passed to the instances spawned
     validator_state: Option<Arc<ValidatorState>>,
+    consensus_adapter: Option<Arc<ConsensusAdapter>>,
 
     /// Begin objects initialized after calling spawn_validator_service
 
@@ -79,7 +82,7 @@ impl ValidatorSpawner {
             .filter(|v| v.name == validator_name)
             .collect::<Vec<&ValidatorInfo>>()
             .pop()
-            .expect("Could not locate validator")
+            .expect("Could not locate validator {validator_name}")
             .clone();
         Self {
             db_path,
@@ -88,6 +91,7 @@ impl ValidatorSpawner {
             validator_info,
             validator_address,
             validator_state: None,
+            consensus_adapter: None,
             tx_reconfigure_consensus: None,
             service_handles: None,
             server_handles: None,
@@ -106,6 +110,14 @@ impl ValidatorSpawner {
     pub fn get_validator_state(&self) -> Option<Arc<ValidatorState>> {
         if self.validator_state.is_some() {
             Some(Arc::clone(self.validator_state.as_ref().unwrap()))
+        } else {
+            None
+        }
+    }
+
+    pub fn get_consensus_adapter(&self) -> Option<Arc<ConsensusAdapter>> {
+        if self.consensus_adapter.is_some() {
+            Some(Arc::clone(self.consensus_adapter.as_ref().unwrap()))
         } else {
             None
         }
@@ -136,6 +148,10 @@ impl ValidatorSpawner {
         self.validator_state = Some(validator_state)
     }
 
+    fn set_consensus_adapter(&mut self, consensus_adapter: Arc<ConsensusAdapter>) {
+        self.consensus_adapter = Some(consensus_adapter)
+    }
+
     /// Internal helper function used to spawns the validator service
     /// note, this function will fail if called twice from the same spawner
     async fn spawn_validator_service(
@@ -147,13 +163,12 @@ impl ValidatorSpawner {
         };
 
         // create config directory
-        let network_address = self.validator_info.network_address.clone();
         let consensus_addresses = self.validator_info.narwhal_consensus_addresses.clone();
         let pubilc_key = self.validator_info.public_key();
 
         // TODO - can we avoid consuming the private key twice in the network setup?
         // Note, this awkwardness is due to my inferred understanding of Arc pin.
-        let key_file = self.key_path.join(format!("{}.key", self.validator_info.name));
+        let key_file = &self.key_path;
         let consensus_db_path = self
             .db_path
             .join(format!("{}-{}", self.validator_info.name, CONSENSUS_DB_NAME));
@@ -185,7 +200,6 @@ impl ValidatorSpawner {
             key_pair,
             consensus_db_path,
             gdex_db_path: gdex_db_path.clone(),
-            network_address,
             metrics_address: utils::available_local_socket_address(),
             admin_interface_port: utils::get_available_port(),
             json_rpc_address: utils::available_local_socket_address(),
@@ -238,6 +252,7 @@ impl ValidatorSpawner {
         );
 
         let validator_server_handle = validator_server.spawn().await.unwrap();
+        self.set_consensus_adapter(validator_server_handle.get_adapter());
 
         self.server_handles = Some(vec![validator_server_handle.get_handle()]);
     }

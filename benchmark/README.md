@@ -152,6 +152,13 @@ Then follow the instructions for [Amazon EC2 key pairs and Linux instances](http
 
 This operation is manual (AWS exposes APIs to manipulate keys) and needs to be repeated for each AWS region that you plan to use. Upon importing your key, AWS requires you to choose a 'name' for your key; ensure you set the same name on all AWS regions. This SSH key will be used by the Python scripts to execute commands and upload/download files to your AWS instances.
 
+To successfully clone gdex-core, which is private, you first need to add the same SSH key to your github account, so that you can clone via SSH.
+
+Then locally, add your key to ssh agent to enable port forwarding:
+```
+$ ssh-add /absolute/key/path
+```
+
 
 ### Step 3. Configure the testbed
 The file [settings.json](https://github.com/mystenlabs/narwhal/blob/main/benchmark/settings.json) (located in [narwhal/benchmarks](https://github.com/mystenlabs/narwhal/blob/main/benchmark)) contains all the configuration parameters of the testbed to deploy. Its content looks as follows:

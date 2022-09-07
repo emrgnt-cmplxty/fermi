@@ -39,7 +39,6 @@ async fn create_genesis_state(dir: &Path, validator_count: usize) -> ValidatorGe
                 stake: VALIDATOR_FUNDING_AMOUNT,
                 balance: VALIDATOR_BALANCE,
                 delegation: 0,
-                network_address: utils::new_network_address(),
                 narwhal_primary_to_primary: utils::new_network_address(),
                 narwhal_worker_to_primary: utils::new_network_address(),
                 narwhal_primary_to_worker: vec![utils::new_network_address()],
@@ -108,12 +107,12 @@ impl TestCluster {
         let mut validator_counter = 0;
         for validator_info in genesis_state.validator_set() {
             validator_counter += 1;
-
+            let key_file = format!("{}.key", validator_info.name);
             let mut validator_spawner = ValidatorSpawner::new(
-                working_dir.clone(), // db path
-                working_dir.clone(), // key path
-                working_dir.clone(), // genesis path
-                validator_info.network_address.clone(),
+                working_dir.clone(),                                                               // db path
+                PathBuf::from(working_dir.to_str().unwrap().to_owned() + "/" + key_file.as_str()), // key path
+                working_dir.clone(),                                                               // genesis path
+                utils::new_network_address(),
                 validator_info.name.clone(),
             );
 

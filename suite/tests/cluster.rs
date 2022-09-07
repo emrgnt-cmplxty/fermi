@@ -59,6 +59,9 @@ pub mod cluster_test_suite {
         let mut cluster = TestCluster::spawn(validator_count, None).await;
         sleep(Duration::from_secs(2)).await;
 
+        let receiver_adapter = cluster.get_validator_spawner(1).get_consensus_adapter().unwrap();
+        receiver_adapter.update_batch_size(1);
+
         info!("Sending transactions");
         let (kp_sender, kp_receiver, _) = cluster.send_transactions(0, 1, 20).await;
         sleep(Duration::from_secs(5)).await;
@@ -87,6 +90,9 @@ pub mod cluster_test_suite {
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
+
+        let receiver_adapter = cluster.get_validator_spawner(1).get_consensus_adapter().unwrap();
+        receiver_adapter.update_batch_size(1);
 
         info!("Sending transactions");
         cluster.send_transactions(0, 1, 10).await;
@@ -119,6 +125,9 @@ pub mod cluster_test_suite {
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
+
+        let receiver_adapter = cluster.get_validator_spawner(1).get_consensus_adapter().unwrap();
+        receiver_adapter.update_batch_size(1);
 
         info!("Sending transactions");
         let (_, _, signed_transactions) = cluster.send_transactions(0, 1, 10).await;
@@ -202,6 +211,9 @@ pub mod cluster_test_suite {
 
         info!("Launching nodes 1 - {}", target_node);
         let mut cluster = TestCluster::spawn(validator_count, Some(target_node)).await;
+
+        let receiver_adapter = cluster.get_validator_spawner(1).get_consensus_adapter().unwrap();
+        receiver_adapter.update_batch_size(1);
 
         info!("Begin Sending {N_TRANSACTIONS} transactions");
         cluster.send_transactions_async(0, 1, N_TRANSACTIONS, None).await;
@@ -295,6 +307,9 @@ pub mod cluster_test_suite {
 
         info!("Launching nodes 1 - {}", target_node);
         let mut cluster = TestCluster::spawn(validator_count, Some(target_node)).await;
+
+        let receiver_adapter = cluster.get_validator_spawner(1).get_consensus_adapter().unwrap();
+        receiver_adapter.update_batch_size(1);
 
         info!("Begin Sending {N_TRANSACTIONS} transactions");
         cluster.send_transactions_async(0, 1, N_TRANSACTIONS, None).await;
@@ -416,12 +431,19 @@ pub mod cluster_test_suite {
         const N_TRANSACTIONS: u64 = 1_000_000;
 
         let mut cluster = TestCluster::spawn(validator_count, None).await;
+
+        let receiver_adapter = cluster.get_validator_spawner(1).get_consensus_adapter().unwrap();
+        receiver_adapter.update_batch_size(1);
+
         cluster.send_transactions(0, 1, 10).await;
 
         let metrics_0 = &cluster.get_validator_spawner(0).get_validator_state().unwrap().metrics;
         let metrics_1 = &cluster.get_validator_spawner(1).get_validator_state().unwrap().metrics;
         assert!(metrics_0.num_transactions_rec.get() == 0);
         assert!(metrics_1.num_transactions_rec.get() == 10);
+
+        let receiver_adapter = cluster.get_validator_spawner(0).get_consensus_adapter().unwrap();
+        receiver_adapter.update_batch_size(1);
 
         cluster.send_transactions_async(1, 0, N_TRANSACTIONS, None).await;
 

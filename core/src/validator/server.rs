@@ -56,7 +56,7 @@ impl ValidatorServerHandle {
 pub struct ValidatorServer {
     address: Multiaddr,
     state: Arc<ValidatorState>,
-    consensus_adapter: ConsensusAdapter,
+    consensus_adapter: Arc<ConsensusAdapter>,
 }
 
 impl ValidatorServer {
@@ -66,7 +66,7 @@ impl ValidatorServer {
         consensus_addresses: Vec<Multiaddr>,
         tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
     ) -> Self {
-        let consensus_adapter = ConsensusAdapter::new(consensus_addresses, None, tx_reconfigure_consensus);
+        let consensus_adapter = Arc::new(ConsensusAdapter::new(consensus_addresses, None, tx_reconfigure_consensus));
 
         Self {
             address,
@@ -89,7 +89,7 @@ impl ValidatorServer {
             .server_builder()
             .add_service(TransactionsServer::new(ValidatorService {
                 state: self.state,
-                consensus_adapter: Arc::new(Mutex::new(self.consensus_adapter)),
+                consensus_adapter: self.consensus_adapter,
             }))
             .bind(&address)
             .await
@@ -107,7 +107,7 @@ impl ValidatorServer {
 /// Handles communication with consensus and resulting validator state updates
 pub struct ValidatorService {
     state: Arc<ValidatorState>,
-    consensus_adapter: Arc<Mutex<ConsensusAdapter>>,
+    consensus_adapter: Arc<ConsensusAdapter>,
 }
 
 impl ValidatorService {
@@ -194,58 +194,58 @@ impl ValidatorService {
     }
 
     async fn handle_transaction(
-        consensus_adapter: Arc<Mutex<ConsensusAdapter>>,
+        consensus_adapter: Arc<ConsensusAdapter>,
         state: Arc<ValidatorState>,
         transaction_proto: TransactionProto,
     ) -> Result<tonic::Response<Empty>, tonic::Status> {
         trace!("Handling a new transaction with ValidatorService",);
         state.metrics.increment_num_transactions_rec();
 
-        let signed_transaction = SignedTransaction::deserialize(transaction_proto.transaction.to_vec())
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
-        signed_transaction
-            .verify()
-            .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
+        // let signed_transaction = SignedTransaction::deserialize(transaction_proto.transaction.to_vec())
+        //     .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        // signed_transaction
+        //     .verify()
+        //     .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
 
-        // TODO change this to err flow
-        // TODO there is a ton of contention here
-        if !state.validator_store.cache_contains_block_digest(
-            signed_transaction
-                .get_transaction_payload()
-                .get_recent_certificate_digest(),
-        ) {
-            state.metrics.increment_num_transactions_rec_failed();
-            return Err(tonic::Status::internal("Invalid recent certificate digest"));
-        }
-        if state
-            .validator_store
-            .cache_contains_transaction(signed_transaction.get_transaction_payload())
-        {
-            state.metrics.increment_num_transactions_rec_failed();
-            let digest = signed_transaction.get_transaction_payload().digest().to_string();
-            return Err(tonic::Status::internal("Duplicate transaction ".to_owned() + &digest));
-        }
+        // // TODO change this to err flow
+        // // TODO there is a ton of contention here
+        // if !state.validator_store.cache_contains_block_digest(
+        //     signed_transaction
+        //         .get_transaction_payload()
+        //         .get_recent_certificate_digest(),
+        // ) {
+        //     state.metrics.increment_num_transactions_rec_failed();
+        //     return Err(tonic::Status::internal("Invalid recent certificate digest"));
+        // }
+        // if state
+        //     .validator_store
+        //     .cache_contains_transaction(signed_transaction.get_transaction_payload())
+        // {
+        //     state.metrics.increment_num_transactions_rec_failed();
+        //     let digest = signed_transaction.get_transaction_payload().digest().to_string();
+        //     return Err(tonic::Status::internal("Duplicate transaction ".to_owned() + &digest));
+        // }
 
         let transaction_proto = narwhal_types::TransactionProto {
             transaction: transaction_proto.transaction,
         };
 
         let _result = consensus_adapter
-            .lock()
-            .await
+            // .lock()
+            // .await
             .submit_transaction(transaction_proto)
             .await
             .unwrap();
 
-        state
-            .handle_pre_consensus_transaction(&signed_transaction)
-            // .instrument(span)
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        // state
+        //     .handle_pre_consensus_transaction(&signed_transaction)
+        //     // .instrument(span)
+        //     .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
         Ok(tonic::Response::new(Empty {}))
     }
 
-    pub fn get_consensus_adapters(&self) -> &Arc<Mutex<ConsensusAdapter>> {
+    pub fn get_consensus_adapters(&self) -> &Arc<ConsensusAdapter> {
         &self.consensus_adapter
     }
 }
@@ -281,6 +281,7 @@ impl Transactions for ValidatorService {
 
             let state = self.state.clone();
             let consensus_adapter = self.consensus_adapter.clone();
+
             tokio::spawn(async move { Self::handle_transaction(consensus_adapter, state, signed_transaction).await })
                 .await
                 .unwrap()?;

@@ -330,7 +330,7 @@ mod test_validator_server {
         builder::genesis_state::GenesisStateBuilder,
         client,
         genesis_ceremony::{VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
-        validator::metrics::ValidatorMetricsAndHealth,
+        validator::metrics::ValidatorMetrics,
     };
     use gdex_controller::master::MasterController;
     use gdex_types::{
@@ -376,7 +376,7 @@ mod test_validator_server {
             .expect("Failed to open temporary directory")
             .into_path();
         let registry = Registry::default();
-        let metrics = Arc::new(ValidatorMetricsAndHealth::new(&registry));
+        let metrics = Arc::new(ValidatorMetrics::new(&registry));
         let validator_state = ValidatorState::new(public_key, secret, &genesis, &store_path, metrics);
         let new_addr = utils::new_network_address();
         let (tx_reconfigure_consensus, _rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);
@@ -450,7 +450,7 @@ mod test_validator_server {
             .into_path();
 
         let registry = Registry::default();
-        let metrics = Arc::new(ValidatorMetricsAndHealth::new(&registry));
+        let metrics = Arc::new(ValidatorMetrics::new(&registry));
         let validator_state = ValidatorState::new(public_key, secret, &genesis, &store_path, metrics);
         let new_addr = utils::new_network_address();
         let (tx_reconfigure_consensus, _rx_reconfigure_consensus) = tokio::sync::mpsc::channel(10);

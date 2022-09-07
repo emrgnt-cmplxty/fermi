@@ -3,7 +3,7 @@
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-core/src/authority.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bcuse super::state::ValidatorState;
 use super::genesis_state::ValidatorGenesisState;
-use crate::validator::metrics::ValidatorMetricsAndHealth;
+use crate::validator::metrics::ValidatorMetrics;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
 use fastcrypto::Hash;
@@ -236,7 +236,7 @@ pub struct ValidatorState {
     /// A map of transactions which have been seen
     pub validator_store: ValidatorStore,
     /// Metrics around blockchain operations
-    pub metrics: Arc<ValidatorMetricsAndHealth>,
+    pub metrics: Arc<ValidatorMetrics>,
 }
 
 impl ValidatorState {
@@ -247,7 +247,7 @@ impl ValidatorState {
         secret: StableSyncValidatorSigner,
         genesis: &ValidatorGenesisState,
         store_db_path: &PathBuf,
-        metrics: Arc<ValidatorMetricsAndHealth>,
+        metrics: Arc<ValidatorMetrics>,
     ) -> Self {
         ValidatorState {
             name,
@@ -389,7 +389,7 @@ mod test_validator_state {
             .into_path();
 
         let registry = Registry::default();
-        let metrics = Arc::new(ValidatorMetricsAndHealth::new(&registry));
+        let metrics = Arc::new(ValidatorMetrics::new(&registry));
         let validator = ValidatorState::new(public_key, secret, &genesis, &store_path, metrics);
 
         validator.halt_validator();
@@ -429,7 +429,7 @@ mod test_validator_state {
             .expect("Failed to open temporary directory")
             .into_path();
         let registry = Registry::default();
-        let metrics = Arc::new(ValidatorMetricsAndHealth::new(&registry));
+        let metrics = Arc::new(ValidatorMetrics::new(&registry));
         ValidatorState::new(public_key, secret, &genesis, &store_path, metrics)
     }
 

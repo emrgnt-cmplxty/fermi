@@ -6,7 +6,7 @@ use crate::{
     genesis_ceremony::GENESIS_FILENAME,
     metrics::start_prometheus_server,
     validator::{
-        genesis_state::ValidatorGenesisState, metrics::ValidatorMetricsAndHealth, server::ValidatorServer,
+        genesis_state::ValidatorGenesisState, metrics::ValidatorMetrics, server::ValidatorServer,
         server::ValidatorService, state::ValidatorState,
     },
 };
@@ -198,7 +198,7 @@ impl ValidatorSpawner {
         };
 
         let prometheus_registry = start_prometheus_server(node_config.metrics_address);
-        let metrics = Arc::new(ValidatorMetricsAndHealth::new(&prometheus_registry));
+        let metrics = Arc::new(ValidatorMetrics::new(&prometheus_registry));
         let validator_state = Arc::new(ValidatorState::new(
             pubilc_key,
             Arc::pin(utils::read_keypair_from_file(&key_file).unwrap()),

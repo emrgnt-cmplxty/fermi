@@ -18,7 +18,7 @@ type BlockSize = usize;
 type BlockLatencyInMilis = u64;
 
 /// Track end to end transaction pipeline metrics
-pub struct ValidatorMetricsAndHealth {
+pub struct ValidatorMetrics {
     // Continuously updated information
     /// The number of transactions submitted to the validator
     pub num_transactions_rec: IntCounter,
@@ -43,7 +43,7 @@ pub struct ValidatorMetricsAndHealth {
     prev_block_info: Arc<Mutex<BlockInfo>>,
 }
 
-impl ValidatorMetricsAndHealth {
+impl ValidatorMetrics {
     pub fn new(registry: &Registry) -> Self {
         // step from 0 to 3M micros
         let block_latency_buckets: Vec<f64> = (0..3_000).map(|i| i as f64 * 1_000.).collect();

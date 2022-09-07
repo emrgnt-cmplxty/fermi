@@ -234,6 +234,8 @@ impl ValidatorService {
         {
             state.metrics.increment_num_transactions_rec_failed();
             let digest = signed_transaction.get_transaction_payload().digest().to_string();
+            // TODO - find cleaner way to represent this logic
+            // TODO - make sure benchmark flag is removed from node Cargo.toml in the future
             cfg_if::cfg_if! {
                 if #[cfg(feature = "benchmark")] {
                     debug!("Duplicate transaction id = {}", digest);

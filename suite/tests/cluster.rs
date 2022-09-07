@@ -5,7 +5,6 @@ pub mod cluster_test_suite {
     // IMPORTS
 
     // gdex
-    use benchmark_gdex_node::faucet_server::{FaucetService, FAUCET_PORT};
     use gdex_core::{
         catchup::manager::{
             mock_catchup_manager::{MockCatchupManger, MockRelayServer},
@@ -13,6 +12,7 @@ pub mod cluster_test_suite {
         },
         client::endpoint_from_multiaddr,
     };
+    use gdex_node::faucet_server::{FaucetService, FAUCET_PORT};
     use gdex_suite::test_utils::test_cluster::TestCluster;
     use gdex_types::{
         account::{AccountKeyPair, ValidatorKeyPair},

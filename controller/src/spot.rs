@@ -43,7 +43,7 @@ use gdex_types::{
 };
 
 // mysten
-use narwhal_crypto::ed25519::Ed25519PublicKey;
+use fastcrypto::ed25519::Ed25519PublicKey;
 
 // external
 use serde::{Deserialize, Serialize};

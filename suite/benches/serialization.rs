@@ -7,13 +7,13 @@ extern crate bincode;
 extern crate criterion;
 
 use criterion::*;
+use fastcrypto::{Hash, DIGEST_LEN};
 use gdex_types::{
     account::{AccountKeyPair, AccountSignature},
     crypto::{KeypairTraits, Signer},
     error::GDEXError,
     new_transaction::{ConsensusTransaction, NewSignedTransaction, NewTransaction, new_create_payment_transaction, sign_transaction}
 };
-use narwhal_crypto::{Hash, DIGEST_LEN};
 use narwhal_types::{Batch, CertificateDigest, WorkerMessage};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 

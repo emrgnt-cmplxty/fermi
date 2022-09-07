@@ -7,7 +7,7 @@ use anyhow::Result;
 use gdex_types::{
     account::{AccountKeyPair, ValidatorKeyPair},
     committee::StakeUnit,
-    crypto::{get_key_pair_from_rng, GDEXAddress},
+    crypto::{get_key_pair_from_rng, GDEXAddress, KeypairTraits},
     serialization::KeyPairBase64,
 };
 use multiaddr::Multiaddr;
@@ -89,7 +89,8 @@ impl GenesisConfig {
             let address = if let Some(address) = account.address {
                 address
             } else {
-                let (address, keypair) = get_key_pair_from_rng(&mut rng);
+                let keypair = get_key_pair_from_rng::<ValidatorKeyPair, R>(&mut rng);
+                let address = GDEXAddress::from(keypair.public());
                 keys.push(keypair);
                 address
             };

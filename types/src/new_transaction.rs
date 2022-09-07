@@ -26,7 +26,7 @@ pub use crate::proto::{
 // gdex
 
 // mysten
-use narwhal_crypto::{
+use fastcrypto::{
     Verifier,
     DIGEST_LEN,
     traits::Signer
@@ -527,7 +527,7 @@ pub fn get_payment_receiver(
 pub fn hash_transaction(
     transaction: &NewTransaction
 ) -> NewTransactionDigest {
-    NewTransactionDigest::new(narwhal_crypto::blake2b_256(|hasher| {hasher.update(serialize_protobuf(transaction)) }))
+    NewTransactionDigest::new(fastcrypto::blake2b_256(|hasher| {hasher.update(serialize_protobuf(transaction)) }))
 }
 
 pub fn sign_transaction(

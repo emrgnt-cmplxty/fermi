@@ -56,7 +56,7 @@ pub struct NodeConfig {
 }
 
 fn default_key_pair() -> Arc<ValidatorKeyPair> {
-    Arc::new(gdex_types::crypto::get_key_pair().1)
+    Arc::new(gdex_types::crypto::get_random_key_pair())
 }
 
 fn default_grpc_address() -> Multiaddr {

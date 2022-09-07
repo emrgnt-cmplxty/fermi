@@ -16,7 +16,7 @@ use std::{
     convert::TryInto,
     {fs, path::Path},
 };
-use tracing::{info, trace};
+use tracing::trace;
 
 /// An object with the necessary state to initialize a new node at blockchain genesis
 #[derive(Clone, Debug)]
@@ -53,13 +53,37 @@ impl ValidatorGenesisState {
             .validator_set
             .iter()
             .map(|validator| {
+                // Strong requirement here for narwhal and sui to be on the same version of fastcrypto
+                // for AuthorityPublicBytes to cast to type alias PublicKey defined in narwhal to
+                // construct narwhal Committee struct.
                 let name = validator.public_key().try_into().expect("Can't get narwhal public key");
                 let primary = narwhal_config::PrimaryAddresses {
                     primary_to_primary: validator.narwhal_primary_to_primary.clone(),
                     worker_to_primary: validator.narwhal_worker_to_primary.clone(),
                 };
+                let authority = narwhal_config::Authority {
+                    stake: validator.stake as narwhal_config::Stake, //TODO this should at least be the same size integer
+                    primary,
+                };
+
+                (name, authority)
+            })
+            .collect();
+        std::sync::Arc::new(arc_swap::ArcSwap::from_pointee(narwhal_config::Committee {
+            authorities: narwhal_committee,
+            epoch: self.epoch() as narwhal_config::Epoch,
+        }))
+    }
+
+    pub fn narwhal_worker_cache(&self) -> narwhal_config::SharedWorkerCache {
+        let workers = self
+            .validator_set
+            .iter()
+            .map(|validator| {
+                let name = validator.public_key().try_into().expect("Can't get narwhal public key");
 
                 let mut worker_counter = 0;
+
                 let workers = validator
                     .narwhal_primary_to_worker
                     .iter()
@@ -82,21 +106,17 @@ impl ValidatorGenesisState {
                         )
                     })
                     .collect();
-                info!("workers ={:?} ", workers);
-                let validator = narwhal_config::Authority {
-                    stake: validator.stake as narwhal_config::Stake, //TODO this should at least be the same size integer
-                    primary,
-                    workers,
-                };
 
-                (name, validator)
+                let worker_index = narwhal_config::WorkerIndex(workers);
+
+                (name, worker_index)
             })
             .collect();
-
-        std::sync::Arc::new(arc_swap::ArcSwap::from_pointee(narwhal_config::Committee {
-            authorities: narwhal_committee,
+        narwhal_config::WorkerCache {
+            workers,
             epoch: self.epoch() as narwhal_config::Epoch,
-        }))
+        }
+        .into()
     }
 
     pub fn get_default_genesis() -> Self {
@@ -222,7 +242,8 @@ mod genesis_test {
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 
-        let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let key: ValidatorKeyPair =
+            get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         let validator = ValidatorInfo {
             name: "0".into(),
             public_key: key.public().into(),

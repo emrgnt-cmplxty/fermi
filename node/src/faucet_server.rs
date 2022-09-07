@@ -1,3 +1,4 @@
+use fastcrypto::{ed25519::Ed25519PublicKey, traits::ToFromBytes, DIGEST_LEN};
 use gdex_core::client;
 use gdex_types::{
     account::AccountKeyPair,
@@ -7,7 +8,6 @@ use gdex_types::{
     utils,
 };
 use multiaddr::Multiaddr;
-use narwhal_crypto::{ed25519::Ed25519PublicKey, traits::ToFromBytes, DIGEST_LEN};
 use narwhal_types::CertificateDigest;
 use std::{
     env, io,

@@ -8,7 +8,8 @@ members = [
     "suite",
     "types",
     "benchmark-gdex",
-    "benchmark-narwhal",
+    # TODO - revive benchmark-narwhal workflow
+    # "benchmark-narwhal",
     "workspace-hack"
 ]
 

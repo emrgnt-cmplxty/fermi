@@ -26,9 +26,9 @@ use std::{
 };
 
 /// A config builder class which is used in the genesis process to generate a NetworkConfig
-pub struct NetworkConfigBuilder<R = OsRng> {
+pub struct NetworkConfigBuilder {
     /// Associated random number generator
-    rng: R,
+    rng: OsRng,
     /// Directory of created config
     config_directory: PathBuf,
     /// Boolean parameter to determine port generation process, currently always set to True
@@ -51,7 +51,7 @@ impl NetworkConfigBuilder {
     }
 }
 
-impl<R> NetworkConfigBuilder<R> {
+impl NetworkConfigBuilder {
     /// Set the randomize the ports and return a new object
     pub fn randomize_ports(mut self, randomize_ports: bool) -> Self {
         self.randomize_ports = randomize_ports;
@@ -69,26 +69,15 @@ impl<R> NetworkConfigBuilder<R> {
         self.initial_accounts_config = Some(initial_accounts_config);
         self
     }
-
-    /// Set the rng and return a new object
-    pub fn rng<N: ::rand::RngCore + ::rand::CryptoRng>(self, rng: N) -> NetworkConfigBuilder<N> {
-        NetworkConfigBuilder {
-            rng,
-            config_directory: self.config_directory,
-            randomize_ports: self.randomize_ports,
-            committee_size: self.committee_size,
-            initial_accounts_config: self.initial_accounts_config,
-        }
-    }
 }
 
-impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
+impl NetworkConfigBuilder {
     //TODO right now we always randomize ports, we may want to have a default port configuration
     /// Build a config with random validator inputs the networking ports
     /// are randomly selected via utils::new_network_address
     pub fn build(mut self) -> NetworkConfig {
         let validators = (0..self.committee_size.get())
-            .map(|_| get_key_pair_from_rng(&mut self.rng).1)
+            .map(|_| get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut self.rng))
             .map(|key_pair: ValidatorKeyPair| ValidatorGenesisStateInfo {
                 key_pair,
                 network_address: utils::new_network_address(),

@@ -18,7 +18,7 @@ use gdex_core::{
 };
 use gdex_node::faucet_server::FAUCET_PORT;
 use gdex_types::{
-    account::AccountKeyPair,
+    account::ValidatorKeyPair,
     crypto::get_key_pair_from_rng,
     proto::{FaucetAirdropRequest, FaucetClient},
     utils,
@@ -392,7 +392,8 @@ impl GDEXCommand {
                 keystore_path,
                 keystore_name,
             } => {
-                let keypair: AccountKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+                let keypair: ValidatorKeyPair =
+                    get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
 
                 let keystore_path = keystore_path.unwrap_or(gdex_config_dir()?);
                 let keystore_name = keystore_name.unwrap_or_else(|| String::from(GDEX_KEYSTORE_FILENAME));

@@ -206,9 +206,11 @@ The third block (`repo`) contains the information regarding the repository's nam
 ```
 Remember to update the `url` field to the name of your repo. You can modify the branch name when testing new functionality without having to check out the code locally.
 
-Then the last block (`instances`) specifies the [AWS instance type](https://aws.amazon.com/ec2/instance-types) and the [AWS regions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions) to use:
+Then the last block (`instances`) specifies the [AWS instance type](https://aws.amazon.com/ec2/instance-types) and the [AWS regions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions) to use, as well as the names given to instances and security group:
 ```json
-"instances": {
+"instances": {    
+    "name": "dag-node",
+    "security-group": "dag",
     "type": "m5d.8xlarge",
     "regions": ["us-east-1", "eu-north-1", "ap-southeast-2", "us-west-1", "ap-northeast-1"]
 }
@@ -216,6 +218,8 @@ Then the last block (`instances`) specifies the [AWS instance type](https://aws.
 The instance type selects the hardware on which to deploy the testbed. For example, `m5d.8xlarge` instances come with 32 vCPUs (16 physical cores), 128 GB of RAM, and guarantee 10 Gbps of bandwidth. The Python scripts will configure each instance with 300 GB of SSD hard drive. The `regions` field specifies the data centers to use.
 
 If you require more nodes than data centers, the Python scripts will distribute the nodes as equally as possible amongst the data centers. All machines run a fresh install of Ubuntu Server 20.04.
+
+You should specify your own name and security group in order to prevent collisions between different testbeds in the same amazon account.
 
 ### Step 4. Create a testbed
 The AWS instances are orchestrated with [Fabric](http://www.fabfile.org) from the file [fabfile.py](https://github.com/mystenlabs/narwhal/blob/main/benchmark/fabfile.py) (located in [narwhal/benchmarks](https://github.com/mystenlabs/narwhal/blob/main/benchmark)); you can list all possible commands as follows:

@@ -10,6 +10,8 @@
     "branch": "feature/remote-benchmark"
   },
   "instances": {
+    "name": "dag-node",
+    "security-group": "dag",
     "type": "m5d.8xlarge",
     "regions": [
       "us-east-1",

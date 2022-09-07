@@ -133,7 +133,7 @@ class GDEXBench:
 
             # Run the primaries
             Print.info('Booting nodes...')
-            rate_share = ceil(self.rate[0] / self.bench_parameters.nodes[0])
+            rate_share = ceil(self.rate[0] / (self.bench_parameters.workers * self.bench_parameters.nodes[0]))
             for i, name in enumerate(committee.json['authorities'].keys()):
                 validator_dict = committee.json['authorities'][name]
                 validator_address = validator_dict['network_address']
@@ -151,9 +151,13 @@ class GDEXBench:
                 log_file = PathMaker.primary_log_file(i)
                 print(cmd, ">>", log_file)
                 self._background_run(cmd, log_file)
+                # sleep to avoid weird port collisions in local bench
+                sleep(0.5)
 
             Print.info('Booting clients...')
+            # spawn one client per worker
             for i, name in enumerate(committee.json['authorities'].keys()):
+              for j in range(self.bench_parameters.workers):
                 validator_dict = committee.json['authorities'][name]
                 validator_address = validator_dict['network_address']
                 relayer_address = validator_dict['relayer_address']
@@ -173,9 +177,10 @@ class GDEXBench:
                         rate_share,
                         [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
                     )
-                log_file = PathMaker.client_log_file(i, 0)
+                log_file = PathMaker.client_log_file(i, j)
                 print(cmd, ">>", log_file)
                 self._background_run(cmd, log_file)
+
 
             # Wait for all transactions to be processed.
             Print.info(f'Running benchmark ({self.duration} sec)...')

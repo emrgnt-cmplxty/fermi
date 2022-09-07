@@ -13,8 +13,8 @@ use gdex_types::{
     asset::PRIMARY_ASSET_ID,
     crypto::{get_key_pair_from_rng, KeypairTraits},
     node::ValidatorInfo,
-    proto::{TransactionProto, TransactionsClient},
-    transaction::{transaction_test_functions::generate_signed_test_transaction, SignedTransaction},
+    proto::{TransactionSubmitterClient},
+    new_transaction::{new_transaction_test_functions::generate_signed_test_transaction, NewSignedTransaction},
     utils,
 };
 
@@ -177,7 +177,7 @@ impl TestCluster {
         sending_validator: usize,
         receiving_validator: usize,
         n_transactions: u64,
-    ) -> (ValidatorKeyPair, ValidatorKeyPair, Vec<SignedTransaction>) {
+    ) -> (ValidatorKeyPair, ValidatorKeyPair, Vec<NewSignedTransaction>) {
         let working_dir = self.get_working_dir();
         let sender = self.get_validator_spawner(sending_validator);
         let key_file = working_dir.join(format!("{}.key", sender.get_validator_info().name));
@@ -189,7 +189,7 @@ impl TestCluster {
         let receiver_address = receiver.get_validator_address().clone();
 
         let mut client =
-            TransactionsClient::new(client::connect_lazy(&receiver_address).expect("Failed to connect to consensus"));
+            TransactionSubmitterClient::new(client::connect_lazy(&receiver_address).expect("Failed to connect to consensus"));
 
         let mut signed_transactions = Vec::new();
         let mut i = 1;
@@ -197,11 +197,8 @@ impl TestCluster {
             let amount = i;
             let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, amount);
             signed_transactions.push(signed_transaction.clone());
-            let transaction_proto = TransactionProto {
-                transaction: signed_transaction.serialize().unwrap().into(),
-            };
             let _resp1 = client
-                .submit_transaction(transaction_proto)
+                .submit_transaction(signed_transaction)
                 .await
                 .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
                 .unwrap();
@@ -228,7 +225,7 @@ impl TestCluster {
         let receiver_address = receiver.get_validator_address().clone();
 
         let mut client =
-            TransactionsClient::new(client::connect_lazy(&receiver_address).expect("Failed to connect to consensus"));
+            TransactionSubmitterClient::new(client::connect_lazy(&receiver_address).expect("Failed to connect to consensus"));
 
         let mut signed_transactions = Vec::new();
         let mut i = 1;
@@ -237,11 +234,8 @@ impl TestCluster {
                 let amount = fixed_amount.unwrap_or(i);
                 let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, amount);
                 signed_transactions.push(signed_transaction.clone());
-                let transaction_proto = TransactionProto {
-                    transaction: signed_transaction.serialize().unwrap().into(),
-                };
                 let _resp1 = client
-                    .submit_transaction(transaction_proto)
+                    .submit_transaction(signed_transaction)
                     .await
                     .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
                     .unwrap();

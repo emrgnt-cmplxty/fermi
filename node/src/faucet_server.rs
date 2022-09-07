@@ -2,8 +2,7 @@ use gdex_core::client;
 use gdex_types::{
     account::AccountKeyPair,
     crypto::{KeypairTraits, Signer},
-    proto::{Faucet, FaucetAirdropRequest, FaucetAirdropResponse, FaucetServer, TransactionProto, TransactionsClient},
-    transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
+    proto::{Faucet, FaucetAirdropRequest, FaucetAirdropResponse, FaucetServer, TransactionSubmitterClient},
     new_transaction::{NewSignedTransaction, NewTransaction, new_create_payment_transaction, sign_transaction},
     utils,
 };
@@ -30,34 +29,17 @@ fn generate_signed_airdrop_transaction_for_faucet(
     kp_sender: &AccountKeyPair,
     kp_receiver_public_key: &Ed25519PublicKey,
     amount: u64,
-) -> SignedTransaction {
+) -> NewSignedTransaction {
     // Setting a certificate_digest
     let recent_certificate_digest = CertificateDigest::new([0; DIGEST_LEN]);
-
-    // Creating the transaction variant
-    let transaction_variant = TransactionVariant::PaymentTransaction(PaymentRequest::new(
-        kp_receiver_public_key.clone(),
-        PRIMARY_ASSET_ID,
-        amount,
-    ));
-
-    // Creating the transaction itself, signing it, and returning it
-    let transaction = Transaction::new(
-        kp_sender.public().clone(),
-        recent_certificate_digest,
-        transaction_variant,
-    );
-    let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-    
-    // TODO CRUFT
     let gas: u64 = 1000;
     let new_transaction = new_create_payment_transaction(kp_sender.public().clone(), kp_receiver_public_key, PRIMARY_ASSET_ID, amount, gas, recent_certificate_digest);
     let new_signed_transaction = match sign_transaction(kp_sender, new_transaction) {
         Ok(t) => t,
         _ => panic!("Error signing transaction"),
     };
-    
-    SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest, new_signed_transaction)
+
+    new_signed_transaction
 }
 
 #[tonic::async_trait]
@@ -79,20 +61,16 @@ impl Faucet for FaucetService {
         // Creating signed transaction and proto
         let signed_transaction =
             generate_signed_airdrop_transaction_for_faucet(&kp_sender, &kp_receiver_public_key, 100);
-        let transaction_proto = TransactionProto {
-            transaction: signed_transaction.serialize().unwrap().into(),
-        };
-
+        
         // Getting the validator port from the second cli argument
-
         // The port for the validator that we will send the transaction to is passed in as the second cli argument when the server is starting
-        let mut client = TransactionsClient::new(
+        let mut client = TransactionSubmitterClient::new(
             client::connect_lazy(&self.validator_addr).expect("Failed to connect to consensus"),
         );
 
         // If there is an error we will get a panic because of the unwrap
         let _response = client
-            .submit_transaction(transaction_proto)
+            .submit_transaction(signed_transaction)
             .await
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
             .unwrap();

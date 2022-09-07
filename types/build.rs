@@ -4,7 +4,7 @@
 type Result<T> = ::std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 fn main() -> Result<()> {
-    let proto_files = &["proto/gdex.proto", "proto/new_transaction.proto", "proto/new_block.proto", "proto/bank_requests.proto", "proto/spot_requests.proto"];
+    let proto_files = &["proto/gdex.proto", "proto/services.proto", "proto/new_transaction.proto", "proto/new_block.proto", "proto/bank_requests.proto", "proto/spot_requests.proto"];
     let dirs = &["proto"];
 
     // Use `Bytes` instead of `Vec<u8>` for bytes fields

@@ -48,7 +48,6 @@ use std::{
 
 pub const PROTO_VERSION: Version = Version { major: 0, minor: 0, patch: 0 };
 
-
 // DIGEST TYPES
 
 #[derive(Clone, Copy, Serialize, Deserialize, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -70,7 +69,7 @@ impl NewTransactionDigest {
     }
 }
 
-// INTERFACE
+// SERIALIZATION
 
 pub fn serialize_protobuf<T>(
     proto_message: &T
@@ -88,6 +87,43 @@ pub fn deserialize_protobuf<T: Message + std::default::Default>(
     match message_result {
         Ok(message) => Ok(message),
         Err(..) => Err(GDEXError::DeserializationError)
+    }
+}
+
+// INTERFACE
+
+// CONSENSUS TRANSACTION
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ConsensusTransaction {
+    signed_transaction_bytes: Vec<u8>,
+}
+
+impl ConsensusTransaction {
+    pub fn new(
+        new_signed_transaction: &NewSignedTransaction
+    ) -> Self {
+        ConsensusTransaction {
+            signed_transaction_bytes: serialize_protobuf(new_signed_transaction)
+        }
+    }
+
+    pub fn deserialize(byte_vec: Vec<u8>) -> Result<Self, GDEXError> {
+        match bincode::deserialize(&byte_vec[..]) {
+            Ok(result) => Ok(result),
+            Err(..) => Err(GDEXError::DeserializationError),
+        }
+    }
+
+    pub fn serialize(&self) -> Result<Vec<u8>, GDEXError> {
+        match bincode::serialize(&self) {
+            Ok(result) => Ok(result),
+            Err(..) => Err(GDEXError::SerializationError),
+        }
+    }
+
+    pub fn get_payload(&self) -> Result<NewSignedTransaction, GDEXError> {
+        deserialize_protobuf(&self.signed_transaction_bytes)
     }
 }
 
@@ -557,5 +593,34 @@ pub fn parse_order_side(
         1 => Ok(OrderSide::Bid),
         2 => Ok(OrderSide::Ask),
         _ => Err(GDEXError::DeserializationError)
+    }
+}
+
+/// Begin externally available testing functions
+#[cfg(any(test, feature = "testing"))]
+pub mod new_transaction_test_functions {
+    use super::*;
+    use crate::{
+        account::AccountKeyPair,
+        crypto::{KeypairTraits, Signer},
+    };
+
+    pub const PRIMARY_ASSET_ID: u64 = 0;
+
+    pub fn generate_signed_test_transaction(
+        kp_sender: &AccountKeyPair,
+        kp_receiver: &AccountKeyPair,
+        amount: u64,
+    ) -> NewSignedTransaction {
+        // TODO replace this with latest
+        let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
+
+        let gas: u64 = 1000;
+        let new_transaction = new_create_payment_transaction(kp_sender.public().clone(), kp_receiver.public(), PRIMARY_ASSET_ID, amount, gas, dummy_batch_digest);
+        let new_signed_transaction = match sign_transaction(&kp_sender, new_transaction) {
+            Ok(t) => t,
+            _ => panic!("Error signing transaction"),
+        };
+        new_signed_transaction
     }
 }

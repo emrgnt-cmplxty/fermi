@@ -13,11 +13,10 @@ use gdex_types::{
     block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},
     committee::{Committee, ValidatorName},
     error::GDEXError,
-    transaction::{SignedTransaction, TransactionDigest},
     new_transaction::{
         NewSignedTransaction, NewTransaction, NewTransactionDigest,
         get_signed_transaction_body, hash_transaction, deserialize_protobuf,
-        verify_signature
+        verify_signature, ConsensusTransaction
     }
 };
 use mysten_store::{
@@ -266,7 +265,7 @@ impl ValidatorState {
 
 #[async_trait]
 impl ExecutionState for ValidatorState {
-    type Transaction = SignedTransaction;
+    type Transaction = ConsensusTransaction;
     type Error = GDEXError;
     type Outcome = (ConsensusOutput, ExecutionIndices);
 
@@ -274,14 +273,12 @@ impl ExecutionState for ValidatorState {
         &self,
         consensus_output: &narwhal_consensus::ConsensusOutput,
         execution_indices: ExecutionIndices,
-        signed_transaction: Self::Transaction,
+        consensus_transaction: Self::Transaction,
     ) -> Result<Self::Outcome, Self::Error> {
         self.metrics.increment_num_transactions_consensus();
 
-        // TODO CRUFT
-        
         // deserialize signed transaction
-        let new_signed_transaction: NewSignedTransaction = deserialize_protobuf(&signed_transaction.signed_transaction_bytes)
+        let new_signed_transaction = consensus_transaction.get_payload()
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
         let _ = verify_signature(&new_signed_transaction)
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
@@ -330,11 +327,6 @@ mod test_validator_state {
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
         node::ValidatorInfo,
         order_book::OrderSide,
-        transaction::{
-            create_asset_creation_transaction, create_orderbook_creation_transaction, create_payment_transaction,
-            create_place_cancel_order_transaction, create_place_limit_order_transaction,
-            create_place_update_order_transaction, SignedTransaction,
-        },
         new_transaction::{NewSignedTransaction, NewTransaction, new_create_payment_transaction,
                           new_create_create_orderbook_transaction, new_create_create_asset_transaction,
                           new_create_limit_order_transaction, new_create_update_order_transaction,
@@ -448,10 +440,6 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, 0);
-        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
-
-        // TODO CRUFT
         let gas: u64 = 1000;
         let new_transaction = new_create_create_asset_transaction(sender_kp.public().clone(), 0, gas, recent_block_hash);
         let new_signed_transaction = match sign_transaction(&sender_kp, new_transaction) {
@@ -459,14 +447,13 @@ mod test_validator_state {
             _ => panic!("Error signing transaction"),
         };
 
-        let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest, new_signed_transaction);
+        let consensus_transaction = ConsensusTransaction::new(&new_signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_create_asset_txn,
+                consensus_transaction,
             )
             .await
             .unwrap();
@@ -481,10 +468,6 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, 0);
-        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
-
-        // TODO CRUFT
         let gas: u64 = 1000;
         let new_transaction = new_create_create_asset_transaction(sender_kp.public().clone(), 0, gas, recent_block_hash);
         let new_signed_transaction = match sign_transaction(&sender_kp, new_transaction) {
@@ -492,14 +475,13 @@ mod test_validator_state {
             _ => panic!("Error signing transaction"),
         };
 
-        let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest, new_signed_transaction);
+        let consensus_transaction = ConsensusTransaction::new(&new_signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_create_asset_txn,
+                consensus_transaction,
             )
             .await
             .unwrap();
@@ -508,11 +490,6 @@ mod test_validator_state {
         const TEST_ASSET_ID: u64 = 0;
         const TEST_AMOUNT: u64 = 1000000;
         let receiver_kp = generate_production_keypair::<KeyPair>();
-        let payment_txn =
-            create_payment_transaction(&sender_kp, &receiver_kp, TEST_ASSET_ID, TEST_AMOUNT, recent_block_hash);
-        let signed_digest = sender_kp.sign(&payment_txn.digest().get_array()[..]);
-
-        // TODO CRUFT
         let gas: u64 = 1000;
         let new_transaction = new_create_payment_transaction(sender_kp.public().clone(), receiver_kp.public(), TEST_ASSET_ID, TEST_AMOUNT, gas, recent_block_hash);
         let new_signed_transaction = match sign_transaction(&sender_kp, new_transaction) {
@@ -520,13 +497,13 @@ mod test_validator_state {
             _ => panic!("Error signing transaction"),
         };
 
-        let signed_payment_txn = SignedTransaction::new(sender_kp.public().clone(), payment_txn, signed_digest, new_signed_transaction);
+        let consensus_transaction = ConsensusTransaction::new(&new_signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_payment_txn,
+                consensus_transaction,
             )
             .await
             .unwrap();
@@ -541,10 +518,6 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, 0);
-        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
-
-        // TODO CRUFT
         let gas: u64 = 1000;
         let new_transaction = new_create_create_asset_transaction(sender_kp.public().clone(), 0, gas, recent_block_hash);
         let new_signed_transaction = match sign_transaction(&sender_kp, new_transaction) {
@@ -552,15 +525,14 @@ mod test_validator_state {
             _ => panic!("Error signing transaction"),
         };
 
-        let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest, new_signed_transaction);
+        let consensus_transaction = ConsensusTransaction::new(&new_signed_transaction);
 
         for _ in 0..5 {
             validator
                 .handle_consensus_transaction(
                     &dummy_consensus_output,
                     dummy_execution_indices.clone(),
-                    signed_create_asset_txn.clone(),
+                    consensus_transaction.clone(),
                 )
                 .await
                 .unwrap();
@@ -571,15 +543,6 @@ mod test_validator_state {
         const TEST_QUOTE_ASSET_ID: u64 = 2;
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_orderbook_txn = create_orderbook_creation_transaction(
-            &sender_kp,
-            TEST_BASE_ASSET_ID,
-            TEST_QUOTE_ASSET_ID,
-            recent_block_hash,
-        );
-        let signed_digest = sender_kp.sign(&create_orderbook_txn.digest().get_array()[..]);
-
-        // TODO CRUFT
         let gas: u64 = 1000;
         let new_transaction = new_create_create_orderbook_transaction(sender_kp.public().clone(), TEST_BASE_ASSET_ID, TEST_QUOTE_ASSET_ID, gas, recent_block_hash);
         let new_signed_transaction = match sign_transaction(&sender_kp, new_transaction) {
@@ -587,14 +550,13 @@ mod test_validator_state {
             _ => panic!("Error signing transaction"),
         };
 
-        let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_orderbook_txn, signed_digest, new_signed_transaction);
+        let consensus_transaction = ConsensusTransaction::new(&new_signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_create_asset_txn,
+                consensus_transaction,
             )
             .await
             .unwrap();
@@ -609,10 +571,6 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, 0);
-        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
-
-        // TODO CRUFT
         let gas: u64 = 1000;
         let new_transaction = new_create_create_asset_transaction(sender_kp.public().clone(), 0, gas, recent_block_hash);
         let new_signed_transaction = match sign_transaction(&sender_kp, new_transaction) {
@@ -620,15 +578,14 @@ mod test_validator_state {
             _ => panic!("Error signing transaction"),
         };
 
-        let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest, new_signed_transaction);
+        let consensus_transaction = ConsensusTransaction::new(&new_signed_transaction);
 
         for _ in 0..5 {
             validator
                 .handle_consensus_transaction(
                     &dummy_consensus_output,
                     dummy_execution_indices.clone(),
-                    signed_create_asset_txn.clone(),
+                    consensus_transaction.clone(),
                 )
                 .await
                 .unwrap();
@@ -638,15 +595,6 @@ mod test_validator_state {
         const TEST_BASE_ASSET_ID: u64 = 1;
         const TEST_QUOTE_ASSET_ID: u64 = 2;
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_orderbook_txn = create_orderbook_creation_transaction(
-            &sender_kp,
-            TEST_BASE_ASSET_ID,
-            TEST_QUOTE_ASSET_ID,
-            recent_block_hash,
-        );
-        let signed_digest = sender_kp.sign(&create_orderbook_txn.digest().get_array()[..]);
-
-        // TODO CRUFT
         let gas: u64 = 1000;
         let new_transaction = new_create_create_orderbook_transaction(sender_kp.public().clone(), TEST_BASE_ASSET_ID, TEST_QUOTE_ASSET_ID, gas, recent_block_hash);
         let new_signed_transaction = match sign_transaction(&sender_kp, new_transaction) {
@@ -654,32 +602,19 @@ mod test_validator_state {
             _ => panic!("Error signing transaction"),
         };
 
-        let signed_create_orderbook_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_orderbook_txn, signed_digest, new_signed_transaction);
+        let consensus_transaction = ConsensusTransaction::new(&new_signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_create_orderbook_txn,
+                consensus_transaction,
             )
             .await
             .unwrap();
 
         const TEST_PRICE: u64 = 100;
         const TEST_QUANTITY: u64 = 100;
-        let place_limit_order_txn = create_place_limit_order_transaction(
-            &sender_kp,
-            TEST_BASE_ASSET_ID,
-            TEST_QUOTE_ASSET_ID,
-            OrderSide::Bid,
-            TEST_PRICE,
-            TEST_QUANTITY,
-            recent_block_hash,
-        );
-        let signed_digest = sender_kp.sign(&place_limit_order_txn.digest().get_array()[..]);
-
-        // TODO CRUFT
         let local_timestamp: u64 = 16000000;
         let gas: u64 = 1000;
         let new_transaction = new_create_limit_order_transaction(sender_kp.public().clone(), TEST_BASE_ASSET_ID, TEST_QUOTE_ASSET_ID, OrderSide::Bid as u64, TEST_PRICE, TEST_QUANTITY, local_timestamp, gas, recent_block_hash);
@@ -688,31 +623,19 @@ mod test_validator_state {
             _ => panic!("Error signing transaction"),
         };
 
-        let signed_place_limit_order_txn =
-            SignedTransaction::new(sender_kp.public().clone(), place_limit_order_txn, signed_digest, new_signed_transaction);
+        let consensus_transaction = ConsensusTransaction::new(&new_signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_place_limit_order_txn,
+                consensus_transaction,
             )
             .await
             .unwrap();
 
         // cancel order
         const TEST_ORDER_ID: u64 = 1;
-        let cancel_order_txn = create_place_cancel_order_transaction(
-            &sender_kp,
-            TEST_BASE_ASSET_ID,
-            TEST_QUOTE_ASSET_ID,
-            TEST_ORDER_ID,
-            OrderSide::Bid,
-            recent_block_hash,
-        );
-        let signed_digest = sender_kp.sign(&cancel_order_txn.digest().get_array()[..]);
-
-        // TODO CRUFT
         let local_timestamp: u64 = 16000000;
         let gas: u64 = 1000;
         let new_transaction = new_create_cancel_order_transaction(sender_kp.public().clone(), TEST_BASE_ASSET_ID, TEST_QUOTE_ASSET_ID, OrderSide::Bid as u64, local_timestamp, TEST_ORDER_ID, gas, recent_block_hash);
@@ -721,14 +644,13 @@ mod test_validator_state {
             _ => panic!("Error signing transaction"),
         };
 
-        let signed_cancel_order_txn =
-            SignedTransaction::new(sender_kp.public().clone(), cancel_order_txn, signed_digest, new_signed_transaction);
+        let consensus_transaction = ConsensusTransaction::new(&new_signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_cancel_order_txn,
+                consensus_transaction,
             )
             .await
             .unwrap();
@@ -743,10 +665,6 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, 0);
-        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
-
-        // TODO CRUFT
         let gas: u64 = 1000;
         let new_transaction = new_create_create_asset_transaction(sender_kp.public().clone(), 0, gas, recent_block_hash);
         let new_signed_transaction = match sign_transaction(&sender_kp, new_transaction) {
@@ -754,15 +672,14 @@ mod test_validator_state {
             _ => panic!("Error signing transaction"),
         };
         
-        let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest, new_signed_transaction);
+        let consensus_transaction = ConsensusTransaction::new(&new_signed_transaction);
 
         for _ in 0..5 {
             validator
                 .handle_consensus_transaction(
                     &dummy_consensus_output,
                     dummy_execution_indices.clone(),
-                    signed_create_asset_txn.clone(),
+                    consensus_transaction.clone(),
                 )
                 .await
                 .unwrap();
@@ -772,15 +689,6 @@ mod test_validator_state {
         const TEST_BASE_ASSET_ID: u64 = 1;
         const TEST_QUOTE_ASSET_ID: u64 = 2;
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_orderbook_txn = create_orderbook_creation_transaction(
-            &sender_kp,
-            TEST_BASE_ASSET_ID,
-            TEST_QUOTE_ASSET_ID,
-            recent_block_hash,
-        );
-        let signed_digest = sender_kp.sign(&create_orderbook_txn.digest().get_array()[..]);
-
-        // TODO CRUFT
         let gas: u64 = 1000;
         let new_transaction = new_create_create_orderbook_transaction(sender_kp.public().clone(), TEST_BASE_ASSET_ID, TEST_QUOTE_ASSET_ID, gas, recent_block_hash);
         let new_signed_transaction = match sign_transaction(&sender_kp, new_transaction) {
@@ -788,32 +696,20 @@ mod test_validator_state {
             _ => panic!("Error signing transaction"),
         };
 
-        let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_orderbook_txn, signed_digest, new_signed_transaction);
+        let consensus_transaction = ConsensusTransaction::new(&new_signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_create_asset_txn,
+                consensus_transaction,
             )
             .await
             .unwrap();
 
+        // create limit order transaction
         const TEST_PRICE: u64 = 100;
         const TEST_QUANTITY: u64 = 100;
-        let place_limit_order_txn = create_place_limit_order_transaction(
-            &sender_kp,
-            TEST_BASE_ASSET_ID,
-            TEST_QUOTE_ASSET_ID,
-            OrderSide::Bid,
-            TEST_PRICE,
-            TEST_QUANTITY,
-            recent_block_hash,
-        );
-        let signed_digest = sender_kp.sign(&place_limit_order_txn.digest().get_array()[..]);
-
-        // TODO CRUFT
         let local_timestamp: u64 = 16000000;
         let gas: u64 = 1000;
         let new_transaction = new_create_limit_order_transaction(sender_kp.public().clone(), TEST_BASE_ASSET_ID, TEST_QUOTE_ASSET_ID, OrderSide::Bid as u64, TEST_PRICE, TEST_QUANTITY, local_timestamp, gas, recent_block_hash);
@@ -822,33 +718,19 @@ mod test_validator_state {
             _ => panic!("Error signing transaction"),
         };
 
-        let signed_place_limit_order_txn =
-            SignedTransaction::new(sender_kp.public().clone(), place_limit_order_txn, signed_digest, new_signed_transaction);
+        let consensus_transaction = ConsensusTransaction::new(&new_signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_place_limit_order_txn,
+                consensus_transaction,
             )
             .await
             .unwrap();
 
         // cancel order
         const TEST_ORDER_ID: u64 = 1;
-        let update_order_txn = create_place_update_order_transaction(
-            &sender_kp,
-            TEST_BASE_ASSET_ID,
-            TEST_QUOTE_ASSET_ID,
-            TEST_ORDER_ID,
-            OrderSide::Bid,
-            TEST_PRICE,
-            TEST_QUANTITY + 1,
-            recent_block_hash,
-        );
-        let signed_digest = sender_kp.sign(&update_order_txn.digest().get_array()[..]);
-
-        // TODO CRUFT
         let local_timestamp: u64 = 16000000;
         let gas: u64 = 1000;
         let new_transaction = new_create_update_order_transaction(sender_kp.public().clone(), TEST_BASE_ASSET_ID, TEST_QUOTE_ASSET_ID, OrderSide::Bid as u64, TEST_PRICE, TEST_QUANTITY, local_timestamp, TEST_ORDER_ID, gas, recent_block_hash);
@@ -857,14 +739,13 @@ mod test_validator_state {
             _ => panic!("Error signing transaction"),
         };
         
-        let signed_update_order_txn =
-            SignedTransaction::new(sender_kp.public().clone(), update_order_txn, signed_digest, new_signed_transaction);
+        let consensus_transaction = ConsensusTransaction::new(&new_signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_update_order_txn,
+                consensus_transaction,
             )
             .await
             .unwrap();

@@ -24,7 +24,7 @@ impl Relayer for RelayerService {
                 if let Some(block_info) = opt {
                     Ok(Response::new(RelayerBlockInfoResponse {
                         successful: true,
-                        block_info: Some(BlockInfoProto {
+                        block_info: Some(RelayerBlockInfo {
                             block_number: block_info.block_number,
                             digest: CertificateDigestProto::from(block_info.block_digest).digest, // TODO egregious hack (MI)
                         }),
@@ -61,7 +61,7 @@ impl Relayer for RelayerService {
                 if let Some(block_info) = opt {
                     Ok(Response::new(RelayerBlockInfoResponse {
                         successful: true,
-                        block_info: Some(BlockInfoProto {
+                        block_info: Some(RelayerBlockInfo {
                             block_number: block_info.block_number,
                             digest: CertificateDigestProto::from(block_info.block_digest).digest, // TODO egregious hack (MI)
                         }),
@@ -94,7 +94,7 @@ impl Relayer for RelayerService {
                     let block_bytes = bincode::serialize(&block).unwrap().into();
                     Ok(Response::new(RelayerBlockResponse {
                         successful: true,
-                        block: Some(BlockProto { block: block_bytes }),
+                        block: Some(RelayerBlock { block: block_bytes }),
                     }))
                 } else {
                     Ok(Response::new(RelayerBlockResponse {

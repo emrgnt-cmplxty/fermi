@@ -1,0 +1,84 @@
+// Copyright (c) 2022, Mysten Labs, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
+syntax = "proto3";
+
+package services;
+
+// IMPORTS
+
+import "new_transaction.proto";
+
+// INTERFACE
+
+message Empty {}
+
+// SUBMITTER
+
+service TransactionSubmitter {
+    // submit a transaction
+    rpc SubmitTransaction(new_transaction.NewSignedTransaction) returns (Empty) {}
+    
+    // submit a transaction via stream
+    rpc SubmitTransactionStream(stream new_transaction.NewSignedTransaction) returns (Empty) {}
+}
+
+// FAUCET
+
+service Faucet {
+    // request airdrop
+    rpc Airdrop (FaucetAirdropRequest) returns (FaucetAirdropResponse);
+}
+
+message FaucetAirdropRequest {
+    string airdrop_to = 1;
+    uint64 amount = 2;
+}
+
+message FaucetAirdropResponse {
+    bool successful = 1;
+}
+
+// RELAYER
+
+service Relayer {
+    // request latest block info
+    rpc GetLatestBlockInfo (RelayerGetLatestBlockInfoRequest) returns (RelayerBlockInfoResponse);
+
+    // request block info by block number
+    rpc GetBlockInfo (RelayerGetBlockInfoRequest) returns (RelayerBlockInfoResponse);
+
+    // request block (includes transactions)
+    rpc GetBlock (RelayerGetBlockRequest) returns (RelayerBlockResponse);
+}
+
+message RelayerBlockInfo {
+    uint64 block_number = 1;
+    bytes digest = 2;
+}
+
+message RelayerBlock {
+    bytes block = 1;
+}
+
+message RelayerGetLatestBlockInfoRequest {}
+
+message RelayerGetBlockInfoRequest {
+    uint64 block_number = 1;
+}
+
+message RelayerGetBlockRequest {
+    uint64 block_number = 1;
+}
+
+message RelayerBlockResponse {
+    bool successful = 1;
+    RelayerBlock block = 2;
+}
+
+// TODO figure out how to import from narwhal. It almost worked but it failed because ../ is not allowed
+// in the virtual path for some reason
+message RelayerBlockInfoResponse {
+    bool successful = 1;
+    RelayerBlockInfo block_info = 2;
+}

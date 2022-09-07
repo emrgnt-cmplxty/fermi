@@ -7,10 +7,9 @@ use futures::{future::join_all, StreamExt};
 use gdex_types::{
     account::{AccountKeyPair, ValidatorKeyPair},
     block::BlockDigest,
-    proto::{RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionProto, TransactionsClient},
-    transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
+    proto::{RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionSubmitterClient},
     utils::read_keypair_from_file,
-    new_transaction::{NewSignedTransaction, NewTransaction, new_create_payment_transaction, sign_transaction},
+    new_transaction::{NewSignedTransaction, NewTransaction, new_create_payment_transaction, sign_transaction, ConsensusTransaction},
 };
 use narwhal_crypto::{
     traits::{KeyPair, Signer},
@@ -39,29 +38,15 @@ fn create_signed_transaction(
     kp_receiver: &AccountKeyPair,
     amount: u64,
     block_digest: BlockDigest,
-) -> SignedTransaction {
+) -> NewSignedTransaction {
     // use a dummy batch digest for initial benchmarking
-
-    let transaction_variant = TransactionVariant::PaymentTransaction(PaymentRequest::new(
-        kp_receiver.public().clone(),
-        PRIMARY_ASSET_ID,
-        amount,
-    ));
-    let transaction = Transaction::new(kp_sender.public().clone(), block_digest, transaction_variant);
-
-    // sign digest and create signed transaction
-    let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-
-    // TODO CRUFT
     let gas: u64 = 1000;
     let new_transaction = new_create_payment_transaction(kp_sender.public().clone(), kp_receiver.public(), PRIMARY_ASSET_ID, amount, gas, block_digest);
     let new_signed_transaction = match sign_transaction(kp_sender, new_transaction) {
         Ok(t) => t,
         _ => panic!("Error signing transaction"),
     };
-
-    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest, new_signed_transaction);
-    signed_transaction
+    new_signed_transaction
 }
 
 #[tokio::main]
@@ -152,7 +137,7 @@ impl Client {
         const PRECISION: u64 = 20; // Sample precision.
         const BURST_DURATION: u64 = 1000 / PRECISION;
 
-        let mut client = TransactionsClient::connect(self.target.as_str().to_owned())
+        let mut client = TransactionSubmitterClient::connect(self.target.as_str().to_owned())
             .await
             .unwrap();
         let mut relayer_client = RelayerClient::connect(self.relayer.as_str().to_owned()).await.unwrap();
@@ -191,10 +176,12 @@ impl Client {
             let kp_receiver = keys([1; 32]).pop().unwrap();
 
             if counter == 0 {
-                let transaction_size = create_signed_transaction(&keypair, &kp_receiver, 1, block_digest.clone())
-                    .serialize()
-                    .unwrap()
-                    .len();
+                let signed_transaction = create_signed_transaction(&keypair, &kp_receiver, 1, block_digest.clone());
+                let serialized_consensus_transaction = match ConsensusTransaction::new(&signed_transaction).serialize() {
+                    Ok(t) => t,
+                    _ => panic!("Error serializing transaction"),
+                };
+                let transaction_size = serialized_consensus_transaction.len();
                 info!("Transactions size: {transaction_size} B");
             }
 
@@ -206,11 +193,7 @@ impl Client {
                 }
                 let signed_tranasction =
                     create_signed_transaction(&keypair, &kp_receiver, amount, block_digest.clone());
-                // let txn_digest = signed_tranasction.get_transaction_payload().digest().to_string();
-                // info!("Submitting {}", txn_digest);
-                TransactionProto {
-                    transaction: signed_tranasction.serialize().unwrap().into(),
-                }
+                signed_tranasction
             });
 
             if let Err(e) = client.submit_transaction_stream(stream).await {

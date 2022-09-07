@@ -2,14 +2,10 @@ use gdex_types::{
     account::AccountKeyPair,
     block::BlockDigest,
     order_book::OrderSide,
-    proto::{Empty, RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionProto, TransactionsClient},
-    transaction::{
-        create_asset_creation_transaction, create_orderbook_creation_transaction, create_payment_transaction,
-        create_place_limit_order_transaction, SignedTransaction,
-    },
-    new_transaction::{new_create_payment_transaction,
+    proto::{Empty, RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionSubmitterClient},
+    new_transaction::{NewSignedTransaction, new_create_payment_transaction,
                       new_create_create_orderbook_transaction, new_create_create_asset_transaction,
-                      new_create_limit_order_transaction, sign_transaction},
+                      new_create_limit_order_transaction, sign_transaction, ConsensusTransaction},
 };
 use narwhal_crypto::{
     traits::{KeyPair, Signer},
@@ -31,40 +27,28 @@ fn create_signed_payment_transaction(
     asset_id: u64,
     amount: u64,
     block_digest: BlockDigest,
-) -> SignedTransaction {
-    let transaction = create_payment_transaction(kp_sender, kp_receiver, asset_id, amount, block_digest);
-    let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-    
-    // TODO CRUFT
+) -> NewSignedTransaction {
     let gas: u64 = 1000;
     let new_transaction = new_create_payment_transaction(kp_sender.public().clone(), kp_receiver.public(), asset_id, amount, gas, block_digest);
     let new_signed_transaction = match sign_transaction(kp_sender, new_transaction) {
         Ok(t) => t,
         _ => panic!("Error signing transaction"),
     };
-    
-    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest, new_signed_transaction);
-    signed_transaction
+    new_signed_transaction
 }
 
 fn create_signed_asset_creation_transaction(
     kp_sender: &AccountKeyPair,
     block_digest: BlockDigest,
     dummy: u8,
-) -> SignedTransaction {
-    let transaction = create_asset_creation_transaction(kp_sender, block_digest, dummy);
-    let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-
-    // TODO CRUFT
+) -> NewSignedTransaction {
     let gas: u64 = 1000;
     let new_transaction = new_create_create_asset_transaction(kp_sender.public().clone(), dummy as u64, gas, block_digest);
     let new_signed_transaction = match sign_transaction(kp_sender, new_transaction) {
         Ok(t) => t,
         _ => panic!("Error signing transaction"),
     };
-
-    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest, new_signed_transaction);
-    signed_transaction
+    new_signed_transaction
 }
 
 fn create_signed_orderbook_transaction(
@@ -72,20 +56,14 @@ fn create_signed_orderbook_transaction(
     base_asset_id: u64,
     quote_asset_id: u64,
     block_digest: BlockDigest,
-) -> SignedTransaction {
-    let transaction = create_orderbook_creation_transaction(kp_sender, base_asset_id, quote_asset_id, block_digest);
-    let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-
-    // TODO CRUFT
+) -> NewSignedTransaction {
     let gas: u64 = 1000;
     let new_transaction = new_create_create_orderbook_transaction(kp_sender.public().clone(), base_asset_id, quote_asset_id, gas, block_digest);
     let new_signed_transaction = match sign_transaction(kp_sender, new_transaction) {
         Ok(t) => t,
         _ => panic!("Error signing transaction"),
     };
-
-    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest, new_signed_transaction);
-    signed_transaction
+    new_signed_transaction
 }
 
 fn create_signed_limit_order_transaction(
@@ -96,19 +74,7 @@ fn create_signed_limit_order_transaction(
     price: u64,
     amount: u64,
     block_digest: BlockDigest,
-) -> SignedTransaction {
-    let transaction = create_place_limit_order_transaction(
-        kp_sender,
-        base_asset_id,
-        quote_asset_id,
-        order_side,
-        price,
-        amount,
-        block_digest,
-    );
-    let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-
-    // TODO CRUFT
+) -> NewSignedTransaction {
     let local_timestamp: u64 = 16000000;
     let gas: u64 = 1000;
     let new_transaction = new_create_limit_order_transaction(kp_sender.public().clone(), base_asset_id, quote_asset_id, order_side as u64, price, amount, local_timestamp, gas, block_digest);
@@ -116,15 +82,13 @@ fn create_signed_limit_order_transaction(
         Ok(t) => t,
         _ => panic!("Error signing transaction"),
     };
-
-    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest, new_signed_transaction);
-    signed_transaction
+    new_signed_transaction
 }
 
 pub struct BenchHelper {
     primary_keypair: AccountKeyPair,
     accounts: Vec<AccountKeyPair>,
-    validator_client: Option<TransactionsClient<Channel>>,
+    validator_client: Option<TransactionSubmitterClient<Channel>>,
     relayer_client: Option<RelayerClient<Channel>>,
     base_asset_id: u64,
     quote_asset_id: u64,
@@ -139,7 +103,7 @@ impl BenchHelper {
         BenchHelper {
             primary_keypair,
             accounts: Vec::new(),
-            validator_client: None::<TransactionsClient<Channel>>,
+            validator_client: None::<TransactionSubmitterClient<Channel>>,
             relayer_client: None::<RelayerClient<Channel>>,
             // TODO - avoid hard coding by directly calculating created assets...
             base_asset_id: 1,
@@ -171,16 +135,12 @@ impl BenchHelper {
 
     async fn submit_transaction(
         &mut self,
-        signed_tranasction: SignedTransaction,
+        new_signed_tranasction: NewSignedTransaction,
     ) -> Result<tonic::Response<Empty>, tonic::Status> {
-        let transaction_proto = TransactionProto {
-            transaction: signed_tranasction.serialize().unwrap().into(),
-        };
-
         self.validator_client
             .as_mut()
             .expect("Validator not initialized")
-            .submit_transaction(transaction_proto)
+            .submit_transaction(new_signed_tranasction)
             .await
     }
 
@@ -220,9 +180,7 @@ impl BenchHelper {
                 recent_block_hash,
             );
 
-            TransactionProto {
-                transaction: signed_transaction.serialize().unwrap().into(),
-            }
+            signed_transaction            
         });
 
         if let Err(e) = self
@@ -319,7 +277,7 @@ impl BenchHelper {
         accounts_to_generate: u64,
     ) {
         self.validator_client = Some(
-            TransactionsClient::connect(validator_url.as_str().to_owned())
+            TransactionSubmitterClient::connect(validator_url.as_str().to_owned())
                 .await
                 .unwrap(),
         );
@@ -329,10 +287,16 @@ impl BenchHelper {
         // log the transaction size to help python client calculate throughput
         // note, any transaction type works here because all enumes have the same size
         let recent_block_hash = self.get_recent_block_digest().await;
-        let transaction_size = create_signed_asset_creation_transaction(&self.primary_keypair, recent_block_hash, 0)
-            .serialize()
-            .unwrap()
-            .len();
+
+        let signed_transaction = create_signed_asset_creation_transaction(&self.primary_keypair, recent_block_hash, 0);
+        
+        let serialized_consensus_transaction = match ConsensusTransaction::new(&signed_transaction).serialize() {
+            Ok(t) => t,
+            _ => panic!("Error serializing transaction"),
+        };
+
+        let transaction_size = serialized_consensus_transaction.len();
+        
         info!("Transactions size: {transaction_size} B");
     }
 

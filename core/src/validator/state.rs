@@ -55,12 +55,13 @@ impl ValidatorStore {
     const BLOCKS_CF: &'static str = "blocks";
     const BLOCK_INFO_CF: &'static str = "block_info";
     const LAST_BLOCK_CF: &'static str = "last_block";
+    const LAST_ORDERBOOK_DEPTH_CF: &'static str = "last_orderbook_depth";
 
     pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
         let rocksdb = open_cf(
             store_path,
             None,
-            &[Self::BLOCKS_CF, Self::BLOCK_INFO_CF, Self::LAST_BLOCK_CF],
+            &[Self::BLOCKS_CF, Self::BLOCK_INFO_CF, Self::LAST_BLOCK_CF, Self::LAST_ORDERBOOK_DEPTH_CF],
         )
         .expect("Cannot open database");
 
@@ -68,7 +69,7 @@ impl ValidatorStore {
             Self::BLOCKS_CF;<BlockNumber, Block>,
             Self::BLOCK_INFO_CF;<BlockNumber, BlockInfo>,
             Self::LAST_BLOCK_CF;<u64, BlockInfo>,
-            Self::LAST_BLOCK_CF;<String, OrderbookDepth>
+            Self::LAST_ORDERBOOK_DEPTH_CF;<String, OrderbookDepth>
         );
 
         let block_number_from_dbmap = last_block_map.get(&0_u64);

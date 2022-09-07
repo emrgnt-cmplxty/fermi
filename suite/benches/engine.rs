@@ -8,7 +8,7 @@ use gdex_types::transaction::OrderRequest;
 use gdex_types::{
     account::{account_test_functions::generate_keypair_vec, AccountPubKey},
     crypto::{KeypairTraits, ToFromBytes},
-    order_book::{OrderProcessingResult, OrderSide, Success},
+    order_book::{OrderProcessingResult, OrderSide, Success, OrderbookDepth},
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use rocksdb::{ColumnFamilyDescriptor, DBWithThreadMode, MultiThreaded, Options, DB};
@@ -118,6 +118,21 @@ fn place_orders_engine_account(
     }
 }
 
+fn orderbook_depth_snaps(
+    n_iter: u64,
+    orderbook_controller: &mut OrderbookInterface,
+    db: &DBWithThreadMode<MultiThreaded>
+) {
+    let mut i: u64 = 0;
+    while i < n_iter {
+        // generate the orderbook depth snap
+        let orderbook_depth = orderbook_controller.get_orderbook_depth();
+        let serialized_orderbook_depth = bincode::serialize(&orderbook_depth).unwrap();
+        db.put("a", serialized_orderbook_depth).unwrap();
+        i += 1;
+    }
+}
+
 pub fn criterion_benchmark(c: &mut Criterion) {
     // generate creator details
     let primary = generate_keypair_vec([0; 32]).pop().unwrap();
@@ -179,19 +194,6 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     group.throughput(Throughput::Elements((N_ORDERS_BENCH) as u64));
 
     // no write-out to db
-    group.bench_function("place_orders_engine", |b| {
-        b.iter(|| {
-            place_orders_engine(
-                base_asset_id,
-                quote_asset_id,
-                black_box(N_ORDERS_BENCH),
-                &mut rng,
-                &db,
-                false,
-            )
-        })
-    });
-
     group.bench_function("place_orders_engine_account", |b| {
         b.iter(|| {
             place_orders_engine_account(
@@ -235,6 +237,43 @@ pub fn criterion_benchmark(c: &mut Criterion) {
             )
         })
     });
+
+    group.finish();
+
+    // create more orders
+    const TEST_MID: u64 = 2000;
+    for i in 0..1_000 {
+        for _ in 0..10_000 {
+            // bid
+            orderbook_interface.place_limit_order(
+                primary.public(),
+                OrderSide::Bid,
+                1,
+                TEST_MID-i
+            ).unwrap();
+            orderbook_interface.place_limit_order(
+                primary.public(),
+                OrderSide::Ask,
+                1,
+                TEST_MID+i
+            ).unwrap();
+        }
+    }
+
+    const N_DEPTHS_BENCH: u64 = 1;
+    let mut group1 = c.benchmark_group("orderbook_depth");
+    group1.throughput(Throughput::Elements((N_DEPTHS_BENCH) as u64));
+    group1.bench_function("engine_orderbook_depth_snaps", |b| {
+        b.iter(|| {
+            orderbook_depth_snaps(
+                black_box(N_DEPTHS_BENCH),
+                &mut orderbook_interface,
+                &db
+            )
+        })
+    });
+
+    group1.finish();
 }
 
 criterion_group!(benches, criterion_benchmark);

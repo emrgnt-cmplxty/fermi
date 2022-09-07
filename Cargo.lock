@@ -690,7 +690,7 @@ dependencies = [
  "ark-std",
  "blake2s_simd",
  "byteorder",
- "clap 3.2.19",
+ "clap 3.2.20",
  "csv",
  "env_logger",
  "hex",
@@ -958,9 +958,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "3.2.19"
+version = "3.2.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68d43934757334b5c0519ff882e1ab9647ac0258b47c24c4f490d78e42697fd5"
+checksum = "23b71c3ce99b7611011217b366d923f1d0a7e07a92bb2dbf1e84508c673ca3bd"
 dependencies = [
  "atty",
  "bitflags",
@@ -2413,7 +2413,7 @@ name = "gdex-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "clap 3.2.19",
+ "clap 3.2.20",
  "colored",
  "gdex-core",
  "gdex-node",
@@ -2453,7 +2453,7 @@ dependencies = [
  "bcs",
  "bincode",
  "camino",
- "clap 3.2.19",
+ "clap 3.2.20",
  "config 0.1.0",
  "consensus",
  "crypto",
@@ -3577,7 +3577,7 @@ version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cc195aab5b803465bf614a5a4765741abce6c8d64e7d8ca57acd2923661fba9f"
 dependencies = [
- "clap 3.2.19",
+ "clap 3.2.20",
  "crossbeam-channel",
  "rayon",
  "termcolor",
@@ -3589,7 +3589,7 @@ version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "79529479c298f5af41375b0c1a77ef670d450b4c9cd7949d2b43af08121b20ec"
 dependencies = [
- "clap 3.2.19",
+ "clap 3.2.20",
  "termcolor",
  "threadpool",
 ]
@@ -3880,7 +3880,7 @@ version = "0.1.0"
 source = "git+https://github.com/move-language/move?rev=70b34a66473c34ad30d101290b249f2db3c847a2#70b34a66473c34ad30d101290b249f2db3c847a2"
 dependencies = [
  "anyhow",
- "clap 3.2.19",
+ "clap 3.2.20",
  "crossterm 0.21.0",
  "move-binary-format",
  "move-bytecode-source-map",
@@ -3898,7 +3898,7 @@ source = "git+https://github.com/move-language/move?rev=70b34a66473c34ad30d10129
 dependencies = [
  "anyhow",
  "bcs",
- "clap 3.2.19",
+ "clap 3.2.20",
  "codespan-reporting",
  "colored",
  "difference",
@@ -3960,7 +3960,7 @@ source = "git+https://github.com/move-language/move?rev=70b34a66473c34ad30d10129
 dependencies = [
  "anyhow",
  "bcs",
- "clap 3.2.19",
+ "clap 3.2.20",
  "codespan-reporting",
  "difference",
  "hex",
@@ -4004,7 +4004,7 @@ source = "git+https://github.com/move-language/move?rev=70b34a66473c34ad30d10129
 dependencies = [
  "anyhow",
  "bcs",
- "clap 3.2.19",
+ "clap 3.2.20",
  "codespan",
  "colored",
  "move-binary-format",
@@ -4023,7 +4023,7 @@ version = "0.1.0"
 source = "git+https://github.com/move-language/move?rev=70b34a66473c34ad30d101290b249f2db3c847a2#70b34a66473c34ad30d101290b249f2db3c847a2"
 dependencies = [
  "anyhow",
- "clap 3.2.19",
+ "clap 3.2.20",
  "colored",
  "move-binary-format",
  "move-bytecode-source-map",
@@ -4074,7 +4074,7 @@ source = "git+https://github.com/move-language/move?rev=70b34a66473c34ad30d10129
 dependencies = [
  "anyhow",
  "bcs",
- "clap 3.2.19",
+ "clap 3.2.20",
  "move-binary-format",
  "move-bytecode-source-map",
  "move-bytecode-verifier",
@@ -4165,7 +4165,7 @@ source = "git+https://github.com/move-language/move?rev=70b34a66473c34ad30d10129
 dependencies = [
  "anyhow",
  "bcs",
- "clap 3.2.19",
+ "clap 3.2.20",
  "colored",
  "dirs-next",
  "itertools",
@@ -4202,7 +4202,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "atty",
- "clap 3.2.19",
+ "clap 3.2.20",
  "codespan",
  "codespan-reporting",
  "futures",
@@ -4319,7 +4319,7 @@ source = "git+https://github.com/move-language/move?rev=70b34a66473c34ad30d10129
 dependencies = [
  "anyhow",
  "bytecode-interpreter-crypto",
- "clap 3.2.19",
+ "clap 3.2.20",
  "codespan-reporting",
  "itertools",
  "move-binary-format",
@@ -4384,7 +4384,7 @@ version = "0.1.0"
 source = "git+https://github.com/move-language/move?rev=70b34a66473c34ad30d101290b249f2db3c847a2#70b34a66473c34ad30d101290b249f2db3c847a2"
 dependencies = [
  "anyhow",
- "clap 3.2.19",
+ "clap 3.2.20",
  "colored",
  "move-binary-format",
  "move-bytecode-source-map",
@@ -4416,7 +4416,7 @@ source = "git+https://github.com/move-language/move?rev=70b34a66473c34ad30d10129
 dependencies = [
  "anyhow",
  "better_any",
- "clap 3.2.19",
+ "clap 3.2.20",
  "codespan-reporting",
  "colored",
  "itertools",
@@ -8821,7 +8821,7 @@ dependencies = [
  "cfg-if 1.0.0",
  "clang-sys",
  "clap 2.34.0",
- "clap 3.2.19",
+ "clap 3.2.20",
  "clap_lex",
  "clear_on_drop",
  "cmake",
@@ -9244,7 +9244,7 @@ dependencies = [
  "chrono-tz-build",
  "clang-sys",
  "clap 2.34.0",
- "clap 3.2.19",
+ "clap 3.2.20",
  "clap_derive",
  "clap_lex",
  "clear_on_drop",

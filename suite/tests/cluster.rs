@@ -19,9 +19,10 @@ pub mod cluster_test_suite {
         asset::PRIMARY_ASSET_ID,
         block::{Block, BlockDigest},
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
+        order_book::{Depth, OrderbookDepth},
         proto::{
             FaucetAirdropRequest, FaucetClient, FaucetServer, RelayerClient, RelayerGetBlockRequest,
-            RelayerGetLatestBlockInfoRequest,
+            RelayerGetLatestBlockInfoRequest, RelayerGetLatestOrderbookDepthRequest,
         },
         transaction::{create_asset_creation_transaction, SignedTransaction},
         utils,
@@ -34,6 +35,7 @@ pub mod cluster_test_suite {
     use narwhal_types::{Certificate, Header};
 
     // external
+    use std::collections::HashMap;
     use std::{net::SocketAddr, sync::Arc};
     use tokio::time::{sleep, Duration};
     use tonic::transport::Server;
@@ -410,6 +412,76 @@ pub mod cluster_test_suite {
     }
 
     #[tokio::test]
+    pub async fn test_spawn_relayer_orderbook_depths() {
+        let validator_count: usize = 4;
+        let mut cluster = TestCluster::spawn(validator_count, None).await;
+
+        let spawner_1 = cluster.get_validator_spawner(1);
+        let validator_state_1 = spawner_1.get_validator_state().unwrap();
+
+        // Write the orderbook depth down
+        let base_asset_id: u64 = 1;
+        let quote_asset_id: u64 = 2;
+        let orderbook_key: String = format!("{}_{}", base_asset_id, quote_asset_id);
+        let mut orderbook_depths: HashMap<String, OrderbookDepth> = HashMap::new();
+        let mut bids: Vec<Depth> = Vec::new();
+        let mut asks: Vec<Depth> = Vec::new();
+        const TEST_MID: u64 = 10;
+        for i in 1..TEST_MID {
+            bids.push(Depth {
+                price: i,
+                quantity: 10 * i,
+            });
+            asks.push(Depth {
+                price: TEST_MID + i,
+                quantity: 10 * i,
+            });
+        }
+        let orderbook_depth = OrderbookDepth { bids, asks };
+        orderbook_depths.insert(orderbook_key, orderbook_depth);
+
+        validator_state_1
+            .validator_store
+            .write_latest_orderbook_depths(orderbook_depths)
+            .await;
+
+        let relayer_1 = cluster.spawn_single_relayer(1).await;
+        let target_endpoint = endpoint_from_multiaddr(&relayer_1.get_relayer_address()).unwrap();
+        let endpoint = target_endpoint.endpoint();
+        let mut client = RelayerClient::connect(endpoint.clone()).await.unwrap();
+
+        // generate successful orderbook depth request
+        let latest_orderbook_depth_request = tonic::Request::new(RelayerGetLatestOrderbookDepthRequest {
+            base_asset_id,
+            quote_asset_id,
+            depth: 5,
+        });
+        let latest_orderbook_depth_response = client.get_latest_orderbook_depth(latest_orderbook_depth_request).await;
+        let _latest_orderbook_depth_response_bids = latest_orderbook_depth_response.unwrap().into_inner().bids;
+
+        // TODO: check the bids
+
+        // generate failed depth request
+        let bad_base_asset_id = 2;
+        let bad_quote_asset_id = 3;
+        let bad_latest_orderbook_depth_request = tonic::Request::new(RelayerGetLatestOrderbookDepthRequest {
+            base_asset_id: bad_base_asset_id,
+            quote_asset_id: bad_quote_asset_id,
+            depth: 5,
+        });
+        let bad_latest_orderbook_depth_response = client
+            .get_latest_orderbook_depth(bad_latest_orderbook_depth_request)
+            .await;
+        assert!(
+            bad_latest_orderbook_depth_response.is_err(),
+            "This request must fail as base and quote assets do not exist."
+        );
+        if let Err(err) = bad_latest_orderbook_depth_response {
+            assert_eq!(err.message(), "Orderbook depth was not found.");
+            assert_eq!(tonic::Code::NotFound, err.code());
+        }
+    }
+
     pub async fn test_metrics() {
         let validator_count: usize = 4;
         const N_TRANSACTIONS: u64 = 1_000_000;

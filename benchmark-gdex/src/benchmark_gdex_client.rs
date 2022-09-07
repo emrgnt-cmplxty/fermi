@@ -12,7 +12,7 @@ use gdex_types::{
     block::BlockDigest,
     proto::{RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionSubmitterClient},
     utils::read_keypair_from_file,
-    new_transaction::{NewSignedTransaction, new_create_payment_transaction, sign_transaction, ConsensusTransaction},
+    transaction::{SignedTransaction, create_payment_transaction, sign_transaction, ConsensusTransaction},
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use std::path::PathBuf;
@@ -37,15 +37,15 @@ fn create_signed_transaction(
     kp_receiver: &AccountKeyPair,
     amount: u64,
     block_digest: BlockDigest,
-) -> NewSignedTransaction {
+) -> SignedTransaction {
     // use a dummy batch digest for initial benchmarking
     let gas: u64 = 1000;
-    let new_transaction = new_create_payment_transaction(kp_sender.public().clone(), kp_receiver.public(), PRIMARY_ASSET_ID, amount, gas, block_digest);
-    let new_signed_transaction = match sign_transaction(kp_sender, new_transaction) {
+    let transaction = create_payment_transaction(kp_sender.public().clone(), kp_receiver.public(), PRIMARY_ASSET_ID, amount, gas, block_digest);
+    let signed_transaction = match sign_transaction(kp_sender, transaction) {
         Ok(t) => t,
         _ => panic!("Error signing transaction"),
     };
-    new_signed_transaction
+    signed_transaction
 }
 
 #[tokio::main]

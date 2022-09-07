@@ -4,7 +4,7 @@ use gdex_types::{
     account::AccountKeyPair,
     crypto::KeypairTraits,
     proto::{Faucet, FaucetAirdropRequest, FaucetAirdropResponse, FaucetServer, TransactionSubmitterClient},
-    new_transaction::{NewSignedTransaction, new_create_payment_transaction, sign_transaction},
+    transaction::{SignedTransaction, create_payment_transaction, sign_transaction},
     utils,
 };
 use multiaddr::Multiaddr;
@@ -29,17 +29,17 @@ fn generate_signed_airdrop_transaction_for_faucet(
     kp_sender: &AccountKeyPair,
     kp_receiver_public_key: &Ed25519PublicKey,
     amount: u64,
-) -> NewSignedTransaction {
+) -> SignedTransaction {
     // Setting a certificate_digest
     let recent_certificate_digest = CertificateDigest::new([0; DIGEST_LEN]);
     let gas: u64 = 1000;
-    let new_transaction = new_create_payment_transaction(kp_sender.public().clone(), kp_receiver_public_key, PRIMARY_ASSET_ID, amount, gas, recent_certificate_digest);
-    let new_signed_transaction = match sign_transaction(kp_sender, new_transaction) {
+    let transaction = create_payment_transaction(kp_sender.public().clone(), kp_receiver_public_key, PRIMARY_ASSET_ID, amount, gas, recent_certificate_digest);
+    let signed_transaction = match sign_transaction(kp_sender, transaction) {
         Ok(t) => t,
         _ => panic!("Error signing transaction"),
     };
 
-    new_signed_transaction
+    signed_transaction
 }
 
 #[tonic::async_trait]

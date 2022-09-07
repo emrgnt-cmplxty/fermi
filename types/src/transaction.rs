@@ -16,12 +16,7 @@ use crate::{
     order_book::OrderSide,
 };
 
-pub use crate::proto::{
-    ControllerType, RequestType, Version, NewSignedTransaction,
-    NewTransaction, PaymentRequest, CreateAssetRequest,
-    CreateOrderbookRequest, MarketOrderRequest, LimitOrderRequest,
-    UpdateOrderRequest, CancelOrderRequest
-};
+pub use crate::proto::*;
 
 // gdex
 
@@ -51,17 +46,17 @@ pub const PROTO_VERSION: Version = Version { major: 0, minor: 0, patch: 0 };
 // DIGEST TYPES
 
 #[derive(Clone, Copy, Serialize, Deserialize, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct NewTransactionDigest([u8; DIGEST_LEN]);
+pub struct TransactionDigest([u8; DIGEST_LEN]);
 
-impl fmt::Display for NewTransactionDigest {
+impl fmt::Display for TransactionDigest {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", Base64::encode(&self.0).get(0..16).unwrap())
     }
 }
 
-impl NewTransactionDigest {
-    pub fn new(val: [u8; DIGEST_LEN]) -> NewTransactionDigest {
-        NewTransactionDigest(val)
+impl TransactionDigest {
+    pub fn new(val: [u8; DIGEST_LEN]) -> TransactionDigest {
+        TransactionDigest(val)
     }
 
     pub fn get_array(&self) -> [u8; DIGEST_LEN] {
@@ -101,10 +96,10 @@ pub struct ConsensusTransaction {
 
 impl ConsensusTransaction {
     pub fn new(
-        new_signed_transaction: &NewSignedTransaction
+        signed_transaction: &SignedTransaction
     ) -> Self {
         ConsensusTransaction {
-            signed_transaction_bytes: serialize_protobuf(new_signed_transaction)
+            signed_transaction_bytes: serialize_protobuf(signed_transaction)
         }
     }
 
@@ -122,7 +117,7 @@ impl ConsensusTransaction {
         }
     }
 
-    pub fn get_payload(&self) -> Result<NewSignedTransaction, GDEXError> {
+    pub fn get_payload(&self) -> Result<SignedTransaction, GDEXError> {
         deserialize_protobuf(&self.signed_transaction_bytes)
     }
 }
@@ -130,10 +125,10 @@ impl ConsensusTransaction {
 // SIGNED TRANSACTION
 
 pub fn create_signed_transaction(
-    transaction: NewTransaction,
+    transaction: Transaction,
     signature: &[u8; 64]
-) -> NewSignedTransaction {
-    NewSignedTransaction {
+) -> SignedTransaction {
+    SignedTransaction {
         transaction: Some(transaction),
         signature: Bytes::from(signature.to_vec())
     }
@@ -148,8 +143,8 @@ pub fn create_transaction(
     recent_block_hash: CertificateDigest,
     gas: u64,
     request_bytes: Vec<u8>
-) -> NewTransaction {
-    NewTransaction {
+) -> Transaction {
+    Transaction {
         version: Some(PROTO_VERSION),
         sender: Bytes::from(sender.as_ref().to_vec()),
         target_controller: target_controller as i32,
@@ -266,14 +261,14 @@ pub fn create_cancel_order_request(
 
 // TRANSACTION BUILDERS
 
-pub fn new_create_payment_transaction(
+pub fn create_payment_transaction(
     sender: AccountPubKey, // TODO can be ref?
     receiver: &AccountPubKey,
     asset_id: u64,
     amount: u64,
     gas: u64,
     recent_block_hash: CertificateDigest,
-) -> NewTransaction {
+) -> Transaction {
     let request = create_payment_request(
         receiver,
         asset_id,
@@ -291,12 +286,12 @@ pub fn new_create_payment_transaction(
 }
 
 // TODO get rid of dummy thing (pretty gross)
-pub fn new_create_create_asset_transaction(
+pub fn create_create_asset_transaction(
     sender: AccountPubKey,
     dummy: u64,
     gas: u64,
     recent_block_hash: CertificateDigest,
-) -> NewTransaction {
+) -> Transaction {
     let request = create_create_asset_request(dummy);
     
     create_transaction(
@@ -309,13 +304,13 @@ pub fn new_create_create_asset_transaction(
     )
 }
 
-pub fn new_create_create_orderbook_transaction(
+pub fn create_create_orderbook_transaction(
     sender: AccountPubKey,
     base_asset_id: u64,
     quote_asset_id: u64,
     gas: u64,
     recent_block_hash: CertificateDigest,
-) -> NewTransaction {
+) -> Transaction {
     let request = create_create_orderbook_request(
         base_asset_id,
         quote_asset_id
@@ -332,7 +327,7 @@ pub fn new_create_create_orderbook_transaction(
 }
 
 
-pub fn new_create_market_order_transaction(
+pub fn create_market_order_transaction(
     sender: AccountPubKey,
     base_asset_id: u64,
     quote_asset_id: u64,
@@ -341,7 +336,7 @@ pub fn new_create_market_order_transaction(
     local_timestamp: u64,
     gas: u64,
     recent_block_hash: CertificateDigest,
-) -> NewTransaction {
+) -> Transaction {
     let request = create_market_order_request(
         base_asset_id,
         quote_asset_id,
@@ -360,7 +355,7 @@ pub fn new_create_market_order_transaction(
     )
 }
 
-pub fn new_create_limit_order_transaction(
+pub fn create_limit_order_transaction(
     sender: AccountPubKey,
     base_asset_id: u64,
     quote_asset_id: u64,
@@ -370,7 +365,7 @@ pub fn new_create_limit_order_transaction(
     local_timestamp: u64,
     gas: u64,
     recent_block_hash: CertificateDigest,
-) -> NewTransaction {
+) -> Transaction {
     let request = create_limit_order_request(
         base_asset_id,
         quote_asset_id,
@@ -390,7 +385,7 @@ pub fn new_create_limit_order_transaction(
     )
 }
 
-pub fn new_create_update_order_transaction(
+pub fn create_update_order_transaction(
     sender: AccountPubKey,
     base_asset_id: u64,
     quote_asset_id: u64,
@@ -401,7 +396,7 @@ pub fn new_create_update_order_transaction(
     order_id: u64,
     gas: u64,
     recent_block_hash: CertificateDigest,
-) -> NewTransaction {
+) -> Transaction {
     let request = create_update_order_request(
         base_asset_id,
         quote_asset_id,
@@ -422,7 +417,7 @@ pub fn new_create_update_order_transaction(
     )
 }
 
-pub fn new_create_cancel_order_transaction(
+pub fn create_cancel_order_transaction(
     sender: AccountPubKey,
     base_asset_id: u64,
     quote_asset_id: u64,
@@ -431,7 +426,7 @@ pub fn new_create_cancel_order_transaction(
     order_id: u64,
     gas: u64,
     recent_block_hash: CertificateDigest,
-) -> NewTransaction {
+) -> Transaction {
     let request = create_cancel_order_request(
         base_asset_id,
         quote_asset_id,
@@ -455,8 +450,8 @@ pub fn new_create_cancel_order_transaction(
 // - SIGNED TRANSACTION
 
 pub fn get_signed_transaction_body(
-    signed_transaction: &NewSignedTransaction
-) -> Result<&NewTransaction, GDEXError> {
+    signed_transaction: &SignedTransaction
+) -> Result<&Transaction, GDEXError> {
     match signed_transaction.transaction {
         None => Err(GDEXError::DeserializationError),
         Some(_) => Ok(signed_transaction.transaction.as_ref().unwrap())
@@ -464,14 +459,14 @@ pub fn get_signed_transaction_body(
 }
 
 pub fn get_signed_transaction_sender(
-    signed_transaction: &NewSignedTransaction
+    signed_transaction: &SignedTransaction
 ) -> Result<AccountPubKey, GDEXError> {
     let transaction = get_signed_transaction_body(signed_transaction)?;
     get_transaction_sender(&transaction)
 }
 
 pub fn get_signed_transaction_signature(
-    signed_transaction: &NewSignedTransaction
+    signed_transaction: &SignedTransaction
 ) -> Result<AccountSignature, GDEXError> {
     let account_signature_result = AccountSignature::from_bytes(&signed_transaction.signature);
     match account_signature_result {
@@ -481,7 +476,7 @@ pub fn get_signed_transaction_signature(
 }
 
 pub fn get_signed_transaction_recent_block_hash(
-    signed_transaction: &NewSignedTransaction
+    signed_transaction: &SignedTransaction
 ) -> Result<CertificateDigest, GDEXError> {
     let transaction = get_signed_transaction_body(signed_transaction)?;
     match transaction.recent_block_hash.deref().try_into() {
@@ -491,8 +486,8 @@ pub fn get_signed_transaction_recent_block_hash(
 }
 
 pub fn get_signed_transaction_transaction_hash(
-    signed_transaction: &NewSignedTransaction
-) -> Result<NewTransactionDigest, GDEXError> {
+    signed_transaction: &SignedTransaction
+) -> Result<TransactionDigest, GDEXError> {
     let transaction = get_signed_transaction_body(signed_transaction)?;
     Ok(hash_transaction(transaction))
 }
@@ -501,7 +496,7 @@ pub fn get_signed_transaction_transaction_hash(
 
 
 pub fn get_transaction_sender(
-    transaction: &NewTransaction
+    transaction: &Transaction
 ) -> Result<AccountPubKey, GDEXError> {
     let sender_result = AccountPubKey::from_bytes(&transaction.sender);
     match sender_result {
@@ -525,15 +520,15 @@ pub fn get_payment_receiver(
 // HELPERS
 
 pub fn hash_transaction(
-    transaction: &NewTransaction
-) -> NewTransactionDigest {
-    NewTransactionDigest::new(fastcrypto::blake2b_256(|hasher| {hasher.update(serialize_protobuf(transaction)) }))
+    transaction: &Transaction
+) -> TransactionDigest {
+    TransactionDigest::new(fastcrypto::blake2b_256(|hasher| {hasher.update(serialize_protobuf(transaction)) }))
 }
 
 pub fn sign_transaction(
     sender_kp: &AccountKeyPair,
-    transaction: NewTransaction
-) -> Result<NewSignedTransaction, GDEXError> {
+    transaction: Transaction
+) -> Result<SignedTransaction, GDEXError> {
     let transaction_hash = hash_transaction(&transaction);
     let signature_result: Result<AccountSignature, signature::Error> = sender_kp.try_sign(&transaction_hash.get_array()[..]);
     match signature_result {
@@ -543,7 +538,7 @@ pub fn sign_transaction(
 }
 
 pub fn verify_signature(
-    signed_transaction: &NewSignedTransaction
+    signed_transaction: &SignedTransaction
 ) -> Result<(), GDEXError> {
     let transaction = get_signed_transaction_body(signed_transaction)?;
     let transaction_hash = hash_transaction(&transaction);
@@ -598,7 +593,7 @@ pub fn parse_order_side(
 
 /// Begin externally available testing functions
 #[cfg(any(test, feature = "testing"))]
-pub mod new_transaction_test_functions {
+pub mod transaction_test_functions {
     use super::*;
     use crate::{
         account::AccountKeyPair,
@@ -611,16 +606,16 @@ pub mod new_transaction_test_functions {
         kp_sender: &AccountKeyPair,
         kp_receiver: &AccountKeyPair,
         amount: u64,
-    ) -> NewSignedTransaction {
+    ) -> SignedTransaction {
         // TODO replace this with latest
         let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
 
         let gas: u64 = 1000;
-        let new_transaction = new_create_payment_transaction(kp_sender.public().clone(), kp_receiver.public(), PRIMARY_ASSET_ID, amount, gas, dummy_batch_digest);
-        let new_signed_transaction = match sign_transaction(&kp_sender, new_transaction) {
+        let transaction = create_payment_transaction(kp_sender.public().clone(), kp_receiver.public(), PRIMARY_ASSET_ID, amount, gas, dummy_batch_digest);
+        let signed_transaction = match sign_transaction(&kp_sender, transaction) {
             Ok(t) => t,
             _ => panic!("Error signing transaction"),
         };
-        new_signed_transaction
+        signed_transaction
     }
 }

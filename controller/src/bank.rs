@@ -21,7 +21,12 @@ use gdex_types::{
     asset::{Asset, AssetId},
     crypto::ToFromBytes,
     error::GDEXError,
-    new_transaction::{NewTransaction, RequestType, CreateAssetRequest, PaymentRequest, get_transaction_sender, deserialize_protobuf, get_payment_receiver, parse_request_type},
+    transaction::{
+        Transaction, RequestType,
+        CreateAssetRequest, PaymentRequest,
+        get_transaction_sender, deserialize_protobuf,
+        get_payment_receiver, parse_request_type
+    },
 };
 
 // mysten
@@ -71,7 +76,7 @@ impl Controller for BankController {
         Ok(())
     }
 
-    fn handle_consensus_transaction(&mut self, transaction: &NewTransaction) -> Result<(), GDEXError> {
+    fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
         let request_type = parse_request_type(transaction.request_type)?;
         match request_type {
             RequestType::CreateAsset => {

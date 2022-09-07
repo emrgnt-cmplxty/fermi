@@ -7,7 +7,8 @@ package services;
 
 // IMPORTS
 
-import "new_transaction.proto";
+import "block.proto";
+import "transaction.proto";
 
 // INTERFACE
 
@@ -17,10 +18,10 @@ message Empty {}
 
 service TransactionSubmitter {
     // submit a transaction
-    rpc SubmitTransaction(new_transaction.NewSignedTransaction) returns (Empty) {}
+    rpc SubmitTransaction(transaction.SignedTransaction) returns (Empty) {}
     
     // submit a transaction via stream
-    rpc SubmitTransactionStream(stream new_transaction.NewSignedTransaction) returns (Empty) {}
+    rpc SubmitTransactionStream(stream transaction.SignedTransaction) returns (Empty) {}
 }
 
 // FAUCET
@@ -52,11 +53,6 @@ service Relayer {
     rpc GetBlock (RelayerGetBlockRequest) returns (RelayerBlockResponse);
 }
 
-message RelayerBlockInfo {
-    uint64 block_number = 1;
-    bytes digest = 2;
-}
-
 message RelayerBlock {
     bytes block = 1;
 }
@@ -76,9 +72,7 @@ message RelayerBlockResponse {
     RelayerBlock block = 2;
 }
 
-// TODO figure out how to import from narwhal. It almost worked but it failed because ../ is not allowed
-// in the virtual path for some reason
 message RelayerBlockInfoResponse {
     bool successful = 1;
-    RelayerBlockInfo block_info = 2;
+    block.BlockInfo block_info = 2;
 }

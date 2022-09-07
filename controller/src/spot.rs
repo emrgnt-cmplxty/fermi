@@ -27,8 +27,8 @@ use gdex_types::{
     crypto::ToFromBytes,
     error::GDEXError,
     order_book::{OrderProcessingResult, OrderSide, OrderType, Success},
-    new_transaction::{
-        NewTransaction,
+    transaction::{
+        Transaction,
         RequestType,
         CreateOrderbookRequest,
         MarketOrderRequest,
@@ -507,7 +507,7 @@ impl Controller for SpotController {
         Ok(())
     }
 
-    fn handle_consensus_transaction(&mut self, transaction: &NewTransaction) -> Result<(), GDEXError> {
+    fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
         let request_type = parse_request_type(transaction.request_type)?;
         match request_type {
             RequestType::CreateOrderbook => {

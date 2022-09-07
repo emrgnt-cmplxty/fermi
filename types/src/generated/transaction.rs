@@ -12,16 +12,16 @@ pub struct Version {
 // SIGNED TRANSACTION INTERFACE
 
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct NewSignedTransaction {
+pub struct SignedTransaction {
     #[prost(message, optional, tag="1")]
-    pub transaction: ::core::option::Option<NewTransaction>,
+    pub transaction: ::core::option::Option<Transaction>,
     #[prost(bytes="bytes", tag="2")]
     pub signature: ::prost::bytes::Bytes,
 }
 // TRANSACTION INTERFACE
 
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct NewTransaction {
+pub struct Transaction {
     #[prost(message, optional, tag="1")]
     pub version: ::core::option::Option<Version>,
     #[prost(bytes="bytes", tag="2")]

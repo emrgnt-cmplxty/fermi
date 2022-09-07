@@ -23,8 +23,8 @@ pub mod cluster_test_suite {
             FaucetAirdropRequest, FaucetClient, FaucetServer, RelayerClient, RelayerGetBlockRequest,
             RelayerGetLatestBlockInfoRequest,
         },
-        new_transaction::{
-            new_create_create_asset_transaction,
+        transaction::{
+            create_create_asset_transaction,
             sign_transaction, get_signed_transaction_body,
             ConsensusTransaction
         },
@@ -140,11 +140,11 @@ pub mod cluster_test_suite {
         // check that every transaction entered the cache
         info!("Verify that all transactions entered cache");
         for signed_transaction in signed_transactions.clone() {
-            let new_transaction = match get_signed_transaction_body(&signed_transaction) {
+            let transaction = match get_signed_transaction_body(&signed_transaction) {
                 Ok(t) => t,
                 _ => panic!("Error deserializing signed transaction")
             };
-            assert!(validator_store.cache_contains_transaction(new_transaction));
+            assert!(validator_store.cache_contains_transaction(transaction));
         }
 
         let mut total = 0;
@@ -156,15 +156,15 @@ pub mod cluster_test_suite {
             let block = next_block.1;
             for serialized_consensus_transaction in &block.transactions {
                 let consensus_transaction_db = ConsensusTransaction::deserialize(serialized_consensus_transaction.0.clone()).unwrap();
-                let new_signed_transaction = match consensus_transaction_db.get_payload() {
+                let signed_transaction = match consensus_transaction_db.get_payload() {
                     Ok(t) => t,
                     _ => panic!("Error deserializing signed transaction")
                 };
-                let new_transaction = match get_signed_transaction_body(&new_signed_transaction) {
+                let transaction = match get_signed_transaction_body(&signed_transaction) {
                     Ok(t) => t,
                     _ => panic!("Error deserializing signed transaction")
                 };
-                assert!(validator_store.cache_contains_transaction(new_transaction));
+                assert!(validator_store.cache_contains_transaction(transaction));
                 total += 1;
             }
             assert!(validator_store.cache_contains_block_digest(&block.block_certificate.digest()));
@@ -374,13 +374,13 @@ pub mod cluster_test_suite {
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
         let gas: u64 = 1000;
-        let new_transaction = new_create_create_asset_transaction(sender_kp.public().clone(), 0, gas, recent_block_hash);
-        let new_signed_transaction = match sign_transaction(&sender_kp, new_transaction) {
+        let transaction = create_create_asset_transaction(sender_kp.public().clone(), 0, gas, recent_block_hash);
+        let signed_transaction = match sign_transaction(&sender_kp, transaction) {
             Ok(t) => t,
             _ => panic!("Error signing transaction"),
         };
 
-        let consensus_transaction = ConsensusTransaction::new(&new_signed_transaction);
+        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         // Preparing serialized buf for transactions
         let mut serialized_txns_buf = Vec::new();

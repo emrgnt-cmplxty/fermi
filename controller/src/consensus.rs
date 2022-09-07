@@ -13,7 +13,7 @@ use gdex_types::{
     account::AccountPubKey,
     crypto::ToFromBytes,
     error::GDEXError,
-    new_transaction::{NewTransaction, parse_request_type}
+    transaction::{Transaction, parse_request_type}
 };
 
 // mysten
@@ -55,7 +55,7 @@ impl Controller for ConsensusController {
         Ok(())
     }
 
-    fn handle_consensus_transaction(&mut self, transaction: &NewTransaction) -> Result<(), GDEXError> {
+    fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
         let request_type = parse_request_type(transaction.request_type)?;
         match request_type {
             _ => Err(GDEXError::InvalidRequestTypeError)

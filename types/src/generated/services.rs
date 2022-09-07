@@ -16,13 +16,6 @@ pub struct FaucetAirdropResponse {
     pub successful: bool,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct RelayerBlockInfo {
-    #[prost(uint64, tag="1")]
-    pub block_number: u64,
-    #[prost(bytes="bytes", tag="2")]
-    pub digest: ::prost::bytes::Bytes,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RelayerBlock {
     #[prost(bytes="bytes", tag="1")]
     pub block: ::prost::bytes::Bytes,
@@ -47,14 +40,12 @@ pub struct RelayerBlockResponse {
     #[prost(message, optional, tag="2")]
     pub block: ::core::option::Option<RelayerBlock>,
 }
-/// TODO figure out how to import from narwhal. It almost worked but it failed because ../ is not allowed
-/// in the virtual path for some reason
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RelayerBlockInfoResponse {
     #[prost(bool, tag="1")]
     pub successful: bool,
     #[prost(message, optional, tag="2")]
-    pub block_info: ::core::option::Option<RelayerBlockInfo>,
+    pub block_info: ::core::option::Option<super::block::BlockInfo>,
 }
 /// Generated client implementations.
 pub mod transaction_submitter_client {
@@ -124,7 +115,7 @@ pub mod transaction_submitter_client {
         pub async fn submit_transaction(
             &mut self,
             request: impl tonic::IntoRequest<
-                super::super::new_transaction::NewSignedTransaction,
+                super::super::transaction::SignedTransaction,
             >,
         ) -> Result<tonic::Response<super::Empty>, tonic::Status> {
             self.inner
@@ -146,7 +137,7 @@ pub mod transaction_submitter_client {
         pub async fn submit_transaction_stream(
             &mut self,
             request: impl tonic::IntoStreamingRequest<
-                Message = super::super::new_transaction::NewSignedTransaction,
+                Message = super::super::transaction::SignedTransaction,
             >,
         ) -> Result<tonic::Response<super::Empty>, tonic::Status> {
             self.inner
@@ -388,13 +379,13 @@ pub mod transaction_submitter_server {
         /// submit a transaction
         async fn submit_transaction(
             &self,
-            request: tonic::Request<super::super::new_transaction::NewSignedTransaction>,
+            request: tonic::Request<super::super::transaction::SignedTransaction>,
         ) -> Result<tonic::Response<super::Empty>, tonic::Status>;
         /// submit a transaction via stream
         async fn submit_transaction_stream(
             &self,
             request: tonic::Request<
-                tonic::Streaming<super::super::new_transaction::NewSignedTransaction>,
+                tonic::Streaming<super::super::transaction::SignedTransaction>,
             >,
         ) -> Result<tonic::Response<super::Empty>, tonic::Status>;
     }
@@ -452,7 +443,7 @@ pub mod transaction_submitter_server {
                     impl<
                         T: TransactionSubmitter,
                     > tonic::server::UnaryService<
-                        super::super::new_transaction::NewSignedTransaction,
+                        super::super::transaction::SignedTransaction,
                     > for SubmitTransactionSvc<T> {
                         type Response = super::Empty;
                         type Future = BoxFuture<
@@ -462,7 +453,7 @@ pub mod transaction_submitter_server {
                         fn call(
                             &mut self,
                             request: tonic::Request<
-                                super::super::new_transaction::NewSignedTransaction,
+                                super::super::transaction::SignedTransaction,
                             >,
                         ) -> Self::Future {
                             let inner = self.0.clone();
@@ -497,7 +488,7 @@ pub mod transaction_submitter_server {
                     impl<
                         T: TransactionSubmitter,
                     > tonic::server::ClientStreamingService<
-                        super::super::new_transaction::NewSignedTransaction,
+                        super::super::transaction::SignedTransaction,
                     > for SubmitTransactionStreamSvc<T> {
                         type Response = super::Empty;
                         type Future = BoxFuture<
@@ -508,7 +499,7 @@ pub mod transaction_submitter_server {
                             &mut self,
                             request: tonic::Request<
                                 tonic::Streaming<
-                                    super::super::new_transaction::NewSignedTransaction,
+                                    super::super::transaction::SignedTransaction,
                                 >,
                             >,
                         ) -> Self::Future {

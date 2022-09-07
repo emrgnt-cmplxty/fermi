@@ -20,6 +20,6 @@ pub mod order_book;
 
 pub mod serialization;
 
-pub mod new_transaction;
+pub mod transaction;
 
 pub mod utils;

@@ -16,7 +16,7 @@ pub type AccountKeyPair = Ed25519KeyPair;
 use futures::executor::block_on;
 use gdex_types::{
     error::GDEXError,
-    new_transaction::{
+    transaction::{
         RequestType, deserialize_protobuf, get_transaction_sender,
         get_payment_receiver, ConsensusTransaction, PaymentRequest, CreateAssetRequest,
         verify_signature, get_signed_transaction_body, parse_request_type
@@ -64,26 +64,26 @@ impl ExecutionState for AdvancedExecutionState {
         consensus_transaction: Self::Transaction,
     ) -> Result<Self::Outcome, Self::Error> {
         // deserialize signed transaction
-        let new_signed_transaction = consensus_transaction.get_payload()
+        let signed_transaction = consensus_transaction.get_payload()
             .map_err(|e| Self::Error::VMError(e))?;
-        let _ = verify_signature(&new_signed_transaction)
+        let _ = verify_signature(&signed_transaction)
             .map_err(|e| Self::Error::VMError(e))?;
 
         // get transaction
-        let new_transaction = get_signed_transaction_body(&new_signed_transaction)
+        let transaction = get_signed_transaction_body(&signed_transaction)
             .map_err(|e| Self::Error::VMError(e))?;
 
-        let request_type = parse_request_type(new_transaction.request_type)
+        let request_type = parse_request_type(transaction.request_type)
             .map_err(|e| Self::Error::VMError(e))?;
         let execution = match request_type {
             RequestType::CreateAsset => {
-                let _request: CreateAssetRequest = deserialize_protobuf(&new_transaction.request_bytes)?;
-                let sender = get_transaction_sender(&new_transaction)?;
+                let _request: CreateAssetRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                let sender = get_transaction_sender(&transaction)?;
                 self.bank_controller.lock().unwrap().create_asset(&sender)
             },
             RequestType::Payment => {
-                let request: PaymentRequest = deserialize_protobuf(&new_transaction.request_bytes)?;
-                let sender = get_transaction_sender(&new_transaction)?;
+                let request: PaymentRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                let sender = get_transaction_sender(&transaction)?;
                 let receiver = get_payment_receiver(&request)?;
                 self.bank_controller.lock().unwrap().transfer(
                     &sender,

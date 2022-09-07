@@ -21,7 +21,6 @@ pub use services::{
     relayer_client::RelayerClient,
     relayer_server::{Relayer, RelayerServer},
     RelayerBlock,
-    RelayerBlockInfo,
     RelayerBlockInfoResponse,
     RelayerBlockResponse,
     RelayerGetBlockInfoRequest,
@@ -30,30 +29,28 @@ pub use services::{
 };
 
 #[cfg_attr(beta, allow(clippy::derive_partial_eq_without_eq))]
-#[path = "generated/new_block.rs"]
+#[path = "generated/block.rs"]
 #[rustfmt::skip]
 #[allow(clippy::all)]
-mod new_block;
+mod block;
 
-pub use new_block:: {
-    NewBlock,
-    NewRelayerBlockResponse,
-    NewBlockInfo,
-    NewRelayerBlockInfoResponse,
+pub use block:: {
+    Block,
+    BlockInfo,
 };
 
 #[cfg_attr(beta, allow(clippy::derive_partial_eq_without_eq))]
-#[path = "generated/new_transaction.rs"]
+#[path = "generated/transaction.rs"]
 #[rustfmt::skip]
 #[allow(clippy::all)]
-mod new_transaction;
+mod transaction;
 
-pub use new_transaction::{
+pub use transaction::{
     ControllerType,
     RequestType,
     Version,
-    NewSignedTransaction,
-    NewTransaction,
+    SignedTransaction,
+    Transaction,
 };
 
 #[cfg_attr(beta, allow(clippy::derive_partial_eq_without_eq))]

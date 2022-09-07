@@ -16,8 +16,8 @@ use crate::{
 
 use gdex_types::{
     error::GDEXError,
-    new_transaction::{
-        NewTransaction,
+    transaction::{
+        Transaction,
         ControllerType,
         parse_target_controller
     }
@@ -84,7 +84,7 @@ impl MasterController {
         }
     }
 
-    pub fn handle_consensus_transaction(&self, transaction: &NewTransaction) -> Result<(), GDEXError> {
+    pub fn handle_consensus_transaction(&self, transaction: &Transaction) -> Result<(), GDEXError> {
         let target_controller = parse_target_controller(transaction.target_controller)?;
         match target_controller {
             ControllerType::Consensus => {

@@ -7,7 +7,7 @@ use clap::{crate_name, crate_version, App, AppSettings};
 use futures::{future::join_all, StreamExt};
 use gdex_types::{
     account::AccountKeyPair,
-    new_transaction::{NewSignedTransaction, NewTransaction, new_create_payment_transaction, sign_transaction, ConsensusTransaction},
+    transaction::{create_payment_transaction, sign_transaction, ConsensusTransaction},
 };
 use fastcrypto::{
     traits::{KeyPair, Signer},
@@ -41,13 +41,13 @@ fn create_signed_padded_transaction(
         // use a dummy batch digest for initial benchmarking
         let dummy_certificate_digest = CertificateDigest::new([0; DIGEST_LEN]);
         let gas: u64 = 1000;
-        let new_transaction = new_create_payment_transaction(kp_sender.public().clone(), kp_receiver.public(), PRIMARY_ASSET_ID, amount, gas, dummy_certificate_digest);
-        let new_signed_transaction = match sign_transaction(kp_sender, new_transaction) {
+        let transaction = create_payment_transaction(kp_sender.public().clone(), kp_receiver.public(), PRIMARY_ASSET_ID, amount, gas, dummy_certificate_digest);
+        let signed_transaction = match sign_transaction(kp_sender, transaction) {
             Ok(t) => t,
             _ => panic!("Error signing transaction"),
         };
         
-        let mut padded_serialized_consensus_transaction = match ConsensusTransaction::new(&new_signed_transaction).serialize() {
+        let mut padded_serialized_consensus_transaction = match ConsensusTransaction::new(&signed_transaction).serialize() {
             Ok(t) => t,
             _ => panic!("Error serializing transaction"),
         };

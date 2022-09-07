@@ -14,8 +14,8 @@ use gdex_types::{
     proto::{
         Empty, TransactionSubmitter, TransactionSubmitterServer
     },
-    new_transaction::{
-        NewSignedTransaction, verify_signature,
+    transaction::{
+        SignedTransaction, verify_signature,
         get_signed_transaction_recent_block_hash,
         get_signed_transaction_body, ConsensusTransaction
     },
@@ -202,16 +202,16 @@ impl ValidatorService {
     async fn handle_transaction(
         consensus_adapter: Arc<Mutex<ConsensusAdapter>>,
         state: Arc<ValidatorState>,
-        new_signed_transaction: NewSignedTransaction,
+        signed_transaction: SignedTransaction,
     ) -> Result<tonic::Response<Empty>, tonic::Status> {
         trace!("Handling a new transaction with ValidatorService",);
         state.metrics.increment_num_transactions_rec();
 
-        let _ = verify_signature(&new_signed_transaction)
+        let _ = verify_signature(&signed_transaction)
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
 
         // check recent block hash is valid : TODO seems maybe problematic to do this just here?
-        let recent_block_hash = get_signed_transaction_recent_block_hash(&new_signed_transaction)
+        let recent_block_hash = get_signed_transaction_recent_block_hash(&signed_transaction)
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
         if !state.validator_store.cache_contains_block_digest(&recent_block_hash) {
             state.metrics.increment_num_transactions_rec_failed();
@@ -219,15 +219,15 @@ impl ValidatorService {
         }
         
         // check transaction is not a duplicate
-        let new_transaction = get_signed_transaction_body(&new_signed_transaction)
+        let transaction = get_signed_transaction_body(&signed_transaction)
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
-        if state.validator_store.cache_contains_transaction(new_transaction) {
+        if state.validator_store.cache_contains_transaction(transaction) {
             state.metrics.increment_num_transactions_rec_failed();
             return Err(tonic::Status::internal("Invalid duplicate transaction"));
         }
         
         // submit transaction
-        let serialized_consensus_transaction = ConsensusTransaction::new(&new_signed_transaction).serialize()
+        let serialized_consensus_transaction = ConsensusTransaction::new(&signed_transaction).serialize()
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
         let consensus_transaction_wrapper = ConsensusTransactionWrapper {
             transaction: serialized_consensus_transaction.into()
@@ -241,7 +241,7 @@ impl ValidatorService {
             .unwrap();
 
         state
-            .handle_pre_consensus_transaction(&new_signed_transaction)
+            .handle_pre_consensus_transaction(&signed_transaction)
             // .instrument(span)
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
@@ -258,7 +258,7 @@ impl ValidatorService {
 impl TransactionSubmitter for ValidatorService {
     async fn submit_transaction(
         &self,
-        request: tonic::Request<NewSignedTransaction>,
+        request: tonic::Request<SignedTransaction>,
     ) -> Result<tonic::Response<Empty>, tonic::Status> {
         trace!("Handling a new transaction with a ValidatorService ValidatorAPI",);
         let signed_transaction = request.into_inner();
@@ -274,7 +274,7 @@ impl TransactionSubmitter for ValidatorService {
 
     async fn submit_transaction_stream(
         &self,
-        request: tonic::Request<tonic::Streaming<NewSignedTransaction>>,
+        request: tonic::Request<tonic::Streaming<SignedTransaction>>,
     ) -> Result<tonic::Response<Empty>, tonic::Status> {
         let mut signed_transactions = request.into_inner();
         trace!("Handling a new transaction stream with a ValidatorService ValidatorAPI",);
@@ -306,7 +306,7 @@ mod test_validator_server {
         crypto::{get_key_pair_from_rng, KeypairTraits},
         node::ValidatorInfo,
         proto::TransactionSubmitterClient,
-        new_transaction::new_transaction_test_functions::generate_signed_test_transaction,
+        transaction::transaction_test_functions::generate_signed_test_transaction,
         utils,
     };
 

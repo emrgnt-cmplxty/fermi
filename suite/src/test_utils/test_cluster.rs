@@ -14,7 +14,7 @@ use gdex_types::{
     crypto::{get_key_pair_from_rng, KeypairTraits},
     node::ValidatorInfo,
     proto::{TransactionSubmitterClient},
-    new_transaction::{new_transaction_test_functions::generate_signed_test_transaction, NewSignedTransaction},
+    transaction::{transaction_test_functions::generate_signed_test_transaction, SignedTransaction},
     utils,
 };
 
@@ -178,7 +178,7 @@ impl TestCluster {
         sending_validator: usize,
         receiving_validator: usize,
         n_transactions: u64,
-    ) -> (ValidatorKeyPair, ValidatorKeyPair, Vec<NewSignedTransaction>) {
+    ) -> (ValidatorKeyPair, ValidatorKeyPair, Vec<SignedTransaction>) {
         let working_dir = self.get_working_dir();
         let sender = self.get_validator_spawner(sending_validator);
         let key_file = working_dir.join(format!("{}.key", sender.get_validator_info().name));

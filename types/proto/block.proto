@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package block;
+
+// IMPORTS
+
+import "transaction.proto";
+
+// INTERFACE
+
+message Block {
+    bytes block_certificate = 1;
+    repeated transaction.SignedTransaction transactions = 2;
+}
+
+message BlockInfo {
+   uint64 block_number = 1; 
+   bytes digest = 2;
+}

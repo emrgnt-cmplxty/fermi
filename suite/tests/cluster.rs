@@ -441,12 +441,10 @@ pub mod cluster_test_suite {
             .write_latest_orderbook_depths(orderbook_depths)
             .await;
 
-
         let relayer_1 = cluster.spawn_single_relayer(1).await;
         let target_endpoint = endpoint_from_multiaddr(&relayer_1.get_relayer_address()).unwrap();
         let endpoint = target_endpoint.endpoint();
         let mut client = RelayerClient::connect(endpoint.clone()).await.unwrap();
-
 
         // generate successful orderbook depth request
         let latest_orderbook_depth_request = tonic::Request::new(RelayerGetLatestOrderbookDepthRequest {
@@ -467,20 +465,16 @@ pub mod cluster_test_suite {
             quote_asset_id: bad_quote_asset_id,
             depth: 5,
         });
-        let bad_latest_orderbook_depth_response = client.get_latest_orderbook_depth(bad_latest_orderbook_depth_request).await;
+        let bad_latest_orderbook_depth_response = client
+            .get_latest_orderbook_depth(bad_latest_orderbook_depth_request)
+            .await;
         assert!(
             bad_latest_orderbook_depth_response.is_err(),
             "This request must fail as base and quote assets do not exist."
         );
         if let Err(err) = bad_latest_orderbook_depth_response {
-            assert_eq!(
-                err.message(),
-                "Orderbook depth was not found."
-            );
-            assert_eq!(
-                tonic::Code::NotFound,
-                err.code()
-            );
+            assert_eq!(err.message(), "Orderbook depth was not found.");
+            assert_eq!(tonic::Code::NotFound, err.code());
         }
     }
 }

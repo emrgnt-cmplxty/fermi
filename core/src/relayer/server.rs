@@ -1,6 +1,5 @@
 use crate::validator::state::ValidatorState;
 use gdex_types::proto::*;
-use mysten_store::rocks::TypedStoreError;
 use narwhal_types::CertificateDigestProto;
 
 use std::sync::Arc;
@@ -169,7 +168,7 @@ impl Relayer for RelayerService {
                 }
             }
             // Propogate a tonic error to client
-            Err(err) => Err(Status::unknown(err.to_string()))
+            Err(err) => Err(Status::unknown(err.to_string())),
         }
     }
 }

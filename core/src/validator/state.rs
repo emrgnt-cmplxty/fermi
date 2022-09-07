@@ -61,7 +61,12 @@ impl ValidatorStore {
         let rocksdb = open_cf(
             store_path,
             None,
-            &[Self::BLOCKS_CF, Self::BLOCK_INFO_CF, Self::LAST_BLOCK_CF, Self::LAST_ORDERBOOK_DEPTH_CF],
+            &[
+                Self::BLOCKS_CF,
+                Self::BLOCK_INFO_CF,
+                Self::LAST_BLOCK_CF,
+                Self::LAST_ORDERBOOK_DEPTH_CF,
+            ],
         )
         .expect("Cannot open database");
 

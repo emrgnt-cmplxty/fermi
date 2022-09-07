@@ -8,7 +8,7 @@ use gdex_types::transaction::OrderRequest;
 use gdex_types::{
     account::{account_test_functions::generate_keypair_vec, AccountPubKey},
     crypto::{KeypairTraits, ToFromBytes},
-    order_book::{OrderProcessingResult, OrderSide, Success, OrderbookDepth},
+    order_book::{OrderProcessingResult, OrderSide, OrderbookDepth, Success},
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use rocksdb::{ColumnFamilyDescriptor, DBWithThreadMode, MultiThreaded, Options, DB};
@@ -121,7 +121,7 @@ fn place_orders_engine_account(
 fn orderbook_depth_snaps(
     n_iter: u64,
     orderbook_controller: &mut OrderbookInterface,
-    db: &DBWithThreadMode<MultiThreaded>
+    db: &DBWithThreadMode<MultiThreaded>,
 ) {
     let mut i: u64 = 0;
     while i < n_iter {
@@ -245,18 +245,12 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     for i in 0..1_000 {
         for _ in 0..10_000 {
             // bid
-            orderbook_interface.place_limit_order(
-                primary.public(),
-                OrderSide::Bid,
-                1,
-                TEST_MID-i
-            ).unwrap();
-            orderbook_interface.place_limit_order(
-                primary.public(),
-                OrderSide::Ask,
-                1,
-                TEST_MID+i
-            ).unwrap();
+            orderbook_interface
+                .place_limit_order(primary.public(), OrderSide::Bid, 1, TEST_MID - i)
+                .unwrap();
+            orderbook_interface
+                .place_limit_order(primary.public(), OrderSide::Ask, 1, TEST_MID + i)
+                .unwrap();
         }
     }
 
@@ -264,13 +258,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     let mut group1 = c.benchmark_group("orderbook_depth");
     group1.throughput(Throughput::Elements((N_DEPTHS_BENCH) as u64));
     group1.bench_function("engine_orderbook_depth_snaps", |b| {
-        b.iter(|| {
-            orderbook_depth_snaps(
-                black_box(N_DEPTHS_BENCH),
-                &mut orderbook_interface,
-                &db
-            )
-        })
+        b.iter(|| orderbook_depth_snaps(black_box(N_DEPTHS_BENCH), &mut orderbook_interface, &db))
     });
 
     group1.finish();

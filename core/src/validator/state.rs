@@ -7,7 +7,6 @@ use crate::validator::metrics::ValidatorMetrics;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
 use gdex_controller::master::MasterController;
-use gdex_types::transaction::Transaction;
 use gdex_types::{
     account::ValidatorKeyPair,
     block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},
@@ -15,7 +14,7 @@ use gdex_types::{
     error::GDEXError,
     new_transaction::{
         NewSignedTransaction, NewTransaction, NewTransactionDigest,
-        get_signed_transaction_body, hash_transaction, deserialize_protobuf,
+        get_signed_transaction_body, hash_transaction,
         verify_signature, ConsensusTransaction
     }
 };

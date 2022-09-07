@@ -1,6 +1,6 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
-use crate::asset::AssetId;
+use crate::asset::{AssetAmount, AssetId, AssetPrice};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Debug, time::SystemTime};
 
@@ -53,6 +53,44 @@ impl Order {
     pub fn get_quantity(&self) -> u64 {
         self.quantity
     }
+}
+
+#[derive(Debug)]
+pub enum OrderRequest {
+    Market {
+        base_asset_id: AssetId,
+        quote_asset_id: AssetId,
+        side: OrderSide,
+        quantity: AssetAmount,
+        local_timestamp: SystemTime,
+    },
+
+    Limit {
+        base_asset_id: AssetId,
+        quote_asset_id: AssetId,
+        side: OrderSide,
+        price: AssetPrice,
+        quantity: AssetAmount,
+        local_timestamp: SystemTime,
+    },
+
+    Update {
+        base_asset_id: AssetId,
+        quote_asset_id: AssetId,
+        order_id: OrderId,
+        side: OrderSide,
+        price: AssetPrice,
+        quantity: AssetAmount,
+        local_timestamp: SystemTime,
+    },
+
+    Cancel {
+        base_asset_id: AssetId,
+        quote_asset_id: AssetId,
+        order_id: OrderId,
+        side: OrderSide,
+        local_timestamp: SystemTime,
+    },
 }
 
 #[derive(Debug)]

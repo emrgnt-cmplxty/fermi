@@ -7,10 +7,7 @@ use gdex_types::{
                       new_create_create_orderbook_transaction, new_create_create_asset_transaction,
                       new_create_limit_order_transaction, sign_transaction, ConsensusTransaction},
 };
-use narwhal_crypto::{
-    traits::{KeyPair, Signer},
-    Hash,
-};
+use narwhal_crypto::traits::KeyPair;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use tokio::time::{sleep, Duration};
 use tokio_stream::StreamExt;

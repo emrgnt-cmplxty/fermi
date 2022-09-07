@@ -15,15 +15,15 @@ use gdex_types::{
         Empty, TransactionSubmitter, TransactionSubmitterServer
     },
     new_transaction::{
-        NewSignedTransaction, deserialize_protobuf, verify_signature,
-        serialize_protobuf, get_signed_transaction_recent_block_hash,
-        get_signed_transaction_transaction_hash, get_signed_transaction_body, ConsensusTransaction
+        NewSignedTransaction, verify_signature,
+        get_signed_transaction_recent_block_hash,
+        get_signed_transaction_body, ConsensusTransaction
     }
 };
 use multiaddr::Multiaddr;
 use narwhal_config::Committee as ConsensusCommittee;
 use narwhal_consensus::ConsensusOutput;
-use narwhal_crypto::{Hash, KeyPair as ConsensusKeyPair};
+use narwhal_crypto::KeyPair as ConsensusKeyPair;
 use narwhal_executor::{ExecutionIndices, SubscriberError};
 use narwhal_types::TransactionProto as ConsensusTransactionWrapper;
 use prometheus::Registry;

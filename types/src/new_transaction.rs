@@ -602,7 +602,7 @@ pub mod new_transaction_test_functions {
     use super::*;
     use crate::{
         account::AccountKeyPair,
-        crypto::{KeypairTraits, Signer},
+        crypto::KeypairTraits,
     };
 
     pub const PRIMARY_ASSET_ID: u64 = 0;

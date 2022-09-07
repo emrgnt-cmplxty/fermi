@@ -27,7 +27,6 @@ use gdex_types::{
     crypto::ToFromBytes,
     error::GDEXError,
     order_book::{OrderProcessingResult, OrderSide, OrderType, Success},
-    transaction::{OrderRequest, Transaction, TransactionVariant},
     new_transaction::{
         NewTransaction,
         RequestType,

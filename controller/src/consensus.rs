@@ -13,7 +13,7 @@ use gdex_types::{
     account::AccountPubKey,
     crypto::ToFromBytes,
     error::GDEXError,
-    new_transaction::{NewTransaction, RequestType, parse_request_type}
+    new_transaction::{NewTransaction, parse_request_type}
 };
 
 // mysten

@@ -1,13 +1,13 @@
 use gdex_core::client;
 use gdex_types::{
     account::AccountKeyPair,
-    crypto::{KeypairTraits, Signer},
+    crypto::KeypairTraits,
     proto::{Faucet, FaucetAirdropRequest, FaucetAirdropResponse, FaucetServer, TransactionSubmitterClient},
-    new_transaction::{NewSignedTransaction, NewTransaction, new_create_payment_transaction, sign_transaction},
+    new_transaction::{NewSignedTransaction, new_create_payment_transaction, sign_transaction},
     utils,
 };
 use multiaddr::Multiaddr;
-use narwhal_crypto::{ed25519::Ed25519PublicKey, traits::ToFromBytes, Hash, DIGEST_LEN};
+use narwhal_crypto::{ed25519::Ed25519PublicKey, traits::ToFromBytes, DIGEST_LEN};
 use narwhal_types::CertificateDigest;
 use std::{
     env, io,

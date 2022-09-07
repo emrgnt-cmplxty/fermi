@@ -21,7 +21,6 @@ use gdex_types::{
     asset::{Asset, AssetId},
     crypto::ToFromBytes,
     error::GDEXError,
-    transaction::{Transaction, TransactionVariant},
     new_transaction::{NewTransaction, RequestType, CreateAssetRequest, PaymentRequest, get_transaction_sender, deserialize_protobuf, get_payment_receiver, parse_request_type},
 };
 

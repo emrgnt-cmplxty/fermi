@@ -78,6 +78,7 @@ impl ValidatorServer {
         }
     }
 
+    // TODO this is kinda dumb
     pub async fn spawn(self) -> Result<ValidatorServerHandle, io::Error> {
         let address = self.address.clone();
         info!(
@@ -86,7 +87,6 @@ impl ValidatorServer {
         );
         self.run(address).await
     }
-
     pub async fn run(self, address: Multiaddr) -> Result<ValidatorServerHandle, io::Error> {
         let server = crate::config::server::ServerConfig::new()
             .server_builder()
@@ -333,21 +333,19 @@ mod test_validator_server {
             get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         let public_key = ValidatorPubKeyBytes::from(key.public());
         let secret = Arc::pin(key);
-
+        let consensus_addresses = vec![utils::new_network_address()];
         let validator = ValidatorInfo {
             name: "0".into(),
             public_key,
             stake: VALIDATOR_FUNDING_AMOUNT,
             balance: VALIDATOR_BALANCE,
             delegation: 0,
-            network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),
             narwhal_worker_to_primary: utils::new_network_address(),
             narwhal_primary_to_worker: vec![utils::new_network_address()],
             narwhal_worker_to_worker: vec![utils::new_network_address()],
-            narwhal_consensus_addresses: vec![utils::new_network_address()],
+            narwhal_consensus_addresses: consensus_addresses.clone(),
         };
-        let network_address = validator.network_address.clone();
 
         let builder = GenesisStateBuilder::new()
             .set_master_controller(master_controller)
@@ -364,7 +362,7 @@ mod test_validator_server {
         let validator_server = ValidatorServer::new(
             new_addr.clone(),
             Arc::new(validator_state),
-            vec![network_address],
+            consensus_addresses,
             tx_reconfigure_consensus,
         );
         validator_server.spawn().await
@@ -405,6 +403,7 @@ mod test_validator_server {
             get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         let public_key = ValidatorPubKeyBytes::from(key.public());
         let secret = Arc::pin(key);
+        let consensus_addresses = vec![utils::new_network_address()];
 
         let validator = ValidatorInfo {
             name: "0".into(),
@@ -412,14 +411,12 @@ mod test_validator_server {
             stake: VALIDATOR_FUNDING_AMOUNT,
             balance: VALIDATOR_BALANCE,
             delegation: 0,
-            network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),
             narwhal_worker_to_primary: utils::new_network_address(),
             narwhal_primary_to_worker: vec![utils::new_network_address()],
             narwhal_worker_to_worker: vec![utils::new_network_address()],
-            narwhal_consensus_addresses: vec![utils::new_network_address()],
+            narwhal_consensus_addresses: consensus_addresses.clone(),
         };
-        let network_address = validator.network_address.clone();
 
         let builder = GenesisStateBuilder::new()
             .set_master_controller(master_controller)
@@ -435,7 +432,7 @@ mod test_validator_server {
         let validator_server = ValidatorServer::new(
             new_addr.clone(),
             Arc::new(validator_state),
-            vec![network_address],
+            consensus_addresses,
             tx_reconfigure_consensus.clone(),
         );
         validator_server.spawn().await.unwrap();

@@ -1,4 +1,5 @@
 # Copyright(C) Facebook, Inc. and its affiliates.
+import base64
 from json import dump, load
 from collections import OrderedDict
 from benchmark.utils import multiaddr_to_url_data
@@ -19,7 +20,6 @@ class Key:
         with open(filename, 'r') as f:
             data = load(f)
         return cls(data['name'], data['secret'])
-
 
 class Committee:
     ''' The committee looks as follows:
@@ -67,7 +67,7 @@ class Committee:
             host = hosts.pop(0)
             primary_addr = {
                 'primary_to_primary': f'/ip4/{host}/tcp/{port}/http',
-                'worker_to_primary': f'/ip4/{host}/tcp/{port + 1}/http'
+                'worker_to_primary': f'/ip4/{host}/tcp/{port + 1}/http',
             }
             port += 2
 
@@ -80,8 +80,14 @@ class Committee:
                 }
                 port += 3
 
+            network_address = f'/ip4/{host}/tcp/{port}/http'
+            relayer_address = f'/ip4/{host}/tcp/{port + 1}/http'
+            port += 2
+
             self.json['authorities'][name] = {
                 'stake': 1,
+                'network_address': network_address,
+                'relayer_address': relayer_address,
                 'primary': primary_addr,
                 'workers': workers_addr
             }
@@ -119,13 +125,13 @@ class Committee:
         ips = set()
         for name in names:
             addresses = self.json['authorities'][name]['primary']
-            ips.add(self.ip(addresses['primary_to_primary']))
-            ips.add(self.ip(addresses['worker_to_primary']))
+            ips.add(self.ip_from_multi_address(addresses['primary_to_primary']))
+            ips.add(self.ip_from_multi_address(addresses['worker_to_primary']))
 
             for worker in self.json['authorities'][name]['workers'].values():
-                ips.add(self.ip(worker['primary_to_worker']))
-                ips.add(self.ip(worker['worker_to_worker']))
-                ips.add(self.ip(worker['transactions']))
+                ips.add(self.ip_from_multi_address(worker['primary_to_worker']))
+                ips.add(self.ip_from_multi_address(worker['worker_to_worker']))
+                ips.add(self.ip_from_multi_address(worker['transactions']))
 
         return list(ips)
 
@@ -149,10 +155,15 @@ class Committee:
             dump(self.json, f, indent=4, sort_keys=True)
 
     @staticmethod
-    def ip(multi_address):
+    def ip_from_multi_address(multi_address):
         address = multiaddr_to_url_data(multi_address)
         assert isinstance(address, str)
-        return address.split(':')[0]
+        return address.split(':')[1][2:]
+
+    @staticmethod
+    def ip(address):
+        assert isinstance(address, str)
+        return address.split(':')[1][2:]
 
 
 class LocalCommittee(Committee):
@@ -237,29 +248,16 @@ class BenchParameters:
             raise ConfigError('There should be more nodes than faults')
 
 
-class GDEXBenchParameters:
+class GDEXBenchParameters(BenchParameters):
     def __init__(self, json):
         try:
-            self.faults = int(json['faults'])
-            self.nodes = json['node_addresses']
-            self.relayers = json['relayer_addresses']
-            self.rate = json['rate']
+            super().__init__(json)
             self.genesis_dir = json['genesis_dir']
             self.key_dir = json['key_dir']
             self.db_dir = json['db_dir']
             self.duration = int(json['duration'])
             self.order_bench = bool(json['do_orderbook'])
-
-            if 'mem_profiling' in json:
-                self.mem_profile = bool(json['mem_profiling'])
-            else:
-                self.mem_profile = False
-            
-            if 'flamegraph' in json:
-                self.flamegraph = json['flamegraph']
-            else:
-                self.flamegraph = None
-
+            self.starting_balance = int(json['starting_balance'])
         except KeyError as e:
             raise ConfigError(f'Malformed bench parameters: missing key {e}')
 

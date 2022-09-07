@@ -67,8 +67,6 @@ pub enum CeremonyCommand {
         #[clap(value_parser, long)]
         balance: u64,
         #[clap(value_parser, long)]
-        network_address: Multiaddr,
-        #[clap(value_parser, long)]
         narwhal_primary_to_primary: Multiaddr,
         #[clap(value_parser, long)]
         narwhal_worker_to_primary: Multiaddr,
@@ -114,7 +112,6 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             key_file,
             stake,
             balance,
-            network_address,
             narwhal_primary_to_primary,
             narwhal_worker_to_primary,
             narwhal_primary_to_worker,
@@ -129,7 +126,6 @@ pub fn run(cmd: Ceremony) -> Result<()> {
                 stake,
                 balance,
                 delegation: 0,
-                network_address,
                 narwhal_primary_to_primary,
                 narwhal_worker_to_primary,
                 narwhal_primary_to_worker,
@@ -289,7 +285,6 @@ mod test_genesis_ceremony {
                     stake: VALIDATOR_FUNDING_AMOUNT,
                     balance: VALIDATOR_BALANCE,
                     delegation: 0,
-                    network_address: utils::new_network_address(),
                     narwhal_primary_to_primary: utils::new_network_address(),
                     narwhal_worker_to_primary: utils::new_network_address(),
                     narwhal_primary_to_worker: vec![utils::new_network_address()],
@@ -318,7 +313,6 @@ mod test_genesis_ceremony {
                     key_file: key_file.into(),
                     stake: VALIDATOR_FUNDING_AMOUNT,
                     balance: VALIDATOR_BALANCE,
-                    network_address: validator.network_address().to_owned(),
                     narwhal_primary_to_primary: validator.narwhal_primary_to_primary.clone(),
                     narwhal_worker_to_primary: validator.narwhal_worker_to_primary.clone(),
                     narwhal_primary_to_worker: validator.narwhal_primary_to_worker.clone(),

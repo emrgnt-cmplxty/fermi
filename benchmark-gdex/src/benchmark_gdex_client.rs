@@ -8,8 +8,6 @@ use fastcrypto::{
     Hash,
 };
 use futures::{future::join_all, StreamExt};
-use gdex_types::block::BlockDigest;
-use gdex_types::proto::{RelayerClient, RelayerGetLatestBlockInfoRequest};
 use gdex_types::{
     account::{AccountKeyPair, ValidatorKeyPair},
     block::BlockDigest,

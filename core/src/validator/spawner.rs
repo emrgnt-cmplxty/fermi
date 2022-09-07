@@ -78,7 +78,7 @@ impl ValidatorSpawner {
             .filter(|v| v.name == validator_name)
             .collect::<Vec<&ValidatorInfo>>()
             .pop()
-            .expect("Could not locate validator")
+            .expect("Could not locate validator {validator_name}")
             .clone();
         Self {
             db_path,
@@ -146,13 +146,12 @@ impl ValidatorSpawner {
         };
 
         // create config directory
-        let network_address = self.validator_info.network_address.clone();
         let consensus_addresses = self.validator_info.narwhal_consensus_addresses.clone();
         let pubilc_key = self.validator_info.public_key();
 
         // TODO - can we avoid consuming the private key twice in the network setup?
         // Note, this awkwardness is due to my inferred understanding of Arc pin.
-        let key_file = self.key_path.join(format!("{}.key", self.validator_info.name));
+        let key_file = &self.key_path;
         let consensus_db_path = self
             .db_path
             .join(format!("{}-{}", self.validator_info.name, CONSENSUS_DB_NAME));
@@ -191,7 +190,6 @@ impl ValidatorSpawner {
             key_pair,
             consensus_db_path,
             gdex_db_path,
-            network_address,
             metrics_address: utils::available_local_socket_address(),
             admin_interface_port: utils::get_available_port(),
             json_rpc_address: utils::available_local_socket_address(),

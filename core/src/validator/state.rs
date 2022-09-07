@@ -309,7 +309,7 @@ impl ExecutionState for ValidatorState {
     ) -> Result<Self::Outcome, Self::Error> {
         self.metrics.num_transactions_consensus.inc();
         let transaction = signed_transaction.get_transaction_payload();
-
+/*
         let uniqueness_check = self
             .validator_store
             .insert_confirmed_transaction(transaction, consensus_output);
@@ -325,7 +325,8 @@ impl ExecutionState for ValidatorState {
         if result.is_err() {
             self.metrics.num_transactions_consensus_failed.inc();
         }
-
+*/
+        let result = Ok(());
         Ok((consensus_output.clone(), execution_indices, result))
     }
 

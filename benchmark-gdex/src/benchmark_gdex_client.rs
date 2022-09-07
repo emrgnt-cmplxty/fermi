@@ -8,6 +8,8 @@ use fastcrypto::{
     Hash,
 };
 use futures::{future::join_all, StreamExt};
+use gdex_types::block::BlockDigest;
+use gdex_types::proto::{RelayerClient, RelayerGetLatestBlockInfoRequest};
 use gdex_types::{
     account::{AccountKeyPair, ValidatorKeyPair},
     block::BlockDigest,
@@ -205,7 +207,6 @@ impl Client {
 
             if let Err(e) = client.submit_transaction_stream(stream).await {
                 warn!("Failed to send transaction: {e}");
-                //break 'main;
             }
 
             info!("now.elapsed().as_millis()={}", now.elapsed().as_millis());

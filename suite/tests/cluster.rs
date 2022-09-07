@@ -148,7 +148,7 @@ pub mod cluster_test_suite {
         for next_block in block_db_iter.by_ref() {
             let block = next_block.1;
             for serialized_transaction in &block.transactions {
-                let signed_transaction_db = SignedTransaction::deserialize(serialized_transaction.clone()).unwrap();
+                let signed_transaction_db = SignedTransaction::deserialize(serialized_transaction.0.clone()).unwrap();
                 assert!(validator_store.cache_contains_transaction(signed_transaction_db.get_transaction_payload()));
                 total += 1;
             }
@@ -355,20 +355,20 @@ pub mod cluster_test_suite {
         let validator_state_1 = spawner_1.get_validator_state().unwrap();
 
         // Create txns
+        let dummy_consensus_output = create_test_consensus_output();
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
         let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, 0);
         let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
-        let serialized_txn = SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest)
-            .serialize()
-            .unwrap();
+        let signed_create_asset_txn =
+            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
 
         // Preparing serialized buf for transactions
-        let mut serialized_txns_buf: Vec<Vec<u8>> = Vec::new();
-        serialized_txns_buf.push(serialized_txn);
-
-        let dummy_consensus_output = create_test_consensus_output();
+        let mut serialized_txns_buf = Vec::new();
+        let serialized_txn = signed_create_asset_txn.serialize().unwrap();
+        serialized_txns_buf.push((serialized_txn, Ok(())));
         let certificate = dummy_consensus_output.certificate;
+
         let initial_certificate = certificate.clone();
         let initial_serialized_txns_buf = serialized_txns_buf.clone();
 
@@ -378,22 +378,31 @@ pub mod cluster_test_suite {
             .write_latest_block(initial_certificate, initial_serialized_txns_buf)
             .await;
 
+        // TODO clean
+
         let relayer_1 = cluster.spawn_single_relayer(1).await;
         let target_endpoint = endpoint_from_multiaddr(&relayer_1.get_relayer_address()).unwrap();
-        let mut client = RelayerClient::connect(target_endpoint.endpoint().clone())
-            .await
-            .unwrap();
+        let endpoint = target_endpoint.endpoint();
+        let mut client = RelayerClient::connect(endpoint.clone()).await.unwrap();
 
-        // TODO - should we find a way to reduce this to a single function call?
-        let specific_block_response = client
-            .get_block(tonic::Request::new(RelayerGetBlockRequest { block_number: 0 }))
-            .await;
-        let deserialized_block: Block =
-            bincode::deserialize(&specific_block_response.unwrap().into_inner().block.unwrap().block).unwrap();
+        let specific_block_request = tonic::Request::new(RelayerGetBlockRequest { block_number: 0 });
+        let latest_block_info_request = tonic::Request::new(RelayerGetLatestBlockInfoRequest {});
 
+        // Act
+        let specific_block_response = client.get_block(specific_block_request).await;
+
+        let _latest_block_info_response = client.get_latest_block_info(latest_block_info_request).await;
+
+        let block_bytes_returned = specific_block_response.unwrap().into_inner().block.unwrap().block;
+
+        // Assert
+        let deserialized_block: Block = bincode::deserialize(&block_bytes_returned).unwrap();
+
+        let final_certificate = certificate.clone();
+        let final_serialized_txns_buf = serialized_txns_buf.clone();
         let block_to_check_against = Block {
-            block_certificate: certificate.clone(),
-            transactions: serialized_txns_buf.clone(),
+            block_certificate: final_certificate,
+            transactions: final_serialized_txns_buf,
         };
 
         assert!(block_to_check_against.block_certificate == deserialized_block.block_certificate);
@@ -472,7 +481,7 @@ pub mod cluster_test_suite {
 
         let response = client.airdrop(request).await.unwrap().into_inner();
 
-        assert!(response.successful == true);
+        assert!(response.successful);
     }
 
     #[tokio::test]
@@ -529,4 +538,8 @@ pub mod cluster_test_suite {
 
         // assert!(latest_block_info_response.unwrap().into_inner().successful)
     }
+
+    // TODO - implement test after merging metrics...
+    #[tokio::test]
+    pub async fn test_submit_twice() {}
 }

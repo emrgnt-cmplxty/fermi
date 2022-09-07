@@ -24,5 +24,7 @@ jobs:
       run: rustup component add clippy --toolchain 1.63.0-x86_64-unknown-linux-gnu
     - name: Run clippy
       run: cargo clippy -- --D warnings
+    - name: Install fmt
+      run: rustup component add rustfmt --toolchain 1.63.0-x86_64-unknown-linux-gnu
     - name: Run fmt
       run: cargo fmt --all -- --check

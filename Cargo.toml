@@ -4,7 +4,7 @@ members = [
     "cli",
     "engine",
     "controller",
-    "node",
+    "benchmark-node",
     "suite",
     "types",
     "benchmark-gdex",

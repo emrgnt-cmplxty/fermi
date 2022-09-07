@@ -16,10 +16,10 @@ def gdex(ctx, debug=True):
     ''' Run benchmarks on Narwhal node. '''
     bench_params = {
         'faults': 0,
-        'workers': 2,
-        'nodes': 2,
-        'rate': 50_000,
-        'tx_size': 280,
+        'workers': 20,
+        'nodes': 4,
+        'rate': 175_000,
+        'tx_size': 213,
         'duration': 20,
         'mem_profiling': False,
         'flamegraph': None, # node or None

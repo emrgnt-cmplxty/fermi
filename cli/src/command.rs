@@ -2,6 +2,7 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 use anyhow::{anyhow, bail};
+use benchmark_gdex_node::faucet_server::FAUCET_PORT;
 use clap::Parser;
 use gdex_core::{
     builder::network_config::NetworkConfigBuilder,
@@ -16,7 +17,6 @@ use gdex_core::{
     },
     genesis_ceremony::{run, Ceremony, CeremonyCommand},
 };
-use gdex_node::faucet_server::FAUCET_PORT;
 use gdex_types::{
     account::ValidatorKeyPair,
     crypto::get_key_pair_from_rng,

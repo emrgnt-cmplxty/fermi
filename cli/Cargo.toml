@@ -23,7 +23,7 @@ telemetry-subscribers = { git = "https://github.com/MystenLabs/mysten-infra", re
 gdex-core = { path = "../core" }
 gdex-types = { path = "../types" }
 gdex-workspace-hack = { path = "../workspace-hack" }
-gdex-node = { path = "../node" }
+benchmark-gdex-node = { path = "../benchmark-node" }
 
 [[bin]]
 name = "gdex"

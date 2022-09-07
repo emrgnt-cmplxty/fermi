@@ -29,7 +29,7 @@ narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da
 gdex-core = { path = "../core", features=["testing"] }
 gdex-engine = { path = "../engine" }
 gdex-controller = { path = "../controller" }
-gdex-node = { path = "../node" }
+benchmark-gdex-node = { path = "../benchmark-node" }
 gdex-types = { path = "../types", features=["testing"] }
 gdex-workspace-hack = { path = "../workspace-hack" }
 

@@ -61,12 +61,6 @@ class GDEXBench:
             subprocess.run(cmd, check=True, cwd=PathMaker.gdex_build_path())
             sleep(0.5)  # Removing the store may take time.
 
-            # Recompile the latest code.
-            cmd = CommandMaker.compile(mem_profiling=self.mem_profile, flamegraph=self.flamegraph, benchmark=False)
-            Print.info(f"About to run {cmd}...")
-            subprocess.run(cmd, check=True, cwd=PathMaker.gdex_build_path())
-            sleep(5)  # Removing the store may take time.
-
             # Create alias for the client and nodes binary.
             cmd = CommandMaker.alias_binaries(PathMaker.binary_path())
             print(cmd)

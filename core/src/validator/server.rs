@@ -8,11 +8,13 @@ use crate::{
 };
 use anyhow::anyhow;
 use async_trait::async_trait;
+use fastcrypto::Hash;
 use futures::StreamExt;
 use gdex_types::{
     crypto::KeypairTraits,
     error::GDEXError,
     proto::{Empty, TransactionProto, Transactions, TransactionsServer},
+    transaction::SignedTransaction,
 };
 use multiaddr::Multiaddr;
 use narwhal_config::Committee as ConsensusCommittee;
@@ -22,12 +24,10 @@ use narwhal_executor::{ExecutionIndices, SerializedTransaction, SubscriberError}
 use prometheus::Registry;
 use std::{io, sync::Arc};
 use tokio::{
-    sync::{
-        mpsc::{channel, Receiver, Sender},
-    },
+    sync::mpsc::{channel, Receiver, Sender},
     task::JoinHandle,
 };
-use tracing::{info, trace};
+use tracing::{debug, info, trace};
 
 type ExecutionResult = Result<(), GDEXError>;
 type HandledTransaction = Result<(ConsensusOutput, ExecutionIndices, ExecutionResult), SubscriberError>;
@@ -36,11 +36,16 @@ type HandledTransaction = Result<(ConsensusOutput, ExecutionIndices, ExecutionRe
 pub struct ValidatorServerHandle {
     local_addr: Multiaddr,
     handle: JoinHandle<()>,
+    adapter: Arc<ConsensusAdapter>,
 }
 
 impl ValidatorServerHandle {
     pub fn address(&self) -> &Multiaddr {
         &self.local_addr
+    }
+
+    pub fn get_adapter(&self) -> Arc<ConsensusAdapter> {
+        Arc::clone(&self.adapter)
     }
 
     pub fn get_handle(self) -> JoinHandle<()> {
@@ -81,13 +86,13 @@ impl ValidatorServer {
         );
         self.run(address).await
     }
-    
+
     pub async fn run(self, address: Multiaddr) -> Result<ValidatorServerHandle, io::Error> {
         let server = crate::config::server::ServerConfig::new()
             .server_builder()
             .add_service(TransactionsServer::new(ValidatorService {
-                state: self.state,
-                consensus_adapter: self.consensus_adapter,
+                state: self.state.clone(),
+                consensus_adapter: self.consensus_adapter.clone(),
             }))
             .bind(&address)
             .await
@@ -97,6 +102,7 @@ impl ValidatorServer {
         let handle = ValidatorServerHandle {
             local_addr,
             handle: tokio::spawn(server.serve()),
+            adapter: self.consensus_adapter,
         };
         Ok(handle)
     }
@@ -129,7 +135,7 @@ impl ValidatorService {
         let consensus_storage_base_path = consensus_config.db_path().to_path_buf();
         let consensus_parameters = consensus_config.narwhal_config().to_owned();
 
-        println!("consensus_committee = {:?}", consensus_committee);
+        info!("consensus_committee = {:?}", consensus_committee);
 
         let registry = prometheus_registry.clone();
         let restarter_handle = tokio::spawn(async move {
@@ -199,52 +205,56 @@ impl ValidatorService {
         trace!("Handling a new transaction with ValidatorService",);
         state.metrics.increment_num_transactions_rec();
 
-        // let signed_transaction = SignedTransaction::deserialize(transaction_proto.transaction.to_vec())
-        //     .map_err(|e| tonic::Status::internal(e.to_string()))?;
-        // signed_transaction
-        //     .verify()
-        //     .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
+        let signed_transaction = SignedTransaction::deserialize(transaction_proto.transaction.to_vec())
+            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        signed_transaction
+            .verify()
+            .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
 
         // // TODO change this to err flow
         // // TODO there is a ton of contention here
-        // if !state.validator_store.cache_contains_block_digest(
-        //     signed_transaction
-        //         .get_transaction_payload()
-        //         .get_recent_certificate_digest(),
-        // ) {
-        //     state.metrics.increment_num_transactions_rec_failed();
-        //     return Err(tonic::Status::internal("Invalid recent certificate digest"));
-        // }
-        // if state
-        //     .validator_store
-        //     .cache_contains_transaction(signed_transaction.get_transaction_payload())
-        // {
-        //     state.metrics.increment_num_transactions_rec_failed();
-        //     let digest = signed_transaction.get_transaction_payload().digest().to_string();
-        //     return Err(tonic::Status::internal("Duplicate transaction ".to_owned() + &digest));
-        // }
+        if !state.validator_store.cache_contains_block_digest(
+            signed_transaction
+                .get_transaction_payload()
+                .get_recent_certificate_digest(),
+        ) {
+            state.metrics.increment_num_transactions_rec_failed();
+            cfg_if::cfg_if! {
+                if #[cfg(feature = "benchmark")] {
+                    debug!("A submitted transaction digest was invalid");
+                } else {
+                    return Err(tonic::Status::internal("Invalid recent certificate digest"));
+                }
+            }
+        }
+
+        if state
+            .validator_store
+            .cache_contains_transaction(signed_transaction.get_transaction_payload())
+        {
+            state.metrics.increment_num_transactions_rec_failed();
+            let digest = signed_transaction.get_transaction_payload().digest().to_string();
+            cfg_if::cfg_if! {
+                if #[cfg(feature = "benchmark")] {
+                    debug!("Duplicate transaction id = {}", digest);
+                } else {
+                    return Err(tonic::Status::internal("Duplicate transaction ".to_owned() + &digest));
+                }
+            }
+        }
 
         let transaction_proto = narwhal_types::TransactionProto {
             transaction: transaction_proto.transaction,
         };
 
-        let _result = consensus_adapter
-            // .lock()
-            // .await
-            .submit_transaction(transaction_proto)
-            .await
-            .unwrap();
+        consensus_adapter.submit_transaction(transaction_proto).await?;
 
-        // state
-        //     .handle_pre_consensus_transaction(&signed_transaction)
-        //     // .instrument(span)
-        //     .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        state
+            .handle_pre_consensus_transaction(&signed_transaction)
+            // .instrument(span)
+            .map_err(|e| tonic::Status::internal(e.to_string()))?;
 
         Ok(tonic::Response::new(Empty {}))
-    }
-
-    pub fn get_consensus_adapters(&self) -> &Arc<ConsensusAdapter> {
-        &self.consensus_adapter
     }
 }
 

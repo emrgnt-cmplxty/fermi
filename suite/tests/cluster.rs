@@ -5,6 +5,7 @@ pub mod cluster_test_suite {
     // IMPORTS
 
     // gdex
+    use benchmark_gdex_node::faucet_server::{FaucetService, FAUCET_PORT};
     use gdex_core::{
         catchup::manager::{
             mock_catchup_manager::{MockCatchupManger, MockRelayServer},
@@ -12,7 +13,6 @@ pub mod cluster_test_suite {
         },
         client::endpoint_from_multiaddr,
     };
-    use gdex_node::faucet_server::{FaucetService, FAUCET_PORT};
     use gdex_suite::test_utils::test_cluster::TestCluster;
     use gdex_types::{
         account::{AccountKeyPair, ValidatorKeyPair},
@@ -58,6 +58,9 @@ pub mod cluster_test_suite {
         let mut cluster = TestCluster::spawn(validator_count, None).await;
         sleep(Duration::from_secs(2)).await;
 
+        let receiver_adapter = cluster.get_validator_spawner(1).get_consensus_adapter().unwrap();
+        receiver_adapter.update_batch_size(1);
+
         info!("Sending transactions");
         let (kp_sender, kp_receiver, _) = cluster.send_transactions(0, 1, 20).await;
         sleep(Duration::from_secs(5)).await;
@@ -86,6 +89,9 @@ pub mod cluster_test_suite {
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
+
+        let receiver_adapter = cluster.get_validator_spawner(1).get_consensus_adapter().unwrap();
+        receiver_adapter.update_batch_size(1);
 
         info!("Sending transactions");
         cluster.send_transactions(0, 1, 10).await;
@@ -118,6 +124,9 @@ pub mod cluster_test_suite {
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
+
+        let receiver_adapter = cluster.get_validator_spawner(1).get_consensus_adapter().unwrap();
+        receiver_adapter.update_batch_size(1);
 
         info!("Sending transactions");
         let (_, _, signed_transactions) = cluster.send_transactions(0, 1, 10).await;
@@ -201,6 +210,9 @@ pub mod cluster_test_suite {
 
         info!("Launching nodes 1 - {}", target_node);
         let mut cluster = TestCluster::spawn(validator_count, Some(target_node)).await;
+
+        let receiver_adapter = cluster.get_validator_spawner(1).get_consensus_adapter().unwrap();
+        receiver_adapter.update_batch_size(1);
 
         info!("Begin Sending {N_TRANSACTIONS} transactions");
         cluster.send_transactions_async(0, 1, N_TRANSACTIONS, None).await;
@@ -294,6 +306,9 @@ pub mod cluster_test_suite {
 
         info!("Launching nodes 1 - {}", target_node);
         let mut cluster = TestCluster::spawn(validator_count, Some(target_node)).await;
+
+        let receiver_adapter = cluster.get_validator_spawner(1).get_consensus_adapter().unwrap();
+        receiver_adapter.update_batch_size(1);
 
         info!("Begin Sending {N_TRANSACTIONS} transactions");
         cluster.send_transactions_async(0, 1, N_TRANSACTIONS, None).await;
@@ -415,12 +430,19 @@ pub mod cluster_test_suite {
         const N_TRANSACTIONS: u64 = 1_000_000;
 
         let mut cluster = TestCluster::spawn(validator_count, None).await;
+
+        let receiver_adapter = cluster.get_validator_spawner(1).get_consensus_adapter().unwrap();
+        receiver_adapter.update_batch_size(1);
+
         cluster.send_transactions(0, 1, 10).await;
 
         let metrics_0 = &cluster.get_validator_spawner(0).get_validator_state().unwrap().metrics;
         let metrics_1 = &cluster.get_validator_spawner(1).get_validator_state().unwrap().metrics;
         assert!(metrics_0.num_transactions_rec.load(std::sync::atomic::Ordering::SeqCst) == 0);
         assert!(metrics_1.num_transactions_rec.load(std::sync::atomic::Ordering::SeqCst) == 10);
+
+        let receiver_adapter = cluster.get_validator_spawner(0).get_consensus_adapter().unwrap();
+        receiver_adapter.update_batch_size(1);
 
         cluster.send_transactions_async(1, 0, N_TRANSACTIONS, None).await;
 

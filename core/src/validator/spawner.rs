@@ -27,6 +27,8 @@ use tracing::info;
 use narwhal_config::{Committee as ConsensusCommittee, Parameters as ConsensusParameters};
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
 
+use super::consensus_adapter::ConsensusAdapter;
+
 // INTERFACE
 
 // TODO lets clean up these comments
@@ -50,6 +52,7 @@ pub struct ValidatorSpawner {
 
     /// Validator state passed to the instances spawned
     validator_state: Option<Arc<ValidatorState>>,
+    consensus_adapter: Option<Arc<ConsensusAdapter>>,
 
     /// Begin objects initialized after calling spawn_validator_service
 
@@ -87,6 +90,7 @@ impl ValidatorSpawner {
             validator_info,
             validator_address,
             validator_state: None,
+            consensus_adapter: None,
             tx_reconfigure_consensus: None,
             service_handles: None,
             server_handles: None,
@@ -105,6 +109,14 @@ impl ValidatorSpawner {
     pub fn get_validator_state(&self) -> Option<Arc<ValidatorState>> {
         if self.validator_state.is_some() {
             Some(Arc::clone(self.validator_state.as_ref().unwrap()))
+        } else {
+            None
+        }
+    }
+
+    pub fn get_consensus_adapter(&self) -> Option<Arc<ConsensusAdapter>> {
+        if self.consensus_adapter.is_some() {
+            Some(Arc::clone(self.consensus_adapter.as_ref().unwrap()))
         } else {
             None
         }
@@ -133,6 +145,10 @@ impl ValidatorSpawner {
 
     fn set_validator_state(&mut self, validator_state: Arc<ValidatorState>) {
         self.validator_state = Some(validator_state)
+    }
+
+    fn set_consensus_adapter(&mut self, consensus_adapter: Arc<ConsensusAdapter>) {
+        self.consensus_adapter = Some(consensus_adapter)
     }
 
     /// Internal helper function used to spawns the validator service
@@ -233,6 +249,7 @@ impl ValidatorSpawner {
         );
 
         let validator_server_handle = validator_server.spawn().await.unwrap();
+        self.set_consensus_adapter(validator_server_handle.get_adapter());
 
         self.server_handles = Some(vec![validator_server_handle.get_handle()]);
     }

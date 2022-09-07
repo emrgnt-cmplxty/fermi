@@ -522,6 +522,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "benchmark-gdex-node"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap 2.34.0",
+ "crypto",
+ "fastcrypto",
+ "futures",
+ "gdex-core",
+ "gdex-types",
+ "hex",
+ "multiaddr",
+ "prost",
+ "telemetry-subscribers 0.1.0 (git+https://github.com/mystenlabs/mysten-infra.git?rev=7ef7415a4e11cf68fa68ce9db884c46e704e0445)",
+ "tokio",
+ "tonic",
+ "tracing",
+ "types",
+]
+
+[[package]]
 name = "better_any"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2413,10 +2434,10 @@ name = "gdex-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "benchmark-gdex-node",
  "clap 3.2.19",
  "colored",
  "gdex-core",
- "gdex-node",
  "gdex-types",
  "gdex-workspace-hack",
  "multiaddr",
@@ -2453,6 +2474,7 @@ dependencies = [
  "bcs",
  "bincode",
  "camino",
+ "cfg-if 1.0.0",
  "clap 3.2.19",
  "config 0.1.0",
  "consensus",
@@ -2498,31 +2520,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "gdex-node"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap 2.34.0",
- "crypto",
- "fastcrypto",
- "futures",
- "gdex-core",
- "gdex-types",
- "hex",
- "multiaddr",
- "prost",
- "telemetry-subscribers 0.1.0 (git+https://github.com/mystenlabs/mysten-infra.git?rev=7ef7415a4e11cf68fa68ce9db884c46e704e0445)",
- "tokio",
- "tonic",
- "tracing",
- "types",
-]
-
-[[package]]
 name = "gdex-suite"
 version = "0.1.0"
 dependencies = [
  "bcs",
+ "benchmark-gdex-node",
  "bincode",
  "config 0.1.0",
  "consensus",
@@ -2532,7 +2534,6 @@ dependencies = [
  "gdex-controller",
  "gdex-core",
  "gdex-engine",
- "gdex-node",
  "gdex-types",
  "gdex-workspace-hack",
  "hex",

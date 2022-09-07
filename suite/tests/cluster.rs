@@ -19,16 +19,10 @@ pub mod cluster_test_suite {
         asset::PRIMARY_ASSET_ID,
         block::{Block, BlockDigest},
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
-<<<<<<< HEAD
         order_book::{Depth, OrderbookDepth},
         proto::{
-            RelayerClient, RelayerGetBlockRequest, RelayerGetLatestBlockInfoRequest,
-            RelayerGetLatestOrderbookDepthRequest,
-=======
-        proto::{
             FaucetAirdropRequest, FaucetClient, FaucetServer, RelayerClient, RelayerGetBlockRequest,
-            RelayerGetLatestBlockInfoRequest,
->>>>>>> main
+            RelayerGetLatestBlockInfoRequest, RelayerGetLatestOrderbookDepthRequest,
         },
         transaction::{create_asset_creation_transaction, SignedTransaction},
         utils,
@@ -41,12 +35,8 @@ pub mod cluster_test_suite {
     use narwhal_types::{Certificate, Header};
 
     // external
-<<<<<<< HEAD
     use std::collections::HashMap;
-    use std::sync::Arc;
-=======
     use std::{net::SocketAddr, sync::Arc};
->>>>>>> main
     use tokio::time::{sleep, Duration};
     use tonic::transport::Server;
     use tracing::info;

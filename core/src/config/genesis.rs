@@ -7,7 +7,7 @@ use anyhow::Result;
 use gdex_types::{
     account::{AccountKeyPair, ValidatorKeyPair},
     committee::StakeUnit,
-    crypto::{get_key_pair_from_rng, GDEXAddress},
+    crypto::{get_key_pair_from_rng, GDEXAddress, KeypairTraits},
     serialization::KeyPairBase64,
 };
 use multiaddr::Multiaddr;
@@ -42,9 +42,9 @@ pub struct ValidatorGenesisStateInfo {
     pub balance: u64,
     pub narwhal_primary_to_primary: Multiaddr,
     pub narwhal_worker_to_primary: Multiaddr,
-    pub narwhal_primary_to_worker: Multiaddr,
-    pub narwhal_worker_to_worker: Multiaddr,
-    pub narwhal_consensus_address: Multiaddr,
+    pub narwhal_primary_to_worker: Vec<Multiaddr>,
+    pub narwhal_worker_to_worker: Vec<Multiaddr>,
+    pub narwhal_consensus_addresses: Vec<Multiaddr>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -89,7 +89,8 @@ impl GenesisConfig {
             let address = if let Some(address) = account.address {
                 address
             } else {
-                let (address, keypair) = get_key_pair_from_rng(&mut rng);
+                let keypair = get_key_pair_from_rng::<ValidatorKeyPair, R>(&mut rng);
+                let address = GDEXAddress::from(keypair.public());
                 keys.push(keypair);
                 address
             };

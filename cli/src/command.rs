@@ -18,7 +18,7 @@ use gdex_core::{
 };
 use gdex_node::faucet_server::FAUCET_PORT;
 use gdex_types::{
-    account::AccountKeyPair,
+    account::ValidatorKeyPair,
     crypto::get_key_pair_from_rng,
     proto::{FaucetAirdropRequest, FaucetClient},
     utils,
@@ -70,12 +70,12 @@ pub enum GDEXCommand {
         narwhal_primary_to_primary: Option<Multiaddr>,
         #[clap(value_parser, long, help = "Network worker to primary")]
         narwhal_worker_to_primary: Option<Multiaddr>,
-        #[clap(value_parser, long, help = "Network primary to worker")]
-        narwhal_primary_to_worker: Option<Multiaddr>,
-        #[clap(value_parser, long, help = "Network worker to worker")]
-        narwhal_worker_to_worker: Option<Multiaddr>,
-        #[clap(value_parser, long, help = "Network consensus address")]
-        narwhal_consensus_address: Option<Multiaddr>,
+        #[clap(value_parser, long, help = "Network primary to worker", value_delimiter = ',')]
+        narwhal_primary_to_worker: Option<Vec<Multiaddr>>,
+        #[clap(value_parser, long, help = "Network worker to worker", value_delimiter = ',')]
+        narwhal_worker_to_worker: Option<Vec<Multiaddr>>,
+        #[clap(value_parser, long, help = "Network consensus address", value_delimiter = ',')]
+        narwhal_consensus_addresses: Option<Vec<Multiaddr>>,
     },
     /// Add controllers to the genesis blob
     #[clap(name = "add-controllers-genesis")]
@@ -190,7 +190,7 @@ impl GDEXCommand {
                 narwhal_worker_to_primary,
                 narwhal_primary_to_worker,
                 narwhal_worker_to_worker,
-                narwhal_consensus_address,
+                narwhal_consensus_addresses,
             } => {
                 let ceremony = Ceremony {
                     path,
@@ -205,11 +205,11 @@ impl GDEXCommand {
                         narwhal_worker_to_primary: narwhal_worker_to_primary
                             .unwrap_or_else(|| utils::new_network_address()),
                         narwhal_primary_to_worker: narwhal_primary_to_worker
-                            .unwrap_or_else(|| utils::new_network_address()),
+                            .unwrap_or_else(|| vec![utils::new_network_address()]),
                         narwhal_worker_to_worker: narwhal_worker_to_worker
-                            .unwrap_or_else(|| utils::new_network_address()),
-                        narwhal_consensus_address: narwhal_consensus_address
-                            .unwrap_or_else(|| utils::new_network_address()),
+                            .unwrap_or_else(|| vec![utils::new_network_address()]),
+                        narwhal_consensus_addresses: narwhal_consensus_addresses
+                            .unwrap_or_else(|| vec![utils::new_network_address()]),
                     },
                 };
                 ceremony.run().unwrap();
@@ -392,7 +392,8 @@ impl GDEXCommand {
                 keystore_path,
                 keystore_name,
             } => {
-                let keypair: AccountKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+                let keypair: ValidatorKeyPair =
+                    get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
 
                 let keystore_path = keystore_path.unwrap_or(gdex_config_dir()?);
                 let keystore_name = keystore_name.unwrap_or_else(|| String::from(GDEX_KEYSTORE_FILENAME));

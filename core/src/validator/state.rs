@@ -3,9 +3,11 @@
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-core/src/authority.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bcuse super::state::ValidatorState;
 use super::genesis_state::ValidatorGenesisState;
+use crate::validator::metrics::ValidatorMetrics;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
-use gdex_controller::{controller::Controller, master::MasterController};
+use fastcrypto::Hash;
+use gdex_controller::master::MasterController;
 use gdex_types::transaction::Transaction;
 use gdex_types::{
     account::ValidatorKeyPair,
@@ -21,7 +23,6 @@ use mysten_store::{
     Map, Store,
 };
 use narwhal_consensus::ConsensusOutput;
-use narwhal_crypto::Hash;
 use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
 use narwhal_types::CertificateDigest;
 
@@ -35,6 +36,8 @@ use std::{
     },
 };
 use tracing::{info, trace};
+type ExecutionResult = Result<(), GDEXError>;
+
 /// Tracks recently submitted transactions to implement transaction gating
 pub struct ValidatorStore {
     /// The transaction map tracks recently submitted transactions
@@ -98,7 +101,7 @@ impl ValidatorStore {
         };
 
         let block_digest_cache = Mutex::new(HashMap::new());
-        // TODO theres likely a better way to say what I'm saying here
+        // TODO - cleanup writing dummy block
         if block_number == 0 {
             block_digest_cache
                 .lock()
@@ -135,26 +138,36 @@ impl ValidatorStore {
         );
     }
 
-    pub fn insert_confirmed_transaction(&self, transaction: &Transaction, consensus_output: &ConsensusOutput) {
+    pub fn insert_confirmed_transaction(
+        &self,
+        transaction: &Transaction,
+        consensus_output: &ConsensusOutput,
+    ) -> Result<(), GDEXError> {
         let transaction_digest = transaction.digest();
         let block_digest = consensus_output.certificate.digest();
-        let mut locked_block_digest_cache = self.block_digest_cache.lock().unwrap();
-        let max_seq_num_so_far = locked_block_digest_cache.values().max();
 
-        let _is_new_seq_num =
-            max_seq_num_so_far.is_none() || consensus_output.consensus_index > *max_seq_num_so_far.unwrap();
+        // return an error if transaction has already been seen before
+        if let Some(digest) = self.transaction_cache.lock().unwrap().get(&transaction_digest) {
+            if digest.is_some() {
+                return Err(GDEXError::TransactionDuplicate);
+            }
+        }
 
         self.transaction_cache
             .lock()
             .unwrap()
             .insert(transaction_digest, Some(block_digest));
-        locked_block_digest_cache.insert(block_digest, consensus_output.consensus_index);
+        self.block_digest_cache
+            .lock()
+            .unwrap()
+            .insert(block_digest, consensus_output.consensus_index);
+        Ok(())
     }
 
     pub async fn write_latest_block(
         &self,
         block_certificate: BlockCertificate,
-        transactions: Vec<SerializedTransaction>,
+        transactions: Vec<(SerializedTransaction, ExecutionResult)>,
     ) {
         // TODO - is there a way to acquire a mutable reference to the block-number without demanding &mut self?
         // this would allow us to avoid separate commands to load and add to the counter
@@ -228,8 +241,10 @@ pub struct ValidatorState {
     /// NodeConfig for this node
     /// Controller of various blockchain modules
     pub master_controller: MasterController,
-    // A map of transactions which have been seen
+    /// A map of transactions which have been seen
     pub validator_store: ValidatorStore,
+    /// Metrics around blockchain operations
+    pub metrics: ValidatorMetrics,
 }
 
 impl ValidatorState {
@@ -248,6 +263,7 @@ impl ValidatorState {
             committee: ArcSwap::from(Arc::new(genesis.committee().unwrap())),
             master_controller: genesis.master_controller().clone(),
             validator_store: ValidatorStore::reopen(store_db_path),
+            metrics: ValidatorMetrics::default(),
         }
     }
 
@@ -278,7 +294,7 @@ impl ValidatorState {
 impl ExecutionState for ValidatorState {
     type Transaction = SignedTransaction;
     type Error = GDEXError;
-    type Outcome = (ConsensusOutput, ExecutionIndices);
+    type Outcome = (ConsensusOutput, ExecutionIndices, ExecutionResult);
 
     async fn handle_consensus_transaction(
         &self,
@@ -286,26 +302,15 @@ impl ExecutionState for ValidatorState {
         execution_indices: ExecutionIndices,
         signed_transaction: Self::Transaction,
     ) -> Result<Self::Outcome, Self::Error> {
+        self.metrics.increment_num_transactions_consensus();
         let transaction = signed_transaction.get_transaction_payload();
 
         self.validator_store
-            .insert_confirmed_transaction(transaction, consensus_output);
+            .insert_confirmed_transaction(transaction, consensus_output)?;
 
-        // handle transactions for bank controller
-        self.master_controller
-            .bank_controller
-            .lock()
-            .unwrap()
-            .handle_consensus_transaction(transaction)
-            .unwrap();
-        self.master_controller
-            .spot_controller
-            .lock()
-            .unwrap()
-            .handle_consensus_transaction(transaction)
-            .unwrap();
+        let result = self.master_controller.handle_consensus_transaction(transaction);
 
-        Ok((consensus_output.clone(), execution_indices))
+        Ok((consensus_output.clone(), execution_indices, result))
     }
 
     fn ask_consensus_write_lock(&self) -> bool {
@@ -320,6 +325,10 @@ impl ExecutionState for ValidatorState {
     async fn load_execution_indices(&self) -> Result<ExecutionIndices, Self::Error> {
         Ok(ExecutionIndices::default())
     }
+
+    fn deserialize(bytes: &[u8]) -> Result<Self::Transaction, bincode::Error> {
+        bincode::deserialize(bytes)
+    }
 }
 
 #[cfg(test)]
@@ -329,6 +338,7 @@ mod test_validator_state {
         builder::genesis_state::GenesisStateBuilder,
         genesis_ceremony::{VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
     };
+    use fastcrypto::{generate_production_keypair, DIGEST_LEN};
     use gdex_types::{
         account::ValidatorPubKeyBytes,
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
@@ -342,7 +352,7 @@ mod test_validator_state {
         utils,
     };
     use narwhal_consensus::ConsensusOutput;
-    use narwhal_crypto::{generate_production_keypair, Hash, KeyPair, DIGEST_LEN};
+    use narwhal_crypto::KeyPair;
     use narwhal_executor::ExecutionIndices;
     use narwhal_types::{Certificate, Header};
 
@@ -352,7 +362,8 @@ mod test_validator_state {
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 
-        let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let key: ValidatorKeyPair =
+            get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         let public_key = ValidatorPubKeyBytes::from(key.public());
         let secret = Arc::pin(key);
 
@@ -365,9 +376,9 @@ mod test_validator_state {
             network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),
             narwhal_worker_to_primary: utils::new_network_address(),
-            narwhal_primary_to_worker: utils::new_network_address(),
-            narwhal_worker_to_worker: utils::new_network_address(),
-            narwhal_consensus_address: utils::new_network_address(),
+            narwhal_primary_to_worker: vec![utils::new_network_address()],
+            narwhal_worker_to_worker: vec![utils::new_network_address()],
+            narwhal_consensus_addresses: vec![utils::new_network_address()],
         };
 
         let builder = GenesisStateBuilder::new()
@@ -389,7 +400,8 @@ mod test_validator_state {
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 
-        let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let key: ValidatorKeyPair =
+            get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         let public_key = ValidatorPubKeyBytes::from(key.public());
         let secret = Arc::pin(key);
 
@@ -402,9 +414,9 @@ mod test_validator_state {
             network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),
             narwhal_worker_to_primary: utils::new_network_address(),
-            narwhal_primary_to_worker: utils::new_network_address(),
-            narwhal_worker_to_worker: utils::new_network_address(),
-            narwhal_consensus_address: utils::new_network_address(),
+            narwhal_primary_to_worker: vec![utils::new_network_address()],
+            narwhal_worker_to_worker: vec![utils::new_network_address()],
+            narwhal_consensus_addresses: vec![utils::new_network_address()],
         };
 
         let builder = GenesisStateBuilder::new()
@@ -439,6 +451,7 @@ mod test_validator_state {
         }
     }
 
+    #[allow(unused_must_use)]
     #[tokio::test]
     pub async fn process_create_asset_txn() {
         let validator: ValidatorState = create_test_validator();
@@ -448,7 +461,7 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
+        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, 0);
         let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
         let signed_create_asset_txn =
             SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
@@ -463,6 +476,7 @@ mod test_validator_state {
             .unwrap();
     }
 
+    #[allow(unused_must_use)]
     #[tokio::test]
     pub async fn process_payment_txn() {
         let validator: ValidatorState = create_test_validator();
@@ -472,7 +486,7 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
+        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, 0);
         let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
         let signed_create_asset_txn =
             SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
@@ -505,6 +519,7 @@ mod test_validator_state {
             .unwrap();
     }
 
+    #[allow(unused_must_use)]
     #[tokio::test]
     pub async fn process_create_orderbook_transaction() {
         let validator: ValidatorState = create_test_validator();
@@ -514,12 +529,13 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
-        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
-        let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
 
-        for _ in 0..5 {
+        for asset_number in 0..5 {
+            let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, asset_number);
+            let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
+            let signed_create_asset_txn =
+                SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+
             validator
                 .handle_consensus_transaction(
                     &dummy_consensus_output,
@@ -555,6 +571,7 @@ mod test_validator_state {
             .unwrap();
     }
 
+    #[allow(unused_must_use)]
     #[tokio::test]
     pub async fn process_place_limit_order_and_cancel_transaction() {
         let validator: ValidatorState = create_test_validator();
@@ -564,12 +581,13 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
-        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
-        let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
 
-        for _ in 0..5 {
+        for asset_number in 0..5 {
+            let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, asset_number);
+            let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
+            let signed_create_asset_txn =
+                SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+
             validator
                 .handle_consensus_transaction(
                     &dummy_consensus_output,
@@ -651,6 +669,7 @@ mod test_validator_state {
             .unwrap();
     }
 
+    #[allow(unused_must_use)]
     #[tokio::test]
     pub async fn process_place_limit_order_and_update_transaction() {
         let validator: ValidatorState = create_test_validator();
@@ -660,12 +679,13 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
-        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
-        let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
 
-        for _ in 0..5 {
+        for asset_number in 0..5 {
+            let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, asset_number);
+            let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
+            let signed_create_asset_txn =
+                SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+
             validator
                 .handle_consensus_transaction(
                     &dummy_consensus_output,

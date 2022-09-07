@@ -31,7 +31,7 @@ use gdex_types::{
 };
 
 // mysten
-use narwhal_crypto::ed25519::Ed25519PublicKey;
+use fastcrypto::ed25519::Ed25519PublicKey;
 
 // external
 use serde::{Deserialize, Serialize};
@@ -59,7 +59,7 @@ pub struct OrderbookInterface {
     accounts: HashMap<AccountPubKey, OrderAccount>,
     order_to_account: HashMap<OrderId, AccountPubKey>,
 }
-
+// TODO - remove all asserts from orderbook impl
 impl OrderbookInterface {
     // TODO #4 //
     pub fn new(
@@ -129,8 +129,9 @@ impl OrderbookInterface {
                 .lock()
                 .unwrap()
                 .get_balance(account_pub_key, self.base_asset_id)?;
-
-            assert!(base_asset_balance > quantity);
+            if base_asset_balance < quantity {
+                return Err(GDEXError::OrderExceedsBalance);
+            }
         } else {
             // if bid, buying base asset with quantity*price of quote asset
             let quote_asset_balance = self
@@ -139,7 +140,9 @@ impl OrderbookInterface {
                 .unwrap()
                 .get_balance(account_pub_key, self.quote_asset_id)?;
 
-            assert!(quote_asset_balance > quantity * price);
+            if quote_asset_balance < quantity * price {
+                return Err(GDEXError::OrderExceedsBalance);
+            }
         }
 
         // create and process limit order

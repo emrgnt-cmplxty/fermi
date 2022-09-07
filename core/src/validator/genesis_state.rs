@@ -53,34 +53,70 @@ impl ValidatorGenesisState {
             .validator_set
             .iter()
             .map(|validator| {
+                // Strong requirement here for narwhal and sui to be on the same version of fastcrypto
+                // for AuthorityPublicBytes to cast to type alias PublicKey defined in narwhal to
+                // construct narwhal Committee struct.
                 let name = validator.public_key().try_into().expect("Can't get narwhal public key");
                 let primary = narwhal_config::PrimaryAddresses {
                     primary_to_primary: validator.narwhal_primary_to_primary.clone(),
                     worker_to_primary: validator.narwhal_worker_to_primary.clone(),
                 };
-                let workers = [(
-                    0, // worker_id
-                    narwhal_config::WorkerInfo {
-                        primary_to_worker: validator.narwhal_primary_to_worker.clone(),
-                        transactions: validator.narwhal_consensus_address.clone(),
-                        worker_to_worker: validator.narwhal_worker_to_worker.clone(),
-                    },
-                )]
-                .into_iter()
-                .collect();
-                let validator = narwhal_config::Authority {
+                let authority = narwhal_config::Authority {
                     stake: validator.stake as narwhal_config::Stake, //TODO this should at least be the same size integer
                     primary,
-                    workers,
                 };
 
-                (name, validator)
+                (name, authority)
             })
             .collect();
         std::sync::Arc::new(arc_swap::ArcSwap::from_pointee(narwhal_config::Committee {
             authorities: narwhal_committee,
             epoch: self.epoch() as narwhal_config::Epoch,
         }))
+    }
+
+    pub fn narwhal_worker_cache(&self) -> narwhal_config::SharedWorkerCache {
+        let workers = self
+            .validator_set
+            .iter()
+            .map(|validator| {
+                let name = validator.public_key().try_into().expect("Can't get narwhal public key");
+
+                let mut worker_counter = 0;
+
+                let workers = validator
+                    .narwhal_primary_to_worker
+                    .iter()
+                    .zip(validator.narwhal_worker_to_worker.iter())
+                    .zip(validator.narwhal_consensus_addresses.iter())
+                    // map to triplet tuple
+                    .map(|((primary_to_worker, worker_to_worker), consensus_address)| {
+                        (primary_to_worker, worker_to_worker, consensus_address)
+                    })
+                    .map(|(primary_to_worker, worker_to_worker, consensus_address)| {
+                        worker_counter += 1;
+                        (
+                            // unwrap is safe because we know worker_counter >= 0
+                            (worker_counter - 1).try_into().unwrap(), // worker_id
+                            narwhal_config::WorkerInfo {
+                                primary_to_worker: primary_to_worker.clone(),
+                                transactions: consensus_address.clone(),
+                                worker_to_worker: worker_to_worker.clone(),
+                            },
+                        )
+                    })
+                    .collect();
+
+                let worker_index = narwhal_config::WorkerIndex(workers);
+
+                (name, worker_index)
+            })
+            .collect();
+        narwhal_config::WorkerCache {
+            workers,
+            epoch: self.epoch() as narwhal_config::Epoch,
+        }
+        .into()
     }
 
     pub fn get_default_genesis() -> Self {
@@ -165,6 +201,8 @@ impl<'de> Deserialize<'de> for ValidatorGenesisState {
 
         let raw_genesis: RawGenesis = bcs::from_bytes(&bytes).map_err(|e| Error::custom(e.to_string()))?;
 
+        raw_genesis.master_controller.initialize_controllers();
+
         Ok(ValidatorGenesisState {
             master_controller: raw_genesis.master_controller,
             validator_set: raw_genesis.validator_set,
@@ -204,7 +242,8 @@ mod genesis_test {
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 
-        let key: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let key: ValidatorKeyPair =
+            get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         let validator = ValidatorInfo {
             name: "0".into(),
             public_key: key.public().into(),
@@ -214,9 +253,9 @@ mod genesis_test {
             network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),
             narwhal_worker_to_primary: utils::new_network_address(),
-            narwhal_primary_to_worker: utils::new_network_address(),
-            narwhal_worker_to_worker: utils::new_network_address(),
-            narwhal_consensus_address: utils::new_network_address(),
+            narwhal_primary_to_worker: vec![utils::new_network_address()],
+            narwhal_worker_to_worker: vec![utils::new_network_address()],
+            narwhal_consensus_addresses: vec![utils::new_network_address()],
         };
 
         let builder = GenesisStateBuilder::new()

@@ -1,3 +1,4 @@
+use fastcrypto::{ed25519::Ed25519PublicKey, traits::ToFromBytes, Hash, DIGEST_LEN};
 use gdex_core::client;
 use gdex_types::{
     account::AccountKeyPair,
@@ -6,17 +7,25 @@ use gdex_types::{
     transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
     utils,
 };
-use narwhal_crypto::{ed25519::Ed25519PublicKey, traits::ToFromBytes, Hash, DIGEST_LEN};
+use multiaddr::Multiaddr;
 use narwhal_types::CertificateDigest;
-use std::{env, io, net::SocketAddr, path::Path};
+use std::{
+    env, io,
+    net::SocketAddr,
+    path::{Path, PathBuf},
+};
 use tonic::{transport::Server, Request, Response, Status};
 pub const PRIMARY_ASSET_ID: u64 = 0;
 pub const FAUCET_PORT: u32 = 8080;
 
-#[derive(Debug, Default)]
-pub struct FaucetService {}
+#[derive(Debug)]
+pub struct FaucetService {
+    pub validator_index: u64,
+    pub key_path: PathBuf,
+    pub validator_addr: Multiaddr,
+}
 
-pub fn generate_signed_airdrop_transaction_for_faucet(
+fn generate_signed_airdrop_transaction_for_faucet(
     kp_sender: &AccountKeyPair,
     kp_receiver_public_key: &Ed25519PublicKey,
     amount: u64,
@@ -45,13 +54,9 @@ pub fn generate_signed_airdrop_transaction_for_faucet(
 impl Faucet for FaucetService {
     async fn airdrop(&self, request: Request<FaucetAirdropRequest>) -> Result<Response<FaucetAirdropResponse>, Status> {
         // Getting the file path for the key of the faucet
-        let key_dir = ".proto/";
-        let key_path = Path::new(key_dir).to_path_buf();
 
         // For now the faucet is the primary validator
-        let primary_validator_index = 0;
-        let key_file = key_path.join(format!("validator-{}.key", primary_validator_index));
-
+        let key_file = self.key_path.join(format!("validator-{}.key", self.validator_index));
         // Getting request, parsing it, and changing the hex public key passed in into a public key object
         let req = request.into_inner();
         let bytes_airdrop_to = hex::decode(req.airdrop_to).unwrap();
@@ -69,30 +74,41 @@ impl Faucet for FaucetService {
         };
 
         // Getting the validator port from the second cli argument
-        let validator_port = env::args().nth(1).unwrap();
 
         // The port for the validator that we will send the transaction to is passed in as the second cli argument when the server is starting
-        let primary_validator_addr = format!("/dns/localhost/tcp/{}/http", validator_port);
-        let primary_validator_multiaddr = primary_validator_addr.parse().unwrap();
         let mut client = TransactionsClient::new(
-            client::connect_lazy(&primary_validator_multiaddr).expect("Failed to connect to consensus"),
+            client::connect_lazy(&self.validator_addr).expect("Failed to connect to consensus"),
         );
 
         // If there is an error we will get a panic because of the unwrap
-        let response = client
+        let _response = client
             .submit_transaction(transaction_proto)
             .await
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
             .unwrap();
-
-        // Printing the response
-        println!("{:?}", response);
 
         // We can now return true because errors will have been caught above
         let reply = FaucetAirdropResponse { successful: true };
 
         // Sending back a response
         Ok(Response::new(reply))
+    }
+}
+
+impl Default for FaucetService {
+    fn default() -> Self {
+        let key_dir = ".proto/";
+        let key_path = Path::new(key_dir).to_path_buf();
+
+        // TODO - take validator addr directly as multiaddr as in spawn node
+        let validator_port = env::args().nth(1).unwrap();
+        let validator_addr = format!("/dns/localhost/tcp/{}/http", validator_port).parse().unwrap();
+
+        Self {
+            validator_index: 0,
+            key_path,
+            validator_addr,
+        }
     }
 }
 

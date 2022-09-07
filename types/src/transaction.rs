@@ -5,8 +5,9 @@
 //! each valid transaction corresponds to a unique state transition within
 //! the space of allowable blockchain transitions
 use crate::{
-    account::{AccountPubKey, AccountSignature},
+    account::{AccountKeyPair, AccountPubKey, AccountSignature},
     asset::{AssetAmount, AssetId, AssetPrice},
+    crypto::KeypairTraits,
     error::GDEXError,
     order_book::OrderId,
     order_book::OrderSide,
@@ -14,7 +15,7 @@ use crate::{
     serialization::Encoding,
 };
 use blake2::{digest::Update, VarBlake2b};
-use narwhal_crypto::{Digest, Hash, Verifier, DIGEST_LEN};
+use fastcrypto::{Digest, Hash, Verifier, DIGEST_LEN};
 use narwhal_types::CertificateDigest;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -25,8 +26,12 @@ use std::{
 
 pub const SERIALIZED_TRANSACTION_LENGTH: usize = 280;
 
+// TODO - remove dummy after adding more fields to create asset request
+// Note, dummy has been added to allow us to submit multiple txns w/out collisions in bench
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct CreateAssetRequest {}
+pub struct CreateAssetRequest {
+    pub dummy: u8,
+}
 
 /// A valid payment transaction causes a state transition inside of
 /// the BankController object, e.g. it creates a fund transfer from
@@ -82,35 +87,6 @@ impl CreateOrderbookRequest {
         self.quote_asset_id
     }
 }
-
-/***#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct PlaceLimitOrderRequest {
-    side: OrderSide,
-    quantity: AssetAmount,
-    price: AssetPrice
-}
-
-impl PlaceLimitOrderRequest {
-    pub fn new (side: OrderSide, quantity: AssetAmount, price: AssetPrice) -> Self {
-        Self {
-            side,
-            quantity,
-            price
-        }
-    }
-
-    pub fn get_side(&self) -> OrderSide {
-        self.side
-    }
-
-    pub fn get_quantity(&self) -> AssetAmount {
-        self.quantity
-    }
-
-    pub fn get_price(&self) -> AssetPrice {
-        self.price
-    }
-}***/
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum OrderRequest {
@@ -239,18 +215,18 @@ impl Hash for Transaction {
                     hasher.update(payment.get_receiver().0.as_bytes());
                     hasher.update(payment.get_asset_id().to_le_bytes());
                     hasher.update(payment.get_amount().to_le_bytes());
+                    // TODO - hashing the string is suboptimal, but cert digest bytes are private
                     hasher.update(self.get_recent_certificate_digest().to_string());
-                    // TODO this doesn't really make sense but the contents are private
                 };
-                TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
+                TransactionDigest(fastcrypto::blake2b_256(hasher_update))
             }
-            TransactionVariant::CreateAssetTransaction(_create_asset) => {
+            TransactionVariant::CreateAssetTransaction(create_asset) => {
                 let hasher_update = |hasher: &mut VarBlake2b| {
+                    hasher.update(create_asset.dummy.to_le_bytes());
                     hasher.update(self.get_sender().0.to_bytes());
                     hasher.update(self.get_recent_certificate_digest().to_string())
-                    // TODO this doesn't really make sense but the contents are private
                 };
-                TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
+                TransactionDigest(fastcrypto::blake2b_256(hasher_update))
             }
             TransactionVariant::CreateOrderbookTransaction(create_orderbook) => {
                 let hasher_update = |hasher: &mut VarBlake2b| {
@@ -259,7 +235,7 @@ impl Hash for Transaction {
                     hasher.update(create_orderbook.quote_asset_id.to_le_bytes());
                     hasher.update(self.get_recent_certificate_digest().to_string());
                 };
-                TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
+                TransactionDigest(fastcrypto::blake2b_256(hasher_update))
             }
             TransactionVariant::PlaceOrderTransaction(order) => match order {
                 OrderRequest::Limit {
@@ -281,7 +257,7 @@ impl Hash for Transaction {
                         hasher.update(ts.to_le_bytes());
                         hasher.update(self.get_recent_certificate_digest().to_string());
                     };
-                    TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
+                    TransactionDigest(fastcrypto::blake2b_256(hasher_update))
                 }
                 OrderRequest::Market {
                     base_asset_id,
@@ -300,7 +276,7 @@ impl Hash for Transaction {
                         hasher.update(ts.to_le_bytes());
                         hasher.update(self.get_recent_certificate_digest().to_string());
                     };
-                    TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
+                    TransactionDigest(fastcrypto::blake2b_256(hasher_update))
                 }
                 OrderRequest::Cancel {
                     base_asset_id,
@@ -319,7 +295,7 @@ impl Hash for Transaction {
                         hasher.update(ts.to_le_bytes());
                         hasher.update(self.get_recent_certificate_digest().to_string());
                     };
-                    TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
+                    TransactionDigest(fastcrypto::blake2b_256(hasher_update))
                 }
                 OrderRequest::Update {
                     base_asset_id,
@@ -342,7 +318,7 @@ impl Hash for Transaction {
                         hasher.update(ts.to_le_bytes());
                         hasher.update(self.get_recent_certificate_digest().to_string());
                     };
-                    TransactionDigest(narwhal_crypto::blake2b_256(hasher_update))
+                    TransactionDigest(fastcrypto::blake2b_256(hasher_update))
                 }
             },
         }
@@ -413,41 +389,39 @@ impl SignedTransaction {
     }
 }
 
-use crate::account::AccountKeyPair;
-use crate::crypto::KeypairTraits;
-
 pub fn create_payment_transaction(
     sender_kp: &AccountKeyPair,
     receiver_kp: &AccountKeyPair,
     asset_id: u64,
     amount: u64,
-    recent_block_hash: CertificateDigest,
+    recent_block_digest: CertificateDigest,
 ) -> Transaction {
     let transaction_variant =
         TransactionVariant::PaymentTransaction(PaymentRequest::new(receiver_kp.public().clone(), asset_id, amount));
 
-    Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
+    Transaction::new(sender_kp.public().clone(), recent_block_digest, transaction_variant)
 }
 
 pub fn create_asset_creation_transaction(
     sender_kp: &AccountKeyPair,
-    recent_block_hash: CertificateDigest,
+    recent_block_digest: CertificateDigest,
+    dummy: u8,
 ) -> Transaction {
-    let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest {});
+    let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest { dummy });
 
-    Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
+    Transaction::new(sender_kp.public().clone(), recent_block_digest, transaction_variant)
 }
 
 pub fn create_orderbook_creation_transaction(
     sender_kp: &AccountKeyPair,
     base_asset_id: AssetId,
     quote_asset_id: AssetId,
-    recent_block_hash: CertificateDigest,
+    recent_block_digest: CertificateDigest,
 ) -> Transaction {
     let transaction_variant =
         TransactionVariant::CreateOrderbookTransaction(CreateOrderbookRequest::new(base_asset_id, quote_asset_id));
 
-    Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
+    Transaction::new(sender_kp.public().clone(), recent_block_digest, transaction_variant)
 }
 
 pub fn create_place_limit_order_transaction(
@@ -457,7 +431,7 @@ pub fn create_place_limit_order_transaction(
     side: OrderSide,
     price: AssetPrice,
     quantity: AssetAmount,
-    recent_block_hash: CertificateDigest,
+    recent_block_digest: CertificateDigest,
 ) -> Transaction {
     let local_timestamp = SystemTime::now();
     let transaction_variant = TransactionVariant::PlaceOrderTransaction(OrderRequest::Limit {
@@ -469,7 +443,7 @@ pub fn create_place_limit_order_transaction(
         local_timestamp,
     });
 
-    Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
+    Transaction::new(sender_kp.public().clone(), recent_block_digest, transaction_variant)
 }
 
 pub fn create_place_cancel_order_transaction(
@@ -478,7 +452,7 @@ pub fn create_place_cancel_order_transaction(
     quote_asset_id: AssetId,
     order_id: OrderId,
     side: OrderSide,
-    recent_block_hash: CertificateDigest,
+    recent_block_digest: CertificateDigest,
 ) -> Transaction {
     let local_timestamp = SystemTime::now();
     let transaction_variant = TransactionVariant::PlaceOrderTransaction(OrderRequest::Cancel {
@@ -489,7 +463,7 @@ pub fn create_place_cancel_order_transaction(
         local_timestamp,
     });
 
-    Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
+    Transaction::new(sender_kp.public().clone(), recent_block_digest, transaction_variant)
 }
 
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::too_many_arguments))]
@@ -501,7 +475,7 @@ pub fn create_place_update_order_transaction(
     side: OrderSide,
     price: AssetPrice,
     quantity: AssetAmount,
-    recent_block_hash: CertificateDigest,
+    recent_block_digest: CertificateDigest,
 ) -> Transaction {
     let local_timestamp = SystemTime::now();
     let transaction_variant = TransactionVariant::PlaceOrderTransaction(OrderRequest::Update {
@@ -514,7 +488,7 @@ pub fn create_place_update_order_transaction(
         local_timestamp,
     });
 
-    Transaction::new(sender_kp.public().clone(), recent_block_hash, transaction_variant)
+    Transaction::new(sender_kp.public().clone(), recent_block_digest, transaction_variant)
 }
 
 /// Begin externally available testing functions
@@ -533,7 +507,6 @@ pub mod transaction_test_functions {
         kp_receiver: &AccountKeyPair,
         amount: u64,
     ) -> SignedTransaction {
-        // TODO replace this with latest
         let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
         let transaction_variant = TransactionVariant::PaymentTransaction(PaymentRequest::new(
             kp_receiver.public().clone(),
@@ -556,6 +529,8 @@ pub mod transaction_tests {
     use super::*;
     use crate::account::account_test_functions::generate_keypair_vec;
     use crate::crypto::{KeypairTraits, Signer};
+
+    use fastcrypto::traits::ToFromBytes;
 
     #[test]
     // test that transaction returns expected fields, validates a good signature, and has deterministic hashing
@@ -664,7 +639,7 @@ pub mod transaction_tests {
 
         let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
 
-        let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest {});
+        let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest { dummy: 0 });
 
         let transaction = Transaction::new(kp_sender.public().clone(), dummy_batch_digest, transaction_variant);
         let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
@@ -861,12 +836,11 @@ pub mod transaction_tests {
         let signed_transaction_deserialized: SignedTransaction = SignedTransaction::deserialize(serialized).unwrap();
         // verify signed transaction matches previous values
 
-        // TODO - why does this fail?
-        // assert!(
-        //     signed_transaction.get_transaction_signature()
-        //         == signed_transaction_deserialized.get_transaction_signature(),
-        //     "signed transaction signature does not match after deserialize"
-        // );
+        assert!(
+            signed_transaction.get_transaction_signature().as_bytes()
+                == signed_transaction_deserialized.get_transaction_signature().as_bytes(),
+            "signed transaction signature does not match after deserialize"
+        );
 
         // verify transaction matches previous values
         let transaction = signed_transaction.get_transaction_payload();
@@ -874,12 +848,12 @@ pub mod transaction_tests {
 
         assert!(
             transaction.digest() == transaction_deserialized.digest(),
-            "transaction hash does not match after deserialize"
+            "transaction digest does not match after deserialize"
         );
 
         assert!(
             transaction.get_sender() == transaction_deserialized.get_sender(),
-            "transaction hash does not match"
+            "transaction digest does not match"
         );
 
         // verify transaction variant matches previous values

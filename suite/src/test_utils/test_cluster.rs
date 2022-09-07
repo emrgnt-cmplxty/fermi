@@ -31,7 +31,8 @@ async fn create_genesis_state(dir: &Path, validator_count: usize) -> ValidatorGe
     // initialize validator info
     let validators_info = (0..validator_count)
         .map(|i| {
-            let keypair: ValidatorKeyPair = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+            let keypair: ValidatorKeyPair =
+                get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
             let info = ValidatorInfo {
                 name: format!("validator-{i}"),
                 public_key: ValidatorPubKeyBytes::from(keypair.public()),
@@ -41,9 +42,9 @@ async fn create_genesis_state(dir: &Path, validator_count: usize) -> ValidatorGe
                 network_address: utils::new_network_address(),
                 narwhal_primary_to_primary: utils::new_network_address(),
                 narwhal_worker_to_primary: utils::new_network_address(),
-                narwhal_primary_to_worker: utils::new_network_address(),
-                narwhal_worker_to_worker: utils::new_network_address(),
-                narwhal_consensus_address: utils::new_network_address(),
+                narwhal_primary_to_worker: vec![utils::new_network_address()],
+                narwhal_worker_to_worker: vec![utils::new_network_address()],
+                narwhal_consensus_addresses: vec![utils::new_network_address()],
             };
             let key_file = dir.join(format!("{}.key", info.name));
             utils::write_keypair_to_file(&keypair, &key_file).unwrap();
@@ -145,6 +146,7 @@ impl TestCluster {
         self.temp_working_dir.path().to_path_buf()
     }
 
+    // TODO - we need a non-mut instance of this function for testing.
     pub fn get_validator_spawner(&mut self, index: usize) -> &mut ValidatorSpawner {
         &mut self.validator_spawners[index]
     }

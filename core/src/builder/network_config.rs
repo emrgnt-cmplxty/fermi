@@ -26,9 +26,9 @@ use std::{
 };
 
 /// A config builder class which is used in the genesis process to generate a NetworkConfig
-pub struct NetworkConfigBuilder<R = OsRng> {
+pub struct NetworkConfigBuilder {
     /// Associated random number generator
-    rng: R,
+    rng: OsRng,
     /// Directory of created config
     config_directory: PathBuf,
     /// Boolean parameter to determine port generation process, currently always set to True
@@ -51,7 +51,7 @@ impl NetworkConfigBuilder {
     }
 }
 
-impl<R> NetworkConfigBuilder<R> {
+impl NetworkConfigBuilder {
     /// Set the randomize the ports and return a new object
     pub fn randomize_ports(mut self, randomize_ports: bool) -> Self {
         self.randomize_ports = randomize_ports;
@@ -69,26 +69,15 @@ impl<R> NetworkConfigBuilder<R> {
         self.initial_accounts_config = Some(initial_accounts_config);
         self
     }
-
-    /// Set the rng and return a new object
-    pub fn rng<N: ::rand::RngCore + ::rand::CryptoRng>(self, rng: N) -> NetworkConfigBuilder<N> {
-        NetworkConfigBuilder {
-            rng,
-            config_directory: self.config_directory,
-            randomize_ports: self.randomize_ports,
-            committee_size: self.committee_size,
-            initial_accounts_config: self.initial_accounts_config,
-        }
-    }
 }
 
-impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
+impl NetworkConfigBuilder {
     //TODO right now we always randomize ports, we may want to have a default port configuration
     /// Build a config with random validator inputs the networking ports
     /// are randomly selected via utils::new_network_address
     pub fn build(mut self) -> NetworkConfig {
         let validators = (0..self.committee_size.get())
-            .map(|_| get_key_pair_from_rng(&mut self.rng).1)
+            .map(|_| get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut self.rng))
             .map(|key_pair: ValidatorKeyPair| ValidatorGenesisStateInfo {
                 key_pair,
                 network_address: utils::new_network_address(),
@@ -96,9 +85,9 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
                 balance: DEFAULT_BALANCE,
                 narwhal_primary_to_primary: utils::new_network_address(),
                 narwhal_worker_to_primary: utils::new_network_address(),
-                narwhal_primary_to_worker: utils::new_network_address(),
-                narwhal_worker_to_worker: utils::new_network_address(),
-                narwhal_consensus_address: utils::new_network_address(),
+                narwhal_primary_to_worker: vec![utils::new_network_address()],
+                narwhal_worker_to_worker: vec![utils::new_network_address()],
+                narwhal_consensus_addresses: vec![utils::new_network_address()],
             })
             .collect::<Vec<_>>();
 
@@ -128,7 +117,7 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
                     narwhal_worker_to_primary: validator.narwhal_worker_to_primary.clone(),
                     narwhal_primary_to_worker: validator.narwhal_primary_to_worker.clone(),
                     narwhal_worker_to_worker: validator.narwhal_worker_to_worker.clone(),
-                    narwhal_consensus_address: validator.narwhal_consensus_address.clone(),
+                    narwhal_consensus_addresses: validator.narwhal_consensus_addresses.clone(),
                 }
             })
             .collect::<Vec<_>>();
@@ -153,7 +142,7 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
             .map(|validator| {
                 let public_key: ValidatorPubKeyBytes = validator.key_pair.public().into();
                 let network_address = validator.network_address;
-                let consensus_address = validator.narwhal_consensus_address;
+                let consensus_addresses = validator.narwhal_consensus_addresses;
                 let consensus_db_path = self
                     .config_directory
                     .join(CONSENSUS_DB_NAME)
@@ -163,7 +152,7 @@ impl<R: ::rand::RngCore + ::rand::CryptoRng> NetworkConfigBuilder<R> {
                     .join(GDEX_DB_NAME)
                     .join(utils::encode_bytes_hex(&public_key));
                 let consensus_config = ConsensusConfig {
-                    consensus_address,
+                    consensus_addresses,
                     consensus_db_path: consensus_db_path.clone(),
                     narwhal_config: Default::default(),
                 };

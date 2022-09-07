@@ -12,28 +12,43 @@ pub mod cluster_test_suite {
         },
         client::endpoint_from_multiaddr,
     };
+    use gdex_node::faucet_server::{FaucetService, FAUCET_PORT};
     use gdex_suite::test_utils::test_cluster::TestCluster;
     use gdex_types::{
+        account::{AccountKeyPair, ValidatorKeyPair},
         asset::PRIMARY_ASSET_ID,
         block::{Block, BlockDigest},
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
+<<<<<<< HEAD
         order_book::{Depth, OrderbookDepth},
         proto::{
             RelayerClient, RelayerGetBlockRequest, RelayerGetLatestBlockInfoRequest,
             RelayerGetLatestOrderbookDepthRequest,
+=======
+        proto::{
+            FaucetAirdropRequest, FaucetClient, FaucetServer, RelayerClient, RelayerGetBlockRequest,
+            RelayerGetLatestBlockInfoRequest,
+>>>>>>> main
         },
         transaction::{create_asset_creation_transaction, SignedTransaction},
+        utils,
     };
 
     // mysten
+    use fastcrypto::{generate_production_keypair, Hash, DIGEST_LEN};
     use narwhal_consensus::ConsensusOutput;
-    use narwhal_crypto::{generate_production_keypair, Hash, KeyPair, DIGEST_LEN};
+    use narwhal_crypto::KeyPair;
     use narwhal_types::{Certificate, Header};
 
     // external
+<<<<<<< HEAD
     use std::collections::HashMap;
     use std::sync::Arc;
+=======
+    use std::{net::SocketAddr, sync::Arc};
+>>>>>>> main
     use tokio::time::{sleep, Duration};
+    use tonic::transport::Server;
     use tracing::info;
 
     // TESTS
@@ -98,7 +113,7 @@ pub mod cluster_test_suite {
             epoch: 1,
         };
 
-        let key = get_key_pair_from_rng(&mut rand::rngs::OsRng).1;
+        let key = get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
         spawner_0
             .get_tx_reconfigure_consensus()
             .as_ref()
@@ -144,7 +159,7 @@ pub mod cluster_test_suite {
         for next_block in block_db_iter.by_ref() {
             let block = next_block.1;
             for serialized_transaction in &block.transactions {
-                let signed_transaction_db = SignedTransaction::deserialize(serialized_transaction.clone()).unwrap();
+                let signed_transaction_db = SignedTransaction::deserialize(serialized_transaction.0.clone()).unwrap();
                 assert!(validator_store.cache_contains_transaction(signed_transaction_db.get_transaction_payload()));
                 total += 1;
             }
@@ -278,8 +293,7 @@ pub mod cluster_test_suite {
         info!("Success");
     }
 
-    // TODO - investigate buiding helper functions for relay client
-    // TODO - can we remove the ignore decorator without CI failures?
+    // TODO - Move to regression tests
     #[ignore]
     #[tokio::test(flavor = "multi_thread")]
     pub async fn test_catchup_new_node() {
@@ -355,15 +369,15 @@ pub mod cluster_test_suite {
         let dummy_consensus_output = create_test_consensus_output();
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash);
+        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, 0);
         let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
         let signed_create_asset_txn =
             SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
 
         // Preparing serialized buf for transactions
-        let mut serialized_txns_buf: Vec<Vec<u8>> = Vec::new();
+        let mut serialized_txns_buf = Vec::new();
         let serialized_txn = signed_create_asset_txn.serialize().unwrap();
-        serialized_txns_buf.push(serialized_txn);
+        serialized_txns_buf.push((serialized_txn, Ok(())));
         let certificate = dummy_consensus_output.certificate;
 
         let initial_certificate = certificate.clone();
@@ -477,4 +491,96 @@ pub mod cluster_test_suite {
             assert_eq!(tonic::Code::NotFound, err.code());
         }
     }
+
+    pub async fn test_metrics() {
+        let validator_count: usize = 4;
+        const N_TRANSACTIONS: u64 = 1_000_000;
+
+        let mut cluster = TestCluster::spawn(validator_count, None).await;
+        cluster.send_transactions(0, 1, 10).await;
+
+        let metrics_0 = &cluster.get_validator_spawner(0).get_validator_state().unwrap().metrics;
+        let metrics_1 = &cluster.get_validator_spawner(1).get_validator_state().unwrap().metrics;
+        assert!(metrics_0.num_transactions_rec.load(std::sync::atomic::Ordering::SeqCst) == 0);
+        assert!(metrics_1.num_transactions_rec.load(std::sync::atomic::Ordering::SeqCst) == 10);
+
+        cluster.send_transactions_async(1, 0, N_TRANSACTIONS, None).await;
+
+        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+        let init_time = metrics_0
+            .latest_system_epoch_time_in_ms
+            .load(std::sync::atomic::Ordering::SeqCst);
+        let init_transactions = metrics_0
+            .num_transactions_consensus
+            .load(std::sync::atomic::Ordering::SeqCst);
+        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+        let time_delta = metrics_0
+            .latest_system_epoch_time_in_ms
+            .load(std::sync::atomic::Ordering::SeqCst)
+            - init_time;
+        let transactions_delta = metrics_0
+            .num_transactions_consensus
+            .load(std::sync::atomic::Ordering::SeqCst)
+            - init_transactions;
+
+        // assert tps was greater than 0
+        assert!(transactions_delta as f64 / (time_delta as f64 / 1000.) > 0.);
+    }
+
+    pub async fn test_spawn_faucet() {
+        let temp_dir = tempfile::tempdir().unwrap();
+
+        let validator_count: usize = 4;
+        let mut cluster = TestCluster::spawn(validator_count, None).await;
+
+        let keypair: AccountKeyPair =
+            get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
+        let key_path = temp_dir.path().to_path_buf();
+        let keystore_name = "validator-0.key";
+
+        utils::write_keypair_to_file(&keypair, &key_path.join(&keystore_name)).unwrap();
+
+        // Getting the address that is passed in
+        let addr_str = format!("127.0.0.1:{}", FAUCET_PORT);
+
+        // Parsing it into an address
+        let addr = addr_str.parse::<SocketAddr>().unwrap();
+
+        // Instantiating the faucet service
+        let validator_addr = cluster.get_validator_spawner(0).get_validator_address().clone();
+
+        let faucet_service = FaucetService {
+            validator_index: 0,
+            key_path,
+            validator_addr,
+        };
+        tokio::spawn(async move {
+            Server::builder()
+                .add_service(FaucetServer::new(faucet_service))
+                .serve(addr)
+                .await
+                .unwrap();
+        });
+
+        sleep(Duration::from_secs(1)).await;
+
+        let receiver_kp = generate_production_keypair::<KeyPair>();
+
+        let addr_str = format!("http://127.0.0.1:{}", FAUCET_PORT);
+        let mut client = FaucetClient::connect(addr_str.to_string()).await.unwrap();
+
+        let request = tonic::Request::new(FaucetAirdropRequest {
+            // airdrop_to: hex::encode(receiver_kp.public().to_string()),
+            airdrop_to: utils::encode_bytes_hex(receiver_kp.public()),
+            amount: 100,
+        });
+
+        let response = client.airdrop(request).await.unwrap().into_inner();
+
+        assert!(response.successful);
+    }
+
+    // TODO - implement test after merging metrics...
+    #[tokio::test]
+    pub async fn test_submit_twice() {}
 }

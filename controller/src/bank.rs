@@ -22,10 +22,8 @@ use gdex_types::{
     crypto::ToFromBytes,
     error::GDEXError,
     transaction::{
-        Transaction, RequestType,
-        CreateAssetRequest, PaymentRequest,
-        get_transaction_sender, deserialize_protobuf,
-        get_payment_receiver, parse_request_type
+        deserialize_protobuf, get_payment_receiver, get_transaction_sender, parse_request_type, CreateAssetRequest,
+        PaymentRequest, RequestType, Transaction,
     },
 };
 
@@ -81,23 +79,16 @@ impl Controller for BankController {
         match request_type {
             RequestType::CreateAsset => {
                 let _request: CreateAssetRequest = deserialize_protobuf(&transaction.request_bytes)?;
-                let sender = get_transaction_sender(&transaction)?;
-                return self.create_asset(
-                    &sender
-                );
-            },
+                let sender = get_transaction_sender(transaction)?;
+                self.create_asset(&sender)
+            }
             RequestType::Payment => {
                 let request: PaymentRequest = deserialize_protobuf(&transaction.request_bytes)?;
-                let sender = get_transaction_sender(&transaction)?;
+                let sender = get_transaction_sender(transaction)?;
                 let receiver = get_payment_receiver(&request)?;
-                return self.transfer(
-                    &sender,
-                    &receiver,
-                    request.asset_id,
-                    request.amount
-                );
-            },
-            _ => Err(GDEXError::InvalidRequestTypeError)
+                self.transfer(&sender, &receiver, request.asset_id, request.amount)
+            }
+            _ => Err(GDEXError::InvalidRequestTypeError),
         }
     }
 }

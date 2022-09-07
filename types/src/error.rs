@@ -46,7 +46,7 @@ pub enum GDEXError {
     // server errors
     #[error("Failed to process the inbound transaction")]
     RpcFailure(String),
-    
+
     // proto errors
     #[error("Failed to sign transaction")]
     SigningError,
@@ -54,13 +54,13 @@ pub enum GDEXError {
     SerializationError,
     #[error("Failed to deserialize object")]
     DeserializationError,
-    
+
     // controller errors
     #[error("Target controller not found")]
     InvalidControllerError,
     #[error("Controller can not handle request type")]
     InvalidRequestTypeError,
-    
+
     #[error("Failed to verify transaction signature")]
     TransactionSignatureVerificationError,
 }

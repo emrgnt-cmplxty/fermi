@@ -14,7 +14,7 @@ use super::sequence;
 use super::validation::OrderRequestValidator;
 use gdex_types::{
     asset::AssetId,
-    order_book::{Failed, Order, OrderProcessingResult, OrderSide, OrderType, Success, OrderRequest},
+    order_book::{Failed, Order, OrderProcessingResult, OrderRequest, OrderSide, OrderType, Success},
 };
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;

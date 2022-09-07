@@ -24,9 +24,7 @@ pub mod cluster_test_suite {
             RelayerGetLatestBlockInfoRequest,
         },
         transaction::{
-            create_create_asset_transaction,
-            sign_transaction, get_signed_transaction_body,
-            ConsensusTransaction
+            create_create_asset_transaction, get_signed_transaction_body, sign_transaction, ConsensusTransaction,
         },
         utils,
     };
@@ -142,7 +140,7 @@ pub mod cluster_test_suite {
         for signed_transaction in signed_transactions.clone() {
             let transaction = match get_signed_transaction_body(&signed_transaction) {
                 Ok(t) => t,
-                _ => panic!("Error deserializing signed transaction")
+                _ => panic!("Error deserializing signed transaction"),
             };
             assert!(validator_store.cache_contains_transaction(transaction));
         }
@@ -155,14 +153,15 @@ pub mod cluster_test_suite {
         for next_block in block_db_iter.by_ref() {
             let block = next_block.1;
             for serialized_consensus_transaction in &block.transactions {
-                let consensus_transaction_db = ConsensusTransaction::deserialize(serialized_consensus_transaction.0.clone()).unwrap();
+                let consensus_transaction_db =
+                    ConsensusTransaction::deserialize(serialized_consensus_transaction.0.clone()).unwrap();
                 let signed_transaction = match consensus_transaction_db.get_payload() {
                     Ok(t) => t,
-                    _ => panic!("Error deserializing signed transaction")
+                    _ => panic!("Error deserializing signed transaction"),
                 };
                 let transaction = match get_signed_transaction_body(&signed_transaction) {
                     Ok(t) => t,
-                    _ => panic!("Error deserializing signed transaction")
+                    _ => panic!("Error deserializing signed transaction"),
                 };
                 assert!(validator_store.cache_contains_transaction(transaction));
                 total += 1;

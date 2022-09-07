@@ -3,16 +3,14 @@
 // SPDX-License-Identifier: Apache-2.0
 use anyhow::{Context, Result};
 use clap::{crate_name, crate_version, App, AppSettings};
-use fastcrypto::{
-    traits::KeyPair,
-};
+use fastcrypto::traits::KeyPair;
 use futures::{future::join_all, StreamExt};
 use gdex_types::{
     account::{AccountKeyPair, ValidatorKeyPair},
     block::BlockDigest,
     proto::{RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionSubmitterClient},
+    transaction::{create_payment_transaction, sign_transaction, ConsensusTransaction, SignedTransaction},
     utils::read_keypair_from_file,
-    transaction::{SignedTransaction, create_payment_transaction, sign_transaction, ConsensusTransaction},
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use std::path::PathBuf;
@@ -40,7 +38,14 @@ fn create_signed_transaction(
 ) -> SignedTransaction {
     // use a dummy batch digest for initial benchmarking
     let gas: u64 = 1000;
-    let transaction = create_payment_transaction(kp_sender.public().clone(), kp_receiver.public(), PRIMARY_ASSET_ID, amount, gas, block_digest);
+    let transaction = create_payment_transaction(
+        kp_sender.public().clone(),
+        kp_receiver.public(),
+        PRIMARY_ASSET_ID,
+        amount,
+        gas,
+        block_digest,
+    );
     let signed_transaction = match sign_transaction(kp_sender, transaction) {
         Ok(t) => t,
         _ => panic!("Error signing transaction"),
@@ -176,7 +181,8 @@ impl Client {
 
             if counter == 0 {
                 let signed_transaction = create_signed_transaction(&keypair, &kp_receiver, 1, block_digest.clone());
-                let serialized_consensus_transaction = match ConsensusTransaction::new(&signed_transaction).serialize() {
+                let serialized_consensus_transaction = match ConsensusTransaction::new(&signed_transaction).serialize()
+                {
                     Ok(t) => t,
                     _ => panic!("Error serializing transaction"),
                 };

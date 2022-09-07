@@ -13,7 +13,7 @@ use gdex_types::{
     asset::PRIMARY_ASSET_ID,
     crypto::{get_key_pair_from_rng, KeypairTraits},
     node::ValidatorInfo,
-    proto::{TransactionSubmitterClient},
+    proto::TransactionSubmitterClient,
     transaction::{transaction_test_functions::generate_signed_test_transaction, SignedTransaction},
     utils,
 };
@@ -189,8 +189,9 @@ impl TestCluster {
         let receiver = self.get_validator_spawner(receiving_validator);
         let receiver_address = receiver.get_validator_address().clone();
 
-        let mut client =
-            TransactionSubmitterClient::new(client::connect_lazy(&receiver_address).expect("Failed to connect to consensus"));
+        let mut client = TransactionSubmitterClient::new(
+            client::connect_lazy(&receiver_address).expect("Failed to connect to consensus"),
+        );
 
         let mut signed_transactions = Vec::new();
         let mut i = 1;
@@ -225,8 +226,9 @@ impl TestCluster {
         let receiver = self.get_validator_spawner(receiving_validator);
         let receiver_address = receiver.get_validator_address().clone();
 
-        let mut client =
-            TransactionSubmitterClient::new(client::connect_lazy(&receiver_address).expect("Failed to connect to consensus"));
+        let mut client = TransactionSubmitterClient::new(
+            client::connect_lazy(&receiver_address).expect("Failed to connect to consensus"),
+        );
 
         let mut signed_transactions = Vec::new();
         let mut i = 1;

@@ -16,11 +16,7 @@ use crate::{
 
 use gdex_types::{
     error::GDEXError,
-    transaction::{
-        Transaction,
-        ControllerType,
-        parse_target_controller
-    }
+    transaction::{parse_target_controller, ControllerType, Transaction},
 };
 // external
 use serde::{Deserialize, Serialize};
@@ -88,25 +84,29 @@ impl MasterController {
         let target_controller = parse_target_controller(transaction.target_controller)?;
         match target_controller {
             ControllerType::Consensus => {
-                return self.consensus_controller
+                return self
+                    .consensus_controller
                     .lock()
                     .unwrap()
                     .handle_consensus_transaction(transaction);
-            },
+            }
             ControllerType::Bank => {
-                return self.bank_controller
+                return self
+                    .bank_controller
                     .lock()
                     .unwrap()
                     .handle_consensus_transaction(transaction);
-            },
+            }
             ControllerType::Stake => {
-                return self.stake_controller
+                return self
+                    .stake_controller
                     .lock()
                     .unwrap()
                     .handle_consensus_transaction(transaction);
-            },
+            }
             ControllerType::Spot => {
-                return self.spot_controller
+                return self
+                    .spot_controller
                     .lock()
                     .unwrap()
                     .handle_consensus_transaction(transaction);

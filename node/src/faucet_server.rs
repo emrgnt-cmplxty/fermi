@@ -4,7 +4,7 @@ use gdex_types::{
     account::AccountKeyPair,
     crypto::KeypairTraits,
     proto::{Faucet, FaucetAirdropRequest, FaucetAirdropResponse, FaucetServer, TransactionSubmitterClient},
-    transaction::{SignedTransaction, create_payment_transaction, sign_transaction},
+    transaction::{create_payment_transaction, sign_transaction, SignedTransaction},
     utils,
 };
 use multiaddr::Multiaddr;
@@ -33,13 +33,18 @@ fn generate_signed_airdrop_transaction_for_faucet(
     // Setting a certificate_digest
     let recent_certificate_digest = CertificateDigest::new([0; DIGEST_LEN]);
     let gas: u64 = 1000;
-    let transaction = create_payment_transaction(kp_sender.public().clone(), kp_receiver_public_key, PRIMARY_ASSET_ID, amount, gas, recent_certificate_digest);
-    let signed_transaction = match sign_transaction(kp_sender, transaction) {
+    let transaction = create_payment_transaction(
+        kp_sender.public().clone(),
+        kp_receiver_public_key,
+        PRIMARY_ASSET_ID,
+        amount,
+        gas,
+        recent_certificate_digest,
+    );
+    match sign_transaction(kp_sender, transaction) {
         Ok(t) => t,
         _ => panic!("Error signing transaction"),
-    };
-
-    signed_transaction
+    }
 }
 
 #[tonic::async_trait]
@@ -61,7 +66,7 @@ impl Faucet for FaucetService {
         // Creating signed transaction and proto
         let signed_transaction =
             generate_signed_airdrop_transaction_for_faucet(&kp_sender, &kp_receiver_public_key, 100);
-        
+
         // Getting the validator port from the second cli argument
         // The port for the validator that we will send the transaction to is passed in as the second cli argument when the server is starting
         let mut client = TransactionSubmitterClient::new(

@@ -19,7 +19,7 @@ use gdex_types::{
     asset::PRIMARY_ASSET_ID,
     crypto::ToFromBytes,
     error::GDEXError,
-    transaction::{Transaction, parse_request_type},
+    transaction::{parse_request_type, Transaction},
 };
 
 // mysten
@@ -70,8 +70,10 @@ impl Controller for StakeController {
 
     fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
         let request_type = parse_request_type(transaction.request_type)?;
+
+        #[allow(clippy::match_single_binding)]
         match request_type {
-            _ => Err(GDEXError::InvalidRequestTypeError)
+            _ => Err(GDEXError::InvalidRequestTypeError),
         }
     }
 }

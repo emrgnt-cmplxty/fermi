@@ -8,18 +8,18 @@
 mod services;
 
 pub use services::{
-    Empty,
-    // transaction submitter
-    transaction_submitter_client::TransactionSubmitterClient,
-    transaction_submitter_server::{TransactionSubmitter, TransactionSubmitterServer},
     // faucet
     faucet_client::FaucetClient,
     faucet_server::{Faucet, FaucetServer},
-    FaucetAirdropRequest,
-    FaucetAirdropResponse,
     // relayer
     relayer_client::RelayerClient,
     relayer_server::{Relayer, RelayerServer},
+    // transaction submitter
+    transaction_submitter_client::TransactionSubmitterClient,
+    transaction_submitter_server::{TransactionSubmitter, TransactionSubmitterServer},
+    Empty,
+    FaucetAirdropRequest,
+    FaucetAirdropResponse,
     RelayerBlock,
     RelayerBlockInfoResponse,
     RelayerBlockResponse,
@@ -34,10 +34,7 @@ pub use services::{
 #[allow(clippy::all)]
 mod block;
 
-pub use block:: {
-    Block,
-    BlockInfo,
-};
+pub use block::{Block, BlockInfo};
 
 #[cfg_attr(beta, allow(clippy::derive_partial_eq_without_eq))]
 #[path = "generated/transaction.rs"]
@@ -45,13 +42,7 @@ pub use block:: {
 #[allow(clippy::all)]
 mod transaction;
 
-pub use transaction::{
-    ControllerType,
-    RequestType,
-    Version,
-    SignedTransaction,
-    Transaction,
-};
+pub use transaction::{ControllerType, RequestType, SignedTransaction, Transaction, Version};
 
 #[cfg_attr(beta, allow(clippy::derive_partial_eq_without_eq))]
 #[path = "generated/bank_requests.rs"]
@@ -59,10 +50,7 @@ pub use transaction::{
 #[allow(clippy::all)]
 mod bank_requests;
 
-pub use bank_requests::{
-    CreateAssetRequest,
-    PaymentRequest,
-};
+pub use bank_requests::{CreateAssetRequest, PaymentRequest};
 
 #[cfg_attr(beta, allow(clippy::derive_partial_eq_without_eq))]
 #[path = "generated/spot_requests.rs"]
@@ -70,10 +58,6 @@ pub use bank_requests::{
 #[allow(clippy::all)]
 mod spot_requests;
 
-pub use spot_requests::{  
-    CreateOrderbookRequest,
-    MarketOrderRequest,
-    LimitOrderRequest,
-    UpdateOrderRequest,
-    CancelOrderRequest,
+pub use spot_requests::{
+    CancelOrderRequest, CreateOrderbookRequest, LimitOrderRequest, MarketOrderRequest, UpdateOrderRequest,
 };

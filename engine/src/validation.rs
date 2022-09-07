@@ -2,10 +2,7 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 
-use gdex_types::{
-    asset::AssetId,
-    order_book::OrderRequest
-};
+use gdex_types::{asset::AssetId, order_book::OrderRequest};
 use serde::{Deserialize, Serialize};
 
 /// Validation errors

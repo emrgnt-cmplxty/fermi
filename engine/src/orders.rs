@@ -4,10 +4,7 @@
 
 use gdex_types::{
     asset::AssetId,
-    order_book::{
-        OrderSide,
-        OrderRequest
-    }
+    order_book::{OrderRequest, OrderSide},
 };
 use std::time::SystemTime;
 

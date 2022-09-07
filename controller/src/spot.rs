@@ -28,18 +28,9 @@ use gdex_types::{
     error::GDEXError,
     order_book::{OrderProcessingResult, OrderSide, OrderType, Success},
     transaction::{
-        Transaction,
-        RequestType,
-        CreateOrderbookRequest,
-        MarketOrderRequest,
-        LimitOrderRequest,
-        UpdateOrderRequest,
-        CancelOrderRequest,
-        deserialize_protobuf,
-        get_transaction_sender,
-        parse_order_side,
-        parse_request_type
-    }
+        deserialize_protobuf, get_transaction_sender, parse_order_side, parse_request_type, CancelOrderRequest,
+        CreateOrderbookRequest, LimitOrderRequest, MarketOrderRequest, RequestType, Transaction, UpdateOrderRequest,
+    },
 };
 
 // mysten
@@ -512,57 +503,58 @@ impl Controller for SpotController {
         match request_type {
             RequestType::CreateOrderbook => {
                 let request: CreateOrderbookRequest = deserialize_protobuf(&transaction.request_bytes)?;
-                return self.create_orderbook(
-                    request.base_asset_id,
-                    request.quote_asset_id
-                );
-            },
+                self.create_orderbook(request.base_asset_id, request.quote_asset_id)
+            }
             RequestType::MarketOrder => {
                 let request: MarketOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
-                dbg!(request.base_asset_id, request.quote_asset_id, request.side, request.quantity);
+                dbg!(
+                    request.base_asset_id,
+                    request.quote_asset_id,
+                    request.side,
+                    request.quantity
+                );
                 Ok(())
-            },
+            }
             RequestType::LimitOrder => {
                 let request: LimitOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
-                let sender = get_transaction_sender(&transaction)?;
+                let sender = get_transaction_sender(transaction)?;
                 let side = parse_order_side(request.side)?;
-                return self.place_limit_order(
+                self.place_limit_order(
                     request.base_asset_id,
                     request.quote_asset_id,
                     &sender,
                     side,
                     request.quantity,
-                    request.price
-                );
-            },
+                    request.price,
+                )
+            }
             RequestType::UpdateOrder => {
                 let request: UpdateOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
-                let sender = get_transaction_sender(&transaction)?;
+                let sender = get_transaction_sender(transaction)?;
                 let side = parse_order_side(request.side)?;
-                return self.place_update_order(
+                self.place_update_order(
                     request.base_asset_id,
                     request.quote_asset_id,
                     &sender,
                     request.order_id,
                     side,
                     request.quantity,
-                    request.price
-                );
-                
-            },
+                    request.price,
+                )
+            }
             RequestType::CancelOrder => {
                 let request: CancelOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
-                let sender = get_transaction_sender(&transaction)?;
+                let sender = get_transaction_sender(transaction)?;
                 let side = parse_order_side(request.side)?;
-                return self.place_cancel_order(
+                self.place_cancel_order(
                     request.base_asset_id,
                     request.quote_asset_id,
                     &sender,
                     request.order_id,
-                    side
-                );
-            },
-            _ => Err(GDEXError::InvalidRequestTypeError)
+                    side,
+                )
+            }
+            _ => Err(GDEXError::InvalidRequestTypeError),
         }
     }
 }

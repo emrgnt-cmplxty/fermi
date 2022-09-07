@@ -11,15 +11,12 @@ use async_trait::async_trait;
 use futures::StreamExt;
 use gdex_types::{
     crypto::KeypairTraits,
-    proto::{
-        Empty, TransactionSubmitter, TransactionSubmitterServer
-    },
-    transaction::{
-        SignedTransaction, verify_signature,
-        get_signed_transaction_recent_block_hash,
-        get_signed_transaction_body, ConsensusTransaction
-    },
     error::GDEXError,
+    proto::{Empty, TransactionSubmitter, TransactionSubmitterServer},
+    transaction::{
+        get_signed_transaction_body, get_signed_transaction_recent_block_hash, verify_signature, ConsensusTransaction,
+        SignedTransaction,
+    },
 };
 use multiaddr::Multiaddr;
 use narwhal_config::Committee as ConsensusCommittee;
@@ -207,8 +204,7 @@ impl ValidatorService {
         trace!("Handling a new transaction with ValidatorService",);
         state.metrics.increment_num_transactions_rec();
 
-        let _ = verify_signature(&signed_transaction)
-            .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
+        verify_signature(&signed_transaction).map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
 
         // check recent block hash is valid : TODO seems maybe problematic to do this just here?
         let recent_block_hash = get_signed_transaction_recent_block_hash(&signed_transaction)
@@ -217,7 +213,7 @@ impl ValidatorService {
             state.metrics.increment_num_transactions_rec_failed();
             return Err(tonic::Status::internal("Invalid recent certificate digest"));
         }
-        
+
         // check transaction is not a duplicate
         let transaction = get_signed_transaction_body(&signed_transaction)
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
@@ -225,12 +221,13 @@ impl ValidatorService {
             state.metrics.increment_num_transactions_rec_failed();
             return Err(tonic::Status::internal("Invalid duplicate transaction"));
         }
-        
+
         // submit transaction
-        let serialized_consensus_transaction = ConsensusTransaction::new(&signed_transaction).serialize()
+        let serialized_consensus_transaction = ConsensusTransaction::new(&signed_transaction)
+            .serialize()
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
         let consensus_transaction_wrapper = ConsensusTransactionWrapper {
-            transaction: serialized_consensus_transaction.into()
+            transaction: serialized_consensus_transaction.into(),
         };
 
         let _result = consensus_adapter
@@ -365,8 +362,9 @@ mod test_validator_server {
     pub async fn server_process_transaction() {
         let handle_result = spawn_test_validator_server().await;
         let handle = handle_result.unwrap();
-        let mut client =
-            TransactionSubmitterClient::new(client::connect_lazy(handle.address()).expect("Failed to connect to consensus"));
+        let mut client = TransactionSubmitterClient::new(
+            client::connect_lazy(handle.address()).expect("Failed to connect to consensus"),
+        );
 
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();

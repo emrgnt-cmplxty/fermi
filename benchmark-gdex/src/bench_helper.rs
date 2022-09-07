@@ -4,9 +4,10 @@ use gdex_types::{
     block::BlockDigest,
     order_book::OrderSide,
     proto::{Empty, RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionSubmitterClient},
-    transaction::{SignedTransaction, create_payment_transaction,
-                      create_create_orderbook_transaction, create_create_asset_transaction,
-                      create_limit_order_transaction, sign_transaction, ConsensusTransaction},
+    transaction::{
+        create_create_asset_transaction, create_create_orderbook_transaction, create_limit_order_transaction,
+        create_payment_transaction, sign_transaction, ConsensusTransaction, SignedTransaction,
+    },
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use tokio::time::{sleep, Duration};
@@ -26,12 +27,18 @@ fn create_signed_payment_transaction(
     block_digest: BlockDigest,
 ) -> SignedTransaction {
     let gas: u64 = 1000;
-    let transaction = create_payment_transaction(kp_sender.public().clone(), kp_receiver.public(), asset_id, amount, gas, block_digest);
-    let signed_transaction = match sign_transaction(kp_sender, transaction) {
+    let transaction = create_payment_transaction(
+        kp_sender.public().clone(),
+        kp_receiver.public(),
+        asset_id,
+        amount,
+        gas,
+        block_digest,
+    );
+    match sign_transaction(kp_sender, transaction) {
         Ok(t) => t,
         _ => panic!("Error signing transaction"),
-    };
-    signed_transaction
+    }
 }
 
 fn create_signed_asset_creation_transaction(
@@ -41,11 +48,10 @@ fn create_signed_asset_creation_transaction(
 ) -> SignedTransaction {
     let gas: u64 = 1000;
     let transaction = create_create_asset_transaction(kp_sender.public().clone(), dummy as u64, gas, block_digest);
-    let signed_transaction = match sign_transaction(kp_sender, transaction) {
+    match sign_transaction(kp_sender, transaction) {
         Ok(t) => t,
         _ => panic!("Error signing transaction"),
-    };
-    signed_transaction
+    }
 }
 
 fn create_signed_orderbook_transaction(
@@ -55,12 +61,17 @@ fn create_signed_orderbook_transaction(
     block_digest: BlockDigest,
 ) -> SignedTransaction {
     let gas: u64 = 1000;
-    let transaction = create_create_orderbook_transaction(kp_sender.public().clone(), base_asset_id, quote_asset_id, gas, block_digest);
-    let signed_transaction = match sign_transaction(kp_sender, transaction) {
+    let transaction = create_create_orderbook_transaction(
+        kp_sender.public().clone(),
+        base_asset_id,
+        quote_asset_id,
+        gas,
+        block_digest,
+    );
+    match sign_transaction(kp_sender, transaction) {
         Ok(t) => t,
         _ => panic!("Error signing transaction"),
-    };
-    signed_transaction
+    }
 }
 
 fn create_signed_limit_order_transaction(
@@ -74,12 +85,21 @@ fn create_signed_limit_order_transaction(
 ) -> SignedTransaction {
     let local_timestamp: u64 = 16000000;
     let gas: u64 = 1000;
-    let transaction = create_limit_order_transaction(kp_sender.public().clone(), base_asset_id, quote_asset_id, order_side as u64, price, amount, local_timestamp, gas, block_digest);
-    let signed_transaction = match sign_transaction(kp_sender, transaction) {
+    let transaction = create_limit_order_transaction(
+        kp_sender.public().clone(),
+        base_asset_id,
+        quote_asset_id,
+        order_side as u64,
+        price,
+        amount,
+        local_timestamp,
+        gas,
+        block_digest,
+    );
+    match sign_transaction(kp_sender, transaction) {
         Ok(t) => t,
         _ => panic!("Error signing transaction"),
-    };
-    signed_transaction
+    }
 }
 
 pub struct BenchHelper {
@@ -167,7 +187,7 @@ impl BenchHelper {
                 amount = 1;
             }
 
-            let signed_transaction = create_signed_limit_order_transaction(
+            create_signed_limit_order_transaction(
                 &keypair_copy.copy(),
                 base_asset_id,
                 quote_asset_id,
@@ -175,9 +195,7 @@ impl BenchHelper {
                 price,
                 amount,
                 recent_block_hash,
-            );
-
-            signed_transaction            
+            )
         });
 
         if let Err(e) = self
@@ -286,14 +304,14 @@ impl BenchHelper {
         let recent_block_hash = self.get_recent_block_digest().await;
 
         let signed_transaction = create_signed_asset_creation_transaction(&self.primary_keypair, recent_block_hash, 0);
-        
+
         let serialized_consensus_transaction = match ConsensusTransaction::new(&signed_transaction).serialize() {
             Ok(t) => t,
             _ => panic!("Error serializing transaction"),
         };
 
         let transaction_size = serialized_consensus_transaction.len();
-        
+
         info!("Transactions size: {transaction_size} B");
     }
 

@@ -12,7 +12,9 @@ use gdex_types::{
     account::{AccountKeyPair, AccountSignature},
     crypto::{KeypairTraits, Signer},
     error::GDEXError,
-    new_transaction::{ConsensusTransaction, NewSignedTransaction, NewTransaction, new_create_payment_transaction, sign_transaction}
+    new_transaction::{
+        new_create_payment_transaction, sign_transaction, ConsensusTransaction, NewSignedTransaction, NewTransaction,
+    },
 };
 use narwhal_types::{Batch, CertificateDigest, WorkerMessage};
 use rand::{rngs::StdRng, Rng, SeedableRng};
@@ -27,19 +29,13 @@ fn verify_incoming_transaction(raw_consensus_transaction: Vec<u8>) -> Result<(),
     let consensus_transaction_result = ConsensusTransaction::deserialize(raw_consensus_transaction);
 
     match consensus_transaction_result {
-        Ok(consensus_transaction) => {
-            match consensus_transaction.get_payload() {
-                Ok(signed_transaction) => {
-                    match verify_signature(sign_transaction) {
-                        Ok(_) => {
-                            Ok(())
-                        }
-                        Err(sig_error) => Err(sig_error),
-                    }
-                },
-                Err(get_payload_error) => Err(get_payload_error),
-            }
-        }
+        Ok(consensus_transaction) => match consensus_transaction.get_payload() {
+            Ok(signed_transaction) => match verify_signature(sign_transaction) {
+                Ok(_) => Ok(()),
+                Err(sig_error) => Err(sig_error),
+            },
+            Err(get_payload_error) => Err(get_payload_error),
+        },
         // deserialization failed
         Err(derserialize_err) => Err(derserialize_err),
     }
@@ -51,7 +47,14 @@ fn criterion_benchmark(c: &mut Criterion) {
         let kp_receiver = keys(receiver_seed).pop().unwrap();
         let certificate_digest = CertificateDigest::new([0; DIGEST_LEN]);
         let gas: u64 = 1000;
-        let new_transaction = new_create_payment_transaction(kp_sender.public().clone(), kp_receiver.public(), 0, amount, gas, certificate_digest);
+        let new_transaction = new_create_payment_transaction(
+            kp_sender.public().clone(),
+            kp_receiver.public(),
+            0,
+            amount,
+            gas,
+            certificate_digest,
+        );
         let new_signed_transaction = match sign_transaction(kp_sender, new_transaction) {
             Ok(t) => t,
             _ => panic!("Error signing transaction"),
@@ -108,9 +111,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         match bincode::deserialize(batch).unwrap() {
             WorkerMessage::Batch(Batch(transactions)) => {
                 for raw_transaction in transactions {
-                    let transaction: Vec<u8> = raw_transaction
-                        .to_vec()
-                        .collect();
+                    let transaction: Vec<u8> = raw_transaction.to_vec().collect();
 
                     let _ = ConsensusTransaction::deserialize(transaction).unwrap();
                 }
@@ -126,9 +127,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         match bincode::deserialize(batch).unwrap() {
             WorkerMessage::Batch(Batch(transactions)) => {
                 for raw_transaction in transactions {
-                    let transaction: Vec<u8> = raw_transaction
-                        .to_vec()
-                        .collect();
+                    let transaction: Vec<u8> = raw_transaction.to_vec().collect();
 
                     verify_incoming_transaction(transaction).unwrap();
                 }

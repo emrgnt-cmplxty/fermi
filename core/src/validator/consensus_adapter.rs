@@ -7,13 +7,9 @@ use narwhal_config::Committee as ConsensusCommittee;
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
 use std::sync::{
     atomic::{AtomicU64, Ordering},
-    Arc,
 };
-use tokio::sync::mpsc::Sender;
-use tokio::sync::Mutex;
-
+use tokio::sync::{Mutex, mpsc::Sender};
 /// Default transaction rate at which to rotate target worker
-const TRANSACTIONS_PER_WORKER: usize = 1;
 const CLIENTS_PER_WORKER: usize = 4;
 
 /// Submit transactions to the Narwhal consensus.
@@ -22,19 +18,16 @@ pub struct ConsensusAdapter {
     consensus_clients: Vec<Mutex<narwhal_types::TransactionsClient<tonic::transport::Channel>>>,
     // /// A transaction counter used for worker selection
     transaction_counter: AtomicU64,
-    // /// The number of transactions to send per rotation
-    // transactions_per_rotation: usize,
     // /// The address of consensus
-    // pub consensus_addresses: Vec<Multiaddr>,
+    pub consensus_addresses: Vec<Multiaddr>,
     // /// A channel to tell consensus to reconfigure.
-    // pub tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
+    pub tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
 }
 
 impl ConsensusAdapter {
     pub fn new(
         consensus_addresses: Vec<Multiaddr>,
-        _transactions_per_rotation: Option<usize>,
-        _tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
+        tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
     ) -> Self {
         let mut consensus_clients: Vec<Mutex<narwhal_types::TransactionsClient<tonic::transport::Channel>>> =
             Vec::new();
@@ -53,9 +46,8 @@ impl ConsensusAdapter {
         Self {
             consensus_clients,
             transaction_counter: AtomicU64::new(0),
-            // transactions_per_rotation: transactions_per_rotation.unwrap_or(TRANSACTIONS_PER_WORKER),
-            // consensus_addresses,
-            // tx_reconfigure_consensus,
+            consensus_addresses,
+            tx_reconfigure_consensus,
         }
     }
 

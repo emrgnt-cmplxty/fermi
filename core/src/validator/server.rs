@@ -8,13 +8,11 @@ use crate::{
 };
 use anyhow::anyhow;
 use async_trait::async_trait;
-use fastcrypto::Hash;
 use futures::StreamExt;
 use gdex_types::{
     crypto::KeypairTraits,
     error::GDEXError,
     proto::{Empty, TransactionProto, Transactions, TransactionsServer},
-    transaction::SignedTransaction,
 };
 use multiaddr::Multiaddr;
 use narwhal_config::Committee as ConsensusCommittee;
@@ -26,7 +24,6 @@ use std::{io, sync::Arc};
 use tokio::{
     sync::{
         mpsc::{channel, Receiver, Sender},
-        Mutex,
     },
     task::JoinHandle,
 };
@@ -66,7 +63,7 @@ impl ValidatorServer {
         consensus_addresses: Vec<Multiaddr>,
         tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
     ) -> Self {
-        let consensus_adapter = Arc::new(ConsensusAdapter::new(consensus_addresses, None, tx_reconfigure_consensus));
+        let consensus_adapter = Arc::new(ConsensusAdapter::new(consensus_addresses, tx_reconfigure_consensus));
 
         Self {
             address,
@@ -84,6 +81,7 @@ impl ValidatorServer {
         );
         self.run(address).await
     }
+    
     pub async fn run(self, address: Multiaddr) -> Result<ValidatorServerHandle, io::Error> {
         let server = crate::config::server::ServerConfig::new()
             .server_builder()

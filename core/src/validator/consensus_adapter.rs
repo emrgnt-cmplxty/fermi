@@ -15,11 +15,11 @@ const BATCH_SIZE: usize = 100;
 pub struct ConsensusAdapter {
     /// A network client connecting to the consensus node of this authority.
     consensus_clients: Vec<Mutex<narwhal_types::TransactionsClient<tonic::transport::Channel>>>,
-    // /// A transaction counter used for worker selection
+    /// A transaction counter used for worker selection
     batch_counter: AtomicU64,
-    // /// The address of consensus
+    /// The address of consensus
     pub consensus_addresses: Vec<Multiaddr>,
-    // /// A channel to tell consensus to reconfigure.
+    /// A channel to tell consensus to reconfigure.
     pub tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
     batch_size: AtomicUsize,
     submitted_transactions: Mutex<Vec<narwhal_types::TransactionProto>>,

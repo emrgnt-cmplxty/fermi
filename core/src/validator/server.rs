@@ -234,8 +234,8 @@ impl ValidatorService {
             .verify()
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
 
-        // // TODO change this to err flow
-        // // TODO there is a ton of contention here
+        // TODO change this to err flow
+        // TODO there is a ton of contention here
         if !state.validator_store.cache_contains_block_digest(
             signed_transaction
                 .get_transaction_payload()

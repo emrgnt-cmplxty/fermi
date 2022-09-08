@@ -63,7 +63,7 @@ impl ConsensusAdapter {
             let worker_index = self.batch_counter.load(Ordering::SeqCst) % (self.consensus_clients.len() as u64);
             let transactions_copy = tokio_stream::iter(transaction_buffer_lock.clone());
             *transaction_buffer_lock = Vec::new();
-            // drop the transaction buffer so that other threads do no tremain blocked while we submit our batch
+            // drop the transaction buffer so that other threads do not remain blocked while we submit our batch
             drop(transaction_buffer_lock);
             // increment the batch counter so that next batch is sent to a different worker
             self.batch_counter.fetch_add(1, Ordering::SeqCst);

@@ -92,7 +92,7 @@ message Depth {
     uint64 quantity = 2;
 }
 
-// A response of the latest orderbook snap
+// A response of the latest orderbook depth
 message RelayerLatestOrderbookDepthResponse {
     repeated Depth bids = 1;
     repeated Depth asks = 2;

@@ -27,6 +27,7 @@ use gdex_types::{
     crypto::ToFromBytes,
     error::GDEXError,
     order_book::{OrderProcessingResult, OrderSide, OrderType, OrderbookDepth, Success},
+    store::ProcessBlockStore,
     transaction::{
         deserialize_protobuf, get_transaction_sender, parse_order_side, parse_request_type, CancelOrderRequest,
         CreateOrderbookRequest, LimitOrderRequest, MarketOrderRequest, RequestType, Transaction, UpdateOrderRequest,
@@ -561,7 +562,7 @@ impl Controller for SpotController {
         }
     }
 
-    fn post_process(&mut self, _block_number: u64) {}
+    fn process_end_of_block(&mut self, _process_block_store: &ProcessBlockStore) {}
 }
 
 impl SpotController {

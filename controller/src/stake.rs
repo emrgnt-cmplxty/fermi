@@ -19,6 +19,7 @@ use gdex_types::{
     asset::PRIMARY_ASSET_ID,
     crypto::ToFromBytes,
     error::GDEXError,
+    store::ProcessBlockStore,
     transaction::{parse_request_type, Transaction},
 };
 
@@ -77,7 +78,7 @@ impl Controller for StakeController {
         }
     }
 
-    fn post_process(&mut self, _block_number: u64) {}
+    fn process_end_of_block(&mut self, _process_block_store: &ProcessBlockStore) {}
 }
 
 impl StakeController {

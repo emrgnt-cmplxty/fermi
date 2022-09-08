@@ -209,9 +209,8 @@ impl ValidatorService {
                             let (block, block_info) = store
                                 .write_latest_block(consensus_output.certificate, serialized_txns_buf.clone())
                                 .await;
-                            metrics.process_new_block(block, block_info);
-                            master_controller
-                                .post_process(store.block_number.load(std::sync::atomic::Ordering::SeqCst));
+                            metrics.process_end_of_block(block, block_info);
+                            master_controller.process_end_of_block(&store.process_block_store);
                             serialized_txns_buf.clear();
                         }
                     }
@@ -275,7 +274,9 @@ impl ValidatorService {
             transaction: serialized_consensus_transaction.into(),
         };
 
-        consensus_adapter.submit_transaction(consensus_transaction_wrapper).await?;
+        consensus_adapter
+            .submit_transaction(consensus_transaction_wrapper)
+            .await?;
 
         state
             .handle_pre_consensus_transaction(&signed_transaction)

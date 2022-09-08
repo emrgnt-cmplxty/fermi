@@ -16,6 +16,7 @@ use crate::{
 
 use gdex_types::{
     error::GDEXError,
+    store::ProcessBlockStore,
     transaction::{parse_target_controller, ControllerType, Transaction},
 };
 // external
@@ -114,13 +115,25 @@ impl MasterController {
         }
     }
 
-    pub fn post_process(&self, block_number: u64) {
-        self.consensus_controller.lock().unwrap().post_process(block_number);
+    pub fn process_end_of_block(&self, process_block_store: &ProcessBlockStore) {
+        self.consensus_controller
+            .lock()
+            .unwrap()
+            .process_end_of_block(process_block_store);
 
-        self.bank_controller.lock().unwrap().post_process(block_number);
+        self.bank_controller
+            .lock()
+            .unwrap()
+            .process_end_of_block(process_block_store);
 
-        self.stake_controller.lock().unwrap().post_process(block_number);
+        self.stake_controller
+            .lock()
+            .unwrap()
+            .process_end_of_block(process_block_store);
 
-        self.spot_controller.lock().unwrap().post_process(block_number);
+        self.spot_controller
+            .lock()
+            .unwrap()
+            .process_end_of_block(process_block_store);
     }
 }

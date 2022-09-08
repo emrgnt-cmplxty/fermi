@@ -13,6 +13,7 @@ use gdex_types::{
     account::AccountPubKey,
     crypto::ToFromBytes,
     error::GDEXError,
+    store::ProcessBlockStore,
     transaction::{parse_request_type, Transaction},
 };
 
@@ -64,5 +65,5 @@ impl Controller for ConsensusController {
         }
     }
 
-    fn post_process(&mut self, _block_number: u64) {}
+    fn process_end_of_block(&mut self, _process_block_store: &ProcessBlockStore) {}
 }

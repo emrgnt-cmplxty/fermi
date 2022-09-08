@@ -7,13 +7,13 @@ extern crate bincode;
 extern crate criterion;
 
 use criterion::*;
-use fastcrypto::{Hash, DIGEST_LEN};
+use fastcrypto::DIGEST_LEN;
 use gdex_types::{
     account::{AccountKeyPair, AccountSignature},
     crypto::{KeypairTraits, Signer},
     error::GDEXError,
-    new_transaction::{
-        new_create_payment_transaction, sign_transaction, ConsensusTransaction, NewSignedTransaction, NewTransaction,
+    transaction::{
+        create_payment_transaction, sign_transaction, ConsensusTransaction, verify_signature
     },
 };
 use narwhal_types::{Batch, CertificateDigest, WorkerMessage};
@@ -30,7 +30,7 @@ fn verify_incoming_transaction(raw_consensus_transaction: Vec<u8>) -> Result<(),
 
     match consensus_transaction_result {
         Ok(consensus_transaction) => match consensus_transaction.get_payload() {
-            Ok(signed_transaction) => match verify_signature(sign_transaction) {
+            Ok(signed_transaction) => match verify_signature(&signed_transaction) {
                 Ok(_) => Ok(()),
                 Err(sig_error) => Err(sig_error),
             },
@@ -47,7 +47,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         let kp_receiver = keys(receiver_seed).pop().unwrap();
         let certificate_digest = CertificateDigest::new([0; DIGEST_LEN]);
         let gas: u64 = 1000;
-        let new_transaction = new_create_payment_transaction(
+        let transaction = create_payment_transaction(
             kp_sender.public().clone(),
             kp_receiver.public(),
             0,
@@ -55,12 +55,12 @@ fn criterion_benchmark(c: &mut Criterion) {
             gas,
             certificate_digest,
         );
-        let new_signed_transaction = match sign_transaction(kp_sender, new_transaction) {
+        let signed_transaction = match sign_transaction(&kp_sender, transaction) {
             Ok(t) => t,
             _ => panic!("Error signing transaction"),
         };
 
-        ConsensusTransaction::new(new_signed_transaction)
+        ConsensusTransaction::new(&signed_transaction)
     }
 
     // bench serializing singletons
@@ -111,7 +111,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         match bincode::deserialize(batch).unwrap() {
             WorkerMessage::Batch(Batch(transactions)) => {
                 for raw_transaction in transactions {
-                    let transaction: Vec<u8> = raw_transaction.to_vec().collect();
+                    let transaction: Vec<u8> = raw_transaction.to_vec();
 
                     let _ = ConsensusTransaction::deserialize(transaction).unwrap();
                 }
@@ -127,7 +127,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         match bincode::deserialize(batch).unwrap() {
             WorkerMessage::Batch(Batch(transactions)) => {
                 for raw_transaction in transactions {
-                    let transaction: Vec<u8> = raw_transaction.to_vec().collect();
+                    let transaction: Vec<u8> = raw_transaction.to_vec();
 
                     verify_incoming_transaction(transaction).unwrap();
                 }

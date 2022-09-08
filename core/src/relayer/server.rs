@@ -29,17 +29,10 @@ impl Relayer for RelayerService {
                         }),
                     }))
                 } else {
-                    Ok(Response::new(RelayerBlockInfoResponse {
-                        successful: true,
-                        block_info: None,
-                    }))
+                    Err(Status::not_found("Latest block info was not found."))
                 }
             }
-            // TODO propagate error message to client
-            Err(_) => Ok(Response::new(RelayerBlockInfoResponse {
-                successful: false,
-                block_info: None,
-            })),
+            Err(err) => Err(Status::unknown(err.to_string()))
         }
     }
     async fn get_block_info(
@@ -66,17 +59,10 @@ impl Relayer for RelayerService {
                         }),
                     }))
                 } else {
-                    Ok(Response::new(RelayerBlockInfoResponse {
-                        successful: true,
-                        block_info: None,
-                    }))
+                    Err(Status::not_found("Block info was not found."))
                 }
             }
-            // TODO propagate error message to client
-            Err(_) => Ok(Response::new(RelayerBlockInfoResponse {
-                successful: false,
-                block_info: None,
-            })),
+            Err(err) => Err(Status::unknown(err.to_string()))
         }
     }
     async fn get_block(
@@ -96,17 +82,10 @@ impl Relayer for RelayerService {
                         block: Some(RelayerBlock { block: block_bytes }),
                     }))
                 } else {
-                    Ok(Response::new(RelayerBlockResponse {
-                        successful: true,
-                        block: None,
-                    }))
+                    Err(Status::not_found("Block was not found."))
                 }
             }
-            // TODO propagate error message to client
-            Err(_) => Ok(Response::new(RelayerBlockResponse {
-                successful: false,
-                block: None,
-            })),
+            Err(err) => Err(Status::unknown(err.to_string()))
         }
     }
     async fn get_latest_orderbook_depth(

@@ -202,10 +202,10 @@ impl ValidatorStore {
         (block, block_info)
     }
 
-    pub async fn write_latest_orderbook_snaps(&self, orderbook_snaps: HashMap<String, OrderbookDepth>) {
-        for (asset_pair, orderbook_snap) in orderbook_snaps {
+    pub async fn write_latest_orderbook_depths(&self, orderbook_depths: HashMap<String, OrderbookDepth>) {
+        for (asset_pair, orderbook_depth) in orderbook_depths {
             self.latest_orderbook_depth_store
-                .write(asset_pair, orderbook_snap.clone())
+                .write(asset_pair, orderbook_depth.clone())
                 .await;
         }
     }

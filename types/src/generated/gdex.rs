@@ -83,7 +83,7 @@ pub struct Depth {
     #[prost(uint64, tag="2")]
     pub quantity: u64,
 }
-/// A response of the latest orderbook snap
+/// A response of the latest orderbook depth
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RelayerLatestOrderbookDepthResponse {
     #[prost(message, repeated, tag="1")]

@@ -98,8 +98,6 @@ class LogParser:
         return size, rate, start, misses, samples
 
     def _parse_primaries(self, log):
-#        if search(r'(?:ERROR)', log) is not None:
-#            print("WARNING: Primary(s) errored, please check logs")
         if search(r'(?:panicked)', log) is not None:
             print('search = ', search(r'(?:panicked)', log))
             raise ParseError('Primary(s) panicked')

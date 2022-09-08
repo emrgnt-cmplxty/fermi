@@ -151,7 +151,7 @@ class GDEXBench:
             Print.info('Booting clients...')
             # spawn one client per worker
             for i, name in enumerate(committee.json['authorities'].keys()):
-              for j in range(self.bench_parameters.workers):
+              for worker_idx in range(self.bench_parameters.workers):
                 validator_dict = committee.json['authorities'][name]
                 validator_address = validator_dict['network_address']
                 relayer_address = validator_dict['relayer_address']
@@ -171,10 +171,9 @@ class GDEXBench:
                         rate_share,
                         [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
                     )
-                log_file = PathMaker.client_log_file(i, j)
+                log_file = PathMaker.client_log_file(i, worker_idx)
                 print(cmd, ">>", log_file)
                 self._background_run(cmd, log_file)
-
 
             # Wait for all transactions to be processed.
             Print.info(f'Running benchmark ({self.duration} sec)...')

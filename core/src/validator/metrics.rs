@@ -21,15 +21,15 @@ type BlockLatencyInMilis = u64;
 pub struct ValidatorMetrics {
     // Continuously updated information
     /// The number of transactions submitted to the validator
-    pub num_transactions_rec: IntCounter,
+    pub transactions_received: IntCounter,
     /// The number of transactions submitted to the validator that were not executed
-    pub num_transactions_rec_failed: IntCounter,
+    pub transactions_received_failed: IntCounter,
     /// The number of transactions submitted from consensus
-    pub num_transactions_consensus: IntCounter,
+    pub transactions_executed: IntCounter,
     /// The number of transactions submitted from consensus that failed state execution
-    pub num_transactions_consensus_failed: IntCounter,
+    pub transactions_executed_failed: IntCounter,
     /// The number of blocks processed
-    pub num_blocks_processed: IntCounter,
+    pub block_number: IntCounter,
     /// The validator system epoch time
     pub validator_system_epoch_time_in_micros: IntGauge,
     /// The block latency in miliseconds
@@ -55,32 +55,32 @@ impl ValidatorMetrics {
         let cluster_tps_buckets: Vec<f64> = (0..2_000).map(|i| i as f64 * 100.).collect();
 
         Self {
-            num_transactions_rec: register_int_counter_with_registry!(
-                "num_transactions_rec",
+            transactions_received: register_int_counter_with_registry!(
+                "transactions_received",
                 "The number of transactions sent to this validator.",
                 registry
             )
             .unwrap(),
-            num_transactions_rec_failed: register_int_counter_with_registry!(
-                "num_transactions_rec_failed",
+            transactions_received_failed: register_int_counter_with_registry!(
+                "transactions_received_failed",
                 "The number of transactions sent to this validator that failed execution.",
                 registry
             )
             .unwrap(),
-            num_transactions_consensus: register_int_counter_with_registry!(
-                "num_transactions_consensus",
+            transactions_executed: register_int_counter_with_registry!(
+                "transactions_executed",
                 "The number of transactions processed by this validator through consensus.",
                 registry
             )
             .unwrap(),
-            num_transactions_consensus_failed: register_int_counter_with_registry!(
-                "num_transactions_consensus_failed",
+            transactions_executed_failed: register_int_counter_with_registry!(
+                "transactions_executed_failed",
                 "The number of transactions processed by this validator through consensus which failed execution.",
                 registry
             )
             .unwrap(),
-            num_blocks_processed: register_int_counter_with_registry!(
-                "num_blocks_processed",
+            block_number: register_int_counter_with_registry!(
+                "block_number",
                 "The number of blocks created from consensus.",
                 registry
             )
@@ -118,7 +118,7 @@ impl ValidatorMetrics {
     }
 
     pub fn process_new_block(&self, block: Block, block_info: BlockInfo) {
-        self.num_blocks_processed.inc();
+        self.block_number.inc();
         let mut prev_block_info = self.prev_block_info.lock().unwrap();
 
         // Check that default block info is not stored in prev_block_info

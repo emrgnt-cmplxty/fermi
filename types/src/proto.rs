@@ -8,18 +8,19 @@
 mod services;
 
 pub use services::{
-    Empty,
-    // transaction submitter
-    transaction_submitter_client::TransactionSubmitterClient,
-    transaction_submitter_server::{TransactionSubmitter, TransactionSubmitterServer},
     // faucet
     faucet_client::FaucetClient,
     faucet_server::{Faucet, FaucetServer},
-    FaucetAirdropRequest,
-    FaucetAirdropResponse,
     // relayer
     relayer_client::RelayerClient,
     relayer_server::{Relayer, RelayerServer},
+    // transaction submitter
+    transaction_submitter_client::TransactionSubmitterClient,
+    transaction_submitter_server::{TransactionSubmitter, TransactionSubmitterServer},
+    Depth,
+    Empty,
+    FaucetAirdropRequest,
+    FaucetAirdropResponse,
     RelayerBlock,
     RelayerBlockInfoResponse,
     RelayerBlockResponse,
@@ -27,10 +28,9 @@ pub use services::{
     RelayerGetBlockRequest,
     RelayerGetLatestBlockInfoRequest,
     RelayerGetLatestOrderbookDepthRequest,
-    Depth,
     RelayerLatestOrderbookDepthResponse,
     RelayerMetricsRequest,
-    RelayerMetricsResponse
+    RelayerMetricsResponse,
 };
 
 #[cfg_attr(beta, allow(clippy::derive_partial_eq_without_eq))]

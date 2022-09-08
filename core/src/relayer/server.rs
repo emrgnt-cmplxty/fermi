@@ -32,7 +32,7 @@ impl Relayer for RelayerService {
                     Err(Status::not_found("Latest block info was not found."))
                 }
             }
-            Err(err) => Err(Status::unknown(err.to_string()))
+            Err(err) => Err(Status::unknown(err.to_string())),
         }
     }
     async fn get_block_info(
@@ -62,7 +62,7 @@ impl Relayer for RelayerService {
                     Err(Status::not_found("Block info was not found."))
                 }
             }
-            Err(err) => Err(Status::unknown(err.to_string()))
+            Err(err) => Err(Status::unknown(err.to_string())),
         }
     }
     async fn get_block(
@@ -85,7 +85,7 @@ impl Relayer for RelayerService {
                     Err(Status::not_found("Block was not found."))
                 }
             }
-            Err(err) => Err(Status::unknown(err.to_string()))
+            Err(err) => Err(Status::unknown(err.to_string())),
         }
     }
     async fn get_latest_orderbook_depth(

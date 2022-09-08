@@ -275,7 +275,9 @@ impl ValidatorService {
             transaction: serialized_consensus_transaction.into(),
         };
 
-        consensus_adapter.submit_transaction(consensus_transaction_wrapper).await?;
+        consensus_adapter
+            .submit_transaction(consensus_transaction_wrapper)
+            .await?;
 
         state
             .handle_pre_consensus_transaction(&signed_transaction)

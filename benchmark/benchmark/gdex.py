@@ -1,5 +1,7 @@
 # Copyright(C) Facebook, Inc. and its affiliates.
+import os
 import subprocess
+from collections import OrderedDict
 from math import ceil
 from os.path import basename, splitext
 from time import sleep
@@ -9,16 +11,16 @@ from benchmark.config import Key, LocalCommittee, NodeParameters, BenchParameter
 from benchmark.gdex_logs import LogParser, ParseError
 from benchmark.utils import Print, BenchError, PathMaker
 
-def url_to_multiaddr(url):
-    assert isinstance(url, str)
-    return '/dns/localhost/tcp/%s/http' % (url.split(':')[-1])
+from benchmark.config import Committee
+from benchmark.utils import multiaddr_to_url_data, url_to_multiaddr
+
 
 class GDEXBench:
     BASE_PORT = 3000
 
-    def __init__(self, bench_parameters_dict):
+    def __init__(self, bench_parameters):
         try:
-            self.bench_parameters = GDEXBenchParameters(bench_parameters_dict)
+            self.bench_parameters = GDEXBenchParameters(bench_parameters)
         except ConfigError as e:
             raise BenchError('Invalid nodes or bench parameters', e)
 
@@ -46,21 +48,15 @@ class GDEXBench:
 
         try:
             Print.info('Setting up testbed...')
-            nodes, relayers, rate = self.nodes, self.relayers, self.rate
 
             # Cleanup all files.
-            cmd = f'{CommandMaker.clean_logs()} ; {CommandMaker.cleanup()}'
-            subprocess.run([cmd], shell=True, stderr=subprocess.DEVNULL)
+            cmd = f'{CommandMaker.clean_logs()} ;'
+            subprocess.run([cmd], shell=True)
+            cmd = CommandMaker.cleanup()
+            subprocess.run([cmd], shell=True, cwd=PathMaker.gdex_build_path())
             sleep(0.5)  # Removing the store may take time.
-
             # Recompile the latest code.
             cmd = CommandMaker.compile(mem_profiling=self.mem_profile, flamegraph=self.flamegraph)
-            Print.info(f"About to run {cmd}...")
-            subprocess.run(cmd, check=True, cwd=PathMaker.gdex_build_path())
-            sleep(0.5)  # Removing the store may take time.
-
-            # Recompile the latest code.
-            cmd = CommandMaker.compile(mem_profiling=self.mem_profile, flamegraph=self.flamegraph, benchmark=False)
             Print.info(f"About to run {cmd}...")
             subprocess.run(cmd, check=True, cwd=PathMaker.gdex_build_path())
             sleep(0.5)  # Removing the store may take time.
@@ -70,47 +66,112 @@ class GDEXBench:
             print(cmd)
             subprocess.run([cmd], shell=True)
 
-            # Run the primaries
-            for id, node_name in enumerate(nodes.keys()):
+            cmd = CommandMaker.init_gdex_genesis(os.path.abspath(self.bench_parameters.key_dir))
+            subprocess.run([cmd], shell=True)
+            # Generate configuration files.
+            keys = []
+            key_files = [PathMaker.key_file(i) for i in range(self.bench_parameters.nodes[0])]
+
+            for filename in key_files:
                 sleep(2)
+                cmd = CommandMaker.generate_gdex_key(filename, os.path.abspath(self.bench_parameters.key_dir)).split()
+                subprocess.run(cmd, check=True)
+                keys += [Key.from_file(os.path.abspath(self.bench_parameters.key_dir + filename))]
+
+            names = [x.name for x in keys]
+
+            workers = self.bench_parameters.workers
+            committee = LocalCommittee(names, 3000, workers)
+            committee.print(PathMaker.committee_file())
+            for i, name in enumerate(names):
+                validator_dict = committee.json["authorities"][name]
+                balance = self.bench_parameters.starting_balance
+                stake = validator_dict["stake"]
+                key_file = os.path.abspath(self.bench_parameters.key_dir + key_files[i])
+
+                primary_to_primary = validator_dict["primary"]["primary_to_primary"]
+                worker_to_primary = validator_dict["primary"]["worker_to_primary"]
+                primary_to_worker = []
+                worker_to_worker = []
+                consensus_address = []
+                for i in range(self.bench_parameters.workers):
+                    primary_to_worker.append(validator_dict["workers"][i]["primary_to_worker"])
+                    worker_to_worker.append(validator_dict["workers"][i]["worker_to_worker"])
+                    consensus_address.append(validator_dict["workers"][i]["transactions"])
+
+                cmd = CommandMaker.add_gdex_validator_genesis(
+                    self.bench_parameters.key_dir,
+                    name,
+                    balance,
+                    stake,
+                    key_file,
+                    primary_to_primary,
+                    worker_to_primary,
+                    ','.join(primary_to_worker),
+                    ','.join(worker_to_worker),
+                    ','.join(consensus_address)
+                )
+                print(cmd)
+                subprocess.run([cmd], shell=True)
+
+            cmd = CommandMaker.add_controllers_gdex_genesis(os.path.abspath(self.bench_parameters.key_dir))
+            subprocess.run([cmd], shell=True)
+            cmd = CommandMaker.build_gdex_genesis(os.path.abspath(self.bench_parameters.key_dir))
+            subprocess.run([cmd], shell=True)
+
+            for i, name in enumerate(committee.json['authorities'].keys())  :
+                cmd = CommandMaker.verify_and_sign_gdex_genesis(os.path.abspath(self.bench_parameters.key_dir), os.path.abspath(self.bench_parameters.key_dir + key_files[i]))
+                subprocess.run([cmd], shell=True)
+            cmd = CommandMaker.finalize_genesis(os.path.abspath(self.bench_parameters.key_dir))
+            subprocess.run([cmd], shell=True)
+
+            # Run the primaries
+            Print.info('Booting nodes...')
+            rate_share = ceil(self.rate[0] / (self.bench_parameters.workers * self.bench_parameters.nodes[0]))
+            for i, name in enumerate(committee.json['authorities'].keys()):
+                validator_dict = committee.json['authorities'][name]
+                validator_address = validator_dict['network_address']
+                relayer_address = validator_dict['relayer_address']
                 cmd = CommandMaker.run_gdex_node(
-                    self.db_dir,
-                    self.genesis_dir,
-                    self.key_dir,
-                    node_name,
-                    url_to_multiaddr(nodes[node_name]),
-                    url_to_multiaddr(relayers[node_name]),
+                    os.path.abspath(self.bench_parameters.db_dir),
+                    os.path.abspath(self.bench_parameters.key_dir),
+                    os.path.abspath(self.bench_parameters.key_dir + PathMaker.key_file(i)),
+                    name,
+                    validator_address,
+                    relayer_address,
                     debug,
                     self.flamegraph
                 )
-                log_file = PathMaker.primary_log_file(id)
+                log_file = PathMaker.primary_log_file(i)
                 print(cmd, ">>", log_file)
                 self._background_run(cmd, log_file)
+                # sleep to avoid weird port collisions in local bench
+                sleep(0.5)
 
-            # Run the clients (they will wait for the nodes to be ready).
-
-            # currently hard-coded for a single worker, for n-workers denom = n*len(nodes.keys())
-            rate_share = ceil(rate / len(nodes.keys()))
-            for id, address in enumerate(nodes.values()):
-                sleep(2)
+            Print.info('Booting clients...')
+            # spawn one client per worker
+            for i, name in enumerate(committee.json['authorities'].keys()):
+              for worker_idx in range(self.bench_parameters.workers):
+                validator_dict = committee.json['authorities'][name]
+                validator_address = validator_dict['network_address']
+                relayer_address = validator_dict['relayer_address']
                 if self.order_bench:
                     cmd = CommandMaker.run_gdex_orderbook_client(
-                        id,
-                        address,
-                        relayers['validator-' + str(id)],
+                        multiaddr_to_url_data(validator_address),
+                        multiaddr_to_url_data(relayer_address),
+                        os.path.abspath(self.bench_parameters.key_dir + PathMaker.key_file(0)),
                         rate_share,
-                        [x for x in nodes.values() if x != address]
+                        [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
                     )
                 else:
                     cmd = CommandMaker.run_gdex_client(
-                        id,
-                        address,
-                        relayers['validator-' + str(id)],
+                        multiaddr_to_url_data(validator_address),
+                        multiaddr_to_url_data(relayer_address),
+                        os.path.abspath(self.bench_parameters.key_dir + PathMaker.key_file(i)),
                         rate_share,
-                        [x for x in nodes.values() if x != address]
+                        [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
                     )
-                # currently hard-coded for a single worker, for n-workers 0 -> i
-                log_file = PathMaker.client_log_file(id, 0)
+                log_file = PathMaker.client_log_file(i, worker_idx)
                 print(cmd, ">>", log_file)
                 self._background_run(cmd, log_file)
 

@@ -11,7 +11,6 @@ use gdex_types::account::{ValidatorKeyPair, ValidatorPubKeyBytes};
 use gdex_types::crypto::GDEXAddress;
 use gdex_types::crypto::KeypairTraits;
 use gdex_types::serialization::KeyPairBase64;
-use multiaddr::Multiaddr;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use std::net::SocketAddr;
@@ -28,8 +27,6 @@ pub struct NodeConfig {
     pub key_pair: Arc<ValidatorKeyPair>,
     pub consensus_db_path: PathBuf,
     pub gdex_db_path: PathBuf,
-    #[serde(default = "default_grpc_address")]
-    pub network_address: Multiaddr,
     #[serde(default = "default_json_rpc_address")]
     pub json_rpc_address: SocketAddr,
     #[serde(default = "default_websocket_address")]
@@ -57,11 +54,6 @@ pub struct NodeConfig {
 
 fn default_key_pair() -> Arc<ValidatorKeyPair> {
     Arc::new(gdex_types::crypto::get_random_key_pair())
-}
-
-fn default_grpc_address() -> Multiaddr {
-    use multiaddr::multiaddr;
-    multiaddr!(Ip4([0, 0, 0, 0]), Tcp(8080u16))
 }
 
 fn default_metrics_address() -> SocketAddr {
@@ -106,10 +98,6 @@ impl NodeConfig {
         &self.gdex_db_path
     }
 
-    pub fn network_address(&self) -> &Multiaddr {
-        &self.network_address
-    }
-
     pub fn consensus_config(&self) -> Option<&ConsensusConfig> {
         self.consensus_config.as_ref()
     }
@@ -145,7 +133,6 @@ mod node_tests {
         let _gdex_address = validator_config.gdex_address();
         let _consensus_db_path = validator_config.consensus_db_path();
         let _gdex_db_path = validator_config.gdex_db_path();
-        let _network_address = validator_config.network_address();
         let _consensus_config = validator_config.consensus_config();
         let _genesis = validator_config.genesis();
     }

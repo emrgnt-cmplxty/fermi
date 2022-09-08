@@ -6,6 +6,7 @@ plots
 demo_client
 gdex-node
 *_db
+benchmark/.proto/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,4 +1,5 @@
 # Copyright(C) Facebook, Inc. and its affiliates.
+import os
 from collections import OrderedDict
 from fabric import Connection, ThreadingGroup as Group
 from fabric.exceptions import GroupException
@@ -10,12 +11,11 @@ from math import ceil
 from copy import deepcopy
 import subprocess
 
-from benchmark.config import Committee, Key, NodeParameters, BenchParameters, ConfigError
-from benchmark.utils import BenchError, Print, PathMaker, progress_bar
+from benchmark.config import Committee, Key, NodeParameters, BenchParameters, ConfigError, GDEXBenchParameters
+from benchmark.utils import BenchError, Print, PathMaker, progress_bar, multiaddr_to_url_data
 from benchmark.commands import CommandMaker
-from benchmark.logs import LogParser, ParseError
+from benchmark.gdex_logs import LogParser, ParseError
 from benchmark.instance import InstanceManager
-
 
 class FabricError(Exception):
     ''' Wrapper for Fabric exception with a meaningfull error message. '''
@@ -31,13 +31,19 @@ class ExecutionError(Exception):
 
 
 class Bench:
-    def __init__(self, ctx):
+    def __init__(self, ctx, bench_parameters, node_parameters, debug=False):
         self.manager = InstanceManager.make()
         self.settings = self.manager.settings
+        self.bench_parameters = GDEXBenchParameters(bench_parameters)
+        self.node_parameters = NodeParameters(node_parameters)
+        self.debug = debug
+        self.local_proto_dir = os.getcwd() + self.bench_parameters.key_dir
+        self.remote_proto_dir = self.settings.repo_name + self.bench_parameters.key_dir
         try:
             ctx.connect_kwargs.pkey = RSAKey.from_private_key_file(
                 self.manager.settings.key_path
             )
+            ctx.forward_agent = True
             self.connect = ctx.connect_kwargs
         except (IOError, PasswordRequiredException, SSHException) as e:
             raise BenchError('Failed to load SSH key', e)
@@ -61,6 +67,7 @@ class Bench:
             # The following dependencies prevent the error: [error: linker `cc` not found].
             'sudo apt-get -y install build-essential',
             'sudo apt-get -y install cmake',
+            'sudo apt-get install libssl-dev',
 
             # Install rust (non-interactive).
             'curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y',
@@ -69,14 +76,21 @@ class Bench:
 
             # This is missing from the Rocksdb installer (needed for Rocksdb).
             'sudo apt-get install -y clang',
+            'sudo apt-get install openssl',
+            'sudo apt-get install pkg-config',
 
             # Clone the repo.
+            'ssh-keyscan -H github.com >> ~/.ssh/known_hosts',
             f'(git clone {self.settings.repo_url} || (cd {self.settings.repo_name} ; git pull))'
         ]
         hosts = self.manager.hosts(flat=True)
         try:
-            g = Group(*hosts, user='ubuntu', connect_kwargs=self.connect)
-            g.run(' && '.join(cmd), hide=True)
+            g = Group(*hosts, user='ubuntu', connect_kwargs=self.connect, forward_agent=True)
+
+            for c in g:
+                c._config.forward_agent = True
+
+            g.run(' && '.join(cmd), hide=False)
             Print.heading(f'Initialized testbed of {len(hosts)} nodes')
         except (GroupException, ExecutionError) as e:
             e = FabricError(e) if isinstance(e, GroupException) else e
@@ -129,9 +143,9 @@ class Bench:
                 selected.append(ips)
             return selected
 
-    def _background_run(self, host, command, log_file):
+    def _background_run(self, host, command, log_file, cwd='~/gdex-core/benchmark'):
         name = splitext(basename(log_file))[0]
-        cmd = f'tmux new -d -s "{name}" "{command} |& tee {log_file}"'
+        cmd = f'(cd {cwd}) && tmux new -d -s "{name}" "{command} |& tee {log_file}"'
         c = Connection(host, user='ubuntu', connect_kwargs=self.connect)
         output = c.run(cmd, hide=True)
         self._check_stderr(output)
@@ -145,43 +159,47 @@ class Bench:
         Print.info(
             f'Updating {len(ips)} machines (branch "{self.settings.branch}")...'
         )
+        compile_cmd = ' '.join(CommandMaker.compile(False, None))
         cmd = [
             f'(cd {self.settings.repo_name} && git fetch -f)',
             f'(cd {self.settings.repo_name} && git checkout -f {self.settings.branch})',
             f'(cd {self.settings.repo_name} && git pull -f)',
             'source $HOME/.cargo/env',
-            f'(cd {self.settings.repo_name}/node && {CommandMaker.compile()})',
+            f'(cd {self.settings.repo_name} && {compile_cmd})',
             CommandMaker.alias_binaries(
                 f'./{self.settings.repo_name}/target/release/'
             )
         ]
-        g = Group(*ips, user='ubuntu', connect_kwargs=self.connect)
+        g = Group(*ips, user='ubuntu', connect_kwargs=self.connect, forward_agent=True)
         g.run(' && '.join(cmd), hide=True)
 
     def _config(self, hosts, node_parameters, bench_parameters):
         Print.info('Generating configuration files...')
-
         # Cleanup all local configuration files.
         cmd = CommandMaker.cleanup()
-        subprocess.run([cmd], shell=True, stderr=subprocess.DEVNULL)
+        subprocess.run([cmd], shell=True, stderr=subprocess.DEVNULL, cwd='.')
 
         # Recompile the latest code.
-        cmd = CommandMaker.compile(mem_profiling=self.mem_profile)
+        cmd = CommandMaker.compile(False, None, False)
         Print.info(f"About to run {cmd}...")
-        subprocess.run(cmd, check=True, cwd=PathMaker.narwhal_node_crate_path())
+        subprocess.run(cmd, check=True, cwd='../')
 
         # Create alias for the client and nodes binary.
         cmd = CommandMaker.alias_binaries(PathMaker.binary_path())
         subprocess.run([cmd], shell=True)
 
+        cmd = CommandMaker.init_gdex_genesis(self.local_proto_dir)
+        subprocess.run([cmd], shell=True)
+
         # Generate configuration files.
         keys = []
         key_files = [PathMaker.key_file(i) for i in range(len(hosts))]
-        for filename in key_files:
-            cmd = CommandMaker.generate_key(filename).split()
-            subprocess.run(cmd, check=True)
-            keys += [Key.from_file(filename)]
 
+        for filename in key_files:
+            cmd = CommandMaker.generate_gdex_key(filename).split()
+            subprocess.run(cmd, check=True)
+            keys += [Key.from_file(self.local_proto_dir + filename)]
+        sleep(2)
         names = [x.name for x in keys]
 
         if bench_parameters.collocate:
@@ -193,26 +211,85 @@ class Bench:
             addresses = OrderedDict(
                 (x, y) for x, y in zip(names, hosts)
             )
+
         committee = Committee(addresses, self.settings.base_port)
         committee.print(PathMaker.committee_file())
+        for i, name in enumerate(names):
+            validator_dict = committee.json["authorities"][name]
+            balance = self.bench_parameters.starting_balance
+            stake = validator_dict["stake"]
+            key_file = self.local_proto_dir + key_files[i]
+
+            primary_to_primary = validator_dict["primary"]["primary_to_primary"]
+            worker_to_primary = validator_dict["primary"]["worker_to_primary"]
+
+            primary_to_worker = []
+            worker_to_worker = []
+            consensus_address = []
+
+            for i in range(workers):
+                primary_to_worker.append(validator_dict["workers"][i]["primary_to_worker"])
+                worker_to_worker.append(validator_dict["workers"][i]["worker_to_worker"])
+                consensus_address.append(validator_dict["workers"][i]["transactions"])
+
+            cmd = CommandMaker.add_gdex_validator_genesis(
+                self.local_proto_dir,
+                name,
+                balance,
+                stake,
+                key_file,
+                primary_to_primary,
+                worker_to_primary,
+                ','.join(primary_to_worker),
+                ','.join(worker_to_worker),
+                ','.join(consensus_address)
+            )
+            subprocess.run([cmd], shell=True)
+        cmd = CommandMaker.add_controllers_gdex_genesis(self.local_proto_dir)
+        subprocess.run([cmd], shell=True)
+        cmd = CommandMaker.build_gdex_genesis(self.local_proto_dir)
+        subprocess.run([cmd], shell=True)
+        for i, name in enumerate(names):
+            cmd = CommandMaker.verify_and_sign_gdex_genesis(self.local_proto_dir, self.local_proto_dir + key_files[i])
+            subprocess.run([cmd], shell=True)
+
+        cmd = CommandMaker.finalize_genesis(self.local_proto_dir)
+        subprocess.run([cmd], shell=True)
 
         node_parameters.print(PathMaker.parameters_file())
-
         # Cleanup all nodes and upload configuration files.
+        local_committee_dir = self.local_proto_dir + 'committee/'
+        remote_committee_dir = self.remote_proto_dir + 'committee/'
+        local_signatures_dir = self.local_proto_dir + 'signatures/'
+        remote_signatures_dir = self.remote_proto_dir + 'signatures/'
+
         names = names[:len(names)-bench_parameters.faults]
         progress = progress_bar(names, prefix='Uploading config files:')
         for i, name in enumerate(progress):
             for ip in committee.ips(name):
+                print(i, name, ip)
                 c = Connection(ip, user='ubuntu', connect_kwargs=self.connect)
-                c.run(f'{CommandMaker.cleanup()} || true', hide=True)
-                c.put(PathMaker.committee_file(), '.')
-                c.put(PathMaker.key_file(i), '.')
-                c.put(PathMaker.parameters_file(), '.')
+                c.run(f'(cd gdex-core && {CommandMaker.cleanup()}) || true', hide=False)
+                c.run(f'(mkdir {remote_committee_dir}) || true')
+                c.run(f'(mkdir {remote_signatures_dir}) || true')
+                c.put(self.local_proto_dir + "genesis.blob", self.remote_proto_dir)
+                c.put(self.local_proto_dir + PathMaker.key_file(i), self.remote_proto_dir)
+                # TODO
+                if i > 0:
+                    c.put(self.local_proto_dir + PathMaker.key_file(0), self.remote_proto_dir)
+                c.put(self.local_proto_dir + "master_controller", self.remote_proto_dir)
+
+                for fname in os.listdir(local_committee_dir):
+                    c.put(local_committee_dir + fname, remote_committee_dir)
+
+                for fname in os.listdir(local_signatures_dir):
+                    c.put(local_signatures_dir + fname, remote_signatures_dir)
+
+
 
         return committee
 
-    def _run_single(self, rate, committee, bench_parameters, debug=False):
-        faults = bench_parameters.faults
+    def _run_single(self, rate, committee, bench_parameters):
 
         # Kill any potentially unfinished run and delete logs.
         hosts = committee.ips()
@@ -221,50 +298,54 @@ class Bench:
         # Run the clients (they will wait for the nodes to be ready).
         # Filter all faulty nodes from the client addresses (or they will wait
         # for the faulty nodes to be online).
-        Print.info('Booting clients...')
-        workers_addresses = committee.load().workers_addresses(faults)
-        rate_share = ceil(rate / committee.load().workers())
-        for i, addresses in enumerate(workers_addresses):
-            for (id, address) in addresses:
-                host = Committee.ip(address)
-                cmd = CommandMaker.run_narwhal_client(
-                    address,
-                    bench_parameters.tx_size,
-                    rate_share,
-                    [x for y in workers_addresses for _, x in y]
-                )
-                log_file = PathMaker.client_log_file(i, id)
-                self._background_run(host, cmd, log_file)
-
-        # Run the primaries (except the faulty ones).
-        Print.info('Booting primaries...')
-        for i, address in enumerate(committee.load().primary_addresses(faults)):
-            host = Committee.ip(address)
-            cmd = CommandMaker.run_narwhal_primary(
-                PathMaker.key_file(i),
-                PathMaker.committee_file(),
-                PathMaker.db_path(i),
-                PathMaker.parameters_file(),
-                debug=debug
+        Print.info('Booting nodes...')
+        rate_share = ceil(rate / len(committee.json['authorities']))
+        for i, name in enumerate(committee.json['authorities'].keys()):
+            validator_dict = committee.json['authorities'][name]
+            validator_address = validator_dict['network_address'].split('/')
+            validator_address[2] = '0.0.0.0'
+            validator_address = '/'.join(validator_address)
+            relayer_address = validator_dict['relayer_address'].split('/')
+            relayer_address[2] = '0.0.0.0'
+            relayer_address = '/'.join(relayer_address)
+            host = Committee.ip_from_multi_address(validator_dict['network_address'])
+            cmd = CommandMaker.run_gdex_node(
+                self.remote_proto_dir,
+                self.remote_proto_dir,
+                self.remote_proto_dir + PathMaker.key_file(i),
+                name,
+                validator_address,
+                relayer_address
             )
+
             log_file = PathMaker.primary_log_file(i)
             self._background_run(host, cmd, log_file)
 
-        # Run the workers (except the faulty ones).
-        Print.info('Booting workers...')
-        for i, addresses in enumerate(workers_addresses):
-            for (id, address) in addresses:
-                host = Committee.ip(address)
-                cmd = CommandMaker.run_narwhal_worker(
-                    PathMaker.key_file(i),
-                    PathMaker.committee_file(),
-                    PathMaker.db_path(i, id),
-                    PathMaker.parameters_file(),
-                    id,  # The worker's id.
-                    debug=debug
+        # Run the primaries (except the faulty ones).
+        Print.info('Booting clients...')
+        for i, name in enumerate(committee.json['authorities'].keys()):
+            validator_dict = committee.json['authorities'][name]
+            validator_address = validator_dict['network_address']
+            relayer_address = validator_dict['relayer_address']
+            host = Committee.ip_from_multi_address(validator_address)
+            if self.bench_parameters.order_bench:
+                cmd = CommandMaker.run_gdex_orderbook_client(
+                    multiaddr_to_url_data(validator_address),
+                    multiaddr_to_url_data(relayer_address),
+                    self.remote_proto_dir + PathMaker.key_file(0),
+                    rate_share,
+                    [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
                 )
-                log_file = PathMaker.worker_log_file(i, id)
-                self._background_run(host, cmd, log_file)
+            else:
+                cmd = CommandMaker.run_gdex_client(
+                    multiaddr_to_url_data(validator_address),
+                    multiaddr_to_url_data(relayer_address),
+                    self.remote_proto_dir + PathMaker.key_file(i),
+                    rate_share,
+                    [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
+                )
+            log_file = PathMaker.client_log_file(i, 0)
+            self._background_run(host, cmd, log_file)
 
         # Wait for all transactions to be processed.
         duration = bench_parameters.duration
@@ -278,53 +359,36 @@ class Bench:
         subprocess.run([cmd], shell=True, stderr=subprocess.DEVNULL)
 
         # Download log files.
-        workers_addresses = committee.load().workers_addresses(faults)
+        workers_addresses = committee.workers_addresses(faults)
         progress = progress_bar(workers_addresses, prefix='Downloading workers logs:')
         for i, addresses in enumerate(progress):
             for id, address in addresses:
                 host = Committee.ip(address)
                 c = Connection(host, user='ubuntu', connect_kwargs=self.connect)
                 c.get(
-                    PathMaker.client_log_file(i, id),
-                    local=PathMaker.client_log_file(i, id)
+                    PathMaker.client_log_file(i, 0),
+                    local=PathMaker.client_log_file(i, 0)
                 )
                 c.get(
-                    PathMaker.worker_log_file(i, id),
-                    local=PathMaker.worker_log_file(i, id)
+                    PathMaker.primary_log_file(i),
+                    local=PathMaker.primary_log_file(i)
                 )
-
-        primary_addresses = committee.load().primary_addresses(faults)
-        progress = progress_bar(primary_addresses, prefix='Downloading primaries logs:')
-        for i, address in enumerate(progress):
-            host = Committee.ip(address)
-            c = Connection(host, user='ubuntu', connect_kwargs=self.connect)
-            c.get(
-                PathMaker.primary_log_file(i),
-                local=PathMaker.primary_log_file(i)
-            )
-
         # Parse logs and return the parser.
         Print.info('Parsing logs and computing performance...')
         return LogParser.process(PathMaker.logs_path(), faults=faults)
 
-    def run(self, bench_parameters_dict, node_parameters_dict, debug=False):
-        assert isinstance(debug, bool)
+    def run(self):
         Print.heading('Starting remote benchmark')
-        try:
-            bench_parameters = BenchParameters(bench_parameters_dict)
-            node_parameters = NodeParameters(node_parameters_dict)
-        except ConfigError as e:
-            raise BenchError('Invalid nodes or bench parameters', e)
 
         # Select which hosts to use.
-        selected_hosts = self._select_hosts(bench_parameters)
+        selected_hosts = self._select_hosts(self.bench_parameters)
         if not selected_hosts:
             Print.warn('There are not enough instances available')
             return
 
         # Update nodes.
         try:
-            self._update(selected_hosts, bench_parameters.collocate)
+            self._update(selected_hosts, self.bench_parameters.collocate)
         except (GroupException, ExecutionError) as e:
             e = FabricError(e) if isinstance(e, GroupException) else e
             raise BenchError('Failed to update nodes', e)
@@ -332,37 +396,37 @@ class Bench:
         # Upload all configuration files.
         try:
             committee = self._config(
-                selected_hosts, node_parameters, bench_parameters
+                selected_hosts, self.node_parameters, self.bench_parameters
             )
         except (subprocess.SubprocessError, GroupException) as e:
             e = FabricError(e) if isinstance(e, GroupException) else e
             raise BenchError('Failed to configure nodes', e)
 
         # Run benchmarks.
-        for n in bench_parameters.nodes:
+        for n in self.bench_parameters.nodes:
             committee_copy = deepcopy(committee)
             committee_copy.remove_nodes(committee.size() - n)
 
-            for r in bench_parameters.rate:
+            for r in self.bench_parameters.rate:
                 Print.heading(f'\nRunning {n} nodes (input rate: {r:,} tx/s)')
 
                 # Run the benchmark.
-                for i in range(bench_parameters.runs):
-                    Print.heading(f'Run {i+1}/{bench_parameters.runs}')
+                for i in range(self.bench_parameters.runs):
+                    Print.heading(f'Run {i+1}/{self.bench_parameters.runs}')
                     try:
                         self._run_single(
-                            r, committee_copy, bench_parameters, debug
+                            r, committee_copy, self.bench_parameters
                         )
 
-                        faults = bench_parameters.faults
+                        faults = self.bench_parameters.faults
                         logger = self._logs(committee_copy, faults)
                         logger.print(PathMaker.result_file(
                             faults,
                             n,
-                            bench_parameters.workers,
-                            bench_parameters.collocate,
+                            self.bench_parameters.workers,
+                            self.bench_parameters.collocate,
                             r,
-                            bench_parameters.tx_size,
+                            self.bench_parameters.tx_size,
                         ))
                     except (subprocess.SubprocessError, GroupException, ParseError) as e:
                         self.kill(hosts=selected_hosts)

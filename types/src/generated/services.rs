@@ -15,11 +15,8 @@ pub struct FaucetAirdropResponse {
     #[prost(bool, tag="1")]
     pub successful: bool,
 }
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct RelayerBlock {
-    #[prost(bytes="bytes", tag="1")]
-    pub block: ::prost::bytes::Bytes,
-}
+// block info
+
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RelayerGetLatestBlockInfoRequest {
 }
@@ -29,9 +26,23 @@ pub struct RelayerGetBlockInfoRequest {
     pub block_number: u64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RelayerBlockInfoResponse {
+    #[prost(bool, tag="1")]
+    pub successful: bool,
+    #[prost(message, optional, tag="2")]
+    pub block_info: ::core::option::Option<super::block::BlockInfo>,
+}
+// block
+
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RelayerGetBlockRequest {
     #[prost(uint64, tag="1")]
     pub block_number: u64,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RelayerBlock {
+    #[prost(bytes="bytes", tag="1")]
+    pub block: ::prost::bytes::Bytes,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RelayerBlockResponse {
@@ -40,12 +51,42 @@ pub struct RelayerBlockResponse {
     #[prost(message, optional, tag="2")]
     pub block: ::core::option::Option<RelayerBlock>,
 }
+// orderbook depth
+
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct RelayerBlockInfoResponse {
-    #[prost(bool, tag="1")]
-    pub successful: bool,
-    #[prost(message, optional, tag="2")]
-    pub block_info: ::core::option::Option<super::block::BlockInfo>,
+pub struct RelayerGetLatestOrderbookDepthRequest {
+    #[prost(uint64, tag="1")]
+    pub base_asset_id: u64,
+    #[prost(uint64, tag="2")]
+    pub quote_asset_id: u64,
+    #[prost(uint64, tag="3")]
+    pub depth: u64,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Depth {
+    #[prost(uint64, tag="1")]
+    pub price: u64,
+    #[prost(uint64, tag="2")]
+    pub quantity: u64,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RelayerLatestOrderbookDepthResponse {
+    #[prost(message, repeated, tag="1")]
+    pub bids: ::prost::alloc::vec::Vec<Depth>,
+    #[prost(message, repeated, tag="2")]
+    pub asks: ::prost::alloc::vec::Vec<Depth>,
+}
+// metrics
+
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RelayerMetricsRequest {
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RelayerMetricsResponse {
+    #[prost(uint64, tag="1")]
+    pub average_latency: u64,
+    #[prost(double, tag="2")]
+    pub average_tps: f64,
 }
 /// Generated client implementations.
 pub mod transaction_submitter_client {
@@ -364,6 +405,51 @@ pub mod relayer_client {
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/services.Relayer/GetBlock",
+            );
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        /// request orderbook depth snapshot
+        pub async fn get_latest_orderbook_depth(
+            &mut self,
+            request: impl tonic::IntoRequest<
+                super::RelayerGetLatestOrderbookDepthRequest,
+            >,
+        ) -> Result<
+            tonic::Response<super::RelayerLatestOrderbookDepthResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/services.Relayer/GetLatestOrderbookDepth",
+            );
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        /// request orderbook metrics
+        pub async fn get_latest_metrics(
+            &mut self,
+            request: impl tonic::IntoRequest<super::RelayerMetricsRequest>,
+        ) -> Result<tonic::Response<super::RelayerMetricsResponse>, tonic::Status> {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/services.Relayer/GetLatestMetrics",
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
@@ -726,6 +812,19 @@ pub mod relayer_server {
             &self,
             request: tonic::Request<super::RelayerGetBlockRequest>,
         ) -> Result<tonic::Response<super::RelayerBlockResponse>, tonic::Status>;
+        /// request orderbook depth snapshot
+        async fn get_latest_orderbook_depth(
+            &self,
+            request: tonic::Request<super::RelayerGetLatestOrderbookDepthRequest>,
+        ) -> Result<
+            tonic::Response<super::RelayerLatestOrderbookDepthResponse>,
+            tonic::Status,
+        >;
+        /// request orderbook metrics
+        async fn get_latest_metrics(
+            &self,
+            request: tonic::Request<super::RelayerMetricsRequest>,
+        ) -> Result<tonic::Response<super::RelayerMetricsResponse>, tonic::Status>;
     }
     #[derive(Debug)]
     pub struct RelayerServer<T: Relayer> {
@@ -884,6 +983,89 @@ pub mod relayer_server {
                     let fut = async move {
                         let inner = inner.0;
                         let method = GetBlockSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/services.Relayer/GetLatestOrderbookDepth" => {
+                    #[allow(non_camel_case_types)]
+                    struct GetLatestOrderbookDepthSvc<T: Relayer>(pub Arc<T>);
+                    impl<
+                        T: Relayer,
+                    > tonic::server::UnaryService<
+                        super::RelayerGetLatestOrderbookDepthRequest,
+                    > for GetLatestOrderbookDepthSvc<T> {
+                        type Response = super::RelayerLatestOrderbookDepthResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<
+                                super::RelayerGetLatestOrderbookDepthRequest,
+                            >,
+                        ) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut = async move {
+                                (*inner).get_latest_orderbook_depth(request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = GetLatestOrderbookDepthSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/services.Relayer/GetLatestMetrics" => {
+                    #[allow(non_camel_case_types)]
+                    struct GetLatestMetricsSvc<T: Relayer>(pub Arc<T>);
+                    impl<
+                        T: Relayer,
+                    > tonic::server::UnaryService<super::RelayerMetricsRequest>
+                    for GetLatestMetricsSvc<T> {
+                        type Response = super::RelayerMetricsResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::RelayerMetricsRequest>,
+                        ) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut = async move {
+                                (*inner).get_latest_metrics(request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = GetLatestMetricsSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

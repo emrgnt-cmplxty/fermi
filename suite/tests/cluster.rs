@@ -19,9 +19,10 @@ pub mod cluster_test_suite {
         asset::PRIMARY_ASSET_ID,
         block::{Block, BlockDigest},
         crypto::{get_key_pair_from_rng, KeypairTraits},
+        order_book::{Depth, OrderbookDepth},
         proto::{
             FaucetAirdropRequest, FaucetClient, FaucetServer, RelayerClient, RelayerGetBlockRequest,
-            RelayerGetLatestBlockInfoRequest,
+            RelayerGetLatestBlockInfoRequest, RelayerGetLatestOrderbookDepthRequest,
         },
         transaction::{
             create_create_asset_transaction, get_signed_transaction_body, sign_transaction, ConsensusTransaction,
@@ -36,7 +37,7 @@ pub mod cluster_test_suite {
     use narwhal_types::{Certificate, Header};
 
     // external
-    use std::{net::SocketAddr, sync::Arc};
+    use std::{collections::HashMap, net::SocketAddr, sync::Arc};
     use tokio::time::{sleep, Duration};
     use tonic::transport::Server;
     use tracing::info;
@@ -59,6 +60,12 @@ pub mod cluster_test_suite {
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
         sleep(Duration::from_secs(2)).await;
+
+        cluster
+            .get_validator_spawner(1)
+            .get_consensus_adapter()
+            .unwrap()
+            .update_batch_size(1);
 
         info!("Sending transactions");
         let (kp_sender, kp_receiver, _) = cluster.send_transactions(0, 1, 20).await;
@@ -88,6 +95,12 @@ pub mod cluster_test_suite {
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
+
+        cluster
+            .get_validator_spawner(1)
+            .get_consensus_adapter()
+            .unwrap()
+            .update_batch_size(1);
 
         info!("Sending transactions");
         cluster.send_transactions(0, 1, 10).await;
@@ -120,6 +133,12 @@ pub mod cluster_test_suite {
         info!("Creating test cluster");
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
+
+        cluster
+            .get_validator_spawner(1)
+            .get_consensus_adapter()
+            .unwrap()
+            .update_batch_size(1);
 
         info!("Sending transactions");
         let (_, _, signed_transactions) = cluster.send_transactions(0, 1, 10).await;
@@ -217,6 +236,12 @@ pub mod cluster_test_suite {
         info!("Launching nodes 1 - {}", target_node);
         let mut cluster = TestCluster::spawn(validator_count, Some(target_node)).await;
 
+        cluster
+            .get_validator_spawner(1)
+            .get_consensus_adapter()
+            .unwrap()
+            .update_batch_size(1);
+
         info!("Begin Sending {N_TRANSACTIONS} transactions");
         cluster.send_transactions_async(0, 1, N_TRANSACTIONS, None).await;
 
@@ -309,6 +334,12 @@ pub mod cluster_test_suite {
 
         info!("Launching nodes 1 - {}", target_node);
         let mut cluster = TestCluster::spawn(validator_count, Some(target_node)).await;
+
+        cluster
+            .get_validator_spawner(1)
+            .get_consensus_adapter()
+            .unwrap()
+            .update_batch_size(1);
 
         info!("Begin Sending {N_TRANSACTIONS} transactions");
         cluster.send_transactions_async(0, 1, N_TRANSACTIONS, None).await;
@@ -429,39 +460,104 @@ pub mod cluster_test_suite {
     }
 
     #[tokio::test]
+    pub async fn test_spawn_relayer_orderbook_depths() {
+        let validator_count: usize = 4;
+        let mut cluster = TestCluster::spawn(validator_count, None).await;
+
+        let spawner_1 = cluster.get_validator_spawner(1);
+        let validator_state_1 = spawner_1.get_validator_state().unwrap();
+
+        // Write the orderbook depth down
+        let base_asset_id: u64 = 1;
+        let quote_asset_id: u64 = 2;
+        let orderbook_key: String = format!("{}_{}", base_asset_id, quote_asset_id);
+        let mut orderbook_depths: HashMap<String, OrderbookDepth> = HashMap::new();
+        let mut bids: Vec<Depth> = Vec::new();
+        let mut asks: Vec<Depth> = Vec::new();
+        const TEST_MID: u64 = 10;
+        for i in 1..TEST_MID {
+            bids.push(Depth {
+                price: i,
+                quantity: 10 * i,
+            });
+            asks.push(Depth {
+                price: TEST_MID + i,
+                quantity: 10 * i,
+            });
+        }
+        let orderbook_depth = OrderbookDepth { bids, asks };
+        orderbook_depths.insert(orderbook_key, orderbook_depth);
+
+        validator_state_1
+            .validator_store
+            .write_latest_orderbook_depths(orderbook_depths)
+            .await;
+
+        let relayer_1 = cluster.spawn_single_relayer(1).await;
+        let target_endpoint = endpoint_from_multiaddr(&relayer_1.get_relayer_address()).unwrap();
+        let endpoint = target_endpoint.endpoint();
+        let mut client = RelayerClient::connect(endpoint.clone()).await.unwrap();
+
+        // generate successful orderbook depth request
+        let latest_orderbook_depth_request = tonic::Request::new(RelayerGetLatestOrderbookDepthRequest {
+            base_asset_id,
+            quote_asset_id,
+            depth: 5,
+        });
+        let latest_orderbook_depth_response = client.get_latest_orderbook_depth(latest_orderbook_depth_request).await;
+        let _latest_orderbook_depth_response_bids = latest_orderbook_depth_response.unwrap().into_inner().bids;
+
+        // TODO: check the bids
+
+        // generate failed depth request
+        let bad_base_asset_id = 2;
+        let bad_quote_asset_id = 3;
+        let bad_latest_orderbook_depth_request = tonic::Request::new(RelayerGetLatestOrderbookDepthRequest {
+            base_asset_id: bad_base_asset_id,
+            quote_asset_id: bad_quote_asset_id,
+            depth: 5,
+        });
+        let bad_latest_orderbook_depth_response = client
+            .get_latest_orderbook_depth(bad_latest_orderbook_depth_request)
+            .await;
+        assert!(
+            bad_latest_orderbook_depth_response.is_err(),
+            "This request must fail as base and quote assets do not exist."
+        );
+        if let Err(err) = bad_latest_orderbook_depth_response {
+            assert_eq!(err.message(), "Orderbook depth was not found.");
+            assert_eq!(tonic::Code::NotFound, err.code());
+        }
+    }
+
     pub async fn test_metrics() {
         let validator_count: usize = 4;
         const N_TRANSACTIONS: u64 = 1_000_000;
 
         let mut cluster = TestCluster::spawn(validator_count, None).await;
+
+        let receiver_adapter = cluster.get_validator_spawner(1).get_consensus_adapter().unwrap();
+        receiver_adapter.update_batch_size(1);
+
         cluster.send_transactions(0, 1, 10).await;
 
         let metrics_0 = &cluster.get_validator_spawner(0).get_validator_state().unwrap().metrics;
         let metrics_1 = &cluster.get_validator_spawner(1).get_validator_state().unwrap().metrics;
-        assert!(metrics_0.num_transactions_rec.load(std::sync::atomic::Ordering::SeqCst) == 0);
-        assert!(metrics_1.num_transactions_rec.load(std::sync::atomic::Ordering::SeqCst) == 10);
+        assert!(metrics_0.transactions_received.get() == 0);
+        assert!(metrics_1.transactions_received.get() == 10);
+
+        cluster
+            .get_validator_spawner(1)
+            .get_consensus_adapter()
+            .unwrap()
+            .update_batch_size(1);
 
         cluster.send_transactions_async(1, 0, N_TRANSACTIONS, None).await;
 
         tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-        let init_time = metrics_0
-            .latest_system_epoch_time_in_ms
-            .load(std::sync::atomic::Ordering::SeqCst);
-        let init_transactions = metrics_0
-            .num_transactions_consensus
-            .load(std::sync::atomic::Ordering::SeqCst);
-        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-        let time_delta = metrics_0
-            .latest_system_epoch_time_in_ms
-            .load(std::sync::atomic::Ordering::SeqCst)
-            - init_time;
-        let transactions_delta = metrics_0
-            .num_transactions_consensus
-            .load(std::sync::atomic::Ordering::SeqCst)
-            - init_transactions;
 
-        // assert tps was greater than 0
-        assert!(transactions_delta as f64 / (time_delta as f64 / 1000.) > 0.);
+        assert!(metrics_0.get_average_tps() > 0.);
+        assert!(metrics_0.get_average_latency_in_micros() > 0);
     }
 
     pub async fn test_spawn_faucet() {
@@ -515,6 +611,61 @@ pub mod cluster_test_suite {
         let response = client.airdrop(request).await.unwrap().into_inner();
 
         assert!(response.successful);
+    }
+
+    #[tokio::test]
+    pub async fn test_spawn_relayer_orderbook_depth() {
+        let validator_count: usize = 4;
+        let mut cluster = TestCluster::spawn(validator_count, None).await;
+
+        let spawner_1 = cluster.get_validator_spawner(1);
+        let validator_state_1 = spawner_1.get_validator_state().unwrap();
+
+        // Write the orderbook depth down
+        let base_asset_id: u64 = 1;
+        let quote_asset_id: u64 = 2;
+        let orderbook_key: String = format!("{}_{}", base_asset_id, quote_asset_id);
+        let mut orderbook_depths: HashMap<String, OrderbookDepth> = HashMap::new();
+        let mut bids: Vec<Depth> = Vec::new();
+        let mut asks: Vec<Depth> = Vec::new();
+        const TEST_MID: u64 = 10;
+        for i in 1..TEST_MID {
+            bids.push(Depth {
+                price: i,
+                quantity: 10 * i,
+            });
+            asks.push(Depth {
+                price: TEST_MID + i,
+                quantity: 10 * i,
+            });
+        }
+        let orderbook_depth = OrderbookDepth { bids, asks };
+        orderbook_depths.insert(orderbook_key, orderbook_depth);
+
+        validator_state_1
+            .validator_store
+            .write_latest_orderbook_depths(orderbook_depths)
+            .await;
+
+        // TODO clean
+
+        let relayer_1 = cluster.spawn_single_relayer(1).await;
+        let target_endpoint = endpoint_from_multiaddr(&relayer_1.get_relayer_address()).unwrap();
+        let endpoint = target_endpoint.endpoint();
+        let mut client = RelayerClient::connect(endpoint.clone()).await.unwrap();
+
+        let latest_orderbook_depth_request = tonic::Request::new(RelayerGetLatestOrderbookDepthRequest {
+            base_asset_id,
+            quote_asset_id,
+            depth: 5,
+        });
+
+        // Act
+        let latest_orderbook_depth_response = client.get_latest_orderbook_depth(latest_orderbook_depth_request).await;
+
+        let _latest_orderbook_depth_response_bids = latest_orderbook_depth_response.unwrap().into_inner().bids;
+
+        // assert!(latest_block_info_response.unwrap().into_inner().successful)
     }
 
     // TODO - implement test after merging metrics...

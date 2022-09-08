@@ -91,6 +91,8 @@ impl Controller for BankController {
             _ => Err(GDEXError::InvalidRequestTypeError),
         }
     }
+
+    fn post_process(&mut self, _block_number: u64) {}
 }
 
 impl BankController {

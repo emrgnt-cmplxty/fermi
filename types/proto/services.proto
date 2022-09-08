@@ -51,11 +51,15 @@ service Relayer {
 
     // request block (includes transactions)
     rpc GetBlock (RelayerGetBlockRequest) returns (RelayerBlockResponse);
+
+    // request orderbook depth snapshot
+    rpc GetLatestOrderbookDepth (RelayerGetLatestOrderbookDepthRequest) returns (RelayerLatestOrderbookDepthResponse);
+
+    // request orderbook metrics
+    rpc GetLatestMetrics (RelayerMetricsRequest) returns (RelayerMetricsResponse);
 }
 
-message RelayerBlock {
-    bytes block = 1;
-}
+// block info
 
 message RelayerGetLatestBlockInfoRequest {}
 
@@ -63,8 +67,19 @@ message RelayerGetBlockInfoRequest {
     uint64 block_number = 1;
 }
 
+message RelayerBlockInfoResponse {
+    bool successful = 1;
+    block.BlockInfo block_info = 2;
+}
+
+// block
+
 message RelayerGetBlockRequest {
     uint64 block_number = 1;
+}
+
+message RelayerBlock {
+    bytes block = 1;
 }
 
 message RelayerBlockResponse {
@@ -72,7 +87,29 @@ message RelayerBlockResponse {
     RelayerBlock block = 2;
 }
 
-message RelayerBlockInfoResponse {
-    bool successful = 1;
-    block.BlockInfo block_info = 2;
+// orderbook depth
+
+message RelayerGetLatestOrderbookDepthRequest {
+    uint64 base_asset_id = 1;
+    uint64 quote_asset_id = 2;
+    uint64 depth = 3;
+}
+
+message Depth {
+    uint64 price = 1;
+    uint64 quantity = 2;
+}
+
+message RelayerLatestOrderbookDepthResponse {
+    repeated Depth bids = 1;
+    repeated Depth asks = 2;
+}
+
+// metrics
+
+message RelayerMetricsRequest {}
+
+message RelayerMetricsResponse {
+    uint64 average_latency = 1;
+    double average_tps = 2;
 }

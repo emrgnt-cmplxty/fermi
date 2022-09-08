@@ -13,6 +13,7 @@ use gdex_types::{
     block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},
     committee::{Committee, ValidatorName},
     error::GDEXError,
+    order_book::OrderbookDepth,
     transaction::{
         get_signed_transaction_body, hash_transaction, verify_signature, ConsensusTransaction, SignedTransaction,
         Transaction, TransactionDigest,
@@ -26,7 +27,6 @@ use mysten_store::{
 use narwhal_consensus::ConsensusOutput;
 use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
 use narwhal_types::CertificateDigest;
-
 use std::{
     collections::HashMap,
     path::PathBuf,
@@ -35,6 +35,7 @@ use std::{
         atomic::{AtomicBool, AtomicU64, Ordering},
         Arc, Mutex,
     },
+    time::{SystemTime, UNIX_EPOCH},
 };
 use tracing::{info, trace};
 type ExecutionResult = Result<(), GDEXError>;
@@ -51,25 +52,33 @@ pub struct ValidatorStore {
     pub block_number: AtomicU64,
     // singleton store that keeps only the most recent block info at key 0
     pub last_block_info_store: Store<u64, BlockInfo>,
+    // store of orderbook depths
+    pub latest_orderbook_depth_store: Store<String, OrderbookDepth>,
 }
 
 impl ValidatorStore {
     const BLOCKS_CF: &'static str = "blocks";
     const BLOCK_INFO_CF: &'static str = "block_info";
     const LAST_BLOCK_CF: &'static str = "last_block";
+    const LAST_ORDERBOOK_DEPTH_CF: &'static str = "last_orderbook_depth";
 
     pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
         let rocksdb = open_cf(
             store_path,
             None,
-            &[Self::BLOCKS_CF, Self::BLOCK_INFO_CF, Self::LAST_BLOCK_CF],
+            &[
+                Self::BLOCKS_CF,
+                Self::BLOCK_INFO_CF,
+                Self::LAST_BLOCK_CF,
+                Self::LAST_ORDERBOOK_DEPTH_CF,
+            ],
         )
         .expect("Cannot open database");
-
-        let (block_map, block_info_map, last_block_map) = reopen!(&rocksdb,
+        let (block_map, block_info_map, last_block_map, orderbook_depth_map) = reopen!(&rocksdb,
             Self::BLOCKS_CF;<BlockNumber, Block>,
             Self::BLOCK_INFO_CF;<BlockNumber, BlockInfo>,
-            Self::LAST_BLOCK_CF;<u64, BlockInfo>
+            Self::LAST_BLOCK_CF;<u64, BlockInfo>,
+            Self::LAST_ORDERBOOK_DEPTH_CF;<String, OrderbookDepth>
         );
 
         let block_number_from_dbmap = last_block_map.get(&0_u64);
@@ -77,6 +86,7 @@ impl ValidatorStore {
         let block_store = Store::new(block_map);
         let block_info_store = Store::new(block_info_map);
         let last_block_info_store = Store::new(last_block_map);
+        let latest_orderbook_depth_store = Store::new(orderbook_depth_map);
 
         // TODO load the state if last block is not 0, i.e. not at genesis
         let block_number = match block_number_from_dbmap {
@@ -108,6 +118,7 @@ impl ValidatorStore {
             block_info_store,
             block_number: AtomicU64::new(block_number),
             last_block_info_store,
+            latest_orderbook_depth_store,
         }
     }
 
@@ -158,7 +169,7 @@ impl ValidatorStore {
         &self,
         block_certificate: BlockCertificate,
         transactions: Vec<(SerializedTransaction, ExecutionResult)>,
-    ) {
+    ) -> (Block, BlockInfo) {
         // TODO - is there a way to acquire a mutable reference to the block-number without demanding &mut self?
         // this would allow us to avoid separate commands to load and add to the counter
 
@@ -170,17 +181,35 @@ impl ValidatorStore {
             transactions,
         };
 
+        let start = SystemTime::now();
+        let validator_system_epoch_time_in_micros = start
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_micros()
+            .try_into()
+            .unwrap();
+
         let block_info = BlockInfo {
             block_number,
             block_digest,
+            validator_system_epoch_time_in_micros,
         };
 
         // write-out the block information to associated stores
         self.block_store.write(block_number, block.clone()).await;
         self.block_info_store.write(block_number, block_info.clone()).await;
-        self.last_block_info_store.write(0, block_info).await;
+        self.last_block_info_store.write(0, block_info.clone()).await;
         // update the block number
         self.block_number.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        (block, block_info)
+    }
+
+    pub async fn write_latest_orderbook_depths(&self, orderbook_depths: HashMap<String, OrderbookDepth>) {
+        for (asset_pair, orderbook_depth) in orderbook_depths {
+            self.latest_orderbook_depth_store
+                .write(asset_pair, orderbook_depth.clone())
+                .await;
+        }
     }
 
     pub fn prune(&self) {
@@ -226,7 +255,7 @@ pub struct ValidatorState {
     /// A map of transactions which have been seen
     pub validator_store: ValidatorStore,
     /// Metrics around blockchain operations
-    pub metrics: ValidatorMetrics,
+    pub metrics: Arc<ValidatorMetrics>,
 }
 
 impl ValidatorState {
@@ -237,6 +266,7 @@ impl ValidatorState {
         secret: StableSyncValidatorSigner,
         genesis: &ValidatorGenesisState,
         store_db_path: &PathBuf,
+        metrics: Arc<ValidatorMetrics>,
     ) -> Self {
         ValidatorState {
             name,
@@ -245,7 +275,7 @@ impl ValidatorState {
             committee: ArcSwap::from(Arc::new(genesis.committee().unwrap())),
             master_controller: genesis.master_controller().clone(),
             validator_store: ValidatorStore::reopen(store_db_path),
-            metrics: ValidatorMetrics::default(),
+            metrics,
         }
     }
 
@@ -284,7 +314,7 @@ impl ExecutionState for ValidatorState {
         execution_indices: ExecutionIndices,
         consensus_transaction: Self::Transaction,
     ) -> Result<Self::Outcome, Self::Error> {
-        self.metrics.increment_num_transactions_consensus();
+        self.metrics.transactions_executed.inc();
 
         // deserialize signed transaction
         let signed_transaction = consensus_transaction
@@ -295,13 +325,22 @@ impl ExecutionState for ValidatorState {
         // get transaction
         let transaction = get_signed_transaction_body(&signed_transaction)?;
 
-        // TODO we need to dedupe here
-
         // cache confirmed transaction
-        self.validator_store
-            .insert_confirmed_transaction(transaction, consensus_output)?;
+        let uniqueness_check = self
+            .validator_store
+            .insert_confirmed_transaction(transaction, consensus_output);
+
+        // if transaction is not unique stop execution
+        if uniqueness_check.is_err() {
+            self.metrics.transactions_executed_failed.inc();
+            return Ok((consensus_output.clone(), execution_indices, uniqueness_check));
+        }
 
         let result = self.master_controller.handle_consensus_transaction(transaction);
+
+        if result.is_err() {
+            self.metrics.transactions_executed_failed.inc();
+        }
 
         Ok((consensus_output.clone(), execution_indices, result))
     }
@@ -348,6 +387,7 @@ mod test_validator_state {
     use narwhal_crypto::KeyPair;
     use narwhal_executor::ExecutionIndices;
     use narwhal_types::{Certificate, Header};
+    use prometheus::Registry;
 
     #[tokio::test]
     pub async fn single_node_init() {
@@ -366,7 +406,6 @@ mod test_validator_state {
             stake: VALIDATOR_FUNDING_AMOUNT,
             balance: VALIDATOR_BALANCE,
             delegation: 0,
-            network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),
             narwhal_worker_to_primary: utils::new_network_address(),
             narwhal_primary_to_worker: vec![utils::new_network_address()],
@@ -382,7 +421,10 @@ mod test_validator_state {
         let store_path = tempfile::tempdir()
             .expect("Failed to open temporary directory")
             .into_path();
-        let validator = ValidatorState::new(public_key, secret, &genesis, &store_path);
+
+        let registry = Registry::default();
+        let metrics = Arc::new(ValidatorMetrics::new(&registry));
+        let validator = ValidatorState::new(public_key, secret, &genesis, &store_path, metrics);
 
         validator.halt_validator();
         validator.unhalt_validator();
@@ -404,7 +446,6 @@ mod test_validator_state {
             stake: VALIDATOR_FUNDING_AMOUNT,
             balance: VALIDATOR_BALANCE,
             delegation: 0,
-            network_address: utils::new_network_address(),
             narwhal_primary_to_primary: utils::new_network_address(),
             narwhal_worker_to_primary: utils::new_network_address(),
             narwhal_primary_to_worker: vec![utils::new_network_address()],
@@ -420,8 +461,9 @@ mod test_validator_state {
         let store_path = tempfile::tempdir()
             .expect("Failed to open temporary directory")
             .into_path();
-
-        ValidatorState::new(public_key, secret, &genesis, &store_path)
+        let registry = Registry::default();
+        let metrics = Arc::new(ValidatorMetrics::new(&registry));
+        ValidatorState::new(public_key, secret, &genesis, &store_path, metrics)
     }
 
     fn create_test_execution_indices() -> ExecutionIndices {

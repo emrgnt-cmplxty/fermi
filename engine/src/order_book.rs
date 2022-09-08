@@ -14,9 +14,10 @@ use super::sequence;
 use super::validation::OrderRequestValidator;
 use gdex_types::{
     asset::AssetId,
-    order_book::{Failed, Order, OrderProcessingResult, OrderRequest, OrderSide, OrderType, Success},
+    order_book::{Depth, Failed, Order, OrderProcessingResult, OrderRequest, OrderSide, OrderType, OrderbookDepth, Success},
 };
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::time::SystemTime;
 
 const MIN_SEQUENCE_ID: u64 = 1;
@@ -55,6 +56,56 @@ impl Orderbook {
             seq: sequence::new_sequence_gen(MIN_SEQUENCE_ID, MAX_SEQUENCE_ID),
             order_validator: OrderRequestValidator::new(base_asset, quote_asset, MIN_SEQUENCE_ID, MAX_SEQUENCE_ID),
         }
+    }
+
+    pub fn get_orderbook_depth(&self) -> OrderbookDepth {
+        let mut bids_map: HashMap<u64, u64> = HashMap::new();
+        let mut asks_map: HashMap<u64, u64> = HashMap::new();
+
+        // aggregate bids + asks
+        for order in self.bid_queue.orders.values() {
+            let price = order.get_price();
+            match bids_map.entry(price) {
+                std::collections::hash_map::Entry::Occupied(mut e) => {
+                    e.insert(e.get() + order.get_quantity());
+                }
+                std::collections::hash_map::Entry::Vacant(e) => {
+                    e.insert(order.get_quantity());
+                }
+            }
+        }
+        for order in self.ask_queue.orders.values() {
+            let price = order.get_price();
+            match asks_map.entry(price) {
+                std::collections::hash_map::Entry::Occupied(mut e) => {
+                    e.insert(e.get() + order.get_quantity());
+                }
+                std::collections::hash_map::Entry::Vacant(e) => {
+                    e.insert(order.get_quantity());
+                }
+            }
+        }
+
+        let mut bids: Vec<Depth> = Vec::new();
+        let mut asks: Vec<Depth> = Vec::new();
+
+        for (price, quantity) in &bids_map {
+            bids.push(Depth {
+                price: *price,
+                quantity: *quantity,
+            });
+        }
+        for (price, quantity) in &asks_map {
+            asks.push(Depth {
+                price: *price,
+                quantity: *quantity,
+            });
+        }
+
+        bids.sort_by(|a, b| a.price.partial_cmp(&b.price).unwrap());
+        asks.sort_by(|a, b| a.price.partial_cmp(&b.price).unwrap());
+
+        OrderbookDepth { bids, asks }
     }
 
     pub fn process_order(&mut self, order: OrderRequest) -> OrderProcessingResult {

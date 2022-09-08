@@ -98,8 +98,6 @@ class LogParser:
         return size, rate, start, misses, samples
 
     def _parse_primaries(self, log):
-        if search(r'(?:ERROR)', log) is not None:
-            print("WARNING: Primary(s) errored, please check logs")
         if search(r'(?:panicked)', log) is not None:
             print('search = ', search(r'(?:panicked)', log))
             raise ParseError('Primary(s) panicked')
@@ -141,7 +139,7 @@ class LogParser:
         return proposals, commits, configs#, ip
 
     def _parse_workers(self, log):
-        if search(r'(?:panic|ERROR)', log) is not None:
+        if search(r'(?:panic)', log) is not None:
             raise ParseError('Worker(s) panicked')
 
         tmp = findall(r'Batch ([^ ]+) contains (\d+) B', log)

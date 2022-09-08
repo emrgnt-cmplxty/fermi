@@ -63,4 +63,6 @@ impl Controller for ConsensusController {
             _ => Err(GDEXError::InvalidRequestTypeError),
         }
     }
+
+    fn post_process(&mut self, _block_number: u64) {}
 }

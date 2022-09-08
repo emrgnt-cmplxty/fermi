@@ -210,14 +210,6 @@ impl ValidatorStore {
         }
     }
 
-    pub async fn write_latest_orderbook_depths(&self, orderbook_depths: HashMap<String, OrderbookDepth>) {
-        for (asset_pair, orderbook_depth) in orderbook_depths {
-            self.latest_orderbook_depth_store
-                .write(asset_pair, orderbook_depth.clone())
-                .await;
-        }
-    }
-
     pub fn prune(&self) {
         let mut locked_block_digest_cache = self.block_digest_cache.lock().unwrap();
         if locked_block_digest_cache.len() > self.gc_depth as usize {

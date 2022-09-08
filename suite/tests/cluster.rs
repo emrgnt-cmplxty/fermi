@@ -19,10 +19,10 @@ pub mod cluster_test_suite {
         asset::PRIMARY_ASSET_ID,
         block::{Block, BlockDigest},
         crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
-        order_book::{Depth, OrderbookSnap},
+        order_book::{Depth, OrderbookDepth},
         proto::{
             FaucetAirdropRequest, FaucetClient, FaucetServer, RelayerClient, RelayerGetBlockRequest,
-            RelayerGetLatestBlockInfoRequest, RelayerGetLatestOrderbookSnapRequest,
+            RelayerGetLatestBlockInfoRequest, RelayerGetLatestOrderbookDepthRequest,
         },
         transaction::{create_asset_creation_transaction, SignedTransaction},
         utils,
@@ -59,8 +59,7 @@ pub mod cluster_test_suite {
         let mut cluster = TestCluster::spawn(validator_count, None).await;
         sleep(Duration::from_secs(2)).await;
 
-        let receiver_adapter = cluster.get_validator_spawner(1).get_consensus_adapter().unwrap();
-        receiver_adapter.update_batch_size(1);
+        cluster.get_validator_spawner(1).get_consensus_adapter().unwrap().update_batch_size(1);
 
         info!("Sending transactions");
         let (kp_sender, kp_receiver, _) = cluster.send_transactions(0, 1, 20).await;
@@ -91,8 +90,7 @@ pub mod cluster_test_suite {
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
-        let receiver_adapter = cluster.get_validator_spawner(1).get_consensus_adapter().unwrap();
-        receiver_adapter.update_batch_size(1);
+        cluster.get_validator_spawner(1).get_consensus_adapter().unwrap().update_batch_size(1);
 
         info!("Sending transactions");
         cluster.send_transactions(0, 1, 10).await;
@@ -126,8 +124,7 @@ pub mod cluster_test_suite {
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
-        let receiver_adapter = cluster.get_validator_spawner(1).get_consensus_adapter().unwrap();
-        receiver_adapter.update_batch_size(1);
+        cluster.get_validator_spawner(1).get_consensus_adapter().unwrap().update_batch_size(1);
 
         info!("Sending transactions");
         let (_, _, signed_transactions) = cluster.send_transactions(0, 1, 10).await;
@@ -212,8 +209,7 @@ pub mod cluster_test_suite {
         info!("Launching nodes 1 - {}", target_node);
         let mut cluster = TestCluster::spawn(validator_count, Some(target_node)).await;
 
-        let receiver_adapter = cluster.get_validator_spawner(1).get_consensus_adapter().unwrap();
-        receiver_adapter.update_batch_size(1);
+        cluster.get_validator_spawner(1).get_consensus_adapter().unwrap().update_batch_size(1);
 
         info!("Begin Sending {N_TRANSACTIONS} transactions");
         cluster.send_transactions_async(0, 1, N_TRANSACTIONS, None).await;
@@ -308,8 +304,7 @@ pub mod cluster_test_suite {
         info!("Launching nodes 1 - {}", target_node);
         let mut cluster = TestCluster::spawn(validator_count, Some(target_node)).await;
 
-        let receiver_adapter = cluster.get_validator_spawner(1).get_consensus_adapter().unwrap();
-        receiver_adapter.update_batch_size(1);
+        cluster.get_validator_spawner(1).get_consensus_adapter().unwrap().update_batch_size(1);
 
         info!("Begin Sending {N_TRANSACTIONS} transactions");
         cluster.send_transactions_async(0, 1, N_TRANSACTIONS, None).await;
@@ -426,6 +421,76 @@ pub mod cluster_test_suite {
     }
 
     #[tokio::test]
+    pub async fn test_spawn_relayer_orderbook_depths() {
+        let validator_count: usize = 4;
+        let mut cluster = TestCluster::spawn(validator_count, None).await;
+
+        let spawner_1 = cluster.get_validator_spawner(1);
+        let validator_state_1 = spawner_1.get_validator_state().unwrap();
+
+        // Write the orderbook depth down
+        let base_asset_id: u64 = 1;
+        let quote_asset_id: u64 = 2;
+        let orderbook_key: String = format!("{}_{}", base_asset_id, quote_asset_id);
+        let mut orderbook_depths: HashMap<String, OrderbookDepth> = HashMap::new();
+        let mut bids: Vec<Depth> = Vec::new();
+        let mut asks: Vec<Depth> = Vec::new();
+        const TEST_MID: u64 = 10;
+        for i in 1..TEST_MID {
+            bids.push(Depth {
+                price: i,
+                quantity: 10 * i,
+            });
+            asks.push(Depth {
+                price: TEST_MID + i,
+                quantity: 10 * i,
+            });
+        }
+        let orderbook_depth = OrderbookDepth { bids, asks };
+        orderbook_depths.insert(orderbook_key, orderbook_depth);
+
+        validator_state_1
+            .validator_store
+            .write_latest_orderbook_depths(orderbook_depths)
+            .await;
+
+        let relayer_1 = cluster.spawn_single_relayer(1).await;
+        let target_endpoint = endpoint_from_multiaddr(&relayer_1.get_relayer_address()).unwrap();
+        let endpoint = target_endpoint.endpoint();
+        let mut client = RelayerClient::connect(endpoint.clone()).await.unwrap();
+
+        // generate successful orderbook depth request
+        let latest_orderbook_depth_request = tonic::Request::new(RelayerGetLatestOrderbookDepthRequest {
+            base_asset_id,
+            quote_asset_id,
+            depth: 5,
+        });
+        let latest_orderbook_depth_response = client.get_latest_orderbook_depth(latest_orderbook_depth_request).await;
+        let _latest_orderbook_depth_response_bids = latest_orderbook_depth_response.unwrap().into_inner().bids;
+
+        // TODO: check the bids
+
+        // generate failed depth request
+        let bad_base_asset_id = 2;
+        let bad_quote_asset_id = 3;
+        let bad_latest_orderbook_depth_request = tonic::Request::new(RelayerGetLatestOrderbookDepthRequest {
+            base_asset_id: bad_base_asset_id,
+            quote_asset_id: bad_quote_asset_id,
+            depth: 5,
+        });
+        let bad_latest_orderbook_depth_response = client
+            .get_latest_orderbook_depth(bad_latest_orderbook_depth_request)
+            .await;
+        assert!(
+            bad_latest_orderbook_depth_response.is_err(),
+            "This request must fail as base and quote assets do not exist."
+        );
+        if let Err(err) = bad_latest_orderbook_depth_response {
+            assert_eq!(err.message(), "Orderbook depth was not found.");
+            assert_eq!(tonic::Code::NotFound, err.code());
+        }
+    }
+
     pub async fn test_metrics() {
         let validator_count: usize = 4;
         const N_TRANSACTIONS: u64 = 1_000_000;
@@ -442,8 +507,7 @@ pub mod cluster_test_suite {
         assert!(metrics_0.num_transactions_rec.get() == 0);
         assert!(metrics_1.num_transactions_rec.get() == 10);
 
-        let receiver_adapter = cluster.get_validator_spawner(0).get_consensus_adapter().unwrap();
-        receiver_adapter.update_batch_size(1);
+        cluster.get_validator_spawner(1).get_consensus_adapter().unwrap().update_batch_size(1);
 
         cluster.send_transactions_async(1, 0, N_TRANSACTIONS, None).await;
 
@@ -507,18 +571,18 @@ pub mod cluster_test_suite {
     }
 
     #[tokio::test]
-    pub async fn test_spawn_relayer_orderbook_snaps() {
+    pub async fn test_spawn_relayer_orderbook_depth() {
         let validator_count: usize = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         let spawner_1 = cluster.get_validator_spawner(1);
         let validator_state_1 = spawner_1.get_validator_state().unwrap();
 
-        // Write the orderbook snap down
+        // Write the orderbook depth down
         let base_asset_id: u64 = 1;
         let quote_asset_id: u64 = 2;
         let orderbook_key: String = format!("{}_{}", base_asset_id, quote_asset_id);
-        let mut orderbook_snaps: HashMap<String, OrderbookSnap> = HashMap::new();
+        let mut orderbook_depths: HashMap<String, OrderbookDepth> = HashMap::new();
         let mut bids: Vec<Depth> = Vec::new();
         let mut asks: Vec<Depth> = Vec::new();
         const TEST_MID: u64 = 10;
@@ -532,12 +596,12 @@ pub mod cluster_test_suite {
                 quantity: 10 * i,
             });
         }
-        let orderbook_snap = OrderbookSnap { bids, asks };
-        orderbook_snaps.insert(orderbook_key, orderbook_snap);
+        let orderbook_depth = OrderbookDepth { bids, asks };
+        orderbook_depths.insert(orderbook_key, orderbook_depth);
 
         validator_state_1
             .validator_store
-            .write_latest_orderbook_snaps(orderbook_snaps)
+            .write_latest_orderbook_depths(orderbook_depths)
             .await;
 
         // TODO clean
@@ -547,16 +611,16 @@ pub mod cluster_test_suite {
         let endpoint = target_endpoint.endpoint();
         let mut client = RelayerClient::connect(endpoint.clone()).await.unwrap();
 
-        let latest_orderbook_snap_request = tonic::Request::new(RelayerGetLatestOrderbookSnapRequest {
+        let latest_orderbook_depth_request = tonic::Request::new(RelayerGetLatestOrderbookDepthRequest {
             base_asset_id,
             quote_asset_id,
             depth: 5,
         });
 
         // Act
-        let latest_orderbook_snap_response = client.get_latest_orderbook_snap(latest_orderbook_snap_request).await;
+        let latest_orderbook_depth_response = client.get_latest_orderbook_depth(latest_orderbook_depth_request).await;
 
-        let _latest_orderbook_snap_response_bids = latest_orderbook_snap_response.unwrap().into_inner().bids;
+        let _latest_orderbook_depth_response_bids = latest_orderbook_depth_response.unwrap().into_inner().bids;
 
         // assert!(latest_block_info_response.unwrap().into_inner().successful)
     }

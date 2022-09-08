@@ -14,7 +14,7 @@ use gdex_types::{
     block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},
     committee::{Committee, ValidatorName},
     error::GDEXError,
-    order_book::OrderbookSnap,
+    order_book::OrderbookDepth,
     transaction::{SignedTransaction, TransactionDigest},
 };
 use mysten_store::{
@@ -35,7 +35,7 @@ use std::{
     },
     time::{SystemTime, UNIX_EPOCH},
 };
-use tracing::{info, debug, trace};
+use tracing::{info, trace};
 type ExecutionResult = Result<(), GDEXError>;
 
 /// Tracks recently submitted transactions to implement transaction gating
@@ -50,28 +50,33 @@ pub struct ValidatorStore {
     pub block_number: AtomicU64,
     // singleton store that keeps only the most recent block info at key 0
     pub last_block_info_store: Store<u64, BlockInfo>,
-    // store of orderbook snaps
-    pub latest_orderbook_snap_store: Store<String, OrderbookSnap>,
+    // store of orderbook depths
+    pub latest_orderbook_depth_store: Store<String, OrderbookDepth>,
 }
 
 impl ValidatorStore {
     const BLOCKS_CF: &'static str = "blocks";
     const BLOCK_INFO_CF: &'static str = "block_info";
     const LAST_BLOCK_CF: &'static str = "last_block";
+    const LAST_ORDERBOOK_DEPTH_CF: &'static str = "last_orderbook_depth";
 
     pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
         let rocksdb = open_cf(
             store_path,
             None,
-            &[Self::BLOCKS_CF, Self::BLOCK_INFO_CF, Self::LAST_BLOCK_CF],
+            &[
+                Self::BLOCKS_CF,
+                Self::BLOCK_INFO_CF,
+                Self::LAST_BLOCK_CF,
+                Self::LAST_ORDERBOOK_DEPTH_CF,
+            ],
         )
         .expect("Cannot open database");
-
-        let (block_map, block_info_map, last_block_map, orderbook_snap_map) = reopen!(&rocksdb,
+        let (block_map, block_info_map, last_block_map, orderbook_depth_map) = reopen!(&rocksdb,
             Self::BLOCKS_CF;<BlockNumber, Block>,
             Self::BLOCK_INFO_CF;<BlockNumber, BlockInfo>,
             Self::LAST_BLOCK_CF;<u64, BlockInfo>,
-            Self::LAST_BLOCK_CF;<String, OrderbookSnap>
+            Self::LAST_ORDERBOOK_DEPTH_CF;<String, OrderbookDepth>
         );
 
         let block_number_from_dbmap = last_block_map.get(&0_u64);
@@ -79,7 +84,7 @@ impl ValidatorStore {
         let block_store = Store::new(block_map);
         let block_info_store = Store::new(block_info_map);
         let last_block_info_store = Store::new(last_block_map);
-        let latest_orderbook_snap_store = Store::new(orderbook_snap_map);
+        let latest_orderbook_depth_store = Store::new(orderbook_depth_map);
 
         // TODO load the state if last block is not 0, i.e. not at genesis
         let block_number = match block_number_from_dbmap {
@@ -111,7 +116,7 @@ impl ValidatorStore {
             block_info_store,
             block_number: AtomicU64::new(block_number),
             last_block_info_store,
-            latest_orderbook_snap_store,
+            latest_orderbook_depth_store,
         }
     }
 
@@ -197,10 +202,18 @@ impl ValidatorStore {
         (block, block_info)
     }
 
-    pub async fn write_latest_orderbook_snaps(&self, orderbook_snaps: HashMap<String, OrderbookSnap>) {
+    pub async fn write_latest_orderbook_snaps(&self, orderbook_snaps: HashMap<String, OrderbookDepth>) {
         for (asset_pair, orderbook_snap) in orderbook_snaps {
-            self.latest_orderbook_snap_store
+            self.latest_orderbook_depth_store
                 .write(asset_pair, orderbook_snap.clone())
+                .await;
+        }
+    }
+
+    pub async fn write_latest_orderbook_depths(&self, orderbook_depths: HashMap<String, OrderbookDepth>) {
+        for (asset_pair, orderbook_depth) in orderbook_depths {
+            self.latest_orderbook_depth_store
+                .write(asset_pair, orderbook_depth.clone())
                 .await;
         }
     }

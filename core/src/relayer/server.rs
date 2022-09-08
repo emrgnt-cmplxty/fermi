@@ -17,7 +17,6 @@ impl Relayer for RelayerService {
     ) -> Result<Response<RelayerBlockInfoResponse>, Status> {
         let validator_state = &self.state;
         let returned_value = validator_state.validator_store.last_block_info_store.read(0).await;
-        println!("{:?}", returned_value.as_ref().unwrap());
 
         match returned_value {
             Ok(opt) => {
@@ -110,10 +109,10 @@ impl Relayer for RelayerService {
             })),
         }
     }
-    async fn get_latest_orderbook_snap(
+    async fn get_latest_orderbook_depth(
         &self,
-        request: Request<RelayerGetLatestOrderbookSnapRequest>,
-    ) -> Result<Response<RelayerLatestOrderbookSnapResponse>, Status> {
+        request: Request<RelayerGetLatestOrderbookDepthRequest>,
+    ) -> Result<Response<RelayerLatestOrderbookDepthResponse>, Status> {
         let validator_state = &self.state;
         let req = request.into_inner();
 
@@ -121,59 +120,58 @@ impl Relayer for RelayerService {
         let depth = req.depth;
         let base_asset_id = req.base_asset_id;
         let quote_asset_id = req.quote_asset_id;
-        let orderbook_snap_key = format!("{}_{}", base_asset_id, quote_asset_id);
+        let orderbook_depth_key = validator_state
+            .master_controller
+            .spot_controller
+            .lock()
+            .unwrap()
+            .get_orderbook_key(base_asset_id, quote_asset_id);
 
         let returned_value = validator_state
             .validator_store
-            .latest_orderbook_snap_store
-            .read(orderbook_snap_key)
+            .latest_orderbook_depth_store
+            .read(orderbook_depth_key)
             .await;
-        println!("{:?}", returned_value.as_ref().unwrap());
 
         match returned_value {
             Ok(opt) => {
-                if let Some(orderbook_snap) = opt {
+                if let Some(orderbook_depth) = opt {
                     let mut bids: Vec<DepthProto> = Vec::new();
                     let mut asks: Vec<DepthProto> = Vec::new();
 
                     let mut counter: u64 = 0;
-                    for i in 0..orderbook_snap.bids.len() {
+                    for i in 0..orderbook_depth.bids.len() {
                         if counter >= depth {
                             break;
                         }
-                        let bid = &orderbook_snap.bids[orderbook_snap.bids.len() - 1 - i];
+                        let bid = &orderbook_depth.bids[orderbook_depth.bids.len() - 1 - i];
                         bids.push(DepthProto {
                             price: bid.price,
                             quantity: bid.quantity,
                         });
                         counter += 1;
                     }
-                    for i in 0..orderbook_snap.asks.len() {
+                    for i in 0..orderbook_depth.asks.len() {
                         if counter >= depth {
                             break;
                         }
-                        let ask = &orderbook_snap.asks[orderbook_snap.asks.len() - 1 - i];
+                        let ask = &orderbook_depth.asks[orderbook_depth.asks.len() - 1 - i];
                         asks.push(DepthProto {
                             price: ask.price,
                             quantity: ask.quantity,
                         });
                         counter += 1;
                     }
-                    return Ok(Response::new(RelayerLatestOrderbookSnapResponse { bids, asks }));
+                    return Ok(Response::new(RelayerLatestOrderbookDepthResponse { bids, asks }));
                 } else {
-                    let bids: Vec<Depth> = Vec::new();
-                    let asks: Vec<Depth> = Vec::new();
-                    return Ok(Response::new(RelayerLatestOrderbookSnapResponse { bids, asks }));
+                    Err(Status::not_found("Orderbook depth was not found."))
                 }
             }
-            // TODO propagate error message to client
-            Err(_) => {
-                let bids: Vec<Depth> = Vec::new();
-                let asks: Vec<Depth> = Vec::new();
-                return Ok(Response::new(RelayerLatestOrderbookSnapResponse { bids, asks }));
-            }
+            // Propogate a tonic error to client
+            Err(err) => Err(Status::unknown(err.to_string())),
         }
     }
+
     async fn get_latest_metrics(
         &self,
         _request: Request<RelayerMetricsRequest>,

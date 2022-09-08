@@ -226,7 +226,7 @@ impl ValidatorService {
     ) -> Result<tonic::Response<Empty>, tonic::Status> {
         let start = SystemTime::now();
         trace!("Handling a new transaction with ValidatorService",);
-        state.metrics.num_transactions_rec.inc();
+        state.metrics.transactions_received.inc();
 
         let signed_transaction = SignedTransaction::deserialize(transaction_proto.transaction.to_vec())
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
@@ -241,7 +241,7 @@ impl ValidatorService {
                 .get_transaction_payload()
                 .get_recent_certificate_digest(),
         ) {
-            state.metrics.num_transactions_rec_failed.inc();
+            state.metrics.transactions_received_failed.inc();
             cfg_if::cfg_if! {
                 if #[cfg(feature = "benchmark")] {
                     trace!("A submitted transaction digest was invalid");
@@ -255,7 +255,7 @@ impl ValidatorService {
             .validator_store
             .cache_contains_transaction(signed_transaction.get_transaction_payload())
         {
-            state.metrics.num_transactions_rec_failed.inc();
+            state.metrics.transactions_received_failed.inc();
             let digest = signed_transaction.get_transaction_payload().digest().to_string();
             // TODO - find cleaner way to represent this logic
             // TODO - make sure benchmark flag is removed from node Cargo.toml in the future

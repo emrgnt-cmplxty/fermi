@@ -320,22 +320,23 @@ impl ExecutionState for ValidatorState {
         execution_indices: ExecutionIndices,
         signed_transaction: Self::Transaction,
     ) -> Result<Self::Outcome, Self::Error> {
-        self.metrics.num_transactions_consensus.inc();
+        self.metrics.transactions_executed.inc();
         let transaction = signed_transaction.get_transaction_payload();
 
-        let uniqueness_check = self.validator_store
+        let uniqueness_check = self
+            .validator_store
             .insert_confirmed_transaction(transaction, consensus_output);
 
         // iterate failed transaction metrics and stop propagation uniqueness fails
         if uniqueness_check.is_err() {
-            self.metrics.num_transactions_consensus_failed.inc();
-            return Ok((consensus_output.clone(), execution_indices, uniqueness_check))
+            self.metrics.transactions_executed_failed.inc();
+            return Ok((consensus_output.clone(), execution_indices, uniqueness_check));
         }
-        
+
         let result = self.master_controller.handle_consensus_transaction(transaction);
 
         if result.is_err() {
-            self.metrics.num_transactions_consensus_failed.inc();
+            self.metrics.transactions_executed_failed.inc();
         }
 
         Ok((consensus_output.clone(), execution_indices, result))

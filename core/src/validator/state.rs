@@ -35,7 +35,7 @@ use std::{
     },
     time::{SystemTime, UNIX_EPOCH},
 };
-use tracing::{info, trace};
+use tracing::{info, debug, trace};
 type ExecutionResult = Result<(), GDEXError>;
 
 /// Tracks recently submitted transactions to implement transaction gating
@@ -310,15 +310,21 @@ impl ExecutionState for ValidatorState {
         self.metrics.num_transactions_consensus.inc();
         let transaction = signed_transaction.get_transaction_payload();
 
-        self.validator_store
-            .insert_confirmed_transaction(transaction, consensus_output)?;
+        let uniqueness_check = self.validator_store
+            .insert_confirmed_transaction(transaction, consensus_output);
 
+        // iterate failed transaction metrics and stop propagation uniqueness fails
+        if uniqueness_check.is_err() {
+            self.metrics.num_transactions_consensus_failed.inc();
+            return Ok((consensus_output.clone(), execution_indices, uniqueness_check))
+        }
+        
         let result = self.master_controller.handle_consensus_transaction(transaction);
 
-        if let Err(err) = result {
+        if result.is_err() {
             self.metrics.num_transactions_consensus_failed.inc();
-            return Err(err);
         }
+
         Ok((consensus_output.clone(), execution_indices, result))
     }
 

@@ -19,5 +19,6 @@ pub struct Block {
 pub struct BlockInfo {
     pub block_number: BlockNumber,
     pub block_digest: BlockDigest,
-    pub validator_system_epoch_time_in_ms: u64,
+    // TODO - change to consensus time when implemented
+    pub validator_system_epoch_time_in_micros: u64,
 }

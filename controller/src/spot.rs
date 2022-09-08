@@ -286,8 +286,9 @@ impl OrderbookInterface {
                     // update user balances
                     let existing_pub_key = self.get_pub_key_from_order(order_id);
                     self.update_balances_on_fill(&existing_pub_key, *side, *price, *quantity)?;
+                    // TODO - Uncomment remove below after diagnosing how this can cause failures
                     // remove order from map
-                    self.order_to_account.remove(order_id).ok_or(GDEXError::OrderRequest)?;
+                    //self.order_to_account.remove(order_id).ok_or(GDEXError::OrderRequest)?;
                 }
                 Ok(Success::Updated {
                     order_id,
@@ -1304,7 +1305,6 @@ pub mod spot_tests {
                     .unwrap();
             }
         }
-
         let _orderbook_depth = orderbook_interface.get_orderbook_depth();
     }
 }

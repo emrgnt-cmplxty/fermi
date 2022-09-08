@@ -119,14 +119,14 @@ fn place_orders_engine_account(
     }
 }
 
-fn orderbook_depth_snaps(
+fn orderbook_depth_depths(
     n_iter: u64,
     orderbook_controller: &mut OrderbookInterface,
     db: &DBWithThreadMode<MultiThreaded>,
 ) {
     let mut i: u64 = 0;
     while i < n_iter {
-        // generate the orderbook depth snap
+        // generate the orderbook depth depth
         let orderbook_depth = orderbook_controller.get_orderbook_depth();
         let serialized_orderbook_depth = bincode::serialize(&orderbook_depth).unwrap();
         db.put("a", serialized_orderbook_depth).unwrap();
@@ -258,8 +258,8 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     const N_DEPTHS_BENCH: u64 = 1;
     let mut group1 = c.benchmark_group("orderbook_depth");
     group1.throughput(Throughput::Elements((N_DEPTHS_BENCH) as u64));
-    group1.bench_function("engine_orderbook_depth_snaps", |b| {
-        b.iter(|| orderbook_depth_snaps(black_box(N_DEPTHS_BENCH), &mut orderbook_interface, &db))
+    group1.bench_function("engine_orderbook_depth_depths", |b| {
+        b.iter(|| orderbook_depth_depths(black_box(N_DEPTHS_BENCH), &mut orderbook_interface, &db))
     });
 
     group1.finish();

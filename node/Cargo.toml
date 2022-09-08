@@ -21,7 +21,8 @@ narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da
 narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "crypto"}
 telemetry-subscribers = { git = "https://github.com/MystenLabs/mysten-infra", rev = "7ef7415a4e11cf68fa68ce9db884c46e704e0445" }
 # local crates
-gdex-core = { path = "../core" }
+# TODO - remove benchmark flag in the future
+gdex-core = { path = "../core", features = ["benchmark"] }
 gdex-types = { path = "../types" }
 
 [[bin]]

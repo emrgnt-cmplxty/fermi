@@ -171,4 +171,17 @@ impl Relayer for RelayerService {
             Err(err) => Err(Status::unknown(err.to_string())),
         }
     }
+
+    async fn get_latest_metrics(
+        &self,
+        _request: Request<RelayerMetricsRequest>,
+    ) -> Result<Response<RelayerMetricsResponse>, Status> {
+        let validator_state = &self.state;
+        let metrics = &validator_state.metrics;
+
+        Ok(Response::new(RelayerMetricsResponse {
+            average_latency: metrics.get_average_latency_in_micros(),
+            average_tps: metrics.get_average_tps(),
+        }))
+    }
 }

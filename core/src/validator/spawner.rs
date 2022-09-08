@@ -6,7 +6,8 @@ use crate::{
     genesis_ceremony::GENESIS_FILENAME,
     metrics::start_prometheus_server,
     validator::{
-        genesis_state::ValidatorGenesisState, server::ValidatorServer, server::ValidatorService, state::ValidatorState,
+        genesis_state::ValidatorGenesisState, metrics::ValidatorMetrics, server::ValidatorServer,
+        server::ValidatorService, state::ValidatorState,
     },
 };
 
@@ -26,6 +27,8 @@ use tracing::info;
 // mysten
 use narwhal_config::{Committee as ConsensusCommittee, Parameters as ConsensusParameters};
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
+
+use super::consensus_adapter::ConsensusAdapter;
 
 // INTERFACE
 
@@ -50,6 +53,7 @@ pub struct ValidatorSpawner {
 
     /// Validator state passed to the instances spawned
     validator_state: Option<Arc<ValidatorState>>,
+    consensus_adapter: Option<Arc<ConsensusAdapter>>,
 
     /// Begin objects initialized after calling spawn_validator_service
 
@@ -87,6 +91,7 @@ impl ValidatorSpawner {
             validator_info,
             validator_address,
             validator_state: None,
+            consensus_adapter: None,
             tx_reconfigure_consensus: None,
             service_handles: None,
             server_handles: None,
@@ -105,6 +110,14 @@ impl ValidatorSpawner {
     pub fn get_validator_state(&self) -> Option<Arc<ValidatorState>> {
         if self.validator_state.is_some() {
             Some(Arc::clone(self.validator_state.as_ref().unwrap()))
+        } else {
+            None
+        }
+    }
+
+    pub fn get_consensus_adapter(&self) -> Option<Arc<ConsensusAdapter>> {
+        if self.consensus_adapter.is_some() {
+            Some(Arc::clone(self.consensus_adapter.as_ref().unwrap()))
         } else {
             None
         }
@@ -135,6 +148,10 @@ impl ValidatorSpawner {
         self.validator_state = Some(validator_state)
     }
 
+    fn set_consensus_adapter(&mut self, consensus_adapter: Arc<ConsensusAdapter>) {
+        self.consensus_adapter = Some(consensus_adapter)
+    }
+
     /// Internal helper function used to spawns the validator service
     /// note, this function will fail if called twice from the same spawner
     async fn spawn_validator_service(
@@ -159,14 +176,6 @@ impl ValidatorSpawner {
             .db_path
             .join(format!("{}-{}", self.validator_info.name, GDEX_DB_NAME));
 
-        let key_pair = Arc::pin(utils::read_keypair_from_file(&key_file).unwrap());
-        let validator_state = Arc::new(ValidatorState::new(
-            pubilc_key,
-            key_pair,
-            &self.genesis_state,
-            &gdex_db_path,
-        ));
-
         info!(
             "Spawning a validator with the initial validator info = {:?}",
             self.validator_info
@@ -185,11 +194,12 @@ impl ValidatorSpawner {
             consensus_db_path: consensus_db_path.clone(),
             narwhal_config,
         };
+
         let key_pair = Arc::new(utils::read_keypair_from_file(&key_file).unwrap());
         let node_config = NodeConfig {
             key_pair,
             consensus_db_path,
-            gdex_db_path,
+            gdex_db_path: gdex_db_path.clone(),
             metrics_address: utils::available_local_socket_address(),
             admin_interface_port: utils::get_available_port(),
             json_rpc_address: utils::available_local_socket_address(),
@@ -200,7 +210,16 @@ impl ValidatorSpawner {
             enable_reconfig: false,
             genesis: Genesis::new(self.genesis_state.clone()),
         };
+
         let prometheus_registry = start_prometheus_server(node_config.metrics_address);
+        let metrics = Arc::new(ValidatorMetrics::new(&prometheus_registry));
+        let validator_state = Arc::new(ValidatorState::new(
+            pubilc_key,
+            Arc::pin(utils::read_keypair_from_file(&key_file).unwrap()),
+            &self.genesis_state,
+            &gdex_db_path,
+            metrics,
+        ));
 
         // spawn the validator service, e.g. Narwhal consensus
         self.service_handles = Some(
@@ -233,6 +252,7 @@ impl ValidatorSpawner {
         );
 
         let validator_server_handle = validator_server.spawn().await.unwrap();
+        self.set_consensus_adapter(validator_server_handle.get_adapter());
 
         self.server_handles = Some(vec![validator_server_handle.get_handle()]);
     }

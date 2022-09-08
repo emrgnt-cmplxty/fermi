@@ -40,6 +40,7 @@ service Relayer {
     rpc GetBlockInfo (RelayerGetBlockInfoRequest) returns (RelayerBlockInfoResponse);
     rpc GetBlock (RelayerGetBlockRequest) returns (RelayerBlockResponse);
     rpc GetLatestOrderbookDepth (RelayerGetLatestOrderbookDepthRequest) returns (RelayerLatestOrderbookDepthResponse);
+    rpc GetLatestMetrics (RelayerMetricsRequest) returns (RelayerMetricsResponse);
 }
 
 // A message to get the latest block info
@@ -95,4 +96,13 @@ message Depth {
 message RelayerLatestOrderbookDepthResponse {
     repeated Depth bids = 1;
     repeated Depth asks = 2;
+}
+
+// A message to get the metrics
+message RelayerMetricsRequest {}
+
+// Response message containing latest metrics
+message RelayerMetricsResponse {
+    uint64 average_latency = 1;
+    double average_tps = 2;
 }

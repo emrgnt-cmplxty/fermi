@@ -167,6 +167,7 @@ impl ValidatorService {
         // TODO load the actual last block
         let mut serialized_txns_buf = Vec::new();
         let store = &validator_state.validator_store;
+        let master_controller = &validator_state.master_controller;
         loop {
             while let Some(message) = rx_output.recv().await {
                 trace!("Received a finalized consensus transaction for post processing",);
@@ -200,6 +201,8 @@ impl ValidatorService {
                             store
                                 .write_latest_block(consensus_output.certificate, serialized_txns_buf.clone())
                                 .await;
+                            master_controller
+                                .post_process(store.block_number.load(std::sync::atomic::Ordering::SeqCst));
                             serialized_txns_buf.clear();
                         }
                     }

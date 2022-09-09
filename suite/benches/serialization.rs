@@ -9,10 +9,10 @@ extern crate criterion;
 use criterion::*;
 use fastcrypto::DIGEST_LEN;
 use gdex_types::{
-    account::{AccountKeyPair, AccountSignature},
-    crypto::{KeypairTraits, Signer},
+    account::{AccountKeyPair},
+    crypto::{KeypairTraits},
     error::GDEXError,
-    transaction::{create_payment_transaction, sign_transaction, ConsensusTransaction},
+    transaction::{create_payment_transaction, ConsensusTransaction},
 };
 use narwhal_types::{Batch, CertificateDigest, WorkerMessage};
 use rand::{rngs::StdRng, Rng, SeedableRng};
@@ -53,7 +53,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             gas,
             certificate_digest,
         );
-        let signed_transaction = sign_transaction(&kp_sender, transaction).unwrap();
+        let signed_transaction = transaction.sign(&kp_sender).unwrap();
         ConsensusTransaction::new(&signed_transaction)
     }
 

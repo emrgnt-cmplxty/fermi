@@ -16,7 +16,12 @@ impl Relayer for RelayerService {
         _request: Request<RelayerGetLatestBlockInfoRequest>,
     ) -> Result<Response<RelayerBlockInfoResponse>, Status> {
         let validator_state = &self.state;
-        let returned_value = validator_state.validator_store.last_block_info_store.read(0).await;
+        let returned_value = validator_state
+            .validator_store
+            .process_block_store
+            .last_block_info_store
+            .read(0)
+            .await;
 
         match returned_value {
             Ok(opt) => {
@@ -45,6 +50,7 @@ impl Relayer for RelayerService {
 
         match validator_state
             .validator_store
+            .process_block_store
             .block_info_store
             .read(block_number)
             .await
@@ -73,7 +79,13 @@ impl Relayer for RelayerService {
         let req = request.into_inner();
         let block_number = req.block_number;
 
-        match validator_state.validator_store.block_store.read(block_number).await {
+        match validator_state
+            .validator_store
+            .process_block_store
+            .block_store
+            .read(block_number)
+            .await
+        {
             Ok(opt) => {
                 if let Some(block) = opt {
                     let block_bytes = bincode::serialize(&block).unwrap().into();
@@ -108,6 +120,7 @@ impl Relayer for RelayerService {
 
         let returned_value = validator_state
             .validator_store
+            .process_block_store
             .latest_orderbook_depth_store
             .read(orderbook_depth_key)
             .await;

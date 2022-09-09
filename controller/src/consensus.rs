@@ -13,6 +13,7 @@ use gdex_types::{
     account::AccountPubKey,
     crypto::ToFromBytes,
     error::GDEXError,
+    store::ProcessBlockStore,
     transaction::{parse_request_type, Transaction},
 };
 
@@ -21,6 +22,7 @@ use gdex_types::{
 // external
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
+use async_trait::async_trait;
 
 // CONSTANTS
 
@@ -48,6 +50,7 @@ impl Default for ConsensusController {
     }
 }
 
+#[async_trait]
 impl Controller for ConsensusController {
     fn initialize(&mut self, _master_controller: &MasterController) {}
 
@@ -64,5 +67,5 @@ impl Controller for ConsensusController {
         }
     }
 
-    fn post_process(&mut self, _block_number: u64) {}
+    async fn process_end_of_block(&mut self, _process_block_store: &ProcessBlockStore, _block_number: u64) {}
 }

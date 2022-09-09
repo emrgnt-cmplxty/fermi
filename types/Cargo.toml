@@ -32,6 +32,7 @@ gdex-workspace-hack = { path = "../workspace-hack" }
 
 # mysten crates
 fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "c022a2ae23ca7cc2778293fd3b1db42e8cd02d3b" }
+mysten-store = { git = "https://github.com/mystenlabs/mysten-infra.git", rev = "7ef7415a4e11cf68fa68ce9db884c46e704e0445", package = "typed-store"}
 narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "crypto"}
 narwhal-executor = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "executor" }
 narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "types" }

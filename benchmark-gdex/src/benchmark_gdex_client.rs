@@ -9,7 +9,7 @@ use gdex_types::{
     account::{AccountKeyPair, ValidatorKeyPair},
     block::BlockDigest,
     proto::{RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionSubmitterClient},
-    transaction::{create_payment_transaction, sign_transaction, ConsensusTransaction, SignedTransaction},
+    transaction::{create_payment_transaction, ConsensusTransaction, SignedTransaction},
     utils::read_keypair_from_file,
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
@@ -46,11 +46,7 @@ fn create_signed_transaction(
         gas,
         block_digest,
     );
-    let signed_transaction = match sign_transaction(kp_sender, transaction) {
-        Ok(t) => t,
-        _ => panic!("Error signing transaction"),
-    };
-    signed_transaction
+    transaction.sign(kp_sender).unwrap()
 }
 
 #[tokio::main]

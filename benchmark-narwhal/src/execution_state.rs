@@ -17,9 +17,9 @@ use futures::executor::block_on;
 use gdex_types::{
     error::GDEXError,
     transaction::{
-        RequestType, deserialize_protobuf, get_transaction_sender,
+        RequestType, deserialize_protobuf,
         get_payment_receiver, ConsensusTransaction, PaymentRequest, CreateAssetRequest,
-        verify_signature, get_signed_transaction_body, parse_request_type
+        parse_request_type
     },
 };
 use rand::{rngs::StdRng, SeedableRng};
@@ -66,11 +66,11 @@ impl ExecutionState for AdvancedExecutionState {
         // deserialize signed transaction
         let signed_transaction = consensus_transaction.get_payload()
             .map_err(|e| Self::Error::VMError(e))?;
-        let _ = verify_signature(&signed_transaction)
+        let _ = signed_transaction.verify_signature()
             .map_err(|e| Self::Error::VMError(e))?;
 
         // get transaction
-        let transaction = get_signed_transaction_body(&signed_transaction)
+        let transaction = signed_transaction.get_transaction()
             .map_err(|e| Self::Error::VMError(e))?;
 
         let request_type = parse_request_type(transaction.request_type)
@@ -78,12 +78,12 @@ impl ExecutionState for AdvancedExecutionState {
         let execution = match request_type {
             RequestType::CreateAsset => {
                 let _request: CreateAssetRequest = deserialize_protobuf(&transaction.request_bytes)?;
-                let sender = get_transaction_sender(&transaction)?;
+                let sender = transaction.get_sender()?;
                 self.bank_controller.lock().unwrap().create_asset(&sender)
             },
             RequestType::Payment => {
                 let request: PaymentRequest = deserialize_protobuf(&transaction.request_bytes)?;
-                let sender = get_transaction_sender(&transaction)?;
+                let sender = transaction.get_sender()?;
                 let receiver = get_payment_receiver(&request)?;
                 self.bank_controller.lock().unwrap().transfer(
                     &sender,

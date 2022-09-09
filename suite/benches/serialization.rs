@@ -12,7 +12,7 @@ use gdex_types::{
     account::{AccountKeyPair, AccountSignature},
     crypto::{KeypairTraits, Signer},
     error::GDEXError,
-    transaction::{create_payment_transaction, sign_transaction, verify_signature, ConsensusTransaction},
+    transaction::{create_payment_transaction, sign_transaction, ConsensusTransaction},
 };
 use narwhal_types::{Batch, CertificateDigest, WorkerMessage};
 use rand::{rngs::StdRng, Rng, SeedableRng};
@@ -28,7 +28,7 @@ fn verify_incoming_transaction(raw_consensus_transaction: Vec<u8>) -> Result<(),
 
     match consensus_transaction_result {
         Ok(consensus_transaction) => match consensus_transaction.get_payload() {
-            Ok(signed_transaction) => match verify_signature(&signed_transaction) {
+            Ok(signed_transaction) => match signed_transaction.verify_signature() {
                 Ok(_) => Ok(()),
                 Err(sig_error) => Err(sig_error),
             },
@@ -53,11 +53,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             gas,
             certificate_digest,
         );
-        let signed_transaction = match sign_transaction(&kp_sender, transaction) {
-            Ok(t) => t,
-            _ => panic!("Error signing transaction"),
-        };
-
+        let signed_transaction = sign_transaction(&kp_sender, transaction).unwrap();
         ConsensusTransaction::new(&signed_transaction)
     }
 

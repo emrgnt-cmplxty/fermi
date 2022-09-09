@@ -13,10 +13,9 @@ use gdex_types::{
     block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},
     committee::{Committee, ValidatorName},
     error::GDEXError,
-    order_book::OrderbookDepth,
     store::ProcessBlockStore,
     transaction::{
-        get_signed_transaction_body, hash_transaction, verify_signature, ConsensusTransaction, SignedTransaction,
+        ConsensusTransaction, SignedTransaction,
         Transaction, TransactionDigest,
     },
 };
@@ -84,8 +83,7 @@ impl ValidatorStore {
     }
 
     pub fn cache_contains_transaction(&self, transaction: &Transaction) -> bool {
-        let transaction_digest = hash_transaction(transaction);
-        return self.transaction_cache.lock().unwrap().contains_key(&transaction_digest);
+        return self.transaction_cache.lock().unwrap().contains_key(&transaction.digest());
     }
 
     pub fn cache_contains_block_digest(&self, block_digest: &BlockDigest) -> bool {
@@ -93,9 +91,8 @@ impl ValidatorStore {
     }
 
     pub fn insert_unconfirmed_transaction(&self, transaction: &Transaction) {
-        let transaction_digest = hash_transaction(transaction);
         self.transaction_cache.lock().unwrap().insert(
-            transaction_digest,
+            transaction.digest(),
             None, // Insert with no block digest, a digest will be added after confirmation
         );
     }
@@ -105,8 +102,8 @@ impl ValidatorStore {
         transaction: &Transaction,
         consensus_output: &ConsensusOutput,
     ) -> Result<(), GDEXError> {
-        let transaction_digest = hash_transaction(transaction);
         let block_digest = consensus_output.certificate.digest();
+        let transaction_digest = transaction.digest();
 
         // return an error if transaction has already been seen before
         if let Some(digest) = self.transaction_cache.lock().unwrap().get(&transaction_digest) {
@@ -258,7 +255,7 @@ impl ValidatorState {
     /// Initiate a new transaction.
     pub fn handle_pre_consensus_transaction(&self, signed_transaction: &SignedTransaction) -> Result<(), GDEXError> {
         trace!("Handling a new pre-consensus transaction with the ValidatorState",);
-        let transaction = get_signed_transaction_body(signed_transaction)?;
+        let transaction = signed_transaction.get_transaction()?;
         self.validator_store.insert_unconfirmed_transaction(transaction);
         Ok(())
     }
@@ -282,10 +279,10 @@ impl ExecutionState for ValidatorState {
         let signed_transaction = consensus_transaction
             .get_payload()
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
-        let _ = verify_signature(&signed_transaction).map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
+        let _ = signed_transaction.verify_signature().map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
 
         // get transaction
-        let transaction = get_signed_transaction_body(&signed_transaction)?;
+        let transaction = signed_transaction.get_transaction()?;
 
         // cache confirmed transaction
         let uniqueness_check = self
@@ -341,7 +338,6 @@ mod test_validator_state {
         transaction::{
             create_cancel_order_transaction, create_create_asset_transaction, create_create_orderbook_transaction,
             create_limit_order_transaction, create_payment_transaction, create_update_order_transaction,
-            sign_transaction,
         },
         utils,
     };
@@ -460,11 +456,7 @@ mod test_validator_state {
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
         let gas: u64 = 1000;
         let transaction = create_create_asset_transaction(sender_kp.public().clone(), 0, gas, recent_block_hash);
-        let signed_transaction = match sign_transaction(&sender_kp, transaction) {
-            Ok(t) => t,
-            _ => panic!("Error signing transaction"),
-        };
-
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
@@ -489,11 +481,7 @@ mod test_validator_state {
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
         let gas: u64 = 1000;
         let transaction = create_create_asset_transaction(sender_kp.public().clone(), 0, gas, recent_block_hash);
-        let signed_transaction = match sign_transaction(&sender_kp, transaction) {
-            Ok(t) => t,
-            _ => panic!("Error signing transaction"),
-        };
-
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
@@ -518,11 +506,7 @@ mod test_validator_state {
             gas,
             recent_block_hash,
         );
-        let signed_transaction = match sign_transaction(&sender_kp, transaction) {
-            Ok(t) => t,
-            _ => panic!("Error signing transaction"),
-        };
-
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
@@ -550,11 +534,7 @@ mod test_validator_state {
         for asset_number in 0..5 {
             let transaction =
                 create_create_asset_transaction(sender_kp.public().clone(), asset_number, gas, recent_block_hash);
-            let signed_transaction = match sign_transaction(&sender_kp, transaction) {
-                Ok(t) => t,
-                _ => panic!("Error signing transaction"),
-            };
-
+            let signed_transaction = transaction.sign(&sender_kp).unwrap();
             let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
             validator
@@ -580,11 +560,7 @@ mod test_validator_state {
             gas,
             recent_block_hash,
         );
-        let signed_transaction = match sign_transaction(&sender_kp, transaction) {
-            Ok(t) => t,
-            _ => panic!("Error signing transaction"),
-        };
-
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
@@ -612,11 +588,7 @@ mod test_validator_state {
         for asset_number in 0..5 {
             let transaction =
                 create_create_asset_transaction(sender_kp.public().clone(), asset_number, gas, recent_block_hash);
-            let signed_transaction = match sign_transaction(&sender_kp, transaction) {
-                Ok(t) => t,
-                _ => panic!("Error signing transaction"),
-            };
-
+            let signed_transaction = transaction.sign(&sender_kp).unwrap();
             let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
             validator
@@ -641,11 +613,7 @@ mod test_validator_state {
             gas,
             recent_block_hash,
         );
-        let signed_transaction = match sign_transaction(&sender_kp, transaction) {
-            Ok(t) => t,
-            _ => panic!("Error signing transaction"),
-        };
-
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
@@ -672,11 +640,7 @@ mod test_validator_state {
             gas,
             recent_block_hash,
         );
-        let signed_transaction = match sign_transaction(&sender_kp, transaction) {
-            Ok(t) => t,
-            _ => panic!("Error signing transaction"),
-        };
-
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
@@ -702,11 +666,7 @@ mod test_validator_state {
             gas,
             recent_block_hash,
         );
-        let signed_transaction = match sign_transaction(&sender_kp, transaction) {
-            Ok(t) => t,
-            _ => panic!("Error signing transaction"),
-        };
-
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
@@ -734,11 +694,7 @@ mod test_validator_state {
         for asset_number in 0..5 {
             let transaction =
                 create_create_asset_transaction(sender_kp.public().clone(), asset_number, gas, recent_block_hash);
-            let signed_transaction = match sign_transaction(&sender_kp, transaction) {
-                Ok(t) => t,
-                _ => panic!("Error signing transaction"),
-            };
-
+            let signed_transaction = transaction.sign(&sender_kp).unwrap();
             let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
             validator
@@ -763,11 +719,7 @@ mod test_validator_state {
             gas,
             recent_block_hash,
         );
-        let signed_transaction = match sign_transaction(&sender_kp, transaction) {
-            Ok(t) => t,
-            _ => panic!("Error signing transaction"),
-        };
-
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
@@ -795,11 +747,7 @@ mod test_validator_state {
             gas,
             recent_block_hash,
         );
-        let signed_transaction = match sign_transaction(&sender_kp, transaction) {
-            Ok(t) => t,
-            _ => panic!("Error signing transaction"),
-        };
-
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
@@ -827,11 +775,7 @@ mod test_validator_state {
             gas,
             recent_block_hash,
         );
-        let signed_transaction = match sign_transaction(&sender_kp, transaction) {
-            Ok(t) => t,
-            _ => panic!("Error signing transaction"),
-        };
-
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator

@@ -14,7 +14,7 @@ use gdex_types::{
     error::GDEXError,
     proto::{Empty, TransactionSubmitter, TransactionSubmitterServer},
     transaction::{
-        get_signed_transaction_body, get_signed_transaction_recent_block_hash, verify_signature, ConsensusTransaction,
+        ConsensusTransaction,
         SignedTransaction,
     },
 };
@@ -217,15 +217,15 @@ impl ValidatorService {
         trace!("Handling a new transaction with ValidatorService",);
         state.metrics.transactions_received.inc();
 
-        verify_signature(&signed_transaction).map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
+        signed_transaction.verify_signature().map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
 
         // check recent block hash is valid
         // TODO seems maybe problematic to do this just here?
         // TODO change this to err flow
         // TODO there is a ton of contention here
-        let recent_block_hash = get_signed_transaction_recent_block_hash(&signed_transaction)
+        let recent_block_digest = signed_transaction.get_recent_block_digest()
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
-        if !state.validator_store.cache_contains_block_digest(&recent_block_hash) {
+        if !state.validator_store.cache_contains_block_digest(&recent_block_digest) {
             state.metrics.transactions_received_failed.inc();
             cfg_if::cfg_if! {
                 if #[cfg(feature = "benchmark")] {
@@ -237,7 +237,7 @@ impl ValidatorService {
         }
 
         // check transaction is not a duplicate
-        let transaction = get_signed_transaction_body(&signed_transaction)
+        let transaction = signed_transaction.get_transaction()
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
         if state.validator_store.cache_contains_transaction(transaction) {
             state.metrics.transactions_received_failed.inc();

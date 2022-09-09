@@ -21,7 +21,7 @@ pub use crate::proto::*;
 // gdex
 
 // mysten
-use fastcrypto::{traits::Signer, Digest, Verifier, Hash, DIGEST_LEN};
+use fastcrypto::{traits::Signer, Digest, Hash, Verifier, DIGEST_LEN};
 use narwhal_types::{CertificateDigest, CertificateDigestProto};
 
 // external
@@ -126,7 +126,6 @@ impl ConsensusTransaction {
 // SIGNED TRANSACTION
 
 impl SignedTransaction {
-
     pub fn get_transaction(&self) -> Result<&Transaction, GDEXError> {
         self.transaction.as_ref().ok_or(GDEXError::DeserializationError)
     }
@@ -152,7 +151,9 @@ impl SignedTransaction {
         let transaction_digest = transaction.digest();
         let sender = transaction.get_sender()?;
         let signature = self.get_signature()?;
-        sender.verify(&transaction_digest.get_array()[..], &signature).map_err(|_e| GDEXError::DeserializationError)
+        sender
+            .verify(&transaction_digest.get_array()[..], &signature)
+            .map_err(|_e| GDEXError::DeserializationError)
     }
 }
 
@@ -169,8 +170,8 @@ impl Transaction {
     pub fn get_sender(&self) -> Result<AccountPubKey, GDEXError> {
         AccountPubKey::from_bytes(&self.sender).map_err(|_e| GDEXError::DeserializationError)
     }
-    
-    pub fn get_recent_block_digest(&self) ->  Result<CertificateDigest, GDEXError> {
+
+    pub fn get_recent_block_digest(&self) -> Result<CertificateDigest, GDEXError> {
         match self.recent_block_hash.deref().try_into() {
             Ok(digest) => Ok(CertificateDigest::new(digest)),
             Err(..) => Err(GDEXError::DeserializationError),
@@ -197,7 +198,6 @@ impl Hash for Transaction {
         }))
     }
 }
-
 
 pub fn create_transaction(
     sender: AccountPubKey,

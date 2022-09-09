@@ -13,10 +13,7 @@ use gdex_types::{
     crypto::KeypairTraits,
     error::GDEXError,
     proto::{Empty, TransactionSubmitter, TransactionSubmitterServer},
-    transaction::{
-        ConsensusTransaction,
-        SignedTransaction,
-    },
+    transaction::{ConsensusTransaction, SignedTransaction},
 };
 use multiaddr::Multiaddr;
 use narwhal_config::Committee as ConsensusCommittee;
@@ -217,13 +214,16 @@ impl ValidatorService {
         trace!("Handling a new transaction with ValidatorService",);
         state.metrics.transactions_received.inc();
 
-        signed_transaction.verify_signature().map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
+        signed_transaction
+            .verify_signature()
+            .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
 
         // check recent block hash is valid
         // TODO seems maybe problematic to do this just here?
         // TODO change this to err flow
         // TODO there is a ton of contention here
-        let recent_block_digest = signed_transaction.get_recent_block_digest()
+        let recent_block_digest = signed_transaction
+            .get_recent_block_digest()
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
         if !state.validator_store.cache_contains_block_digest(&recent_block_digest) {
             state.metrics.transactions_received_failed.inc();
@@ -237,7 +237,8 @@ impl ValidatorService {
         }
 
         // check transaction is not a duplicate
-        let transaction = signed_transaction.get_transaction()
+        let transaction = signed_transaction
+            .get_transaction()
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
         if state.validator_store.cache_contains_transaction(transaction) {
             state.metrics.transactions_received_failed.inc();

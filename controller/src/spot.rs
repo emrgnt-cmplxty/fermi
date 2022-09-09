@@ -29,8 +29,8 @@ use gdex_types::{
     order_book::{OrderProcessingResult, OrderSide, OrderType, OrderbookDepth, Success},
     store::ProcessBlockStore,
     transaction::{
-        deserialize_protobuf, parse_order_side, parse_request_type, CancelOrderRequest,
-        CreateOrderbookRequest, LimitOrderRequest, MarketOrderRequest, RequestType, Transaction, UpdateOrderRequest,
+        deserialize_protobuf, parse_order_side, parse_request_type, CancelOrderRequest, CreateOrderbookRequest,
+        LimitOrderRequest, MarketOrderRequest, RequestType, Transaction, UpdateOrderRequest,
     },
 };
 
@@ -38,10 +38,10 @@ use gdex_types::{
 use fastcrypto::ed25519::Ed25519PublicKey;
 
 // external
+use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use std::{collections::HashMap, time::SystemTime};
-use async_trait::async_trait;
 
 // TYPE DEFS
 
@@ -567,8 +567,7 @@ impl Controller for SpotController {
 
     async fn process_end_of_block(&mut self, process_block_store: &ProcessBlockStore, block_number: u64) {
         // write out orderbook depth every ORDERBOOK_DEPTH_FREQUENCY
-        if block_number % ORDERBOOK_DEPTH_FREQUENCY == 0
-        {
+        if block_number % ORDERBOOK_DEPTH_FREQUENCY == 0 {
             let orderbook_depths = self.generate_orderbook_depths();
             for (asset_pair, orderbook_depth) in orderbook_depths {
                 process_block_store

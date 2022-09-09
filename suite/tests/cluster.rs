@@ -24,9 +24,7 @@ pub mod cluster_test_suite {
             FaucetAirdropRequest, FaucetClient, FaucetServer, RelayerClient, RelayerGetBlockRequest,
             RelayerGetLatestBlockInfoRequest, RelayerGetLatestOrderbookDepthRequest,
         },
-        transaction::{
-            create_create_asset_transaction, ConsensusTransaction,
-        },
+        transaction::{create_create_asset_transaction, ConsensusTransaction},
         utils,
     };
 
@@ -480,11 +478,12 @@ pub mod cluster_test_suite {
         orderbook_depths.insert(orderbook_key.clone(), orderbook_depth);
 
         for (asset_pair, orderbook_depth) in orderbook_depths {
-            validator_state_1.validator_store
-            .process_block_store
-            .latest_orderbook_depth_store
-            .write(asset_pair, orderbook_depth)
-            .await;
+            validator_state_1
+                .validator_store
+                .process_block_store
+                .latest_orderbook_depth_store
+                .write(asset_pair, orderbook_depth)
+                .await;
         }
 
         let relayer_1 = cluster.spawn_single_relayer(1).await;
@@ -637,11 +636,12 @@ pub mod cluster_test_suite {
         orderbook_depths.insert(orderbook_key, orderbook_depth);
 
         for (asset_pair, orderbook_depth) in orderbook_depths {
-            validator_state_1.validator_store
-            .process_block_store
-            .latest_orderbook_depth_store
-            .write(asset_pair, orderbook_depth)
-            .await;
+            validator_state_1
+                .validator_store
+                .process_block_store
+                .latest_orderbook_depth_store
+                .write(asset_pair, orderbook_depth)
+                .await;
         }
 
         let relayer_1 = cluster.spawn_single_relayer(1).await;

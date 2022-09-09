@@ -23,17 +23,16 @@ use gdex_types::{
     error::GDEXError,
     store::ProcessBlockStore,
     transaction::{
-        deserialize_protobuf, parse_request_type, CreateAssetRequest,
-        PaymentRequest, RequestType, Transaction,
+        deserialize_protobuf, parse_request_type, CreateAssetRequest, PaymentRequest, RequestType, Transaction,
     },
 };
 
 // mysten
 
 // external
+use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use async_trait::async_trait;
 
 // CONSTANTS
 #[derive(PartialEq)]

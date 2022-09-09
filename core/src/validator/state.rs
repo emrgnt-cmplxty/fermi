@@ -14,10 +14,7 @@ use gdex_types::{
     committee::{Committee, ValidatorName},
     error::GDEXError,
     store::ProcessBlockStore,
-    transaction::{
-        ConsensusTransaction, SignedTransaction,
-        Transaction, TransactionDigest,
-    },
+    transaction::{ConsensusTransaction, SignedTransaction, Transaction, TransactionDigest},
 };
 use narwhal_consensus::ConsensusOutput;
 use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
@@ -83,7 +80,11 @@ impl ValidatorStore {
     }
 
     pub fn cache_contains_transaction(&self, transaction: &Transaction) -> bool {
-        return self.transaction_cache.lock().unwrap().contains_key(&transaction.digest());
+        return self
+            .transaction_cache
+            .lock()
+            .unwrap()
+            .contains_key(&transaction.digest());
     }
 
     pub fn cache_contains_block_digest(&self, block_digest: &BlockDigest) -> bool {
@@ -279,7 +280,9 @@ impl ExecutionState for ValidatorState {
         let signed_transaction = consensus_transaction
             .get_payload()
             .map_err(|e| tonic::Status::internal(e.to_string()))?;
-        let _ = signed_transaction.verify_signature().map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
+        let _ = signed_transaction
+            .verify_signature()
+            .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
 
         // get transaction
         let transaction = signed_transaction.get_transaction()?;

@@ -165,7 +165,7 @@ pub mod cluster_test_suite {
         }
 
         let mut total = 0;
-        let block_db = validator_store.block_store.iter(None).await;
+        let block_db = validator_store.process_block_store.block_store.iter(None).await;
         let mut block_db_iter = block_db.iter();
 
         // TODO - more rigorously check exact match of transactions
@@ -266,6 +266,7 @@ pub mod cluster_test_suite {
 
         // Verify that blocks do not match before running catchup
         let latest_block_store_node_0 = validator_store_node_1
+            .process_block_store
             .last_block_info_store
             .read(0)
             .await
@@ -274,6 +275,7 @@ pub mod cluster_test_suite {
 
         let latest_block_store_target = restarted_validator_state
             .validator_store
+            .process_block_store
             .last_block_info_store
             .read(0)
             .await
@@ -297,6 +299,7 @@ pub mod cluster_test_suite {
 
         // Verify that blocks do match after running catchup
         let latest_block_store_node_1 = validator_store_node_1
+            .process_block_store
             .last_block_info_store
             .read(0)
             .await
@@ -305,6 +308,7 @@ pub mod cluster_test_suite {
 
         let latest_block_store_target = restarted_validator_state
             .validator_store
+            .process_block_store
             .last_block_info_store
             .read(0)
             .await
@@ -486,12 +490,15 @@ pub mod cluster_test_suite {
             });
         }
         let orderbook_depth = OrderbookDepth { bids, asks };
-        orderbook_depths.insert(orderbook_key, orderbook_depth);
+        orderbook_depths.insert(orderbook_key.clone(), orderbook_depth);
 
-        validator_state_1
-            .validator_store
-            .write_latest_orderbook_depths(orderbook_depths)
+        for (asset_pair, orderbook_depth) in orderbook_depths {
+            validator_state_1.validator_store
+            .process_block_store
+            .latest_orderbook_depth_store
+            .write(asset_pair, orderbook_depth)
             .await;
+        }
 
         let relayer_1 = cluster.spawn_single_relayer(1).await;
         let target_endpoint = endpoint_from_multiaddr(&relayer_1.get_relayer_address()).unwrap();
@@ -642,12 +649,13 @@ pub mod cluster_test_suite {
         let orderbook_depth = OrderbookDepth { bids, asks };
         orderbook_depths.insert(orderbook_key, orderbook_depth);
 
-        validator_state_1
-            .validator_store
-            .write_latest_orderbook_depths(orderbook_depths)
+        for (asset_pair, orderbook_depth) in orderbook_depths {
+            validator_state_1.validator_store
+            .process_block_store
+            .latest_orderbook_depth_store
+            .write(asset_pair, orderbook_depth)
             .await;
-
-        // TODO clean
+        }
 
         let relayer_1 = cluster.spawn_single_relayer(1).await;
         let target_endpoint = endpoint_from_multiaddr(&relayer_1.get_relayer_address()).unwrap();

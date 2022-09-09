@@ -19,6 +19,7 @@ use gdex_types::{
     asset::PRIMARY_ASSET_ID,
     crypto::ToFromBytes,
     error::GDEXError,
+    store::ProcessBlockStore,
     transaction::{parse_request_type, Transaction},
 };
 
@@ -28,6 +29,7 @@ use gdex_types::{
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+use async_trait::async_trait;
 
 // CONSTANTS
 
@@ -55,6 +57,7 @@ impl Default for StakeController {
     }
 }
 
+#[async_trait]
 impl Controller for StakeController {
     fn initialize(&mut self, master_controller: &MasterController) {
         self.bank_controller = Arc::clone(&master_controller.bank_controller);
@@ -77,7 +80,7 @@ impl Controller for StakeController {
         }
     }
 
-    fn post_process(&mut self, _block_number: u64) {}
+    async fn process_end_of_block(&mut self, _process_block_store: &ProcessBlockStore, _block_number: u64) {}
 }
 
 impl StakeController {

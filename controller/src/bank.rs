@@ -21,6 +21,7 @@ use gdex_types::{
     asset::{Asset, AssetId},
     crypto::ToFromBytes,
     error::GDEXError,
+    store::ProcessBlockStore,
     transaction::{
         deserialize_protobuf, get_payment_receiver, get_transaction_sender, parse_request_type, CreateAssetRequest,
         PaymentRequest, RequestType, Transaction,
@@ -32,6 +33,7 @@ use gdex_types::{
 // external
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use async_trait::async_trait;
 
 // CONSTANTS
 #[derive(PartialEq)]
@@ -67,6 +69,7 @@ impl Default for BankController {
     }
 }
 
+#[async_trait]
 impl Controller for BankController {
     fn initialize(&mut self, _master_controller: &MasterController) {}
 
@@ -92,7 +95,7 @@ impl Controller for BankController {
         }
     }
 
-    fn post_process(&mut self, _block_number: u64) {}
+    async fn process_end_of_block(&mut self, _process_block_store: &ProcessBlockStore, _block_number: u64) {}
 }
 
 impl BankController {

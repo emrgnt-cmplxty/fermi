@@ -164,7 +164,7 @@ impl BenchHelper {
                 (OrderSide::Ask, rand::thread_rng().gen_range(1_u64..100_u64))
             };
 
-            // cross the spread for one unit of quanitty at MATCH_FREQUENCY
+            // cross the spread for one unit of quantity at MATCH_FREQUENCY
             if x % MATCH_FREQUENCY == 0 && x > 0 {
                 price = 100;
                 amount = 1;
@@ -180,9 +180,14 @@ impl BenchHelper {
                 recent_block_hash,
             );
 
-            TransactionProto {
+            let proto = TransactionProto {
                 transaction: signed_transaction.serialize().unwrap().into(),
+            };
+            if x == 0 {
+                let transaction_size = proto.transaction.len();
+                info!("Transactions size: {transaction_size} B");
             }
+            proto
         });
 
         if let Err(e) = self
@@ -288,6 +293,7 @@ impl BenchHelper {
 
         // log the transaction size to help python client calculate throughput
         // note, any transaction type works here because all enumes have the same size
+        // note, no they don't
         let recent_block_hash = self.get_recent_block_digest().await;
         let transaction_size = create_signed_asset_creation_transaction(&self.primary_keypair, recent_block_hash, 0)
             .serialize()

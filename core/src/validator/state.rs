@@ -13,7 +13,6 @@ use gdex_types::{
     block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},
     committee::{Committee, ValidatorName},
     error::GDEXError,
-    order_book::OrderbookDepth,
     store::ProcessBlockStore,
     transaction::{
         get_signed_transaction_body, hash_transaction, verify_signature, ConsensusTransaction, SignedTransaction,

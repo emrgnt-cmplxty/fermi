@@ -7,7 +7,7 @@ use gdex_engine::{order_book::Orderbook, orders::create_limit_order_request};
 use gdex_types::{
     account::{account_test_functions::generate_keypair_vec, AccountPubKey},
     crypto::{KeypairTraits, ToFromBytes},
-    order_book::{OrderProcessingResult, OrderSide, OrderRequest, Success},
+    order_book::{OrderProcessingResult, OrderRequest, OrderSide, Success},
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use rocksdb::{ColumnFamilyDescriptor, DBWithThreadMode, MultiThreaded, Options, DB};

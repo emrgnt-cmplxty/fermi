@@ -115,25 +115,11 @@ impl MasterController {
         }
     }
 
-    pub fn process_end_of_block(&self, process_block_store: &ProcessBlockStore, block_number: u64) {
-        self.consensus_controller
-            .lock()
-            .unwrap()
-            .process_end_of_block(process_block_store, block_number);
-
-        self.bank_controller
-            .lock()
-            .unwrap()
-            .process_end_of_block(process_block_store, block_number);
-
-        self.stake_controller
-            .lock()
-            .unwrap()
-            .process_end_of_block(process_block_store, block_number);
-
-        self.spot_controller
-            .lock()
-            .unwrap()
-            .process_end_of_block(process_block_store, block_number);
+    pub async fn process_end_of_block(&self, process_block_store: &ProcessBlockStore, block_number: u64) {
+        ConsensusController::process_end_of_block(self.consensus_controller.clone(), process_block_store, block_number)
+            .await;
+        BankController::process_end_of_block(self.bank_controller.clone(), process_block_store, block_number).await;
+        StakeController::process_end_of_block(self.stake_controller.clone(), process_block_store, block_number).await;
+        SpotController::process_end_of_block(self.spot_controller.clone(), process_block_store, block_number).await;
     }
 }

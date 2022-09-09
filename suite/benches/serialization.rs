@@ -12,9 +12,7 @@ use gdex_types::{
     account::{AccountKeyPair, AccountSignature},
     crypto::{KeypairTraits, Signer},
     error::GDEXError,
-    transaction::{
-        create_payment_transaction, sign_transaction, ConsensusTransaction, verify_signature
-    },
+    transaction::{create_payment_transaction, sign_transaction, verify_signature, ConsensusTransaction},
 };
 use narwhal_types::{Batch, CertificateDigest, WorkerMessage};
 use rand::{rngs::StdRng, Rng, SeedableRng};

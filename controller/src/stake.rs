@@ -26,10 +26,10 @@ use gdex_types::{
 // mysten
 
 // external
+use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use async_trait::async_trait;
 
 // CONSTANTS
 
@@ -80,7 +80,12 @@ impl Controller for StakeController {
         }
     }
 
-    async fn process_end_of_block(&mut self, _process_block_store: &ProcessBlockStore, _block_number: u64) {}
+    async fn process_end_of_block(
+        _controller: Arc<Mutex<Self>>,
+        _process_block_store: &ProcessBlockStore,
+        _block_number: u64,
+    ) {
+    }
 }
 
 impl StakeController {

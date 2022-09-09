@@ -21,7 +21,7 @@ pub use crate::proto::*;
 // gdex
 
 // mysten
-use fastcrypto::{traits::Signer, Verifier, DIGEST_LEN};
+use fastcrypto::{traits::Signer, Digest, Hash, Verifier, DIGEST_LEN};
 use narwhal_types::{CertificateDigest, CertificateDigestProto};
 
 // external
@@ -59,6 +59,12 @@ impl TransactionDigest {
 
     pub fn get_array(&self) -> [u8; DIGEST_LEN] {
         self.0
+    }
+}
+
+impl From<TransactionDigest> for Digest {
+    fn from(digest: TransactionDigest) -> Self {
+        Digest::new(digest.0)
     }
 }
 
@@ -119,6 +125,38 @@ impl ConsensusTransaction {
 
 // SIGNED TRANSACTION
 
+impl SignedTransaction {
+    pub fn get_transaction(&self) -> Result<&Transaction, GDEXError> {
+        self.transaction.as_ref().ok_or(GDEXError::DeserializationError)
+    }
+
+    pub fn get_sender(&self) -> Result<AccountPubKey, GDEXError> {
+        self.get_transaction()?.get_sender()
+    }
+
+    pub fn get_signature(&self) -> Result<AccountSignature, GDEXError> {
+        AccountSignature::from_bytes(&self.signature).map_err(|_e| GDEXError::DeserializationError)
+    }
+
+    pub fn get_recent_block_digest(&self) -> Result<CertificateDigest, GDEXError> {
+        self.get_transaction()?.get_recent_block_digest()
+    }
+
+    pub fn get_transaction_digest(&self) -> Result<TransactionDigest, GDEXError> {
+        Ok(self.get_transaction()?.digest())
+    }
+
+    pub fn verify_signature(&self) -> Result<(), GDEXError> {
+        let transaction = self.get_transaction()?;
+        let transaction_digest = transaction.digest();
+        let sender = transaction.get_sender()?;
+        let signature = self.get_signature()?;
+        sender
+            .verify(&transaction_digest.get_array()[..], &signature)
+            .map_err(|_e| GDEXError::DeserializationError)
+    }
+}
+
 pub fn create_signed_transaction(transaction: Transaction, signature: &[u8; 64]) -> SignedTransaction {
     SignedTransaction {
         transaction: Some(transaction),
@@ -127,6 +165,39 @@ pub fn create_signed_transaction(transaction: Transaction, signature: &[u8; 64])
 }
 
 // TRANSACTION
+
+impl Transaction {
+    pub fn get_sender(&self) -> Result<AccountPubKey, GDEXError> {
+        AccountPubKey::from_bytes(&self.sender).map_err(|_e| GDEXError::DeserializationError)
+    }
+
+    pub fn get_recent_block_digest(&self) -> Result<CertificateDigest, GDEXError> {
+        match self.recent_block_hash.deref().try_into() {
+            Ok(digest) => Ok(CertificateDigest::new(digest)),
+            Err(..) => Err(GDEXError::DeserializationError),
+        }
+    }
+
+    pub fn sign(self, sender_kp: &AccountKeyPair) -> Result<SignedTransaction, GDEXError> {
+        let transaction_digest = self.digest();
+        let signature_result: Result<AccountSignature, signature::Error> =
+            sender_kp.try_sign(&transaction_digest.get_array()[..]);
+        match signature_result {
+            Ok(result) => Ok(create_signed_transaction(self, &result.sig.to_bytes())),
+            Err(..) => Err(GDEXError::SigningError),
+        }
+    }
+}
+
+impl Hash for Transaction {
+    type TypedDigest = TransactionDigest;
+
+    fn digest(&self) -> TransactionDigest {
+        TransactionDigest::new(fastcrypto::blake2b_256(|hasher| {
+            hasher.update(serialize_protobuf(self))
+        }))
+    }
+}
 
 pub fn create_transaction(
     sender: AccountPubKey,
@@ -151,6 +222,12 @@ pub fn create_transaction(
 
 pub fn create_create_asset_request(dummy: u64) -> CreateAssetRequest {
     CreateAssetRequest { dummy }
+}
+
+impl PaymentRequest {
+    pub fn get_receiver(&self) -> Result<AccountPubKey, GDEXError> {
+        AccountPubKey::from_bytes(&self.receiver).map_err(|_e| GDEXError::DeserializationError)
+    }
 }
 
 pub fn create_payment_request(receiver: &AccountPubKey, asset_id: u64, amount: u64) -> PaymentRequest {
@@ -403,97 +480,6 @@ pub fn create_cancel_order_transaction(
     )
 }
 
-// GETTERS
-
-// - SIGNED TRANSACTION
-
-pub fn get_signed_transaction_body(signed_transaction: &SignedTransaction) -> Result<&Transaction, GDEXError> {
-    match signed_transaction.transaction {
-        None => Err(GDEXError::DeserializationError),
-        Some(_) => Ok(signed_transaction.transaction.as_ref().unwrap()),
-    }
-}
-
-pub fn get_signed_transaction_sender(signed_transaction: &SignedTransaction) -> Result<AccountPubKey, GDEXError> {
-    let transaction = get_signed_transaction_body(signed_transaction)?;
-    get_transaction_sender(transaction)
-}
-
-pub fn get_signed_transaction_signature(signed_transaction: &SignedTransaction) -> Result<AccountSignature, GDEXError> {
-    let account_signature_result = AccountSignature::from_bytes(&signed_transaction.signature);
-    match account_signature_result {
-        Ok(result) => Ok(result),
-        Err(..) => Err(GDEXError::DeserializationError),
-    }
-}
-
-pub fn get_signed_transaction_recent_block_hash(
-    signed_transaction: &SignedTransaction,
-) -> Result<CertificateDigest, GDEXError> {
-    let transaction = get_signed_transaction_body(signed_transaction)?;
-    match transaction.recent_block_hash.deref().try_into() {
-        Ok(digest) => Ok(CertificateDigest::new(digest)),
-        Err(..) => Err(GDEXError::DeserializationError),
-    }
-}
-
-pub fn get_signed_transaction_transaction_hash(
-    signed_transaction: &SignedTransaction,
-) -> Result<TransactionDigest, GDEXError> {
-    let transaction = get_signed_transaction_body(signed_transaction)?;
-    Ok(hash_transaction(transaction))
-}
-
-// - TRANSACTION
-
-pub fn get_transaction_sender(transaction: &Transaction) -> Result<AccountPubKey, GDEXError> {
-    let sender_result = AccountPubKey::from_bytes(&transaction.sender);
-    match sender_result {
-        Ok(result) => Ok(result),
-        Err(..) => Err(GDEXError::DeserializationError),
-    }
-}
-
-// - PAYMENT REQUEST
-
-pub fn get_payment_receiver(request: &PaymentRequest) -> Result<AccountPubKey, GDEXError> {
-    let receiver_result = AccountPubKey::from_bytes(&request.receiver);
-    match receiver_result {
-        Ok(result) => Ok(result),
-        Err(..) => Err(GDEXError::DeserializationError),
-    }
-}
-
-// HELPERS
-
-pub fn hash_transaction(transaction: &Transaction) -> TransactionDigest {
-    TransactionDigest::new(fastcrypto::blake2b_256(|hasher| {
-        hasher.update(serialize_protobuf(transaction))
-    }))
-}
-
-pub fn sign_transaction(sender_kp: &AccountKeyPair, transaction: Transaction) -> Result<SignedTransaction, GDEXError> {
-    let transaction_hash = hash_transaction(&transaction);
-    let signature_result: Result<AccountSignature, signature::Error> =
-        sender_kp.try_sign(&transaction_hash.get_array()[..]);
-    match signature_result {
-        Ok(result) => Ok(create_signed_transaction(transaction, &result.sig.to_bytes())),
-        Err(..) => Err(GDEXError::SigningError),
-    }
-}
-
-pub fn verify_signature(signed_transaction: &SignedTransaction) -> Result<(), GDEXError> {
-    let transaction = get_signed_transaction_body(signed_transaction)?;
-    let transaction_hash = hash_transaction(transaction);
-    let sender = get_signed_transaction_sender(signed_transaction)?;
-    let signature = get_signed_transaction_signature(signed_transaction)?;
-    let verify_signature_result = sender.verify(&transaction_hash.get_array()[..], &signature);
-    match verify_signature_result {
-        Ok(_) => Ok(()),
-        Err(..) => Err(GDEXError::TransactionSignatureVerificationError),
-    }
-}
-
 // ENUM CONVERSIONS
 // TODO gotta be a better way to do this
 
@@ -553,9 +539,7 @@ pub mod transaction_test_functions {
             gas,
             dummy_batch_digest,
         );
-        match sign_transaction(kp_sender, transaction) {
-            Ok(t) => t,
-            _ => panic!("Error signing transaction"),
-        }
+
+        transaction.sign(kp_sender).unwrap()
     }
 }

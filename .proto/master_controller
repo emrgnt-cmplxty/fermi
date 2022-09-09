@@ -12,48 +12,48 @@ bank_controller:
       asset_id: 0
       owner_pubkey: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
   bank_accounts:
-    U1RBS0VDT05UUk9MTEVSQUFBQUFBQUFBQUFBQUFBQUE=:
-      account_pub_key: U1RBS0VDT05UUk9MTEVSQUFBQUFBQUFBQUFBQUFBQUE=
+    LfopE7eHgH4KiuvKNPpEBxkYzNe4YxVReYvWv2erlaA=:
+      account_pub_key: LfopE7eHgH4KiuvKNPpEBxkYzNe4YxVReYvWv2erlaA=
       balances:
-        0: 4
+        0: 4999999999
+    QvmYN+y9MThe8PdX2lbqLBwC/37qsJNUR9Bez/oKRAM=:
+      account_pub_key: QvmYN+y9MThe8PdX2lbqLBwC/37qsJNUR9Bez/oKRAM=
+      balances:
+        0: 4999999999
     AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=:
       account_pub_key: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
       balances:
         0: 9999980000000000
-    x2QWtxyikbZq4sq6PbLUGkh8gAeqeuthialuURJNnBw=:
-      account_pub_key: x2QWtxyikbZq4sq6PbLUGkh8gAeqeuthialuURJNnBw=
-      balances:
-        0: 4999999999
-    zYEUcZTgpx1ckZipuiYeYHLci4+u9t8M+u4S6rISLQM=:
-      account_pub_key: zYEUcZTgpx1ckZipuiYeYHLci4+u9t8M+u4S6rISLQM=
-      balances:
-        0: 4999999999
-    Qir9gKlM6D1yrWi6D4Clti0AB6f6oXw6OfU60U8yG80=:
-      account_pub_key: Qir9gKlM6D1yrWi6D4Clti0AB6f6oXw6OfU60U8yG80=
-      balances:
-        0: 4999999999
-    MFwNTHnSO3SChTGbAPkouldUTuD9n4Q+d7eaMlyIAKQ=:
-      account_pub_key: MFwNTHnSO3SChTGbAPkouldUTuD9n4Q+d7eaMlyIAKQ=
+    p2F1SS2x3aTQgdWL2BmrRiK+jEZ6LkSeVmgVRgEMqpQ=:
+      account_pub_key: p2F1SS2x3aTQgdWL2BmrRiK+jEZ6LkSeVmgVRgEMqpQ=
       balances:
         0: 4999999999
     U1BPVENPTlRST0xMRVJBQUFBQUFBQUFBQUFBQUFBQUE=:
       account_pub_key: U1BPVENPTlRST0xMRVJBQUFBQUFBQUFBQUFBQUFBQUE=
       balances: {}
+    7W8OQeMURXBk+5SNuIx1yUWX4fOgsOMgXJAYbOow/tE=:
+      account_pub_key: 7W8OQeMURXBk+5SNuIx1yUWX4fOgsOMgXJAYbOow/tE=
+      balances:
+        0: 4999999999
+    U1RBS0VDT05UUk9MTEVSQUFBQUFBQUFBQUFBQUFBQUE=:
+      account_pub_key: U1RBS0VDT05UUk9MTEVSQUFBQUFBQUFBQUFBQUFBQUE=
+      balances:
+        0: 4
   n_assets: 1
 stake_controller:
   controller_account: U1RBS0VDT05UUk9MTEVSQUFBQUFBQUFBQUFBQUFBQUE=
   stake_accounts:
-    Qir9gKlM6D1yrWi6D4Clti0AB6f6oXw6OfU60U8yG80=:
-      account_pub_key: Qir9gKlM6D1yrWi6D4Clti0AB6f6oXw6OfU60U8yG80=
+    p2F1SS2x3aTQgdWL2BmrRiK+jEZ6LkSeVmgVRgEMqpQ=:
+      account_pub_key: p2F1SS2x3aTQgdWL2BmrRiK+jEZ6LkSeVmgVRgEMqpQ=
       staked_amount: 1
-    zYEUcZTgpx1ckZipuiYeYHLci4+u9t8M+u4S6rISLQM=:
-      account_pub_key: zYEUcZTgpx1ckZipuiYeYHLci4+u9t8M+u4S6rISLQM=
+    7W8OQeMURXBk+5SNuIx1yUWX4fOgsOMgXJAYbOow/tE=:
+      account_pub_key: 7W8OQeMURXBk+5SNuIx1yUWX4fOgsOMgXJAYbOow/tE=
       staked_amount: 1
-    x2QWtxyikbZq4sq6PbLUGkh8gAeqeuthialuURJNnBw=:
-      account_pub_key: x2QWtxyikbZq4sq6PbLUGkh8gAeqeuthialuURJNnBw=
+    QvmYN+y9MThe8PdX2lbqLBwC/37qsJNUR9Bez/oKRAM=:
+      account_pub_key: QvmYN+y9MThe8PdX2lbqLBwC/37qsJNUR9Bez/oKRAM=
       staked_amount: 1
-    MFwNTHnSO3SChTGbAPkouldUTuD9n4Q+d7eaMlyIAKQ=:
-      account_pub_key: MFwNTHnSO3SChTGbAPkouldUTuD9n4Q+d7eaMlyIAKQ=
+    LfopE7eHgH4KiuvKNPpEBxkYzNe4YxVReYvWv2erlaA=:
+      account_pub_key: LfopE7eHgH4KiuvKNPpEBxkYzNe4YxVReYvWv2erlaA=
       staked_amount: 1
   bank_controller:
     controller_account: U1RBS0VDT05UUk9MTEVSQUFBQUFBQUFBQUFBQUFBQUE=
@@ -62,33 +62,33 @@ stake_controller:
         asset_id: 0
         owner_pubkey: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
     bank_accounts:
-      U1RBS0VDT05UUk9MTEVSQUFBQUFBQUFBQUFBQUFBQUE=:
-        account_pub_key: U1RBS0VDT05UUk9MTEVSQUFBQUFBQUFBQUFBQUFBQUE=
+      LfopE7eHgH4KiuvKNPpEBxkYzNe4YxVReYvWv2erlaA=:
+        account_pub_key: LfopE7eHgH4KiuvKNPpEBxkYzNe4YxVReYvWv2erlaA=
         balances:
-          0: 4
+          0: 4999999999
+      QvmYN+y9MThe8PdX2lbqLBwC/37qsJNUR9Bez/oKRAM=:
+        account_pub_key: QvmYN+y9MThe8PdX2lbqLBwC/37qsJNUR9Bez/oKRAM=
+        balances:
+          0: 4999999999
       AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=:
         account_pub_key: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
         balances:
           0: 9999980000000000
-      x2QWtxyikbZq4sq6PbLUGkh8gAeqeuthialuURJNnBw=:
-        account_pub_key: x2QWtxyikbZq4sq6PbLUGkh8gAeqeuthialuURJNnBw=
-        balances:
-          0: 4999999999
-      zYEUcZTgpx1ckZipuiYeYHLci4+u9t8M+u4S6rISLQM=:
-        account_pub_key: zYEUcZTgpx1ckZipuiYeYHLci4+u9t8M+u4S6rISLQM=
-        balances:
-          0: 4999999999
-      Qir9gKlM6D1yrWi6D4Clti0AB6f6oXw6OfU60U8yG80=:
-        account_pub_key: Qir9gKlM6D1yrWi6D4Clti0AB6f6oXw6OfU60U8yG80=
-        balances:
-          0: 4999999999
-      MFwNTHnSO3SChTGbAPkouldUTuD9n4Q+d7eaMlyIAKQ=:
-        account_pub_key: MFwNTHnSO3SChTGbAPkouldUTuD9n4Q+d7eaMlyIAKQ=
+      p2F1SS2x3aTQgdWL2BmrRiK+jEZ6LkSeVmgVRgEMqpQ=:
+        account_pub_key: p2F1SS2x3aTQgdWL2BmrRiK+jEZ6LkSeVmgVRgEMqpQ=
         balances:
           0: 4999999999
       U1BPVENPTlRST0xMRVJBQUFBQUFBQUFBQUFBQUFBQUE=:
         account_pub_key: U1BPVENPTlRST0xMRVJBQUFBQUFBQUFBQUFBQUFBQUE=
         balances: {}
+      7W8OQeMURXBk+5SNuIx1yUWX4fOgsOMgXJAYbOow/tE=:
+        account_pub_key: 7W8OQeMURXBk+5SNuIx1yUWX4fOgsOMgXJAYbOow/tE=
+        balances:
+          0: 4999999999
+      U1RBS0VDT05UUk9MTEVSQUFBQUFBQUFBQUFBQUFBQUE=:
+        account_pub_key: U1RBS0VDT05UUk9MTEVSQUFBQUFBQUFBQUFBQUFBQUE=
+        balances:
+          0: 4
     n_assets: 1
   total_staked: 4
 spot_controller:
@@ -101,31 +101,31 @@ spot_controller:
         asset_id: 0
         owner_pubkey: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
     bank_accounts:
-      U1RBS0VDT05UUk9MTEVSQUFBQUFBQUFBQUFBQUFBQUE=:
-        account_pub_key: U1RBS0VDT05UUk9MTEVSQUFBQUFBQUFBQUFBQUFBQUE=
+      LfopE7eHgH4KiuvKNPpEBxkYzNe4YxVReYvWv2erlaA=:
+        account_pub_key: LfopE7eHgH4KiuvKNPpEBxkYzNe4YxVReYvWv2erlaA=
         balances:
-          0: 4
+          0: 4999999999
+      QvmYN+y9MThe8PdX2lbqLBwC/37qsJNUR9Bez/oKRAM=:
+        account_pub_key: QvmYN+y9MThe8PdX2lbqLBwC/37qsJNUR9Bez/oKRAM=
+        balances:
+          0: 4999999999
       AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=:
         account_pub_key: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
         balances:
           0: 9999980000000000
-      x2QWtxyikbZq4sq6PbLUGkh8gAeqeuthialuURJNnBw=:
-        account_pub_key: x2QWtxyikbZq4sq6PbLUGkh8gAeqeuthialuURJNnBw=
-        balances:
-          0: 4999999999
-      zYEUcZTgpx1ckZipuiYeYHLci4+u9t8M+u4S6rISLQM=:
-        account_pub_key: zYEUcZTgpx1ckZipuiYeYHLci4+u9t8M+u4S6rISLQM=
-        balances:
-          0: 4999999999
-      Qir9gKlM6D1yrWi6D4Clti0AB6f6oXw6OfU60U8yG80=:
-        account_pub_key: Qir9gKlM6D1yrWi6D4Clti0AB6f6oXw6OfU60U8yG80=
-        balances:
-          0: 4999999999
-      MFwNTHnSO3SChTGbAPkouldUTuD9n4Q+d7eaMlyIAKQ=:
-        account_pub_key: MFwNTHnSO3SChTGbAPkouldUTuD9n4Q+d7eaMlyIAKQ=
+      p2F1SS2x3aTQgdWL2BmrRiK+jEZ6LkSeVmgVRgEMqpQ=:
+        account_pub_key: p2F1SS2x3aTQgdWL2BmrRiK+jEZ6LkSeVmgVRgEMqpQ=
         balances:
           0: 4999999999
       U1BPVENPTlRST0xMRVJBQUFBQUFBQUFBQUFBQUFBQUE=:
         account_pub_key: U1BPVENPTlRST0xMRVJBQUFBQUFBQUFBQUFBQUFBQUE=
         balances: {}
+      7W8OQeMURXBk+5SNuIx1yUWX4fOgsOMgXJAYbOow/tE=:
+        account_pub_key: 7W8OQeMURXBk+5SNuIx1yUWX4fOgsOMgXJAYbOow/tE=
+        balances:
+          0: 4999999999
+      U1RBS0VDT05UUk9MTEVSQUFBQUFBQUFBQUFBQUFBQUE=:
+        account_pub_key: U1RBS0VDT05UUk9MTEVSQUFBQUFBQUFBQUFBQUFBQUE=
+        balances:
+          0: 4
     n_assets: 1

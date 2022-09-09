@@ -4,7 +4,7 @@ use gdex_types::{
     account::AccountKeyPair,
     crypto::KeypairTraits,
     proto::{Faucet, FaucetAirdropRequest, FaucetAirdropResponse, FaucetServer, TransactionSubmitterClient},
-    transaction::{create_payment_transaction, sign_transaction, SignedTransaction},
+    transaction::{create_payment_transaction, SignedTransaction},
     utils,
 };
 use multiaddr::Multiaddr;
@@ -41,7 +41,7 @@ fn generate_signed_airdrop_transaction_for_faucet(
         gas,
         recent_certificate_digest,
     );
-    match sign_transaction(kp_sender, transaction) {
+    match transaction.sign(kp_sender) {
         Ok(t) => t,
         _ => panic!("Error signing transaction"),
     }

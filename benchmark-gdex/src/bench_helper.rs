@@ -6,7 +6,7 @@ use gdex_types::{
     proto::{Empty, RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionSubmitterClient},
     transaction::{
         create_create_asset_transaction, create_create_orderbook_transaction, create_limit_order_transaction,
-        create_payment_transaction, sign_transaction, ConsensusTransaction, SignedTransaction,
+        create_payment_transaction, ConsensusTransaction, SignedTransaction,
     },
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
@@ -35,10 +35,7 @@ fn create_signed_payment_transaction(
         gas,
         block_digest,
     );
-    match sign_transaction(kp_sender, transaction) {
-        Ok(t) => t,
-        _ => panic!("Error signing transaction"),
-    }
+    transaction.sign(kp_sender).unwrap()
 }
 
 fn create_signed_asset_creation_transaction(
@@ -48,10 +45,7 @@ fn create_signed_asset_creation_transaction(
 ) -> SignedTransaction {
     let gas: u64 = 1000;
     let transaction = create_create_asset_transaction(kp_sender.public().clone(), dummy as u64, gas, block_digest);
-    match sign_transaction(kp_sender, transaction) {
-        Ok(t) => t,
-        _ => panic!("Error signing transaction"),
-    }
+    transaction.sign(kp_sender).unwrap()
 }
 
 fn create_signed_orderbook_transaction(
@@ -68,10 +62,7 @@ fn create_signed_orderbook_transaction(
         gas,
         block_digest,
     );
-    match sign_transaction(kp_sender, transaction) {
-        Ok(t) => t,
-        _ => panic!("Error signing transaction"),
-    }
+    transaction.sign(kp_sender).unwrap()
 }
 
 fn create_signed_limit_order_transaction(
@@ -96,10 +87,7 @@ fn create_signed_limit_order_transaction(
         gas,
         block_digest,
     );
-    match sign_transaction(kp_sender, transaction) {
-        Ok(t) => t,
-        _ => panic!("Error signing transaction"),
-    }
+    transaction.sign(kp_sender).unwrap()
 }
 
 pub struct BenchHelper {

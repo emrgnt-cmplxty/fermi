@@ -23,8 +23,7 @@ use gdex_types::{
     error::GDEXError,
     store::ProcessBlockStore,
     transaction::{
-        deserialize_protobuf, get_payment_receiver, get_transaction_sender, parse_request_type, CreateAssetRequest,
-        PaymentRequest, RequestType, Transaction,
+        deserialize_protobuf, parse_request_type, CreateAssetRequest, PaymentRequest, RequestType, Transaction,
     },
 };
 
@@ -83,13 +82,13 @@ impl Controller for BankController {
         match request_type {
             RequestType::CreateAsset => {
                 let _request: CreateAssetRequest = deserialize_protobuf(&transaction.request_bytes)?;
-                let sender = get_transaction_sender(transaction)?;
+                let sender = transaction.get_sender()?;
                 self.create_asset(&sender)
             }
             RequestType::Payment => {
                 let request: PaymentRequest = deserialize_protobuf(&transaction.request_bytes)?;
-                let sender = get_transaction_sender(transaction)?;
-                let receiver = get_payment_receiver(&request)?;
+                let sender = transaction.get_sender()?;
+                let receiver = request.get_receiver()?;
                 self.transfer(&sender, &receiver, request.asset_id, request.amount)
             }
             _ => Err(GDEXError::InvalidRequestTypeError),

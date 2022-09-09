@@ -29,8 +29,8 @@ use gdex_types::{
     order_book::{OrderProcessingResult, OrderSide, OrderType, OrderbookDepth, Success},
     store::ProcessBlockStore,
     transaction::{
-        deserialize_protobuf, get_transaction_sender, parse_order_side, parse_request_type, CancelOrderRequest,
-        CreateOrderbookRequest, LimitOrderRequest, MarketOrderRequest, RequestType, Transaction, UpdateOrderRequest,
+        deserialize_protobuf, parse_order_side, parse_request_type, CancelOrderRequest, CreateOrderbookRequest,
+        LimitOrderRequest, MarketOrderRequest, RequestType, Transaction, UpdateOrderRequest,
     },
 };
 
@@ -524,7 +524,7 @@ impl Controller for SpotController {
             }
             RequestType::LimitOrder => {
                 let request: LimitOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
-                let sender = get_transaction_sender(transaction)?;
+                let sender = transaction.get_sender()?;
                 let side = parse_order_side(request.side)?;
                 self.place_limit_order(
                     request.base_asset_id,
@@ -537,7 +537,7 @@ impl Controller for SpotController {
             }
             RequestType::UpdateOrder => {
                 let request: UpdateOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
-                let sender = get_transaction_sender(transaction)?;
+                let sender = transaction.get_sender()?;
                 let side = parse_order_side(request.side)?;
                 self.place_update_order(
                     request.base_asset_id,
@@ -551,7 +551,7 @@ impl Controller for SpotController {
             }
             RequestType::CancelOrder => {
                 let request: CancelOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
-                let sender = get_transaction_sender(transaction)?;
+                let sender = transaction.get_sender()?;
                 let side = parse_order_side(request.side)?;
                 self.place_cancel_order(
                     request.base_asset_id,

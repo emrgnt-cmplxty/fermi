@@ -2453,6 +2453,7 @@ dependencies = [
 name = "gdex-controller"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "crypto",
  "fastcrypto",
  "gdex-engine",

@@ -34,7 +34,6 @@ use tracing::{info, trace};
 
 // constants
 // frequency of orderbook depth writes (rounds)
-const ORDERBOOK_DEPTH_FREQUENCY: u64 = 100;
 type ExecutionResult = Result<(), GDEXError>;
 type HandledTransaction = Result<(ConsensusOutput, ExecutionIndices, ExecutionResult), SubscriberError>;
 
@@ -186,19 +185,6 @@ impl ValidatorService {
 
                         // if next_transaction_index == 0 then the block is complete and we may write-out
                         if execution_indices.next_transaction_index == 0 {
-                            // write out orderbook depth every ORDERBOOK_DEPTH_FREQUENCY
-                            if store.block_number.load(std::sync::atomic::Ordering::SeqCst) % ORDERBOOK_DEPTH_FREQUENCY
-                                == 0
-                            {
-                                let orderbook_depths = validator_state
-                                    .master_controller
-                                    .spot_controller
-                                    .lock()
-                                    .unwrap()
-                                    .generate_orderbook_depths();
-                                store.write_latest_orderbook_depths(orderbook_depths).await;
-                            }
-
                             // subtract round look-back from the latest round to get block number
                             let round_number = consensus_output.certificate.header.round;
 
@@ -210,7 +196,8 @@ impl ValidatorService {
                                 .write_latest_block(consensus_output.certificate, serialized_txns_buf.clone())
                                 .await;
                             metrics.process_end_of_block(block, block_info);
-                            master_controller.process_end_of_block(&store.process_block_store);
+                            let block_number = store.block_number.load(std::sync::atomic::Ordering::SeqCst);
+                            master_controller.process_end_of_block(&store.process_block_store, block_number);
                             serialized_txns_buf.clear();
                         }
                     }

@@ -115,25 +115,25 @@ impl MasterController {
         }
     }
 
-    pub fn process_end_of_block(&self, process_block_store: &ProcessBlockStore) {
+    pub fn process_end_of_block(&self, process_block_store: &ProcessBlockStore, block_number: u64) {
         self.consensus_controller
             .lock()
             .unwrap()
-            .process_end_of_block(process_block_store);
+            .process_end_of_block(process_block_store, block_number);
 
         self.bank_controller
             .lock()
             .unwrap()
-            .process_end_of_block(process_block_store);
+            .process_end_of_block(process_block_store, block_number);
 
         self.stake_controller
             .lock()
             .unwrap()
-            .process_end_of_block(process_block_store);
+            .process_end_of_block(process_block_store, block_number);
 
         self.spot_controller
             .lock()
             .unwrap()
-            .process_end_of_block(process_block_store);
+            .process_end_of_block(process_block_store, block_number);
     }
 }

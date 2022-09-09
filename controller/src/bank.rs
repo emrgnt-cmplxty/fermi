@@ -33,6 +33,7 @@ use gdex_types::{
 // external
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use async_trait::async_trait;
 
 // CONSTANTS
 #[derive(PartialEq)]
@@ -68,6 +69,7 @@ impl Default for BankController {
     }
 }
 
+#[async_trait]
 impl Controller for BankController {
     fn initialize(&mut self, _master_controller: &MasterController) {}
 
@@ -93,7 +95,7 @@ impl Controller for BankController {
         }
     }
 
-    fn process_end_of_block(&mut self, _process_block_store: &ProcessBlockStore) {}
+    async fn process_end_of_block(&mut self, _process_block_store: &ProcessBlockStore, _block_number: u64) {}
 }
 
 impl BankController {

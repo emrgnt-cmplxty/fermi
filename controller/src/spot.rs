@@ -41,6 +41,7 @@ use fastcrypto::ed25519::Ed25519PublicKey;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use std::{collections::HashMap, time::SystemTime};
+use async_trait::async_trait;
 
 // TYPE DEFS
 
@@ -49,6 +50,7 @@ pub type OrderId = u64;
 // CONSTANTS
 
 pub const SPOT_CONTROLLER_ACCOUNT_PUBKEY: &[u8] = b"SPOTCONTROLLERAAAAAAAAAAAAAAAAAA";
+const ORDERBOOK_DEPTH_FREQUENCY: u64 = 100;
 
 // ORDER BOOK INTERFACE
 
@@ -489,6 +491,7 @@ impl Default for SpotController {
     }
 }
 
+#[async_trait]
 impl Controller for SpotController {
     fn initialize(&mut self, master_controller: &MasterController) {
         self.bank_controller = Arc::clone(&master_controller.bank_controller);
@@ -562,7 +565,19 @@ impl Controller for SpotController {
         }
     }
 
-    fn process_end_of_block(&mut self, _process_block_store: &ProcessBlockStore) {}
+    async fn process_end_of_block(&mut self, process_block_store: &ProcessBlockStore, block_number: u64) {
+        // write out orderbook depth every ORDERBOOK_DEPTH_FREQUENCY
+        if block_number % ORDERBOOK_DEPTH_FREQUENCY == 0
+        {
+            let orderbook_depths = self.generate_orderbook_depths();
+            for (asset_pair, orderbook_depth) in orderbook_depths {
+                process_block_store
+                    .latest_orderbook_depth_store
+                    .write(asset_pair, orderbook_depth.clone())
+                    .await;
+            }
+        }
+    }
 }
 
 impl SpotController {

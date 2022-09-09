@@ -490,12 +490,15 @@ pub mod cluster_test_suite {
             });
         }
         let orderbook_depth = OrderbookDepth { bids, asks };
-        orderbook_depths.insert(orderbook_key, orderbook_depth);
+        orderbook_depths.insert(orderbook_key.clone(), orderbook_depth);
 
-        validator_state_1
-            .validator_store
-            .write_latest_orderbook_depths(orderbook_depths)
+        for (asset_pair, orderbook_depth) in orderbook_depths {
+            validator_state_1.validator_store
+            .process_block_store
+            .latest_orderbook_depth_store
+            .write(asset_pair, orderbook_depth)
             .await;
+        }
 
         let relayer_1 = cluster.spawn_single_relayer(1).await;
         let target_endpoint = endpoint_from_multiaddr(&relayer_1.get_relayer_address()).unwrap();
@@ -646,12 +649,13 @@ pub mod cluster_test_suite {
         let orderbook_depth = OrderbookDepth { bids, asks };
         orderbook_depths.insert(orderbook_key, orderbook_depth);
 
-        validator_state_1
-            .validator_store
-            .write_latest_orderbook_depths(orderbook_depths)
+        for (asset_pair, orderbook_depth) in orderbook_depths {
+            validator_state_1.validator_store
+            .process_block_store
+            .latest_orderbook_depth_store
+            .write(asset_pair, orderbook_depth)
             .await;
-
-        // TODO clean
+        }
 
         let relayer_1 = cluster.spawn_single_relayer(1).await;
         let target_endpoint = endpoint_from_multiaddr(&relayer_1.get_relayer_address()).unwrap();

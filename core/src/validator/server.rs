@@ -194,7 +194,9 @@ impl ValidatorService {
                                 .await;
                             metrics.process_end_of_block(block, block_info);
                             let block_number = store.block_number.load(std::sync::atomic::Ordering::SeqCst);
-                            master_controller.process_end_of_block(&store.process_block_store, block_number);
+                            master_controller
+                                .process_end_of_block(&store.process_block_store, block_number)
+                                .await;
                             serialized_txns_buf.clear();
                         }
                     }

@@ -137,17 +137,15 @@ impl BenchHelper {
             .as_mut()
             .expect("Relayer client not initialized")
             .get_latest_block_info(BLOCK_INFO_REQUEST.clone())
-            .await
-            .unwrap()
-            .into_inner();
+            .await;
 
-        let block_digest: BlockDigest = if response.successful && response.block_info.is_some() {
-            bincode::deserialize(response.block_info.unwrap().digest.as_ref()).unwrap()
-        } else {
-            warn!("Failed to get latest block digest, returning default");
-            BlockDigest::new([0; 32])
-        };
-        block_digest
+        if let Ok(relayer_block_response) = response {
+            if let Some(block_info) = relayer_block_response.into_inner().block_info {
+                bincode::deserialize(block_info.digest.as_ref()).unwrap()
+            }
+        }
+        warn!("Failed to get latest block digest, returning default");
+        BlockDigest::new([0; 32])
     }
 
     async fn submit_transaction(

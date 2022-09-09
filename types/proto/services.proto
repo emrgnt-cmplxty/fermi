@@ -3,25 +3,31 @@
 
 syntax = "proto3";
 
-package gdex;
+package services;
 
-message Transaction {
-    bytes transaction = 1;
-}
+// IMPORTS
 
-// Empty message for when we don't have anything to return
+import "block.proto";
+import "transaction.proto";
+
+// INTERFACE
+
 message Empty {}
 
-service Transactions {
-    // Submit a Transactions
-    rpc SubmitTransaction(Transaction) returns (Empty) {}
+// SUBMITTER
 
-    // Submit a Transactions
-    rpc SubmitTransactionStream(stream Transaction) returns (Empty) {}
+service TransactionSubmitter {
+    // submit a transaction
+    rpc SubmitTransaction(transaction.SignedTransaction) returns (Empty) {}
+    
+    // submit a transaction via stream
+    rpc SubmitTransactionStream(stream transaction.SignedTransaction) returns (Empty) {}
 }
 
-// Faucet service for airdropping
+// FAUCET
+
 service Faucet {
+    // request airdrop
     rpc Airdrop (FaucetAirdropRequest) returns (FaucetAirdropResponse);
 }
 
@@ -34,53 +40,55 @@ message FaucetAirdropResponse {
     bool successful = 1;
 }
 
-// Relay service for relaying information outside
+// RELAYER
+
 service Relayer {
+    // request latest block info
     rpc GetLatestBlockInfo (RelayerGetLatestBlockInfoRequest) returns (RelayerBlockInfoResponse);
+
+    // request block info by block number
     rpc GetBlockInfo (RelayerGetBlockInfoRequest) returns (RelayerBlockInfoResponse);
+
+    // request block (includes transactions)
     rpc GetBlock (RelayerGetBlockRequest) returns (RelayerBlockResponse);
+
+    // request orderbook depth snapshot
     rpc GetLatestOrderbookDepth (RelayerGetLatestOrderbookDepthRequest) returns (RelayerLatestOrderbookDepthResponse);
+
+    // request orderbook metrics
     rpc GetLatestMetrics (RelayerMetricsRequest) returns (RelayerMetricsResponse);
 }
 
-// A message to get the latest block info
+// block info
+
 message RelayerGetLatestBlockInfoRequest {}
 
-// A message to get a certain block info based on the block number
 message RelayerGetBlockInfoRequest {
     uint64 block_number = 1;
 }
 
-// A message to get the actual block object based on the block number
+message RelayerBlockInfoResponse {
+    bool successful = 1;
+    block.BlockInfo block_info = 2;
+}
+
+// block
+
 message RelayerGetBlockRequest {
     uint64 block_number = 1;
 }
 
-// Structure for BlockInfo
-message BlockInfo {
-    uint64 block_number = 1;
-    bytes digest = 2;
-}
-
-// Structure for Block
-message Block {
+message RelayerBlock {
     bytes block = 1;
 }
 
-// Response from relayer with actual Block 
 message RelayerBlockResponse {
     bool successful = 1;
-    Block block = 2;
+    RelayerBlock block = 2;
 }
 
-// TODO figure out how to import from narwhal. It almost worked but it failed because ../ is not allowed
-// in the virtual path for some reason
-message RelayerBlockInfoResponse {
-    bool successful = 1;
-    BlockInfo block_info = 2;
-}
+// orderbook depth
 
-// A message to get the latest orderbook depth
 message RelayerGetLatestOrderbookDepthRequest {
     uint64 base_asset_id = 1;
     uint64 quote_asset_id = 2;
@@ -92,16 +100,15 @@ message Depth {
     uint64 quantity = 2;
 }
 
-// A response of the latest orderbook depth
 message RelayerLatestOrderbookDepthResponse {
     repeated Depth bids = 1;
     repeated Depth asks = 2;
 }
 
-// A message to get the metrics
+// metrics
+
 message RelayerMetricsRequest {}
 
-// Response message containing latest metrics
 message RelayerMetricsResponse {
     uint64 average_latency = 1;
     double average_tps = 2;

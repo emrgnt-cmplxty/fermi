@@ -7,7 +7,7 @@ use clap::{crate_name, crate_version, App, AppSettings};
 use futures::{future::join_all, StreamExt};
 use gdex_types::{
     account::AccountKeyPair,
-    transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
+    transaction::{create_payment_transaction, ConsensusTransaction},
 };
 use fastcrypto::{
     traits::{KeyPair, Signer},
@@ -40,30 +40,18 @@ fn create_signed_padded_transaction(
     if is_advanced_execution {
         // use a dummy batch digest for initial benchmarking
         let dummy_certificate_digest = CertificateDigest::new([0; DIGEST_LEN]);
+        let gas: u64 = 1000;
+        let transaction = create_payment_transaction(kp_sender.public().clone(), kp_receiver.public(), PRIMARY_ASSET_ID, amount, gas, dummy_certificate_digest);
+        let signed_transaction = transaction.sign(kp_sender).unwrap()
+        let mut padded_serialized_consensus_transaction = ConsensusTransaction::new(&signed_transaction).serialize().unwrap()
 
-        let transaction_variant = TransactionVariant::PaymentTransaction(PaymentRequest::new(
-            kp_receiver.public().clone(),
-            PRIMARY_ASSET_ID,
-            amount,
-        ));
-        let transaction = Transaction::new(
-            kp_sender.public().clone(),
-            dummy_certificate_digest,
-            transaction_variant,
-        );
-
-        // sign digest and create signed transaction
-        let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest);
-
-        // serialize and resize the transaction for channel distribution
-        let mut padded_signed_transaction = signed_transaction.serialize().unwrap();
         assert!(
-            padded_signed_transaction.len() <= transmission_size,
+            padded_serialized_consensus_transaction.len() <= transmission_size,
             "please resize to a larger expected byte length"
         );
-        padded_signed_transaction.resize(transmission_size, 0);
-        padded_signed_transaction
+
+        padded_serialized_consensus_transaction.resize(transmission_size, 0);
+        padded_serialized_consensus_transaction
     } else {
         let mut tx = BytesMut::with_capacity(transmission_size);
         tx.put_u8(0u8); // Sample txs start with 0.

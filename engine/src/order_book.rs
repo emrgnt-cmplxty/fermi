@@ -14,8 +14,9 @@ use super::sequence;
 use super::validation::OrderRequestValidator;
 use gdex_types::{
     asset::AssetId,
-    order_book::{Depth, Failed, Order, OrderProcessingResult, OrderSide, OrderType, OrderbookDepth, Success},
-    transaction::OrderRequest,
+    order_book::{
+        Depth, Failed, Order, OrderProcessingResult, OrderRequest, OrderSide, OrderType, OrderbookDepth, Success,
+    },
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

@@ -1,9 +1,5 @@
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct Transaction {
-    #[prost(bytes="bytes", tag="1")]
-    pub transaction: ::prost::bytes::Bytes,
-}
-/// Empty message for when we don't have anything to return
+// INTERFACE
+
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Empty {
 }
@@ -19,54 +15,44 @@ pub struct FaucetAirdropResponse {
     #[prost(bool, tag="1")]
     pub successful: bool,
 }
-/// A message to get the latest block info
+// block info
+
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RelayerGetLatestBlockInfoRequest {
 }
-/// A message to get a certain block info based on the block number
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RelayerGetBlockInfoRequest {
     #[prost(uint64, tag="1")]
     pub block_number: u64,
 }
-/// A message to get the actual block object based on the block number
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct RelayerGetBlockRequest {
-    #[prost(uint64, tag="1")]
-    pub block_number: u64,
-}
-/// Structure for BlockInfo
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct BlockInfo {
-    #[prost(uint64, tag="1")]
-    pub block_number: u64,
-    #[prost(bytes="bytes", tag="2")]
-    pub digest: ::prost::bytes::Bytes,
-}
-/// Structure for Block
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct Block {
-    #[prost(bytes="bytes", tag="1")]
-    pub block: ::prost::bytes::Bytes,
-}
-/// Response from relayer with actual Block 
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct RelayerBlockResponse {
-    #[prost(bool, tag="1")]
-    pub successful: bool,
-    #[prost(message, optional, tag="2")]
-    pub block: ::core::option::Option<Block>,
-}
-/// TODO figure out how to import from narwhal. It almost worked but it failed because ../ is not allowed
-/// in the virtual path for some reason
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RelayerBlockInfoResponse {
     #[prost(bool, tag="1")]
     pub successful: bool,
     #[prost(message, optional, tag="2")]
-    pub block_info: ::core::option::Option<BlockInfo>,
+    pub block_info: ::core::option::Option<super::block::BlockInfo>,
 }
-/// A message to get the latest orderbook depth
+// block
+
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RelayerGetBlockRequest {
+    #[prost(uint64, tag="1")]
+    pub block_number: u64,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RelayerBlock {
+    #[prost(bytes="bytes", tag="1")]
+    pub block: ::prost::bytes::Bytes,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RelayerBlockResponse {
+    #[prost(bool, tag="1")]
+    pub successful: bool,
+    #[prost(message, optional, tag="2")]
+    pub block: ::core::option::Option<RelayerBlock>,
+}
+// orderbook depth
+
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RelayerGetLatestOrderbookDepthRequest {
     #[prost(uint64, tag="1")]
@@ -83,7 +69,6 @@ pub struct Depth {
     #[prost(uint64, tag="2")]
     pub quantity: u64,
 }
-/// A response of the latest orderbook depth
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RelayerLatestOrderbookDepthResponse {
     #[prost(message, repeated, tag="1")]
@@ -91,11 +76,11 @@ pub struct RelayerLatestOrderbookDepthResponse {
     #[prost(message, repeated, tag="2")]
     pub asks: ::prost::alloc::vec::Vec<Depth>,
 }
-/// A message to get the metrics
+// metrics
+
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RelayerMetricsRequest {
 }
-/// Response message containing latest metrics
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RelayerMetricsResponse {
     #[prost(uint64, tag="1")]
@@ -104,14 +89,14 @@ pub struct RelayerMetricsResponse {
     pub average_tps: f64,
 }
 /// Generated client implementations.
-pub mod transactions_client {
+pub mod transaction_submitter_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
     #[derive(Debug, Clone)]
-    pub struct TransactionsClient<T> {
+    pub struct TransactionSubmitterClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl TransactionsClient<tonic::transport::Channel> {
+    impl TransactionSubmitterClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -122,7 +107,7 @@ pub mod transactions_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> TransactionsClient<T>
+    impl<T> TransactionSubmitterClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
@@ -136,7 +121,7 @@ pub mod transactions_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> TransactionsClient<InterceptedService<T, F>>
+        ) -> TransactionSubmitterClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -150,7 +135,7 @@ pub mod transactions_client {
                 http::Request<tonic::body::BoxBody>,
             >>::Error: Into<StdError> + Send + Sync,
         {
-            TransactionsClient::new(InterceptedService::new(inner, interceptor))
+            TransactionSubmitterClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with `gzip`.
         ///
@@ -167,10 +152,12 @@ pub mod transactions_client {
             self.inner = self.inner.accept_gzip();
             self
         }
-        /// Submit a Transactions
+        /// submit a transaction
         pub async fn submit_transaction(
             &mut self,
-            request: impl tonic::IntoRequest<super::Transaction>,
+            request: impl tonic::IntoRequest<
+                super::super::transaction::SignedTransaction,
+            >,
         ) -> Result<tonic::Response<super::Empty>, tonic::Status> {
             self.inner
                 .ready()
@@ -183,14 +170,16 @@ pub mod transactions_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/gdex.Transactions/SubmitTransaction",
+                "/services.TransactionSubmitter/SubmitTransaction",
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
-        /// Submit a Transactions
+        /// submit a transaction via stream
         pub async fn submit_transaction_stream(
             &mut self,
-            request: impl tonic::IntoStreamingRequest<Message = super::Transaction>,
+            request: impl tonic::IntoStreamingRequest<
+                Message = super::super::transaction::SignedTransaction,
+            >,
         ) -> Result<tonic::Response<super::Empty>, tonic::Status> {
             self.inner
                 .ready()
@@ -203,7 +192,7 @@ pub mod transactions_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/gdex.Transactions/SubmitTransactionStream",
+                "/services.TransactionSubmitter/SubmitTransactionStream",
             );
             self.inner
                 .client_streaming(request.into_streaming_request(), path, codec)
@@ -215,7 +204,6 @@ pub mod transactions_client {
 pub mod faucet_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
-    /// Faucet service for airdropping
     #[derive(Debug, Clone)]
     pub struct FaucetClient<T> {
         inner: tonic::client::Grpc<T>,
@@ -276,6 +264,7 @@ pub mod faucet_client {
             self.inner = self.inner.accept_gzip();
             self
         }
+        /// request airdrop
         pub async fn airdrop(
             &mut self,
             request: impl tonic::IntoRequest<super::FaucetAirdropRequest>,
@@ -290,7 +279,7 @@ pub mod faucet_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gdex.Faucet/Airdrop");
+            let path = http::uri::PathAndQuery::from_static("/services.Faucet/Airdrop");
             self.inner.unary(request.into_request(), path, codec).await
         }
     }
@@ -299,7 +288,6 @@ pub mod faucet_client {
 pub mod relayer_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
-    /// Relay service for relaying information outside
     #[derive(Debug, Clone)]
     pub struct RelayerClient<T> {
         inner: tonic::client::Grpc<T>,
@@ -360,6 +348,7 @@ pub mod relayer_client {
             self.inner = self.inner.accept_gzip();
             self
         }
+        /// request latest block info
         pub async fn get_latest_block_info(
             &mut self,
             request: impl tonic::IntoRequest<super::RelayerGetLatestBlockInfoRequest>,
@@ -375,10 +364,11 @@ pub mod relayer_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/gdex.Relayer/GetLatestBlockInfo",
+                "/services.Relayer/GetLatestBlockInfo",
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
+        /// request block info by block number
         pub async fn get_block_info(
             &mut self,
             request: impl tonic::IntoRequest<super::RelayerGetBlockInfoRequest>,
@@ -394,10 +384,11 @@ pub mod relayer_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/gdex.Relayer/GetBlockInfo",
+                "/services.Relayer/GetBlockInfo",
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
+        /// request block (includes transactions)
         pub async fn get_block(
             &mut self,
             request: impl tonic::IntoRequest<super::RelayerGetBlockRequest>,
@@ -412,9 +403,12 @@ pub mod relayer_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/gdex.Relayer/GetBlock");
+            let path = http::uri::PathAndQuery::from_static(
+                "/services.Relayer/GetBlock",
+            );
             self.inner.unary(request.into_request(), path, codec).await
         }
+        /// request orderbook depth snapshot
         pub async fn get_latest_orderbook_depth(
             &mut self,
             request: impl tonic::IntoRequest<
@@ -435,10 +429,11 @@ pub mod relayer_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/gdex.Relayer/GetLatestOrderbookDepth",
+                "/services.Relayer/GetLatestOrderbookDepth",
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
+        /// request orderbook metrics
         pub async fn get_latest_metrics(
             &mut self,
             request: impl tonic::IntoRequest<super::RelayerMetricsRequest>,
@@ -454,38 +449,40 @@ pub mod relayer_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/gdex.Relayer/GetLatestMetrics",
+                "/services.Relayer/GetLatestMetrics",
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
     }
 }
 /// Generated server implementations.
-pub mod transactions_server {
+pub mod transaction_submitter_server {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
-    ///Generated trait containing gRPC methods that should be implemented for use with TransactionsServer.
+    ///Generated trait containing gRPC methods that should be implemented for use with TransactionSubmitterServer.
     #[async_trait]
-    pub trait Transactions: Send + Sync + 'static {
-        /// Submit a Transactions
+    pub trait TransactionSubmitter: Send + Sync + 'static {
+        /// submit a transaction
         async fn submit_transaction(
             &self,
-            request: tonic::Request<super::Transaction>,
+            request: tonic::Request<super::super::transaction::SignedTransaction>,
         ) -> Result<tonic::Response<super::Empty>, tonic::Status>;
-        /// Submit a Transactions
+        /// submit a transaction via stream
         async fn submit_transaction_stream(
             &self,
-            request: tonic::Request<tonic::Streaming<super::Transaction>>,
+            request: tonic::Request<
+                tonic::Streaming<super::super::transaction::SignedTransaction>,
+            >,
         ) -> Result<tonic::Response<super::Empty>, tonic::Status>;
     }
     #[derive(Debug)]
-    pub struct TransactionsServer<T: Transactions> {
+    pub struct TransactionSubmitterServer<T: TransactionSubmitter> {
         inner: _Inner<T>,
         accept_compression_encodings: (),
         send_compression_encodings: (),
     }
     struct _Inner<T>(Arc<T>);
-    impl<T: Transactions> TransactionsServer<T> {
+    impl<T: TransactionSubmitter> TransactionSubmitterServer<T> {
         pub fn new(inner: T) -> Self {
             Self::from_arc(Arc::new(inner))
         }
@@ -507,9 +504,10 @@ pub mod transactions_server {
             InterceptedService::new(Self::new(inner), interceptor)
         }
     }
-    impl<T, B> tonic::codegen::Service<http::Request<B>> for TransactionsServer<T>
+    impl<T, B> tonic::codegen::Service<http::Request<B>>
+    for TransactionSubmitterServer<T>
     where
-        T: Transactions,
+        T: TransactionSubmitter,
         B: Body + Send + 'static,
         B::Error: Into<StdError> + Send + 'static,
     {
@@ -525,11 +523,14 @@ pub mod transactions_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
-                "/gdex.Transactions/SubmitTransaction" => {
+                "/services.TransactionSubmitter/SubmitTransaction" => {
                     #[allow(non_camel_case_types)]
-                    struct SubmitTransactionSvc<T: Transactions>(pub Arc<T>);
-                    impl<T: Transactions> tonic::server::UnaryService<super::Transaction>
-                    for SubmitTransactionSvc<T> {
+                    struct SubmitTransactionSvc<T: TransactionSubmitter>(pub Arc<T>);
+                    impl<
+                        T: TransactionSubmitter,
+                    > tonic::server::UnaryService<
+                        super::super::transaction::SignedTransaction,
+                    > for SubmitTransactionSvc<T> {
                         type Response = super::Empty;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
@@ -537,7 +538,9 @@ pub mod transactions_server {
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::Transaction>,
+                            request: tonic::Request<
+                                super::super::transaction::SignedTransaction,
+                            >,
                         ) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move {
@@ -563,13 +566,16 @@ pub mod transactions_server {
                     };
                     Box::pin(fut)
                 }
-                "/gdex.Transactions/SubmitTransactionStream" => {
+                "/services.TransactionSubmitter/SubmitTransactionStream" => {
                     #[allow(non_camel_case_types)]
-                    struct SubmitTransactionStreamSvc<T: Transactions>(pub Arc<T>);
+                    struct SubmitTransactionStreamSvc<T: TransactionSubmitter>(
+                        pub Arc<T>,
+                    );
                     impl<
-                        T: Transactions,
-                    > tonic::server::ClientStreamingService<super::Transaction>
-                    for SubmitTransactionStreamSvc<T> {
+                        T: TransactionSubmitter,
+                    > tonic::server::ClientStreamingService<
+                        super::super::transaction::SignedTransaction,
+                    > for SubmitTransactionStreamSvc<T> {
                         type Response = super::Empty;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
@@ -577,7 +583,11 @@ pub mod transactions_server {
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<tonic::Streaming<super::Transaction>>,
+                            request: tonic::Request<
+                                tonic::Streaming<
+                                    super::super::transaction::SignedTransaction,
+                                >,
+                            >,
                         ) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move {
@@ -618,7 +628,7 @@ pub mod transactions_server {
             }
         }
     }
-    impl<T: Transactions> Clone for TransactionsServer<T> {
+    impl<T: TransactionSubmitter> Clone for TransactionSubmitterServer<T> {
         fn clone(&self) -> Self {
             let inner = self.inner.clone();
             Self {
@@ -628,7 +638,7 @@ pub mod transactions_server {
             }
         }
     }
-    impl<T: Transactions> Clone for _Inner<T> {
+    impl<T: TransactionSubmitter> Clone for _Inner<T> {
         fn clone(&self) -> Self {
             Self(self.0.clone())
         }
@@ -638,8 +648,9 @@ pub mod transactions_server {
             write!(f, "{:?}", self.0)
         }
     }
-    impl<T: Transactions> tonic::transport::NamedService for TransactionsServer<T> {
-        const NAME: &'static str = "gdex.Transactions";
+    impl<T: TransactionSubmitter> tonic::transport::NamedService
+    for TransactionSubmitterServer<T> {
+        const NAME: &'static str = "services.TransactionSubmitter";
     }
 }
 /// Generated server implementations.
@@ -649,12 +660,12 @@ pub mod faucet_server {
     ///Generated trait containing gRPC methods that should be implemented for use with FaucetServer.
     #[async_trait]
     pub trait Faucet: Send + Sync + 'static {
+        /// request airdrop
         async fn airdrop(
             &self,
             request: tonic::Request<super::FaucetAirdropRequest>,
         ) -> Result<tonic::Response<super::FaucetAirdropResponse>, tonic::Status>;
     }
-    /// Faucet service for airdropping
     #[derive(Debug)]
     pub struct FaucetServer<T: Faucet> {
         inner: _Inner<T>,
@@ -702,7 +713,7 @@ pub mod faucet_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
-                "/gdex.Faucet/Airdrop" => {
+                "/services.Faucet/Airdrop" => {
                     #[allow(non_camel_case_types)]
                     struct AirdropSvc<T: Faucet>(pub Arc<T>);
                     impl<
@@ -776,7 +787,7 @@ pub mod faucet_server {
         }
     }
     impl<T: Faucet> tonic::transport::NamedService for FaucetServer<T> {
-        const NAME: &'static str = "gdex.Faucet";
+        const NAME: &'static str = "services.Faucet";
     }
 }
 /// Generated server implementations.
@@ -786,18 +797,22 @@ pub mod relayer_server {
     ///Generated trait containing gRPC methods that should be implemented for use with RelayerServer.
     #[async_trait]
     pub trait Relayer: Send + Sync + 'static {
+        /// request latest block info
         async fn get_latest_block_info(
             &self,
             request: tonic::Request<super::RelayerGetLatestBlockInfoRequest>,
         ) -> Result<tonic::Response<super::RelayerBlockInfoResponse>, tonic::Status>;
+        /// request block info by block number
         async fn get_block_info(
             &self,
             request: tonic::Request<super::RelayerGetBlockInfoRequest>,
         ) -> Result<tonic::Response<super::RelayerBlockInfoResponse>, tonic::Status>;
+        /// request block (includes transactions)
         async fn get_block(
             &self,
             request: tonic::Request<super::RelayerGetBlockRequest>,
         ) -> Result<tonic::Response<super::RelayerBlockResponse>, tonic::Status>;
+        /// request orderbook depth snapshot
         async fn get_latest_orderbook_depth(
             &self,
             request: tonic::Request<super::RelayerGetLatestOrderbookDepthRequest>,
@@ -805,12 +820,12 @@ pub mod relayer_server {
             tonic::Response<super::RelayerLatestOrderbookDepthResponse>,
             tonic::Status,
         >;
+        /// request orderbook metrics
         async fn get_latest_metrics(
             &self,
             request: tonic::Request<super::RelayerMetricsRequest>,
         ) -> Result<tonic::Response<super::RelayerMetricsResponse>, tonic::Status>;
     }
-    /// Relay service for relaying information outside
     #[derive(Debug)]
     pub struct RelayerServer<T: Relayer> {
         inner: _Inner<T>,
@@ -858,7 +873,7 @@ pub mod relayer_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
-                "/gdex.Relayer/GetLatestBlockInfo" => {
+                "/services.Relayer/GetLatestBlockInfo" => {
                     #[allow(non_camel_case_types)]
                     struct GetLatestBlockInfoSvc<T: Relayer>(pub Arc<T>);
                     impl<
@@ -901,7 +916,7 @@ pub mod relayer_server {
                     };
                     Box::pin(fut)
                 }
-                "/gdex.Relayer/GetBlockInfo" => {
+                "/services.Relayer/GetBlockInfo" => {
                     #[allow(non_camel_case_types)]
                     struct GetBlockInfoSvc<T: Relayer>(pub Arc<T>);
                     impl<
@@ -941,7 +956,7 @@ pub mod relayer_server {
                     };
                     Box::pin(fut)
                 }
-                "/gdex.Relayer/GetBlock" => {
+                "/services.Relayer/GetBlock" => {
                     #[allow(non_camel_case_types)]
                     struct GetBlockSvc<T: Relayer>(pub Arc<T>);
                     impl<
@@ -979,7 +994,7 @@ pub mod relayer_server {
                     };
                     Box::pin(fut)
                 }
-                "/gdex.Relayer/GetLatestOrderbookDepth" => {
+                "/services.Relayer/GetLatestOrderbookDepth" => {
                     #[allow(non_camel_case_types)]
                     struct GetLatestOrderbookDepthSvc<T: Relayer>(pub Arc<T>);
                     impl<
@@ -1022,7 +1037,7 @@ pub mod relayer_server {
                     };
                     Box::pin(fut)
                 }
-                "/gdex.Relayer/GetLatestMetrics" => {
+                "/services.Relayer/GetLatestMetrics" => {
                     #[allow(non_camel_case_types)]
                     struct GetLatestMetricsSvc<T: Relayer>(pub Arc<T>);
                     impl<
@@ -1098,6 +1113,6 @@ pub mod relayer_server {
         }
     }
     impl<T: Relayer> tonic::transport::NamedService for RelayerServer<T> {
-        const NAME: &'static str = "gdex.Relayer";
+        const NAME: &'static str = "services.Relayer";
     }
 }

@@ -1,15 +1,12 @@
-use fastcrypto::{
-    traits::{KeyPair, Signer},
-    Hash,
-};
+use fastcrypto::traits::KeyPair;
 use gdex_types::{
     account::AccountKeyPair,
     block::BlockDigest,
     order_book::OrderSide,
-    proto::{Empty, RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionProto, TransactionsClient},
+    proto::{Empty, RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionSubmitterClient},
     transaction::{
-        create_asset_creation_transaction, create_orderbook_creation_transaction, create_payment_transaction,
-        create_place_limit_order_transaction, SignedTransaction,
+        create_create_asset_transaction, create_create_orderbook_transaction, create_limit_order_transaction,
+        create_payment_transaction, ConsensusTransaction, SignedTransaction,
     },
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
@@ -29,10 +26,16 @@ fn create_signed_payment_transaction(
     amount: u64,
     block_digest: BlockDigest,
 ) -> SignedTransaction {
-    let transaction = create_payment_transaction(kp_sender, kp_receiver, asset_id, amount, block_digest);
-    let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
-    signed_transaction
+    let gas: u64 = 1000;
+    let transaction = create_payment_transaction(
+        kp_sender.public().clone(),
+        kp_receiver.public(),
+        asset_id,
+        amount,
+        gas,
+        block_digest,
+    );
+    transaction.sign(kp_sender).unwrap()
 }
 
 fn create_signed_asset_creation_transaction(
@@ -40,10 +43,9 @@ fn create_signed_asset_creation_transaction(
     block_digest: BlockDigest,
     dummy: u8,
 ) -> SignedTransaction {
-    let transaction = create_asset_creation_transaction(kp_sender, block_digest, dummy);
-    let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
-    signed_transaction
+    let gas: u64 = 1000;
+    let transaction = create_create_asset_transaction(kp_sender.public().clone(), dummy as u64, gas, block_digest);
+    transaction.sign(kp_sender).unwrap()
 }
 
 fn create_signed_orderbook_transaction(
@@ -52,10 +54,15 @@ fn create_signed_orderbook_transaction(
     quote_asset_id: u64,
     block_digest: BlockDigest,
 ) -> SignedTransaction {
-    let transaction = create_orderbook_creation_transaction(kp_sender, base_asset_id, quote_asset_id, block_digest);
-    let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
-    signed_transaction
+    let gas: u64 = 1000;
+    let transaction = create_create_orderbook_transaction(
+        kp_sender.public().clone(),
+        base_asset_id,
+        quote_asset_id,
+        gas,
+        block_digest,
+    );
+    transaction.sign(kp_sender).unwrap()
 }
 
 fn create_signed_limit_order_transaction(
@@ -67,24 +74,26 @@ fn create_signed_limit_order_transaction(
     amount: u64,
     block_digest: BlockDigest,
 ) -> SignedTransaction {
-    let transaction = create_place_limit_order_transaction(
-        kp_sender,
+    let local_timestamp: u64 = 16000000;
+    let gas: u64 = 1000;
+    let transaction = create_limit_order_transaction(
+        kp_sender.public().clone(),
         base_asset_id,
         quote_asset_id,
-        order_side,
+        order_side as u64,
         price,
         amount,
+        local_timestamp,
+        gas,
         block_digest,
     );
-    let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
-    signed_transaction
+    transaction.sign(kp_sender).unwrap()
 }
 
 pub struct BenchHelper {
     primary_keypair: AccountKeyPair,
     accounts: Vec<AccountKeyPair>,
-    validator_client: Option<TransactionsClient<Channel>>,
+    validator_client: Option<TransactionSubmitterClient<Channel>>,
     relayer_client: Option<RelayerClient<Channel>>,
     base_asset_id: u64,
     quote_asset_id: u64,
@@ -99,7 +108,7 @@ impl BenchHelper {
         BenchHelper {
             primary_keypair,
             accounts: Vec::new(),
-            validator_client: None::<TransactionsClient<Channel>>,
+            validator_client: None::<TransactionSubmitterClient<Channel>>,
             relayer_client: None::<RelayerClient<Channel>>,
             // TODO - avoid hard coding by directly calculating created assets...
             base_asset_id: 1,
@@ -116,31 +125,25 @@ impl BenchHelper {
             .as_mut()
             .expect("Relayer client not initialized")
             .get_latest_block_info(BLOCK_INFO_REQUEST.clone())
-            .await
-            .unwrap()
-            .into_inner();
+            .await;
 
-        let block_digest: BlockDigest = if response.successful && response.block_info.is_some() {
-            bincode::deserialize(response.block_info.unwrap().digest.as_ref()).unwrap()
-        } else {
-            warn!("Failed to get latest block digest, returning default");
-            BlockDigest::new([0; 32])
-        };
-        block_digest
+        if let Ok(relayer_block_response) = response {
+            if let Some(block_info) = relayer_block_response.into_inner().block_info {
+                bincode::deserialize(block_info.digest.as_ref()).unwrap()
+            }
+        }
+        warn!("Failed to get latest block digest, returning default");
+        BlockDigest::new([0; 32])
     }
 
     async fn submit_transaction(
         &mut self,
-        signed_tranasction: SignedTransaction,
+        signed_transaction: SignedTransaction,
     ) -> Result<tonic::Response<Empty>, tonic::Status> {
-        let transaction_proto = TransactionProto {
-            transaction: signed_tranasction.serialize().unwrap().into(),
-        };
-
         self.validator_client
             .as_mut()
             .expect("Validator not initialized")
-            .submit_transaction(transaction_proto)
+            .submit_transaction(signed_transaction)
             .await
     }
 
@@ -170,7 +173,7 @@ impl BenchHelper {
                 amount = 1;
             }
 
-            let signed_transaction = create_signed_limit_order_transaction(
+            create_signed_limit_order_transaction(
                 &keypair_copy.copy(),
                 base_asset_id,
                 quote_asset_id,
@@ -178,11 +181,7 @@ impl BenchHelper {
                 price,
                 amount,
                 recent_block_hash,
-            );
-
-            TransactionProto {
-                transaction: signed_transaction.serialize().unwrap().into(),
-            }
+            )
         });
 
         if let Err(e) = self
@@ -279,7 +278,7 @@ impl BenchHelper {
         accounts_to_generate: u64,
     ) {
         self.validator_client = Some(
-            TransactionsClient::connect(validator_url.as_str().to_owned())
+            TransactionSubmitterClient::connect(validator_url.as_str().to_owned())
                 .await
                 .unwrap(),
         );
@@ -289,10 +288,16 @@ impl BenchHelper {
         // log the transaction size to help python client calculate throughput
         // note, any transaction type works here because all enumes have the same size
         let recent_block_hash = self.get_recent_block_digest().await;
-        let transaction_size = create_signed_asset_creation_transaction(&self.primary_keypair, recent_block_hash, 0)
-            .serialize()
-            .unwrap()
-            .len();
+
+        let signed_transaction = create_signed_asset_creation_transaction(&self.primary_keypair, recent_block_hash, 0);
+
+        let serialized_consensus_transaction = match ConsensusTransaction::new(&signed_transaction).serialize() {
+            Ok(t) => t,
+            _ => panic!("Error serializing transaction"),
+        };
+
+        let transaction_size = serialized_consensus_transaction.len();
+
         info!("Transactions size: {transaction_size} B");
     }
 

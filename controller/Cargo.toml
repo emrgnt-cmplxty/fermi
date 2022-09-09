@@ -5,6 +5,7 @@ authors = []
 edition = "2021"
 
 [dependencies]
+async-trait = "0.1.57"
 rand =  "0.8.5"
 serde = { version = "1.0.141", features = ["derive"] }
 

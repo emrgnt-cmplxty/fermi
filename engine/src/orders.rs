@@ -2,7 +2,10 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 
-use gdex_types::{asset::AssetId, order_book::OrderSide, transaction::OrderRequest};
+use gdex_types::{
+    asset::AssetId,
+    order_book::{OrderRequest, OrderSide},
+};
 use std::time::SystemTime;
 
 /* Constructors */

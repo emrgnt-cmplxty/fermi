@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package transaction;
+
+// ENUMS
+
+enum ControllerType {
+    BANK = 0;
+    STAKE = 1;
+    SPOT = 2;
+    CONSENSUS = 3;
+}
+
+enum RequestType {
+    PAYMENT = 0;
+    CREATE_ASSET = 1;
+    CREATE_ORDERBOOK = 2;
+    MARKET_ORDER = 3;
+    LIMIT_ORDER = 4;
+    UPDATE_ORDER = 5;
+    CANCEL_ORDER = 6;
+}
+
+// STRUCTS
+
+message Version {
+    uint32 major = 1;
+    uint32 minor = 2;
+    uint32 patch = 3;
+}
+
+// SIGNED TRANSACTION INTERFACE
+
+message SignedTransaction {
+    Transaction transaction = 1;
+    bytes signature = 2;
+}
+
+// TRANSACTION INTERFACE
+
+message Transaction {
+    Version version = 1;
+    bytes sender = 2;
+    ControllerType target_controller = 3;
+    RequestType request_type = 4;
+    bytes recent_block_hash = 5;
+    uint64 gas = 6;
+    bytes request_bytes = 7;
+}

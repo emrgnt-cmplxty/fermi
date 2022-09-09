@@ -8,19 +8,19 @@ use crate::{
 };
 use anyhow::anyhow;
 use async_trait::async_trait;
-use fastcrypto::Hash;
 use futures::StreamExt;
 use gdex_types::{
     crypto::KeypairTraits,
     error::GDEXError,
-    proto::{Empty, TransactionProto, Transactions, TransactionsServer},
-    transaction::SignedTransaction,
+    proto::{Empty, TransactionSubmitter, TransactionSubmitterServer},
+    transaction::{ConsensusTransaction, SignedTransaction},
 };
 use multiaddr::Multiaddr;
 use narwhal_config::Committee as ConsensusCommittee;
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
 use narwhal_executor::{ExecutionIndices, SerializedTransaction, SubscriberError};
+use narwhal_types::TransactionProto as ConsensusTransactionWrapper;
 use prometheus::Registry;
 use std::{io, sync::Arc, time::SystemTime};
 use tokio::{
@@ -31,7 +31,6 @@ use tracing::{info, trace};
 
 // constants
 // frequency of orderbook depth writes (rounds)
-const ORDERBOOK_DEPTH_FREQUENCY: u64 = 100;
 type ExecutionResult = Result<(), GDEXError>;
 type HandledTransaction = Result<(ConsensusOutput, ExecutionIndices, ExecutionResult), SubscriberError>;
 
@@ -93,7 +92,7 @@ impl ValidatorServer {
     pub async fn run(self, address: Multiaddr) -> Result<ValidatorServerHandle, io::Error> {
         let server = crate::config::server::ServerConfig::new()
             .server_builder()
-            .add_service(TransactionsServer::new(ValidatorService {
+            .add_service(TransactionSubmitterServer::new(ValidatorService {
                 state: self.state.clone(),
                 consensus_adapter: self.consensus_adapter.clone(),
             }))
@@ -183,19 +182,6 @@ impl ValidatorService {
 
                         // if next_transaction_index == 0 then the block is complete and we may write-out
                         if execution_indices.next_transaction_index == 0 {
-                            // write out orderbook depth every ORDERBOOK_DEPTH_FREQUENCY
-                            if store.block_number.load(std::sync::atomic::Ordering::SeqCst) % ORDERBOOK_DEPTH_FREQUENCY
-                                == 0
-                            {
-                                let orderbook_depths = validator_state
-                                    .master_controller
-                                    .spot_controller
-                                    .lock()
-                                    .unwrap()
-                                    .generate_orderbook_depths();
-                                store.write_latest_orderbook_depths(orderbook_depths).await;
-                            }
-
                             // subtract round look-back from the latest round to get block number
                             let round_number = consensus_output.certificate.header.round;
 
@@ -206,9 +192,9 @@ impl ValidatorService {
                             let (block, block_info) = store
                                 .write_latest_block(consensus_output.certificate, serialized_txns_buf.clone())
                                 .await;
-                            metrics.process_new_block(block, block_info);
-                            master_controller
-                                .post_process(store.block_number.load(std::sync::atomic::Ordering::SeqCst));
+                            metrics.process_end_of_block(block, block_info);
+                            let block_number = store.block_number.load(std::sync::atomic::Ordering::SeqCst);
+                            master_controller.process_end_of_block(&store.process_block_store, block_number);
                             serialized_txns_buf.clear();
                         }
                     }
@@ -222,25 +208,24 @@ impl ValidatorService {
     async fn handle_transaction(
         consensus_adapter: Arc<ConsensusAdapter>,
         state: Arc<ValidatorState>,
-        transaction_proto: TransactionProto,
+        signed_transaction: SignedTransaction,
     ) -> Result<tonic::Response<Empty>, tonic::Status> {
         let start = SystemTime::now();
         trace!("Handling a new transaction with ValidatorService",);
         state.metrics.transactions_received.inc();
 
-        let signed_transaction = SignedTransaction::deserialize(transaction_proto.transaction.to_vec())
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
         signed_transaction
-            .verify()
+            .verify_signature()
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
 
+        // check recent block hash is valid
+        // TODO seems maybe problematic to do this just here?
         // TODO change this to err flow
         // TODO there is a ton of contention here
-        if !state.validator_store.cache_contains_block_digest(
-            signed_transaction
-                .get_transaction_payload()
-                .get_recent_certificate_digest(),
-        ) {
+        let recent_block_digest = signed_transaction
+            .get_recent_block_digest()
+            .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
+        if !state.validator_store.cache_contains_block_digest(&recent_block_digest) {
             state.metrics.transactions_received_failed.inc();
             cfg_if::cfg_if! {
                 if #[cfg(feature = "benchmark")] {
@@ -251,14 +236,15 @@ impl ValidatorService {
             }
         }
 
-        if state
-            .validator_store
-            .cache_contains_transaction(signed_transaction.get_transaction_payload())
-        {
+        // check transaction is not a duplicate
+        let transaction = signed_transaction
+            .get_transaction()
+            .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
+        if state.validator_store.cache_contains_transaction(transaction) {
             state.metrics.transactions_received_failed.inc();
-            let digest = signed_transaction.get_transaction_payload().digest().to_string();
             // TODO - find cleaner way to represent this logic
             // TODO - make sure benchmark flag is removed from node Cargo.toml in the future
+            let digest = "TEST"; // TODO impl txn to string
             cfg_if::cfg_if! {
                 if #[cfg(feature = "benchmark")] {
                     trace!("Duplicate transaction id = {}", digest);
@@ -268,11 +254,17 @@ impl ValidatorService {
             }
         }
 
-        let transaction_proto = narwhal_types::TransactionProto {
-            transaction: transaction_proto.transaction,
+        // submit transaction
+        let serialized_consensus_transaction = ConsensusTransaction::new(&signed_transaction)
+            .serialize()
+            .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
+        let consensus_transaction_wrapper = ConsensusTransactionWrapper {
+            transaction: serialized_consensus_transaction.into(),
         };
 
-        consensus_adapter.submit_transaction(transaction_proto).await?;
+        consensus_adapter
+            .submit_transaction(consensus_transaction_wrapper)
+            .await?;
 
         state
             .handle_pre_consensus_transaction(&signed_transaction)
@@ -297,10 +289,10 @@ impl ValidatorService {
 
 /// Spawns a tonic grpc which parses incoming transactions and forwards them to the handle_transaction method of ValidatorService
 #[async_trait]
-impl Transactions for ValidatorService {
+impl TransactionSubmitter for ValidatorService {
     async fn submit_transaction(
         &self,
-        request: tonic::Request<TransactionProto>,
+        request: tonic::Request<SignedTransaction>,
     ) -> Result<tonic::Response<Empty>, tonic::Status> {
         trace!("Handling a new transaction with a ValidatorService ValidatorAPI",);
         let signed_transaction = request.into_inner();
@@ -316,12 +308,12 @@ impl Transactions for ValidatorService {
 
     async fn submit_transaction_stream(
         &self,
-        request: tonic::Request<tonic::Streaming<TransactionProto>>,
+        request: tonic::Request<tonic::Streaming<SignedTransaction>>,
     ) -> Result<tonic::Response<Empty>, tonic::Status> {
-        let mut transactions = request.into_inner();
+        let mut signed_transactions = request.into_inner();
         trace!("Handling a new transaction stream with a ValidatorService ValidatorAPI",);
 
-        while let Some(Ok(signed_transaction)) = transactions.next().await {
+        while let Some(Ok(signed_transaction)) = signed_transactions.next().await {
             trace!("Streaming a new transaction with a ValidatorService ValidatorAPI",);
 
             let state = self.state.clone();
@@ -349,7 +341,7 @@ mod test_validator_server {
         account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair, ValidatorPubKeyBytes},
         crypto::{get_key_pair_from_rng, KeypairTraits},
         node::ValidatorInfo,
-        proto::TransactionsClient,
+        proto::TransactionSubmitterClient,
         transaction::transaction_test_functions::generate_signed_test_transaction,
         utils,
     };
@@ -408,18 +400,16 @@ mod test_validator_server {
     pub async fn server_process_transaction() {
         let handle_result = spawn_test_validator_server().await;
         let handle = handle_result.unwrap();
-        let mut client =
-            TransactionsClient::new(client::connect_lazy(handle.address()).expect("Failed to connect to consensus"));
+        let mut client = TransactionSubmitterClient::new(
+            client::connect_lazy(handle.address()).expect("Failed to connect to consensus"),
+        );
 
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
         let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, 10);
-        let transaction_proto = TransactionProto {
-            transaction: signed_transaction.serialize().unwrap().into(),
-        };
 
         let _resp1 = client
-            .submit_transaction(transaction_proto)
+            .submit_transaction(signed_transaction)
             .await
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e));
     }

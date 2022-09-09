@@ -19,12 +19,14 @@ use gdex_types::{
     asset::PRIMARY_ASSET_ID,
     crypto::ToFromBytes,
     error::GDEXError,
-    transaction::Transaction,
+    store::ProcessBlockStore,
+    transaction::{parse_request_type, Transaction},
 };
 
 // mysten
 
 // external
+use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -55,6 +57,7 @@ impl Default for StakeController {
     }
 }
 
+#[async_trait]
 impl Controller for StakeController {
     fn initialize(&mut self, master_controller: &MasterController) {
         self.bank_controller = Arc::clone(&master_controller.bank_controller);
@@ -68,11 +71,16 @@ impl Controller for StakeController {
         Ok(())
     }
 
-    fn handle_consensus_transaction(&mut self, _transaction: &Transaction) -> Result<(), GDEXError> {
-        Ok(())
+    fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
+        let request_type = parse_request_type(transaction.request_type)?;
+
+        #[allow(clippy::match_single_binding)]
+        match request_type {
+            _ => Err(GDEXError::InvalidRequestTypeError),
+        }
     }
 
-    fn post_process(&mut self, _block_number: u64) {}
+    async fn process_end_of_block(&mut self, _process_block_store: &ProcessBlockStore, _block_number: u64) {}
 }
 
 impl StakeController {

@@ -117,7 +117,7 @@ impl ValidatorMetrics {
         }
     }
 
-    pub fn process_new_block(&self, block: Block, block_info: BlockInfo) {
+    pub fn process_end_of_block(&self, block: Block, block_info: BlockInfo) {
         self.block_number.inc();
         let mut prev_block_info = self.prev_block_info.lock().unwrap();
 

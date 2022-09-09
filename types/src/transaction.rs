@@ -4,176 +4,44 @@
 //! The transaction class is responsible for parsing client interactions
 //! each valid transaction corresponds to a unique state transition within
 //! the space of allowable blockchain transitions
+
+// IMPORTS
+
+// crate
 use crate::{
     account::{AccountKeyPair, AccountPubKey, AccountSignature},
-    asset::{AssetAmount, AssetId, AssetPrice},
-    crypto::KeypairTraits,
+    crypto::ToFromBytes,
     error::GDEXError,
-    order_book::OrderId,
     order_book::OrderSide,
-    serialization::Base64,
-    serialization::Encoding,
+    serialization::{Base64, Encoding},
 };
-use blake2::{digest::Update, VarBlake2b};
-use fastcrypto::{Digest, Hash, Verifier, DIGEST_LEN};
-use narwhal_types::CertificateDigest;
+
+pub use crate::proto::*;
+
+// gdex
+
+// mysten
+use fastcrypto::{traits::Signer, Digest, Hash, Verifier, DIGEST_LEN};
+use narwhal_types::{CertificateDigest, CertificateDigestProto};
+
+// external
+use blake2::digest::Update;
+use prost::bytes::Bytes;
+use prost::Message;
 use serde::{Deserialize, Serialize};
-use std::{
-    fmt,
-    fmt::Debug,
-    time::{SystemTime, UNIX_EPOCH},
+use std::fmt;
+use std::io::Cursor;
+use std::ops::Deref;
+
+// CONSTANTS
+
+pub const PROTO_VERSION: Version = Version {
+    major: 0,
+    minor: 0,
+    patch: 0,
 };
 
-pub const SERIALIZED_TRANSACTION_LENGTH: usize = 280;
-
-// TODO - remove dummy after adding more fields to create asset request
-// Note, dummy has been added to allow us to submit multiple txns w/out collisions in bench
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct CreateAssetRequest {
-    pub dummy: u8,
-}
-
-/// A valid payment transaction causes a state transition inside of
-/// the BankController object, e.g. it creates a fund transfer from
-/// User A to User B provided User A has sufficient funds
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct PaymentRequest {
-    receiver: AccountPubKey,
-    asset_id: AssetId,
-    amount: u64,
-}
-
-impl PaymentRequest {
-    pub fn new(receiver: AccountPubKey, asset_id: AssetId, amount: AssetAmount) -> Self {
-        PaymentRequest {
-            receiver,
-            asset_id,
-            amount,
-        }
-    }
-
-    pub fn get_receiver(&self) -> &AccountPubKey {
-        &self.receiver
-    }
-
-    pub fn get_asset_id(&self) -> AssetId {
-        self.asset_id
-    }
-
-    pub fn get_amount(&self) -> AssetAmount {
-        self.amount
-    }
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct CreateOrderbookRequest {
-    base_asset_id: AssetId,
-    quote_asset_id: AssetId,
-}
-
-impl CreateOrderbookRequest {
-    pub fn new(base_asset_id: AssetId, quote_asset_id: AssetId) -> Self {
-        Self {
-            base_asset_id,
-            quote_asset_id,
-        }
-    }
-
-    pub fn get_base_asset_id(&self) -> AssetId {
-        self.base_asset_id
-    }
-
-    pub fn get_quote_asset_id(&self) -> AssetId {
-        self.quote_asset_id
-    }
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub enum OrderRequest {
-    Market {
-        base_asset_id: AssetId,
-        quote_asset_id: AssetId,
-        side: OrderSide,
-        quantity: AssetAmount,
-        local_timestamp: SystemTime,
-    },
-
-    Limit {
-        base_asset_id: AssetId,
-        quote_asset_id: AssetId,
-        side: OrderSide,
-        price: AssetPrice,
-        quantity: AssetAmount,
-        local_timestamp: SystemTime,
-    },
-
-    Update {
-        base_asset_id: AssetId,
-        quote_asset_id: AssetId,
-        order_id: OrderId,
-        side: OrderSide,
-        price: AssetPrice,
-        quantity: AssetAmount,
-        local_timestamp: SystemTime,
-    },
-
-    Cancel {
-        base_asset_id: AssetId,
-        quote_asset_id: AssetId,
-        order_id: OrderId,
-        side: OrderSide,
-        local_timestamp: SystemTime,
-    },
-}
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[allow(clippy::large_enum_variant)]
-pub enum TransactionVariant {
-    PaymentTransaction(PaymentRequest),
-    CreateAssetTransaction(CreateAssetRequest),
-    CreateOrderbookTransaction(CreateOrderbookRequest),
-    // this handles limit, market, cancel, update
-    PlaceOrderTransaction(OrderRequest),
-}
-
-/// A transaction for creating a new asset in the BankController
-/// GDEX prefix is added because Narwal github contains a Transaction type
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Transaction {
-    // storing from here is not redundant as from may not equal sender
-    // e.g. we are preserving the possibility of adding re-key functionality
-    sender: AccountPubKey,
-    // it is necessary to pass a recent block hash to make sure that a transaction cannot
-    // be duplicated, moreover it is used to gaurantee that a submitted transaction was
-    // created within a well designated lookback, TODO - implement such checks in pipeline
-    recent_certificate_digest: CertificateDigest,
-    variant: TransactionVariant,
-}
-
-impl Transaction {
-    pub fn new(
-        sender: AccountPubKey,
-        recent_certificate_digest: CertificateDigest,
-        variant: TransactionVariant,
-    ) -> Self {
-        Transaction {
-            sender,
-            recent_certificate_digest,
-            variant,
-        }
-    }
-
-    pub fn get_sender(&self) -> &AccountPubKey {
-        &self.sender
-    }
-
-    pub fn get_recent_certificate_digest(&self) -> &CertificateDigest {
-        &self.recent_certificate_digest
-    }
-
-    pub fn get_variant(&self) -> &TransactionVariant {
-        &self.variant
-    }
-}
+// DIGEST TYPES
 
 #[derive(Clone, Copy, Serialize, Deserialize, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct TransactionDigest([u8; DIGEST_LEN]);
@@ -200,305 +68,457 @@ impl From<TransactionDigest> for Digest {
     }
 }
 
-fn convert_system_time_to_int(timestamp: SystemTime) -> u128 {
-    timestamp.duration_since(UNIX_EPOCH).unwrap().as_millis()
+// SERIALIZATION
+
+pub fn serialize_protobuf<T>(proto_message: &T) -> Vec<u8>
+where
+    T: Message + std::default::Default,
+{
+    let mut buf = Vec::new();
+    buf.reserve(proto_message.encoded_len());
+    proto_message.encode(&mut buf).unwrap();
+    buf
 }
 
-impl Hash for Transaction {
-    type TypedDigest = TransactionDigest;
-
-    fn digest(&self) -> TransactionDigest {
-        match &self.variant {
-            TransactionVariant::PaymentTransaction(payment) => {
-                let hasher_update = |hasher: &mut VarBlake2b| {
-                    hasher.update(self.get_sender().0.to_bytes());
-                    hasher.update(payment.get_receiver().0.as_bytes());
-                    hasher.update(payment.get_asset_id().to_le_bytes());
-                    hasher.update(payment.get_amount().to_le_bytes());
-                    // TODO - hashing the string is suboptimal, but cert digest bytes are private
-                    hasher.update(self.get_recent_certificate_digest().to_string());
-                };
-                TransactionDigest(fastcrypto::blake2b_256(hasher_update))
-            }
-            TransactionVariant::CreateAssetTransaction(create_asset) => {
-                let hasher_update = |hasher: &mut VarBlake2b| {
-                    hasher.update(create_asset.dummy.to_le_bytes());
-                    hasher.update(self.get_sender().0.to_bytes());
-                    hasher.update(self.get_recent_certificate_digest().to_string())
-                };
-                TransactionDigest(fastcrypto::blake2b_256(hasher_update))
-            }
-            TransactionVariant::CreateOrderbookTransaction(create_orderbook) => {
-                let hasher_update = |hasher: &mut VarBlake2b| {
-                    hasher.update(self.get_sender().0.to_bytes());
-                    hasher.update(create_orderbook.base_asset_id.to_le_bytes());
-                    hasher.update(create_orderbook.quote_asset_id.to_le_bytes());
-                    hasher.update(self.get_recent_certificate_digest().to_string());
-                };
-                TransactionDigest(fastcrypto::blake2b_256(hasher_update))
-            }
-            TransactionVariant::PlaceOrderTransaction(order) => match order {
-                OrderRequest::Limit {
-                    base_asset_id,
-                    quote_asset_id,
-                    side,
-                    price,
-                    quantity,
-                    local_timestamp,
-                } => {
-                    let ts = convert_system_time_to_int(*local_timestamp);
-                    let hasher_update = |hasher: &mut VarBlake2b| {
-                        hasher.update(self.get_sender().0.to_bytes());
-                        hasher.update(base_asset_id.to_le_bytes());
-                        hasher.update(quote_asset_id.to_le_bytes());
-                        hasher.update((*side as u8).to_le_bytes());
-                        hasher.update(price.to_le_bytes());
-                        hasher.update(quantity.to_le_bytes());
-                        hasher.update(ts.to_le_bytes());
-                        hasher.update(self.get_recent_certificate_digest().to_string());
-                    };
-                    TransactionDigest(fastcrypto::blake2b_256(hasher_update))
-                }
-                OrderRequest::Market {
-                    base_asset_id,
-                    quote_asset_id,
-                    side,
-                    quantity,
-                    local_timestamp,
-                } => {
-                    let ts = convert_system_time_to_int(*local_timestamp);
-                    let hasher_update = |hasher: &mut VarBlake2b| {
-                        hasher.update(self.get_sender().0.to_bytes());
-                        hasher.update(base_asset_id.to_le_bytes());
-                        hasher.update(quote_asset_id.to_le_bytes());
-                        hasher.update((*side as u8).to_le_bytes());
-                        hasher.update(quantity.to_le_bytes());
-                        hasher.update(ts.to_le_bytes());
-                        hasher.update(self.get_recent_certificate_digest().to_string());
-                    };
-                    TransactionDigest(fastcrypto::blake2b_256(hasher_update))
-                }
-                OrderRequest::Cancel {
-                    base_asset_id,
-                    quote_asset_id,
-                    order_id,
-                    side,
-                    local_timestamp,
-                } => {
-                    let ts = convert_system_time_to_int(*local_timestamp);
-                    let hasher_update = |hasher: &mut VarBlake2b| {
-                        hasher.update(self.get_sender().0.to_bytes());
-                        hasher.update(base_asset_id.to_le_bytes());
-                        hasher.update(quote_asset_id.to_le_bytes());
-                        hasher.update(order_id.to_le_bytes());
-                        hasher.update((*side as u8).to_le_bytes());
-                        hasher.update(ts.to_le_bytes());
-                        hasher.update(self.get_recent_certificate_digest().to_string());
-                    };
-                    TransactionDigest(fastcrypto::blake2b_256(hasher_update))
-                }
-                OrderRequest::Update {
-                    base_asset_id,
-                    quote_asset_id,
-                    order_id,
-                    side,
-                    price,
-                    quantity,
-                    local_timestamp,
-                } => {
-                    let ts = convert_system_time_to_int(*local_timestamp);
-                    let hasher_update = |hasher: &mut VarBlake2b| {
-                        hasher.update(self.get_sender().0.to_bytes());
-                        hasher.update(base_asset_id.to_le_bytes());
-                        hasher.update(quote_asset_id.to_le_bytes());
-                        hasher.update(order_id.to_le_bytes());
-                        hasher.update((*side as u8).to_le_bytes());
-                        hasher.update(price.to_le_bytes());
-                        hasher.update(quantity.to_le_bytes());
-                        hasher.update(ts.to_le_bytes());
-                        hasher.update(self.get_recent_certificate_digest().to_string());
-                    };
-                    TransactionDigest(fastcrypto::blake2b_256(hasher_update))
-                }
-            },
-        }
+pub fn deserialize_protobuf<T: Message + std::default::Default>(buf: &[u8]) -> Result<T, GDEXError> {
+    let message_result = T::decode(&mut Cursor::new(buf));
+    match message_result {
+        Ok(message) => Ok(message),
+        Err(..) => Err(GDEXError::DeserializationError),
     }
 }
 
-/// The SignedTransaction object is responsible for encoding
-/// a transaction payload and associated metadata which allows
-/// validation of sender logic
+// INTERFACE
+
+// CONSENSUS TRANSACTION
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct SignedTransaction {
-    sender: AccountPubKey,
-    transaction_payload: Transaction,
-    transaction_signature: AccountSignature,
+pub struct ConsensusTransaction {
+    signed_transaction_bytes: Vec<u8>,
 }
 
-impl SignedTransaction {
-    pub fn new(
-        sender: AccountPubKey,
-        transaction_payload: Transaction,
-        transaction_signature: AccountSignature,
-    ) -> Self {
-        SignedTransaction {
-            sender,
-            transaction_payload,
-            transaction_signature,
+impl ConsensusTransaction {
+    pub fn new(signed_transaction: &SignedTransaction) -> Self {
+        ConsensusTransaction {
+            signed_transaction_bytes: serialize_protobuf(signed_transaction),
         }
     }
 
     pub fn deserialize(byte_vec: Vec<u8>) -> Result<Self, GDEXError> {
         match bincode::deserialize(&byte_vec[..]) {
             Ok(result) => Ok(result),
-            Err(..) => Err(GDEXError::TransactionDeserialization),
+            Err(..) => Err(GDEXError::DeserializationError),
         }
-    }
-
-    pub fn deserialize_and_verify(byte_vec: Vec<u8>) -> Result<Self, GDEXError> {
-        let deserialized_transaction = Self::deserialize(byte_vec)?;
-        deserialized_transaction.verify()?;
-        Ok(deserialized_transaction)
     }
 
     pub fn serialize(&self) -> Result<Vec<u8>, GDEXError> {
         match bincode::serialize(&self) {
             Ok(result) => Ok(result),
-            Err(..) => Err(GDEXError::TransactionSerialization),
+            Err(..) => Err(GDEXError::SerializationError),
         }
     }
 
-    pub fn get_transaction_payload(&self) -> &Transaction {
-        &self.transaction_payload
+    pub fn get_payload(&self) -> Result<SignedTransaction, GDEXError> {
+        deserialize_protobuf(&self.signed_transaction_bytes)
+    }
+}
+
+// SIGNED TRANSACTION
+
+impl SignedTransaction {
+    pub fn get_transaction(&self) -> Result<&Transaction, GDEXError> {
+        self.transaction.as_ref().ok_or(GDEXError::DeserializationError)
     }
 
-    pub fn get_transaction_signature(&self) -> &AccountSignature {
-        &self.transaction_signature
+    pub fn get_sender(&self) -> Result<AccountPubKey, GDEXError> {
+        self.get_transaction()?.get_sender()
     }
 
-    pub fn verify(&self) -> Result<(), GDEXError> {
-        let transaction_digest_array = self.transaction_payload.digest().get_array();
-        match self
-            .transaction_payload
-            .get_sender()
-            .verify(&transaction_digest_array[..], &self.transaction_signature)
-        {
-            Ok(..) => Ok(()),
-            Err(..) => Err(GDEXError::FailedVerification),
+    pub fn get_signature(&self) -> Result<AccountSignature, GDEXError> {
+        AccountSignature::from_bytes(&self.signature).map_err(|_e| GDEXError::DeserializationError)
+    }
+
+    pub fn get_recent_block_digest(&self) -> Result<CertificateDigest, GDEXError> {
+        self.get_transaction()?.get_recent_block_digest()
+    }
+
+    pub fn get_transaction_digest(&self) -> Result<TransactionDigest, GDEXError> {
+        Ok(self.get_transaction()?.digest())
+    }
+
+    pub fn verify_signature(&self) -> Result<(), GDEXError> {
+        let transaction = self.get_transaction()?;
+        let transaction_digest = transaction.digest();
+        let sender = transaction.get_sender()?;
+        let signature = self.get_signature()?;
+        sender
+            .verify(&transaction_digest.get_array()[..], &signature)
+            .map_err(|_e| GDEXError::DeserializationError)
+    }
+}
+
+pub fn create_signed_transaction(transaction: Transaction, signature: &[u8; 64]) -> SignedTransaction {
+    SignedTransaction {
+        transaction: Some(transaction),
+        signature: Bytes::from(signature.to_vec()),
+    }
+}
+
+// TRANSACTION
+
+impl Transaction {
+    pub fn get_sender(&self) -> Result<AccountPubKey, GDEXError> {
+        AccountPubKey::from_bytes(&self.sender).map_err(|_e| GDEXError::DeserializationError)
+    }
+
+    pub fn get_recent_block_digest(&self) -> Result<CertificateDigest, GDEXError> {
+        match self.recent_block_hash.deref().try_into() {
+            Ok(digest) => Ok(CertificateDigest::new(digest)),
+            Err(..) => Err(GDEXError::DeserializationError),
+        }
+    }
+
+    pub fn sign(self, sender_kp: &AccountKeyPair) -> Result<SignedTransaction, GDEXError> {
+        let transaction_digest = self.digest();
+        let signature_result: Result<AccountSignature, signature::Error> =
+            sender_kp.try_sign(&transaction_digest.get_array()[..]);
+        match signature_result {
+            Ok(result) => Ok(create_signed_transaction(self, &result.sig.to_bytes())),
+            Err(..) => Err(GDEXError::SigningError),
         }
     }
 }
+
+impl Hash for Transaction {
+    type TypedDigest = TransactionDigest;
+
+    fn digest(&self) -> TransactionDigest {
+        TransactionDigest::new(fastcrypto::blake2b_256(|hasher| {
+            hasher.update(serialize_protobuf(self))
+        }))
+    }
+}
+
+pub fn create_transaction(
+    sender: AccountPubKey,
+    target_controller: ControllerType,
+    request_type: RequestType,
+    recent_block_hash: CertificateDigest,
+    gas: u64,
+    request_bytes: Vec<u8>,
+) -> Transaction {
+    Transaction {
+        version: Some(PROTO_VERSION),
+        sender: Bytes::from(sender.as_ref().to_vec()),
+        target_controller: target_controller as i32,
+        request_type: request_type as i32,
+        recent_block_hash: CertificateDigestProto::from(recent_block_hash).digest,
+        gas,
+        request_bytes: Bytes::from(request_bytes),
+    }
+}
+
+// BANK REQUESTS
+
+pub fn create_create_asset_request(dummy: u64) -> CreateAssetRequest {
+    CreateAssetRequest { dummy }
+}
+
+impl PaymentRequest {
+    pub fn get_receiver(&self) -> Result<AccountPubKey, GDEXError> {
+        AccountPubKey::from_bytes(&self.receiver).map_err(|_e| GDEXError::DeserializationError)
+    }
+}
+
+pub fn create_payment_request(receiver: &AccountPubKey, asset_id: u64, amount: u64) -> PaymentRequest {
+    PaymentRequest {
+        receiver: Bytes::from(receiver.as_ref().to_vec()),
+        asset_id,
+        amount,
+    }
+}
+
+// SPOT REQUESTS
+
+pub fn create_create_orderbook_request(base_asset_id: u64, quote_asset_id: u64) -> CreateOrderbookRequest {
+    CreateOrderbookRequest {
+        base_asset_id,
+        quote_asset_id,
+    }
+}
+
+pub fn create_market_order_request(
+    base_asset_id: u64,
+    quote_asset_id: u64,
+    side: u64,
+    quantity: u64,
+    local_timestamp: u64,
+) -> MarketOrderRequest {
+    MarketOrderRequest {
+        base_asset_id,
+        quote_asset_id,
+        side,
+        quantity,
+        local_timestamp,
+    }
+}
+
+pub fn create_limit_order_request(
+    base_asset_id: u64,
+    quote_asset_id: u64,
+    side: u64,
+    price: u64,
+    quantity: u64,
+    local_timestamp: u64,
+) -> LimitOrderRequest {
+    LimitOrderRequest {
+        base_asset_id,
+        quote_asset_id,
+        side,
+        price,
+        quantity,
+        local_timestamp,
+    }
+}
+
+pub fn create_update_order_request(
+    base_asset_id: u64,
+    quote_asset_id: u64,
+    side: u64,
+    price: u64,
+    quantity: u64,
+    local_timestamp: u64,
+    order_id: u64,
+) -> UpdateOrderRequest {
+    UpdateOrderRequest {
+        base_asset_id,
+        quote_asset_id,
+        side,
+        price,
+        quantity,
+        local_timestamp,
+        order_id,
+    }
+}
+
+pub fn create_cancel_order_request(
+    base_asset_id: u64,
+    quote_asset_id: u64,
+    side: u64,
+    local_timestamp: u64,
+    order_id: u64,
+) -> CancelOrderRequest {
+    CancelOrderRequest {
+        base_asset_id,
+        quote_asset_id,
+        side,
+        local_timestamp,
+        order_id,
+    }
+}
+
+// TRANSACTION BUILDERS
 
 pub fn create_payment_transaction(
-    sender_kp: &AccountKeyPair,
-    receiver_kp: &AccountKeyPair,
+    sender: AccountPubKey, // TODO can be ref?
+    receiver: &AccountPubKey,
     asset_id: u64,
     amount: u64,
-    recent_block_digest: CertificateDigest,
+    gas: u64,
+    recent_block_hash: CertificateDigest,
 ) -> Transaction {
-    let transaction_variant =
-        TransactionVariant::PaymentTransaction(PaymentRequest::new(receiver_kp.public().clone(), asset_id, amount));
+    let request = create_payment_request(receiver, asset_id, amount);
 
-    Transaction::new(sender_kp.public().clone(), recent_block_digest, transaction_variant)
+    create_transaction(
+        sender,
+        ControllerType::Bank,
+        RequestType::Payment,
+        recent_block_hash,
+        gas,
+        serialize_protobuf(&request),
+    )
 }
 
-pub fn create_asset_creation_transaction(
-    sender_kp: &AccountKeyPair,
-    recent_block_digest: CertificateDigest,
-    dummy: u8,
+// TODO get rid of dummy thing (pretty gross)
+pub fn create_create_asset_transaction(
+    sender: AccountPubKey,
+    dummy: u64,
+    gas: u64,
+    recent_block_hash: CertificateDigest,
 ) -> Transaction {
-    let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest { dummy });
+    let request = create_create_asset_request(dummy);
 
-    Transaction::new(sender_kp.public().clone(), recent_block_digest, transaction_variant)
+    create_transaction(
+        sender,
+        ControllerType::Bank,
+        RequestType::CreateAsset,
+        recent_block_hash,
+        gas,
+        serialize_protobuf(&request),
+    )
 }
 
-pub fn create_orderbook_creation_transaction(
-    sender_kp: &AccountKeyPair,
-    base_asset_id: AssetId,
-    quote_asset_id: AssetId,
-    recent_block_digest: CertificateDigest,
+pub fn create_create_orderbook_transaction(
+    sender: AccountPubKey,
+    base_asset_id: u64,
+    quote_asset_id: u64,
+    gas: u64,
+    recent_block_hash: CertificateDigest,
 ) -> Transaction {
-    let transaction_variant =
-        TransactionVariant::CreateOrderbookTransaction(CreateOrderbookRequest::new(base_asset_id, quote_asset_id));
+    let request = create_create_orderbook_request(base_asset_id, quote_asset_id);
 
-    Transaction::new(sender_kp.public().clone(), recent_block_digest, transaction_variant)
+    create_transaction(
+        sender,
+        ControllerType::Spot,
+        RequestType::CreateOrderbook,
+        recent_block_hash,
+        gas,
+        serialize_protobuf(&request),
+    )
 }
 
-pub fn create_place_limit_order_transaction(
-    sender_kp: &AccountKeyPair,
-    base_asset_id: AssetId,
-    quote_asset_id: AssetId,
-    side: OrderSide,
-    price: AssetPrice,
-    quantity: AssetAmount,
-    recent_block_digest: CertificateDigest,
+#[allow(clippy::too_many_arguments)]
+pub fn create_market_order_transaction(
+    sender: AccountPubKey,
+    base_asset_id: u64,
+    quote_asset_id: u64,
+    side: u64,
+    quantity: u64,
+    local_timestamp: u64,
+    gas: u64,
+    recent_block_hash: CertificateDigest,
 ) -> Transaction {
-    let local_timestamp = SystemTime::now();
-    let transaction_variant = TransactionVariant::PlaceOrderTransaction(OrderRequest::Limit {
+    let request = create_market_order_request(base_asset_id, quote_asset_id, side, quantity, local_timestamp);
+
+    create_transaction(
+        sender,
+        ControllerType::Spot,
+        RequestType::MarketOrder,
+        recent_block_hash,
+        gas,
+        serialize_protobuf(&request),
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn create_limit_order_transaction(
+    sender: AccountPubKey,
+    base_asset_id: u64,
+    quote_asset_id: u64,
+    side: u64,
+    price: u64,
+    quantity: u64,
+    local_timestamp: u64,
+    gas: u64,
+    recent_block_hash: CertificateDigest,
+) -> Transaction {
+    let request = create_limit_order_request(base_asset_id, quote_asset_id, side, price, quantity, local_timestamp);
+
+    create_transaction(
+        sender,
+        ControllerType::Spot,
+        RequestType::LimitOrder,
+        recent_block_hash,
+        gas,
+        serialize_protobuf(&request),
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn create_update_order_transaction(
+    sender: AccountPubKey,
+    base_asset_id: u64,
+    quote_asset_id: u64,
+    side: u64,
+    price: u64,
+    quantity: u64,
+    local_timestamp: u64,
+    order_id: u64,
+    gas: u64,
+    recent_block_hash: CertificateDigest,
+) -> Transaction {
+    let request = create_update_order_request(
         base_asset_id,
         quote_asset_id,
         side,
         price,
         quantity,
         local_timestamp,
-    });
+        order_id,
+    );
 
-    Transaction::new(sender_kp.public().clone(), recent_block_digest, transaction_variant)
+    create_transaction(
+        sender,
+        ControllerType::Spot,
+        RequestType::UpdateOrder,
+        recent_block_hash,
+        gas,
+        serialize_protobuf(&request),
+    )
 }
 
-pub fn create_place_cancel_order_transaction(
-    sender_kp: &AccountKeyPair,
-    base_asset_id: AssetId,
-    quote_asset_id: AssetId,
-    order_id: OrderId,
-    side: OrderSide,
-    recent_block_digest: CertificateDigest,
+#[allow(clippy::too_many_arguments)]
+pub fn create_cancel_order_transaction(
+    sender: AccountPubKey,
+    base_asset_id: u64,
+    quote_asset_id: u64,
+    side: u64,
+    local_timestamp: u64,
+    order_id: u64,
+    gas: u64,
+    recent_block_hash: CertificateDigest,
 ) -> Transaction {
-    let local_timestamp = SystemTime::now();
-    let transaction_variant = TransactionVariant::PlaceOrderTransaction(OrderRequest::Cancel {
-        base_asset_id,
-        quote_asset_id,
-        order_id,
-        side,
-        local_timestamp,
-    });
+    let request = create_cancel_order_request(base_asset_id, quote_asset_id, side, local_timestamp, order_id);
 
-    Transaction::new(sender_kp.public().clone(), recent_block_digest, transaction_variant)
+    create_transaction(
+        sender,
+        ControllerType::Spot,
+        RequestType::CancelOrder,
+        recent_block_hash,
+        gas,
+        serialize_protobuf(&request),
+    )
 }
 
-#[cfg_attr(feature = "cargo-clippy", allow(clippy::too_many_arguments))]
-pub fn create_place_update_order_transaction(
-    sender_kp: &AccountKeyPair,
-    base_asset_id: AssetId,
-    quote_asset_id: AssetId,
-    order_id: OrderId,
-    side: OrderSide,
-    price: AssetPrice,
-    quantity: AssetAmount,
-    recent_block_digest: CertificateDigest,
-) -> Transaction {
-    let local_timestamp = SystemTime::now();
-    let transaction_variant = TransactionVariant::PlaceOrderTransaction(OrderRequest::Update {
-        base_asset_id,
-        quote_asset_id,
-        order_id,
-        side,
-        price,
-        quantity,
-        local_timestamp,
-    });
+// ENUM CONVERSIONS
+// TODO gotta be a better way to do this
 
-    Transaction::new(sender_kp.public().clone(), recent_block_digest, transaction_variant)
+pub fn parse_target_controller(target_controller: i32) -> Result<ControllerType, GDEXError> {
+    match target_controller {
+        0 => Ok(ControllerType::Bank),
+        1 => Ok(ControllerType::Stake),
+        2 => Ok(ControllerType::Spot),
+        3 => Ok(ControllerType::Consensus),
+        _ => Err(GDEXError::DeserializationError),
+    }
+}
+
+pub fn parse_request_type(request_type: i32) -> Result<RequestType, GDEXError> {
+    match request_type {
+        0 => Ok(RequestType::Payment),
+        1 => Ok(RequestType::CreateAsset),
+        2 => Ok(RequestType::CreateOrderbook),
+        3 => Ok(RequestType::MarketOrder),
+        4 => Ok(RequestType::LimitOrder),
+        5 => Ok(RequestType::UpdateOrder),
+        6 => Ok(RequestType::CancelOrder),
+        _ => Err(GDEXError::DeserializationError),
+    }
+}
+
+pub fn parse_order_side(side: u64) -> Result<OrderSide, GDEXError> {
+    match side {
+        1 => Ok(OrderSide::Bid),
+        2 => Ok(OrderSide::Ask),
+        _ => Err(GDEXError::DeserializationError),
+    }
 }
 
 /// Begin externally available testing functions
 #[cfg(any(test, feature = "testing"))]
 pub mod transaction_test_functions {
     use super::*;
-    use crate::{
-        account::AccountKeyPair,
-        crypto::{KeypairTraits, Signer},
-    };
+    use crate::{account::AccountKeyPair, crypto::KeypairTraits};
 
     pub const PRIMARY_ASSET_ID: u64 = 0;
 
@@ -507,382 +527,19 @@ pub mod transaction_test_functions {
         kp_receiver: &AccountKeyPair,
         amount: u64,
     ) -> SignedTransaction {
+        // TODO replace this with latest
         let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
-        let transaction_variant = TransactionVariant::PaymentTransaction(PaymentRequest::new(
-            kp_receiver.public().clone(),
+
+        let gas: u64 = 1000;
+        let transaction = create_payment_transaction(
+            kp_sender.public().clone(),
+            kp_receiver.public(),
             PRIMARY_ASSET_ID,
             amount,
-        ));
-
-        let transaction = Transaction::new(kp_sender.public().clone(), dummy_batch_digest, transaction_variant);
-
-        let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-
-        SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest)
-    }
-}
-
-/// Begin the testing suite for transactions
-#[cfg(test)]
-pub mod transaction_tests {
-    use super::transaction_test_functions::*;
-    use super::*;
-    use crate::account::account_test_functions::generate_keypair_vec;
-    use crate::crypto::{KeypairTraits, Signer};
-
-    use fastcrypto::traits::ToFromBytes;
-
-    #[test]
-    // test that transaction returns expected fields, validates a good signature, and has deterministic hashing
-    fn fails_bad_signature() {
-        // generating a signed transaction payload
-        let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
-        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-
-        let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
-        let transaction_variant = TransactionVariant::PaymentTransaction(PaymentRequest::new(
-            kp_receiver.public().clone(),
-            PRIMARY_ASSET_ID,
-            10,
-        ));
-
-        let transaction = Transaction::new(kp_sender.public().clone(), dummy_batch_digest, transaction_variant);
-
-        // sign the wrong payload
-        let signed_digest = kp_sender.sign(dummy_batch_digest.to_string().as_bytes());
-
-        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
-        let verify_result = signed_transaction.verify();
-
-        // check that verification fails
-        match verify_result {
-            Ok(..) => {
-                panic!("An error is expected.");
-            }
-            Err(GDEXError::FailedVerification) => { /* do nothing */ }
-            _ => {
-                panic!("An unexpected error occurred.")
-            }
-        }
-    }
-
-    #[test]
-    // test that transaction returns expected fields, validates a good signature, and has deterministic hashing
-    fn transaction_properties() {
-        let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
-        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, 10);
-        let transaction = signed_transaction.get_transaction_payload();
-        let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-
-        // perform transaction checks
-
-        // check valid signature
-        signed_transaction.verify().unwrap();
-
-        // verify deterministic hashing
-        let transaction_hash_0 = transaction.digest();
-        let transaction_hash_1 = transaction.digest();
-        assert!(
-            transaction_hash_0 == transaction_hash_1,
-            "hashes appears to have violated determinism"
-        );
-        assert!(
-            signed_transaction.get_transaction_signature().clone() == signed_digest,
-            "transaction sender does not match transaction input"
-        );
-        assert!(
-            signed_transaction.get_transaction_payload().get_sender() == kp_sender.public(),
-            "transaction payload sender does not match transction input"
-        );
-        assert!(
-            signed_transaction
-                .get_transaction_payload()
-                .get_recent_certificate_digest()
-                .to_string()
-                == CertificateDigest::new([0; DIGEST_LEN]).to_string(),
-            "transaction payload batch digest does not match transaction input"
-        );
-    }
-
-    #[test]
-    // test that a signed payment transaction behaves as expected
-    fn signed_payment_transaction() {
-        let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
-        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, 10);
-
-        let payment = match signed_transaction.get_transaction_payload().get_variant() {
-            TransactionVariant::PaymentTransaction(r) => r,
-            _ => {
-                panic!("An unexpected error occurred while reading the payment transaction");
-            }
-        };
-
-        assert!(
-            payment.get_amount() == 10,
-            "transaction amount does not match transaction input"
-        );
-        assert!(
-            payment.get_asset_id() == PRIMARY_ASSET_ID,
-            "transaction asset id does not match transaction input"
-        );
-        assert!(
-            payment.get_receiver() == kp_receiver.public(),
-            "transaction to does not match transction input"
-        );
-    }
-
-    #[test]
-    fn create_asset_transaction() {
-        let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
-
-        let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
-
-        let transaction_variant = TransactionVariant::CreateAssetTransaction(CreateAssetRequest { dummy: 0 });
-
-        let transaction = Transaction::new(kp_sender.public().clone(), dummy_batch_digest, transaction_variant);
-        let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
-
-        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
-
-        // check valid signature
-        signed_transaction.verify().unwrap();
-
-        // check we can unpack transaction as expected
-        let _create_asset = match signed_transaction.get_transaction_payload().get_variant() {
-            TransactionVariant::CreateAssetTransaction(r) => r,
-            _ => {
-                panic!("An unexpected error occurred while reading the payment transaction");
-            }
-        };
-    }
-
-    #[test]
-    fn create_limit_order_transaction() {
-        let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
-
-        let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
-
-        const TEST_BASE_ASSET_ID: u64 = 1;
-        const TEST_QUOTE_ASSET_ID: u64 = 2;
-        const TEST_ORDER_SIDE: OrderSide = OrderSide::Ask;
-        const TEST_QUANTITY: u64 = 10;
-        const TEST_PRICE: u64 = 10;
-        let transaction = create_place_limit_order_transaction(
-            &kp_sender,
-            TEST_BASE_ASSET_ID,
-            TEST_QUOTE_ASSET_ID,
-            TEST_ORDER_SIDE,
-            TEST_QUANTITY,
-            TEST_PRICE,
+            gas,
             dummy_batch_digest,
         );
 
-        let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
-
-        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
-
-        // check valid signature
-        signed_transaction.verify().unwrap();
-
-        // check we can unpack transaction as expected
-        let limit_order_request = match signed_transaction.get_transaction_payload().get_variant() {
-            TransactionVariant::PlaceOrderTransaction(r) => r,
-            _ => {
-                panic!("An unexpected error occurred while reading the limit order transaction");
-            }
-        };
-
-        if let OrderRequest::Limit {
-            base_asset_id,
-            quote_asset_id,
-            side,
-            price,
-            quantity,
-            ..
-        } = limit_order_request
-        {
-            assert!(*base_asset_id == TEST_BASE_ASSET_ID, "Base asset is incorrect.");
-            assert!(*quote_asset_id == TEST_QUOTE_ASSET_ID, "Quote asset is incorrect.");
-            assert!(*side == TEST_ORDER_SIDE, "Order side is incorrect.");
-            assert!(*price == TEST_PRICE, "Order price is incorrect.");
-            assert!(*quantity == TEST_QUANTITY, "Order quantity is incorrect.");
-        } else {
-            panic!("Transaction variant for limit order wasn't correctly identified.")
-        }
-    }
-
-    #[test]
-    fn create_cancel_order_transaction() {
-        let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
-
-        let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
-
-        const TEST_BASE_ASSET_ID: u64 = 1;
-        const TEST_QUOTE_ASSET_ID: u64 = 2;
-        const TEST_ORDER_ID: u64 = 1;
-        const TEST_ORDER_SIDE: OrderSide = OrderSide::Ask;
-        let transaction = create_place_cancel_order_transaction(
-            &kp_sender,
-            TEST_BASE_ASSET_ID,
-            TEST_QUOTE_ASSET_ID,
-            TEST_ORDER_ID,
-            TEST_ORDER_SIDE,
-            dummy_batch_digest,
-        );
-
-        let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
-
-        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
-
-        // check valid signature
-        signed_transaction.verify().unwrap();
-
-        // check we can unpack transaction as expected
-        let cancel_order_request = match signed_transaction.get_transaction_payload().get_variant() {
-            TransactionVariant::PlaceOrderTransaction(r) => r,
-            _ => {
-                panic!("An unexpected error occurred while reading the cancel order transaction");
-            }
-        };
-
-        if let OrderRequest::Cancel {
-            base_asset_id,
-            quote_asset_id,
-            order_id,
-            side,
-            ..
-        } = cancel_order_request
-        {
-            assert!(*base_asset_id == TEST_BASE_ASSET_ID, "Base asset is incorrect.");
-            assert!(*quote_asset_id == TEST_QUOTE_ASSET_ID, "Quote asset is incorrect.");
-            assert!(*order_id == TEST_ORDER_ID, "Order id is incorrect.");
-            assert!(*side == TEST_ORDER_SIDE, "Order side is incorrect.");
-        } else {
-            panic!("Transaction variant for cancel order wasn't correctly identified.")
-        }
-    }
-
-    #[test]
-    fn create_update_order_transaction() {
-        let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
-
-        let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
-
-        const TEST_BASE_ASSET_ID: u64 = 1;
-        const TEST_QUOTE_ASSET_ID: u64 = 2;
-        const TEST_ORDER_ID: u64 = 1;
-        const TEST_ORDER_SIDE: OrderSide = OrderSide::Ask;
-        const TEST_QUANTITY: u64 = 10;
-        const TEST_PRICE: u64 = 10;
-        let transaction = create_place_update_order_transaction(
-            &kp_sender,
-            TEST_BASE_ASSET_ID,
-            TEST_QUOTE_ASSET_ID,
-            TEST_ORDER_ID,
-            TEST_ORDER_SIDE,
-            TEST_QUANTITY,
-            TEST_PRICE,
-            dummy_batch_digest,
-        );
-
-        let signed_digest: AccountSignature = kp_sender.sign(&transaction.digest().get_array()[..]);
-
-        let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest);
-
-        // check valid signature
-        signed_transaction.verify().unwrap();
-
-        // check we can unpack transaction as expected
-        let update_order_request = match signed_transaction.get_transaction_payload().get_variant() {
-            TransactionVariant::PlaceOrderTransaction(r) => r,
-            _ => {
-                panic!("An unexpected error occurred while reading the update order transaction");
-            }
-        };
-
-        if let OrderRequest::Update {
-            base_asset_id,
-            quote_asset_id,
-            order_id,
-            side,
-            price,
-            quantity,
-            ..
-        } = update_order_request
-        {
-            assert!(*base_asset_id == TEST_BASE_ASSET_ID, "Base asset is incorrect.");
-            assert!(*quote_asset_id == TEST_QUOTE_ASSET_ID, "Quote asset is incorrect.");
-            assert!(*order_id == TEST_ORDER_ID, "Order id is incorrect.");
-            assert!(*side == TEST_ORDER_SIDE, "Order side is incorrect.");
-            assert!(*price == TEST_PRICE, "Order price is incorrect.");
-            assert!(*quantity == TEST_QUANTITY, "Order quantity is incorrect.");
-        } else {
-            panic!("Transaction variant for update order wasn't correctly identified.")
-        }
-    }
-
-    #[test]
-    fn test_serialize_deserialize() {
-        let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();
-        let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
-        let signed_transaction = generate_signed_test_transaction(&kp_sender, &kp_receiver, 10);
-
-        // perform transaction checks
-
-        let serialized = signed_transaction.serialize().unwrap();
-        // check valid signature
-        let signed_transaction_deserialized: SignedTransaction = SignedTransaction::deserialize(serialized).unwrap();
-        // verify signed transaction matches previous values
-
-        assert!(
-            signed_transaction.get_transaction_signature().as_bytes()
-                == signed_transaction_deserialized.get_transaction_signature().as_bytes(),
-            "signed transaction signature does not match after deserialize"
-        );
-
-        // verify transaction matches previous values
-        let transaction = signed_transaction.get_transaction_payload();
-        let transaction_deserialized = signed_transaction_deserialized.get_transaction_payload();
-
-        assert!(
-            transaction.digest() == transaction_deserialized.digest(),
-            "transaction digest does not match after deserialize"
-        );
-
-        assert!(
-            transaction.get_sender() == transaction_deserialized.get_sender(),
-            "transaction digest does not match"
-        );
-
-        // verify transaction variant matches previous values
-        let payment = match transaction.get_variant() {
-            TransactionVariant::PaymentTransaction(r) => r,
-            _ => {
-                panic!("An unexpected error occurred while reading the payment transaction");
-            }
-        };
-        let payment_deserialized = match transaction_deserialized.get_variant() {
-            TransactionVariant::PaymentTransaction(r) => r,
-            _ => {
-                panic!("An unexpected error occurred while reading the payment transaction");
-            }
-        };
-
-        assert!(
-            payment_deserialized.get_amount() == payment.get_amount(),
-            "transaction amount does not match transaction input"
-        );
-
-        assert!(
-            payment_deserialized.get_asset_id() == payment.get_asset_id(),
-            "transaction amount does not match transaction input"
-        );
-
-        assert!(
-            payment_deserialized.get_receiver() == payment.get_receiver(),
-            "transaction amount does not match transaction input"
-        );
+        transaction.sign(kp_sender).unwrap()
     }
 }

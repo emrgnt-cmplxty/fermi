@@ -9,11 +9,18 @@ use crate::controller::Controller;
 use crate::master::MasterController;
 
 // gdex
-use gdex_types::{account::AccountPubKey, crypto::ToFromBytes, error::GDEXError, transaction::Transaction};
+use gdex_types::{
+    account::AccountPubKey,
+    crypto::ToFromBytes,
+    error::GDEXError,
+    store::ProcessBlockStore,
+    transaction::{parse_request_type, Transaction},
+};
 
 // mysten
 
 // external
+use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -43,6 +50,7 @@ impl Default for ConsensusController {
     }
 }
 
+#[async_trait]
 impl Controller for ConsensusController {
     fn initialize(&mut self, _master_controller: &MasterController) {}
 
@@ -50,9 +58,14 @@ impl Controller for ConsensusController {
         Ok(())
     }
 
-    fn handle_consensus_transaction(&mut self, _transaction: &Transaction) -> Result<(), GDEXError> {
-        Ok(())
+    fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
+        let request_type = parse_request_type(transaction.request_type)?;
+
+        #[allow(clippy::match_single_binding)]
+        match request_type {
+            _ => Err(GDEXError::InvalidRequestTypeError),
+        }
     }
 
-    fn post_process(&mut self, _block_number: u64) {}
+    async fn process_end_of_block(&mut self, _process_block_store: &ProcessBlockStore, _block_number: u64) {}
 }

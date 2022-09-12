@@ -16,6 +16,7 @@ use tokio_stream::StreamExt;
 use tonic::transport::Channel;
 use tracing::{info, warn};
 use url::Url;
+use gdex_types::transaction::serialize_protobuf;
 
 const BLOCK_INFO_REQUEST: RelayerGetLatestBlockInfoRequest = RelayerGetLatestBlockInfoRequest {};
 const MATCH_FREQUENCY: u64 = 100;
@@ -184,14 +185,11 @@ impl BenchHelper {
                 recent_block_hash,
             );
 
-            let proto = TransactionProto {
-                transaction: signed_transaction.serialize().unwrap().into(),
-            };
             if x == 0 {
-                let transaction_size = proto.transaction.len();
+                let transaction_size = serialize_protobuf(&signed_transaction).len();
                 info!("Transactions size: {transaction_size} B");
             }
-            proto
+            signed_transaction
         });
 
         if let Err(e) = self

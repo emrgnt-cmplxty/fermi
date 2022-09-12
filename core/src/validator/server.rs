@@ -196,7 +196,7 @@ impl ValidatorService {
                                 .process_end_of_block(&store.process_block_store, block_number)
                                 .await;
                             serialized_txns_buf.clear();
-                            info!("Finalized block {block_num} contains {num_txns} transactions");
+                            info!("Finalized block {block_number} contains {num_txns} transactions");
                         }
                     }
                     Err(e) => error!("{:?}", e), // TODO

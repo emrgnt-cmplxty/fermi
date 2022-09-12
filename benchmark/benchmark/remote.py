@@ -227,7 +227,6 @@ class Bench:
             worker_to_worker = []
             consensus_address = []
 
-            print("validator_dict=", validator_dict)
             for i in range(workers):
                 primary_to_worker.append(validator_dict["workers"][i]["primary_to_worker"])
                 worker_to_worker.append(validator_dict["workers"][i]["worker_to_worker"])

@@ -164,8 +164,8 @@ impl Client {
                 .unwrap()
                 .into_inner();
 
-            let block_digest: BlockDigest = if response.successful && response.block_info.is_some() {
-                bincode::deserialize(response.block_info.unwrap().digest.as_ref()).unwrap()
+            let block_digest = if let Some(block_info) = response.block_info  {
+                bincode::deserialize(block_info.digest.as_ref()).unwrap()
             } else {
                 BlockDigest::new([0; 32])
             };

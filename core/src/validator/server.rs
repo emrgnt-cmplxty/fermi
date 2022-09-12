@@ -27,7 +27,7 @@ use tokio::{
     sync::mpsc::{channel, Receiver, Sender},
     task::JoinHandle,
 };
-use tracing::{info, trace};
+use tracing::{error, info, trace};
 
 // constants
 // frequency of orderbook depth writes (rounds)
@@ -175,7 +175,6 @@ impl ValidatorService {
         let master_controller = &validator_state.master_controller;
         loop {
             while let Some(message) = rx_output.recv().await {
-                trace!("Received a finalized consensus transaction for post processing",);
                 let (result, serialized_txn) = message;
                 match result {
                     Ok((consensus_output, execution_indices, execution_result)) => {
@@ -184,7 +183,8 @@ impl ValidatorService {
                         // if next_transaction_index == 0 then the block is complete and we may write-out
                         if execution_indices.next_transaction_index == 0 {
                             // write out orderbook depth every ORDERBOOK_DEPTH_FREQUENCY
-                            if store.block_number.load(std::sync::atomic::Ordering::SeqCst) % ORDERBOOK_DEPTH_FREQUENCY
+                            let block_num = store.block_number.load(std::sync::atomic::Ordering::SeqCst);
+                            if block_num % ORDERBOOK_DEPTH_FREQUENCY
                                 == 0
                             {
                                 let orderbook_depths = validator_state
@@ -197,10 +197,10 @@ impl ValidatorService {
                             }
 
                             // subtract round look-back from the latest round to get block number
-                            let round_number = consensus_output.certificate.header.round;
 
                             let num_txns = serialized_txns_buf.len();
-                            trace!("Processing result from {round_number} with {num_txns} transactions");
+                            // This log is used in benchmarking
+                            info!("Finalized block {block_num} contains {num_txns} transactions");
                             store.prune();
                             // write-out the new block to the validator store
                             let (block, block_info) = store
@@ -208,11 +208,11 @@ impl ValidatorService {
                                 .await;
                             metrics.process_new_block(block, block_info);
                             master_controller
-                                .post_process(store.block_number.load(std::sync::atomic::Ordering::SeqCst));
+                                .post_process(block_num);
                             serialized_txns_buf.clear();
                         }
                     }
-                    Err(e) => info!("{:?}", e), // TODO
+                    Err(e) => error!("{:?}", e), // TODO
                 }
                 // NOTE: Notify the user that its transaction has been processed.
             }

@@ -147,7 +147,7 @@ impl BenchHelper {
     // PUBLIC
 
     pub async fn burst_orderbook(&mut self, burst: u64) {
-        info!("bursting client now...");
+        info!("Bursting client now...");
         let recent_block_hash = self.get_recent_block_digest().await;
 
         // prepare copies of self variables before moving into closure

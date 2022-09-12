@@ -1,5 +1,6 @@
 use bincode::Options;
 use fastcrypto::traits::KeyPair;
+use gdex_types::transaction::serialize_protobuf;
 use gdex_types::{
     account::AccountKeyPair,
     block::BlockDigest,
@@ -16,7 +17,6 @@ use tokio_stream::StreamExt;
 use tonic::transport::Channel;
 use tracing::{info, warn};
 use url::Url;
-use gdex_types::transaction::serialize_protobuf;
 
 const BLOCK_INFO_REQUEST: RelayerGetLatestBlockInfoRequest = RelayerGetLatestBlockInfoRequest {};
 const MATCH_FREQUENCY: u64 = 100;

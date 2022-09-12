@@ -44,13 +44,13 @@ fn criterion_benchmark(c: &mut Criterion) {
         let kp_sender = keys(sender_seed).pop().unwrap();
         let kp_receiver = keys(receiver_seed).pop().unwrap();
         let certificate_digest = CertificateDigest::new([0; DIGEST_LEN]);
-        let gas: u64 = 1000;
+        let fee: u64 = 1000;
         let transaction = create_payment_transaction(
             kp_sender.public().clone(),
             kp_receiver.public(),
             0,
             amount,
-            gas,
+            fee,
             certificate_digest,
         );
         let signed_transaction = transaction.sign(&kp_sender).unwrap();

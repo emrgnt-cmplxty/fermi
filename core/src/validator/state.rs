@@ -457,8 +457,8 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let gas: u64 = 1000;
-        let transaction = create_create_asset_transaction(sender_kp.public().clone(), 0, gas, recent_block_hash);
+        let fee: u64 = 1000;
+        let transaction = create_create_asset_transaction(sender_kp.public().clone(), 0, fee, recent_block_hash);
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
@@ -482,8 +482,8 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let gas: u64 = 1000;
-        let transaction = create_create_asset_transaction(sender_kp.public().clone(), 0, gas, recent_block_hash);
+        let fee: u64 = 1000;
+        let transaction = create_create_asset_transaction(sender_kp.public().clone(), 0, fee, recent_block_hash);
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
@@ -500,13 +500,13 @@ mod test_validator_state {
         const TEST_ASSET_ID: u64 = 0;
         const TEST_AMOUNT: u64 = 1000000;
         let receiver_kp = generate_production_keypair::<KeyPair>();
-        let gas: u64 = 1000;
+        let fee: u64 = 1000;
         let transaction = create_payment_transaction(
             sender_kp.public().clone(),
             receiver_kp.public(),
             TEST_ASSET_ID,
             TEST_AMOUNT,
-            gas,
+            fee,
             recent_block_hash,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
@@ -532,11 +532,11 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let gas: u64 = 1000;
+        let fee: u64 = 1000;
 
         for asset_number in 0..5 {
             let transaction =
-                create_create_asset_transaction(sender_kp.public().clone(), asset_number, gas, recent_block_hash);
+                create_create_asset_transaction(sender_kp.public().clone(), asset_number, fee, recent_block_hash);
             let signed_transaction = transaction.sign(&sender_kp).unwrap();
             let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
@@ -555,12 +555,12 @@ mod test_validator_state {
         const TEST_QUOTE_ASSET_ID: u64 = 2;
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let gas: u64 = 1000;
+        let fee: u64 = 1000;
         let transaction = create_create_orderbook_transaction(
             sender_kp.public().clone(),
             TEST_BASE_ASSET_ID,
             TEST_QUOTE_ASSET_ID,
-            gas,
+            fee,
             recent_block_hash,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
@@ -586,11 +586,11 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let gas: u64 = 1000;
+        let fee: u64 = 1000;
 
         for asset_number in 0..5 {
             let transaction =
-                create_create_asset_transaction(sender_kp.public().clone(), asset_number, gas, recent_block_hash);
+                create_create_asset_transaction(sender_kp.public().clone(), asset_number, fee, recent_block_hash);
             let signed_transaction = transaction.sign(&sender_kp).unwrap();
             let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
@@ -608,12 +608,12 @@ mod test_validator_state {
         const TEST_BASE_ASSET_ID: u64 = 1;
         const TEST_QUOTE_ASSET_ID: u64 = 2;
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let gas: u64 = 1000;
+        let fee: u64 = 1000;
         let transaction = create_create_orderbook_transaction(
             sender_kp.public().clone(),
             TEST_BASE_ASSET_ID,
             TEST_QUOTE_ASSET_ID,
-            gas,
+            fee,
             recent_block_hash,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
@@ -631,7 +631,7 @@ mod test_validator_state {
         const TEST_PRICE: u64 = 100;
         const TEST_QUANTITY: u64 = 100;
         let local_timestamp: u64 = 16000000;
-        let gas: u64 = 1000;
+        let fee: u64 = 1000;
         let transaction = create_limit_order_transaction(
             sender_kp.public().clone(),
             TEST_BASE_ASSET_ID,
@@ -640,7 +640,7 @@ mod test_validator_state {
             TEST_PRICE,
             TEST_QUANTITY,
             local_timestamp,
-            gas,
+            fee,
             recent_block_hash,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
@@ -658,7 +658,7 @@ mod test_validator_state {
         // cancel order
         const TEST_ORDER_ID: u64 = 1;
         let local_timestamp: u64 = 16000000;
-        let gas: u64 = 1000;
+        let fee: u64 = 1000;
         let transaction = create_cancel_order_transaction(
             sender_kp.public().clone(),
             TEST_BASE_ASSET_ID,
@@ -666,7 +666,7 @@ mod test_validator_state {
             OrderSide::Bid as u64,
             local_timestamp,
             TEST_ORDER_ID,
-            gas,
+            fee,
             recent_block_hash,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
@@ -692,11 +692,11 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let gas: u64 = 1000;
+        let fee: u64 = 1000;
 
         for asset_number in 0..5 {
             let transaction =
-                create_create_asset_transaction(sender_kp.public().clone(), asset_number, gas, recent_block_hash);
+                create_create_asset_transaction(sender_kp.public().clone(), asset_number, fee, recent_block_hash);
             let signed_transaction = transaction.sign(&sender_kp).unwrap();
             let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
@@ -714,12 +714,12 @@ mod test_validator_state {
         const TEST_BASE_ASSET_ID: u64 = 1;
         const TEST_QUOTE_ASSET_ID: u64 = 2;
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let gas: u64 = 1000;
+        let fee: u64 = 1000;
         let transaction = create_create_orderbook_transaction(
             sender_kp.public().clone(),
             TEST_BASE_ASSET_ID,
             TEST_QUOTE_ASSET_ID,
-            gas,
+            fee,
             recent_block_hash,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
@@ -738,7 +738,7 @@ mod test_validator_state {
         const TEST_PRICE: u64 = 100;
         const TEST_QUANTITY: u64 = 100;
         let local_timestamp: u64 = 16000000;
-        let gas: u64 = 1000;
+        let fee: u64 = 1000;
         let transaction = create_limit_order_transaction(
             sender_kp.public().clone(),
             TEST_BASE_ASSET_ID,
@@ -747,7 +747,7 @@ mod test_validator_state {
             TEST_PRICE,
             TEST_QUANTITY,
             local_timestamp,
-            gas,
+            fee,
             recent_block_hash,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
@@ -765,7 +765,7 @@ mod test_validator_state {
         // cancel order
         const TEST_ORDER_ID: u64 = 1;
         let local_timestamp: u64 = 16000000;
-        let gas: u64 = 1000;
+        let fee: u64 = 1000;
         let transaction = create_update_order_transaction(
             sender_kp.public().clone(),
             TEST_BASE_ASSET_ID,
@@ -775,7 +775,7 @@ mod test_validator_state {
             TEST_QUANTITY,
             local_timestamp,
             TEST_ORDER_ID,
-            gas,
+            fee,
             recent_block_hash,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();

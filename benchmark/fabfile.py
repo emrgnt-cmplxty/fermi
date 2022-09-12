@@ -25,7 +25,7 @@ def gdex(ctx, debug=True):
         'flamegraph': None, # node or None
         'genesis_dir': "../.proto/",
         'key_dir': "../.proto/",
-        'do_orderbook': True,
+        'do_orderbook': False,
         # the database dir will be wiped before running the benchmark
         'db_dir': "../.proto/db",
         'starting_balance': 5000000000

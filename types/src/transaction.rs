@@ -204,7 +204,7 @@ pub fn create_transaction(
     target_controller: ControllerType,
     request_type: RequestType,
     recent_block_hash: CertificateDigest,
-    gas: u64,
+    fee: u64,
     request_bytes: Vec<u8>,
 ) -> Transaction {
     Transaction {
@@ -213,7 +213,7 @@ pub fn create_transaction(
         target_controller: target_controller as i32,
         request_type: request_type as i32,
         recent_block_hash: CertificateDigestProto::from(recent_block_hash).digest,
-        gas,
+        fee,
         request_bytes: Bytes::from(request_bytes),
     }
 }
@@ -324,7 +324,7 @@ pub fn create_payment_transaction(
     receiver: &AccountPubKey,
     asset_id: u64,
     amount: u64,
-    gas: u64,
+    fee: u64,
     recent_block_hash: CertificateDigest,
 ) -> Transaction {
     let request = create_payment_request(receiver, asset_id, amount);
@@ -334,7 +334,7 @@ pub fn create_payment_transaction(
         ControllerType::Bank,
         RequestType::Payment,
         recent_block_hash,
-        gas,
+        fee,
         serialize_protobuf(&request),
     )
 }
@@ -343,7 +343,7 @@ pub fn create_payment_transaction(
 pub fn create_create_asset_transaction(
     sender: AccountPubKey,
     dummy: u64,
-    gas: u64,
+    fee: u64,
     recent_block_hash: CertificateDigest,
 ) -> Transaction {
     let request = create_create_asset_request(dummy);
@@ -353,7 +353,7 @@ pub fn create_create_asset_transaction(
         ControllerType::Bank,
         RequestType::CreateAsset,
         recent_block_hash,
-        gas,
+        fee,
         serialize_protobuf(&request),
     )
 }
@@ -362,7 +362,7 @@ pub fn create_create_orderbook_transaction(
     sender: AccountPubKey,
     base_asset_id: u64,
     quote_asset_id: u64,
-    gas: u64,
+    fee: u64,
     recent_block_hash: CertificateDigest,
 ) -> Transaction {
     let request = create_create_orderbook_request(base_asset_id, quote_asset_id);
@@ -372,7 +372,7 @@ pub fn create_create_orderbook_transaction(
         ControllerType::Spot,
         RequestType::CreateOrderbook,
         recent_block_hash,
-        gas,
+        fee,
         serialize_protobuf(&request),
     )
 }
@@ -385,7 +385,7 @@ pub fn create_market_order_transaction(
     side: u64,
     quantity: u64,
     local_timestamp: u64,
-    gas: u64,
+    fee: u64,
     recent_block_hash: CertificateDigest,
 ) -> Transaction {
     let request = create_market_order_request(base_asset_id, quote_asset_id, side, quantity, local_timestamp);
@@ -395,7 +395,7 @@ pub fn create_market_order_transaction(
         ControllerType::Spot,
         RequestType::MarketOrder,
         recent_block_hash,
-        gas,
+        fee,
         serialize_protobuf(&request),
     )
 }
@@ -409,7 +409,7 @@ pub fn create_limit_order_transaction(
     price: u64,
     quantity: u64,
     local_timestamp: u64,
-    gas: u64,
+    fee: u64,
     recent_block_hash: CertificateDigest,
 ) -> Transaction {
     let request = create_limit_order_request(base_asset_id, quote_asset_id, side, price, quantity, local_timestamp);
@@ -419,7 +419,7 @@ pub fn create_limit_order_transaction(
         ControllerType::Spot,
         RequestType::LimitOrder,
         recent_block_hash,
-        gas,
+        fee,
         serialize_protobuf(&request),
     )
 }
@@ -434,7 +434,7 @@ pub fn create_update_order_transaction(
     quantity: u64,
     local_timestamp: u64,
     order_id: u64,
-    gas: u64,
+    fee: u64,
     recent_block_hash: CertificateDigest,
 ) -> Transaction {
     let request = create_update_order_request(
@@ -452,7 +452,7 @@ pub fn create_update_order_transaction(
         ControllerType::Spot,
         RequestType::UpdateOrder,
         recent_block_hash,
-        gas,
+        fee,
         serialize_protobuf(&request),
     )
 }
@@ -465,7 +465,7 @@ pub fn create_cancel_order_transaction(
     side: u64,
     local_timestamp: u64,
     order_id: u64,
-    gas: u64,
+    fee: u64,
     recent_block_hash: CertificateDigest,
 ) -> Transaction {
     let request = create_cancel_order_request(base_asset_id, quote_asset_id, side, local_timestamp, order_id);
@@ -475,7 +475,7 @@ pub fn create_cancel_order_transaction(
         ControllerType::Spot,
         RequestType::CancelOrder,
         recent_block_hash,
-        gas,
+        fee,
         serialize_protobuf(&request),
     )
 }
@@ -530,13 +530,13 @@ pub mod transaction_test_functions {
         // TODO replace this with latest
         let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
 
-        let gas: u64 = 1000;
+        let fee: u64 = 1000;
         let transaction = create_payment_transaction(
             kp_sender.public().clone(),
             kp_receiver.public(),
             PRIMARY_ASSET_ID,
             amount,
-            gas,
+            fee,
             dummy_batch_digest,
         );
 

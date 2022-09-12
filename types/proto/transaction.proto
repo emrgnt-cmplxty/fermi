@@ -44,6 +44,6 @@ message Transaction {
     ControllerType target_controller = 3;
     RequestType request_type = 4;
     bytes recent_block_hash = 5;
-    uint64 gas = 6;
+    uint64 fee = 6;
     bytes request_bytes = 7;
 }

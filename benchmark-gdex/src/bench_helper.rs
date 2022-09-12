@@ -26,13 +26,13 @@ fn create_signed_payment_transaction(
     amount: u64,
     block_digest: BlockDigest,
 ) -> SignedTransaction {
-    let gas: u64 = 1000;
+    let fee: u64 = 1000;
     let transaction = create_payment_transaction(
         kp_sender.public().clone(),
         kp_receiver.public(),
         asset_id,
         amount,
-        gas,
+        fee,
         block_digest,
     );
     transaction.sign(kp_sender).unwrap()
@@ -43,8 +43,8 @@ fn create_signed_asset_creation_transaction(
     block_digest: BlockDigest,
     dummy: u8,
 ) -> SignedTransaction {
-    let gas: u64 = 1000;
-    let transaction = create_create_asset_transaction(kp_sender.public().clone(), dummy as u64, gas, block_digest);
+    let fee: u64 = 1000;
+    let transaction = create_create_asset_transaction(kp_sender.public().clone(), dummy as u64, fee, block_digest);
     transaction.sign(kp_sender).unwrap()
 }
 
@@ -54,12 +54,12 @@ fn create_signed_orderbook_transaction(
     quote_asset_id: u64,
     block_digest: BlockDigest,
 ) -> SignedTransaction {
-    let gas: u64 = 1000;
+    let fee: u64 = 1000;
     let transaction = create_create_orderbook_transaction(
         kp_sender.public().clone(),
         base_asset_id,
         quote_asset_id,
-        gas,
+        fee,
         block_digest,
     );
     transaction.sign(kp_sender).unwrap()
@@ -75,7 +75,7 @@ fn create_signed_limit_order_transaction(
     block_digest: BlockDigest,
 ) -> SignedTransaction {
     let local_timestamp: u64 = 16000000;
-    let gas: u64 = 1000;
+    let fee: u64 = 1000;
     let transaction = create_limit_order_transaction(
         kp_sender.public().clone(),
         base_asset_id,
@@ -84,7 +84,7 @@ fn create_signed_limit_order_transaction(
         price,
         amount,
         local_timestamp,
-        gas,
+        fee,
         block_digest,
     );
     transaction.sign(kp_sender).unwrap()

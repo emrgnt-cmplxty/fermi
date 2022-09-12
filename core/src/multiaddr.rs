@@ -6,7 +6,7 @@ use anyhow::{anyhow, Result};
 use multiaddr::{Multiaddr, Protocol};
 use std::{
     borrow::Cow,
-    net::{IpAddr, SocketAddr},
+    net::{IpAddr, Ipv4Addr, SocketAddr},
 };
 
 // Converts a /ip{4,6}/-/tcp/-[/-] Multiaddr to SocketAddr.
@@ -20,6 +20,7 @@ pub fn to_socket_addr(addr: &Multiaddr) -> Result<SocketAddr> {
     {
         Protocol::Ip4(ip4_addr) => IpAddr::V4(ip4_addr),
         Protocol::Ip6(ip6_addr) => IpAddr::V6(ip6_addr),
+        Protocol::Dns(..) => IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
         unsupported => return Err(anyhow!("unsupported protocol {unsupported}")),
     };
     let tcp_port = parse_tcp(&mut iter)?;

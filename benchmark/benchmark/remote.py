@@ -308,6 +308,11 @@ class Bench:
             relayer_address = validator_dict['relayer_address'].split('/')
             relayer_address[2] = '0.0.0.0'
             relayer_address = '/'.join(relayer_address)
+
+            metrics_address = validator_dict['metrics_address'].split('/')
+            metrics_address[2] = '0.0.0.0'
+            metrics_address = '/'.join(metrics_address)
+
             host = Committee.ip_from_multi_address(validator_dict['network_address'])
             cmd = CommandMaker.run_gdex_node(
                 self.remote_proto_dir,
@@ -315,7 +320,8 @@ class Bench:
                 self.remote_proto_dir + PathMaker.key_file(i),
                 name,
                 validator_address,
-                relayer_address
+                relayer_address,
+                metrics_address
             )
 
             log_file = PathMaker.primary_log_file(i)

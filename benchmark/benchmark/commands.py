@@ -122,6 +122,7 @@ class CommandMaker:
         validator_name,
         validator_address,
         relayer_address,
+        metrics_address,
         debug=False,
         flamegraph=None,
     ):
@@ -137,7 +138,7 @@ class CommandMaker:
 
         command = (
             f"{flamegraph}./gdex-node {v} run --db-dir {db_dir} --genesis-dir  {genesis_dir} "
-            f"--key-path {key_path} --validator-name {validator_name} --validator-address {validator_address} --relayer-address {relayer_address}"
+            f"--key-path {key_path} --validator-name {validator_name} --validator-address {validator_address} --relayer-address {relayer_address} --metrics-address {metrics_address}"
         )
         print("Returning execution command = ", command)
         return command

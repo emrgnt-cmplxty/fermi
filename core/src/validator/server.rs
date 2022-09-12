@@ -184,7 +184,6 @@ impl ValidatorService {
                             // subtract round look-back from the latest round to get block number
 
                             let num_txns = serialized_txns_buf.len();
-                            // This log is used in benchmarking
                             store.prune();
                             // write-out the new block to the validator store
                             let (block, block_info) = store
@@ -196,6 +195,7 @@ impl ValidatorService {
                                 .process_end_of_block(&store.process_block_store, block_number)
                                 .await;
                             serialized_txns_buf.clear();
+                            // This log is used in benchmarking
                             info!("Finalized block {block_number} contains {num_txns} transactions");
                         }
                     }

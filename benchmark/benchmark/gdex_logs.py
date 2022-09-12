@@ -114,7 +114,6 @@ class LogParser:
         tmp = findall(r'(.*?) .* Finalized block (\d+) contains (\d+) transactions', log)
         tmp = [(int(b), int(c)) for t, b, c in tmp]
         counts = self._merge_results([tmp])
-        #commits = self._merge_results([tmp])
 
         configs = {
             'header_size': int(

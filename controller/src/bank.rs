@@ -21,14 +21,19 @@ use gdex_types::{
     asset::{Asset, AssetId},
     crypto::ToFromBytes,
     error::GDEXError,
-    transaction::{Transaction, TransactionVariant},
+    store::ProcessBlockStore,
+    transaction::{
+        deserialize_protobuf, parse_request_type, CreateAssetRequest, PaymentRequest, RequestType, Transaction,
+    },
 };
 
 // mysten
 
 // external
+use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 
 // CONSTANTS
 #[derive(PartialEq)]
@@ -64,6 +69,7 @@ impl Default for BankController {
     }
 }
 
+#[async_trait]
 impl Controller for BankController {
     fn initialize(&mut self, _master_controller: &MasterController) {}
 
@@ -72,22 +78,29 @@ impl Controller for BankController {
     }
 
     fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
-        if let TransactionVariant::PaymentTransaction(payment) = transaction.get_variant() {
-            return self.transfer(
-                transaction.get_sender(),
-                payment.get_receiver(),
-                payment.get_asset_id(),
-                payment.get_amount(),
-            );
+        let request_type = parse_request_type(transaction.request_type)?;
+        match request_type {
+            RequestType::CreateAsset => {
+                let _request: CreateAssetRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                let sender = transaction.get_sender()?;
+                self.create_asset(&sender)
+            }
+            RequestType::Payment => {
+                let request: PaymentRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                let sender = transaction.get_sender()?;
+                let receiver = request.get_receiver()?;
+                self.transfer(&sender, &receiver, request.asset_id, request.amount)
+            }
+            _ => Err(GDEXError::InvalidRequestTypeError),
         }
-        if let TransactionVariant::CreateAssetTransaction(_create_asset) = transaction.get_variant() {
-            return self.create_asset(transaction.get_sender());
-        }
-
-        Ok(())
     }
 
-    fn post_process(&mut self, _block_number: u64) {}
+    async fn process_end_of_block(
+        _controller: Arc<Mutex<Self>>,
+        _process_block_store: &ProcessBlockStore,
+        _block_number: u64,
+    ) {
+    }
 }
 
 impl BankController {

@@ -16,7 +16,11 @@ pub type AccountKeyPair = Ed25519KeyPair;
 use futures::executor::block_on;
 use gdex_types::{
     error::GDEXError,
-    transaction::{SignedTransaction, TransactionVariant},
+    transaction::{
+        RequestType, deserialize_protobuf,
+        get_payment_receiver, ConsensusTransaction, PaymentRequest, CreateAssetRequest,
+        parse_request_type
+    },
 };
 use rand::{rngs::StdRng, SeedableRng};
 
@@ -49,35 +53,48 @@ pub struct AdvancedExecutionState {
 
 #[async_trait]
 impl ExecutionState for AdvancedExecutionState {
-    type Transaction = SignedTransaction;
+    type Transaction = ConsensusTransaction;
     type Error = AdvancedExecutionStateError;
     type Outcome = Vec<u8>;
 
     async fn handle_consensus_transaction(
         &self,
         _consensus_output: &ConsensusOutput,
-        execution_indices: ExecutionIndices,
-        signed_transaction: Self::Transaction,
+        _execution_indices: ExecutionIndices,
+        consensus_transaction: Self::Transaction,
     ) -> Result<Self::Outcome, Self::Error> {
-        let transaction = signed_transaction.get_transaction_payload();
-        let execution = match transaction.get_variant() {
-            TransactionVariant::PaymentTransaction(payment) => {
-                self.store.write(Self::INDICES_ADDRESS, execution_indices).await;
+        // deserialize signed transaction
+        let signed_transaction = consensus_transaction.get_payload()
+            .map_err(|e| Self::Error::VMError(e))?;
+        let _ = signed_transaction.verify_signature()
+            .map_err(|e| Self::Error::VMError(e))?;
+
+        // get transaction
+        let transaction = signed_transaction.get_transaction()
+            .map_err(|e| Self::Error::VMError(e))?;
+
+        let request_type = parse_request_type(transaction.request_type)
+            .map_err(|e| Self::Error::VMError(e))?;
+        let execution = match request_type {
+            RequestType::CreateAsset => {
+                let _request: CreateAssetRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                let sender = transaction.get_sender()?;
+                self.bank_controller.lock().unwrap().create_asset(&sender)
+            },
+            RequestType::Payment => {
+                let request: PaymentRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                let sender = transaction.get_sender()?;
+                let receiver = get_payment_receiver(&request)?;
                 self.bank_controller.lock().unwrap().transfer(
-                    transaction.get_sender(),
-                    payment.get_receiver(),
-                    payment.get_asset_id(),
-                    payment.get_amount(),
+                    &sender,
+                    &receiver,
+                    request.asset_id,
+                    request.amount
                 )
-            }
-            TransactionVariant::CreateAssetTransaction(_create_asset) => self
-                .bank_controller
-                .lock()
-                .unwrap()
-                .create_asset(transaction.get_sender()),
-            TransactionVariant::CreateOrderbookTransaction(_create_orderbook) => Ok(()),
-            TransactionVariant::PlaceOrderTransaction(_order) => Ok(()),
+            },
+            _ => Ok(()),
         };
+
         match execution {
             Ok(_) => Ok(Vec::default()),
             Err(err) => Err(Self::Error::VMError(err)),

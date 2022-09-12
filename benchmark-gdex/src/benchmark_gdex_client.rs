@@ -3,16 +3,13 @@
 // SPDX-License-Identifier: Apache-2.0
 use anyhow::{Context, Result};
 use clap::{crate_name, crate_version, App, AppSettings};
-use fastcrypto::{
-    traits::{KeyPair, Signer},
-    Hash,
-};
+use fastcrypto::traits::KeyPair;
 use futures::{future::join_all, StreamExt};
 use gdex_types::{
     account::{AccountKeyPair, ValidatorKeyPair},
     block::BlockDigest,
-    proto::{RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionProto, TransactionsClient},
-    transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant},
+    proto::{RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionSubmitterClient},
+    transaction::{create_payment_transaction, ConsensusTransaction, SignedTransaction},
     utils::read_keypair_from_file,
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
@@ -40,18 +37,16 @@ fn create_signed_transaction(
     block_digest: BlockDigest,
 ) -> SignedTransaction {
     // use a dummy batch digest for initial benchmarking
-
-    let transaction_variant = TransactionVariant::PaymentTransaction(PaymentRequest::new(
-        kp_receiver.public().clone(),
+    let fee: u64 = 1000;
+    let transaction = create_payment_transaction(
+        kp_sender.public().clone(),
+        kp_receiver.public(),
         PRIMARY_ASSET_ID,
         amount,
-    ));
-    let transaction = Transaction::new(kp_sender.public().clone(), block_digest, transaction_variant);
-
-    // sign digest and create signed transaction
-    let signed_digest = kp_sender.sign(&transaction.digest().get_array()[..]);
-    let signed_transaction = SignedTransaction::new(kp_sender.public().clone(), transaction.clone(), signed_digest);
-    signed_transaction
+        fee,
+        block_digest,
+    );
+    transaction.sign(kp_sender).unwrap()
 }
 
 #[tokio::main]
@@ -142,7 +137,7 @@ impl Client {
         const PRECISION: u64 = 20; // Sample precision.
         const BURST_DURATION: u64 = 1000 / PRECISION;
 
-        let mut client = TransactionsClient::connect(self.target.as_str().to_owned())
+        let mut client = TransactionSubmitterClient::connect(self.target.as_str().to_owned())
             .await
             .unwrap();
         let mut relayer_client = RelayerClient::connect(self.relayer.as_str().to_owned()).await.unwrap();
@@ -163,28 +158,29 @@ impl Client {
         info!("Start sending transactions");
         loop {
             // fetch recent block digest before starting another round of payments
-            let response = relayer_client
-                .get_latest_block_info(block_info_request.clone())
-                .await
-                .unwrap()
-                .into_inner();
+            let response = relayer_client.get_latest_block_info(block_info_request.clone()).await;
 
-            let block_digest: BlockDigest = if response.successful && response.block_info.is_some() {
-                bincode::deserialize(response.block_info.unwrap().digest.as_ref()).unwrap()
-            } else {
-                BlockDigest::new([0; 32])
+            let mut block_digest = BlockDigest::new([0; 32]);
+
+            if let Ok(relayer_block_response) = response {
+                if let Some(block_info) = relayer_block_response.into_inner().block_info {
+                    block_digest = bincode::deserialize(block_info.digest.as_ref()).unwrap()
+                }
             };
-
+    
             interval.as_mut().tick().await;
             let now = Instant::now();
             let keypair = keypair.copy();
             let kp_receiver = keys([1; 32]).pop().unwrap();
 
             if counter == 0 {
-                let transaction_size = create_signed_transaction(&keypair, &kp_receiver, 1, block_digest.clone())
-                    .serialize()
-                    .unwrap()
-                    .len();
+                let signed_transaction = create_signed_transaction(&keypair, &kp_receiver, 1, block_digest.clone());
+                let serialized_consensus_transaction = match ConsensusTransaction::new(&signed_transaction).serialize()
+                {
+                    Ok(t) => t,
+                    _ => panic!("Error serializing transaction"),
+                };
+                let transaction_size = serialized_consensus_transaction.len();
                 info!("Transactions size: {transaction_size} B");
             }
 
@@ -196,11 +192,7 @@ impl Client {
                 }
                 let signed_tranasction =
                     create_signed_transaction(&keypair, &kp_receiver, amount, block_digest.clone());
-                // let txn_digest = signed_tranasction.get_transaction_payload().digest().to_string();
-                // info!("Submitting {}", txn_digest);
-                TransactionProto {
-                    transaction: signed_tranasction.serialize().unwrap().into(),
-                }
+                signed_tranasction
             });
 
             if let Err(e) = client.submit_transaction_stream(stream).await {

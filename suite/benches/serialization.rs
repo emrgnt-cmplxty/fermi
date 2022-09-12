@@ -7,12 +7,12 @@ extern crate bincode;
 extern crate criterion;
 
 use criterion::*;
-use fastcrypto::{Hash, DIGEST_LEN};
+use fastcrypto::DIGEST_LEN;
 use gdex_types::{
-    account::{AccountKeyPair, AccountSignature},
-    crypto::{KeypairTraits, Signer},
+    account::AccountKeyPair,
+    crypto::KeypairTraits,
     error::GDEXError,
-    transaction::{PaymentRequest, SignedTransaction, Transaction, TransactionVariant, SERIALIZED_TRANSACTION_LENGTH},
+    transaction::{create_payment_transaction, ConsensusTransaction},
 };
 use narwhal_types::{Batch, CertificateDigest, WorkerMessage};
 use rand::{rngs::StdRng, Rng, SeedableRng};
@@ -22,65 +22,63 @@ pub fn keys(seed: [u8; 32]) -> Vec<AccountKeyPair> {
     (0..4).map(|_| AccountKeyPair::generate(&mut rng)).collect()
 }
 
-fn verify_incoming_transaction(serialized_transaction: Vec<u8>) -> Result<(), GDEXError> {
+fn verify_incoming_transaction(raw_consensus_transaction: Vec<u8>) -> Result<(), GDEXError> {
     // remove trailing zeros & deserialize transaction
-    let signed_transaction_result = SignedTransaction::deserialize(serialized_transaction);
+    let consensus_transaction_result = ConsensusTransaction::deserialize(raw_consensus_transaction);
 
-    match signed_transaction_result {
-        Ok(signed_transaction) => {
-            match signed_transaction.verify() {
-                Ok(_) => {
-                    // transaction was successfully deserialized and the signature matched the payload
-                    Ok(())
-                }
-                // deserialization succeeded, but verification failed
+    match consensus_transaction_result {
+        Ok(consensus_transaction) => match consensus_transaction.get_payload() {
+            Ok(signed_transaction) => match signed_transaction.verify_signature() {
+                Ok(_) => Ok(()),
                 Err(sig_error) => Err(sig_error),
-            }
-        }
+            },
+            Err(get_payload_error) => Err(get_payload_error),
+        },
         // deserialization failed
         Err(derserialize_err) => Err(derserialize_err),
     }
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-    fn get_signed_transaction(sender_seed: [u8; 32], receiver_seed: [u8; 32], amount: u64) -> SignedTransaction {
+    fn get_consensus_transaction(sender_seed: [u8; 32], receiver_seed: [u8; 32], amount: u64) -> ConsensusTransaction {
         let kp_sender = keys(sender_seed).pop().unwrap();
         let kp_receiver = keys(receiver_seed).pop().unwrap();
-
-        let transaction_variant =
-            TransactionVariant::PaymentTransaction(PaymentRequest::new(kp_receiver.public().clone(), 0, amount));
         let certificate_digest = CertificateDigest::new([0; DIGEST_LEN]);
-
-        let transaction = Transaction::new(kp_sender.public().clone(), certificate_digest, transaction_variant);
-
-        // generate the signed digest for repeated use
-        let signed_digest: AccountSignature = kp_sender.sign(&(transaction.digest().get_array())[..]);
-
-        SignedTransaction::new(kp_sender.public().clone(), transaction, signed_digest)
+        let fee: u64 = 1000;
+        let transaction = create_payment_transaction(
+            kp_sender.public().clone(),
+            kp_receiver.public(),
+            0,
+            amount,
+            fee,
+            certificate_digest,
+        );
+        let signed_transaction = transaction.sign(&kp_sender).unwrap();
+        ConsensusTransaction::new(&signed_transaction)
     }
 
     // bench serializing singletons
     fn serialize_1_000(sender_seed: [u8; 32], receiver_seed: [u8; 32]) {
-        let signed_transaction = get_signed_transaction(sender_seed, receiver_seed, 10);
+        let consensus_transaction = get_consensus_transaction(sender_seed, receiver_seed, 10);
 
         let mut i = 0;
         while i < 1_000 {
             // wrap signed transaction in black box to protect compiler from advance knowledge
-            let _ = black_box(signed_transaction.clone()).serialize().unwrap();
+            let _ = black_box(consensus_transaction.clone()).serialize().unwrap();
             i += 1;
         }
     }
 
     // bench deserializing singletons
     fn deserialize_1_000(sender_seed: [u8; 32], receiver_seed: [u8; 32]) {
-        let signed_transaction_serialized = get_signed_transaction(sender_seed, receiver_seed, 10)
+        let consensus_transaction_serialized = get_consensus_transaction(sender_seed, receiver_seed, 10)
             .serialize()
             .unwrap();
 
         let mut i = 0;
         while i < 1_000 {
             // wrap signed transaction in black box to protect compiler from advance knowledge
-            let _ = SignedTransaction::deserialize(black_box(signed_transaction_serialized.clone())).unwrap();
+            let _ = ConsensusTransaction::deserialize(black_box(consensus_transaction_serialized.clone())).unwrap();
             i += 1;
         }
     }
@@ -97,8 +95,8 @@ fn criterion_benchmark(c: &mut Criterion) {
     let mut batch = Vec::new();
     while i < 1_000 {
         let amount = rand::thread_rng().gen_range(10..100);
-        let signed_transaction = get_signed_transaction([0; 32], [1; 32], amount);
-        batch.push(bincode::serialize(&signed_transaction).unwrap());
+        let consensus_transaction = get_consensus_transaction([0; 32], [1; 32], amount);
+        batch.push(bincode::serialize(&consensus_transaction).unwrap());
         i += 1;
     }
 
@@ -106,14 +104,10 @@ fn criterion_benchmark(c: &mut Criterion) {
     fn deserialize_batch_method1(batch: &[u8]) {
         match bincode::deserialize(batch).unwrap() {
             WorkerMessage::Batch(Batch(transactions)) => {
-                for transaction_padded in transactions {
-                    let transaction: Vec<u8> = transaction_padded
-                        .to_vec()
-                        .drain(..SERIALIZED_TRANSACTION_LENGTH)
-                        .collect();
+                for raw_transaction in transactions {
+                    let transaction: Vec<u8> = raw_transaction.to_vec();
 
-                    let _ = SignedTransaction::deserialize(transaction).unwrap();
-                    // TxReceiverHandler::verify_incoming_transaction(transaction).unwrap();
+                    let _ = ConsensusTransaction::deserialize(transaction).unwrap();
                 }
             }
             _ => {
@@ -126,11 +120,8 @@ fn criterion_benchmark(c: &mut Criterion) {
     fn deserialize_batch_and_verify_method1(batch: &[u8]) {
         match bincode::deserialize(batch).unwrap() {
             WorkerMessage::Batch(Batch(transactions)) => {
-                for transaction_padded in transactions {
-                    let transaction: Vec<u8> = transaction_padded
-                        .to_vec()
-                        .drain(..SERIALIZED_TRANSACTION_LENGTH)
-                        .collect();
+                for raw_transaction in transactions {
+                    let transaction: Vec<u8> = raw_transaction.to_vec();
 
                     verify_incoming_transaction(transaction).unwrap();
                 }

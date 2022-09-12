@@ -18,13 +18,13 @@ pub mod cluster_test_suite {
         account::{AccountKeyPair, ValidatorKeyPair},
         asset::PRIMARY_ASSET_ID,
         block::{Block, BlockDigest},
-        crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
+        crypto::{get_key_pair_from_rng, KeypairTraits},
         order_book::{Depth, OrderbookDepth},
         proto::{
             FaucetAirdropRequest, FaucetClient, FaucetServer, RelayerClient, RelayerGetBlockRequest,
             RelayerGetLatestBlockInfoRequest, RelayerGetLatestOrderbookDepthRequest,
         },
-        transaction::{create_asset_creation_transaction, SignedTransaction},
+        transaction::{create_create_asset_transaction, ConsensusTransaction},
         utils,
     };
 
@@ -155,19 +155,23 @@ pub mod cluster_test_suite {
         // check that every transaction entered the cache
         info!("Verify that all transactions entered cache");
         for signed_transaction in signed_transactions.clone() {
-            assert!(validator_store.cache_contains_transaction(signed_transaction.get_transaction_payload()));
+            let transaction = signed_transaction.get_transaction().unwrap();
+            assert!(validator_store.cache_contains_transaction(transaction));
         }
 
         let mut total = 0;
-        let block_db = validator_store.block_store.iter(None).await;
+        let block_db = validator_store.process_block_store.block_store.iter(None).await;
         let mut block_db_iter = block_db.iter();
 
         // TODO - more rigorously check exact match of transactions
         for next_block in block_db_iter.by_ref() {
             let block = next_block.1;
-            for serialized_transaction in &block.transactions {
-                let signed_transaction_db = SignedTransaction::deserialize(serialized_transaction.0.clone()).unwrap();
-                assert!(validator_store.cache_contains_transaction(signed_transaction_db.get_transaction_payload()));
+            for serialized_consensus_transaction in &block.transactions {
+                let consensus_transaction_db =
+                    ConsensusTransaction::deserialize(serialized_consensus_transaction.0.clone()).unwrap();
+                let signed_transaction = consensus_transaction_db.get_payload().unwrap();
+                let transaction = signed_transaction.get_transaction().unwrap();
+                assert!(validator_store.cache_contains_transaction(transaction));
                 total += 1;
             }
             assert!(validator_store.cache_contains_block_digest(&block.block_certificate.digest()));
@@ -251,6 +255,7 @@ pub mod cluster_test_suite {
 
         // Verify that blocks do not match before running catchup
         let latest_block_store_node_0 = validator_store_node_1
+            .process_block_store
             .last_block_info_store
             .read(0)
             .await
@@ -259,6 +264,7 @@ pub mod cluster_test_suite {
 
         let latest_block_store_target = restarted_validator_state
             .validator_store
+            .process_block_store
             .last_block_info_store
             .read(0)
             .await
@@ -282,6 +288,7 @@ pub mod cluster_test_suite {
 
         // Verify that blocks do match after running catchup
         let latest_block_store_node_1 = validator_store_node_1
+            .process_block_store
             .last_block_info_store
             .read(0)
             .await
@@ -290,6 +297,7 @@ pub mod cluster_test_suite {
 
         let latest_block_store_target = restarted_validator_state
             .validator_store
+            .process_block_store
             .last_block_info_store
             .read(0)
             .await
@@ -388,14 +396,14 @@ pub mod cluster_test_suite {
         let dummy_consensus_output = create_test_consensus_output();
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, 0);
-        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
-        let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+        let fee: u64 = 1000;
+        let transaction = create_create_asset_transaction(sender_kp.public().clone(), 0, fee, recent_block_hash);
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
+        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         // Preparing serialized buf for transactions
         let mut serialized_txns_buf = Vec::new();
-        let serialized_txn = signed_create_asset_txn.serialize().unwrap();
+        let serialized_txn = consensus_transaction.serialize().unwrap();
         serialized_txns_buf.push((serialized_txn, Ok(())));
         let certificate = dummy_consensus_output.certificate;
 
@@ -467,12 +475,16 @@ pub mod cluster_test_suite {
             });
         }
         let orderbook_depth = OrderbookDepth { bids, asks };
-        orderbook_depths.insert(orderbook_key, orderbook_depth);
+        orderbook_depths.insert(orderbook_key.clone(), orderbook_depth);
 
-        validator_state_1
-            .validator_store
-            .write_latest_orderbook_depths(orderbook_depths)
-            .await;
+        for (asset_pair, orderbook_depth) in orderbook_depths {
+            validator_state_1
+                .validator_store
+                .process_block_store
+                .latest_orderbook_depth_store
+                .write(asset_pair, orderbook_depth)
+                .await;
+        }
 
         let relayer_1 = cluster.spawn_single_relayer(1).await;
         let target_endpoint = endpoint_from_multiaddr(&relayer_1.get_relayer_address()).unwrap();
@@ -623,12 +635,14 @@ pub mod cluster_test_suite {
         let orderbook_depth = OrderbookDepth { bids, asks };
         orderbook_depths.insert(orderbook_key, orderbook_depth);
 
-        validator_state_1
-            .validator_store
-            .write_latest_orderbook_depths(orderbook_depths)
-            .await;
-
-        // TODO clean
+        for (asset_pair, orderbook_depth) in orderbook_depths {
+            validator_state_1
+                .validator_store
+                .process_block_store
+                .latest_orderbook_depth_store
+                .write(asset_pair, orderbook_depth)
+                .await;
+        }
 
         let relayer_1 = cluster.spawn_single_relayer(1).await;
         let target_endpoint = endpoint_from_multiaddr(&relayer_1.get_relayer_address()).unwrap();

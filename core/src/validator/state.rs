@@ -8,19 +8,13 @@ use arc_swap::ArcSwap;
 use async_trait::async_trait;
 use fastcrypto::Hash;
 use gdex_controller::master::MasterController;
-use gdex_types::transaction::Transaction;
 use gdex_types::{
     account::ValidatorKeyPair,
     block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},
     committee::{Committee, ValidatorName},
     error::GDEXError,
-    order_book::OrderbookDepth,
-    transaction::{SignedTransaction, TransactionDigest},
-};
-use mysten_store::{
-    reopen,
-    rocks::{open_cf, DBMap},
-    Map, Store,
+    store::ProcessBlockStore,
+    transaction::{ConsensusTransaction, SignedTransaction, Transaction, TransactionDigest},
 };
 use narwhal_consensus::ConsensusOutput;
 use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
@@ -45,49 +39,17 @@ pub struct ValidatorStore {
     block_digest_cache: Mutex<HashMap<BlockDigest, BlockNumber>>,
     // garbage collection depth
     gc_depth: u64,
-    pub block_store: Store<BlockNumber, Block>,
-    pub block_info_store: Store<BlockNumber, BlockInfo>,
     pub block_number: AtomicU64,
-    // singleton store that keeps only the most recent block info at key 0
-    pub last_block_info_store: Store<u64, BlockInfo>,
-    // store of orderbook depths
-    pub latest_orderbook_depth_store: Store<String, OrderbookDepth>,
+    pub process_block_store: ProcessBlockStore,
 }
 
 impl ValidatorStore {
-    const BLOCKS_CF: &'static str = "blocks";
-    const BLOCK_INFO_CF: &'static str = "block_info";
-    const LAST_BLOCK_CF: &'static str = "last_block";
-    const LAST_ORDERBOOK_DEPTH_CF: &'static str = "last_orderbook_depth";
-
     pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
-        let rocksdb = open_cf(
-            store_path,
-            None,
-            &[
-                Self::BLOCKS_CF,
-                Self::BLOCK_INFO_CF,
-                Self::LAST_BLOCK_CF,
-                Self::LAST_ORDERBOOK_DEPTH_CF,
-            ],
-        )
-        .expect("Cannot open database");
-        let (block_map, block_info_map, last_block_map, orderbook_depth_map) = reopen!(&rocksdb,
-            Self::BLOCKS_CF;<BlockNumber, Block>,
-            Self::BLOCK_INFO_CF;<BlockNumber, BlockInfo>,
-            Self::LAST_BLOCK_CF;<u64, BlockInfo>,
-            Self::LAST_ORDERBOOK_DEPTH_CF;<String, OrderbookDepth>
-        );
-
-        let block_number_from_dbmap = last_block_map.get(&0_u64);
-
-        let block_store = Store::new(block_map);
-        let block_info_store = Store::new(block_info_map);
-        let last_block_info_store = Store::new(last_block_map);
-        let latest_orderbook_depth_store = Store::new(orderbook_depth_map);
+        let process_block_store: ProcessBlockStore = ProcessBlockStore::reopen(store_path);
+        let last_block_info = process_block_store.last_block_info.clone();
 
         // TODO load the state if last block is not 0, i.e. not at genesis
-        let block_number = match block_number_from_dbmap {
+        let block_number = match last_block_info {
             Ok(o) => {
                 if let Some(v) = o {
                     v.block_number
@@ -112,17 +74,17 @@ impl ValidatorStore {
             transaction_cache: Mutex::new(HashMap::new()),
             block_digest_cache,
             gc_depth: 50,
-            block_store,
-            block_info_store,
+            process_block_store,
             block_number: AtomicU64::new(block_number),
-            last_block_info_store,
-            latest_orderbook_depth_store,
         }
     }
 
     pub fn cache_contains_transaction(&self, transaction: &Transaction) -> bool {
-        let transaction_digest = transaction.digest();
-        return self.transaction_cache.lock().unwrap().contains_key(&transaction_digest);
+        return self
+            .transaction_cache
+            .lock()
+            .unwrap()
+            .contains_key(&transaction.digest());
     }
 
     pub fn cache_contains_block_digest(&self, block_digest: &BlockDigest) -> bool {
@@ -130,9 +92,8 @@ impl ValidatorStore {
     }
 
     pub fn insert_unconfirmed_transaction(&self, transaction: &Transaction) {
-        let transaction_digest = transaction.digest();
         self.transaction_cache.lock().unwrap().insert(
-            transaction_digest,
+            transaction.digest(),
             None, // Insert with no block digest, a digest will be added after confirmation
         );
     }
@@ -142,8 +103,8 @@ impl ValidatorStore {
         transaction: &Transaction,
         consensus_output: &ConsensusOutput,
     ) -> Result<(), GDEXError> {
-        let transaction_digest = transaction.digest();
         let block_digest = consensus_output.certificate.digest();
+        let transaction_digest = transaction.digest();
 
         // return an error if transaction has already been seen before
         if let Some(digest) = self.transaction_cache.lock().unwrap().get(&transaction_digest) {
@@ -194,20 +155,21 @@ impl ValidatorStore {
         };
 
         // write-out the block information to associated stores
-        self.block_store.write(block_number, block.clone()).await;
-        self.block_info_store.write(block_number, block_info.clone()).await;
-        self.last_block_info_store.write(0, block_info.clone()).await;
+        self.process_block_store
+            .block_store
+            .write(block_number, block.clone())
+            .await;
+        self.process_block_store
+            .block_info_store
+            .write(block_number, block_info.clone())
+            .await;
+        self.process_block_store
+            .last_block_info_store
+            .write(0, block_info.clone())
+            .await;
         // update the block number
         self.block_number.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         (block, block_info)
-    }
-
-    pub async fn write_latest_orderbook_depths(&self, orderbook_depths: HashMap<String, OrderbookDepth>) {
-        for (asset_pair, orderbook_depth) in orderbook_depths {
-            self.latest_orderbook_depth_store
-                .write(asset_pair, orderbook_depth.clone())
-                .await;
-        }
     }
 
     pub fn prune(&self) {
@@ -292,17 +254,17 @@ impl ValidatorState {
 
 impl ValidatorState {
     /// Initiate a new transaction.
-    pub fn handle_pre_consensus_transaction(&self, transaction: &SignedTransaction) -> Result<(), GDEXError> {
+    pub fn handle_pre_consensus_transaction(&self, signed_transaction: &SignedTransaction) -> Result<(), GDEXError> {
         trace!("Handling a new pre-consensus transaction with the ValidatorState",);
-        self.validator_store
-            .insert_unconfirmed_transaction(transaction.get_transaction_payload());
+        let transaction = signed_transaction.get_transaction()?;
+        self.validator_store.insert_unconfirmed_transaction(transaction);
         Ok(())
     }
 }
 
 #[async_trait]
 impl ExecutionState for ValidatorState {
-    type Transaction = SignedTransaction;
+    type Transaction = ConsensusTransaction;
     type Error = GDEXError;
     type Outcome = (ConsensusOutput, ExecutionIndices, ExecutionResult);
 
@@ -310,16 +272,27 @@ impl ExecutionState for ValidatorState {
         &self,
         consensus_output: &narwhal_consensus::ConsensusOutput,
         execution_indices: ExecutionIndices,
-        signed_transaction: Self::Transaction,
+        consensus_transaction: Self::Transaction,
     ) -> Result<Self::Outcome, Self::Error> {
         self.metrics.transactions_executed.inc();
-        let transaction = signed_transaction.get_transaction_payload();
 
+        // deserialize signed transaction
+        let signed_transaction = consensus_transaction
+            .get_payload()
+            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        let _ = signed_transaction
+            .verify_signature()
+            .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
+
+        // get transaction
+        let transaction = signed_transaction.get_transaction()?;
+
+        // cache confirmed transaction
         let uniqueness_check = self
             .validator_store
             .insert_confirmed_transaction(transaction, consensus_output);
 
-        // iterate failed transaction metrics and stop propagation uniqueness fails
+        // if transaction is not unique stop execution
         if uniqueness_check.is_err() {
             self.metrics.transactions_executed_failed.inc();
             return Ok((consensus_output.clone(), execution_indices, uniqueness_check));
@@ -362,13 +335,12 @@ mod test_validator_state {
     use fastcrypto::{generate_production_keypair, DIGEST_LEN};
     use gdex_types::{
         account::ValidatorPubKeyBytes,
-        crypto::{get_key_pair_from_rng, KeypairTraits, Signer},
+        crypto::{get_key_pair_from_rng, KeypairTraits},
         node::ValidatorInfo,
         order_book::OrderSide,
         transaction::{
-            create_asset_creation_transaction, create_orderbook_creation_transaction, create_payment_transaction,
-            create_place_cancel_order_transaction, create_place_limit_order_transaction,
-            create_place_update_order_transaction, SignedTransaction,
+            create_cancel_order_transaction, create_create_asset_transaction, create_create_orderbook_transaction,
+            create_limit_order_transaction, create_payment_transaction, create_update_order_transaction,
         },
         utils,
     };
@@ -485,16 +457,16 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, 0);
-        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
-        let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+        let fee: u64 = 1000;
+        let transaction = create_create_asset_transaction(sender_kp.public().clone(), 0, fee, recent_block_hash);
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
+        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_create_asset_txn,
+                consensus_transaction,
             )
             .await
             .unwrap();
@@ -510,16 +482,16 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, 0);
-        let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
-        let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+        let fee: u64 = 1000;
+        let transaction = create_create_asset_transaction(sender_kp.public().clone(), 0, fee, recent_block_hash);
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
+        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_create_asset_txn,
+                consensus_transaction,
             )
             .await
             .unwrap();
@@ -528,16 +500,23 @@ mod test_validator_state {
         const TEST_ASSET_ID: u64 = 0;
         const TEST_AMOUNT: u64 = 1000000;
         let receiver_kp = generate_production_keypair::<KeyPair>();
-        let payment_txn =
-            create_payment_transaction(&sender_kp, &receiver_kp, TEST_ASSET_ID, TEST_AMOUNT, recent_block_hash);
-        let signed_digest = sender_kp.sign(&payment_txn.digest().get_array()[..]);
-        let signed_payment_txn = SignedTransaction::new(sender_kp.public().clone(), payment_txn, signed_digest);
+        let fee: u64 = 1000;
+        let transaction = create_payment_transaction(
+            sender_kp.public().clone(),
+            receiver_kp.public(),
+            TEST_ASSET_ID,
+            TEST_AMOUNT,
+            fee,
+            recent_block_hash,
+        );
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
+        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_payment_txn,
+                consensus_transaction,
             )
             .await
             .unwrap();
@@ -553,18 +532,19 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
+        let fee: u64 = 1000;
 
         for asset_number in 0..5 {
-            let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, asset_number);
-            let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
-            let signed_create_asset_txn =
-                SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+            let transaction =
+                create_create_asset_transaction(sender_kp.public().clone(), asset_number, fee, recent_block_hash);
+            let signed_transaction = transaction.sign(&sender_kp).unwrap();
+            let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
             validator
                 .handle_consensus_transaction(
                     &dummy_consensus_output,
                     dummy_execution_indices.clone(),
-                    signed_create_asset_txn.clone(),
+                    consensus_transaction.clone(),
                 )
                 .await
                 .unwrap();
@@ -575,21 +555,22 @@ mod test_validator_state {
         const TEST_QUOTE_ASSET_ID: u64 = 2;
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_orderbook_txn = create_orderbook_creation_transaction(
-            &sender_kp,
+        let fee: u64 = 1000;
+        let transaction = create_create_orderbook_transaction(
+            sender_kp.public().clone(),
             TEST_BASE_ASSET_ID,
             TEST_QUOTE_ASSET_ID,
+            fee,
             recent_block_hash,
         );
-        let signed_digest = sender_kp.sign(&create_orderbook_txn.digest().get_array()[..]);
-        let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_orderbook_txn, signed_digest);
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
+        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_create_asset_txn,
+                consensus_transaction,
             )
             .await
             .unwrap();
@@ -605,18 +586,19 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
+        let fee: u64 = 1000;
 
         for asset_number in 0..5 {
-            let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, asset_number);
-            let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
-            let signed_create_asset_txn =
-                SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+            let transaction =
+                create_create_asset_transaction(sender_kp.public().clone(), asset_number, fee, recent_block_hash);
+            let signed_transaction = transaction.sign(&sender_kp).unwrap();
+            let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
             validator
                 .handle_consensus_transaction(
                     &dummy_consensus_output,
                     dummy_execution_indices.clone(),
-                    signed_create_asset_txn.clone(),
+                    consensus_transaction.clone(),
                 )
                 .await
                 .unwrap();
@@ -626,68 +608,75 @@ mod test_validator_state {
         const TEST_BASE_ASSET_ID: u64 = 1;
         const TEST_QUOTE_ASSET_ID: u64 = 2;
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_orderbook_txn = create_orderbook_creation_transaction(
-            &sender_kp,
+        let fee: u64 = 1000;
+        let transaction = create_create_orderbook_transaction(
+            sender_kp.public().clone(),
             TEST_BASE_ASSET_ID,
             TEST_QUOTE_ASSET_ID,
+            fee,
             recent_block_hash,
         );
-        let signed_digest = sender_kp.sign(&create_orderbook_txn.digest().get_array()[..]);
-        let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_orderbook_txn, signed_digest);
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
+        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_create_asset_txn,
+                consensus_transaction,
             )
             .await
             .unwrap();
 
         const TEST_PRICE: u64 = 100;
         const TEST_QUANTITY: u64 = 100;
-        let place_limit_order_txn = create_place_limit_order_transaction(
-            &sender_kp,
+        let local_timestamp: u64 = 16000000;
+        let fee: u64 = 1000;
+        let transaction = create_limit_order_transaction(
+            sender_kp.public().clone(),
             TEST_BASE_ASSET_ID,
             TEST_QUOTE_ASSET_ID,
-            OrderSide::Bid,
+            OrderSide::Bid as u64,
             TEST_PRICE,
             TEST_QUANTITY,
+            local_timestamp,
+            fee,
             recent_block_hash,
         );
-        let signed_digest = sender_kp.sign(&place_limit_order_txn.digest().get_array()[..]);
-        let signed_place_limit_order_txn =
-            SignedTransaction::new(sender_kp.public().clone(), place_limit_order_txn, signed_digest);
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
+        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_place_limit_order_txn,
+                consensus_transaction,
             )
             .await
             .unwrap();
 
         // cancel order
         const TEST_ORDER_ID: u64 = 1;
-        let cancel_order_txn = create_place_cancel_order_transaction(
-            &sender_kp,
+        let local_timestamp: u64 = 16000000;
+        let fee: u64 = 1000;
+        let transaction = create_cancel_order_transaction(
+            sender_kp.public().clone(),
             TEST_BASE_ASSET_ID,
             TEST_QUOTE_ASSET_ID,
+            OrderSide::Bid as u64,
+            local_timestamp,
             TEST_ORDER_ID,
-            OrderSide::Bid,
+            fee,
             recent_block_hash,
         );
-        let signed_digest = sender_kp.sign(&cancel_order_txn.digest().get_array()[..]);
-        let signed_cancel_order_txn =
-            SignedTransaction::new(sender_kp.public().clone(), cancel_order_txn, signed_digest);
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
+        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_cancel_order_txn,
+                consensus_transaction,
             )
             .await
             .unwrap();
@@ -703,18 +692,19 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
+        let fee: u64 = 1000;
 
         for asset_number in 0..5 {
-            let create_asset_txn = create_asset_creation_transaction(&sender_kp, recent_block_hash, asset_number);
-            let signed_digest = sender_kp.sign(&create_asset_txn.digest().get_array()[..]);
-            let signed_create_asset_txn =
-                SignedTransaction::new(sender_kp.public().clone(), create_asset_txn, signed_digest);
+            let transaction =
+                create_create_asset_transaction(sender_kp.public().clone(), asset_number, fee, recent_block_hash);
+            let signed_transaction = transaction.sign(&sender_kp).unwrap();
+            let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
             validator
                 .handle_consensus_transaction(
                     &dummy_consensus_output,
                     dummy_execution_indices.clone(),
-                    signed_create_asset_txn.clone(),
+                    consensus_transaction.clone(),
                 )
                 .await
                 .unwrap();
@@ -724,70 +714,78 @@ mod test_validator_state {
         const TEST_BASE_ASSET_ID: u64 = 1;
         const TEST_QUOTE_ASSET_ID: u64 = 2;
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let create_orderbook_txn = create_orderbook_creation_transaction(
-            &sender_kp,
+        let fee: u64 = 1000;
+        let transaction = create_create_orderbook_transaction(
+            sender_kp.public().clone(),
             TEST_BASE_ASSET_ID,
             TEST_QUOTE_ASSET_ID,
+            fee,
             recent_block_hash,
         );
-        let signed_digest = sender_kp.sign(&create_orderbook_txn.digest().get_array()[..]);
-        let signed_create_asset_txn =
-            SignedTransaction::new(sender_kp.public().clone(), create_orderbook_txn, signed_digest);
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
+        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_create_asset_txn,
+                consensus_transaction,
             )
             .await
             .unwrap();
 
+        // create limit order transaction
         const TEST_PRICE: u64 = 100;
         const TEST_QUANTITY: u64 = 100;
-        let place_limit_order_txn = create_place_limit_order_transaction(
-            &sender_kp,
+        let local_timestamp: u64 = 16000000;
+        let fee: u64 = 1000;
+        let transaction = create_limit_order_transaction(
+            sender_kp.public().clone(),
             TEST_BASE_ASSET_ID,
             TEST_QUOTE_ASSET_ID,
-            OrderSide::Bid,
+            OrderSide::Bid as u64,
             TEST_PRICE,
             TEST_QUANTITY,
+            local_timestamp,
+            fee,
             recent_block_hash,
         );
-        let signed_digest = sender_kp.sign(&place_limit_order_txn.digest().get_array()[..]);
-        let signed_place_limit_order_txn =
-            SignedTransaction::new(sender_kp.public().clone(), place_limit_order_txn, signed_digest);
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
+        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_place_limit_order_txn,
+                consensus_transaction,
             )
             .await
             .unwrap();
 
         // cancel order
         const TEST_ORDER_ID: u64 = 1;
-        let update_order_txn = create_place_update_order_transaction(
-            &sender_kp,
+        let local_timestamp: u64 = 16000000;
+        let fee: u64 = 1000;
+        let transaction = create_update_order_transaction(
+            sender_kp.public().clone(),
             TEST_BASE_ASSET_ID,
             TEST_QUOTE_ASSET_ID,
-            TEST_ORDER_ID,
-            OrderSide::Bid,
+            OrderSide::Bid as u64,
             TEST_PRICE,
-            TEST_QUANTITY + 1,
+            TEST_QUANTITY,
+            local_timestamp,
+            TEST_ORDER_ID,
+            fee,
             recent_block_hash,
         );
-        let signed_digest = sender_kp.sign(&update_order_txn.digest().get_array()[..]);
-        let signed_update_order_txn =
-            SignedTransaction::new(sender_kp.public().clone(), update_order_txn, signed_digest);
+        let signed_transaction = transaction.sign(&sender_kp).unwrap();
+        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                signed_update_order_txn,
+                consensus_transaction,
             )
             .await
             .unwrap();

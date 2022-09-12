@@ -14,7 +14,11 @@ use crate::{
 
 // mysten
 
-use gdex_types::{error::GDEXError, transaction::Transaction};
+use gdex_types::{
+    error::GDEXError,
+    store::ProcessBlockStore,
+    transaction::{parse_target_controller, ControllerType, Transaction},
+};
 // external
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -78,36 +82,44 @@ impl MasterController {
     }
 
     pub fn handle_consensus_transaction(&self, transaction: &Transaction) -> Result<(), GDEXError> {
-        self.consensus_controller
-            .lock()
-            .unwrap()
-            .handle_consensus_transaction(transaction)?;
-
-        self.bank_controller
-            .lock()
-            .unwrap()
-            .handle_consensus_transaction(transaction)?;
-
-        self.stake_controller
-            .lock()
-            .unwrap()
-            .handle_consensus_transaction(transaction)?;
-
-        self.spot_controller
-            .lock()
-            .unwrap()
-            .handle_consensus_transaction(transaction)?;
-
-        Ok(())
+        let target_controller = parse_target_controller(transaction.target_controller)?;
+        match target_controller {
+            ControllerType::Consensus => {
+                return self
+                    .consensus_controller
+                    .lock()
+                    .unwrap()
+                    .handle_consensus_transaction(transaction);
+            }
+            ControllerType::Bank => {
+                return self
+                    .bank_controller
+                    .lock()
+                    .unwrap()
+                    .handle_consensus_transaction(transaction);
+            }
+            ControllerType::Stake => {
+                return self
+                    .stake_controller
+                    .lock()
+                    .unwrap()
+                    .handle_consensus_transaction(transaction);
+            }
+            ControllerType::Spot => {
+                return self
+                    .spot_controller
+                    .lock()
+                    .unwrap()
+                    .handle_consensus_transaction(transaction);
+            }
+        }
     }
 
-    pub fn post_process(&self, block_number: u64) {
-        self.consensus_controller.lock().unwrap().post_process(block_number);
-
-        self.bank_controller.lock().unwrap().post_process(block_number);
-
-        self.stake_controller.lock().unwrap().post_process(block_number);
-
-        self.spot_controller.lock().unwrap().post_process(block_number);
+    pub async fn process_end_of_block(&self, process_block_store: &ProcessBlockStore, block_number: u64) {
+        ConsensusController::process_end_of_block(self.consensus_controller.clone(), process_block_store, block_number)
+            .await;
+        BankController::process_end_of_block(self.bank_controller.clone(), process_block_store, block_number).await;
+        StakeController::process_end_of_block(self.stake_controller.clone(), process_block_store, block_number).await;
+        SpotController::process_end_of_block(self.spot_controller.clone(), process_block_store, block_number).await;
     }
 }

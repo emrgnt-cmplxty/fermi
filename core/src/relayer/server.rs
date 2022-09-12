@@ -16,30 +16,28 @@ impl Relayer for RelayerService {
         _request: Request<RelayerGetLatestBlockInfoRequest>,
     ) -> Result<Response<RelayerBlockInfoResponse>, Status> {
         let validator_state = &self.state;
-        let returned_value = validator_state.validator_store.last_block_info_store.read(0).await;
+        let returned_value = validator_state
+            .validator_store
+            .process_block_store
+            .last_block_info_store
+            .read(0)
+            .await;
 
         match returned_value {
             Ok(opt) => {
                 if let Some(block_info) = opt {
                     Ok(Response::new(RelayerBlockInfoResponse {
                         successful: true,
-                        block_info: Some(BlockInfoProto {
+                        block_info: Some(BlockInfo {
                             block_number: block_info.block_number,
                             digest: CertificateDigestProto::from(block_info.block_digest).digest, // TODO egregious hack (MI)
                         }),
                     }))
                 } else {
-                    Ok(Response::new(RelayerBlockInfoResponse {
-                        successful: true,
-                        block_info: None,
-                    }))
+                    Err(Status::not_found("Latest block info was not found."))
                 }
             }
-            // TODO propagate error message to client
-            Err(_) => Ok(Response::new(RelayerBlockInfoResponse {
-                successful: false,
-                block_info: None,
-            })),
+            Err(err) => Err(Status::unknown(err.to_string())),
         }
     }
     async fn get_block_info(
@@ -52,6 +50,7 @@ impl Relayer for RelayerService {
 
         match validator_state
             .validator_store
+            .process_block_store
             .block_info_store
             .read(block_number)
             .await
@@ -60,23 +59,16 @@ impl Relayer for RelayerService {
                 if let Some(block_info) = opt {
                     Ok(Response::new(RelayerBlockInfoResponse {
                         successful: true,
-                        block_info: Some(BlockInfoProto {
+                        block_info: Some(BlockInfo {
                             block_number: block_info.block_number,
                             digest: CertificateDigestProto::from(block_info.block_digest).digest, // TODO egregious hack (MI)
                         }),
                     }))
                 } else {
-                    Ok(Response::new(RelayerBlockInfoResponse {
-                        successful: true,
-                        block_info: None,
-                    }))
+                    Err(Status::not_found("Block info was not found."))
                 }
             }
-            // TODO propagate error message to client
-            Err(_) => Ok(Response::new(RelayerBlockInfoResponse {
-                successful: false,
-                block_info: None,
-            })),
+            Err(err) => Err(Status::unknown(err.to_string())),
         }
     }
     async fn get_block(
@@ -87,26 +79,25 @@ impl Relayer for RelayerService {
         let req = request.into_inner();
         let block_number = req.block_number;
 
-        match validator_state.validator_store.block_store.read(block_number).await {
+        match validator_state
+            .validator_store
+            .process_block_store
+            .block_store
+            .read(block_number)
+            .await
+        {
             Ok(opt) => {
                 if let Some(block) = opt {
                     let block_bytes = bincode::serialize(&block).unwrap().into();
                     Ok(Response::new(RelayerBlockResponse {
                         successful: true,
-                        block: Some(BlockProto { block: block_bytes }),
+                        block: Some(RelayerBlock { block: block_bytes }),
                     }))
                 } else {
-                    Ok(Response::new(RelayerBlockResponse {
-                        successful: true,
-                        block: None,
-                    }))
+                    Err(Status::not_found("Block was not found."))
                 }
             }
-            // TODO propagate error message to client
-            Err(_) => Ok(Response::new(RelayerBlockResponse {
-                successful: false,
-                block: None,
-            })),
+            Err(err) => Err(Status::unknown(err.to_string())),
         }
     }
     async fn get_latest_orderbook_depth(
@@ -129,6 +120,7 @@ impl Relayer for RelayerService {
 
         let returned_value = validator_state
             .validator_store
+            .process_block_store
             .latest_orderbook_depth_store
             .read(orderbook_depth_key)
             .await;
@@ -136,8 +128,8 @@ impl Relayer for RelayerService {
         match returned_value {
             Ok(opt) => {
                 if let Some(orderbook_depth) = opt {
-                    let mut bids: Vec<DepthProto> = Vec::new();
-                    let mut asks: Vec<DepthProto> = Vec::new();
+                    let mut bids: Vec<Depth> = Vec::new();
+                    let mut asks: Vec<Depth> = Vec::new();
 
                     let mut counter: u64 = 0;
                     for i in 0..orderbook_depth.bids.len() {
@@ -145,7 +137,7 @@ impl Relayer for RelayerService {
                             break;
                         }
                         let bid = &orderbook_depth.bids[orderbook_depth.bids.len() - 1 - i];
-                        bids.push(DepthProto {
+                        bids.push(Depth {
                             price: bid.price,
                             quantity: bid.quantity,
                         });
@@ -156,7 +148,7 @@ impl Relayer for RelayerService {
                             break;
                         }
                         let ask = &orderbook_depth.asks[orderbook_depth.asks.len() - 1 - i];
-                        asks.push(DepthProto {
+                        asks.push(Depth {
                             price: ask.price,
                             quantity: ask.quantity,
                         });

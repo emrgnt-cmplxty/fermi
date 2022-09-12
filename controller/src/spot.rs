@@ -27,13 +27,18 @@ use gdex_types::{
     crypto::ToFromBytes,
     error::GDEXError,
     order_book::{OrderProcessingResult, OrderSide, OrderType, OrderbookDepth, Success},
-    transaction::{OrderRequest, Transaction, TransactionVariant},
+    store::ProcessBlockStore,
+    transaction::{
+        deserialize_protobuf, parse_order_side, parse_request_type, CancelOrderRequest, CreateOrderbookRequest,
+        LimitOrderRequest, MarketOrderRequest, RequestType, Transaction, UpdateOrderRequest,
+    },
 };
 
 // mysten
 use fastcrypto::ed25519::Ed25519PublicKey;
 
 // external
+use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use std::{collections::HashMap, time::SystemTime};
@@ -45,6 +50,7 @@ pub type OrderId = u64;
 // CONSTANTS
 
 pub const SPOT_CONTROLLER_ACCOUNT_PUBKEY: &[u8] = b"SPOTCONTROLLERAAAAAAAAAAAAAAAAAA";
+const ORDERBOOK_DEPTH_FREQUENCY: u64 = 100;
 
 // ORDER BOOK INTERFACE
 
@@ -485,6 +491,7 @@ impl Default for SpotController {
     }
 }
 
+#[async_trait]
 impl Controller for SpotController {
     fn initialize(&mut self, master_controller: &MasterController) {
         self.bank_controller = Arc::clone(&master_controller.bank_controller);
@@ -499,72 +506,81 @@ impl Controller for SpotController {
     }
 
     fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
-        if let TransactionVariant::CreateOrderbookTransaction(orderbook) = transaction.get_variant() {
-            return self.create_orderbook(orderbook.get_base_asset_id(), orderbook.get_quote_asset_id());
-        }
-        if let TransactionVariant::PlaceOrderTransaction(order) = transaction.get_variant() {
-            match order {
-                OrderRequest::Market {
-                    base_asset_id,
-                    quote_asset_id,
-                    side,
-                    quantity,
-                    ..
-                } => {
-                    dbg!(base_asset_id, quote_asset_id, side, quantity);
-                }
-                OrderRequest::Limit {
-                    base_asset_id,
-                    quote_asset_id,
-                    side,
-                    price,
-                    quantity,
-                    ..
-                } => self.place_limit_order(
-                    *base_asset_id,
-                    *quote_asset_id,
-                    transaction.get_sender(),
-                    *side,
-                    *quantity,
-                    *price,
-                )?,
-                OrderRequest::Cancel {
-                    base_asset_id,
-                    quote_asset_id,
-                    order_id,
-                    side,
-                    ..
-                } => self.place_cancel_order(
-                    *base_asset_id,
-                    *quote_asset_id,
-                    transaction.get_sender(),
-                    *order_id,
-                    *side,
-                )?,
-                OrderRequest::Update {
-                    base_asset_id,
-                    quote_asset_id,
-                    order_id,
-                    side,
-                    price,
-                    quantity,
-                    ..
-                } => self.place_update_order(
-                    *base_asset_id,
-                    *quote_asset_id,
-                    transaction.get_sender(),
-                    *order_id,
-                    *side,
-                    *quantity,
-                    *price,
-                )?,
+        let request_type = parse_request_type(transaction.request_type)?;
+        match request_type {
+            RequestType::CreateOrderbook => {
+                let request: CreateOrderbookRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                self.create_orderbook(request.base_asset_id, request.quote_asset_id)
             }
+            RequestType::MarketOrder => {
+                let request: MarketOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                dbg!(
+                    request.base_asset_id,
+                    request.quote_asset_id,
+                    request.side,
+                    request.quantity
+                );
+                Ok(())
+            }
+            RequestType::LimitOrder => {
+                let request: LimitOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                let sender = transaction.get_sender()?;
+                let side = parse_order_side(request.side)?;
+                self.place_limit_order(
+                    request.base_asset_id,
+                    request.quote_asset_id,
+                    &sender,
+                    side,
+                    request.quantity,
+                    request.price,
+                )
+            }
+            RequestType::UpdateOrder => {
+                let request: UpdateOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                let sender = transaction.get_sender()?;
+                let side = parse_order_side(request.side)?;
+                self.place_update_order(
+                    request.base_asset_id,
+                    request.quote_asset_id,
+                    &sender,
+                    request.order_id,
+                    side,
+                    request.quantity,
+                    request.price,
+                )
+            }
+            RequestType::CancelOrder => {
+                let request: CancelOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                let sender = transaction.get_sender()?;
+                let side = parse_order_side(request.side)?;
+                self.place_cancel_order(
+                    request.base_asset_id,
+                    request.quote_asset_id,
+                    &sender,
+                    request.order_id,
+                    side,
+                )
+            }
+            _ => Err(GDEXError::InvalidRequestTypeError),
         }
-
-        Ok(())
     }
 
-    fn post_process(&mut self, _block_number: u64) {}
+    async fn process_end_of_block(
+        controller: Arc<Mutex<Self>>,
+        process_block_store: &ProcessBlockStore,
+        block_number: u64,
+    ) {
+        // write out orderbook depth every ORDERBOOK_DEPTH_FREQUENCY
+        if block_number % ORDERBOOK_DEPTH_FREQUENCY == 0 {
+            let orderbook_depths = controller.lock().unwrap().generate_orderbook_depths();
+            for (asset_pair, orderbook_depth) in orderbook_depths {
+                process_block_store
+                    .latest_orderbook_depth_store
+                    .write(asset_pair, orderbook_depth.clone())
+                    .await;
+            }
+        }
+    }
 }
 
 impl SpotController {

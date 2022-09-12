@@ -113,6 +113,7 @@ impl TestCluster {
                 PathBuf::from(working_dir.to_str().unwrap().to_owned() + "/" + key_file.as_str()), // key path
                 working_dir.clone(),                                                               // genesis path
                 utils::new_network_address(),
+                utils::new_network_address(),
                 validator_info.name.clone(),
             );
 

@@ -167,7 +167,7 @@ impl Client {
                     block_digest = bincode::deserialize(block_info.digest.as_ref()).unwrap()
                 }
             };
-    
+
             interval.as_mut().tick().await;
             let now = Instant::now();
             let keypair = keypair.copy();

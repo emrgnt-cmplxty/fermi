@@ -99,8 +99,8 @@ class LogParser:
 
     def _parse_primaries(self, log):
         if search(r'(?:panicked)', log) is not None:
-            print('search = ', search(r'(?:panicked)', log))
             raise ParseError('Primary(s) panicked')
+
         tmp = findall(r'(.*?) .* Created B\d+\([^ ]+\) -> ([^ ]+=)', log)
         tmp = [(d, self._to_posix(t)) for t, d in tmp]
         proposals = self._merge_results([tmp])

@@ -84,10 +84,14 @@ class Committee:
             relayer_address = f'/ip4/{host}/tcp/{port + 1}/http'
             port += 2
 
+            metrics_address = f'/ip4/{host}/tcp/{port}/http'
+            port += 1
+
             self.json['authorities'][name] = {
                 'stake': 1,
                 'network_address': network_address,
                 'relayer_address': relayer_address,
+                'metrics_address': metrics_address,
                 'primary': primary_addr,
                 'workers': workers_addr
             }

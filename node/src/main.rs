@@ -8,8 +8,9 @@ use multiaddr::Multiaddr;
 use std::{path::Path, str::FromStr, sync::Arc};
 use tracing::info;
 
-const DEFAULT_RELAY_MULTIADDR: &str = "/dns/localhost/tcp/62000/http";
-const DEFAULT_VALIDATOR_MULTIADDR: &str = "/dns/localhost/tcp/63000/http";
+const DEFAULT_RELAY_MULTIADDR: &str = "/dns/localhost/tcp/61000/http";
+const DEFAULT_VALIDATOR_MULTIADDR: &str = "/dns/localhost/tcp/62000/http";
+const DEFAULT_METRICS_MULTIADDR: &str = "/dns/localhost/tcp/63000/http";
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -24,8 +25,9 @@ async fn main() -> Result<()> {
                 .args_from_usage("--key-path=<FILE> 'The file containing the node keys'")
                 .args_from_usage("--genesis-dir=<FOLDER> 'The folder containing the genesis blob'")
                 .args_from_usage("--validator-name=<NAME> 'The validator name'")
-                .args_from_usage("--validator-address=<PORT> 'The validator port'")
-                .args_from_usage("--relayer-address=<PORT> 'The relayer port'"),
+                .args_from_usage("--validator-address=<ADDR> 'The validator address'")
+                .args_from_usage("--metrics-address=<ADDR> 'The metrics address'")
+                .args_from_usage("--relayer-address=<ADDR> 'The relayer address'"),
         )
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .get_matches();
@@ -82,12 +84,16 @@ async fn run(matches: &ArgMatches<'_>) {
         .unwrap_or(DEFAULT_VALIDATOR_MULTIADDR);
     let validator_address = Multiaddr::from_str(validator_address).unwrap();
 
+    let metrics_address = matches.value_of("metrics-address").unwrap_or(DEFAULT_METRICS_MULTIADDR);
+    let metrics_address = Multiaddr::from_str(metrics_address).unwrap();
+
     info!("Spawning validator and relayer");
     let mut validator_spawner = ValidatorSpawner::new(
-        /* db_path */ db_path.clone(),
-        /* key_path */ key_path.clone(),
-        /* genesis_path */ genesis_path.clone(),
-        /* validator_address */ validator_address.clone(),
+        /* db_path */ db_path,
+        /* key_path */ key_path,
+        /* genesis_path */ genesis_path,
+        /* validator_address */ validator_address,
+        /* metrics_address */ metrics_address,
         /* validator_name */ validator_name.to_string(),
     );
 

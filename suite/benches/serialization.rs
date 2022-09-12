@@ -9,8 +9,8 @@ extern crate criterion;
 use criterion::*;
 use fastcrypto::DIGEST_LEN;
 use gdex_types::{
-    account::{AccountKeyPair},
-    crypto::{KeypairTraits},
+    account::AccountKeyPair,
+    crypto::KeypairTraits,
     error::GDEXError,
     transaction::{create_payment_transaction, ConsensusTransaction},
 };

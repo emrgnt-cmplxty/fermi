@@ -1,4 +1,3 @@
-use bincode::Options;
 use fastcrypto::traits::KeyPair;
 use gdex_types::transaction::serialize_protobuf;
 use gdex_types::{

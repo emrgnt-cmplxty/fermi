@@ -40,8 +40,8 @@ fn create_signed_padded_transaction(
     if is_advanced_execution {
         // use a dummy batch digest for initial benchmarking
         let dummy_certificate_digest = CertificateDigest::new([0; DIGEST_LEN]);
-        let gas: u64 = 1000;
-        let transaction = create_payment_transaction(kp_sender.public().clone(), kp_receiver.public(), PRIMARY_ASSET_ID, amount, gas, dummy_certificate_digest);
+        let fee: u64 = 1000;
+        let transaction = create_payment_transaction(kp_sender.public().clone(), kp_receiver.public(), PRIMARY_ASSET_ID, amount, fee, dummy_certificate_digest);
         let signed_transaction = transaction.sign(kp_sender).unwrap()
         let mut padded_serialized_consensus_transaction = ConsensusTransaction::new(&signed_transaction).serialize().unwrap()
 

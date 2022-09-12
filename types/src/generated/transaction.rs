@@ -33,7 +33,7 @@ pub struct Transaction {
     #[prost(bytes="bytes", tag="5")]
     pub recent_block_hash: ::prost::bytes::Bytes,
     #[prost(uint64, tag="6")]
-    pub gas: u64,
+    pub fee: u64,
     #[prost(bytes="bytes", tag="7")]
     pub request_bytes: ::prost::bytes::Bytes,
 }

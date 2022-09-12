@@ -37,13 +37,13 @@ fn create_signed_transaction(
     block_digest: BlockDigest,
 ) -> SignedTransaction {
     // use a dummy batch digest for initial benchmarking
-    let gas: u64 = 1000;
+    let fee: u64 = 1000;
     let transaction = create_payment_transaction(
         kp_sender.public().clone(),
         kp_receiver.public(),
         PRIMARY_ASSET_ID,
         amount,
-        gas,
+        fee,
         block_digest,
     );
     transaction.sign(kp_sender).unwrap()

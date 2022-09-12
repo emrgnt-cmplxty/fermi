@@ -27,7 +27,7 @@ use tokio::{
     sync::mpsc::{channel, Receiver, Sender},
     task::JoinHandle,
 };
-use tracing::{info, trace};
+use tracing::{error, info, trace};
 
 // constants
 // frequency of orderbook depth writes (rounds)
@@ -174,7 +174,6 @@ impl ValidatorService {
         let master_controller = &validator_state.master_controller;
         loop {
             while let Some(message) = rx_output.recv().await {
-                trace!("Received a finalized consensus transaction for post processing",);
                 let (result, serialized_txn) = message;
                 match result {
                     Ok((consensus_output, execution_indices, execution_result)) => {
@@ -183,10 +182,8 @@ impl ValidatorService {
                         // if next_transaction_index == 0 then the block is complete and we may write-out
                         if execution_indices.next_transaction_index == 0 {
                             // subtract round look-back from the latest round to get block number
-                            let round_number = consensus_output.certificate.header.round;
 
                             let num_txns = serialized_txns_buf.len();
-                            trace!("Processing result from {round_number} with {num_txns} transactions");
                             store.prune();
                             // write-out the new block to the validator store
                             let (block, block_info) = store
@@ -198,9 +195,11 @@ impl ValidatorService {
                                 .process_end_of_block(&store.process_block_store, block_number)
                                 .await;
                             serialized_txns_buf.clear();
+                            // This log is used in benchmarking
+                            info!("Finalized block {block_number} contains {num_txns} transactions");
                         }
                     }
-                    Err(e) => info!("{:?}", e), // TODO
+                    Err(e) => error!("{:?}", e), // TODO
                 }
                 // NOTE: Notify the user that its transaction has been processed.
             }

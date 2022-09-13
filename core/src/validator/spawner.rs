@@ -5,6 +5,7 @@ use crate::{
     config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, GDEX_DB_NAME},
     genesis_ceremony::GENESIS_FILENAME,
     metrics::start_prometheus_server,
+    multiaddr::to_socket_addr,
     validator::{
         genesis_state::ValidatorGenesisState, metrics::ValidatorMetrics, server::ValidatorServer,
         server::ValidatorService, state::ValidatorState,
@@ -48,6 +49,8 @@ pub struct ValidatorSpawner {
     validator_info: ValidatorInfo,
     /// Address for communication to the validator server
     validator_address: Multiaddr,
+    /// Address for communication to the metrics server
+    metrics_address: Multiaddr,
 
     /// Begin objects initialized after calling spawn_validator_service
 
@@ -71,6 +74,7 @@ impl ValidatorSpawner {
         key_path: PathBuf,
         genesis_path: PathBuf,
         validator_address: Multiaddr,
+        metrics_address: Multiaddr,
         validator_name: String,
     ) -> Self {
         let genesis_state =
@@ -90,6 +94,7 @@ impl ValidatorSpawner {
             genesis_state,
             validator_info,
             validator_address,
+            metrics_address,
             validator_state: None,
             consensus_adapter: None,
             tx_reconfigure_consensus: None,
@@ -200,7 +205,7 @@ impl ValidatorSpawner {
             key_pair,
             consensus_db_path,
             gdex_db_path: gdex_db_path.clone(),
-            metrics_address: utils::available_local_socket_address(),
+            metrics_address: to_socket_addr(&self.metrics_address).unwrap(),
             admin_interface_port: utils::get_available_port(),
             json_rpc_address: utils::available_local_socket_address(),
             websocket_address: Some(utils::available_local_socket_address()),

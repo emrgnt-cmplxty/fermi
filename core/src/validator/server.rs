@@ -42,7 +42,7 @@ pub struct ValidatorServerHandle {
 }
 
 impl ValidatorServerHandle {
-    pub fn address(&self) -> &Multiaddr {
+    pub fn validator_address(&self) -> &Multiaddr {
         &self.local_addr
     }
 
@@ -55,17 +55,17 @@ impl ValidatorServerHandle {
     }
 }
 
-/// Can spawn a validator server handle at the internal address
+/// Can spawn a validator server handle at the internal validator_address
 /// the server handle contains a validator api (grpc) that exposes a validator service
 pub struct ValidatorServer {
-    address: Multiaddr,
+    validator_address: Multiaddr,
     state: Arc<ValidatorState>,
     consensus_adapter: Arc<ConsensusAdapter>,
 }
 
 impl ValidatorServer {
     pub fn new(
-        address: Multiaddr,
+        validator_address: Multiaddr,
         state: Arc<ValidatorState>,
         consensus_addresses: Vec<Multiaddr>,
         tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
@@ -73,7 +73,7 @@ impl ValidatorServer {
         let consensus_adapter = Arc::new(ConsensusAdapter::new(consensus_addresses, tx_reconfigure_consensus));
 
         Self {
-            address,
+            validator_address,
             state,
             consensus_adapter,
         }
@@ -81,22 +81,22 @@ impl ValidatorServer {
 
     // TODO this is kinda dumb
     pub async fn spawn(self) -> Result<ValidatorServerHandle, io::Error> {
-        let address = self.address.clone();
+        let validator_address = self.validator_address.clone();
         info!(
-            "Calling spawn to produce a the validator server with port address = {:?}",
-            address
+            "Calling spawn to produce a the validator server with port validator_address = {:?}",
+            validator_address
         );
-        self.run(address).await
+        self.run(validator_address).await
     }
 
-    pub async fn run(self, address: Multiaddr) -> Result<ValidatorServerHandle, io::Error> {
+    pub async fn run(self, validator_address: Multiaddr) -> Result<ValidatorServerHandle, io::Error> {
         let server = crate::config::server::ServerConfig::new()
             .server_builder()
             .add_service(TransactionSubmitterServer::new(ValidatorService {
                 state: self.state.clone(),
                 consensus_adapter: self.consensus_adapter.clone(),
             }))
-            .bind(&address)
+            .bind(&validator_address)
             .await
             .unwrap();
         let local_addr = server.local_addr().to_owned();
@@ -402,7 +402,7 @@ mod test_validator_server {
         let handle_result = spawn_test_validator_server().await;
         let handle = handle_result.unwrap();
         let mut client = TransactionSubmitterClient::new(
-            client::connect_lazy(handle.address()).expect("Failed to connect to consensus"),
+            client::connect_lazy(handle.validator_address()).expect("Failed to connect to consensus"),
         );
 
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();

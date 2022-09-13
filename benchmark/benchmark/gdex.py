@@ -132,6 +132,7 @@ class GDEXBench:
                 validator_dict = committee.json['authorities'][name]
                 validator_address = validator_dict['network_address']
                 relayer_address = validator_dict['relayer_address']
+                metrics_address = validator_dict['metrics_address']
                 cmd = CommandMaker.run_gdex_node(
                     os.path.abspath(self.bench_parameters.db_dir),
                     os.path.abspath(self.bench_parameters.key_dir),
@@ -139,6 +140,7 @@ class GDEXBench:
                     name,
                     validator_address,
                     relayer_address,
+                    metrics_address,
                     debug,
                     self.flamegraph
                 )

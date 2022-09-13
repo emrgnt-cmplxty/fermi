@@ -45,3 +45,5 @@ proto/*
 /.proto/committee/
 /.proto/signatures/
 /.proto/.*.json
+/benchmark/.proto/
+/.proto/

@@ -137,7 +137,7 @@ impl BenchHelper {
             },
             Err(status) => warn!("Failed to get latest block digest, returning default. Bad status {:?}", status),
         }
-        return BlockDigest::new([0; 32])
+        BlockDigest::new([0; 32])
     }
 
     async fn submit_transaction(

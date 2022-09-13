@@ -128,13 +128,16 @@ impl BenchHelper {
             .get_latest_block_info(BLOCK_INFO_REQUEST.clone())
             .await;
 
-        if let Ok(relayer_block_response) = response {
-            if let Some(block_info) = relayer_block_response.into_inner().block_info {
-                bincode::deserialize(block_info.digest.as_ref()).unwrap()
-            }
+        match response {
+            Ok(relayer_block_response) => {
+                match relayer_block_response.into_inner().block_info {
+                    Some(block_info) => return bincode::deserialize(block_info.digest.as_ref()).unwrap(),
+                    None => warn!("Failed to get latest block digest, returning default. Empty result")
+                }
+            },
+            Err(status) => warn!("Failed to get latest block digest, returning default. Bad status {:?}", status),
         }
-        warn!("Failed to get latest block digest, returning default");
-        BlockDigest::new([0; 32])
+        return BlockDigest::new([0; 32])
     }
 
     async fn submit_transaction(

@@ -158,7 +158,7 @@ def install(ctx):
             'mem_profiling': False,
             'genesis_dir': "/.proto/",
             'key_dir': "/.proto/",
-            # the database dir will be whiped before running the benchmark
+            # the database dir will be wiped before running the benchmark
             'db_dir': "/.proto/db",
             'do_orderbook': True,
             'starting_balance': 5000000000
@@ -207,7 +207,7 @@ def remote(ctx, debug=False):
         'mem_profiling': False,
         'genesis_dir': "/.proto/",
         'key_dir': "/.proto/",
-        # the database dir will be whiped before running the benchmark
+        # the database dir will be wiped before running the benchmark
         'db_dir': "/.proto/db",
         'do_orderbook': True,
         'starting_balance': 5000000000
@@ -253,12 +253,12 @@ def protonet(ctx, debug=False):
         'nodes': 2,
         'workers': 5,
         'tx_size': 213,
-        'rate': 50_000,
-        'duration': 20,
+        'rate': 10_000,
+        'duration': 0,
         'mem_profiling': False,
         'genesis_dir': "/.proto/",
         'key_dir': "/.proto/",
-        # the database dir will be whiped before running the benchmark
+        # the database dir will be wiped before running the benchmark
         'db_dir': "/.proto/db",
         'do_orderbook': True,
         'starting_balance': 5000000000
@@ -321,12 +321,12 @@ def kill(ctx):
         'nodes': 2,
         'workers': 5,
         'tx_size': 213,
-        'rate': 50_000,
+        'rate': 10_000,
         'duration': 20,
         'mem_profiling': False,
         'genesis_dir': "/.proto/",
         'key_dir': "/.proto/",
-        # the database dir will be whiped before running the benchmark
+        # the database dir will be wiped before running the benchmark
         'db_dir': "/.proto/db",
         'do_orderbook': True,
         'starting_balance': 5000000000

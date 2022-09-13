@@ -58,7 +58,7 @@ def generate(ctx):
         'starting_balance': 5000000000
     }
     try:
-        GDEXBench().setup_genesis(bench_params)
+        GDEXBench().setup_genesis(bench_params, benchmark=False, release=False)
     except BenchError as e:
         Print.error(e)
 

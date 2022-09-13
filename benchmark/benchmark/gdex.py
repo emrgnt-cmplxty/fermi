@@ -33,7 +33,7 @@ class GDEXBench:
         except subprocess.SubprocessError as e:
             raise BenchError('Failed to kill testbed', e)
 
-    def setup_genesis(self, bench_parameters_dict):
+    def setup_genesis(self, bench_parameters_dict, benchmark=True, release=True):
         Print.info('Setting up testbed...')
         try:
             bench_parameters = GDEXBenchParameters(bench_parameters_dict)
@@ -47,13 +47,13 @@ class GDEXBench:
         subprocess.run([cmd], shell=True, cwd=PathMaker.gdex_build_path())
         sleep(0.5)  # Removing the store may take time.
         # Recompile the latest code.
-        cmd = CommandMaker.compile(mem_profiling=bench_parameters.mem_profile, flamegraph=bench_parameters.flamegraph)
+        cmd = CommandMaker.compile(mem_profiling=bench_parameters.mem_profile, flamegraph=bench_parameters.flamegraph, benchmark=benchmark, release=release)
         Print.info(f"About to run {cmd}...")
         subprocess.run(cmd, check=True, cwd=PathMaker.gdex_build_path())
         sleep(0.5)  # Removing the store may take time.
 
         # Create alias for the client and nodes binary.
-        cmd = CommandMaker.alias_binaries(PathMaker.binary_path())
+        cmd = CommandMaker.alias_binaries(PathMaker.binary_path(release))
         print(cmd)
         subprocess.run([cmd], shell=True)
 

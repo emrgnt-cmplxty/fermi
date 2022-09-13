@@ -33,96 +33,98 @@ class GDEXBench:
         except subprocess.SubprocessError as e:
             raise BenchError('Failed to kill testbed', e)
 
+    def setup_genesis(self, bench_parameters_dict):
+        Print.info('Setting up testbed...')
+        try:
+            bench_parameters = GDEXBenchParameters(bench_parameters_dict)
+        except ConfigError as e:
+            raise BenchError('Invalid nodes or bench parameters', e)
+
+        # Cleanup all files.
+        cmd = f'{CommandMaker.clean_logs()} ;'
+        subprocess.run([cmd], shell=True)
+        cmd = CommandMaker.cleanup()
+        subprocess.run([cmd], shell=True, cwd=PathMaker.gdex_build_path())
+        sleep(0.5)  # Removing the store may take time.
+        # Recompile the latest code.
+        cmd = CommandMaker.compile(mem_profiling=bench_parameters.mem_profile, flamegraph=bench_parameters.flamegraph)
+        Print.info(f"About to run {cmd}...")
+        subprocess.run(cmd, check=True, cwd=PathMaker.gdex_build_path())
+        sleep(0.5)  # Removing the store may take time.
+
+        # Create alias for the client and nodes binary.
+        cmd = CommandMaker.alias_binaries(PathMaker.binary_path())
+        print(cmd)
+        subprocess.run([cmd], shell=True)
+
+        cmd = CommandMaker.init_gdex_genesis(os.path.abspath(bench_parameters.key_dir))
+        subprocess.run([cmd], shell=True)
+        # Generate configuration files.
+        keys = []
+        key_files = [PathMaker.key_file(i) for i in range(bench_parameters.nodes[0])]
+
+        for filename in key_files:
+            sleep(2)
+            cmd = CommandMaker.generate_gdex_key(filename, os.path.abspath(bench_parameters.key_dir)).split()
+            subprocess.run(cmd, check=True)
+            keys += [Key.from_file(os.path.abspath(bench_parameters.key_dir + filename))]
+
+        names = [x.name for x in keys]
+
+        workers = bench_parameters.workers
+        committee = LocalCommittee(names, 3000, workers)
+        committee.print(PathMaker.committee_file())
+        for i, name in enumerate(names):
+            validator_dict = committee.json["authorities"][name]
+            balance = bench_parameters.starting_balance
+            stake = validator_dict["stake"]
+            key_file = os.path.abspath(bench_parameters.key_dir + key_files[i])
+
+            primary_to_primary = validator_dict["primary"]["primary_to_primary"]
+            worker_to_primary = validator_dict["primary"]["worker_to_primary"]
+            primary_to_worker = []
+            worker_to_worker = []
+            consensus_address = []
+            for i in range(bench_parameters.workers):
+                primary_to_worker.append(validator_dict["workers"][i]["primary_to_worker"])
+                worker_to_worker.append(validator_dict["workers"][i]["worker_to_worker"])
+                consensus_address.append(validator_dict["workers"][i]["transactions"])
+
+            cmd = CommandMaker.add_gdex_validator_genesis(
+                bench_parameters.key_dir,
+                name,
+                balance,
+                stake,
+                key_file,
+                primary_to_primary,
+                worker_to_primary,
+                ','.join(primary_to_worker),
+                ','.join(worker_to_worker),
+                ','.join(consensus_address)
+            )
+            print(cmd)
+            subprocess.run([cmd], shell=True)
+
+        cmd = CommandMaker.add_controllers_gdex_genesis(os.path.abspath(bench_parameters.key_dir))
+        subprocess.run([cmd], shell=True)
+        cmd = CommandMaker.build_gdex_genesis(os.path.abspath(bench_parameters.key_dir))
+        subprocess.run([cmd], shell=True)
+
+        for i, name in enumerate(committee.json['authorities'].keys())  :
+            cmd = CommandMaker.verify_and_sign_gdex_genesis(os.path.abspath(bench_parameters.key_dir), os.path.abspath(bench_parameters.key_dir + key_files[i]))
+            subprocess.run([cmd], shell=True)
+        cmd = CommandMaker.finalize_genesis(os.path.abspath(bench_parameters.key_dir))
+        subprocess.run([cmd], shell=True)
+        return committee, bench_parameters
+
     def run(self, bench_parameters_dict, debug=False):
         assert isinstance(debug, bool)
         Print.heading('Starting local benchmark')
-
         # Kill any previous testbed.
         self._kill_nodes()
 
         try:
-            Print.info('Setting up testbed...')
-            try:
-               bench_parameters = GDEXBenchParameters(bench_parameters_dict)
-            except ConfigError as e:
-                raise BenchError('Invalid nodes or bench parameters', e)
-
-            # Cleanup all files.
-            cmd = f'{CommandMaker.clean_logs()} ;'
-            subprocess.run([cmd], shell=True)
-            cmd = CommandMaker.cleanup()
-            subprocess.run([cmd], shell=True, cwd=PathMaker.gdex_build_path())
-            sleep(0.5)  # Removing the store may take time.
-            # Recompile the latest code.
-            cmd = CommandMaker.compile(mem_profiling=bench_parameters.mem_profile, flamegraph=bench_parameters.flamegraph)
-            Print.info(f"About to run {cmd}...")
-            subprocess.run(cmd, check=True, cwd=PathMaker.gdex_build_path())
-            sleep(0.5)  # Removing the store may take time.
-
-            # Create alias for the client and nodes binary.
-            cmd = CommandMaker.alias_binaries(PathMaker.binary_path())
-            print(cmd)
-            subprocess.run([cmd], shell=True)
-
-            cmd = CommandMaker.init_gdex_genesis(os.path.abspath(bench_parameters.key_dir))
-            subprocess.run([cmd], shell=True)
-            # Generate configuration files.
-            keys = []
-            key_files = [PathMaker.key_file(i) for i in range(bench_parameters.nodes[0])]
-
-            for filename in key_files:
-                sleep(2)
-                cmd = CommandMaker.generate_gdex_key(filename, os.path.abspath(bench_parameters.key_dir)).split()
-                subprocess.run(cmd, check=True)
-                keys += [Key.from_file(os.path.abspath(bench_parameters.key_dir + filename))]
-
-            names = [x.name for x in keys]
-
-            workers = bench_parameters.workers
-            committee = LocalCommittee(names, 3000, workers)
-            committee.print(PathMaker.committee_file())
-            for i, name in enumerate(names):
-                validator_dict = committee.json["authorities"][name]
-                balance = bench_parameters.starting_balance
-                stake = validator_dict["stake"]
-                key_file = os.path.abspath(bench_parameters.key_dir + key_files[i])
-
-                primary_to_primary = validator_dict["primary"]["primary_to_primary"]
-                worker_to_primary = validator_dict["primary"]["worker_to_primary"]
-                primary_to_worker = []
-                worker_to_worker = []
-                consensus_address = []
-                for i in range(bench_parameters.workers):
-                    primary_to_worker.append(validator_dict["workers"][i]["primary_to_worker"])
-                    worker_to_worker.append(validator_dict["workers"][i]["worker_to_worker"])
-                    consensus_address.append(validator_dict["workers"][i]["transactions"])
-
-                cmd = CommandMaker.add_gdex_validator_genesis(
-                    bench_parameters.key_dir,
-                    name,
-                    balance,
-                    stake,
-                    key_file,
-                    primary_to_primary,
-                    worker_to_primary,
-                    ','.join(primary_to_worker),
-                    ','.join(worker_to_worker),
-                    ','.join(consensus_address)
-                )
-                print(cmd)
-                subprocess.run([cmd], shell=True)
-
-            cmd = CommandMaker.add_controllers_gdex_genesis(os.path.abspath(bench_parameters.key_dir))
-            subprocess.run([cmd], shell=True)
-            cmd = CommandMaker.build_gdex_genesis(os.path.abspath(bench_parameters.key_dir))
-            subprocess.run([cmd], shell=True)
-
-            for i, name in enumerate(committee.json['authorities'].keys())  :
-                cmd = CommandMaker.verify_and_sign_gdex_genesis(os.path.abspath(bench_parameters.key_dir), os.path.abspath(bench_parameters.key_dir + key_files[i]))
-                subprocess.run([cmd], shell=True)
-            cmd = CommandMaker.finalize_genesis(os.path.abspath(bench_parameters.key_dir))
-            subprocess.run([cmd], shell=True)
-
+            committee, bench_parameters = self.setup_genesis(bench_parameters_dict)
             # Run the primaries
             Print.info('Booting nodes...')
             rate_share = ceil(bench_parameters.rate[0] / (bench_parameters.workers * bench_parameters.nodes[0]))

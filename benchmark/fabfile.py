@@ -39,6 +39,30 @@ def gdex(ctx, debug=True):
         Print.error(e)
 
 @task
+def generate(ctx):
+    ''' Run benchmarks on Narwhal node. '''
+    bench_params = {
+        'faults': 0,
+        'workers': 1,
+        'nodes': 4,
+        'rate': 50_000,
+        'tx_size': 213,
+        'duration': 20,
+        'mem_profiling': False,
+        'flamegraph': None, # node or None
+        'genesis_dir': "../.proto/",
+        'key_dir': "../.proto/",
+        'do_orderbook': False,
+        # the database dir will be wiped before running the benchmark
+        'db_dir': "../.proto/db",
+        'starting_balance': 5000000000
+    }
+    try:
+        GDEXBench().setup_genesis(bench_params)
+    except BenchError as e:
+        Print.error(e)
+
+@task
 def narwhal(ctx, debug=True):
     ''' Run benchmarks on Narwhal node. '''
     bench_params = {

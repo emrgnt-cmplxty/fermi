@@ -16,6 +16,7 @@ from benchmark.utils import BenchError, Print, PathMaker, progress_bar, multiadd
 from benchmark.commands import CommandMaker
 from benchmark.gdex_logs import LogParser, ParseError
 from benchmark.instance import InstanceManager
+from benchmark.remote import Bench
 
 class FabricError(Exception):
     ''' Wrapper for Fabric exception with a meaningfull error message. '''
@@ -30,266 +31,8 @@ class ExecutionError(Exception):
     pass
 
 
-class Protonet:
-    def __init__(self, ctx, bench_parameters, node_parameters, debug=False):
-        self.manager = InstanceManager.make()
-        self.settings = self.manager.settings
-        self.bench_parameters = GDEXBenchParameters(bench_parameters)
-        self.node_parameters = NodeParameters(node_parameters)
-        self.debug = debug
-        self.local_proto_dir = os.getcwd() + self.bench_parameters.key_dir
-        self.remote_proto_dir = self.settings.repo_name + self.bench_parameters.key_dir
-        try:
-            ctx.connect_kwargs.pkey = RSAKey.from_private_key_file(
-                self.manager.settings.key_path
-            )
-            ctx.forward_agent = True
-            self.connect = ctx.connect_kwargs
-        except (IOError, PasswordRequiredException, SSHException) as e:
-            raise BenchError('Failed to load SSH key', e)
-
-    def _check_stderr(self, output):
-        if isinstance(output, dict):
-            for x in output.values():
-                if x.stderr:
-                    raise ExecutionError(x.stderr)
-        else:
-            if output.stderr:
-                raise ExecutionError(output.stderr)
-
-    def install(self):
-        Print.info('Installing rust and cloning the repo...')
-        cmd = [
-            'sudo apt-get update',
-            'sudo apt-get -y upgrade',
-            'sudo apt-get -y autoremove',
-
-            # The following dependencies prevent the error: [error: linker `cc` not found].
-            'sudo apt-get -y install build-essential',
-            'sudo apt-get -y install cmake',
-            'sudo apt-get install libssl-dev',
-
-            # Install rust (non-interactive).
-            'curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y',
-            'source $HOME/.cargo/env',
-            'rustup default stable',
-
-            # This is missing from the Rocksdb installer (needed for Rocksdb).
-            'sudo apt-get install -y clang',
-            'sudo apt-get install openssl',
-            'sudo apt-get install pkg-config',
-
-            # Clone the repo.
-            'ssh-keyscan -H github.com >> ~/.ssh/known_hosts',
-            f'(git clone {self.settings.repo_url} || (cd {self.settings.repo_name} ; git pull))'
-        ]
-        hosts = self.manager.hosts(flat=True)
-        try:
-            g = Group(*hosts, user='ubuntu', connect_kwargs=self.connect, forward_agent=True)
-
-            for c in g:
-                c._config.forward_agent = True
-
-            g.run(' && '.join(cmd), hide=False)
-            Print.heading(f'Initialized testbed of {len(hosts)} nodes')
-        except (GroupException, ExecutionError) as e:
-            e = FabricError(e) if isinstance(e, GroupException) else e
-            raise BenchError('Failed to install repo on testbed', e)
-
-    def kill(self, hosts=[], delete_logs=False):
-        assert isinstance(hosts, list)
-        assert isinstance(delete_logs, bool)
-        hosts = hosts if hosts else self.manager.hosts(flat=True)
-        delete_logs = CommandMaker.clean_logs() if delete_logs else 'true'
-        cmd = [delete_logs, f'({CommandMaker.kill()} || true)']
-        try:
-            g = Group(*hosts, user='ubuntu', connect_kwargs=self.connect)
-            g.run(' && '.join(cmd), hide=True)
-        except GroupException as e:
-            raise BenchError('Failed to kill nodes', FabricError(e))
-
-    def _select_hosts(self, bench_parameters):
-        # Collocate the primary and its workers on the same machine.
-        if bench_parameters.collocate:
-            nodes = max(bench_parameters.nodes)
-
-            # Ensure there are enough hosts.
-            hosts = self.manager.hosts()
-            if sum(len(x) for x in hosts.values()) < nodes:
-                return []
-
-            # Select the hosts in different data centers.
-            ordered = zip(*hosts.values())
-            ordered = [x for y in ordered for x in y]
-            return ordered[:nodes]
-
-        # Spawn the primary and each worker on a different machine. Each
-        # authority runs in a single data center.
-        else:
-            primaries = max(bench_parameters.nodes)
-
-            # Ensure there are enough hosts.
-            hosts = self.manager.hosts()
-            if len(hosts.keys()) < primaries:
-                return []
-            for ips in hosts.values():
-                if len(ips) < bench_parameters.workers + 1:
-                    return []
-
-            # Ensure the primary and its workers are in the same region.
-            selected = []
-            for region in list(hosts.keys())[:primaries]:
-                ips = list(hosts[region])[:bench_parameters.workers + 1]
-                selected.append(ips)
-            return selected
-
-    def _background_run(self, host, command, log_file, cwd='~/gdex-core/benchmark'):
-        name = splitext(basename(log_file))[0]
-        cmd = f'(cd {cwd}) && tmux new -d -s "{name}" "{command} |& tee {log_file}"'
-        c = Connection(host, user='ubuntu', connect_kwargs=self.connect)
-        output = c.run(cmd, hide=True)
-        self._check_stderr(output)
-
-    def _update(self, hosts, collocate):
-        if collocate:
-            ips = list(set(hosts))
-        else:
-            ips = list(set([x for y in hosts for x in y]))
-
-        Print.info(
-            f'Updating {len(ips)} machines (branch "{self.settings.branch}")...'
-        )
-        compile_cmd = ' '.join(CommandMaker.compile(False, None))
-        cmd = [
-            f'(cd {self.settings.repo_name} && git fetch -f)',
-            f'(cd {self.settings.repo_name} && git checkout -f {self.settings.branch})',
-            f'(cd {self.settings.repo_name} && git pull -f)',
-            'source $HOME/.cargo/env',
-            f'(cd {self.settings.repo_name} && {compile_cmd})',
-            CommandMaker.alias_binaries(
-                f'./{self.settings.repo_name}/target/release/'
-            )
-        ]
-        g = Group(*ips, user='ubuntu', connect_kwargs=self.connect, forward_agent=True)
-        g.run(' && '.join(cmd), hide=True)
-
-    def _config(self, hosts, node_parameters, bench_parameters):
-        Print.info('Generating configuration files...')
-        # Cleanup all local configuration files.
-        cmd = CommandMaker.cleanup()
-        subprocess.run([cmd], shell=True, stderr=subprocess.DEVNULL, cwd='.')
-
-        # Recompile the latest code.
-        cmd = CommandMaker.compile(False, None, False)
-        Print.info(f"About to run {cmd}...")
-        subprocess.run(cmd, check=True, cwd='../')
-
-        # Create alias for the client and nodes binary.
-        cmd = CommandMaker.alias_binaries(PathMaker.binary_path())
-        subprocess.run([cmd], shell=True)
-
-        cmd = CommandMaker.init_gdex_genesis(self.local_proto_dir)
-        subprocess.run([cmd], shell=True)
-
-        # Generate configuration files.
-        keys = []
-        key_files = [PathMaker.key_file(i) for i in range(len(hosts))]
-
-        for filename in key_files:
-            cmd = CommandMaker.generate_gdex_key(filename).split()
-            subprocess.run(cmd, check=True)
-            keys += [Key.from_file(self.local_proto_dir + filename)]
-        sleep(2)
-        names = [x.name for x in keys]
-
-        if bench_parameters.collocate:
-            workers = bench_parameters.workers
-            addresses = OrderedDict(
-                (x, [y] * (workers + 1)) for x, y in zip(names, hosts)
-            )
-        else:
-            addresses = OrderedDict(
-                (x, y) for x, y in zip(names, hosts)
-            )
-
-        committee = Committee(addresses, self.settings.base_port)
-        committee.print(PathMaker.committee_file())
-        for i, name in enumerate(names):
-            validator_dict = committee.json["authorities"][name]
-            balance = self.bench_parameters.starting_balance
-            stake = validator_dict["stake"]
-            key_file = self.local_proto_dir + key_files[i]
-
-            primary_to_primary = validator_dict["primary"]["primary_to_primary"]
-            worker_to_primary = validator_dict["primary"]["worker_to_primary"]
-
-            primary_to_worker = []
-            worker_to_worker = []
-            consensus_address = []
-
-            for i in range(workers):
-                primary_to_worker.append(validator_dict["workers"][i]["primary_to_worker"])
-                worker_to_worker.append(validator_dict["workers"][i]["worker_to_worker"])
-                consensus_address.append(validator_dict["workers"][i]["transactions"])
-
-            cmd = CommandMaker.add_gdex_validator_genesis(
-                self.local_proto_dir,
-                name,
-                balance,
-                stake,
-                key_file,
-                primary_to_primary,
-                worker_to_primary,
-                ','.join(primary_to_worker),
-                ','.join(worker_to_worker),
-                ','.join(consensus_address)
-            )
-            subprocess.run([cmd], shell=True)
-        cmd = CommandMaker.add_controllers_gdex_genesis(self.local_proto_dir)
-        subprocess.run([cmd], shell=True)
-        cmd = CommandMaker.build_gdex_genesis(self.local_proto_dir)
-        subprocess.run([cmd], shell=True)
-        for i, name in enumerate(names):
-            cmd = CommandMaker.verify_and_sign_gdex_genesis(self.local_proto_dir, self.local_proto_dir + key_files[i])
-            subprocess.run([cmd], shell=True)
-
-        cmd = CommandMaker.finalize_genesis(self.local_proto_dir)
-        subprocess.run([cmd], shell=True)
-
-        node_parameters.print(PathMaker.parameters_file())
-        # Cleanup all nodes and upload configuration files.
-        local_committee_dir = self.local_proto_dir + 'committee/'
-        remote_committee_dir = self.remote_proto_dir + 'committee/'
-        local_signatures_dir = self.local_proto_dir + 'signatures/'
-        remote_signatures_dir = self.remote_proto_dir + 'signatures/'
-
-        names = names[:len(names)-bench_parameters.faults]
-        progress = progress_bar(names, prefix='Uploading config files:')
-        for i, name in enumerate(progress):
-            for ip in committee.ips(name):
-                print(i, name, ip)
-                c = Connection(ip, user='ubuntu', connect_kwargs=self.connect)
-                c.run(f'(cd gdex-core && {CommandMaker.cleanup()}) || true', hide=False)
-                c.run(f'(mkdir {remote_committee_dir}) || true')
-                c.run(f'(mkdir {remote_signatures_dir}) || true')
-                c.put(self.local_proto_dir + "genesis.blob", self.remote_proto_dir)
-                c.put(self.local_proto_dir + PathMaker.key_file(i), self.remote_proto_dir)
-                # TODO
-                if i > 0:
-                    c.put(self.local_proto_dir + PathMaker.key_file(0), self.remote_proto_dir)
-                c.put(self.local_proto_dir + "master_controller", self.remote_proto_dir)
-
-                for fname in os.listdir(local_committee_dir):
-                    c.put(local_committee_dir + fname, remote_committee_dir)
-
-                for fname in os.listdir(local_signatures_dir):
-                    c.put(local_signatures_dir + fname, remote_signatures_dir)
-
-
-
-        return committee
-
-    def _run_single(self, rate, committee, bench_parameters):
+class Protonet(Bench):
+    def _run_single(self, rate, committee):
 
         # Kill any potentially unfinished run and delete logs.
         hosts = committee.ips()
@@ -352,35 +95,16 @@ class Protonet:
                 )
             log_file = PathMaker.client_log_file(i, 0)
             self._background_run(host, cmd, log_file)
-
         print('Running the protonet')
 
-    def _logs(self, committee, faults):
-        # Delete local logs (if any).
-        cmd = CommandMaker.clean_logs()
-        subprocess.run([cmd], shell=True, stderr=subprocess.DEVNULL)
+    def run(self, bench_parameters_dict, node_parameters_dict, debug):
+        Print.heading('Starting protonet')
 
-        # Download log files.
-        workers_addresses = committee.workers_addresses(faults)
-        progress = progress_bar(workers_addresses, prefix='Downloading workers logs:')
-        for i, addresses in enumerate(progress):
-            for id, address in addresses:
-                host = Committee.ip(address)
-                c = Connection(host, user='ubuntu', connect_kwargs=self.connect)
-                c.get(
-                    PathMaker.client_log_file(i, 0),
-                    local=PathMaker.client_log_file(i, 0)
-                )
-                c.get(
-                    PathMaker.primary_log_file(i),
-                    local=PathMaker.primary_log_file(i)
-                )
-        # Parse logs and return the parser.
-        Print.info('Parsing logs and computing performance...')
-        return LogParser.process(PathMaker.logs_path(), faults=faults)
-
-    def run(self):
-        Print.heading('Starting remote benchmark')
+        self.bench_parameters = GDEXBenchParameters(bench_parameters_dict)
+        self.node_parameters = NodeParameters(node_parameters_dict)
+        self.debug = debug
+        self.local_proto_dir = os.getcwd() + self.bench_parameters.key_dir
+        self.remote_proto_dir = self.settings.repo_name + self.bench_parameters.key_dir
 
         # Select which hosts to use.
         selected_hosts = self._select_hosts(self.bench_parameters)
@@ -405,14 +129,10 @@ class Protonet:
             raise BenchError('Failed to configure nodes', e)
 
         # Run protonet
-        nodes = self.bench_parameters.nodes[0]
         rate = self.bench_parameters.rate[0]
 
         try:
-            Print.heading(f'Starting protonet')
-            self._run_single(
-                rate, committee, self.bench_parameters
-            )
+            self._run_single(rate, committee)
         except (subprocess.SubprocessError, GroupException, ParseError) as e:
             self.kill(hosts=selected_hosts)
             if isinstance(e, GroupException):

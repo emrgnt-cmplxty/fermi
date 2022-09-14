@@ -17,9 +17,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install dependencies
-      run: pip install -r benchmark-handlers/requirements.txt
+      run: pip install -r benchmark/requirements.txt
     - name: Init genesis
-      working-directory: benchmark-handlers
+      working-directory: benchmark
       run: fab generate
     - name: Run tests
       working-directory: rust-gdex

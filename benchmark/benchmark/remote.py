@@ -143,7 +143,7 @@ class Bench:
                 selected.append(ips)
             return selected
 
-    def _background_run(self, host, command, log_file, cwd='~/gdex-core/benchmark-handlers'):
+    def _background_run(self, host, command, log_file, cwd='~/gdex-core/benchmark'):
         name = splitext(basename(log_file))[0]
         cmd = f'(cd {cwd}) && tmux new -d -s "{name}" "{command} |& tee {log_file}"'
         c = Connection(host, user='ubuntu', connect_kwargs=self.connect)
@@ -282,7 +282,7 @@ class Bench:
                 print(i, name, ip)
                 c = Connection(ip, user='ubuntu', connect_kwargs=self.connect)
                 print("cleanup cmd = ", CommandMaker.cleanup())
-                c.run(f'(cd gdex-core/benchmark-handlers && {CommandMaker.cleanup()}) || true', hide=False)
+                c.run(f'(cd gdex-core/benchmark && {CommandMaker.cleanup()}) || true', hide=False)
                 c.run(f'(mkdir -p {remote_committee_dir}) || true')
                 c.run(f'(mkdir {remote_signatures_dir}) || true')
                 c.put(self.local_proto_dir + "genesis.blob", self.remote_proto_dir)
@@ -403,7 +403,7 @@ class Bench:
         self.node_parameters = NodeParameters(node_parameters_dict)
         self.debug = debug
         self.local_proto_dir = os.getcwd() + self.bench_parameters.key_dir
-        self.remote_proto_dir = self.settings.repo_name + "/benchmark-handlers/" + self.bench_parameters.key_dir
+        self.remote_proto_dir = self.settings.repo_name + "/benchmark/" + self.bench_parameters.key_dir
 
         # Select which hosts to use.
         selected_hosts = self._select_hosts(self.bench_parameters)

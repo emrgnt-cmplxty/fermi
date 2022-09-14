@@ -124,7 +124,7 @@ def seed(ctx, starting_data_port):
 
 
 @task
-def create(ctx, nodes=1):
+def create(ctx, nodes=2):
     ''' Create a testbed'''
     try:
         InstanceManager.make().create_instances(nodes)

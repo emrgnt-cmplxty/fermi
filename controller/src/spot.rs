@@ -95,40 +95,40 @@ impl Controller for SpotController {
             }
             RequestType::MarketOrder => {
                 let request: MarketOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
-                match self.get_orderbook(request.base_asset_id, request.quote_asset_id)?.place_market_order(
-                    &sender,
-                    &request
-                ) {
+                match self
+                    .get_orderbook(request.base_asset_id, request.quote_asset_id)?
+                    .place_market_order(&sender, &request)
+                {
                     Ok(_ordering_processing_result) => Ok(()),
                     Err(_err) => Err(GDEXError::OrderRequest),
                 }
             }
             RequestType::LimitOrder => {
                 let request: LimitOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
-                match self.get_orderbook(request.base_asset_id, request.quote_asset_id)?.place_limit_order(
-                    &sender,
-                    &request
-                ) {
+                match self
+                    .get_orderbook(request.base_asset_id, request.quote_asset_id)?
+                    .place_limit_order(&sender, &request)
+                {
                     Ok(_ordering_processing_result) => Ok(()),
                     Err(_err) => Err(GDEXError::OrderRequest),
                 }
             }
             RequestType::UpdateOrder => {
                 let request: UpdateOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
-                match self.get_orderbook(request.base_asset_id, request.quote_asset_id)?.place_update_order(
-                    &sender,
-                    &request
-                ) {
+                match self
+                    .get_orderbook(request.base_asset_id, request.quote_asset_id)?
+                    .place_update_order(&sender, &request)
+                {
                     Ok(_ordering_processing_result) => Ok(()),
                     Err(_err) => Err(GDEXError::OrderRequest),
                 }
             }
             RequestType::CancelOrder => {
                 let request: CancelOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
-                match self.get_orderbook(request.base_asset_id, request.quote_asset_id)?.place_cancel_order(
-                    &sender,
-                    &request
-                ) {
+                match self
+                    .get_orderbook(request.base_asset_id, request.quote_asset_id)?
+                    .place_cancel_order(&sender, &request)
+                {
                     Ok(_ordering_processing_result) => Ok(()),
                     Err(_err) => Err(GDEXError::OrderRequest),
                 }
@@ -156,7 +156,6 @@ impl Controller for SpotController {
 }
 
 impl SpotController {
-    
     // HELPER FUNCTIONS
 
     pub fn get_orderbook_key(&self, base_asset_id: AssetId, quote_asset_id: AssetId) -> AssetPairKey {
@@ -225,7 +224,6 @@ pub struct OrderbookInterface {
 
 // TODO - remove all asserts from orderbook impl
 impl OrderbookInterface {
-
     // CONSTRUCTOR
 
     // TODO #4 //
@@ -247,9 +245,9 @@ impl OrderbookInterface {
             order_to_account: HashMap::new(),
         }
     }
-    
+
     // METRIC FUNCTIONS
-    
+
     pub fn get_orderbook_depth(&self) -> OrderbookDepth {
         self.orderbook.get_orderbook_depth()
     }
@@ -285,16 +283,14 @@ impl OrderbookInterface {
     }
 
     fn get_base_asset_balance(&self, account: &AccountPubKey) -> Result<u64, GDEXError> {
-        self
-            .bank_controller
+        self.bank_controller
             .lock()
             .unwrap()
             .get_balance(account, self.base_asset_id)
     }
-    
+
     fn get_quote_asset_balance(&self, account: &AccountPubKey) -> Result<u64, GDEXError> {
-        self
-            .bank_controller
+        self.bank_controller
             .lock()
             .unwrap()
             .get_balance(account, self.quote_asset_id)
@@ -334,37 +330,37 @@ impl OrderbookInterface {
             &self.controller_account,
             account,
             self.base_asset_id,
-            quantity
+            quantity,
         )?;
         Ok(())
     }
-    
+
     fn send_quote_asset(&self, account: &AccountPubKey, quantity: u64) -> Result<(), GDEXError> {
         self.bank_controller.lock().unwrap().transfer(
             &self.controller_account,
             account,
             self.quote_asset_id,
-            quantity
+            quantity,
         )?;
         Ok(())
     }
-    
+
     fn receive_base_asset(&self, account: &AccountPubKey, quantity: u64) -> Result<(), GDEXError> {
         self.bank_controller.lock().unwrap().transfer(
             account,
             &self.controller_account,
             self.base_asset_id,
-            quantity
+            quantity,
         )?;
         Ok(())
     }
-    
+
     fn receive_quote_asset(&self, account: &AccountPubKey, quantity: u64) -> Result<(), GDEXError> {
         self.bank_controller.lock().unwrap().transfer(
             account,
             &self.controller_account,
             self.quote_asset_id,
-            quantity
+            quantity,
         )?;
         Ok(())
     }
@@ -372,11 +368,11 @@ impl OrderbookInterface {
     // USER FUNCTIONS
 
     // PLACE MARKET ORDER : TODO : UNIMPLEMENTED
-    
+
     pub fn place_market_order(
         &mut self,
         account: &AccountPubKey,
-        request: &MarketOrderRequest
+        request: &MarketOrderRequest,
     ) -> Result<(), GDEXError> {
         // create account
         if !self.accounts.contains_key(account) {
@@ -397,7 +393,7 @@ impl OrderbookInterface {
     pub fn place_limit_order(
         &mut self,
         account: &AccountPubKey,
-        request: &LimitOrderRequest
+        request: &LimitOrderRequest,
     ) -> Result<OrderProcessingResult, GDEXError> {
         // create account
         if !self.accounts.contains_key(account) {
@@ -408,7 +404,7 @@ impl OrderbookInterface {
         let side = parse_order_side(request.side)?;
 
         // check balances before placing order
-        self.validate_order_quantity(account,  side, request.quantity, request.price, 0, 0)?;
+        self.validate_order_quantity(account, side, request.quantity, request.price, 0, 0)?;
 
         // create and process limit order
         let order = create_limit_order_request(
@@ -428,13 +424,13 @@ impl OrderbookInterface {
     pub fn place_cancel_order(
         &mut self,
         account: &AccountPubKey,
-        request: &CancelOrderRequest
+        request: &CancelOrderRequest,
     ) -> Result<OrderProcessingResult, GDEXError> {
         // create account
         if !self.accounts.contains_key(account) {
             self.create_account(account)?
         }
-        
+
         // parse side
         let side = parse_order_side(request.side)?;
 
@@ -455,7 +451,7 @@ impl OrderbookInterface {
     pub fn place_update_order(
         &mut self,
         account: &AccountPubKey,
-        request: &UpdateOrderRequest
+        request: &UpdateOrderRequest,
     ) -> Result<OrderProcessingResult, GDEXError> {
         // create account
         if !self.accounts.contains_key(account) {
@@ -471,7 +467,14 @@ impl OrderbookInterface {
         let current_price = current_order.get_price();
 
         // check balances before placing order
-        self.validate_order_quantity(account, side, request.quantity - current_quantity, request.price, current_quantity, current_price)?;
+        self.validate_order_quantity(
+            account,
+            side,
+            request.quantity - current_quantity,
+            request.price,
+            current_quantity,
+            current_price,
+        )?;
 
         // create and process limit order
         let order = create_update_order_request(
@@ -660,16 +663,19 @@ pub mod spot_tests {
         bank::{BankController, CREATED_ASSET_BALANCE},
         spot::OrderbookInterface,
     };
-    
+
     // gdex
     use gdex_types::crypto::KeypairTraits;
     use gdex_types::{
-        block::BlockDigest,
         account::account_test_functions::generate_keypair_vec,
+        block::BlockDigest,
         order_book::OrderSide,
-        transaction::{create_limit_order_transaction, create_limit_order_request, create_update_order_request, create_cancel_order_request}
+        transaction::{
+            create_cancel_order_request, create_limit_order_request, create_limit_order_transaction,
+            create_update_order_request,
+        },
     };
-    
+
     // mysten
     use fastcrypto::DIGEST_LEN;
 
@@ -688,12 +694,13 @@ pub mod spot_tests {
         price: u64,
         quantity: u64,
     ) -> OrderProcessingResult {
-        let limit_order_request = create_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, side as u64, price, quantity);
+        let limit_order_request =
+            create_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, side as u64, price, quantity);
         orderbook_interface
             .place_limit_order(account, &limit_order_request)
             .unwrap()
     }
-    
+
     fn place_update_order_helper(
         orderbook_interface: &mut OrderbookInterface,
         account: &AccountPubKey,
@@ -702,12 +709,13 @@ pub mod spot_tests {
         quantity: u64,
         order_id: u64,
     ) -> OrderProcessingResult {
-        let update_order_request = create_update_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, side as u64, price, quantity, order_id);
+        let update_order_request =
+            create_update_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, side as u64, price, quantity, order_id);
         orderbook_interface
             .place_update_order(account, &update_order_request)
             .unwrap()
     }
-    
+
     fn place_cancel_order_helper(
         orderbook_interface: &mut OrderbookInterface,
         account: &AccountPubKey,
@@ -738,10 +746,16 @@ pub mod spot_tests {
             controller_account,
             Arc::clone(&bank_controller_ref),
         );
-        
+
         let bid_size = 100;
         let bid_price = 100;
-        place_limit_order_helper(&mut orderbook_interface, &account.public(), OrderSide::Bid, bid_price, bid_size);
+        place_limit_order_helper(
+            &mut orderbook_interface,
+            &account.public(),
+            OrderSide::Bid,
+            bid_price,
+            bid_size,
+        );
 
         assert_eq!(
             bank_controller_ref
@@ -801,7 +815,8 @@ pub mod spot_tests {
             bid_price,
             bid_size,
             fee,
-            recent_block_hash);
+            recent_block_hash,
+        );
         master_controller
             .spot_controller
             .lock()
@@ -850,7 +865,13 @@ pub mod spot_tests {
 
         let bid_size = 100;
         let bid_price = 100;
-        place_limit_order_helper(&mut orderbook_interface, &account.public(), OrderSide::Ask, bid_price, bid_size);
+        place_limit_order_helper(
+            &mut orderbook_interface,
+            &account.public(),
+            OrderSide::Ask,
+            bid_price,
+            bid_size,
+        );
 
         assert_eq!(
             bank_controller_ref
@@ -924,11 +945,23 @@ pub mod spot_tests {
 
         let bid_size_0: u64 = 100;
         let bid_price_0: u64 = 100;
-        place_limit_order_helper(&mut orderbook_interface, &account_0.public(), OrderSide::Bid, bid_price_0, bid_size_0);
+        place_limit_order_helper(
+            &mut orderbook_interface,
+            &account_0.public(),
+            OrderSide::Bid,
+            bid_price_0,
+            bid_size_0,
+        );
 
         let bid_size_1: u64 = 110;
         let bid_price_1: u64 = 110;
-        place_limit_order_helper(&mut orderbook_interface, &account_1.public(), OrderSide::Bid, bid_price_1, bid_size_1);
+        place_limit_order_helper(
+            &mut orderbook_interface,
+            &account_1.public(),
+            OrderSide::Bid,
+            bid_price_1,
+            bid_size_1,
+        );
 
         assert_eq!(
             bank_controller_ref
@@ -995,11 +1028,23 @@ pub mod spot_tests {
 
         let bid_size_0: u64 = 95;
         let bid_price_0: u64 = 200;
-        place_limit_order_helper(&mut orderbook_interface, &account_0.public(), OrderSide::Bid, bid_price_0, bid_size_0);
+        place_limit_order_helper(
+            &mut orderbook_interface,
+            &account_0.public(),
+            OrderSide::Bid,
+            bid_price_0,
+            bid_size_0,
+        );
 
         let bid_size_1: u64 = bid_size_0;
         let bid_price_1: u64 = bid_price_0 - 2;
-        place_limit_order_helper(&mut orderbook_interface, &account_1.public(), OrderSide::Bid, bid_price_1, bid_size_1);
+        place_limit_order_helper(
+            &mut orderbook_interface,
+            &account_1.public(),
+            OrderSide::Bid,
+            bid_price_1,
+            bid_size_1,
+        );
 
         assert_eq!(
             bank_controller_ref
@@ -1038,7 +1083,13 @@ pub mod spot_tests {
         // Place ask for account 1 at price that crosses spread entirely
         let ask_size_0: u64 = bid_size_0;
         let ask_price_0: u64 = bid_price_0 - 1;
-        place_limit_order_helper(&mut orderbook_interface, &account_1.public(), OrderSide::Ask, ask_price_0, ask_size_0);
+        place_limit_order_helper(
+            &mut orderbook_interface,
+            &account_1.public(),
+            OrderSide::Ask,
+            ask_price_0,
+            ask_size_0,
+        );
 
         // check account 0
         // received initial asset creation balance
@@ -1087,7 +1138,13 @@ pub mod spot_tests {
         // Place final order for account 1 at price that crosses spread entirely and closes it's own position
         let ask_size_1: u64 = bid_size_1;
         let ask_price_1: u64 = bid_price_1 - 1;
-        place_limit_order_helper(&mut orderbook_interface, &account_1.public(), OrderSide::Ask, ask_price_1, ask_size_1);
+        place_limit_order_helper(
+            &mut orderbook_interface,
+            &account_1.public(),
+            OrderSide::Ask,
+            ask_price_1,
+            ask_size_1,
+        );
 
         // check account 0
         // state should remain unchanged from prior
@@ -1149,7 +1206,13 @@ pub mod spot_tests {
 
         let bid_size = 100;
         let bid_price = 100;
-        let result = place_limit_order_helper(&mut orderbook_interface, &account.public(), OrderSide::Bid, bid_price, bid_size);
+        let result = place_limit_order_helper(
+            &mut orderbook_interface,
+            &account.public(),
+            OrderSide::Bid,
+            bid_price,
+            bid_size,
+        );
 
         if let Ok(Success::Accepted { order_id, side, .. }) = result[0] {
             // get order
@@ -1206,11 +1269,24 @@ pub mod spot_tests {
         const TEST_QUANTITY: u64 = 100;
         const TEST_PRICE: u64 = 100;
         const TEST_SIDE: OrderSide = OrderSide::Bid;
-        let result = place_limit_order_helper(&mut orderbook_interface, &account.public(), TEST_SIDE, TEST_PRICE, TEST_QUANTITY);
+        let result = place_limit_order_helper(
+            &mut orderbook_interface,
+            &account.public(),
+            TEST_SIDE,
+            TEST_PRICE,
+            TEST_QUANTITY,
+        );
 
         if let Ok(Success::Accepted { order_id, side, .. }) = result[0] {
             // update order
-            place_update_order_helper(&mut orderbook_interface, &account.public(), side, TEST_PRICE, TEST_QUANTITY + 1, order_id);
+            place_update_order_helper(
+                &mut orderbook_interface,
+                &account.public(),
+                side,
+                TEST_PRICE,
+                TEST_QUANTITY + 1,
+                order_id,
+            );
 
             assert!(
                 orderbook_interface
@@ -1271,15 +1347,33 @@ pub mod spot_tests {
 
         let bid_size = 100;
         let bid_price = 100;
-        place_limit_order_helper(&mut orderbook_interface, &account.public(), OrderSide::Bid, bid_price, bid_size);
+        place_limit_order_helper(
+            &mut orderbook_interface,
+            &account.public(),
+            OrderSide::Bid,
+            bid_price,
+            bid_size,
+        );
 
         const TEST_MID: u64 = 100;
         const TEST_NUM_ORDERS: u64 = 2;
 
         for i in 1..3 {
             for _ in 0..TEST_NUM_ORDERS {
-                place_limit_order_helper(&mut orderbook_interface, &account.public(), OrderSide::Bid, TEST_MID - i, u64::pow(10 - i, 2));
-                place_limit_order_helper(&mut orderbook_interface, &account.public(), OrderSide::Ask, TEST_MID + i, u64::pow(10 - i, 2));
+                place_limit_order_helper(
+                    &mut orderbook_interface,
+                    &account.public(),
+                    OrderSide::Bid,
+                    TEST_MID - i,
+                    u64::pow(10 - i, 2),
+                );
+                place_limit_order_helper(
+                    &mut orderbook_interface,
+                    &account.public(),
+                    OrderSide::Ask,
+                    TEST_MID + i,
+                    u64::pow(10 - i, 2),
+                );
             }
         }
         let _orderbook_depth = orderbook_interface.get_orderbook_depth();

@@ -426,14 +426,7 @@ pub fn create_update_order_transaction(
     fee: u64,
     recent_block_hash: CertificateDigest,
 ) -> Transaction {
-    let request = create_update_order_request(
-        base_asset_id,
-        quote_asset_id,
-        side,
-        price,
-        quantity,
-        order_id,
-    );
+    let request = create_update_order_request(base_asset_id, quote_asset_id, side, price, quantity, order_id);
 
     create_transaction(
         sender,

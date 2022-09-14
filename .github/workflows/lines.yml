@@ -17,6 +17,8 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install tokei
+      working-directory: rust-gdex
       run: cargo install tokei --features all
     - name: Run tokei
+      working-directory: rust-gdex
       run: tokei

@@ -7,6 +7,7 @@ import {useEffect, useState} from 'react';
 import config from './config.js';
 import './App.css';
 
+axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*';
 const axios_client = axios.create({baseURL: config.metrics_url})
 
 function App() {

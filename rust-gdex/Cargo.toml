@@ -1,0 +1,16 @@
+[workspace]
+members = [
+    "core",
+    "cli",
+    "engine",
+    "controller",
+    "node",
+    "suite",
+    "types",
+    "benchmark",
+    "workspace-hack"
+]
+
+[profile.flamegraph-profiling]
+inherits = "release"
+debug = true

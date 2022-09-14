@@ -1,3 +1,4 @@
+benchmark-handlers/.data/*
 .gdex/*
 .proto/*db*/
 suite/db_rocks/*
@@ -47,3 +48,5 @@ proto/*
 /.proto/.*.json
 /benchmark/.proto/
 /.proto/
+
+metrics-handlers/__pycache__/*

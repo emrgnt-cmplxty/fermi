@@ -11,12 +11,26 @@ pub mod process_tests {
     use gdex_types::{
         account::account_test_functions::generate_keypair_vec, account::AccountPubKey, asset::AssetId,
         crypto::KeypairTraits, crypto::ToFromBytes, error::GDEXError, order_book::OrderSide,
+        transaction::create_limit_order_request,
     };
     use std::sync::{Arc, Mutex};
 
     const BASE_ASSET_ID: AssetId = 0;
     const QUOTE_ASSET_ID: AssetId = 1;
     const TRANSFER_AMOUNT: u64 = 1_000_000;
+
+    fn place_limit_order_helper(
+        orderbook_interface: &mut OrderbookInterface,
+        account: &AccountPubKey,
+        side: OrderSide,
+        price: u64,
+        quantity: u64,
+    ) {
+        let limit_order_request = create_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, side as u64, price, quantity);
+        orderbook_interface
+            .place_limit_order(account, &limit_order_request)
+            .unwrap();
+    }
 
     #[test]
     fn place_bid() {
@@ -38,9 +52,7 @@ pub mod process_tests {
 
         let bid_size: u64 = 100;
         let bid_price: u64 = 100;
-        orderbook_interface
-            .place_limit_order(account.public(), OrderSide::Bid, bid_size, bid_price)
-            .unwrap();
+        place_limit_order_helper(&mut orderbook_interface, &account.public(), OrderSide::Bid, bid_price, bid_size);
 
         assert_eq!(
             bank_controller_ref
@@ -80,9 +92,7 @@ pub mod process_tests {
 
         let bid_size: u64 = 100;
         let bid_price: u64 = 100;
-        orderbook_interface
-            .place_limit_order(account.public(), OrderSide::Ask, bid_size, bid_price)
-            .unwrap();
+        place_limit_order_helper(&mut orderbook_interface, &account.public(), OrderSide::Ask, bid_price, bid_size);
 
         assert_eq!(
             bank_controller_ref
@@ -177,15 +187,11 @@ pub mod process_tests {
 
         let bid_size_0: u64 = 100;
         let bid_price_0: u64 = 100;
-        orderbook_interface
-            .place_limit_order(account_0.public(), OrderSide::Bid, bid_size_0, bid_price_0)
-            .unwrap();
+        place_limit_order_helper(&mut orderbook_interface, &account_0.public(), OrderSide::Bid, bid_price_0, bid_size_0);
 
         let bid_size_1: u64 = 110;
         let bid_price_1: u64 = 110;
-        orderbook_interface
-            .place_limit_order(account_1.public(), OrderSide::Bid, bid_size_1, bid_price_1)
-            .unwrap();
+        place_limit_order_helper(&mut orderbook_interface, &account_1.public(), OrderSide::Bid, bid_price_1, bid_size_1);
 
         assert_eq!(
             bank_controller_ref
@@ -251,15 +257,11 @@ pub mod process_tests {
 
         let bid_size_0: u64 = 95;
         let bid_price_0: u64 = 200;
-        orderbook_interface
-            .place_limit_order(account_0.public(), OrderSide::Bid, bid_size_0, bid_price_0)
-            .unwrap();
+        place_limit_order_helper(&mut orderbook_interface, &account_0.public(), OrderSide::Bid, bid_price_0, bid_size_0);
 
         let bid_size_1: u64 = bid_size_0;
         let bid_price_1: u64 = bid_price_0 - 2;
-        orderbook_interface
-            .place_limit_order(account_1.public(), OrderSide::Bid, bid_size_1, bid_price_1)
-            .unwrap();
+        place_limit_order_helper(&mut orderbook_interface, &account_1.public(), OrderSide::Bid, bid_price_1, bid_size_1);
 
         assert_eq!(
             bank_controller_ref
@@ -298,9 +300,7 @@ pub mod process_tests {
         // Place ask for account 1 at price that crosses spread entirely
         let ask_size_0: u64 = bid_size_0;
         let ask_price_0: u64 = bid_price_0 - 1;
-        orderbook_interface
-            .place_limit_order(account_1.public(), OrderSide::Ask, ask_size_0, ask_price_0)
-            .unwrap();
+        place_limit_order_helper(&mut orderbook_interface, &account_1.public(), OrderSide::Ask, ask_price_0, ask_size_0);
 
         // check account 0
         // received initial asset creation balance
@@ -348,9 +348,7 @@ pub mod process_tests {
         // Place final order for account 1 at price that crosses spread entirely and closes it's own position
         let ask_size_1: u64 = bid_size_1;
         let ask_price_1: u64 = bid_price_1 - 1;
-        orderbook_interface
-            .place_limit_order(account_1.public(), OrderSide::Ask, ask_size_1, ask_price_1)
-            .unwrap();
+        place_limit_order_helper(&mut orderbook_interface, &account_1.public(), OrderSide::Ask, ask_price_1, ask_size_1);
 
         // check account 0
         // state should remain unchanged from prior

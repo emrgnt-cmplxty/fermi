@@ -8,6 +8,7 @@ use gdex_types::{
     account::{account_test_functions::generate_keypair_vec, AccountPubKey},
     crypto::{KeypairTraits, ToFromBytes},
     order_book::{OrderProcessingResult, OrderRequest, OrderSide, Success},
+    transaction::{create_limit_order_request as txn_create_limit_order_request},
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use rocksdb::{ColumnFamilyDescriptor, DBWithThreadMode, MultiThreaded, Options, DB};
@@ -108,8 +109,9 @@ fn place_orders_engine_account(
         let quantity = rng.gen_range(1..100);
         let price = rng.gen_range(1..100);
 
+        let limit_order_request = txn_create_limit_order_request(base_asset_id, quote_asset_id, order_type as u64, price, quantity);
         let res = orderbook_controller
-            .place_limit_order(primary, order_type, quantity, price)
+            .place_limit_order(primary, &limit_order_request)
             .unwrap();
         if persist {
             persist_result(db, &res);
@@ -245,11 +247,13 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     for i in 0..1_000 {
         for _ in 0..10_000 {
             // bid
+            let bid_limit_order_request = txn_create_limit_order_request(base_asset_id, quote_asset_id, OrderSide::Bid as u64, TEST_MID - i, 1);
             orderbook_interface
-                .place_limit_order(primary.public(), OrderSide::Bid, 1, TEST_MID - i)
+                .place_limit_order(primary.public(), &bid_limit_order_request)
                 .unwrap();
+            let ask_limit_order_request = txn_create_limit_order_request(base_asset_id, quote_asset_id, OrderSide::Ask as u64, TEST_MID + i, 1);
             orderbook_interface
-                .place_limit_order(primary.public(), OrderSide::Ask, 1, TEST_MID + i)
+                .place_limit_order(primary.public(), &ask_limit_order_request)
                 .unwrap();
         }
     }

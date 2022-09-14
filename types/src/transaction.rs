@@ -252,14 +252,12 @@ pub fn create_market_order_request(
     quote_asset_id: u64,
     side: u64,
     quantity: u64,
-    local_timestamp: u64,
 ) -> MarketOrderRequest {
     MarketOrderRequest {
         base_asset_id,
         quote_asset_id,
         side,
         quantity,
-        local_timestamp,
     }
 }
 
@@ -269,7 +267,6 @@ pub fn create_limit_order_request(
     side: u64,
     price: u64,
     quantity: u64,
-    local_timestamp: u64,
 ) -> LimitOrderRequest {
     LimitOrderRequest {
         base_asset_id,
@@ -277,7 +274,6 @@ pub fn create_limit_order_request(
         side,
         price,
         quantity,
-        local_timestamp,
     }
 }
 
@@ -287,7 +283,6 @@ pub fn create_update_order_request(
     side: u64,
     price: u64,
     quantity: u64,
-    local_timestamp: u64,
     order_id: u64,
 ) -> UpdateOrderRequest {
     UpdateOrderRequest {
@@ -296,7 +291,6 @@ pub fn create_update_order_request(
         side,
         price,
         quantity,
-        local_timestamp,
         order_id,
     }
 }
@@ -305,14 +299,12 @@ pub fn create_cancel_order_request(
     base_asset_id: u64,
     quote_asset_id: u64,
     side: u64,
-    local_timestamp: u64,
     order_id: u64,
 ) -> CancelOrderRequest {
     CancelOrderRequest {
         base_asset_id,
         quote_asset_id,
         side,
-        local_timestamp,
         order_id,
     }
 }
@@ -384,11 +376,10 @@ pub fn create_market_order_transaction(
     quote_asset_id: u64,
     side: u64,
     quantity: u64,
-    local_timestamp: u64,
     fee: u64,
     recent_block_hash: CertificateDigest,
 ) -> Transaction {
-    let request = create_market_order_request(base_asset_id, quote_asset_id, side, quantity, local_timestamp);
+    let request = create_market_order_request(base_asset_id, quote_asset_id, side, quantity);
 
     create_transaction(
         sender,
@@ -408,11 +399,10 @@ pub fn create_limit_order_transaction(
     side: u64,
     price: u64,
     quantity: u64,
-    local_timestamp: u64,
     fee: u64,
     recent_block_hash: CertificateDigest,
 ) -> Transaction {
-    let request = create_limit_order_request(base_asset_id, quote_asset_id, side, price, quantity, local_timestamp);
+    let request = create_limit_order_request(base_asset_id, quote_asset_id, side, price, quantity);
 
     create_transaction(
         sender,
@@ -432,7 +422,6 @@ pub fn create_update_order_transaction(
     side: u64,
     price: u64,
     quantity: u64,
-    local_timestamp: u64,
     order_id: u64,
     fee: u64,
     recent_block_hash: CertificateDigest,
@@ -443,7 +432,6 @@ pub fn create_update_order_transaction(
         side,
         price,
         quantity,
-        local_timestamp,
         order_id,
     );
 
@@ -463,12 +451,11 @@ pub fn create_cancel_order_transaction(
     base_asset_id: u64,
     quote_asset_id: u64,
     side: u64,
-    local_timestamp: u64,
     order_id: u64,
     fee: u64,
     recent_block_hash: CertificateDigest,
 ) -> Transaction {
-    let request = create_cancel_order_request(base_asset_id, quote_asset_id, side, local_timestamp, order_id);
+    let request = create_cancel_order_request(base_asset_id, quote_asset_id, side, order_id);
 
     create_transaction(
         sender,

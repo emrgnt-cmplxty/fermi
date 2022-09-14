@@ -11,6 +11,7 @@ use gdex_types::account::{ValidatorKeyPair, ValidatorPubKeyBytes};
 use gdex_types::crypto::GDEXAddress;
 use gdex_types::crypto::KeypairTraits;
 use gdex_types::serialization::KeyPairBase64;
+use multiaddr::Multiaddr;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use std::net::SocketAddr;
@@ -33,7 +34,7 @@ pub struct NodeConfig {
     pub websocket_address: Option<SocketAddr>,
 
     #[serde(default = "default_metrics_address")]
-    pub metrics_address: SocketAddr,
+    pub metrics_address: Multiaddr,
     #[serde(default = "default_admin_interface_port")]
     pub admin_interface_port: u16,
 
@@ -56,9 +57,8 @@ fn default_key_pair() -> Arc<ValidatorKeyPair> {
     Arc::new(gdex_types::crypto::get_random_key_pair())
 }
 
-fn default_metrics_address() -> SocketAddr {
-    use std::net::{IpAddr, Ipv4Addr};
-    SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), 9184)
+fn default_metrics_address() -> Multiaddr {
+    "/ip4/127.0.0.1/tcp/9184".parse().unwrap()
 }
 
 pub fn default_admin_interface_port() -> u16 {

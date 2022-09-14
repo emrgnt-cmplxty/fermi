@@ -90,7 +90,7 @@ class InstanceManager:
                 {
                     'IpProtocol': 'tcp',
                     'FromPort': self.settings.base_port,
-                    'ToPort': self.settings.base_port + 2_000,
+                    'ToPort': self.settings.base_port + 10_000,
                     'IpRanges': [{
                         'CidrIp': '0.0.0.0/0',
                         'Description': 'Dag port',

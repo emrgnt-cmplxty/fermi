@@ -10,13 +10,13 @@ class CommandMaker:
         return (
             f"rm -r .db-* ; "
             f"rm -r *_db ; "
-            f"rm .proto/committee/* ; "
-            f"rm .proto/signatures/* ; "
-            f"rm -r .proto/db/* ; "
-            f"rm .proto/*.key ; "
-            f"rm .proto/*.blob ; "
-            f"rm .proto/*controller ; "
-            f"rm .proto/.*.json ; "
+            f"rm .data/committee/* ; "
+            f"rm .data/signatures/* ; "
+            f"rm -r .data/db/* ; "
+            f"rm .data/*.key ; "
+            f"rm .data/*.blob ; "
+            f"rm .data/*controller ; "
+            f"rm .data/.*.json ; "
             f"mkdir -p {PathMaker.results_path()} ; "
         )
 
@@ -93,7 +93,7 @@ class CommandMaker:
         return f"./gdex finalize-genesis --path {path}"
 
     @staticmethod
-    def generate_gdex_key(filename, path=".proto"):
+    def generate_gdex_key(filename, path=".data"):
         assert isinstance(path, str)
         assert isinstance(filename, str)
         return f"./gdex generate-keystore {path} {filename}"

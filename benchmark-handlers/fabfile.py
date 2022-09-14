@@ -25,11 +25,11 @@ def gdex(ctx, debug=True):
         'duration': 20,
         'mem_profiling': False,
         'flamegraph': None, # node or None
-        'genesis_dir': "../.proto/",
-        'key_dir': "../.proto/",
+        'genesis_dir': '.data/',
+        'key_dir': '.data/',
         'do_orderbook': False,
         # the database dir will be wiped before running the benchmark
-        'db_dir': "../.proto/db",
+        'db_dir': '.data/db',
         'starting_balance': 5000000000
     }
     try:
@@ -50,11 +50,11 @@ def generate(ctx):
         'duration': 20,
         'mem_profiling': False,
         'flamegraph': None, # node or None
-        'genesis_dir': "../.proto/",
-        'key_dir': "../.proto/",
+        'genesis_dir': '.data/',
+        'key_dir': '.data/',
         'do_orderbook': False,
         # the database dir will be wiped before running the benchmark
-        'db_dir': "../.proto/db",
+        'db_dir': '.data/db',
         'starting_balance': 5000000000
     }
     try:
@@ -73,7 +73,7 @@ def narwhal(ctx, debug=True):
         'tx_size': 512,
         'duration': 20,
         'mem_profiling': False,
-        'flamegraph': "primary" # primary, worker, or None
+        'flamegraph': 'primary' # primary, worker, or None
     }
     node_params = {
         'header_size': 1_000,  # bytes
@@ -96,7 +96,7 @@ def narwhal(ctx, debug=True):
         },
         'max_concurrent_requests': 500_000,
         'prometheus_metrics': {
-            "socket_addr": "/ip4/127.0.0.1/tcp/0/http"
+            'socket_addr': '/ip4/127.0.0.1/tcp/0/http'
         },
         'execution': 'advanced'
     }
@@ -188,10 +188,10 @@ def remote(ctx, debug=False):
         'rate': 50_000,
         'duration': 20,
         'mem_profiling': False,
-        'genesis_dir': "/.proto/",
-        'key_dir': "/.proto/",
+        'genesis_dir': '.data/',
+        'key_dir': '.data/',
         # the database dir will be wiped before running the benchmark
-        'db_dir': "/.proto/db",
+        'db_dir': '/.data/db',
         'do_orderbook': True,
         'starting_balance': 5000000000
     }
@@ -217,7 +217,7 @@ def remote(ctx, debug=False):
         },
         'max_concurrent_requests': 500_000,
         'prometheus_metrics': {
-            "socket_addr": "/ip4/127.0.0.1/tcp/0/http"
+            'socket_addr': '/ip4/127.0.0.1/tcp/0/http'
         },
         'execution': 'advanced'
     }
@@ -233,16 +233,16 @@ def protonet(ctx, debug=False):
     ''' Run benchmarks on AWS '''
     bench_params = {
         'faults': 0,
-        'nodes': 2,
+        'nodes': 4,
         'workers': 5,
         'tx_size': 213,
         'rate': 10_000,
         'duration': 0,
         'mem_profiling': False,
-        'genesis_dir': "/.proto/",
-        'key_dir': "/.proto/",
+        'genesis_dir': '.data/',
+        'key_dir': '.data/',
         # the database dir will be wiped before running the benchmark
-        'db_dir': "/.proto/db",
+        'db_dir': '/.data/db',
         'do_orderbook': True,
         'starting_balance': 5000000000
     }
@@ -268,7 +268,7 @@ def protonet(ctx, debug=False):
         },
         'max_concurrent_requests': 500_000,
         'prometheus_metrics': {
-            "socket_addr": "/ip4/127.0.0.1/tcp/0/http"
+            'socket_addr': '/ip4/127.0.0.1/tcp/0/http'
         },
         'execution': 'advanced'
     }

@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 from flask import Flask
 import json
 import os
@@ -23,7 +24,7 @@ if __name__ == "__main__":
         display_chunk_size = args.live_chunk_size
 
         while True:
-            df = get_metrics(gauge_metrics_to_scrape + histogram_metrics_to_scrape)
+            df = asyncio.run(get_metrics(gauge_metrics_to_scrape + histogram_metrics_to_scrape))
             clear()
 
             print("Global Consensus Metrics")

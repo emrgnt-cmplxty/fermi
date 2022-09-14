@@ -6,7 +6,7 @@ use narwhal_config::{Committee, Parameters, SharedWorkerCache};
 use narwhal_crypto::KeyPair;
 use narwhal_executor::{ExecutionState, ExecutorOutput};
 use narwhal_network::{PrimaryToWorkerNetwork, ReliableNetwork, UnreliableNetwork, WorkerToPrimaryNetwork};
-use narwhal_node::{metrics::start_prometheus_server, Node, NodeStorage};
+use narwhal_node::{Node, NodeStorage};
 use narwhal_types::{PrimaryWorkerMessage, ReconfigureNotification, WorkerPrimaryMessage};
 
 use arc_swap::ArcSwap;
@@ -91,14 +91,8 @@ impl NodeRestarter {
                 registry,
             );
 
-            // spin up prometheus server exporter
-            let prom_address = parameters.prometheus_metrics.socket_addr.clone();
-            info!("Starting Prometheus HTTP metrics endpoint at {}", prom_address);
-            let metrics = start_prometheus_server(prom_address, registry);
-
             handles.extend(primary);
             handles.extend(workers);
-            handles.push(metrics);
 
             // Wait for a committee change.
             let (new_keypair, new_committee) = match rx_reconfigure.recv().await {

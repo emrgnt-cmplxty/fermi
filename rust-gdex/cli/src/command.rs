@@ -401,7 +401,10 @@ impl GDEXCommand {
                 let file_result = fs::File::create(&keystore_path.join(&keystore_name));
                 match file_result {
                     Ok(..) => {
-                        utils::write_keypair_to_file(&keypair, &keystore_path.join(&keystore_name))?;
+                        println!("Writing keypair to file {:?}", keystore_path.join(&keystore_name));
+
+                        utils::write_keypair_to_file(&keypair, &keystore_path.join(&keystore_name))
+                            .expect("An error occurred during key generation.");
                     }
                     Err(..) => {
                         println!("A keystore already exists at {:?}.", &keystore_path);

@@ -27,7 +27,7 @@ use tokio::{
     sync::mpsc::{channel, Receiver, Sender},
     task::JoinHandle,
 };
-use tracing::{info, trace};
+use tracing::{error, info, trace};
 
 // constants
 // frequency of orderbook depth writes (rounds)
@@ -42,7 +42,7 @@ pub struct ValidatorServerHandle {
 }
 
 impl ValidatorServerHandle {
-    pub fn address(&self) -> &Multiaddr {
+    pub fn validator_address(&self) -> &Multiaddr {
         &self.local_addr
     }
 
@@ -55,17 +55,17 @@ impl ValidatorServerHandle {
     }
 }
 
-/// Can spawn a validator server handle at the internal address
+/// Can spawn a validator server handle at the internal validator_address
 /// the server handle contains a validator api (grpc) that exposes a validator service
 pub struct ValidatorServer {
-    address: Multiaddr,
+    validator_address: Multiaddr,
     state: Arc<ValidatorState>,
     consensus_adapter: Arc<ConsensusAdapter>,
 }
 
 impl ValidatorServer {
     pub fn new(
-        address: Multiaddr,
+        validator_address: Multiaddr,
         state: Arc<ValidatorState>,
         consensus_addresses: Vec<Multiaddr>,
         tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
@@ -73,7 +73,7 @@ impl ValidatorServer {
         let consensus_adapter = Arc::new(ConsensusAdapter::new(consensus_addresses, tx_reconfigure_consensus));
 
         Self {
-            address,
+            validator_address,
             state,
             consensus_adapter,
         }
@@ -81,22 +81,22 @@ impl ValidatorServer {
 
     // TODO this is kinda dumb
     pub async fn spawn(self) -> Result<ValidatorServerHandle, io::Error> {
-        let address = self.address.clone();
+        let validator_address = self.validator_address.clone();
         info!(
-            "Calling spawn to produce a the validator server with port address = {:?}",
-            address
+            "Calling spawn to produce a the validator server with port validator_address = {:?}",
+            validator_address
         );
-        self.run(address).await
+        self.run(validator_address).await
     }
 
-    pub async fn run(self, address: Multiaddr) -> Result<ValidatorServerHandle, io::Error> {
+    pub async fn run(self, validator_address: Multiaddr) -> Result<ValidatorServerHandle, io::Error> {
         let server = crate::config::server::ServerConfig::new()
             .server_builder()
             .add_service(TransactionSubmitterServer::new(ValidatorService {
                 state: self.state.clone(),
                 consensus_adapter: self.consensus_adapter.clone(),
             }))
-            .bind(&address)
+            .bind(&validator_address)
             .await
             .unwrap();
         let local_addr = server.local_addr().to_owned();
@@ -174,7 +174,6 @@ impl ValidatorService {
         let master_controller = &validator_state.master_controller;
         loop {
             while let Some(message) = rx_output.recv().await {
-                trace!("Received a finalized consensus transaction for post processing",);
                 let (result, serialized_txn) = message;
                 match result {
                     Ok((consensus_output, execution_indices, execution_result)) => {
@@ -183,10 +182,8 @@ impl ValidatorService {
                         // if next_transaction_index == 0 then the block is complete and we may write-out
                         if execution_indices.next_transaction_index == 0 {
                             // subtract round look-back from the latest round to get block number
-                            let round_number = consensus_output.certificate.header.round;
 
                             let num_txns = serialized_txns_buf.len();
-                            trace!("Processing result from {round_number} with {num_txns} transactions");
                             store.prune();
                             // write-out the new block to the validator store
                             let (block, block_info) = store
@@ -198,9 +195,11 @@ impl ValidatorService {
                                 .process_end_of_block(&store.process_block_store, block_number)
                                 .await;
                             serialized_txns_buf.clear();
+                            // This log is used in benchmarking
+                            info!("Finalized block {block_number} contains {num_txns} transactions");
                         }
                     }
-                    Err(e) => info!("{:?}", e), // TODO
+                    Err(e) => error!("{:?}", e), // TODO
                 }
                 // NOTE: Notify the user that its transaction has been processed.
             }
@@ -403,7 +402,7 @@ mod test_validator_server {
         let handle_result = spawn_test_validator_server().await;
         let handle = handle_result.unwrap();
         let mut client = TransactionSubmitterClient::new(
-            client::connect_lazy(handle.address()).expect("Failed to connect to consensus"),
+            client::connect_lazy(handle.validator_address()).expect("Failed to connect to consensus"),
         );
 
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();

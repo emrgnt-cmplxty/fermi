@@ -17,17 +17,22 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install dependencies
-      run: pip install -r benchmark/requirements.txt
+      run: pip install -r benchmark-handlers/requirements.txt
     - name: Init genesis
-      working-directory: benchmark
+      working-directory: benchmark-handlers
       run: fab generate
     - name: Run tests
+      working-directory: rust-gdex
       run: cargo test --verbose
     - name: Install clippy
+      working-directory: rust-gdex
       run: rustup component add clippy --toolchain 1.63.0-x86_64-unknown-linux-gnu
     - name: Run clippy
+      working-directory: rust-gdex
       run: cargo clippy -- --D warnings
     - name: Install fmt
+      working-directory: rust-gdex
       run: rustup component add rustfmt --toolchain 1.63.0-x86_64-unknown-linux-gnu
     - name: Run fmt
+      working-directory: rust-gdex
       run: cargo fmt --all -- --check

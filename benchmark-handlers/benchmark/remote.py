@@ -143,7 +143,7 @@ class Bench:
                 selected.append(ips)
             return selected
 
-    def _background_run(self, host, command, log_file, cwd='~/gdex-core/benchmark'):
+    def _background_run(self, host, command, log_file, cwd='~/gdex-core/benchmark-handlers'):
         name = splitext(basename(log_file))[0]
         cmd = f'(cd {cwd}) && tmux new -d -s "{name}" "{command} |& tee {log_file}"'
         c = Connection(host, user='ubuntu', connect_kwargs=self.connect)
@@ -151,6 +151,7 @@ class Bench:
         self._check_stderr(output)
 
     def _update(self, hosts, collocate):
+        print("Calling update on nodes")
         if collocate:
             ips = list(set(hosts))
         else:
@@ -165,9 +166,9 @@ class Bench:
             f'(cd {self.settings.repo_name} && git checkout -f {self.settings.branch})',
             f'(cd {self.settings.repo_name} && git pull -f)',
             'source $HOME/.cargo/env',
-            f'(cd {self.settings.repo_name} && {compile_cmd})',
+            f'(cd {self.settings.repo_name}/rust-gdex && {compile_cmd})',
             CommandMaker.alias_binaries(
-                f'./{self.settings.repo_name}/target/release/'
+                f'./{self.settings.repo_name}/rust-gdex/target/release/'
             )
         ]
         g = Group(*ips, user='ubuntu', connect_kwargs=self.connect, forward_agent=True)
@@ -182,13 +183,15 @@ class Bench:
         # Recompile the latest code.
         cmd = CommandMaker.compile(False, None, False)
         Print.info(f"About to run {cmd}...")
-        subprocess.run(cmd, check=True, cwd='../')
+        subprocess.run(cmd, check=True, cwd='../rust-gdex')
 
         # Create alias for the client and nodes binary.
-        cmd = CommandMaker.alias_binaries(PathMaker.binary_path())
+        cmd = CommandMaker.alias_binaries(PathMaker.binary_path(True))
+        Print.info(f"About to run {cmd}...")
         subprocess.run([cmd], shell=True)
 
         cmd = CommandMaker.init_gdex_genesis(self.local_proto_dir)
+        Print.info(f"About to run {cmd}...")
         subprocess.run([cmd], shell=True)
 
         # Generate configuration files.
@@ -197,9 +200,11 @@ class Bench:
 
         for filename in key_files:
             cmd = CommandMaker.generate_gdex_key(filename).split()
+            Print.info(f"About to run {cmd}...")
             subprocess.run(cmd, check=True)
             keys += [Key.from_file(self.local_proto_dir + filename)]
 
+        sleep(5)
         names = [x.name for x in keys]
 
         if bench_parameters.collocate:
@@ -244,20 +249,27 @@ class Bench:
                 ','.join(worker_to_worker),
                 ','.join(consensus_address)
             )
+            Print.info(f"About to run {cmd}...")
             subprocess.run([cmd], shell=True)
         cmd = CommandMaker.add_controllers_gdex_genesis(self.local_proto_dir)
+        Print.info(f"About to run {cmd}...")
         subprocess.run([cmd], shell=True)
         cmd = CommandMaker.build_gdex_genesis(self.local_proto_dir)
+        Print.info(f"About to run {cmd}...")
         subprocess.run([cmd], shell=True)
         for i, name in enumerate(names):
             cmd = CommandMaker.verify_and_sign_gdex_genesis(self.local_proto_dir, self.local_proto_dir + key_files[i])
+            Print.info(f"About to run {cmd}...")
             subprocess.run([cmd], shell=True)
-
+            
+        Print.info(f"About to run {cmd}...")
         cmd = CommandMaker.finalize_genesis(self.local_proto_dir)
         subprocess.run([cmd], shell=True)
 
         node_parameters.print(PathMaker.parameters_file())
         # Cleanup all nodes and upload configuration files.
+        print("self.local_proto_dir: ", self.local_proto_dir)
+        print("self.remote_proto_dir: ", self.remote_proto_dir)
         local_committee_dir = self.local_proto_dir + 'committee/'
         remote_committee_dir = self.remote_proto_dir + 'committee/'
         local_signatures_dir = self.local_proto_dir + 'signatures/'
@@ -269,8 +281,9 @@ class Bench:
             for ip in committee.ips(name):
                 print(i, name, ip)
                 c = Connection(ip, user='ubuntu', connect_kwargs=self.connect)
-                c.run(f'(cd gdex-core && {CommandMaker.cleanup()}) || true', hide=False)
-                c.run(f'(mkdir {remote_committee_dir}) || true')
+                print("cleanup cmd = ", CommandMaker.cleanup())
+                c.run(f'(cd gdex-core/benchmark-handlers && {CommandMaker.cleanup()}) || true', hide=False)
+                c.run(f'(mkdir -p {remote_committee_dir}) || true')
                 c.run(f'(mkdir {remote_signatures_dir}) || true')
                 c.put(self.local_proto_dir + "genesis.blob", self.remote_proto_dir)
                 c.put(self.local_proto_dir + PathMaker.key_file(i), self.remote_proto_dir)
@@ -390,7 +403,7 @@ class Bench:
         self.node_parameters = NodeParameters(node_parameters_dict)
         self.debug = debug
         self.local_proto_dir = os.getcwd() + self.bench_parameters.key_dir
-        self.remote_proto_dir = self.settings.repo_name + self.bench_parameters.key_dir
+        self.remote_proto_dir = self.settings.repo_name + "/benchmark-handlers/" + self.bench_parameters.key_dir
 
         # Select which hosts to use.
         selected_hosts = self._select_hosts(self.bench_parameters)
@@ -400,6 +413,7 @@ class Bench:
 
         # Update nodes.
         try:
+            print("Updating nodes...")
             self._update(selected_hosts, self.bench_parameters.collocate)
         except (GroupException, ExecutionError) as e:
             e = FabricError(e) if isinstance(e, GroupException) else e

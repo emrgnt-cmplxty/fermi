@@ -2,9 +2,6 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/mysten-infra/blob/main/crates/mysten-network/src/metrics.rs, commit #0f0f01b87f2c8ebbfdbab575070d4c5abfbaa7f8
-use axum::{extract::Extension, http::StatusCode, routing::get, Router};
-use prometheus::{Registry, TextEncoder};
-use std::net::SocketAddr;
 use std::time::Duration;
 use tonic::codegen::http::header::HeaderName;
 use tonic::codegen::http::{HeaderValue, Request, Response};
@@ -12,8 +9,6 @@ use tonic::{Code, Status};
 use tower_http::classify::GrpcFailureClass;
 use tower_http::trace::{OnFailure, OnRequest, OnResponse};
 use tracing::Span;
-
-const METRICS_ROUTE: &str = "/metrics";
 
 pub(crate) static GRPC_ENDPOINT_PATH_HEADER: HeaderName = HeaderName::from_static("grpc-path-req");
 
@@ -83,29 +78,4 @@ impl<M: MetricsCallbackProvider> OnFailure<GrpcFailureClass> for MetricsHandler<
     fn on_failure(&mut self, _failure_classification: GrpcFailureClass, _latency: Duration, _span: &Span) {
         // just do nothing for now so we avoid printing unnecessary logs
     }
-}
-
-async fn metrics(Extension(registry): Extension<Registry>) -> (StatusCode, String) {
-    let metrics_families = registry.gather();
-    match TextEncoder.encode_to_string(&metrics_families) {
-        Ok(metrics) => (StatusCode::OK, metrics),
-        Err(error) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("unable to encode metrics: {error}"),
-        ),
-    }
-}
-
-pub fn start_prometheus_server(addr: SocketAddr) -> Registry {
-    let registry = Registry::new();
-
-    let app = Router::new()
-        .route(METRICS_ROUTE, get(metrics))
-        .layer(Extension(registry.clone()));
-
-    tokio::spawn(async move {
-        axum::Server::bind(&addr).serve(app.into_make_service()).await.unwrap();
-    });
-
-    registry
 }

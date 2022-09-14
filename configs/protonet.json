@@ -1,0 +1,153 @@
+{
+    "authorities": {
+        "EYgoaAcYjEd9m1HMV1WIihms1p0d+1FQvDJFLigJg/A=": {
+            "metrics_address": "/ip4/35.91.91.105/tcp/3059/http",
+            "network_address": "/ip4/35.91.91.105/tcp/3057/http",
+            "primary": {
+                "primary_to_primary": "/ip4/35.91.91.105/tcp/3040/http",
+                "worker_to_primary": "/ip4/35.91.91.105/tcp/3041/http"
+            },
+            "relayer_address": "/ip4/35.91.91.105/tcp/3058/http",
+            "stake": 1,
+            "workers": {
+                "0": {
+                    "primary_to_worker": "/ip4/35.91.91.105/tcp/3042/http",
+                    "transactions": "/ip4/35.91.91.105/tcp/3043/http",
+                    "worker_to_worker": "/ip4/35.91.91.105/tcp/3044/http"
+                },
+                "1": {
+                    "primary_to_worker": "/ip4/35.91.91.105/tcp/3045/http",
+                    "transactions": "/ip4/35.91.91.105/tcp/3046/http",
+                    "worker_to_worker": "/ip4/35.91.91.105/tcp/3047/http"
+                },
+                "2": {
+                    "primary_to_worker": "/ip4/35.91.91.105/tcp/3048/http",
+                    "transactions": "/ip4/35.91.91.105/tcp/3049/http",
+                    "worker_to_worker": "/ip4/35.91.91.105/tcp/3050/http"
+                },
+                "3": {
+                    "primary_to_worker": "/ip4/35.91.91.105/tcp/3051/http",
+                    "transactions": "/ip4/35.91.91.105/tcp/3052/http",
+                    "worker_to_worker": "/ip4/35.91.91.105/tcp/3053/http"
+                },
+                "4": {
+                    "primary_to_worker": "/ip4/35.91.91.105/tcp/3054/http",
+                    "transactions": "/ip4/35.91.91.105/tcp/3055/http",
+                    "worker_to_worker": "/ip4/35.91.91.105/tcp/3056/http"
+                }
+            }
+        },
+        "PG7o3XLj/fTsWRF3jhtjDBfNi7KicC0HhvIoNMGP1F4=": {
+            "metrics_address": "/ip4/35.89.154.167/tcp/3019/http",
+            "network_address": "/ip4/35.89.154.167/tcp/3017/http",
+            "primary": {
+                "primary_to_primary": "/ip4/35.89.154.167/tcp/3000/http",
+                "worker_to_primary": "/ip4/35.89.154.167/tcp/3001/http"
+            },
+            "relayer_address": "/ip4/35.89.154.167/tcp/3018/http",
+            "stake": 1,
+            "workers": {
+                "0": {
+                    "primary_to_worker": "/ip4/35.89.154.167/tcp/3002/http",
+                    "transactions": "/ip4/35.89.154.167/tcp/3003/http",
+                    "worker_to_worker": "/ip4/35.89.154.167/tcp/3004/http"
+                },
+                "1": {
+                    "primary_to_worker": "/ip4/35.89.154.167/tcp/3005/http",
+                    "transactions": "/ip4/35.89.154.167/tcp/3006/http",
+                    "worker_to_worker": "/ip4/35.89.154.167/tcp/3007/http"
+                },
+                "2": {
+                    "primary_to_worker": "/ip4/35.89.154.167/tcp/3008/http",
+                    "transactions": "/ip4/35.89.154.167/tcp/3009/http",
+                    "worker_to_worker": "/ip4/35.89.154.167/tcp/3010/http"
+                },
+                "3": {
+                    "primary_to_worker": "/ip4/35.89.154.167/tcp/3011/http",
+                    "transactions": "/ip4/35.89.154.167/tcp/3012/http",
+                    "worker_to_worker": "/ip4/35.89.154.167/tcp/3013/http"
+                },
+                "4": {
+                    "primary_to_worker": "/ip4/35.89.154.167/tcp/3014/http",
+                    "transactions": "/ip4/35.89.154.167/tcp/3015/http",
+                    "worker_to_worker": "/ip4/35.89.154.167/tcp/3016/http"
+                }
+            }
+        },
+        "WNHbZ2Tkr9735ytK5nuR3+kyHwg8LMqGojF5u2z7g3I=": {
+            "metrics_address": "/ip4/18.217.145.216/tcp/3039/http",
+            "network_address": "/ip4/18.217.145.216/tcp/3037/http",
+            "primary": {
+                "primary_to_primary": "/ip4/18.217.145.216/tcp/3020/http",
+                "worker_to_primary": "/ip4/18.217.145.216/tcp/3021/http"
+            },
+            "relayer_address": "/ip4/18.217.145.216/tcp/3038/http",
+            "stake": 1,
+            "workers": {
+                "0": {
+                    "primary_to_worker": "/ip4/18.217.145.216/tcp/3022/http",
+                    "transactions": "/ip4/18.217.145.216/tcp/3023/http",
+                    "worker_to_worker": "/ip4/18.217.145.216/tcp/3024/http"
+                },
+                "1": {
+                    "primary_to_worker": "/ip4/18.217.145.216/tcp/3025/http",
+                    "transactions": "/ip4/18.217.145.216/tcp/3026/http",
+                    "worker_to_worker": "/ip4/18.217.145.216/tcp/3027/http"
+                },
+                "2": {
+                    "primary_to_worker": "/ip4/18.217.145.216/tcp/3028/http",
+                    "transactions": "/ip4/18.217.145.216/tcp/3029/http",
+                    "worker_to_worker": "/ip4/18.217.145.216/tcp/3030/http"
+                },
+                "3": {
+                    "primary_to_worker": "/ip4/18.217.145.216/tcp/3031/http",
+                    "transactions": "/ip4/18.217.145.216/tcp/3032/http",
+                    "worker_to_worker": "/ip4/18.217.145.216/tcp/3033/http"
+                },
+                "4": {
+                    "primary_to_worker": "/ip4/18.217.145.216/tcp/3034/http",
+                    "transactions": "/ip4/18.217.145.216/tcp/3035/http",
+                    "worker_to_worker": "/ip4/18.217.145.216/tcp/3036/http"
+                }
+            }
+        },
+        "WfM2Q+D5w4ZpjD1mwF+Ap7a8JG2oHcOX1SMddht+kk0=": {
+            "metrics_address": "/ip4/3.142.77.41/tcp/3079/http",
+            "network_address": "/ip4/3.142.77.41/tcp/3077/http",
+            "primary": {
+                "primary_to_primary": "/ip4/3.142.77.41/tcp/3060/http",
+                "worker_to_primary": "/ip4/3.142.77.41/tcp/3061/http"
+            },
+            "relayer_address": "/ip4/3.142.77.41/tcp/3078/http",
+            "stake": 1,
+            "workers": {
+                "0": {
+                    "primary_to_worker": "/ip4/3.142.77.41/tcp/3062/http",
+                    "transactions": "/ip4/3.142.77.41/tcp/3063/http",
+                    "worker_to_worker": "/ip4/3.142.77.41/tcp/3064/http"
+                },
+                "1": {
+                    "primary_to_worker": "/ip4/3.142.77.41/tcp/3065/http",
+                    "transactions": "/ip4/3.142.77.41/tcp/3066/http",
+                    "worker_to_worker": "/ip4/3.142.77.41/tcp/3067/http"
+                },
+                "2": {
+                    "primary_to_worker": "/ip4/3.142.77.41/tcp/3068/http",
+                    "transactions": "/ip4/3.142.77.41/tcp/3069/http",
+                    "worker_to_worker": "/ip4/3.142.77.41/tcp/3070/http"
+                },
+                "3": {
+                    "primary_to_worker": "/ip4/3.142.77.41/tcp/3071/http",
+                    "transactions": "/ip4/3.142.77.41/tcp/3072/http",
+                    "worker_to_worker": "/ip4/3.142.77.41/tcp/3073/http"
+                },
+                "4": {
+                    "primary_to_worker": "/ip4/3.142.77.41/tcp/3074/http",
+                    "transactions": "/ip4/3.142.77.41/tcp/3075/http",
+                    "worker_to_worker": "/ip4/3.142.77.41/tcp/3076/http"
+                }
+            }
+        }
+    },
+    "epoch": 0
+}

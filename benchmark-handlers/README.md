@@ -161,7 +161,7 @@ $ ssh-add /absolute/key/path
 
 
 ### Step 3. Configure the testbed
-The file [settings.json](https://github.com/mystenlabs/narwhal/blob/main/benchmark/settings.json) (located in [narwhal/benchmarks](https://github.com/mystenlabs/narwhal/blob/main/benchmark)) contains all the configuration parameters of the testbed to deploy. Its content looks as follows:
+The file [settings_example.json](https://github.com/mystenlabs/narwhal/blob/main/benchmark/settings.json) (located in [narwhal/benchmarks](https://github.com/mystenlabs/narwhal/blob/main/benchmark)) contains an example of all the configuration parameters of the testbed to deploy. To use, modify it to your use case and copy into settings.json:
 ```json
 {
     "key": {

@@ -6,13 +6,14 @@
 # sudo ufw status
 # be sure to enable the port in the amazon security group
 
+import asyncio
 from flask import Flask, send_from_directory
 from flask_restful import Api, Resource, reqparse
 from flask_cors import CORS # comment this on deployment, CORS allows us to avoid errors on local webserver
 from utils import *
 
 app = Flask(__name__)
-CORS(app) # comment this on deployment, CORS allows us to avoid errors on local webserver
+CORS(app)
 api = Api(app)
 
 metrics_thresholds_file = open("metrics_thresholds.json")
@@ -20,12 +21,12 @@ metrics_thresholds = json.load(metrics_thresholds_file)
 gauge_metrics_to_scrape = list(metrics_thresholds["gauges"].keys())
 histogram_metrics_to_scrape = list(metrics_thresholds["histograms"].keys())
 
-@app.route("/", defaults={'path':''})
+@app.route("/")
 def serve(path):
     return send_from_directory(app.static_folder,'index.html')
 
 class MetricsApiHandler(Resource):
   def get(self):
-    return get_metrics(gauge_metrics_to_scrape + histogram_metrics_to_scrape).to_json()
+    return asyncio.run(get_metrics(gauge_metrics_to_scrape + histogram_metrics_to_scrape)).to_json()
 
 api.add_resource(MetricsApiHandler, '/metrics')

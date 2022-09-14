@@ -42,33 +42,37 @@ class GDEXBench:
 
         # Cleanup all files.
         cmd = f'{CommandMaker.clean_logs()} ;'
+        Print.info(f"Running {cmd}")
         subprocess.run([cmd], shell=True)
         cmd = CommandMaker.cleanup()
-        subprocess.run([cmd], shell=True, cwd=PathMaker.gdex_build_path())
+        Print.info(f"Running {cmd}")
+        subprocess.run([cmd], shell=True)
         sleep(0.5)  # Removing the store may take time.
         # Recompile the latest code.
         cmd = CommandMaker.compile(mem_profiling=bench_parameters.mem_profile, flamegraph=bench_parameters.flamegraph, benchmark=benchmark, release=release)
-        Print.info(f"About to run {cmd}...")
+        Print.info(f"Running {cmd}")
         subprocess.run(cmd, check=True, cwd=PathMaker.gdex_build_path())
         sleep(0.5)  # Removing the store may take time.
 
         # Create alias for the client and nodes binary.
         cmd = CommandMaker.alias_binaries(PathMaker.binary_path(release))
-        print(cmd)
+        Print.info(f"Running {cmd}")
         subprocess.run([cmd], shell=True)
 
         cmd = CommandMaker.init_gdex_genesis(os.path.abspath(bench_parameters.key_dir))
+        Print.info(f"Running {cmd}...")
         subprocess.run([cmd], shell=True)
         # Generate configuration files.
         keys = []
         key_files = [PathMaker.key_file(i) for i in range(bench_parameters.nodes[0])]
 
         for filename in key_files:
-            sleep(2)
             cmd = CommandMaker.generate_gdex_key(filename, os.path.abspath(bench_parameters.key_dir)).split()
+            Print.info(f"Running {cmd}...")
             subprocess.run(cmd, check=True)
             keys += [Key.from_file(os.path.abspath(bench_parameters.key_dir + filename))]
 
+        sleep(5)
         names = [x.name for x in keys]
 
         workers = bench_parameters.workers
@@ -102,18 +106,23 @@ class GDEXBench:
                 ','.join(worker_to_worker),
                 ','.join(consensus_address)
             )
-            print(cmd)
+            Print.info(f"Running {cmd}")
             subprocess.run([cmd], shell=True)
 
         cmd = CommandMaker.add_controllers_gdex_genesis(os.path.abspath(bench_parameters.key_dir))
+        Print.info(f"Running {cmd}")
         subprocess.run([cmd], shell=True)
         cmd = CommandMaker.build_gdex_genesis(os.path.abspath(bench_parameters.key_dir))
+        Print.info(f"Running {cmd}")
         subprocess.run([cmd], shell=True)
 
-        for i, name in enumerate(committee.json['authorities'].keys())  :
+        for i, name in enumerate(committee.json['authorities'].keys()):
             cmd = CommandMaker.verify_and_sign_gdex_genesis(os.path.abspath(bench_parameters.key_dir), os.path.abspath(bench_parameters.key_dir + key_files[i]))
+            Print.info(f"Running {cmd}")
             subprocess.run([cmd], shell=True)
+        Print.info(f"Running {cmd}")
         cmd = CommandMaker.finalize_genesis(os.path.abspath(bench_parameters.key_dir))
+        Print.info(f"Running {cmd}")
         subprocess.run([cmd], shell=True)
         return committee, bench_parameters
 

@@ -103,8 +103,8 @@ class Protonet(Bench):
         self.bench_parameters = GDEXBenchParameters(bench_parameters_dict)
         self.node_parameters = NodeParameters(node_parameters_dict)
         self.debug = debug
-        self.local_proto_dir = os.getcwd() + self.bench_parameters.key_dir
-        self.remote_proto_dir = self.settings.repo_name + self.bench_parameters.key_dir
+        self.local_proto_dir = os.getcwd() + "/" + self.bench_parameters.key_dir
+        self.remote_proto_dir = self.settings.repo_name + "/benchmark-handlers/" + self.bench_parameters.key_dir
 
         # Select which hosts to use.
         selected_hosts = self._select_hosts(self.bench_parameters)

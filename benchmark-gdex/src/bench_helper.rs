@@ -129,13 +129,14 @@ impl BenchHelper {
             .await;
 
         match response {
-            Ok(relayer_block_response) => {
-                match relayer_block_response.into_inner().block_info {
-                    Some(block_info) => return bincode::deserialize(block_info.digest.as_ref()).unwrap(),
-                    None => warn!("Failed to get latest block digest, returning default. Empty result")
-                }
+            Ok(relayer_block_response) => match relayer_block_response.into_inner().block_info {
+                Some(block_info) => return bincode::deserialize(block_info.digest.as_ref()).unwrap(),
+                None => warn!("Failed to get latest block digest, returning default. Empty result"),
             },
-            Err(status) => warn!("Failed to get latest block digest, returning default. Bad status {:?}", status),
+            Err(status) => warn!(
+                "Failed to get latest block digest, returning default. Bad status {:?}",
+                status
+            ),
         }
         BlockDigest::new([0; 32])
     }

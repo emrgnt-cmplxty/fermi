@@ -31,14 +31,14 @@ class ExecutionError(Exception):
 
 
 class Bench:
-    def __init__(self, ctx, bench_parameters, node_parameters, debug=False):
+    def __init__(self, ctx):#, bench_parameters, node_parameters, debug=False):
         self.manager = InstanceManager.make()
         self.settings = self.manager.settings
-        self.bench_parameters = GDEXBenchParameters(bench_parameters)
-        self.node_parameters = NodeParameters(node_parameters)
-        self.debug = debug
-        self.local_proto_dir = os.getcwd() + self.bench_parameters.key_dir
-        self.remote_proto_dir = self.settings.repo_name + self.bench_parameters.key_dir
+        # self.bench_parameters = GDEXBenchParameters(bench_parameters)
+        # self.node_parameters = NodeParameters(node_parameters)
+        # self.debug = debug
+        # self.local_proto_dir = os.getcwd() + self.bench_parameters.key_dir
+        # self.remote_proto_dir = self.settings.repo_name + self.bench_parameters.key_dir
         try:
             ctx.connect_kwargs.pkey = RSAKey.from_private_key_file(
                 self.manager.settings.key_path
@@ -199,7 +199,7 @@ class Bench:
             cmd = CommandMaker.generate_gdex_key(filename).split()
             subprocess.run(cmd, check=True)
             keys += [Key.from_file(self.local_proto_dir + filename)]
-        sleep(2)
+
         names = [x.name for x in keys]
 
         if bench_parameters.collocate:
@@ -383,8 +383,14 @@ class Bench:
         Print.info('Parsing logs and computing performance...')
         return LogParser.process(PathMaker.logs_path(), faults=faults)
 
-    def run(self):
+    def run(self, bench_parameters_dict, node_parameters_dict, debug):
         Print.heading('Starting remote benchmark')
+
+        self.bench_parameters = GDEXBenchParameters(bench_parameters_dict)
+        self.node_parameters = NodeParameters(node_parameters_dict)
+        self.debug = debug
+        self.local_proto_dir = os.getcwd() + self.bench_parameters.key_dir
+        self.remote_proto_dir = self.settings.repo_name + self.bench_parameters.key_dir
 
         # Select which hosts to use.
         selected_hosts = self._select_hosts(self.bench_parameters)

@@ -25,7 +25,7 @@ class CommandMaker:
         return f"rm -r {PathMaker.logs_path()} ; mkdir -p {PathMaker.logs_path()}"
 
     @staticmethod
-    def compile(mem_profiling, flamegraph, benchmark=True):
+    def compile(mem_profiling, flamegraph, benchmark=True, release=True):
         if mem_profiling:
             params = [
                 "--profile",
@@ -37,8 +37,10 @@ class CommandMaker:
             params = ["--profile", "flamegraph-profiling", "--features", "benchmark"]
         elif benchmark:
             params = ["--release", "--features", "benchmark"]
-        else:
+        elif release:
             params = ["--release"]
+        else:
+            params = []
         return ["cargo", "build"] + params
 
     @staticmethod

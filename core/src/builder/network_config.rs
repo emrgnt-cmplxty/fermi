@@ -157,7 +157,7 @@ impl NetworkConfigBuilder {
                     key_pair: Arc::new(validator.key_pair),
                     consensus_db_path,
                     gdex_db_path,
-                    metrics_address: utils::available_local_socket_address(),
+                    metrics_address: utils::new_network_address(),
                     admin_interface_port: utils::get_available_port(),
                     json_rpc_address: utils::available_local_socket_address(),
                     websocket_address: None,

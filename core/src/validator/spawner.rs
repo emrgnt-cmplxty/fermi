@@ -4,11 +4,9 @@
 use crate::{
     config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, GDEX_DB_NAME},
     genesis_ceremony::GENESIS_FILENAME,
-    metrics::start_prometheus_server,
-    multiaddr::to_socket_addr,
     validator::{
-        genesis_state::ValidatorGenesisState, metrics::ValidatorMetrics, server::ValidatorServer,
-        server::ValidatorService, state::ValidatorState,
+        consensus_adapter::ConsensusAdapter, genesis_state::ValidatorGenesisState, metrics::ValidatorMetrics,
+        server::ValidatorServer, server::ValidatorService, state::ValidatorState,
     },
 };
 
@@ -18,6 +16,7 @@ use gdex_types::{node::ValidatorInfo, utils};
 // external
 use futures::future::join_all;
 use multiaddr::Multiaddr;
+use prometheus::Registry;
 use std::{path::PathBuf, sync::Arc};
 use tokio::{
     sync::mpsc::{Receiver, Sender},
@@ -28,8 +27,7 @@ use tracing::info;
 // mysten
 use narwhal_config::{Committee as ConsensusCommittee, Parameters as ConsensusParameters};
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
-
-use super::consensus_adapter::ConsensusAdapter;
+use narwhal_node::metrics::start_prometheus_server;
 
 // INTERFACE
 
@@ -205,7 +203,7 @@ impl ValidatorSpawner {
             key_pair,
             consensus_db_path,
             gdex_db_path: gdex_db_path.clone(),
-            metrics_address: to_socket_addr(&self.metrics_address).unwrap(),
+            metrics_address: self.metrics_address.clone(),
             admin_interface_port: utils::get_available_port(),
             json_rpc_address: utils::available_local_socket_address(),
             websocket_address: Some(utils::available_local_socket_address()),
@@ -216,7 +214,11 @@ impl ValidatorSpawner {
             genesis: Genesis::new(self.genesis_state.clone()),
         };
 
-        let prometheus_registry = start_prometheus_server(node_config.metrics_address);
+        let prom_address = node_config.metrics_address.clone();
+        let prometheus_registry = Registry::new();
+        println!("Starting Prometheus HTTP metrics endpoint at {}", prom_address);
+        let prometheus_server_handle = start_prometheus_server(prom_address, &prometheus_registry);
+
         let metrics = Arc::new(ValidatorMetrics::new(&prometheus_registry));
         let validator_state = Arc::new(ValidatorState::new(
             pubilc_key,
@@ -227,16 +229,17 @@ impl ValidatorSpawner {
         ));
 
         // spawn the validator service, e.g. Narwhal consensus
-        self.service_handles = Some(
-            ValidatorService::spawn_narwhal(
-                &node_config,
-                Arc::clone(&validator_state),
-                &prometheus_registry,
-                rx_reconfigure_consensus,
-            )
-            .await
-            .unwrap(),
-        );
+        let mut handles = ValidatorService::spawn_narwhal(
+            &node_config,
+            Arc::clone(&validator_state),
+            &prometheus_registry,
+            rx_reconfigure_consensus,
+        )
+        .await
+        .unwrap();
+        handles.push(prometheus_server_handle);
+
+        self.service_handles = Some(handles);
         self.set_validator_state(validator_state);
     }
 

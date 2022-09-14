@@ -46,7 +46,9 @@ class LogParser:
         except (ValueError, IndexError, AttributeError) as e:
             exception(e)
             raise ParseError(f'Failed to parse nodes\' logs: {e}')
-        proposals, commits, self.configs = zip(*results)
+        proposals, commits, self.configs, counts = zip(*results)
+
+        self.counts = self._merge_results([x.items() for x in counts])
         self.proposals = self._merge_results([x.items() for x in proposals])
         self.commits = self._merge_results([x.items() for x in commits])
 
@@ -99,8 +101,8 @@ class LogParser:
 
     def _parse_primaries(self, log):
         if search(r'(?:panicked)', log) is not None:
-            print('search = ', search(r'(?:panicked)', log))
             raise ParseError('Primary(s) panicked')
+
         tmp = findall(r'(.*?) .* Created B\d+\([^ ]+\) -> ([^ ]+=)', log)
         tmp = [(d, self._to_posix(t)) for t, d in tmp]
         proposals = self._merge_results([tmp])
@@ -108,6 +110,10 @@ class LogParser:
         tmp = findall(r'(.*?) .* Committed B\d+\([^ ]+\) -> ([^ ]+=)', log)
         tmp = [(d, self._to_posix(t)) for t, d in tmp]
         commits = self._merge_results([tmp])
+
+        tmp = findall(r'(.*?) .* Finalized block (\d+) contains (\d+) transactions', log)
+        tmp = [(int(b), int(c)) for t, b, c in tmp]
+        counts = self._merge_results([tmp])
 
         configs = {
             'header_size': int(
@@ -136,7 +142,7 @@ class LogParser:
             )
         }
 
-        return proposals, commits, configs#, ip
+        return proposals, commits, configs, counts#, ip
 
     def _parse_workers(self, log):
         if search(r'(?:panic)', log) is not None:
@@ -161,7 +167,7 @@ class LogParser:
         duration = end - start
         bytes = sum(self.sizes.values())
         bps = bytes / duration
-        tps = bps / self.size[0]
+        tps = sum(self.counts.values()) / duration
         return tps, bps, duration
 
     def _consensus_latency(self):
@@ -175,7 +181,7 @@ class LogParser:
         duration = end - start
         bytes = sum(self.sizes.values())
         bps = bytes / duration
-        tps = bps / self.size[0]
+        tps = sum(self.counts.values()) / duration
         return tps, bps, duration
 
     def _end_to_end_latency(self):

@@ -130,18 +130,24 @@ impl Client {
 
         // NOTE: This log entry is used to compute performance.
         info!("Start sending transactions");
-
+        let burst = self.rate / PRECISION;
+        let mut sent = 0;
         tokio::pin!(interval);
         loop {
             interval.as_mut().tick().await;
             let now = Instant::now();
-
-            let burst = self.rate / PRECISION;
+            info!("Transactions sent: {:?}", sent);
             self.bench_helper.burst_orderbook(burst).await;
-
-            if now.elapsed().as_millis() > BURST_DURATION as u128 {
+            sent += burst;
+            let observed_duration = now.elapsed().as_millis();
+            if observed_duration > BURST_DURATION as u128 {
                 // NOTE: This log entry is used to compute performance.
-                warn!("Transaction rate too high for this client");
+                warn!("Transaction rate too high for this client: {observed_duration} observed vs {BURST_DURATION} expected");
+            }
+
+            if observed_duration < BURST_DURATION as u128 {
+                // NOTE: This log entry is used to compute performance.
+                warn!("Transaction rate too low for this client: {observed_duration} observed vs {BURST_DURATION} expected");
             }
         }
     }

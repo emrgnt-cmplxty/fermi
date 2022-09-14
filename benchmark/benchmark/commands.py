@@ -25,7 +25,7 @@ class CommandMaker:
         return f"rm -r {PathMaker.logs_path()} ; mkdir -p {PathMaker.logs_path()}"
 
     @staticmethod
-    def compile(mem_profiling, flamegraph, benchmark=True):
+    def compile(mem_profiling, flamegraph, benchmark=True, release=True):
         if mem_profiling:
             params = [
                 "--profile",
@@ -37,8 +37,10 @@ class CommandMaker:
             params = ["--profile", "flamegraph-profiling", "--features", "benchmark"]
         elif benchmark:
             params = ["--release", "--features", "benchmark"]
-        else:
+        elif release:
             params = ["--release"]
+        else:
+            params = []
         return ["cargo", "build"] + params
 
     @staticmethod
@@ -122,6 +124,7 @@ class CommandMaker:
         validator_name,
         validator_address,
         relayer_address,
+        metrics_address,
         debug=False,
         flamegraph=None,
     ):
@@ -137,7 +140,7 @@ class CommandMaker:
 
         command = (
             f"{flamegraph}./gdex-node {v} run --db-dir {db_dir} --genesis-dir  {genesis_dir} "
-            f"--key-path {key_path} --validator-name {validator_name} --validator-address {validator_address} --relayer-address {relayer_address}"
+            f"--key-path {key_path} --validator-name {validator_name} --validator-address {validator_address} --relayer-address {relayer_address} --metrics-address {metrics_address}"
         )
         print("Returning execution command = ", command)
         return command

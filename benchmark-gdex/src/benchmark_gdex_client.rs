@@ -37,13 +37,13 @@ fn create_signed_transaction(
     block_digest: BlockDigest,
 ) -> SignedTransaction {
     // use a dummy batch digest for initial benchmarking
-    let gas: u64 = 1000;
+    let fee: u64 = 1000;
     let transaction = create_payment_transaction(
         kp_sender.public().clone(),
         kp_receiver.public(),
         PRIMARY_ASSET_ID,
         amount,
-        gas,
+        fee,
         block_digest,
     );
     transaction.sign(kp_sender).unwrap()
@@ -158,16 +158,14 @@ impl Client {
         info!("Start sending transactions");
         loop {
             // fetch recent block digest before starting another round of payments
-            let response = relayer_client
-                .get_latest_block_info(block_info_request.clone())
-                .await
-                .unwrap()
-                .into_inner();
+            let response = relayer_client.get_latest_block_info(block_info_request.clone()).await;
 
-            let block_digest: BlockDigest = if response.successful && response.block_info.is_some() {
-                bincode::deserialize(response.block_info.unwrap().digest.as_ref()).unwrap()
-            } else {
-                BlockDigest::new([0; 32])
+            let mut block_digest = BlockDigest::new([0; 32]);
+
+            if let Ok(relayer_block_response) = response {
+                if let Some(block_info) = relayer_block_response.into_inner().block_info {
+                    block_digest = bincode::deserialize(block_info.digest.as_ref()).unwrap()
+                }
             };
 
             interval.as_mut().tick().await;

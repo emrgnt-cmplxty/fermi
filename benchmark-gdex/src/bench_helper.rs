@@ -1,4 +1,5 @@
 use fastcrypto::traits::KeyPair;
+use gdex_types::transaction::serialize_protobuf;
 use gdex_types::{
     account::AccountKeyPair,
     block::BlockDigest,
@@ -26,13 +27,13 @@ fn create_signed_payment_transaction(
     amount: u64,
     block_digest: BlockDigest,
 ) -> SignedTransaction {
-    let gas: u64 = 1000;
+    let fee: u64 = 1000;
     let transaction = create_payment_transaction(
         kp_sender.public().clone(),
         kp_receiver.public(),
         asset_id,
         amount,
-        gas,
+        fee,
         block_digest,
     );
     transaction.sign(kp_sender).unwrap()
@@ -43,8 +44,8 @@ fn create_signed_asset_creation_transaction(
     block_digest: BlockDigest,
     dummy: u8,
 ) -> SignedTransaction {
-    let gas: u64 = 1000;
-    let transaction = create_create_asset_transaction(kp_sender.public().clone(), dummy as u64, gas, block_digest);
+    let fee: u64 = 1000;
+    let transaction = create_create_asset_transaction(kp_sender.public().clone(), dummy as u64, fee, block_digest);
     transaction.sign(kp_sender).unwrap()
 }
 
@@ -54,12 +55,12 @@ fn create_signed_orderbook_transaction(
     quote_asset_id: u64,
     block_digest: BlockDigest,
 ) -> SignedTransaction {
-    let gas: u64 = 1000;
+    let fee: u64 = 1000;
     let transaction = create_create_orderbook_transaction(
         kp_sender.public().clone(),
         base_asset_id,
         quote_asset_id,
-        gas,
+        fee,
         block_digest,
     );
     transaction.sign(kp_sender).unwrap()
@@ -75,7 +76,7 @@ fn create_signed_limit_order_transaction(
     block_digest: BlockDigest,
 ) -> SignedTransaction {
     let local_timestamp: u64 = 16000000;
-    let gas: u64 = 1000;
+    let fee: u64 = 1000;
     let transaction = create_limit_order_transaction(
         kp_sender.public().clone(),
         base_asset_id,
@@ -84,7 +85,7 @@ fn create_signed_limit_order_transaction(
         price,
         amount,
         local_timestamp,
-        gas,
+        fee,
         block_digest,
     );
     transaction.sign(kp_sender).unwrap()
@@ -127,12 +128,15 @@ impl BenchHelper {
             .get_latest_block_info(BLOCK_INFO_REQUEST.clone())
             .await;
 
-        if let Ok(relayer_block_response) = response {
-            if let Some(block_info) = relayer_block_response.into_inner().block_info {
-                bincode::deserialize(block_info.digest.as_ref()).unwrap()
-            }
+        match response {
+            Ok(relayer_block_response) => {
+                match relayer_block_response.into_inner().block_info {
+                    Some(block_info) => return bincode::deserialize(block_info.digest.as_ref()).unwrap(),
+                    None => warn!("Failed to get latest block digest, returning default. Empty result")
+                }
+            },
+            Err(status) => warn!("Failed to get latest block digest, returning default. Bad status {:?}", status),
         }
-        warn!("Failed to get latest block digest, returning default");
         BlockDigest::new([0; 32])
     }
 
@@ -150,7 +154,7 @@ impl BenchHelper {
     // PUBLIC
 
     pub async fn burst_orderbook(&mut self, burst: u64) {
-        info!("bursting client now...");
+        info!("Bursting client now...");
         let recent_block_hash = self.get_recent_block_digest().await;
 
         // prepare copies of self variables before moving into closure
@@ -167,13 +171,13 @@ impl BenchHelper {
                 (OrderSide::Ask, rand::thread_rng().gen_range(1_u64..100_u64))
             };
 
-            // cross the spread for one unit of quanitty at MATCH_FREQUENCY
+            // cross the spread for one unit of quantity at MATCH_FREQUENCY
             if x % MATCH_FREQUENCY == 0 && x > 0 {
                 price = 100;
                 amount = 1;
             }
 
-            create_signed_limit_order_transaction(
+            let signed_transaction = create_signed_limit_order_transaction(
                 &keypair_copy.copy(),
                 base_asset_id,
                 quote_asset_id,
@@ -181,7 +185,13 @@ impl BenchHelper {
                 price,
                 amount,
                 recent_block_hash,
-            )
+            );
+
+            if x == 0 {
+                let transaction_size = serialize_protobuf(&signed_transaction).len();
+                info!("Transactions size: {transaction_size} B");
+            }
+            signed_transaction
         });
 
         if let Err(e) = self
@@ -287,6 +297,7 @@ impl BenchHelper {
 
         // log the transaction size to help python client calculate throughput
         // note, any transaction type works here because all enumes have the same size
+        // note, no they don't
         let recent_block_hash = self.get_recent_block_digest().await;
 
         let signed_transaction = create_signed_asset_creation_transaction(&self.primary_keypair, recent_block_hash, 0);

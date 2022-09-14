@@ -75,7 +75,6 @@ fn create_signed_limit_order_transaction(
     amount: u64,
     block_digest: BlockDigest,
 ) -> SignedTransaction {
-    let local_timestamp: u64 = 16000000;
     let fee: u64 = 1000;
     let transaction = create_limit_order_transaction(
         kp_sender.public().clone(),
@@ -84,7 +83,6 @@ fn create_signed_limit_order_transaction(
         order_side as u64,
         price,
         amount,
-        local_timestamp,
         fee,
         block_digest,
     );

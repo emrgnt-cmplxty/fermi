@@ -10,6 +10,8 @@ use std::time::SystemTime;
 
 /* Constructors */
 
+// TODO, we need to remove timestamp, it is not useful in a consensus network
+
 /// Create request for the new market order
 pub fn create_market_order_request(
     base_asset_id: AssetId,

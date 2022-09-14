@@ -630,7 +630,6 @@ mod test_validator_state {
 
         const TEST_PRICE: u64 = 100;
         const TEST_QUANTITY: u64 = 100;
-        let local_timestamp: u64 = 16000000;
         let fee: u64 = 1000;
         let transaction = create_limit_order_transaction(
             sender_kp.public().clone(),
@@ -639,7 +638,6 @@ mod test_validator_state {
             OrderSide::Bid as u64,
             TEST_PRICE,
             TEST_QUANTITY,
-            local_timestamp,
             fee,
             recent_block_hash,
         );
@@ -657,14 +655,12 @@ mod test_validator_state {
 
         // cancel order
         const TEST_ORDER_ID: u64 = 1;
-        let local_timestamp: u64 = 16000000;
         let fee: u64 = 1000;
         let transaction = create_cancel_order_transaction(
             sender_kp.public().clone(),
             TEST_BASE_ASSET_ID,
             TEST_QUOTE_ASSET_ID,
             OrderSide::Bid as u64,
-            local_timestamp,
             TEST_ORDER_ID,
             fee,
             recent_block_hash,
@@ -737,7 +733,6 @@ mod test_validator_state {
         // create limit order transaction
         const TEST_PRICE: u64 = 100;
         const TEST_QUANTITY: u64 = 100;
-        let local_timestamp: u64 = 16000000;
         let fee: u64 = 1000;
         let transaction = create_limit_order_transaction(
             sender_kp.public().clone(),
@@ -746,7 +741,6 @@ mod test_validator_state {
             OrderSide::Bid as u64,
             TEST_PRICE,
             TEST_QUANTITY,
-            local_timestamp,
             fee,
             recent_block_hash,
         );
@@ -764,7 +758,6 @@ mod test_validator_state {
 
         // cancel order
         const TEST_ORDER_ID: u64 = 1;
-        let local_timestamp: u64 = 16000000;
         let fee: u64 = 1000;
         let transaction = create_update_order_transaction(
             sender_kp.public().clone(),
@@ -773,7 +766,6 @@ mod test_validator_state {
             OrderSide::Bid as u64,
             TEST_PRICE,
             TEST_QUANTITY,
-            local_timestamp,
             TEST_ORDER_ID,
             fee,
             recent_block_hash,

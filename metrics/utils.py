@@ -9,13 +9,16 @@ PROTONET_FILE = "../configs/protonet.json"
 
 # fetch metrics
 async def fetch_data(authority_info):
-    async with aiohttp.ClientSession() as session:
-        ip = authority_info["metrics_address"].split("/")[-4]
-        port = authority_info["metrics_address"].split("/")[-2]
-        url = "http://{}:{}/metrics".format(ip, port)
-        async with session.get(url) as resp:
-            result = await resp.text()
-    return result
+    try:
+        async with aiohttp.ClientSession() as session:
+            ip = authority_info["metrics_address"].split("/")[-4]
+            port = authority_info["metrics_address"].split("/")[-2]
+            url = "http://{}:{}/metrics".format(ip, port)
+            async with session.get(url) as resp:
+                result = await resp.text()
+        return result
+    except:
+        return None
 
 async def get_metrics(metrics_to_scrape):
     # fetch committee info from config file
@@ -32,6 +35,7 @@ async def get_metrics(metrics_to_scrape):
     for authority in authorities:
         proc_results[authority] = {}
         fetch_result = fetch_results[authority]
+        if fetch_result is None: continue
         # parse the metrics
         families = list(text_string_to_metric_families(fetch_result))
 

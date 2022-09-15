@@ -145,22 +145,18 @@ impl ValidatorMetrics {
     }
 
     pub fn get_average_tps(&self) -> f64 {
-        let mut sum = 0.0;
-        let mut count = 0.0;
-        for (_tps, block_size, latency) in self.tps_ring_buffer.lock().unwrap().iter() {
-            sum += (*block_size) as f64;
-            count += (*latency) as f64;
-        }
+        let buffer = self.tps_ring_buffer.lock().unwrap();
+        let sum: f64 = buffer.iter().map(|x| x.1 as f64).sum();
+        let count: f64 = buffer.iter().map(|x| x.2 as f64).sum();
+
         sum / count * 1_000_000.0
     }
 
     pub fn get_average_latency_in_micros(&self) -> u64 {
-        let mut sum = 0;
-        let mut count = 0;
-        for (_tps, _block_size, time_delta) in self.tps_ring_buffer.lock().unwrap().iter() {
-            sum += time_delta;
-            count += 1;
-        }
+        let buffer = self.tps_ring_buffer.lock().unwrap();
+        let sum: u64 = buffer.iter().map(|x| x.2).sum();
+        let count: u64 = buffer.iter().len().try_into().unwrap();
+
         sum / count
     }
 }

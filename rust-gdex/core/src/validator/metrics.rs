@@ -146,10 +146,9 @@ impl ValidatorMetrics {
 
     pub fn get_average_tps(&self) -> f64 {
         let buffer = self.tps_ring_buffer.lock().unwrap();
-        let sum: f64 = buffer.iter().map(|x| x.1 as f64).sum();
-        let count: f64 = buffer.iter().map(|x| x.2 as f64).sum();
+        let (sum, count) = buffer.iter().fold((0 as f64, 0 as f64),|acc, x| (acc.0 + x.1 as f64, acc.1 + x.2 as f64));
 
-        sum / count * 1_000_000.0
+        sum * 1_000_000.0 / count
     }
 
     pub fn get_average_latency_in_micros(&self) -> u64 {

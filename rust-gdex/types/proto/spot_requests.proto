@@ -14,7 +14,6 @@ message MarketOrderRequest {
     uint64 quote_asset_id = 2;
     uint64 side = 3;
     uint64 quantity = 4;
-    uint64 local_timestamp = 5;
 }
 
 message LimitOrderRequest {
@@ -23,7 +22,6 @@ message LimitOrderRequest {
     uint64 side = 3;
     uint64 price = 4;
     uint64 quantity = 5;
-    uint64 local_timestamp = 6;
 }
 
 message UpdateOrderRequest {
@@ -32,14 +30,12 @@ message UpdateOrderRequest {
     uint64 side = 3;
     uint64 price = 4;
     uint64 quantity = 5;
-    uint64 local_timestamp = 6;
-    uint64 order_id = 7;
+    uint64 order_id = 6;
 }
 
 message CancelOrderRequest {
     uint64 base_asset_id = 1;
     uint64 quote_asset_id = 2;
     uint64 side = 3;
-    uint64 local_timestamp = 4;
-    uint64 order_id = 5;
+    uint64 order_id = 4;
 }

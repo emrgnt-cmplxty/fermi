@@ -19,6 +19,7 @@ use gdex_types::{
     order_book::{
         Depth, Failed, Order, OrderProcessingResult, OrderRequest, OrderSide, OrderType, OrderbookDepth, Success,
     },
+    transaction::{CancelOrderRequest, LimitOrderRequest, MarketOrderRequest, UpdateOrderRequest},
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -583,28 +584,24 @@ impl Orderbook {
 }
 
 pub trait OrderBookWrapper {
+    fn place_market_order(&mut self, account: &AccountPubKey, request: &MarketOrderRequest) -> Result<(), GDEXError>;
+
     fn place_limit_order(
         &mut self,
-        account_pub_key: &AccountPubKey,
-        side: OrderSide,
-        quantity: u64,
-        price: u64,
+        account: &AccountPubKey,
+        request: &LimitOrderRequest,
     ) -> Result<OrderProcessingResult, GDEXError>;
 
     fn place_cancel_order(
         &mut self,
-        account_pub_key: &AccountPubKey,
-        order_id: OrderId,
-        side: OrderSide,
+        account: &AccountPubKey,
+        request: &CancelOrderRequest,
     ) -> Result<OrderProcessingResult, GDEXError>;
 
     fn place_update_order(
         &mut self,
-        account_pub_key: &AccountPubKey,
-        order_id: OrderId,
-        side: OrderSide,
-        quantity: u64,
-        price: u64,
+        account: &AccountPubKey,
+        request: &UpdateOrderRequest,
     ) -> Result<OrderProcessingResult, GDEXError>;
 
     fn insert_new_order(&mut self, order_id: OrderId, account_pub_key: AccountPubKey);
@@ -628,6 +625,7 @@ pub trait OrderBookWrapper {
         price: u64,
         quantity: u64,
     ) -> Result<(), GDEXError>;
+    
     fn update_state_on_update(
         &mut self,
         account_pub_key: &AccountPubKey,

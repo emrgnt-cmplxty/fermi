@@ -604,7 +604,7 @@ pub trait OrderBookWrapper {
         request: &UpdateOrderRequest,
     ) -> Result<OrderProcessingResult, GDEXError>;
 
-    fn insert_new_order(&mut self, order_id: OrderId, account_pub_key: AccountPubKey);
+    fn insert_new_order(&mut self, order_id: OrderId, account: AccountPubKey);
 
     fn get_pub_key_from_order_id(&self, order_id: &OrderId) -> AccountPubKey;
 
@@ -612,7 +612,7 @@ pub trait OrderBookWrapper {
 
     fn update_state_on_limit_order_creation(
         &mut self,
-        account_pub_key: &AccountPubKey,
+        account: &AccountPubKey,
         side: OrderSide,
         price: u64,
         quantity: u64,
@@ -620,15 +620,15 @@ pub trait OrderBookWrapper {
 
     fn update_state_on_fill(
         &mut self,
-        account_pub_key: &AccountPubKey,
+        account: &AccountPubKey,
         side: OrderSide,
         price: u64,
         quantity: u64,
     ) -> Result<(), GDEXError>;
-    
+
     fn update_state_on_update(
         &mut self,
-        account_pub_key: &AccountPubKey,
+        account: &AccountPubKey,
         side: OrderSide,
         previous_price: u64,
         previous_quantity: u64,
@@ -638,7 +638,7 @@ pub trait OrderBookWrapper {
 
     fn update_state_on_cancel(
         &mut self,
-        account_pub_key: &AccountPubKey,
+        account: &AccountPubKey,
         side: OrderSide,
         price: u64,
         quantity: u64,
@@ -646,7 +646,7 @@ pub trait OrderBookWrapper {
 
     fn process_order_result(
         &mut self,
-        account_pub_key: &AccountPubKey,
+        account: &AccountPubKey,
         res: OrderProcessingResult,
     ) -> Result<OrderProcessingResult, GDEXError> {
         for order in &res {
@@ -662,10 +662,10 @@ pub trait OrderBookWrapper {
                 }) => {
                     // update user's balances if it is a limit order
                     if *order_type == OrderType::Limit {
-                        self.update_state_on_limit_order_creation(account_pub_key, *side, *price, *quantity)?;
+                        self.update_state_on_limit_order_creation(account, *side, *price, *quantity)?;
                     }
                     // insert new order to map
-                    self.insert_new_order(*order_id, account_pub_key.clone());
+                    self.insert_new_order(*order_id, account.clone());
                 }
                 // subsequent orders are expected to be an PartialFill or Fill results
                 Ok(Success::PartiallyFilled {

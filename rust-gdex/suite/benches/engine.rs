@@ -1,7 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use gdex_controller::{
     bank::BankController,
-    spot::{OrderbookInterface, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
+    spot::{SpotOrderbook, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
 };
 use gdex_engine::{order_book::Orderbook, orders::create_limit_order_request};
 use gdex_types::{
@@ -86,7 +86,7 @@ fn place_orders_engine_account(
     base_asset_id: u64,
     quote_asset_id: u64,
     primary: &AccountPubKey,
-    orderbook_controller: &mut OrderbookInterface,
+    orderbook_controller: &mut SpotOrderbook,
     rng: &mut StdRng,
     db: &DBWithThreadMode<MultiThreaded>,
     persist: bool,
@@ -121,11 +121,7 @@ fn place_orders_engine_account(
     }
 }
 
-fn orderbook_depth_depths(
-    n_iter: u64,
-    orderbook_controller: &mut OrderbookInterface,
-    db: &DBWithThreadMode<MultiThreaded>,
-) {
+fn orderbook_depth_depths(n_iter: u64, orderbook_controller: &mut SpotOrderbook, db: &DBWithThreadMode<MultiThreaded>) {
     let mut i: u64 = 0;
     while i < n_iter {
         // generate the orderbook depth depth
@@ -153,7 +149,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
     let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
-    let mut orderbook_interface = OrderbookInterface::new(
+    let mut orderbook_interface = SpotOrderbook::new(
         base_asset_id,
         quote_asset_id,
         controller_account,

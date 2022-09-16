@@ -6,12 +6,14 @@
 pub mod process_tests {
     use gdex_controller::{
         bank::{BankController, CREATED_ASSET_BALANCE},
-        spot::{OrderbookInterface, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
+        spot::{SpotInterface, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
     };
+    use gdex_engine::order_book::OrderBookWrapper;
     use gdex_types::{
         account::account_test_functions::generate_keypair_vec, account::AccountPubKey, asset::AssetId,
         crypto::KeypairTraits, crypto::ToFromBytes, error::GDEXError, order_book::OrderSide,
     };
+
     use std::sync::{Arc, Mutex};
 
     const BASE_ASSET_ID: AssetId = 0;
@@ -29,7 +31,7 @@ pub mod process_tests {
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
-        let mut orderbook_interface = OrderbookInterface::new(
+        let mut orderbook_interface = SpotInterface::new(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             controller_account,
@@ -71,7 +73,7 @@ pub mod process_tests {
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
-        let mut orderbook_interface = OrderbookInterface::new(
+        let mut orderbook_interface = SpotInterface::new(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             controller_account,
@@ -113,7 +115,7 @@ pub mod process_tests {
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
-        let orderbook_interface = OrderbookInterface::new(
+        let orderbook_interface = SpotInterface::new(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             controller_account,
@@ -136,7 +138,7 @@ pub mod process_tests {
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
-        let mut orderbook_interface = OrderbookInterface::new(
+        let mut orderbook_interface = SpotInterface::new(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             controller_account,
@@ -168,7 +170,7 @@ pub mod process_tests {
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
-        let mut orderbook_interface = OrderbookInterface::new(
+        let mut orderbook_interface = SpotInterface::new(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             controller_account,
@@ -242,7 +244,7 @@ pub mod process_tests {
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
-        let mut orderbook_interface = OrderbookInterface::new(
+        let mut orderbook_interface = SpotInterface::new(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             controller_account,

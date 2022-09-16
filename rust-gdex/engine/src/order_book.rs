@@ -13,7 +13,9 @@ use super::order_queues::OrderQueue;
 use super::sequence;
 use super::validation::OrderRequestValidator;
 use gdex_types::{
+    account::AccountPubKey,
     asset::AssetId,
+    error::GDEXError,
     order_book::{
         Depth, Failed, Order, OrderProcessingResult, OrderRequest, OrderSide, OrderType, OrderbookDepth, Success,
     },
@@ -21,6 +23,8 @@ use gdex_types::{
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
+
+pub type OrderId = u64;
 
 const MIN_SEQUENCE_ID: u64 = 1;
 const MAX_SEQUENCE_ID: u64 = 1_000_000;
@@ -578,6 +582,157 @@ impl Orderbook {
     }
 }
 
+pub trait OrderBookWrapper {
+    fn place_limit_order(
+        &mut self,
+        account_pub_key: &AccountPubKey,
+        side: OrderSide,
+        quantity: u64,
+        price: u64,
+    ) -> Result<OrderProcessingResult, GDEXError>;
+
+    fn place_cancel_order(
+        &mut self,
+        account_pub_key: &AccountPubKey,
+        order_id: OrderId,
+        side: OrderSide,
+    ) -> Result<OrderProcessingResult, GDEXError>;
+
+    fn place_update_order(
+        &mut self,
+        account_pub_key: &AccountPubKey,
+        order_id: OrderId,
+        side: OrderSide,
+        quantity: u64,
+        price: u64,
+    ) -> Result<OrderProcessingResult, GDEXError>;
+
+    fn insert_new_order(&mut self, order_id: OrderId, account_pub_key: AccountPubKey);
+
+    fn get_pub_key_from_order_id(&self, order_id: &OrderId) -> AccountPubKey;
+
+    // helper functions for process_order_result
+
+    fn update_state_on_limit_order_creation(
+        &mut self,
+        account_pub_key: &AccountPubKey,
+        side: OrderSide,
+        price: u64,
+        quantity: u64,
+    ) -> Result<(), GDEXError>;
+
+    fn update_state_on_fill(
+        &mut self,
+        account_pub_key: &AccountPubKey,
+        side: OrderSide,
+        price: u64,
+        quantity: u64,
+    ) -> Result<(), GDEXError>;
+    fn update_state_on_update(
+        &mut self,
+        account_pub_key: &AccountPubKey,
+        side: OrderSide,
+        previous_price: u64,
+        previous_quantity: u64,
+        price: u64,
+        quantity: u64,
+    ) -> Result<(), GDEXError>;
+
+    fn update_state_on_cancel(
+        &mut self,
+        account_pub_key: &AccountPubKey,
+        side: OrderSide,
+        price: u64,
+        quantity: u64,
+    ) -> Result<(), GDEXError>;
+
+    fn process_order_result(
+        &mut self,
+        account_pub_key: &AccountPubKey,
+        res: OrderProcessingResult,
+    ) -> Result<OrderProcessingResult, GDEXError> {
+        for order in &res {
+            match order {
+                // first order is expected to be an Accepted result
+                Ok(Success::Accepted {
+                    order_id,
+                    side,
+                    price,
+                    quantity,
+                    order_type,
+                    ..
+                }) => {
+                    // update user's balances if it is a limit order
+                    if *order_type == OrderType::Limit {
+                        self.update_state_on_limit_order_creation(account_pub_key, *side, *price, *quantity)?;
+                    }
+                    // insert new order to map
+                    self.insert_new_order(*order_id, account_pub_key.clone());
+                }
+                // subsequent orders are expected to be an PartialFill or Fill results
+                Ok(Success::PartiallyFilled {
+                    order_id,
+                    side,
+                    price,
+                    quantity,
+                    ..
+                }) => {
+                    // update user balances
+                    let existing_pub_key = self.get_pub_key_from_order_id(order_id);
+                    self.update_state_on_fill(&existing_pub_key, *side, *price, *quantity)?;
+                }
+                Ok(Success::Filled {
+                    order_id,
+                    side,
+                    price,
+                    quantity,
+                    ..
+                }) => {
+                    // update user balances
+                    let existing_pub_key = self.get_pub_key_from_order_id(order_id);
+                    self.update_state_on_fill(&existing_pub_key, *side, *price, *quantity)?;
+                    // TODO - Uncomment remove below after diagnosing how this can cause failures
+                    // remove order from map
+                    //self.order_to_account.remove(order_id).ok_or(GDEXError::OrderRequest)?;
+                }
+                Ok(Success::Updated {
+                    order_id,
+                    side,
+                    previous_price,
+                    previous_quantity,
+                    price,
+                    quantity,
+                    ..
+                }) => {
+                    let existing_pub_key = self.get_pub_key_from_order_id(order_id);
+                    self.update_state_on_update(
+                        &existing_pub_key,
+                        *side,
+                        *previous_price,
+                        *previous_quantity,
+                        *price,
+                        *quantity,
+                    )?;
+                }
+                Ok(Success::Cancelled {
+                    order_id,
+                    side,
+                    price,
+                    quantity,
+                    ..
+                }) => {
+                    // order has been cancelled from order book, update states
+                    let existing_pub_key = self.get_pub_key_from_order_id(order_id);
+                    self.update_state_on_cancel(&existing_pub_key, *side, *price, *quantity)?;
+                }
+                Err(_failure) => {
+                    return Err(GDEXError::OrderRequest);
+                }
+            }
+        }
+        Ok(res)
+    }
+}
 #[cfg(test)]
 mod test_order_book {
 

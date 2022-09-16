@@ -18,7 +18,7 @@ use crate::master::MasterController;
 
 // gdex
 use gdex_engine::{
-    order_book::Orderbook,
+    order_book::{OrderBookWrapper, OrderId, Orderbook},
     orders::{create_cancel_order_request, create_limit_order_request, create_update_order_request},
 };
 use gdex_types::{
@@ -26,7 +26,7 @@ use gdex_types::{
     asset::{AssetId, AssetPairKey},
     crypto::ToFromBytes,
     error::GDEXError,
-    order_book::{OrderProcessingResult, OrderSide, OrderType, OrderbookDepth, Success},
+    order_book::{OrderProcessingResult, OrderSide, OrderbookDepth},
     store::ProcessBlockStore,
     transaction::{
         deserialize_protobuf, parse_order_side, parse_request_type, CancelOrderRequest, CreateOrderbookRequest,
@@ -34,18 +34,11 @@ use gdex_types::{
     },
 };
 
-// mysten
-use fastcrypto::ed25519::Ed25519PublicKey;
-
 // external
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use std::{collections::HashMap, time::SystemTime};
-
-// TYPE DEFS
-
-pub type OrderId = u64;
 
 // CONSTANTS
 
@@ -56,7 +49,7 @@ const ORDERBOOK_DEPTH_FREQUENCY: u64 = 100;
 
 /// Creates a single orderbook instance and verifies all interactions
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct OrderbookInterface {
+pub struct SpotInterface {
     base_asset_id: AssetId,
     quote_asset_id: AssetId,
     controller_account: AccountPubKey,
@@ -66,7 +59,7 @@ pub struct OrderbookInterface {
     order_to_account: HashMap<OrderId, AccountPubKey>,
 }
 // TODO - remove all asserts from orderbook impl
-impl OrderbookInterface {
+impl SpotInterface {
     // TODO #4 //
     pub fn new(
         base_asset_id: AssetId,
@@ -76,7 +69,7 @@ impl OrderbookInterface {
     ) -> Self {
         assert!(base_asset_id != quote_asset_id);
         let orderbook = Orderbook::new(base_asset_id, quote_asset_id);
-        OrderbookInterface {
+        SpotInterface {
             base_asset_id,
             quote_asset_id,
             controller_account,
@@ -85,14 +78,6 @@ impl OrderbookInterface {
             accounts: HashMap::new(),
             order_to_account: HashMap::new(),
         }
-    }
-
-    fn get_pub_key_from_order(&self, order_id: &OrderId) -> Ed25519PublicKey {
-        self.order_to_account
-            .get(order_id)
-            .ok_or(GDEXError::AccountLookup)
-            .unwrap()
-            .clone()
     }
 
     /// Create a new account in the orderbook
@@ -112,8 +97,31 @@ impl OrderbookInterface {
         Ok(account)
     }
 
+    pub fn get_orderbook_depth(&self) -> OrderbookDepth {
+        self.orderbook.get_orderbook_depth()
+    }
+
+    // TODO #2 //
+    pub fn overwrite_orderbook(&mut self, new_orderbook: Orderbook) {
+        self.orderbook = new_orderbook;
+    }
+}
+
+impl OrderBookWrapper for SpotInterface {
+    fn insert_new_order(&mut self, order_id: OrderId, account_pub_key: AccountPubKey) {
+        self.order_to_account.insert(order_id, account_pub_key);
+    }
+
+    fn get_pub_key_from_order_id(&self, order_id: &OrderId) -> AccountPubKey {
+        self.order_to_account
+            .get(order_id)
+            .ok_or(GDEXError::AccountLookup)
+            .unwrap()
+            .clone()
+    }
+
     /// Attempt to place a limit order into the orderbook
-    pub fn place_limit_order(
+    fn place_limit_order(
         &mut self,
         account_pub_key: &AccountPubKey,
         side: OrderSide,
@@ -165,7 +173,7 @@ impl OrderbookInterface {
     }
 
     /// Attempt to place a limit order into the orderbook
-    pub fn place_cancel_order(
+    fn place_cancel_order(
         &mut self,
         account_pub_key: &AccountPubKey,
         order_id: OrderId,
@@ -189,7 +197,7 @@ impl OrderbookInterface {
     }
 
     /// Attempt to place a limit order into the orderbook
-    pub fn place_update_order(
+    fn place_update_order(
         &mut self,
         account_pub_key: &AccountPubKey,
         order_id: OrderId,
@@ -246,96 +254,8 @@ impl OrderbookInterface {
         self.process_order_result(account_pub_key, res)
     }
 
-    /// Attempts to loop over and process the outputs from a placed limit order
-    fn process_order_result(
-        &mut self,
-        account_pub_key: &AccountPubKey,
-        res: OrderProcessingResult,
-    ) -> Result<OrderProcessingResult, GDEXError> {
-        for order in &res {
-            match order {
-                // first order is expected to be an Accepted result
-                Ok(Success::Accepted {
-                    order_id,
-                    side,
-                    price,
-                    quantity,
-                    order_type,
-                    ..
-                }) => {
-                    // update user's balances if it is a limit order
-                    if *order_type == OrderType::Limit {
-                        self.update_balances_on_limit_order_create(account_pub_key, *side, *price, *quantity)?;
-                    }
-                    // insert new order to map
-                    self.order_to_account.insert(*order_id, account_pub_key.clone());
-                }
-                // subsequent orders are expected to be an PartialFill or Fill results
-                Ok(Success::PartiallyFilled {
-                    order_id,
-                    side,
-                    price,
-                    quantity,
-                    ..
-                }) => {
-                    // update user balances
-                    let existing_pub_key = self.get_pub_key_from_order(order_id);
-                    self.update_balances_on_fill(&existing_pub_key, *side, *price, *quantity)?;
-                }
-                Ok(Success::Filled {
-                    order_id,
-                    side,
-                    price,
-                    quantity,
-                    ..
-                }) => {
-                    // update user balances
-                    let existing_pub_key = self.get_pub_key_from_order(order_id);
-                    self.update_balances_on_fill(&existing_pub_key, *side, *price, *quantity)?;
-                    // TODO - Uncomment remove below after diagnosing how this can cause failures
-                    // remove order from map
-                    //self.order_to_account.remove(order_id).ok_or(GDEXError::OrderRequest)?;
-                }
-                Ok(Success::Updated {
-                    order_id,
-                    side,
-                    previous_price,
-                    previous_quantity,
-                    price,
-                    quantity,
-                    ..
-                }) => {
-                    let existing_pub_key = self.get_pub_key_from_order(order_id);
-                    self.update_balances_on_update(
-                        &existing_pub_key,
-                        *side,
-                        *previous_price,
-                        *previous_quantity,
-                        *price,
-                        *quantity,
-                    )?;
-                }
-                Ok(Success::Cancelled {
-                    order_id,
-                    side,
-                    price,
-                    quantity,
-                    ..
-                }) => {
-                    // order has been cancelled from order book, update states
-                    let existing_pub_key = self.get_pub_key_from_order(order_id);
-                    self.update_balances_on_cancel(&existing_pub_key, *side, *price, *quantity)?;
-                }
-                Err(_failure) => {
-                    return Err(GDEXError::OrderRequest);
-                }
-            }
-        }
-        Ok(res)
-    }
-
     /// Processes an initialized order by modifying the associated account
-    fn update_balances_on_limit_order_create(
+    fn update_state_on_limit_order_creation(
         &mut self,
         account_pub_key: &AccountPubKey,
         side: OrderSide,
@@ -363,7 +283,7 @@ impl OrderbookInterface {
     }
 
     /// Processes a filled order by modifying the associated account
-    fn update_balances_on_fill(
+    fn update_state_on_fill(
         &mut self,
         account_pub_key: &AccountPubKey,
         side: OrderSide,
@@ -390,7 +310,7 @@ impl OrderbookInterface {
         Ok(())
     }
 
-    fn update_balances_on_update(
+    fn update_state_on_update(
         &mut self,
         account_pub_key: &AccountPubKey,
         side: OrderSide,
@@ -437,7 +357,7 @@ impl OrderbookInterface {
         Ok(())
     }
 
-    fn update_balances_on_cancel(
+    fn update_state_on_cancel(
         &mut self,
         account_pub_key: &AccountPubKey,
         side: OrderSide,
@@ -461,23 +381,13 @@ impl OrderbookInterface {
         }
         Ok(())
     }
-
-    pub fn get_orderbook_depth(&self) -> OrderbookDepth {
-        self.orderbook.get_orderbook_depth()
-    }
-
-    // TODO #2 //
-    pub fn overwrite_orderbook(&mut self, new_orderbook: Orderbook) {
-        self.orderbook = new_orderbook;
-    }
 }
-
 // INTERFACE
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpotController {
     controller_account: AccountPubKey,
-    orderbooks: HashMap<AssetPairKey, OrderbookInterface>,
+    orderbooks: HashMap<AssetPairKey, SpotInterface>,
     bank_controller: Arc<Mutex<BankController>>,
 }
 
@@ -513,14 +423,9 @@ impl Controller for SpotController {
                 self.create_orderbook(request.base_asset_id, request.quote_asset_id)
             }
             RequestType::MarketOrder => {
-                let request: MarketOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
-                dbg!(
-                    request.base_asset_id,
-                    request.quote_asset_id,
-                    request.side,
-                    request.quantity
-                );
-                Ok(())
+                let _request: MarketOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                // TODO - impelement
+                Err(GDEXError::OrderRequest)
             }
             RequestType::LimitOrder => {
                 let request: LimitOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
@@ -609,7 +514,7 @@ impl SpotController {
         if !self.check_orderbook_exists(base_asset_id, quote_asset_id) {
             self.orderbooks.insert(
                 lookup_string,
-                OrderbookInterface::new(
+                SpotInterface::new(
                     base_asset_id,
                     quote_asset_id,
                     self.controller_account.clone(),
@@ -627,7 +532,7 @@ impl SpotController {
         &mut self,
         base_asset_id: AssetId,
         quote_asset_id: AssetId,
-    ) -> Result<&mut OrderbookInterface, GDEXError> {
+    ) -> Result<&mut SpotInterface, GDEXError> {
         let lookup_string = self.get_orderbook_key(base_asset_id, quote_asset_id);
         self.orderbooks.get_mut(&lookup_string).ok_or(GDEXError::AccountLookup)
     }
@@ -700,10 +605,13 @@ pub mod spot_tests {
     use super::*;
     use crate::{
         bank::{BankController, CREATED_ASSET_BALANCE},
-        spot::OrderbookInterface,
+        spot::SpotInterface,
     };
     use gdex_types::crypto::KeypairTraits;
-    use gdex_types::{account::account_test_functions::generate_keypair_vec, order_book::OrderSide};
+    use gdex_types::{
+        account::account_test_functions::generate_keypair_vec,
+        order_book::{OrderSide, Success},
+    };
 
     const BASE_ASSET_ID: AssetId = 0;
     const QUOTE_ASSET_ID: AssetId = 1;
@@ -721,7 +629,7 @@ pub mod spot_tests {
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
-        let mut orderbook_interface = OrderbookInterface::new(
+        let mut orderbook_interface = SpotInterface::new(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             controller_account,
@@ -828,7 +736,7 @@ pub mod spot_tests {
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
-        let mut orderbook_interface = OrderbookInterface::new(
+        let mut orderbook_interface = SpotInterface::new(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             controller_account,
@@ -871,7 +779,7 @@ pub mod spot_tests {
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
-        let orderbook_interface = OrderbookInterface::new(
+        let orderbook_interface = SpotInterface::new(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             controller_account,
@@ -895,7 +803,7 @@ pub mod spot_tests {
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
-        let mut orderbook_interface = OrderbookInterface::new(
+        let mut orderbook_interface = SpotInterface::new(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             controller_account,
@@ -928,7 +836,7 @@ pub mod spot_tests {
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
-        let mut orderbook_interface = OrderbookInterface::new(
+        let mut orderbook_interface = SpotInterface::new(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             controller_account,
@@ -1003,7 +911,7 @@ pub mod spot_tests {
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
-        let mut orderbook_interface = OrderbookInterface::new(
+        let mut orderbook_interface = SpotInterface::new(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             controller_account,
@@ -1165,7 +1073,7 @@ pub mod spot_tests {
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
-        let mut orderbook_interface = OrderbookInterface::new(
+        let mut orderbook_interface = SpotInterface::new(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             controller_account,
@@ -1225,7 +1133,7 @@ pub mod spot_tests {
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
-        let mut orderbook_interface = OrderbookInterface::new(
+        let mut orderbook_interface = SpotInterface::new(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             controller_account,
@@ -1295,7 +1203,7 @@ pub mod spot_tests {
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
-        let mut orderbook_interface = OrderbookInterface::new(
+        let mut orderbook_interface = SpotInterface::new(
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             controller_account,

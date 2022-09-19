@@ -122,4 +122,16 @@ impl MasterController {
         StakeController::process_end_of_block(self.stake_controller.clone(), process_block_store, block_number).await;
         SpotController::process_end_of_block(self.spot_controller.clone(), process_block_store, block_number).await;
     }
+
+    // TODO: organize store
+    pub fn create_catchup_state(&self, _catchup_store: &ProcessBlockStore, block_number: u64) {
+        let _state = vec![
+            ConsensusController::create_catchup_state(self.consensus_controller.clone(), block_number),
+            BankController::create_catchup_state(self.bank_controller.clone(), block_number),
+            StakeController::create_catchup_state(self.stake_controller.clone(), block_number),
+            SpotController::create_catchup_state(self.spot_controller.clone(), block_number)
+        ];
+
+        // TODO: save to store
+    }
 }

@@ -24,4 +24,6 @@ pub trait Controller {
         _process_block_store: &ProcessBlockStore,
         block_number: u64,
     );
+
+    fn create_catchup_state(controller: Arc<Mutex<Self>>, block_number: u64) -> Result<Vec<u8>, GDEXError>;
 }

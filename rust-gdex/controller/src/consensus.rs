@@ -74,4 +74,11 @@ impl Controller for ConsensusController {
         _block_number: u64,
     ) {
     }
+
+    fn create_catchup_state(
+        _controller: Arc<Mutex<Self>>,
+        _block_number: u64
+    ) -> Result<Vec<u8>, GDEXError> {
+        Ok(Vec::new())
+    }
 }

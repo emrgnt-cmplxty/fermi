@@ -1,7 +1,7 @@
 // IMPORTS
 
 // crate
-use crate::master::MasterController;
+use crate::main_controller::MainController;
 
 // gdex
 use gdex_types::{error::GDEXError, store::ProcessBlockStore, transaction::Transaction};
@@ -13,7 +13,7 @@ use std::sync::{Arc, Mutex};
 // TRAIT
 #[async_trait]
 pub trait Controller {
-    fn initialize(&mut self, master_controller: &MasterController);
+    fn initialize(&mut self, master_controller: &MainController);
 
     fn initialize_controller_account(&mut self) -> Result<(), GDEXError>;
 

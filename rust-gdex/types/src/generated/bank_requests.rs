@@ -12,5 +12,5 @@ pub struct PaymentRequest {
     #[prost(uint64, tag="2")]
     pub asset_id: u64,
     #[prost(uint64, tag="3")]
-    pub amount: u64,
+    pub quantity: u64,
 }

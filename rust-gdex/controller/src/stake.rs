@@ -11,7 +11,7 @@
 // crate
 use super::bank::BankController;
 use crate::controller::Controller;
-use crate::master::MasterController;
+use crate::main_controller::MainController;
 
 // gdex
 use gdex_types::{
@@ -59,7 +59,7 @@ impl Default for StakeController {
 
 #[async_trait]
 impl Controller for StakeController {
-    fn initialize(&mut self, master_controller: &MasterController) {
+    fn initialize(&mut self, master_controller: &MainController) {
         self.bank_controller = Arc::clone(&master_controller.bank_controller);
     }
 
@@ -170,7 +170,7 @@ pub mod stake_tests {
     fn stake() {
         let sender = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let master_controller = MasterController::default();
+        let master_controller = MainController::default();
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
         let bank_controller_ref = Arc::clone(&master_controller.bank_controller);
@@ -233,7 +233,7 @@ pub mod stake_tests {
     fn stake_empty() {
         let sender = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let master_controller = MasterController::default();
+        let master_controller = MainController::default();
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
         let bank_controller_ref = Arc::clone(&master_controller.bank_controller);
@@ -303,7 +303,7 @@ pub mod stake_tests {
     fn failed_stake() {
         let sender = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let master_controller = MasterController::default();
+        let master_controller = MainController::default();
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
         let bank_controller_ref = Arc::clone(&master_controller.bank_controller);

@@ -22,8 +22,23 @@ pub enum GDEXError {
     AssetLookup,
 
     // transaction associated errors
+    // TODO - clean up error layout
     #[error("Sender, payload and signature are not consistent")]
     FailedVerification,
+    #[error("Futures market initialization failed")]
+    FuturesInitialization,
+    #[error("Futures market parameters update failed")]
+    FuturesUpdate,
+    #[error("Insufficient collateral available for withdrawal")]
+    FuturesWithdrawal,
+    #[error("Marketplace does not exist.")]
+    MarketplaceExistence,
+    #[error("Market existence check failed")]
+    MarketExistence,
+    #[error("Market updating market prices")]
+    MarketPrices,
+    #[error("Insufficient collateral for this operation")]
+    InsufficientCollateral,
     #[error("Order request failed")]
     OrderRequest,
     #[error("Orderbook creation failed")]
@@ -39,6 +54,9 @@ pub enum GDEXError {
     #[error("Failed to process duplicate transaction")]
     TransactionDuplicate,
 
+    // other errors
+    #[error("Error while converting type")]
+    Conversion,
     // Consensus output errors
     #[error("Failed to execute transaction")]
     ExecError,

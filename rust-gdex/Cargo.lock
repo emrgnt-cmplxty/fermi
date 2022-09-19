@@ -2455,13 +2455,19 @@ name = "gdex-controller"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "bytes",
  "crypto",
  "fastcrypto",
  "gdex-engine",
  "gdex-types",
  "gdex-workspace-hack",
+ "prost",
+ "prost-build",
  "rand 0.8.5",
+ "rustversion",
  "serde 1.0.144",
+ "tonic-build 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "types",
 ]
 
 [[package]]

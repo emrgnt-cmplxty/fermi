@@ -337,7 +337,7 @@ mod test_validator_server {
         genesis_ceremony::{VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
         validator::metrics::ValidatorMetrics,
     };
-    use gdex_controller::master::MasterController;
+    use gdex_controller::main_controller::MainController;
     use gdex_types::{
         account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair, ValidatorPubKeyBytes},
         crypto::{get_key_pair_from_rng, KeypairTraits},
@@ -348,7 +348,7 @@ mod test_validator_server {
     };
 
     async fn spawn_test_validator_server() -> Result<ValidatorServerHandle, io::Error> {
-        let master_controller = MasterController::default();
+        let master_controller = MainController::default();
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 
@@ -417,7 +417,7 @@ mod test_validator_server {
 
     #[tokio::test]
     pub async fn spawn() {
-        let master_controller = MasterController::default();
+        let master_controller = MainController::default();
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 

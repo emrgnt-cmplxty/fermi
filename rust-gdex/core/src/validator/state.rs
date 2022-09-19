@@ -7,7 +7,7 @@ use crate::validator::metrics::ValidatorMetrics;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
 use fastcrypto::Hash;
-use gdex_controller::master::MasterController;
+use gdex_controller::main_controller::MainController;
 use gdex_types::{
     account::ValidatorKeyPair,
     block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},
@@ -211,7 +211,7 @@ pub struct ValidatorState {
     pub committee: ArcSwap<Committee>,
     /// NodeConfig for this node
     /// Controller of various blockchain modules
-    pub master_controller: MasterController,
+    pub master_controller: MainController,
     /// A map of transactions which have been seen
     pub validator_store: ValidatorStore,
     /// Metrics around blockchain operations
@@ -352,7 +352,7 @@ mod test_validator_state {
 
     #[tokio::test]
     pub async fn single_node_init() {
-        let master_controller = MasterController::default();
+        let master_controller = MainController::default();
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 
@@ -392,7 +392,7 @@ mod test_validator_state {
     }
 
     fn create_test_validator() -> ValidatorState {
-        let master_controller = MasterController::default();
+        let master_controller = MainController::default();
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 
@@ -630,7 +630,6 @@ mod test_validator_state {
 
         const TEST_PRICE: u64 = 100;
         const TEST_QUANTITY: u64 = 100;
-        let local_timestamp: u64 = 16000000;
         let fee: u64 = 1000;
         let transaction = create_limit_order_transaction(
             sender_kp.public().clone(),
@@ -639,7 +638,6 @@ mod test_validator_state {
             OrderSide::Bid as u64,
             TEST_PRICE,
             TEST_QUANTITY,
-            local_timestamp,
             fee,
             recent_block_hash,
         );
@@ -657,14 +655,12 @@ mod test_validator_state {
 
         // cancel order
         const TEST_ORDER_ID: u64 = 1;
-        let local_timestamp: u64 = 16000000;
         let fee: u64 = 1000;
         let transaction = create_cancel_order_transaction(
             sender_kp.public().clone(),
             TEST_BASE_ASSET_ID,
             TEST_QUOTE_ASSET_ID,
             OrderSide::Bid as u64,
-            local_timestamp,
             TEST_ORDER_ID,
             fee,
             recent_block_hash,
@@ -737,7 +733,6 @@ mod test_validator_state {
         // create limit order transaction
         const TEST_PRICE: u64 = 100;
         const TEST_QUANTITY: u64 = 100;
-        let local_timestamp: u64 = 16000000;
         let fee: u64 = 1000;
         let transaction = create_limit_order_transaction(
             sender_kp.public().clone(),
@@ -746,7 +741,6 @@ mod test_validator_state {
             OrderSide::Bid as u64,
             TEST_PRICE,
             TEST_QUANTITY,
-            local_timestamp,
             fee,
             recent_block_hash,
         );
@@ -764,7 +758,6 @@ mod test_validator_state {
 
         // cancel order
         const TEST_ORDER_ID: u64 = 1;
-        let local_timestamp: u64 = 16000000;
         let fee: u64 = 1000;
         let transaction = create_update_order_transaction(
             sender_kp.public().clone(),
@@ -773,7 +766,6 @@ mod test_validator_state {
             OrderSide::Bid as u64,
             TEST_PRICE,
             TEST_QUANTITY,
-            local_timestamp,
             TEST_ORDER_ID,
             fee,
             recent_block_hash,

@@ -127,6 +127,7 @@ pub mod cluster_test_suite {
     }
 
     #[tokio::test(flavor = "multi_thread")]
+    #[ignore]
     pub async fn test_cache_transactions() {
         info!("Creating test cluster");
         let validator_count: usize = 4;

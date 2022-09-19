@@ -5,7 +5,7 @@ use crate::futures::{
     types::*, utils::*, AccountDepositRequest, AccountWithdrawalRequest, CreateMarketRequest, CreateMarketplaceRequest,
     FuturesLimitOrderRequest, UpdateMarketParamsRequest, UpdatePricesRequest, UpdateTimeRequest,
 };
-use crate::main_controller::MainController;
+use crate::router::ControllerRouter;
 // gdex
 use gdex_engine::order_book::{OrderBookWrapper, OrderId, Orderbook};
 use gdex_types::{
@@ -32,6 +32,8 @@ use std::{
 pub const FUTURES_CONTROLLER_ACCOUNT_PUBKEY: &[u8] = b"FUTURESSSCONTROLLERAAAAAAAAAAAAA";
 const DEFAULT_MAX_LEVERAGE: u64 = 20;
 
+// INTERFACE
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FuturesController {
     pub controller_account: AccountPubKey,
@@ -52,155 +54,6 @@ impl Default for FuturesController {
 }
 
 // STRUCT IMPLS
-
-impl Marketplace {
-    pub fn insert_new_market(&mut self, base_asset_id: u64, market: FuturesMarket) {
-        self.markets.insert(base_asset_id, market);
-    }
-}
-
-impl OrderBookWrapper for FuturesMarket {
-    // HELPER FUNCTIONS
-
-    // GETTERS
-    fn get_orderbook(&mut self) -> &mut Orderbook {
-        &mut self.orderbook
-    }
-
-    fn get_pub_key_from_order_id(&self, order_id: &OrderId) -> AccountPubKey {
-        self.order_to_account
-            .get(order_id)
-            .ok_or(GDEXError::AccountLookup)
-            .unwrap()
-            .clone()
-    }
-
-    // SETTERS
-    fn set_order(&mut self, order_id: OrderId, account: AccountPubKey) -> Result<(), GDEXError> {
-        // order id should be constantly increasing
-        if self.order_to_account.contains_key(&order_id) {
-            return Err(GDEXError::OrderRequest);
-        }
-        {
-            self.order_to_account.insert(order_id, account);
-            Ok(())
-        }
-    }
-
-    // order check is done upstream because cross-margin calulations are needed
-    // doing it here would be require a circular reference to be made between
-    // FuturesMarket and the Marketplace
-    fn check_order(
-        &self,
-        _account: &AccountPubKey,
-        _side: OrderSide,
-        _quantity: u64,
-        _price: u64,
-        _previous_quantity: u64,
-        _previous_price: u64,
-    ) -> Result<(), GDEXError> {
-        Ok(())
-    }
-
-    // account FUNCTIONS
-
-    fn update_state_on_limit_order_creation(
-        &mut self,
-        account: &AccountPubKey,
-        order_id: u64,
-        side: OrderSide,
-        price: u64,
-        quantity: u64,
-    ) -> Result<(), GDEXError> {
-        // check if accounts contains account and if not create it
-        if !self.accounts.contains_key(account) {
-            self.accounts.insert(account.clone(), FuturesAccount::default());
-        }
-        self.accounts
-            .get_mut(account)
-            .ok_or(GDEXError::AccountLookup)?
-            .open_orders
-            .push(OpenOrder {
-                order_id,
-                side,
-                price,
-                quantity,
-            });
-        Ok(())
-    }
-
-    fn update_state_on_fill(
-        &mut self,
-        account: &AccountPubKey,
-        order_id: u64,
-        side: OrderSide,
-        price: u64,
-        quantity: u64,
-    ) -> Result<(), GDEXError> {
-        if !self.accounts.contains_key(account) {
-            self.accounts.insert(account.clone(), FuturesAccount::default());
-        }
-
-        let mut futures_account = self.accounts.get_mut(account).unwrap();
-        let marketplace_deposits = self.marketplace_deposits.upgrade().unwrap();
-        let mut deposits_lock = marketplace_deposits.lock().unwrap();
-
-        let account_deposit = deposits_lock.get_mut(account).ok_or(GDEXError::AccountLookup)?;
-
-        let new_position = Position {
-            side,
-            quantity,
-            average_price: price,
-        };
-
-        if let Some(old_position) = &futures_account.position {
-            let resultant_position = combine_positions(old_position.clone(), new_position);
-            *account_deposit += compute_realized_pnl(old_position, &resultant_position, price)?;
-            futures_account.position = resultant_position;
-        } else {
-            futures_account.position = Some(new_position);
-        }
-
-        // update open orders
-        for (counter, order) in futures_account.open_orders.iter_mut().enumerate() {
-            if order.order_id == order_id {
-                order.quantity -= quantity;
-                if order.quantity == 0 {
-                    futures_account.open_orders.remove(counter);
-                }
-                break;
-            }
-        }
-        Ok(())
-    }
-
-    #[allow(clippy::collapsible_else_if)]
-    fn update_state_on_update(
-        &mut self,
-        _account: &AccountPubKey,
-        _order_id: u64,
-        _side: OrderSide,
-        _previous_price: u64,
-        _previous_quantity: u64,
-        _price: u64,
-        _quantity: u64,
-    ) -> Result<(), GDEXError> {
-        // TODO - implement update
-        Err(GDEXError::InvalidRequestTypeError)
-    }
-
-    fn update_state_on_cancel(
-        &mut self,
-        _account: &AccountPubKey,
-        _order_id: u64,
-        _side: OrderSide,
-        _price: u64,
-        _quantity: u64,
-    ) -> Result<(), GDEXError> {
-        // TODO - implement cancel
-        Err(GDEXError::InvalidRequestTypeError)
-    }
-}
 
 impl FuturesController {
     pub fn new(controller_account: AccountPubKey, bank_controller: Arc<Mutex<BankController>>) -> Self {
@@ -248,7 +101,7 @@ impl FuturesController {
             if market_place.markets.get(&request.base_asset_id).is_some() {
                 return Err(GDEXError::MarketExistence);
             }
-            market_place.insert_new_market(
+            market_place.markets.insert(
                 request.base_asset_id,
                 FuturesMarket {
                     latest_price: 0,
@@ -479,7 +332,7 @@ impl FuturesController {
 
 #[async_trait]
 impl Controller for FuturesController {
-    fn initialize(&mut self, master_controller: &MainController) {
+    fn initialize(&mut self, master_controller: &ControllerRouter) {
         self.bank_controller = Arc::clone(&master_controller.bank_controller);
     }
 
@@ -546,5 +399,148 @@ impl Controller for FuturesController {
         _process_block_store: &ProcessBlockStore,
         _block_number: u64,
     ) {
+    }
+}
+
+impl OrderBookWrapper for FuturesMarket {
+    // HELPER FUNCTIONS
+
+    // GETTERS
+    fn get_orderbook(&mut self) -> &mut Orderbook {
+        &mut self.orderbook
+    }
+
+    fn get_pub_key_from_order_id(&self, order_id: &OrderId) -> AccountPubKey {
+        self.order_to_account
+            .get(order_id)
+            .ok_or(GDEXError::AccountLookup)
+            .unwrap()
+            .clone()
+    }
+
+    // SETTERS
+    fn set_order(&mut self, order_id: OrderId, account: AccountPubKey) -> Result<(), GDEXError> {
+        // order id should be constantly increasing
+        if self.order_to_account.contains_key(&order_id) {
+            return Err(GDEXError::OrderRequest);
+        }
+        {
+            self.order_to_account.insert(order_id, account);
+            Ok(())
+        }
+    }
+
+    // order check is done upstream because cross-margin calulations are needed
+    // doing it here would be require a circular reference to be made between
+    // FuturesMarket and the Marketplace
+    fn validate_controller(
+        &self,
+        _account: &AccountPubKey,
+        _side: OrderSide,
+        _quantity: u64,
+        _price: u64,
+        _previous_quantity: u64,
+        _previous_price: u64,
+    ) -> Result<(), GDEXError> {
+        Ok(())
+    }
+
+    // account FUNCTIONS
+
+    fn update_state_on_limit_order_creation(
+        &mut self,
+        account: &AccountPubKey,
+        order_id: u64,
+        side: OrderSide,
+        price: u64,
+        quantity: u64,
+    ) -> Result<(), GDEXError> {
+        // check if accounts contains account and if not create it
+        if !self.accounts.contains_key(account) {
+            self.accounts.insert(account.clone(), FuturesAccount::default());
+        }
+        self.accounts
+            .get_mut(account)
+            .ok_or(GDEXError::AccountLookup)?
+            .open_orders
+            .push(OpenOrder {
+                order_id,
+                side,
+                price,
+                quantity,
+            });
+        Ok(())
+    }
+
+    fn update_state_on_fill(
+        &mut self,
+        account: &AccountPubKey,
+        order_id: u64,
+        side: OrderSide,
+        price: u64,
+        quantity: u64,
+    ) -> Result<(), GDEXError> {
+        if !self.accounts.contains_key(account) {
+            self.accounts.insert(account.clone(), FuturesAccount::default());
+        }
+
+        let mut futures_account = self.accounts.get_mut(account).unwrap();
+        let marketplace_deposits = self.marketplace_deposits.upgrade().unwrap();
+        let mut deposits_lock = marketplace_deposits.lock().unwrap();
+
+        let account_deposit = deposits_lock.get_mut(account).ok_or(GDEXError::AccountLookup)?;
+
+        let new_position = Position {
+            side,
+            quantity,
+            average_price: price,
+        };
+
+        if let Some(old_position) = &futures_account.position {
+            let resultant_position = combine_positions(old_position.clone(), new_position);
+            *account_deposit += compute_realized_pnl(old_position, &resultant_position, price)?;
+            futures_account.position = resultant_position;
+        } else {
+            futures_account.position = Some(new_position);
+        }
+
+        // update open orders
+        for (counter, order) in futures_account.open_orders.iter_mut().enumerate() {
+            if order.order_id == order_id {
+                order.quantity -= quantity;
+                if order.quantity == 0 {
+                    futures_account.open_orders.remove(counter);
+                }
+                break;
+            }
+        }
+        Ok(())
+    }
+
+    #[allow(clippy::collapsible_else_if)]
+    fn update_state_on_update(
+        &mut self,
+        _account: &AccountPubKey,
+        _order_id: u64,
+        _side: OrderSide,
+        _previous_price: u64,
+        _previous_quantity: u64,
+        _price: u64,
+        _quantity: u64,
+    ) -> Result<(), GDEXError> {
+        // TODO - implement update
+        Err(GDEXError::InvalidRequestTypeError)
+    }
+
+    fn update_state_on_cancel(
+        &mut self,
+        _account: &AccountPubKey,
+        _order_id: u64,
+        _side: OrderSide,
+        _price: u64,
+        _quantity: u64,
+    ) -> Result<(), GDEXError> {
+        // TODO - implement cancel
+        Err(GDEXError::InvalidRequestTypeError)
     }
 }

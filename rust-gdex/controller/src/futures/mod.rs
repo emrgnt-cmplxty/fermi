@@ -1,8 +1,7 @@
 pub mod controller;
-mod tester;
+mod test;
 mod types;
 mod utils;
-
 
 #[path = "./generated/futures_requests.rs"]
 #[rustfmt::skip]

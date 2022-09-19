@@ -598,7 +598,7 @@ pub trait OrderBookWrapper {
 
     // TODO - remove gating from the order_book level
     // this creates awkward tension in any instance of cross-margin
-    fn check_order(
+    fn validate_controller(
         &self,
         account: &AccountPubKey,
         side: OrderSide,
@@ -628,7 +628,7 @@ pub trait OrderBookWrapper {
         let side = parse_order_side(request.side)?;
 
         // check balances before placing order
-        self.check_order(account, side, request.quantity, request.price, 0, 0)?;
+        self.validate_controller(account, side, request.quantity, request.price, 0, 0)?;
 
         // create and process limit order
         let order = create_limit_order_request(
@@ -680,7 +680,7 @@ pub trait OrderBookWrapper {
         let current_price = current_order.get_price();
 
         // check balances before placing order
-        self.check_order(
+        self.validate_controller(
             account,
             side,
             request.quantity - current_quantity,

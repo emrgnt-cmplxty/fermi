@@ -7,7 +7,7 @@ use crate::validator::metrics::ValidatorMetrics;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
 use fastcrypto::Hash;
-use gdex_controller::main_controller::MainController;
+use gdex_controller::router::ControllerRouter;
 use gdex_types::{
     account::ValidatorKeyPair,
     block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},
@@ -211,7 +211,7 @@ pub struct ValidatorState {
     pub committee: ArcSwap<Committee>,
     /// NodeConfig for this node
     /// Controller of various blockchain modules
-    pub master_controller: MainController,
+    pub master_controller: ControllerRouter,
     /// A map of transactions which have been seen
     pub validator_store: ValidatorStore,
     /// Metrics around blockchain operations
@@ -352,7 +352,7 @@ mod test_validator_state {
 
     #[tokio::test]
     pub async fn single_node_init() {
-        let master_controller = MainController::default();
+        let master_controller = ControllerRouter::default();
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 
@@ -392,7 +392,7 @@ mod test_validator_state {
     }
 
     fn create_test_validator() -> ValidatorState {
-        let master_controller = MainController::default();
+        let master_controller = ControllerRouter::default();
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 

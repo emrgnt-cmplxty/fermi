@@ -1,21 +1,19 @@
 #[cfg(test)]
 pub mod futures_tests {
-
     // crate
     use crate::futures::{
-        types::*, AccountDepositRequest, CreateMarketRequest, CreateMarketplaceRequest,
-        FuturesLimitOrderRequest, UpdateMarketParamsRequest, UpdatePricesRequest, UpdateTimeRequest,
+        types::*, AccountDepositRequest, CreateMarketRequest, CreateMarketplaceRequest, FuturesLimitOrderRequest,
+        UpdateMarketParamsRequest, UpdatePricesRequest, UpdateTimeRequest,
     };
-    use crate::main_controller::MainController;
+    use crate::router::ControllerRouter;
     use crate::ControllerTestBed;
     // gdex
-    use gdex_types::crypto::KeypairTraits;
-    use gdex_types::{account::{AccountKeyPair, account_test_functions::generate_keypair_vec}, order_book::OrderSide};
     use gdex_types::{
-        account::AccountPubKey,
+        account::{account_test_functions::generate_keypair_vec, AccountKeyPair, AccountPubKey},
         asset::AssetId,
-        crypto::ToFromBytes,
+        crypto::{KeypairTraits, ToFromBytes},
         error::GDEXError,
+        order_book::OrderSide,
         proto::ControllerType,
         transaction::{create_transaction, serialize_protobuf, RequestType},
     };
@@ -36,7 +34,7 @@ pub mod futures_tests {
     const FINAL_ASSET_PRICES: &'static [u64] = &[12_000_000];
 
     pub struct FuturesControllerTester {
-        main_controller: MainController,
+        main_controller: ControllerRouter,
         admin_key: AccountKeyPair,
         user_keys: Vec<AccountKeyPair>,
         base_asset_id: u64,
@@ -53,7 +51,7 @@ pub mod futures_tests {
             }
 
             Self {
-                main_controller: MainController::default(),
+                main_controller: ControllerRouter::default(),
                 admin_key,
                 user_keys,
                 base_asset_id: BASE_ASSET_ID,
@@ -246,7 +244,7 @@ pub mod futures_tests {
     }
 
     impl ControllerTestBed for FuturesControllerTester {
-        fn get_main_controller(&self) -> &MainController {
+        fn get_main_controller(&self) -> &ControllerRouter {
             &self.main_controller
         }
         fn initialize(&self) {

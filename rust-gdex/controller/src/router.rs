@@ -26,7 +26,7 @@ use std::sync::{Arc, Mutex};
 // INTERFACE
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct MainController {
+pub struct ControllerRouter {
     pub consensus_controller: Arc<Mutex<ConsensusController>>,
     pub bank_controller: Arc<Mutex<BankController>>,
     pub stake_controller: Arc<Mutex<StakeController>>,
@@ -34,7 +34,7 @@ pub struct MainController {
     pub futures_controller: Arc<Mutex<FuturesController>>,
 }
 
-impl Default for MainController {
+impl Default for ControllerRouter {
     fn default() -> Self {
         let bank_controller = Arc::new(Mutex::new(BankController::default()));
         let stake_controller = Arc::new(Mutex::new(StakeController::default()));
@@ -52,7 +52,7 @@ impl Default for MainController {
     }
 }
 
-impl MainController {
+impl ControllerRouter {
     pub fn initialize_controllers(&self) {
         self.consensus_controller.lock().unwrap().initialize(self);
         self.bank_controller.lock().unwrap().initialize(self);

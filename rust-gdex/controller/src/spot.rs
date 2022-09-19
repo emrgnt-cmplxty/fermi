@@ -14,7 +14,7 @@
 // crate
 use super::bank::BankController;
 use crate::controller::Controller;
-use crate::main_controller::MainController;
+use crate::router::ControllerRouter;
 
 // gdex
 use gdex_engine::order_book::{OrderBookWrapper, OrderId, Orderbook};
@@ -62,7 +62,7 @@ impl Default for SpotController {
 
 #[async_trait]
 impl Controller for SpotController {
-    fn initialize(&mut self, master_controller: &MainController) {
+    fn initialize(&mut self, master_controller: &ControllerRouter) {
         self.bank_controller = Arc::clone(&master_controller.bank_controller);
     }
 
@@ -151,7 +151,7 @@ impl SpotController {
         format!("{}_{}", base_asset_id, quote_asset_id)
     }
 
-    pub fn check_orderbook_exists(&self, base_asset_id: AssetId, quote_asset_id: AssetId) -> bool {
+    pub fn validate_controllerbook_exists(&self, base_asset_id: AssetId, quote_asset_id: AssetId) -> bool {
         let lookup_string = self.get_orderbook_key(base_asset_id, quote_asset_id);
         self.orderbooks.contains_key(&lookup_string)
     }
@@ -180,7 +180,7 @@ impl SpotController {
 
     pub fn create_orderbook(&mut self, base_asset_id: AssetId, quote_asset_id: AssetId) -> Result<(), GDEXError> {
         let lookup_string = self.get_orderbook_key(base_asset_id, quote_asset_id);
-        if !self.check_orderbook_exists(base_asset_id, quote_asset_id) {
+        if !self.validate_controllerbook_exists(base_asset_id, quote_asset_id) {
             self.orderbooks.insert(
                 lookup_string,
                 SpotOrderbook::new(
@@ -240,6 +240,7 @@ impl SpotOrderbook {
 
     // TODO #2 //
     pub fn overwrite_orderbook(&mut self, new_orderbook: Orderbook) {
+        self.order_to_account = HashMap::new();
         self.orderbook = new_orderbook;
     }
 
@@ -318,17 +319,15 @@ impl OrderBookWrapper for SpotOrderbook {
 
     // SETTERS
     fn set_order(&mut self, order_id: OrderId, account: AccountPubKey) -> Result<(), GDEXError> {
-        // order id should be constantly increasing
+        // // order id should be constantly increasing
         if self.order_to_account.contains_key(&order_id) {
             return Err(GDEXError::OrderRequest);
         }
-        {
-            self.order_to_account.insert(order_id, account);
-            Ok(())
-        }
+        self.order_to_account.insert(order_id, account);
+        Ok(())
     }
 
-    fn check_order(
+    fn validate_controller(
         &self,
         account: &AccountPubKey,
         side: OrderSide,
@@ -561,7 +560,7 @@ pub mod spot_tests {
     fn place_bid_spot_controller() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let master_controller = MainController::default();
+        let master_controller = ControllerRouter::default();
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 

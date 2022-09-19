@@ -9,7 +9,7 @@
 use crate::{builder::genesis_state::GenesisStateBuilder, validator::genesis_state::ValidatorGenesisState};
 
 // gdex
-use gdex_controller::main_controller::MainController;
+use gdex_controller::router::ControllerRouter;
 use gdex_types::{
     account::{AccountPubKey, ValidatorKeyPair, ValidatorPubKey, ValidatorPubKeyBytes, ValidatorSignature},
     asset::PRIMARY_ASSET_ID,
@@ -140,7 +140,7 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             let builder = GenesisStateBuilder::load(&dir)?;
 
             // Initialize controllers to default state
-            let master_controller = MainController::default();
+            let master_controller = ControllerRouter::default();
             master_controller.initialize_controllers();
             master_controller.initialize_controller_accounts();
 

@@ -13,7 +13,7 @@
 
 // crate
 use crate::controller::Controller;
-use crate::main_controller::MainController;
+use crate::router::ControllerRouter;
 
 // gdex
 use gdex_types::{
@@ -71,7 +71,7 @@ impl Default for BankController {
 
 #[async_trait]
 impl Controller for BankController {
-    fn initialize(&mut self, _master_controller: &MainController) {}
+    fn initialize(&mut self, _master_controller: &ControllerRouter) {}
 
     fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
         Ok(())

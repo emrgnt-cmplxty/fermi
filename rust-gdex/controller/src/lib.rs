@@ -9,7 +9,7 @@ pub mod consensus;
 
 pub mod futures;
 
-pub mod main_controller;
+pub mod router;
 
 pub mod spot;
 
@@ -17,7 +17,7 @@ pub mod stake;
 
 #[cfg(test)]
 pub trait ControllerTestBed {
-    fn get_main_controller(&self) -> &main_controller::MainController;
+    fn get_main_controller(&self) -> &router::ControllerRouter;
 
     fn generic_initialize(&self) {
         self.get_main_controller().initialize_controllers();

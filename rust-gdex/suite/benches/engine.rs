@@ -243,7 +243,6 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     group.finish();
 
-
     const N_DEPTHS_BENCH: u64 = 1;
     let mut group1 = c.benchmark_group("orderbook_depth");
     group1.throughput(Throughput::Elements((N_DEPTHS_BENCH) as u64));

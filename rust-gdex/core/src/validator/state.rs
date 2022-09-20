@@ -340,7 +340,7 @@ mod test_validator_state {
         order_book::OrderSide,
         utils,
     };
-    use gdex_controllers::{
+    use gdex_controller::{
         bank::proto::{
             create_create_asset_transaction, create_payment_transaction
         },

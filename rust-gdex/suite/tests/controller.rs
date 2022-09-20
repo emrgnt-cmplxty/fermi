@@ -5,15 +5,18 @@
 #[cfg(test)]
 pub mod process_tests {
     use gdex_controller::{
-        bank::{BankController, CREATED_ASSET_BALANCE},
-        spot::{SpotOrderbook, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
+        bank::controller::{BankController, CREATED_ASSET_BALANCE},
+        spot::{
+            controller::{SpotOrderbook, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
+            proto::{create_limit_order_request},
+        },
         utils::engine::{
             order_book::OrderBookWrapper,
         }
     };
     use gdex_types::{
         account::account_test_functions::generate_keypair_vec, account::AccountPubKey, asset::AssetId,
-        crypto::KeypairTraits, crypto::ToFromBytes, order_book::OrderSide, transaction::create_limit_order_request,
+        crypto::KeypairTraits, crypto::ToFromBytes, order_book::OrderSide
     };
 
     use std::sync::{Arc, Mutex};

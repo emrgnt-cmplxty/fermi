@@ -13,7 +13,7 @@ use gdex_types::{
     account::AccountKeyPair,
     crypto::KeypairTraits,
     error::GDEXError,
-    transaction::{ConsensusTransaction, SignedTransaction, serialize_protobuf, deserialize_protobuf}
+    transaction::{deserialize_protobuf, serialize_protobuf, ConsensusTransaction, SignedTransaction},
 };
 
 use narwhal_types::{Batch, CertificateDigest, WorkerMessage};
@@ -151,7 +151,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("serialization_deserialize_batch_and_verify_method1_1_000", move |b| {
         b.iter(|| deserialize_batch_and_verify_method1(black_box(&serialized[..])))
     });
-    
+
     // protobuf
     fn protobuf_serialize_1_000(sender_seed: [u8; 32], receiver_seed: [u8; 32]) {
         let signed_transaction = get_signed_transaction(sender_seed, receiver_seed, 10);

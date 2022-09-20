@@ -45,17 +45,3 @@ pub use block::*;
 mod transaction;
 
 pub use transaction::*;
-
-#[path = "generated/bank_requests.rs"]
-#[rustfmt::skip]
-#[allow(clippy::all)]
-mod bank_requests;
-
-pub use bank_requests::*;
-
-#[path = "generated/spot_requests.rs"]
-#[rustfmt::skip]
-#[allow(clippy::all)]
-mod spot_requests;
-
-pub use spot_requests::*;

@@ -6,8 +6,8 @@
 
 // crate
 use crate::{
-    bank::BankController, consensus::ConsensusController, controller::Controller,
-    futures::controller::FuturesController, spot::SpotController, stake::StakeController,
+    bank::controller::BankController, consensus::controller::ConsensusController, controller::Controller,
+    futures::controller::FuturesController, spot::controller::SpotController, stake::controller::StakeController,
 };
 
 // gdex

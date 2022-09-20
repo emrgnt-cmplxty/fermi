@@ -4,15 +4,27 @@
 type Result<T> = ::std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 fn main() -> Result<()> {
-    let proto_files = &["proto/futures_requests.proto"];
-    let dirs = &["proto"];
+    build_proto("bank")?;
+    build_proto("spot")?;
+    build_proto("futures")?;
+
+    Ok(())
+}
+
+fn build_proto(controller_name: &str) -> Result<()> {
+    let proto_dir = format!("./src/{}/proto", controller_name);
+    let requests_proto_file = format!("./src/{}/proto/{}_requests.proto", controller_name, controller_name);
+    let generated_dir = format!("./src/{}/generated/", controller_name);
+
+    let proto_files = &[requests_proto_file];
+    let dirs = &[proto_dir];
 
     // Use `Bytes` instead of `Vec<u8>` for bytes fields
     let mut config = prost_build::Config::new();
     config.bytes(&["."]);
 
     tonic_build::configure()
-        .out_dir("./src/futures/generated/")
+        .out_dir(generated_dir)
         .compile_with_config(config, proto_files, dirs)?;
 
     println!("cargo:rerun-if-changed=build.rs");

@@ -47,7 +47,7 @@ narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da
 mysten-store = { git = "https://github.com/mystenlabs/mysten-infra.git", rev = "7ef7415a4e11cf68fa68ce9db884c46e704e0445", package = "typed-store"}
 
 # local crates
-gdex-controller = { path = "../controller" }
+gdex-controller = { path = "../controller", features = ["testing"] }
 gdex-types = { path = "../types" }
 gdex-workspace-hack = { path = "../workspace-hack" }
 

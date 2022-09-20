@@ -13,6 +13,7 @@ use super::order_queues::OrderQueue;
 use super::orders::{create_cancel_order_request, create_limit_order_request, create_update_order_request};
 use super::sequence;
 use super::validation::OrderRequestValidator;
+use crate::spot::proto::*;
 
 use gdex_types::{
     account::AccountPubKey,
@@ -21,7 +22,7 @@ use gdex_types::{
     order_book::{
         Depth, Failed, Order, OrderProcessingResult, OrderRequest, OrderSide, OrderType, OrderbookDepth, Success,
     },
-    transaction::{parse_order_side, CancelOrderRequest, LimitOrderRequest, MarketOrderRequest, UpdateOrderRequest},
+    transaction::parse_order_side,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -837,7 +838,7 @@ pub trait OrderBookWrapper {
 mod test_order_book {
 
     use super::*;
-    use crate::orders::{
+    use crate::utils::engine::orders::{
         create_cancel_order_request, create_limit_order_request, create_market_order_request,
         create_update_order_request,
     };

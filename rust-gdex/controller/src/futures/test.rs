@@ -1,10 +1,7 @@
 #[cfg(test)]
 pub mod futures_tests {
     // crate
-    use crate::futures::{
-        types::*, AccountDepositRequest, CreateMarketRequest, CreateMarketplaceRequest, FuturesLimitOrderRequest,
-        UpdateMarketParamsRequest, UpdatePricesRequest, UpdateTimeRequest,
-    };
+    use crate::futures::{proto::*, types::*};
     use crate::router::ControllerRouter;
     use crate::ControllerTestBed;
     // gdex

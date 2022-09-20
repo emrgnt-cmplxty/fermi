@@ -1,17 +1,17 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use gdex_controller::{
-    bank::BankController,
-    spot::{SpotOrderbook, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
-};
-use gdex_engine::{
-    order_book::{OrderBookWrapper, Orderbook},
-    orders::create_limit_order_request,
+    bank::controller::BankController,
+    spot::controller::{SpotOrderbook, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
+    spot::proto::create_limit_order_request as txn_create_limit_order_request,
+    utils::engine::{
+        order_book::{OrderBookWrapper, Orderbook},
+        orders::create_limit_order_request,
+    },
 };
 use gdex_types::{
     account::{account_test_functions::generate_keypair_vec, AccountPubKey},
     crypto::{KeypairTraits, ToFromBytes},
     order_book::{OrderProcessingResult, OrderRequest, OrderSide, Success},
-    transaction::create_limit_order_request as txn_create_limit_order_request,
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use rocksdb::{ColumnFamilyDescriptor, DBWithThreadMode, MultiThreaded, Options, DB};

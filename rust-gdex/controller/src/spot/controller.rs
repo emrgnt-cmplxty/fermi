@@ -12,12 +12,13 @@
 // IMPORTS
 
 // crate
-use super::bank::BankController;
+use crate::bank::controller::BankController;
 use crate::controller::Controller;
 use crate::router::ControllerRouter;
+use crate::spot::proto::*;
+use crate::utils::engine::order_book::{OrderBookWrapper, OrderId, Orderbook};
 
 // gdex
-use gdex_engine::order_book::{OrderBookWrapper, OrderId, Orderbook};
 use gdex_types::{
     account::AccountPubKey,
     asset::{AssetId, AssetPairKey},
@@ -25,10 +26,7 @@ use gdex_types::{
     error::GDEXError,
     order_book::{OrderSide, OrderbookDepth},
     store::ProcessBlockStore,
-    transaction::{
-        deserialize_protobuf, parse_request_type, CancelOrderRequest, CreateOrderbookRequest, LimitOrderRequest,
-        MarketOrderRequest, RequestType, Transaction, UpdateOrderRequest,
-    },
+    transaction::{deserialize_protobuf, parse_request_type, RequestType, Transaction},
 };
 
 // external
@@ -440,10 +438,7 @@ impl OrderBookWrapper for SpotOrderbook {
 pub mod spot_tests {
     // crate
     use super::*;
-    use crate::{
-        bank::{BankController, CREATED_ASSET_BALANCE},
-        spot::SpotOrderbook,
-    };
+    use crate::bank::controller::{BankController, CREATED_ASSET_BALANCE};
 
     // gdex
     use gdex_types::crypto::KeypairTraits;
@@ -451,10 +446,6 @@ pub mod spot_tests {
         account::account_test_functions::generate_keypair_vec,
         block::BlockDigest,
         order_book::{OrderProcessingResult, OrderSide, Success},
-        transaction::{
-            create_cancel_order_request, create_limit_order_request, create_limit_order_transaction,
-            create_update_order_request,
-        },
     };
 
     // mysten

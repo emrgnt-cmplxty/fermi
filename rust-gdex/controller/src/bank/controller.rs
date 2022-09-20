@@ -12,6 +12,7 @@
 // IMPORTS
 
 // crate
+use crate::bank::proto::*;
 use crate::controller::Controller;
 use crate::router::ControllerRouter;
 
@@ -22,9 +23,7 @@ use gdex_types::{
     crypto::ToFromBytes,
     error::GDEXError,
     store::ProcessBlockStore,
-    transaction::{
-        deserialize_protobuf, parse_request_type, CreateAssetRequest, PaymentRequest, RequestType, Transaction,
-    },
+    transaction::{deserialize_protobuf, parse_request_type, RequestType, Transaction},
 };
 
 // mysten
@@ -35,12 +34,15 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-// CONSTANTS
-#[derive(PartialEq)]
-enum Modifier {
+// ENUMS
+
+#[derive(Eq, PartialEq)]
+pub enum Modifier {
     Increment,
     Decrement,
 }
+
+// CONSTANTS
 
 // TODO need to find valid vanity address for bank controller
 pub const BANK_CONTROLLER_ACCOUNT_PUBKEY: &[u8] = b"STAKECONTROLLERAAAAAAAAAAAAAAAAA";
@@ -220,9 +222,14 @@ impl BankController {
     }
 }
 
+// TESTS
+
 #[cfg(test)]
 pub mod spot_tests {
+    // crate
     use super::*;
+
+    // mysten
     use fastcrypto::{generate_production_keypair, traits::KeyPair as _};
     use narwhal_crypto::KeyPair;
 

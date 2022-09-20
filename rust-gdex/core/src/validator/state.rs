@@ -333,15 +333,18 @@ mod test_validator_state {
         genesis_ceremony::{VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
     };
     use fastcrypto::{generate_production_keypair, DIGEST_LEN};
+    use gdex_controller::{
+        bank::proto::{create_create_asset_transaction, create_payment_transaction},
+        spot::proto::{
+            create_cancel_order_transaction, create_create_orderbook_transaction, create_limit_order_transaction,
+            create_update_order_transaction,
+        },
+    };
     use gdex_types::{
         account::ValidatorPubKeyBytes,
         crypto::{get_key_pair_from_rng, KeypairTraits},
         node::ValidatorInfo,
         order_book::OrderSide,
-        transaction::{
-            create_cancel_order_transaction, create_create_asset_transaction, create_create_orderbook_transaction,
-            create_limit_order_transaction, create_payment_transaction, create_update_order_transaction,
-        },
         utils,
     };
     use narwhal_consensus::ConsensusOutput;

@@ -5,6 +5,7 @@ pub mod cluster_test_suite {
     // IMPORTS
 
     // gdex
+    use gdex_controller::bank::proto::create_create_asset_transaction;
     use gdex_core::{
         catchup::manager::{
             mock_catchup_manager::{MockCatchupManger, MockRelayServer},
@@ -24,7 +25,7 @@ pub mod cluster_test_suite {
             FaucetAirdropRequest, FaucetClient, FaucetServer, RelayerClient, RelayerGetBlockRequest,
             RelayerGetLatestBlockInfoRequest, RelayerGetLatestOrderbookDepthRequest,
         },
-        transaction::{create_create_asset_transaction, ConsensusTransaction},
+        transaction::ConsensusTransaction,
         utils,
     };
 

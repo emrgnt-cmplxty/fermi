@@ -161,7 +161,7 @@ impl StakeController {
 #[cfg(test)]
 pub mod stake_tests {
     use super::*;
-    use crate::bank::CREATED_ASSET_BALANCE;
+    use crate::bank::controller::CREATED_ASSET_BALANCE;
     use gdex_types::account::account_test_functions::generate_keypair_vec;
     use gdex_types::crypto::KeypairTraits;
 

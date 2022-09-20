@@ -442,10 +442,7 @@ impl OrderBookWrapper for SpotOrderbook {
 pub mod spot_tests {
     // crate
     use super::*;
-    use crate::{
-        bank::{BankController, CREATED_ASSET_BALANCE},
-        spot::SpotOrderbook,
-    };
+    use crate::bank::controller::{BankController, CREATED_ASSET_BALANCE};
 
     // gdex
     use gdex_types::crypto::KeypairTraits;
@@ -453,10 +450,6 @@ pub mod spot_tests {
         account::account_test_functions::generate_keypair_vec,
         block::BlockDigest,
         order_book::{OrderProcessingResult, OrderSide, Success},
-        transaction::{
-            create_cancel_order_request, create_limit_order_request, create_limit_order_transaction,
-            create_update_order_request,
-        },
     };
 
     // mysten

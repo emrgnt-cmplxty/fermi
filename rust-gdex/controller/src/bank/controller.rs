@@ -231,9 +231,7 @@ impl BankController {
 #[cfg(test)]
 pub mod spot_tests {
     // crate
-    use crate::bank::{
-        types::*, utils::*, proto::*
-    };
+    use super::*;
 
     // mysten
     use fastcrypto::{generate_production_keypair, traits::KeyPair as _};

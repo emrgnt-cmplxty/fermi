@@ -7,7 +7,7 @@ extern crate criterion;
 
 use criterion::*;
 
-use gdex_controller::bank::BankController;
+use gdex_controller::bank::controller::BankController;
 use std::sync::{Arc, Mutex};
 use tokio::{
     runtime::Runtime,

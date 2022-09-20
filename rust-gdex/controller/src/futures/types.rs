@@ -1,5 +1,7 @@
+// crate
+use crate::utils::engine::order_book::{OrderId, Orderbook};
+
 // gdex
-use gdex_engine::order_book::{OrderId, Orderbook};
 use gdex_types::{account::AccountPubKey, asset::AssetId, order_book::OrderSide};
 
 // external

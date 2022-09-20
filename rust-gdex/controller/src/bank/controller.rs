@@ -12,6 +12,9 @@
 // IMPORTS
 
 // crate
+use crate::bank::{
+    proto::*
+};
 use crate::controller::Controller;
 use crate::router::ControllerRouter;
 
@@ -23,7 +26,7 @@ use gdex_types::{
     error::GDEXError,
     store::ProcessBlockStore,
     transaction::{
-        deserialize_protobuf, parse_request_type, CreateAssetRequest, PaymentRequest, RequestType, Transaction,
+        deserialize_protobuf, parse_request_type, RequestType, Transaction,
     },
 };
 
@@ -35,12 +38,15 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-// CONSTANTS
+// ENUMS
+
 #[derive(PartialEq)]
-enum Modifier {
+pub enum Modifier {
     Increment,
     Decrement,
 }
+
+// CONSTANTS
 
 // TODO need to find valid vanity address for bank controller
 pub const BANK_CONTROLLER_ACCOUNT_PUBKEY: &[u8] = b"STAKECONTROLLERAAAAAAAAAAAAAAAAA";
@@ -220,9 +226,16 @@ impl BankController {
     }
 }
 
+// TESTS
+
 #[cfg(test)]
 pub mod spot_tests {
-    use super::*;
+    // crate
+    use crate::bank::{
+        types::*, utils::*, proto::*
+    };
+
+    // mysten
     use fastcrypto::{generate_production_keypair, traits::KeyPair as _};
     use narwhal_crypto::KeyPair;
 

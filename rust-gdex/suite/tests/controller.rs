@@ -7,8 +7,10 @@ pub mod process_tests {
     use gdex_controller::{
         bank::{BankController, CREATED_ASSET_BALANCE},
         spot::{SpotOrderbook, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
+        utils::engine::{
+            order_book::OrderBookWrapper,
+        }
     };
-    use gdex_engine::order_book::OrderBookWrapper;
     use gdex_types::{
         account::account_test_functions::generate_keypair_vec, account::AccountPubKey, asset::AssetId,
         crypto::KeypairTraits, crypto::ToFromBytes, order_book::OrderSide, transaction::create_limit_order_request,

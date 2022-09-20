@@ -1,13 +1,14 @@
 // crate
-use crate::bank::BankController;
+use crate::bank::controller::BankController;
+use crate::spot::proto::*;
 use crate::controller::Controller;
 use crate::futures::{
-    types::*, utils::*, AccountDepositRequest, AccountWithdrawalRequest, CreateMarketRequest, CreateMarketplaceRequest,
-    FuturesLimitOrderRequest, UpdateMarketParamsRequest, UpdatePricesRequest, UpdateTimeRequest,
+    types::*, utils::*, proto::*,
 };
 use crate::router::ControllerRouter;
+use crate::utils::engine::order_book::{OrderBookWrapper, OrderId, Orderbook};
+
 // gdex
-use gdex_engine::order_book::{OrderBookWrapper, OrderId, Orderbook};
 use gdex_types::{
     account::AccountPubKey,
     crypto::ToFromBytes,
@@ -15,7 +16,7 @@ use gdex_types::{
     order_book::OrderSide,
     store::ProcessBlockStore,
     transaction::{
-        deserialize_protobuf, parse_order_side, parse_request_type, LimitOrderRequest, RequestType, Transaction,
+        deserialize_protobuf, parse_order_side, parse_request_type, RequestType, Transaction,
     },
 };
 // external

@@ -15,7 +15,6 @@ fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "c022a2ae
 narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "crypto"}
 narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "types"}
 # local crates
-gdex-engine = { path = "../engine" }
 gdex-types = { path = "../types", features=["testing"] }
 gdex-workspace-hack = { path = "../workspace-hack" }
 
@@ -23,3 +22,6 @@ gdex-workspace-hack = { path = "../workspace-hack" }
 prost-build = "0.10.4"
 rustversion = "1.0.9"
 tonic-build = { version = "0.7.2", features = [ "prost", "transport" ] }
+
+[features]
+testing = []

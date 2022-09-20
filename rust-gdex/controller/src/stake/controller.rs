@@ -9,7 +9,7 @@
 // IMPORTS
 
 // crate
-use super::bank::BankController;
+use crate::bank::controller::BankController;
 use crate::controller::Controller;
 use crate::router::ControllerRouter;
 

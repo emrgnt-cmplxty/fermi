@@ -8,8 +8,6 @@ fn main() -> Result<()> {
         "proto/services.proto",
         "proto/transaction.proto",
         "proto/block.proto",
-        "proto/bank_requests.proto",
-        "proto/spot_requests.proto",
     ];
     let dirs = &["proto"];
 

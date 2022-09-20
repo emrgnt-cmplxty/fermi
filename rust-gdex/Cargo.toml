@@ -2,7 +2,6 @@
 members = [
     "core",
     "cli",
-    "engine",
     "controller",
     "node",
     "suite",

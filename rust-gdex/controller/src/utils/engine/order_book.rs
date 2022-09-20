@@ -9,6 +9,7 @@
 //! we should include some sort of random noise to ensure that every order that touches the book gets inserted
 //! as upstream checks will robustly ensure no duplicates
 
+use crate::spot::proto::*;
 use super::order_queues::OrderQueue;
 use super::orders::{create_cancel_order_request, create_limit_order_request, create_update_order_request};
 use super::sequence;
@@ -21,7 +22,7 @@ use gdex_types::{
     order_book::{
         Depth, Failed, Order, OrderProcessingResult, OrderRequest, OrderSide, OrderType, OrderbookDepth, Success,
     },
-    transaction::{parse_order_side, CancelOrderRequest, LimitOrderRequest, MarketOrderRequest, UpdateOrderRequest},
+    transaction::{parse_order_side},
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

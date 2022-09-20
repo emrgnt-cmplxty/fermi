@@ -6,9 +6,16 @@ use gdex_types::{
     order_book::OrderSide,
     proto::{Empty, RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionSubmitterClient},
     transaction::{
-        create_create_asset_transaction, create_create_orderbook_transaction, create_limit_order_transaction,
-        create_payment_transaction, ConsensusTransaction, SignedTransaction,
+        ConsensusTransaction, SignedTransaction,
     },
+};
+use gdex_controller::{
+    bank::proto::{
+        create_create_asset_transaction, create_payment_transaction
+    },
+    spot::proto::{
+        create_create_orderbook_transaction, create_limit_order_transaction,
+    }
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use tokio::time::{sleep, Duration};

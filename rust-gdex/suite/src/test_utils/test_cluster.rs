@@ -1,7 +1,8 @@
 // IMPORTS
 
 // gdex
-use gdex_controller::{bank::CREATED_ASSET_BALANCE, router::ControllerRouter};
+use gdex_controller::{bank::controller::CREATED_ASSET_BALANCE, router::ControllerRouter};
+use gdex_controller::bank::proto::bank_controller_test_functions::generate_signed_test_transaction;
 use gdex_core::{
     client,
     genesis_ceremony::{GENESIS_FILENAME, VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
@@ -14,9 +15,10 @@ use gdex_types::{
     crypto::{get_key_pair_from_rng, KeypairTraits},
     node::ValidatorInfo,
     proto::TransactionSubmitterClient,
-    transaction::{transaction_test_functions::generate_signed_test_transaction, SignedTransaction},
+    transaction::SignedTransaction,
     utils,
 };
+
 
 // external
 use std::{io, path::Path, path::PathBuf, sync::Arc};

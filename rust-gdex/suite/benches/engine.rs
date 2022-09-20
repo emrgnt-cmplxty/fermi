@@ -2,10 +2,10 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughpu
 use gdex_controller::{
     bank::BankController,
     spot::{SpotOrderbook, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
-};
-use gdex_engine::{
-    order_book::{OrderBookWrapper, Orderbook},
-    orders::create_limit_order_request,
+    utils::engine::{
+        order_book::{OrderBookWrapper, Orderbook},
+        orders::create_limit_order_request,
+    }
 };
 use gdex_types::{
     account::{account_test_functions::generate_keypair_vec, AccountPubKey},

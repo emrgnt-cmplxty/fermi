@@ -9,9 +9,10 @@ use gdex_types::{
     account::{AccountKeyPair, ValidatorKeyPair},
     block::BlockDigest,
     proto::{RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionSubmitterClient},
-    transaction::{create_payment_transaction, ConsensusTransaction, SignedTransaction},
+    transaction::{ConsensusTransaction, SignedTransaction},
     utils::read_keypair_from_file,
 };
+use gdex_controller::bank::proto::create_payment_transaction;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use std::path::PathBuf;
 use tokio::{

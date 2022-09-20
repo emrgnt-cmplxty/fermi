@@ -12,8 +12,10 @@ use gdex_types::{
     account::AccountKeyPair,
     crypto::KeypairTraits,
     error::GDEXError,
-    transaction::{create_payment_transaction, ConsensusTransaction},
+    transaction::ConsensusTransaction,
 };
+use gdex_controller::bank::proto::create_payment_transaction;
+
 use narwhal_types::{Batch, CertificateDigest, WorkerMessage};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 

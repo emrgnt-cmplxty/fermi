@@ -2,18 +2,14 @@
 
 // gdex
 use gdex_types::{
-    error::GDEXError,
-    account::{
-        AccountPubKey
-    },
-    transaction::{
-        Transaction, ControllerType, RequestType, serialize_protobuf, create_transaction
-    },
+    account::AccountPubKey,
     crypto::ToFromBytes,
+    error::GDEXError,
+    transaction::{create_transaction, serialize_protobuf, ControllerType, RequestType, Transaction},
 };
 
 // mysten
-use narwhal_types::{CertificateDigest};
+use narwhal_types::CertificateDigest;
 
 // external
 use prost::bytes::Bytes;
@@ -94,8 +90,8 @@ pub fn create_payment_transaction(
 #[cfg(any(test, feature = "testing"))]
 pub mod bank_controller_test_functions {
     use super::*;
-    use gdex_types::{account::AccountKeyPair, crypto::KeypairTraits, transaction::SignedTransaction};
     use fastcrypto::DIGEST_LEN;
+    use gdex_types::{account::AccountKeyPair, crypto::KeypairTraits, transaction::SignedTransaction};
 
     pub const PRIMARY_ASSET_ID: u64 = 0;
 

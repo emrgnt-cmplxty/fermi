@@ -8,13 +8,8 @@ extern crate criterion;
 
 use criterion::*;
 use fastcrypto::DIGEST_LEN;
-use gdex_types::{
-    account::AccountKeyPair,
-    crypto::KeypairTraits,
-    error::GDEXError,
-    transaction::ConsensusTransaction,
-};
 use gdex_controller::bank::proto::create_payment_transaction;
+use gdex_types::{account::AccountKeyPair, crypto::KeypairTraits, error::GDEXError, transaction::ConsensusTransaction};
 
 use narwhal_types::{Batch, CertificateDigest, WorkerMessage};
 use rand::{rngs::StdRng, Rng, SeedableRng};

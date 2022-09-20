@@ -5,6 +5,7 @@ pub mod cluster_test_suite {
     // IMPORTS
 
     // gdex
+    use gdex_controller::bank::proto::create_create_asset_transaction;
     use gdex_core::{
         catchup::manager::{
             mock_catchup_manager::{MockCatchupManger, MockRelayServer},
@@ -27,7 +28,6 @@ pub mod cluster_test_suite {
         transaction::ConsensusTransaction,
         utils,
     };
-    use gdex_controller::bank::proto::create_create_asset_transaction;
 
     // mysten
     use fastcrypto::{generate_production_keypair, Hash, DIGEST_LEN};

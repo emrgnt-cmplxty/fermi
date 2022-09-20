@@ -6,7 +6,7 @@ use gdex_controller::{
     utils::engine::{
         order_book::{OrderBookWrapper, Orderbook},
         orders::create_limit_order_request,
-    }
+    },
 };
 use gdex_types::{
     account::{account_test_functions::generate_keypair_vec, AccountPubKey},

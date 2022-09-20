@@ -1,4 +1,5 @@
 use fastcrypto::{ed25519::Ed25519PublicKey, traits::ToFromBytes, DIGEST_LEN};
+use gdex_controller::bank::proto::create_payment_transaction;
 use gdex_core::client;
 use gdex_types::{
     account::AccountKeyPair,
@@ -7,7 +8,6 @@ use gdex_types::{
     transaction::SignedTransaction,
     utils,
 };
-use gdex_controller::bank::proto::create_payment_transaction;
 use multiaddr::Multiaddr;
 use narwhal_types::CertificateDigest;
 use std::{

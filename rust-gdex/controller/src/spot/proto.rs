@@ -2,16 +2,12 @@
 
 // gdex
 use gdex_types::{
-    account::{
-        AccountPubKey
-    },
-    transaction::{
-        Transaction, ControllerType, RequestType, serialize_protobuf, create_transaction
-    },
+    account::AccountPubKey,
+    transaction::{create_transaction, serialize_protobuf, ControllerType, RequestType, Transaction},
 };
 
 // mysten
-use narwhal_types::{CertificateDigest};
+use narwhal_types::CertificateDigest;
 
 // MODULE IMPORTS
 

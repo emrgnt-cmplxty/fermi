@@ -1,9 +1,7 @@
 #[cfg(test)]
 pub mod futures_tests {
     // crate
-    use crate::futures::{
-        types::*, proto::*,
-    };
+    use crate::futures::{proto::*, types::*};
     use crate::router::ControllerRouter;
     use crate::ControllerTestBed;
     // gdex

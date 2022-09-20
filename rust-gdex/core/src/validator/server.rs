@@ -337,8 +337,8 @@ mod test_validator_server {
         genesis_ceremony::{VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
         validator::metrics::ValidatorMetrics,
     };
-    use gdex_controller::router::ControllerRouter;
     use gdex_controller::bank::proto::bank_controller_test_functions::generate_signed_test_transaction;
+    use gdex_controller::router::ControllerRouter;
     use gdex_types::{
         account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair, ValidatorPubKeyBytes},
         crypto::{get_key_pair_from_rng, KeypairTraits},

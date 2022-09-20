@@ -12,12 +12,10 @@
 // IMPORTS
 
 // crate
-use crate::spot::{
-    proto::*
-};
 use crate::bank::controller::BankController;
 use crate::controller::Controller;
 use crate::router::ControllerRouter;
+use crate::spot::proto::*;
 use crate::utils::engine::order_book::{OrderBookWrapper, OrderId, Orderbook};
 
 // gdex
@@ -28,9 +26,7 @@ use gdex_types::{
     error::GDEXError,
     order_book::{OrderSide, OrderbookDepth},
     store::ProcessBlockStore,
-    transaction::{
-        deserialize_protobuf, parse_request_type, RequestType, Transaction,
-    },
+    transaction::{deserialize_protobuf, parse_request_type, RequestType, Transaction},
 };
 
 // external

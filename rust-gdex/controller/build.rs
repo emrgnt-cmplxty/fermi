@@ -18,7 +18,7 @@ fn build_proto(controller_name: &str) -> Result<()> {
 
     let proto_files = &[requests_proto_file];
     let dirs = &[proto_dir];
-    
+
     // Use `Bytes` instead of `Vec<u8>` for bytes fields
     let mut config = prost_build::Config::new();
     config.bytes(&["."]);
@@ -34,7 +34,7 @@ fn build_proto(controller_name: &str) -> Result<()> {
     nightly();
     beta();
     stable();
-    
+
     Ok(())
 }
 

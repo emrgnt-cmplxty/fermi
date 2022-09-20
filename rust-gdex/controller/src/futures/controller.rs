@@ -1,11 +1,9 @@
 // crate
 use crate::bank::controller::BankController;
-use crate::spot::proto::*;
 use crate::controller::Controller;
-use crate::futures::{
-    types::*, utils::*, proto::*,
-};
+use crate::futures::{proto::*, types::*, utils::*};
 use crate::router::ControllerRouter;
+use crate::spot::proto::*;
 use crate::utils::engine::order_book::{OrderBookWrapper, OrderId, Orderbook};
 
 // gdex
@@ -15,9 +13,7 @@ use gdex_types::{
     error::GDEXError,
     order_book::OrderSide,
     store::ProcessBlockStore,
-    transaction::{
-        deserialize_protobuf, parse_order_side, parse_request_type, RequestType, Transaction,
-    },
+    transaction::{deserialize_protobuf, parse_order_side, parse_request_type, RequestType, Transaction},
 };
 // external
 use async_trait::async_trait;

@@ -12,9 +12,7 @@
 // IMPORTS
 
 // crate
-use crate::bank::{
-    proto::*
-};
+use crate::bank::proto::*;
 use crate::controller::Controller;
 use crate::router::ControllerRouter;
 
@@ -25,9 +23,7 @@ use gdex_types::{
     crypto::ToFromBytes,
     error::GDEXError,
     store::ProcessBlockStore,
-    transaction::{
-        deserialize_protobuf, parse_request_type, RequestType, Transaction,
-    },
+    transaction::{deserialize_protobuf, parse_request_type, RequestType, Transaction},
 };
 
 // mysten
@@ -40,7 +36,7 @@ use std::sync::{Arc, Mutex};
 
 // ENUMS
 
-#[derive(PartialEq)]
+#[derive(Eq, PartialEq)]
 pub enum Modifier {
     Increment,
     Decrement,

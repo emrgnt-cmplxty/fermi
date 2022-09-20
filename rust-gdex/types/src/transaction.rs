@@ -218,248 +218,6 @@ pub fn create_transaction(
     }
 }
 
-// BANK REQUESTS
-
-pub fn create_create_asset_request(dummy: u64) -> CreateAssetRequest {
-    CreateAssetRequest { dummy }
-}
-
-impl PaymentRequest {
-    pub fn get_receiver(&self) -> Result<AccountPubKey, GDEXError> {
-        AccountPubKey::from_bytes(&self.receiver).map_err(|_e| GDEXError::DeserializationError)
-    }
-}
-
-pub fn create_payment_request(receiver: &AccountPubKey, asset_id: u64, amount: u64) -> PaymentRequest {
-    PaymentRequest {
-        receiver: Bytes::from(receiver.as_ref().to_vec()),
-        asset_id,
-        amount,
-    }
-}
-
-// SPOT REQUESTS
-
-pub fn create_create_orderbook_request(base_asset_id: u64, quote_asset_id: u64) -> CreateOrderbookRequest {
-    CreateOrderbookRequest {
-        base_asset_id,
-        quote_asset_id,
-    }
-}
-
-pub fn create_market_order_request(
-    base_asset_id: u64,
-    quote_asset_id: u64,
-    side: u64,
-    quantity: u64,
-) -> MarketOrderRequest {
-    MarketOrderRequest {
-        base_asset_id,
-        quote_asset_id,
-        side,
-        quantity,
-    }
-}
-
-pub fn create_limit_order_request(
-    base_asset_id: u64,
-    quote_asset_id: u64,
-    side: u64,
-    price: u64,
-    quantity: u64,
-) -> LimitOrderRequest {
-    LimitOrderRequest {
-        base_asset_id,
-        quote_asset_id,
-        side,
-        price,
-        quantity,
-    }
-}
-
-pub fn create_update_order_request(
-    base_asset_id: u64,
-    quote_asset_id: u64,
-    side: u64,
-    price: u64,
-    quantity: u64,
-    order_id: u64,
-) -> UpdateOrderRequest {
-    UpdateOrderRequest {
-        base_asset_id,
-        quote_asset_id,
-        side,
-        price,
-        quantity,
-        order_id,
-    }
-}
-
-pub fn create_cancel_order_request(
-    base_asset_id: u64,
-    quote_asset_id: u64,
-    side: u64,
-    order_id: u64,
-) -> CancelOrderRequest {
-    CancelOrderRequest {
-        base_asset_id,
-        quote_asset_id,
-        side,
-        order_id,
-    }
-}
-
-// TRANSACTION BUILDERS
-
-pub fn create_payment_transaction(
-    sender: AccountPubKey, // TODO can be ref?
-    receiver: &AccountPubKey,
-    asset_id: u64,
-    amount: u64,
-    fee: u64,
-    recent_block_hash: CertificateDigest,
-) -> Transaction {
-    let request = create_payment_request(receiver, asset_id, amount);
-
-    create_transaction(
-        sender,
-        ControllerType::Bank,
-        RequestType::Payment,
-        recent_block_hash,
-        fee,
-        serialize_protobuf(&request),
-    )
-}
-
-// TODO get rid of dummy thing (pretty gross)
-pub fn create_create_asset_transaction(
-    sender: AccountPubKey,
-    dummy: u64,
-    fee: u64,
-    recent_block_hash: CertificateDigest,
-) -> Transaction {
-    let request = create_create_asset_request(dummy);
-
-    create_transaction(
-        sender,
-        ControllerType::Bank,
-        RequestType::CreateAsset,
-        recent_block_hash,
-        fee,
-        serialize_protobuf(&request),
-    )
-}
-
-pub fn create_create_orderbook_transaction(
-    sender: AccountPubKey,
-    base_asset_id: u64,
-    quote_asset_id: u64,
-    fee: u64,
-    recent_block_hash: CertificateDigest,
-) -> Transaction {
-    let request = create_create_orderbook_request(base_asset_id, quote_asset_id);
-
-    create_transaction(
-        sender,
-        ControllerType::Spot,
-        RequestType::CreateOrderbook,
-        recent_block_hash,
-        fee,
-        serialize_protobuf(&request),
-    )
-}
-
-#[allow(clippy::too_many_arguments)]
-pub fn create_market_order_transaction(
-    sender: AccountPubKey,
-    base_asset_id: u64,
-    quote_asset_id: u64,
-    side: u64,
-    quantity: u64,
-    fee: u64,
-    recent_block_hash: CertificateDigest,
-) -> Transaction {
-    let request = create_market_order_request(base_asset_id, quote_asset_id, side, quantity);
-
-    create_transaction(
-        sender,
-        ControllerType::Spot,
-        RequestType::MarketOrder,
-        recent_block_hash,
-        fee,
-        serialize_protobuf(&request),
-    )
-}
-
-#[allow(clippy::too_many_arguments)]
-pub fn create_limit_order_transaction(
-    sender: AccountPubKey,
-    base_asset_id: u64,
-    quote_asset_id: u64,
-    side: u64,
-    price: u64,
-    quantity: u64,
-    fee: u64,
-    recent_block_hash: CertificateDigest,
-) -> Transaction {
-    let request = create_limit_order_request(base_asset_id, quote_asset_id, side, price, quantity);
-
-    create_transaction(
-        sender,
-        ControllerType::Spot,
-        RequestType::LimitOrder,
-        recent_block_hash,
-        fee,
-        serialize_protobuf(&request),
-    )
-}
-
-#[allow(clippy::too_many_arguments)]
-pub fn create_update_order_transaction(
-    sender: AccountPubKey,
-    base_asset_id: u64,
-    quote_asset_id: u64,
-    side: u64,
-    price: u64,
-    quantity: u64,
-    order_id: u64,
-    fee: u64,
-    recent_block_hash: CertificateDigest,
-) -> Transaction {
-    let request = create_update_order_request(base_asset_id, quote_asset_id, side, price, quantity, order_id);
-
-    create_transaction(
-        sender,
-        ControllerType::Spot,
-        RequestType::UpdateOrder,
-        recent_block_hash,
-        fee,
-        serialize_protobuf(&request),
-    )
-}
-
-#[allow(clippy::too_many_arguments)]
-pub fn create_cancel_order_transaction(
-    sender: AccountPubKey,
-    base_asset_id: u64,
-    quote_asset_id: u64,
-    side: u64,
-    order_id: u64,
-    fee: u64,
-    recent_block_hash: CertificateDigest,
-) -> Transaction {
-    let request = create_cancel_order_request(base_asset_id, quote_asset_id, side, order_id);
-
-    create_transaction(
-        sender,
-        ControllerType::Spot,
-        RequestType::CancelOrder,
-        recent_block_hash,
-        fee,
-        serialize_protobuf(&request),
-    )
-}
-
 // ENUM CONVERSIONS
 // TODO gotta be a better way to do this
 
@@ -469,12 +227,14 @@ pub fn parse_target_controller(target_controller: i32) -> Result<ControllerType,
         1 => Ok(ControllerType::Stake),
         2 => Ok(ControllerType::Spot),
         3 => Ok(ControllerType::Consensus),
+        4 => Ok(ControllerType::Futures),
         _ => Err(GDEXError::DeserializationError),
     }
 }
 
 pub fn parse_request_type(request_type: i32) -> Result<RequestType, GDEXError> {
     match request_type {
+        // Spot types
         0 => Ok(RequestType::Payment),
         1 => Ok(RequestType::CreateAsset),
         2 => Ok(RequestType::CreateOrderbook),
@@ -482,6 +242,18 @@ pub fn parse_request_type(request_type: i32) -> Result<RequestType, GDEXError> {
         4 => Ok(RequestType::LimitOrder),
         5 => Ok(RequestType::UpdateOrder),
         6 => Ok(RequestType::CancelOrder),
+        // Futures types
+        7 => Ok(RequestType::CreateMarketplace),
+        8 => Ok(RequestType::CreateMarket),
+        9 => Ok(RequestType::UpdateMarketParams),
+        10 => Ok(RequestType::UpdateTime),
+        11 => Ok(RequestType::UpdatePrices),
+        12 => Ok(RequestType::AccountDeposit),
+        13 => Ok(RequestType::AccountWithdrawal),
+        14 => Ok(RequestType::FuturesMarketOrder),
+        15 => Ok(RequestType::FuturesLimitOrder),
+        16 => Ok(RequestType::FuturesUpdateOrder),
+        17 => Ok(RequestType::FuturesCancelOrder),
         _ => Err(GDEXError::DeserializationError),
     }
 }
@@ -491,35 +263,5 @@ pub fn parse_order_side(side: u64) -> Result<OrderSide, GDEXError> {
         1 => Ok(OrderSide::Bid),
         2 => Ok(OrderSide::Ask),
         _ => Err(GDEXError::DeserializationError),
-    }
-}
-
-/// Begin externally available testing functions
-#[cfg(any(test, feature = "testing"))]
-pub mod transaction_test_functions {
-    use super::*;
-    use crate::{account::AccountKeyPair, crypto::KeypairTraits};
-
-    pub const PRIMARY_ASSET_ID: u64 = 0;
-
-    pub fn generate_signed_test_transaction(
-        kp_sender: &AccountKeyPair,
-        kp_receiver: &AccountKeyPair,
-        amount: u64,
-    ) -> SignedTransaction {
-        // TODO replace this with latest
-        let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
-
-        let fee: u64 = 1000;
-        let transaction = create_payment_transaction(
-            kp_sender.public().clone(),
-            kp_receiver.public(),
-            PRIMARY_ASSET_ID,
-            amount,
-            fee,
-            dummy_batch_digest,
-        );
-
-        transaction.sign(kp_sender).unwrap()
     }
 }

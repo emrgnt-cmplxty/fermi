@@ -7,7 +7,7 @@ use crate::validator::metrics::ValidatorMetrics;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
 use fastcrypto::Hash;
-use gdex_controller::master::MasterController;
+use gdex_controller::router::ControllerRouter;
 use gdex_types::{
     account::ValidatorKeyPair,
     block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},
@@ -211,7 +211,7 @@ pub struct ValidatorState {
     pub committee: ArcSwap<Committee>,
     /// NodeConfig for this node
     /// Controller of various blockchain modules
-    pub master_controller: MasterController,
+    pub master_controller: ControllerRouter,
     /// A map of transactions which have been seen
     pub validator_store: ValidatorStore,
     /// Metrics around blockchain operations
@@ -333,15 +333,18 @@ mod test_validator_state {
         genesis_ceremony::{VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
     };
     use fastcrypto::{generate_production_keypair, DIGEST_LEN};
+    use gdex_controller::{
+        bank::proto::{create_create_asset_transaction, create_payment_transaction},
+        spot::proto::{
+            create_cancel_order_transaction, create_create_orderbook_transaction, create_limit_order_transaction,
+            create_update_order_transaction,
+        },
+    };
     use gdex_types::{
         account::ValidatorPubKeyBytes,
         crypto::{get_key_pair_from_rng, KeypairTraits},
         node::ValidatorInfo,
         order_book::OrderSide,
-        transaction::{
-            create_cancel_order_transaction, create_create_asset_transaction, create_create_orderbook_transaction,
-            create_limit_order_transaction, create_payment_transaction, create_update_order_transaction,
-        },
         utils,
     };
     use narwhal_consensus::ConsensusOutput;
@@ -352,7 +355,7 @@ mod test_validator_state {
 
     #[tokio::test]
     pub async fn single_node_init() {
-        let master_controller = MasterController::default();
+        let master_controller = ControllerRouter::default();
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 
@@ -392,7 +395,7 @@ mod test_validator_state {
     }
 
     fn create_test_validator() -> ValidatorState {
-        let master_controller = MasterController::default();
+        let master_controller = ControllerRouter::default();
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 

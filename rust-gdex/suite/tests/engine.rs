@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
 
-    use gdex_engine::{order_book::Orderbook, orders};
+    use gdex_controller::utils::engine::{order_book::Orderbook, orders};
     use gdex_types::order_book::{Failed, OrderSide, Success};
     use std::time::SystemTime;
 

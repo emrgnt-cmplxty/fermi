@@ -7,17 +7,10 @@ extern crate bincode;
 extern crate criterion;
 
 use criterion::*;
-use fastcrypto::{
-    DIGEST_LEN,
-    generate_production_keypair
-};
+use fastcrypto::{generate_production_keypair, DIGEST_LEN};
+use gdex_controller::bank::proto::create_payment_transaction;
+use gdex_types::{account::AccountKeyPair, crypto::KeypairTraits, error::GDEXError, transaction::ConsensusTransaction};
 use narwhal_crypto::KeyPair;
-use gdex_types::{
-    account::AccountKeyPair,
-    crypto::KeypairTraits,
-    error::GDEXError,
-    transaction::{create_payment_transaction, ConsensusTransaction},
-};
 use narwhal_types::{Batch, CertificateDigest, WorkerMessage};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 

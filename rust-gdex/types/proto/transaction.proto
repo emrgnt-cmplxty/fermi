@@ -9,16 +9,31 @@ enum ControllerType {
     STAKE = 1;
     SPOT = 2;
     CONSENSUS = 3;
+    FUTURES = 4;
 }
 
 enum RequestType {
+    // begin bank messages
     PAYMENT = 0;
+    // begin spot market messages
     CREATE_ASSET = 1;
     CREATE_ORDERBOOK = 2;
     MARKET_ORDER = 3;
     LIMIT_ORDER = 4;
     UPDATE_ORDER = 5;
     CANCEL_ORDER = 6;
+    // begin futures market messages
+    CREATE_MARKETPLACE = 7;
+    CREATE_MARKET = 8;
+    UPDATE_MARKET_PARAMS = 9;
+    UPDATE_TIME = 10;
+    UPDATE_PRICES = 11;
+    ACCOUNT_DEPOSIT = 12;
+    ACCOUNT_WITHDRAWAL = 13;
+    FUTURES_MARKET_ORDER = 14;
+    FUTURES_LIMIT_ORDER = 15;
+    FUTURES_UPDATE_ORDER = 16;
+    FUTURES_CANCEL_ORDER = 17;
 }
 
 // STRUCTS

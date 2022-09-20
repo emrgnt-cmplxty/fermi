@@ -1,14 +1,17 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use gdex_controller::{
-    bank::BankController,
-    spot::{SpotOrderbook, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
+    bank::controller::BankController,
+    spot::controller::{SpotOrderbook, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
+    spot::proto::create_limit_order_request as txn_create_limit_order_request,
+    utils::engine::{
+        order_book::{OrderBookWrapper, Orderbook},
+        orders::create_limit_order_request,
+    },
 };
-use gdex_engine::{order_book::Orderbook, orders::create_limit_order_request};
 use gdex_types::{
     account::{account_test_functions::generate_keypair_vec, AccountPubKey},
     crypto::{KeypairTraits, ToFromBytes},
     order_book::{OrderProcessingResult, OrderRequest, OrderSide, Success},
-    transaction::create_limit_order_request as txn_create_limit_order_request,
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use rocksdb::{ColumnFamilyDescriptor, DBWithThreadMode, MultiThreaded, Options, DB};
@@ -86,7 +89,7 @@ fn place_orders_engine_account(
     base_asset_id: u64,
     quote_asset_id: u64,
     primary: &AccountPubKey,
-    orderbook_controller: &mut SpotOrderbook,
+    spot_orderbook: &mut SpotOrderbook,
     rng: &mut StdRng,
     db: &DBWithThreadMode<MultiThreaded>,
     persist: bool,
@@ -95,7 +98,7 @@ fn place_orders_engine_account(
     let orderbook: Orderbook = Orderbook::new(base_asset_id, quote_asset_id);
 
     // clean market controller orderbook to keep from getting clogged
-    orderbook_controller.overwrite_orderbook(orderbook);
+    spot_orderbook.overwrite_orderbook(orderbook);
 
     // bench
     let mut i_order: u64 = 0;
@@ -111,9 +114,7 @@ fn place_orders_engine_account(
 
         let limit_order_request =
             txn_create_limit_order_request(base_asset_id, quote_asset_id, order_type as u64, price, quantity);
-        let res = orderbook_controller
-            .place_limit_order(primary, &limit_order_request)
-            .unwrap();
+        let res = spot_orderbook.place_limit_order(primary, &limit_order_request).unwrap();
         if persist {
             persist_result(db, &res);
         }
@@ -121,11 +122,14 @@ fn place_orders_engine_account(
     }
 }
 
-fn orderbook_depth_depths(n_iter: u64, orderbook_controller: &mut SpotOrderbook, db: &DBWithThreadMode<MultiThreaded>) {
+fn orderbook_depth_depths(n_iter: u64, spot_orderbook: &mut SpotOrderbook, db: &DBWithThreadMode<MultiThreaded>) {
+    let orderbook: Orderbook = Orderbook::new(0, 1);
+    spot_orderbook.overwrite_orderbook(orderbook);
+
     let mut i: u64 = 0;
     while i < n_iter {
         // generate the orderbook depth depth
-        let orderbook_depth = orderbook_controller.get_orderbook_depth();
+        let orderbook_depth = spot_orderbook.get_orderbook_depth();
         let serialized_orderbook_depth = bincode::serialize(&orderbook_depth).unwrap();
         db.put("a", serialized_orderbook_depth).unwrap();
         i += 1;
@@ -156,7 +160,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         Arc::clone(&bank_controller_ref),
     );
 
-    orderbook_interface.create_account(primary.public()).unwrap();
+    // orderbook_interface.create_account(primary.public()).unwrap();
     // other helpers
     let mut i_account: u64 = 0;
     let path: &str = "./db.rocks";
@@ -238,24 +242,6 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     });
 
     group.finish();
-
-    // create more orders
-    const TEST_MID: u64 = 2000;
-    for i in 0..1_000 {
-        for _ in 0..10_000 {
-            // bid
-            let bid_limit_order_request =
-                txn_create_limit_order_request(base_asset_id, quote_asset_id, OrderSide::Bid as u64, TEST_MID - i, 1);
-            orderbook_interface
-                .place_limit_order(primary.public(), &bid_limit_order_request)
-                .unwrap();
-            let ask_limit_order_request =
-                txn_create_limit_order_request(base_asset_id, quote_asset_id, OrderSide::Ask as u64, TEST_MID + i, 1);
-            orderbook_interface
-                .place_limit_order(primary.public(), &ask_limit_order_request)
-                .unwrap();
-        }
-    }
 
     const N_DEPTHS_BENCH: u64 = 1;
     let mut group1 = c.benchmark_group("orderbook_depth");

@@ -24,6 +24,7 @@ telemetry-subscribers = { git = "https://github.com/MystenLabs/mysten-infra", re
 # TODO - remove benchmark flag in the future
 gdex-core = { path = "../core", features = ["benchmark"] }
 gdex-types = { path = "../types" }
+gdex-controller = { path = "../controller" }
 
 [[bin]]
 name = "faucet-server"

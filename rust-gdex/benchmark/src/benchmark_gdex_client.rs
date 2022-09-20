@@ -5,11 +5,12 @@ use anyhow::{Context, Result};
 use clap::{crate_name, crate_version, App, AppSettings};
 use fastcrypto::traits::KeyPair;
 use futures::{future::join_all, StreamExt};
+use gdex_controller::bank::proto::create_payment_transaction;
 use gdex_types::{
     account::{AccountKeyPair, ValidatorKeyPair},
     block::BlockDigest,
     proto::{RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionSubmitterClient},
-    transaction::{create_payment_transaction, ConsensusTransaction, SignedTransaction},
+    transaction::{ConsensusTransaction, SignedTransaction},
     utils::read_keypair_from_file,
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};

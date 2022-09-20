@@ -1,14 +1,15 @@
 use fastcrypto::traits::KeyPair;
+use gdex_controller::{
+    bank::proto::{create_create_asset_transaction, create_payment_transaction},
+    spot::proto::{create_create_orderbook_transaction, create_limit_order_transaction},
+};
 use gdex_types::transaction::serialize_protobuf;
 use gdex_types::{
     account::AccountKeyPair,
     block::BlockDigest,
     order_book::OrderSide,
     proto::{Empty, RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionSubmitterClient},
-    transaction::{
-        create_create_asset_transaction, create_create_orderbook_transaction, create_limit_order_transaction,
-        create_payment_transaction, ConsensusTransaction, SignedTransaction,
-    },
+    transaction::{ConsensusTransaction, SignedTransaction},
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use tokio::time::{sleep, Duration};

@@ -2456,13 +2456,18 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "bincode",
+ "bytes",
  "crypto",
  "fastcrypto",
- "gdex-engine",
  "gdex-types",
  "gdex-workspace-hack",
+ "prost",
+ "prost-build",
  "rand 0.8.5",
+ "rustversion",
  "serde 1.0.144",
+ "tonic-build 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "types",
 ]
 
 [[package]]
@@ -2513,16 +2518,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gdex-engine"
-version = "0.1.0"
-dependencies = [
- "gdex-types",
- "gdex-workspace-hack",
- "rand 0.8.5",
- "serde 1.0.144",
-]
-
-[[package]]
 name = "gdex-node"
 version = "0.1.0"
 dependencies = [
@@ -2531,6 +2526,7 @@ dependencies = [
  "crypto",
  "fastcrypto",
  "futures",
+ "gdex-controller",
  "gdex-core",
  "gdex-types",
  "hex",
@@ -2556,7 +2552,6 @@ dependencies = [
  "fastcrypto",
  "gdex-controller",
  "gdex-core",
- "gdex-engine",
  "gdex-node",
  "gdex-types",
  "gdex-workspace-hack",

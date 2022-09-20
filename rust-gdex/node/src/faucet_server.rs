@@ -1,10 +1,11 @@
 use fastcrypto::{ed25519::Ed25519PublicKey, traits::ToFromBytes, DIGEST_LEN};
+use gdex_controller::bank::proto::create_payment_transaction;
 use gdex_core::client;
 use gdex_types::{
     account::AccountKeyPair,
     crypto::KeypairTraits,
     proto::{Faucet, FaucetAirdropRequest, FaucetAirdropResponse, FaucetServer, TransactionSubmitterClient},
-    transaction::{create_payment_transaction, SignedTransaction},
+    transaction::SignedTransaction,
     utils,
 };
 use multiaddr::Multiaddr;

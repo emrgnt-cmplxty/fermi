@@ -4,7 +4,7 @@
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/genesis.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 use crate::builder::genesis_state::GenesisStateBuilder;
 use anyhow::{Context, Result};
-use gdex_controller::master::MasterController;
+use gdex_controller::router::ControllerRouter;
 use gdex_types::{
     committee::{Committee, EpochId},
     error::GDEXResult,
@@ -21,18 +21,18 @@ use tracing::trace;
 /// An object with the necessary state to initialize a new node at blockchain genesis
 #[derive(Clone, Debug)]
 pub struct ValidatorGenesisState {
-    master_controller: MasterController,
+    master_controller: ControllerRouter,
     validator_set: Vec<ValidatorInfo>,
 }
 
 impl ValidatorGenesisState {
-    pub fn new(master_controller: MasterController, validator_set: Vec<ValidatorInfo>) -> Self {
+    pub fn new(master_controller: ControllerRouter, validator_set: Vec<ValidatorInfo>) -> Self {
         ValidatorGenesisState {
             master_controller,
             validator_set,
         }
     }
-    pub fn master_controller(&self) -> &MasterController {
+    pub fn master_controller(&self) -> &ControllerRouter {
         &self.master_controller
     }
 
@@ -158,7 +158,7 @@ impl Serialize for ValidatorGenesisState {
 
         #[derive(Serialize)]
         struct RawGenesis<'a> {
-            master_controller: &'a MasterController,
+            master_controller: &'a ControllerRouter,
             validator_set: &'a [ValidatorInfo],
         }
 
@@ -187,7 +187,7 @@ impl<'de> Deserialize<'de> for ValidatorGenesisState {
 
         #[derive(Deserialize)]
         struct RawGenesis {
-            master_controller: MasterController,
+            master_controller: ControllerRouter,
             validator_set: Vec<ValidatorInfo>,
         }
 
@@ -238,7 +238,7 @@ mod genesis_test {
 
         let _genesis_config = GenesisConfig::for_local_testing();
 
-        let master_controller = MasterController::default();
+        let master_controller = ControllerRouter::default();
         master_controller.initialize_controllers();
         master_controller.initialize_controller_accounts();
 

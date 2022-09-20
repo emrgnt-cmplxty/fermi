@@ -37,27 +37,11 @@ pub use services::{
 #[allow(clippy::all)]
 mod block;
 
-pub use block::{Block, BlockInfo};
+pub use block::*;
 
 #[path = "generated/transaction.rs"]
 #[rustfmt::skip]
 #[allow(clippy::all)]
 mod transaction;
 
-pub use transaction::{ControllerType, RequestType, SignedTransaction, Transaction, Version};
-
-#[path = "generated/bank_requests.rs"]
-#[rustfmt::skip]
-#[allow(clippy::all)]
-mod bank_requests;
-
-pub use bank_requests::{CreateAssetRequest, PaymentRequest};
-
-#[path = "generated/spot_requests.rs"]
-#[rustfmt::skip]
-#[allow(clippy::all)]
-mod spot_requests;
-
-pub use spot_requests::{
-    CancelOrderRequest, CreateOrderbookRequest, LimitOrderRequest, MarketOrderRequest, UpdateOrderRequest,
-};
+pub use transaction::*;

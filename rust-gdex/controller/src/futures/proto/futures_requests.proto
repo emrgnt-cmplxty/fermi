@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package futures_requests;
+
+// REQUESTS
+
+message CreateMarketplaceRequest {
+    uint64 quote_asset_id = 1;
+}
+
+message CreateMarketRequest {
+    uint64 base_asset_id = 1;
+}
+
+message UpdateMarketParamsRequest {
+    uint64 base_asset_id = 1;
+    uint64 max_leverage = 2;
+}
+
+message UpdateTimeRequest {
+    uint64 latest_time = 1;
+}
+
+message UpdatePricesRequest {
+    repeated uint64 latest_prices = 1;
+}
+
+message AccountDepositRequest {
+    int64 quantity = 1;
+    bytes market_admin = 2;
+}
+
+message AccountWithdrawalRequest {
+    uint64 quantity = 1;
+    bytes market_admin = 2;
+}
+
+message FuturesLimitOrderRequest {
+    uint64 base_asset_id = 1;
+    uint64 quote_asset_id = 2;
+    uint64 side = 3;
+    uint64 price = 4;
+    uint64 quantity = 5;
+    bytes market_admin = 6;
+}

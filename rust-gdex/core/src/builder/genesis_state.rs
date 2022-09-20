@@ -5,7 +5,7 @@
 use crate::validator::genesis_state::ValidatorGenesisState;
 use anyhow::{bail, Result};
 use camino::Utf8Path;
-use gdex_controller::master::MasterController;
+use gdex_controller::router::ControllerRouter;
 use gdex_types::utils::encode_bytes_hex;
 use gdex_types::{account::ValidatorPubKeyBytes, node::ValidatorInfo};
 use std::{
@@ -20,7 +20,7 @@ const GENESIS_BUILDER_COMMITTEE_DIR: &str = "committee";
 
 /// Creates a builder object which facilitates the validator genesis construction
 pub struct GenesisStateBuilder {
-    pub master_controller: MasterController,
+    pub master_controller: ControllerRouter,
     pub validators: BTreeMap<ValidatorPubKeyBytes, ValidatorInfo>,
 }
 
@@ -43,7 +43,7 @@ impl GenesisStateBuilder {
         self
     }
 
-    pub fn set_master_controller(mut self, master_controller: MasterController) -> Self {
+    pub fn set_master_controller(mut self, master_controller: ControllerRouter) -> Self {
         self.master_controller = master_controller;
         self
     }
@@ -64,9 +64,9 @@ impl GenesisStateBuilder {
             bail!("path must be a directory");
         }
 
-        // Load MasterController
+        // Load ControllerRouter
         let master_controller_bytes = fs::read(path.join(GENESIS_BUILDER_CONTROLLER_OUT))?;
-        let master_controller: MasterController = serde_yaml::from_slice(&master_controller_bytes)?;
+        let master_controller: ControllerRouter = serde_yaml::from_slice(&master_controller_bytes)?;
 
         // Load validator infos
         let mut committee = BTreeMap::new();

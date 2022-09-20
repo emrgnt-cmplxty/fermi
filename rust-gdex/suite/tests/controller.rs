@@ -11,8 +11,7 @@ pub mod process_tests {
     use gdex_engine::order_book::OrderBookWrapper;
     use gdex_types::{
         account::account_test_functions::generate_keypair_vec, account::AccountPubKey, asset::AssetId,
-        crypto::KeypairTraits, crypto::ToFromBytes, error::GDEXError, order_book::OrderSide,
-        transaction::create_limit_order_request,
+        crypto::KeypairTraits, crypto::ToFromBytes, order_book::OrderSide, transaction::create_limit_order_request,
     };
 
     use std::sync::{Arc, Mutex};
@@ -57,7 +56,7 @@ pub mod process_tests {
         let bid_price: u64 = 100;
         place_limit_order_helper(
             &mut orderbook_interface,
-            &account.public(),
+            account.public(),
             OrderSide::Bid,
             bid_price,
             bid_size,
@@ -103,7 +102,7 @@ pub mod process_tests {
         let bid_price: u64 = 100;
         place_limit_order_helper(
             &mut orderbook_interface,
-            &account.public(),
+            account.public(),
             OrderSide::Ask,
             bid_price,
             bid_size,
@@ -125,52 +124,6 @@ pub mod process_tests {
                 .unwrap(),
             CREATED_ASSET_BALANCE - bid_size
         );
-    }
-
-    #[test]
-    fn fail_on_invalid_account_lookup() {
-        let account = generate_keypair_vec([0; 32]).pop().unwrap();
-        let mut bank_controller = BankController::default();
-        bank_controller.create_asset(account.public()).unwrap();
-        bank_controller.create_asset(account.public()).unwrap();
-        let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
-
-        let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
-        let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
-
-        let orderbook_interface = SpotOrderbook::new(
-            BASE_ASSET_ID,
-            QUOTE_ASSET_ID,
-            controller_account,
-            Arc::clone(&bank_controller_ref),
-        );
-
-        let result: GDEXError = orderbook_interface.get_account(account.public()).unwrap_err();
-
-        assert!(matches!(result, GDEXError::AccountLookup));
-    }
-
-    #[test]
-    fn fail_on_account_double_creation() {
-        let account = generate_keypair_vec([0; 32]).pop().unwrap();
-        let mut bank_controller = BankController::default();
-        bank_controller.create_asset(account.public()).unwrap();
-        bank_controller.create_asset(account.public()).unwrap();
-        let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
-
-        let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
-        let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
-
-        let mut orderbook_interface = SpotOrderbook::new(
-            BASE_ASSET_ID,
-            QUOTE_ASSET_ID,
-            controller_account,
-            Arc::clone(&bank_controller_ref),
-        );
-
-        orderbook_interface.create_account(account.public()).unwrap();
-        let result: GDEXError = orderbook_interface.create_account(account.public()).unwrap_err();
-        assert!(matches!(result, GDEXError::AccountCreation));
     }
 
     #[test]
@@ -204,7 +157,7 @@ pub mod process_tests {
         let bid_price_0: u64 = 100;
         place_limit_order_helper(
             &mut orderbook_interface,
-            &account_0.public(),
+            account_0.public(),
             OrderSide::Bid,
             bid_price_0,
             bid_size_0,
@@ -214,7 +167,7 @@ pub mod process_tests {
         let bid_price_1: u64 = 110;
         place_limit_order_helper(
             &mut orderbook_interface,
-            &account_1.public(),
+            account_1.public(),
             OrderSide::Bid,
             bid_price_1,
             bid_size_1,
@@ -286,7 +239,7 @@ pub mod process_tests {
         let bid_price_0: u64 = 200;
         place_limit_order_helper(
             &mut orderbook_interface,
-            &account_0.public(),
+            account_0.public(),
             OrderSide::Bid,
             bid_price_0,
             bid_size_0,
@@ -296,7 +249,7 @@ pub mod process_tests {
         let bid_price_1: u64 = bid_price_0 - 2;
         place_limit_order_helper(
             &mut orderbook_interface,
-            &account_1.public(),
+            account_1.public(),
             OrderSide::Bid,
             bid_price_1,
             bid_size_1,
@@ -341,7 +294,7 @@ pub mod process_tests {
         let ask_price_0: u64 = bid_price_0 - 1;
         place_limit_order_helper(
             &mut orderbook_interface,
-            &account_1.public(),
+            account_1.public(),
             OrderSide::Ask,
             ask_price_0,
             ask_size_0,
@@ -395,7 +348,7 @@ pub mod process_tests {
         let ask_price_1: u64 = bid_price_1 - 1;
         place_limit_order_helper(
             &mut orderbook_interface,
-            &account_1.public(),
+            account_1.public(),
             OrderSide::Ask,
             ask_price_1,
             ask_size_1,

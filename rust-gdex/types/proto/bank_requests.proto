@@ -11,5 +11,5 @@ message CreateAssetRequest {
 message PaymentRequest {
     bytes receiver = 1;
     uint64 asset_id = 2;
-    uint64 amount = 3;  
+    uint64 quantity = 3;  
 }

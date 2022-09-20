@@ -46,15 +46,30 @@ pub enum ControllerType {
     Stake = 1,
     Spot = 2,
     Consensus = 3,
+    Futures = 4,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
 pub enum RequestType {
+    /// begin bank messages
     Payment = 0,
+    /// begin spot market messages
     CreateAsset = 1,
     CreateOrderbook = 2,
     MarketOrder = 3,
     LimitOrder = 4,
     UpdateOrder = 5,
     CancelOrder = 6,
+    /// begin futures market messages
+    CreateMarketplace = 7,
+    CreateMarket = 8,
+    UpdateMarketParams = 9,
+    UpdateTime = 10,
+    UpdatePrices = 11,
+    AccountDeposit = 12,
+    AccountWithdrawal = 13,
+    FuturesMarketOrder = 14,
+    FuturesLimitOrder = 15,
+    FuturesUpdateOrder = 16,
+    FuturesCancelOrder = 17,
 }

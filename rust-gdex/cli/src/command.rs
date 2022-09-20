@@ -407,7 +407,7 @@ impl GDEXCommand {
                             .expect("An error occurred during key generation.");
                     }
                     Err(..) => {
-                        println!("A keystore already exists at {:?}.", &keystore_path);
+                        println!("Error, a keystore already exists at {:?}.", &keystore_path);
                     }
                 }
 
@@ -430,7 +430,6 @@ impl GDEXCommand {
                 let _response = client.airdrop(request).await?;
 
                 // Printing response and returning Ok(())
-                println!("Success! Airdroped {} tokens to address {}", amount, airdrop_to);
                 Ok(())
             }
         }

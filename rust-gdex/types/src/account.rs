@@ -63,21 +63,6 @@ impl BankAccount {
     }
 }
 
-/// OrderAccount is consumed by the SpotController
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct OrderAccount {
-    account_pub_key: AccountPubKey,
-}
-impl OrderAccount {
-    pub fn new(account_pub_key: AccountPubKey) -> Self {
-        OrderAccount { account_pub_key }
-    }
-
-    pub fn get_account_pub_key(&self) -> &AccountPubKey {
-        &self.account_pub_key
-    }
-}
-
 /// StakeAccount is consumed by the StakeController
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct StakeAccount {
@@ -138,14 +123,6 @@ pub mod account_tests {
         assert!(*bank_account.get_balances().get(&0).unwrap() == new_amount);
         assert!(bank_account.get_balance(0) == new_amount);
         assert!(bank_account.get_balance(1) == 0);
-    }
-
-    #[test]
-    pub fn create_order_account() {
-        let sender = generate_keypair_vec([0; 32]).pop().unwrap();
-        let order_account = OrderAccount::new(sender.public().clone());
-
-        assert!(order_account.get_account_pub_key() == &sender.public().clone());
     }
 
     #[test]

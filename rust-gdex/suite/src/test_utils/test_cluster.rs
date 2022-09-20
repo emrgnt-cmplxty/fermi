@@ -1,7 +1,7 @@
 // IMPORTS
 
 // gdex
-use gdex_controller::{bank::CREATED_ASSET_BALANCE, master::MasterController};
+use gdex_controller::{bank::CREATED_ASSET_BALANCE, router::ControllerRouter};
 use gdex_core::{
     client,
     genesis_ceremony::{GENESIS_FILENAME, VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
@@ -51,7 +51,7 @@ async fn create_genesis_state(dir: &Path, validator_count: usize) -> ValidatorGe
         })
         .collect::<Vec<_>>();
 
-    let master_controller = MasterController::default();
+    let master_controller = ControllerRouter::default();
     master_controller.initialize_controllers();
     master_controller.initialize_controller_accounts();
 

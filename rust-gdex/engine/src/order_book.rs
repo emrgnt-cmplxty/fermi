@@ -10,8 +10,10 @@
 //! as upstream checks will robustly ensure no duplicates
 
 use super::order_queues::OrderQueue;
+use super::orders::{create_cancel_order_request, create_limit_order_request, create_update_order_request};
 use super::sequence;
 use super::validation::OrderRequestValidator;
+
 use gdex_types::{
     account::AccountPubKey,
     asset::AssetId,
@@ -19,7 +21,7 @@ use gdex_types::{
     order_book::{
         Depth, Failed, Order, OrderProcessingResult, OrderRequest, OrderSide, OrderType, OrderbookDepth, Success,
     },
-    transaction::{CancelOrderRequest, LimitOrderRequest, MarketOrderRequest, UpdateOrderRequest},
+    transaction::{parse_order_side, CancelOrderRequest, LimitOrderRequest, MarketOrderRequest, UpdateOrderRequest},
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -584,35 +586,129 @@ impl Orderbook {
 }
 
 pub trait OrderBookWrapper {
-    fn place_market_order(&mut self, account: &AccountPubKey, request: &MarketOrderRequest) -> Result<(), GDEXError>;
+    // HELPER FUNCTIONS
+
+    // GETTERS
+    fn get_orderbook(&mut self) -> &mut Orderbook;
+
+    fn get_pub_key_from_order_id(&self, order_id: &OrderId) -> AccountPubKey;
+
+    // SETTERS
+    fn set_order(&mut self, order_id: OrderId, account: AccountPubKey) -> Result<(), GDEXError>;
+
+    // TODO - remove gating from the order_book level
+    // this creates awkward tension in any instance of cross-margin
+    fn validate_controller(
+        &self,
+        account: &AccountPubKey,
+        side: OrderSide,
+        quantity: u64,
+        price: u64,
+        previous_quantity: u64,
+        previous_price: u64,
+    ) -> Result<(), GDEXError>;
+
+    // PLACERS [ORDERS]
+
+    // PLACE MARKET ORDER : TODO : UNIMPLEMENTED
+
+    fn place_market_order(&mut self, _account: &AccountPubKey, _request: &MarketOrderRequest) -> Result<(), GDEXError> {
+        Ok(())
+    }
+
+    // PLACE LIMIT ORDER
 
     fn place_limit_order(
         &mut self,
         account: &AccountPubKey,
         request: &LimitOrderRequest,
-    ) -> Result<OrderProcessingResult, GDEXError>;
+    ) -> Result<OrderProcessingResult, GDEXError> {
+        // create account
+        // parse side
+        let side = parse_order_side(request.side)?;
+
+        // check balances before placing order
+        self.validate_controller(account, side, request.quantity, request.price, 0, 0)?;
+
+        // create and process limit order
+        let order = create_limit_order_request(
+            request.base_asset_id,
+            request.quote_asset_id,
+            side,
+            request.price,
+            request.quantity,
+            SystemTime::now(),
+        );
+        let res = self.get_orderbook().process_order(order);
+        self.process_order_result(account, res)
+    }
+
+    // PLACE CANCEL ORDER
 
     fn place_cancel_order(
         &mut self,
         account: &AccountPubKey,
         request: &CancelOrderRequest,
-    ) -> Result<OrderProcessingResult, GDEXError>;
+    ) -> Result<OrderProcessingResult, GDEXError> {
+        let side = parse_order_side(request.side)?;
+
+        // create and process limit order
+        let order = create_cancel_order_request(
+            request.base_asset_id,
+            request.quote_asset_id,
+            request.order_id,
+            side,
+            SystemTime::now(),
+        );
+        let res = self.get_orderbook().process_order(order);
+        self.process_order_result(account, res)
+    }
+
+    // PLACE UPDATE ORDER
 
     fn place_update_order(
         &mut self,
         account: &AccountPubKey,
         request: &UpdateOrderRequest,
-    ) -> Result<OrderProcessingResult, GDEXError>;
+    ) -> Result<OrderProcessingResult, GDEXError> {
+        // parse side
+        let side = parse_order_side(request.side)?;
 
-    fn insert_new_order(&mut self, order_id: OrderId, account: AccountPubKey);
+        // check updates against user's balances
+        let current_order = self.get_orderbook().get_order(side, request.order_id).unwrap();
+        let current_quantity = current_order.get_quantity();
+        let current_price = current_order.get_price();
 
-    fn get_pub_key_from_order_id(&self, order_id: &OrderId) -> AccountPubKey;
+        // check balances before placing order
+        self.validate_controller(
+            account,
+            side,
+            request.quantity - current_quantity,
+            request.price,
+            current_quantity,
+            current_price,
+        )?;
+
+        // create and process limit order
+        let order = create_update_order_request(
+            request.base_asset_id,
+            request.quote_asset_id,
+            request.order_id,
+            side,
+            request.price,
+            request.quantity,
+            SystemTime::now(),
+        );
+        let res = self.get_orderbook().process_order(order);
+        self.process_order_result(account, res)
+    }
 
     // helper functions for process_order_result
 
     fn update_state_on_limit_order_creation(
         &mut self,
         account: &AccountPubKey,
+        order_id: u64,
         side: OrderSide,
         price: u64,
         quantity: u64,
@@ -621,14 +717,17 @@ pub trait OrderBookWrapper {
     fn update_state_on_fill(
         &mut self,
         account: &AccountPubKey,
+        order_id: u64,
         side: OrderSide,
         price: u64,
         quantity: u64,
     ) -> Result<(), GDEXError>;
 
+    #[allow(clippy::too_many_arguments)]
     fn update_state_on_update(
         &mut self,
         account: &AccountPubKey,
+        order_id: u64,
         side: OrderSide,
         previous_price: u64,
         previous_quantity: u64,
@@ -639,6 +738,7 @@ pub trait OrderBookWrapper {
     fn update_state_on_cancel(
         &mut self,
         account: &AccountPubKey,
+        order_id: u64,
         side: OrderSide,
         price: u64,
         quantity: u64,
@@ -662,10 +762,10 @@ pub trait OrderBookWrapper {
                 }) => {
                     // update user's balances if it is a limit order
                     if *order_type == OrderType::Limit {
-                        self.update_state_on_limit_order_creation(account, *side, *price, *quantity)?;
+                        self.update_state_on_limit_order_creation(account, *order_id, *side, *price, *quantity)?;
                     }
                     // insert new order to map
-                    self.insert_new_order(*order_id, account.clone());
+                    self.set_order(*order_id, account.clone())?;
                 }
                 // subsequent orders are expected to be an PartialFill or Fill results
                 Ok(Success::PartiallyFilled {
@@ -677,7 +777,7 @@ pub trait OrderBookWrapper {
                 }) => {
                     // update user balances
                     let existing_pub_key = self.get_pub_key_from_order_id(order_id);
-                    self.update_state_on_fill(&existing_pub_key, *side, *price, *quantity)?;
+                    self.update_state_on_fill(&existing_pub_key, *order_id, *side, *price, *quantity)?;
                 }
                 Ok(Success::Filled {
                     order_id,
@@ -688,7 +788,7 @@ pub trait OrderBookWrapper {
                 }) => {
                     // update user balances
                     let existing_pub_key = self.get_pub_key_from_order_id(order_id);
-                    self.update_state_on_fill(&existing_pub_key, *side, *price, *quantity)?;
+                    self.update_state_on_fill(&existing_pub_key, *order_id, *side, *price, *quantity)?;
                     // TODO - Uncomment remove below after diagnosing how this can cause failures
                     // remove order from map
                     //self.order_to_account.remove(order_id).ok_or(GDEXError::OrderRequest)?;
@@ -705,6 +805,7 @@ pub trait OrderBookWrapper {
                     let existing_pub_key = self.get_pub_key_from_order_id(order_id);
                     self.update_state_on_update(
                         &existing_pub_key,
+                        *order_id,
                         *side,
                         *previous_price,
                         *previous_quantity,
@@ -721,7 +822,7 @@ pub trait OrderBookWrapper {
                 }) => {
                     // order has been cancelled from order book, update states
                     let existing_pub_key = self.get_pub_key_from_order_id(order_id);
-                    self.update_state_on_cancel(&existing_pub_key, *side, *price, *quantity)?;
+                    self.update_state_on_cancel(&existing_pub_key, *order_id, *side, *price, *quantity)?;
                 }
                 Err(_failure) => {
                     return Err(GDEXError::OrderRequest);
@@ -731,6 +832,7 @@ pub trait OrderBookWrapper {
         Ok(res)
     }
 }
+
 #[cfg(test)]
 mod test_order_book {
 

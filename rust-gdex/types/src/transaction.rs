@@ -230,11 +230,11 @@ impl PaymentRequest {
     }
 }
 
-pub fn create_payment_request(receiver: &AccountPubKey, asset_id: u64, amount: u64) -> PaymentRequest {
+pub fn create_payment_request(receiver: &AccountPubKey, asset_id: u64, quantity: u64) -> PaymentRequest {
     PaymentRequest {
         receiver: Bytes::from(receiver.as_ref().to_vec()),
         asset_id,
-        amount,
+        quantity,
     }
 }
 
@@ -469,12 +469,14 @@ pub fn parse_target_controller(target_controller: i32) -> Result<ControllerType,
         1 => Ok(ControllerType::Stake),
         2 => Ok(ControllerType::Spot),
         3 => Ok(ControllerType::Consensus),
+        4 => Ok(ControllerType::Futures),
         _ => Err(GDEXError::DeserializationError),
     }
 }
 
 pub fn parse_request_type(request_type: i32) -> Result<RequestType, GDEXError> {
     match request_type {
+        // Spot types
         0 => Ok(RequestType::Payment),
         1 => Ok(RequestType::CreateAsset),
         2 => Ok(RequestType::CreateOrderbook),
@@ -482,6 +484,18 @@ pub fn parse_request_type(request_type: i32) -> Result<RequestType, GDEXError> {
         4 => Ok(RequestType::LimitOrder),
         5 => Ok(RequestType::UpdateOrder),
         6 => Ok(RequestType::CancelOrder),
+        // Futures types
+        7 => Ok(RequestType::CreateMarketplace),
+        8 => Ok(RequestType::CreateMarket),
+        9 => Ok(RequestType::UpdateMarketParams),
+        10 => Ok(RequestType::UpdateTime),
+        11 => Ok(RequestType::UpdatePrices),
+        12 => Ok(RequestType::AccountDeposit),
+        13 => Ok(RequestType::AccountWithdrawal),
+        14 => Ok(RequestType::FuturesMarketOrder),
+        15 => Ok(RequestType::FuturesLimitOrder),
+        16 => Ok(RequestType::FuturesUpdateOrder),
+        17 => Ok(RequestType::FuturesCancelOrder),
         _ => Err(GDEXError::DeserializationError),
     }
 }

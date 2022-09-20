@@ -13,7 +13,7 @@
 
 // crate
 use crate::controller::Controller;
-use crate::master::MasterController;
+use crate::router::ControllerRouter;
 
 // gdex
 use gdex_types::{
@@ -71,7 +71,7 @@ impl Default for BankController {
 
 #[async_trait]
 impl Controller for BankController {
-    fn initialize(&mut self, _master_controller: &MasterController) {}
+    fn initialize(&mut self, _master_controller: &ControllerRouter) {}
 
     fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
         Ok(())
@@ -89,7 +89,7 @@ impl Controller for BankController {
                 let request: PaymentRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 let sender = transaction.get_sender()?;
                 let receiver = request.get_receiver()?;
-                self.transfer(&sender, &receiver, request.asset_id, request.amount)
+                self.transfer(&sender, &receiver, request.asset_id, request.quantity)
             }
             _ => Err(GDEXError::InvalidRequestTypeError),
         }
@@ -132,7 +132,7 @@ impl BankController {
         &mut self,
         account_pub_key: &AccountPubKey,
         asset_id: AssetId,
-        amount: u64,
+        quantity: u64,
         increment: Modifier,
     ) -> Result<(), GDEXError> {
         let bank_account = self
@@ -141,14 +141,14 @@ impl BankController {
             .ok_or(GDEXError::AccountLookup)?;
         let current_balance: u64 = bank_account.get_balance(asset_id);
 
-        // if decrementing balance, check if amount exceeds existing balance
+        // if decrementing balance, check if quantity exceeds existing balance
         if increment == Modifier::Decrement {
-            if amount > current_balance {
+            if quantity > current_balance {
                 return Err(GDEXError::PaymentRequest);
             };
-            bank_account.set_balance(asset_id, current_balance - amount);
+            bank_account.set_balance(asset_id, current_balance - quantity);
         } else {
-            bank_account.set_balance(asset_id, current_balance + amount);
+            bank_account.set_balance(asset_id, current_balance + quantity);
         }
 
         Ok(())
@@ -159,11 +159,11 @@ impl BankController {
         sender: &AccountPubKey,
         receiver: &AccountPubKey,
         asset_id: AssetId,
-        amount: u64,
+        quantity: u64,
     ) -> Result<(), GDEXError> {
         // return error if insufficient user balance
         let balance = self.get_balance(sender, asset_id)?;
-        if balance < amount {
+        if balance < quantity {
             return Err(GDEXError::PaymentRequest);
         };
 
@@ -176,8 +176,8 @@ impl BankController {
             }
         };
 
-        self.update_balance(sender, asset_id, amount, Modifier::Decrement)?;
-        self.update_balance(receiver, asset_id, amount, Modifier::Increment)?;
+        self.update_balance(sender, asset_id, quantity, Modifier::Decrement)?;
+        self.update_balance(receiver, asset_id, quantity, Modifier::Increment)?;
 
         Ok(())
     }

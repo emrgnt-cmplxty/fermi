@@ -6,14 +6,20 @@ edition = "2021"
 
 [dependencies]
 async-trait = "0.1.57"
+bytes = "1.2.1"
+prost = "0.10.4"
 rand =  "0.8.5"
 serde = { version = "1.0.141", features = ["derive"] }
-
 # mysten crates
 fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "c022a2ae23ca7cc2778293fd3b1db42e8cd02d3b" }
 narwhal-crypto = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "crypto"}
-
+narwhal-types = { git = "https://github.com/MystenLabs/narwhal", rev = "c045e2da531f84962ac0b80c33a884f1dd751094", package = "types"}
 # local crates
 gdex-engine = { path = "../engine" }
 gdex-types = { path = "../types", features=["testing"] }
 gdex-workspace-hack = { path = "../workspace-hack" }
+
+[build-dependencies]
+prost-build = "0.10.4"
+rustversion = "1.0.9"
+tonic-build = { version = "0.7.2", features = [ "prost", "transport" ] }

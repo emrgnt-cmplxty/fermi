@@ -9,7 +9,12 @@ extern crate criterion;
 use criterion::*;
 use fastcrypto::DIGEST_LEN;
 use gdex_controller::bank::proto::create_payment_transaction;
-use gdex_types::{account::AccountKeyPair, crypto::KeypairTraits, error::GDEXError, transaction::ConsensusTransaction};
+use gdex_types::{
+    account::AccountKeyPair,
+    crypto::KeypairTraits,
+    error::GDEXError,
+    transaction::{deserialize_protobuf, serialize_protobuf, ConsensusTransaction, SignedTransaction},
+};
 
 use narwhal_types::{Batch, CertificateDigest, WorkerMessage};
 use rand::{rngs::StdRng, Rng, SeedableRng};
@@ -37,7 +42,7 @@ fn verify_incoming_transaction(raw_consensus_transaction: Vec<u8>) -> Result<(),
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-    fn get_consensus_transaction(sender_seed: [u8; 32], receiver_seed: [u8; 32], amount: u64) -> ConsensusTransaction {
+    fn get_signed_transaction(sender_seed: [u8; 32], receiver_seed: [u8; 32], amount: u64) -> SignedTransaction {
         let kp_sender = keys(sender_seed).pop().unwrap();
         let kp_receiver = keys(receiver_seed).pop().unwrap();
         let certificate_digest = CertificateDigest::new([0; DIGEST_LEN]);
@@ -50,7 +55,11 @@ fn criterion_benchmark(c: &mut Criterion) {
             fee,
             certificate_digest,
         );
-        let signed_transaction = transaction.sign(&kp_sender).unwrap();
+        transaction.sign(&kp_sender).unwrap()
+    }
+
+    fn get_consensus_transaction(sender_seed: [u8; 32], receiver_seed: [u8; 32], amount: u64) -> ConsensusTransaction {
+        let signed_transaction = get_signed_transaction(sender_seed, receiver_seed, amount);
         ConsensusTransaction::new(&signed_transaction)
     }
 
@@ -141,6 +150,35 @@ fn criterion_benchmark(c: &mut Criterion) {
 
     c.bench_function("serialization_deserialize_batch_and_verify_method1_1_000", move |b| {
         b.iter(|| deserialize_batch_and_verify_method1(black_box(&serialized[..])))
+    });
+
+    // protobuf
+    fn protobuf_serialize_1_000(sender_seed: [u8; 32], receiver_seed: [u8; 32]) {
+        let signed_transaction = get_signed_transaction(sender_seed, receiver_seed, 10);
+
+        let mut i = 0;
+        while i < 1_000 {
+            let _ = serialize_protobuf(&signed_transaction);
+            i += 1;
+        }
+    }
+
+    fn protobuf_deserialize_1_000(sender_seed: [u8; 32], receiver_seed: [u8; 32]) {
+        let signed_transaction_serialized = serialize_protobuf(&get_signed_transaction(sender_seed, receiver_seed, 10));
+
+        let mut i = 0;
+        while i < 1_000 {
+            let signed_transaction: SignedTransaction = deserialize_protobuf(&signed_transaction_serialized).unwrap();
+            i += 1;
+        }
+    }
+
+    c.bench_function("serialization_protobuf_serialize_1_000", move |b| {
+        b.iter(|| protobuf_serialize_1_000(black_box([0_u8; 32]), black_box([1_u8; 32])))
+    });
+
+    c.bench_function("serialization_protobuf_deserialize_1_000", move |b| {
+        b.iter(|| protobuf_deserialize_1_000(black_box([0_u8; 32]), black_box([1_u8; 32])))
     });
 }
 

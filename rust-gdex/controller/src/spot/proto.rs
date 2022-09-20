@@ -3,7 +3,7 @@
 // gdex
 use gdex_types::{
     account::AccountPubKey,
-    transaction::{create_transaction, serialize_protobuf, ControllerType, RequestType, Transaction},
+    transaction::{serialize_protobuf, ControllerType, RequestType, Transaction},
 };
 
 // mysten
@@ -18,76 +18,61 @@ mod spot_requests;
 
 pub use spot_requests::*;
 
-// REQUEST BUILDERS
+// INTERFACE
 
-// SPOT REQUESTS
-
-pub fn create_create_orderbook_request(base_asset_id: u64, quote_asset_id: u64) -> CreateOrderbookRequest {
-    CreateOrderbookRequest {
-        base_asset_id,
-        quote_asset_id,
+impl CreateOrderbookRequest {
+    pub fn new(base_asset_id: u64, quote_asset_id: u64) -> Self {
+        CreateOrderbookRequest {
+            base_asset_id,
+            quote_asset_id,
+        }
     }
 }
 
-pub fn create_market_order_request(
-    base_asset_id: u64,
-    quote_asset_id: u64,
-    side: u64,
-    quantity: u64,
-) -> MarketOrderRequest {
-    MarketOrderRequest {
-        base_asset_id,
-        quote_asset_id,
-        side,
-        quantity,
+impl MarketOrderRequest {
+    pub fn new(base_asset_id: u64, quote_asset_id: u64, side: u64, quantity: u64) -> Self {
+        MarketOrderRequest {
+            base_asset_id,
+            quote_asset_id,
+            side,
+            quantity,
+        }
     }
 }
 
-pub fn create_limit_order_request(
-    base_asset_id: u64,
-    quote_asset_id: u64,
-    side: u64,
-    price: u64,
-    quantity: u64,
-) -> LimitOrderRequest {
-    LimitOrderRequest {
-        base_asset_id,
-        quote_asset_id,
-        side,
-        price,
-        quantity,
+impl LimitOrderRequest {
+    pub fn new(base_asset_id: u64, quote_asset_id: u64, side: u64, price: u64, quantity: u64) -> Self {
+        LimitOrderRequest {
+            base_asset_id,
+            quote_asset_id,
+            side,
+            price,
+            quantity,
+        }
     }
 }
 
-pub fn create_update_order_request(
-    base_asset_id: u64,
-    quote_asset_id: u64,
-    side: u64,
-    price: u64,
-    quantity: u64,
-    order_id: u64,
-) -> UpdateOrderRequest {
-    UpdateOrderRequest {
-        base_asset_id,
-        quote_asset_id,
-        side,
-        price,
-        quantity,
-        order_id,
+impl UpdateOrderRequest {
+    pub fn new(base_asset_id: u64, quote_asset_id: u64, side: u64, price: u64, quantity: u64, order_id: u64) -> Self {
+        UpdateOrderRequest {
+            base_asset_id,
+            quote_asset_id,
+            side,
+            price,
+            quantity,
+            order_id,
+        }
     }
 }
 
-pub fn create_cancel_order_request(
-    base_asset_id: u64,
-    quote_asset_id: u64,
-    side: u64,
-    order_id: u64,
-) -> CancelOrderRequest {
-    CancelOrderRequest {
-        base_asset_id,
-        quote_asset_id,
-        side,
-        order_id,
+impl CancelOrderRequest {
+    pub fn new(base_asset_id: u64, quote_asset_id: u64, side: u64, order_id: u64) -> Self {
+        CancelOrderRequest {
+            base_asset_id,
+            quote_asset_id,
+            side,
+            order_id,
+        }
     }
 }
 
@@ -100,15 +85,13 @@ pub fn create_create_orderbook_transaction(
     fee: u64,
     recent_block_hash: CertificateDigest,
 ) -> Transaction {
-    let request = create_create_orderbook_request(base_asset_id, quote_asset_id);
-
-    create_transaction(
-        sender,
+    Transaction::new(
+        &sender,
         ControllerType::Spot,
         RequestType::CreateOrderbook,
         recent_block_hash,
         fee,
-        serialize_protobuf(&request),
+        serialize_protobuf(&CreateOrderbookRequest::new(base_asset_id, quote_asset_id)),
     )
 }
 
@@ -122,15 +105,13 @@ pub fn create_market_order_transaction(
     fee: u64,
     recent_block_hash: CertificateDigest,
 ) -> Transaction {
-    let request = create_market_order_request(base_asset_id, quote_asset_id, side, quantity);
-
-    create_transaction(
-        sender,
+    Transaction::new(
+        &sender,
         ControllerType::Spot,
         RequestType::MarketOrder,
         recent_block_hash,
         fee,
-        serialize_protobuf(&request),
+        serialize_protobuf(&MarketOrderRequest::new(base_asset_id, quote_asset_id, side, quantity)),
     )
 }
 
@@ -145,15 +126,19 @@ pub fn create_limit_order_transaction(
     fee: u64,
     recent_block_hash: CertificateDigest,
 ) -> Transaction {
-    let request = create_limit_order_request(base_asset_id, quote_asset_id, side, price, quantity);
-
-    create_transaction(
-        sender,
+    Transaction::new(
+        &sender,
         ControllerType::Spot,
         RequestType::LimitOrder,
         recent_block_hash,
         fee,
-        serialize_protobuf(&request),
+        serialize_protobuf(&LimitOrderRequest::new(
+            base_asset_id,
+            quote_asset_id,
+            side,
+            price,
+            quantity,
+        )),
     )
 }
 
@@ -169,15 +154,20 @@ pub fn create_update_order_transaction(
     fee: u64,
     recent_block_hash: CertificateDigest,
 ) -> Transaction {
-    let request = create_update_order_request(base_asset_id, quote_asset_id, side, price, quantity, order_id);
-
-    create_transaction(
-        sender,
+    Transaction::new(
+        &sender,
         ControllerType::Spot,
         RequestType::UpdateOrder,
         recent_block_hash,
         fee,
-        serialize_protobuf(&request),
+        serialize_protobuf(&UpdateOrderRequest::new(
+            base_asset_id,
+            quote_asset_id,
+            side,
+            price,
+            quantity,
+            order_id,
+        )),
     )
 }
 
@@ -191,14 +181,12 @@ pub fn create_cancel_order_transaction(
     fee: u64,
     recent_block_hash: CertificateDigest,
 ) -> Transaction {
-    let request = create_cancel_order_request(base_asset_id, quote_asset_id, side, order_id);
-
-    create_transaction(
-        sender,
+    Transaction::new(
+        &sender,
         ControllerType::Spot,
         RequestType::CancelOrder,
         recent_block_hash,
         fee,
-        serialize_protobuf(&request),
+        serialize_protobuf(&CancelOrderRequest::new(base_asset_id, quote_asset_id, side, order_id)),
     )
 }

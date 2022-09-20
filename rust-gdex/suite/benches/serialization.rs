@@ -7,7 +7,11 @@ extern crate bincode;
 extern crate criterion;
 
 use criterion::*;
-use fastcrypto::DIGEST_LEN;
+use fastcrypto::{
+    DIGEST_LEN,
+    generate_production_keypair
+};
+use narwhal_crypto::KeyPair;
 use gdex_types::{
     account::AccountKeyPair,
     crypto::KeypairTraits,
@@ -144,6 +148,10 @@ fn criterion_benchmark(c: &mut Criterion) {
 
     c.bench_function("serialization_deserialize_batch_and_verify_method1_1_000", move |b| {
         b.iter(|| deserialize_batch_and_verify_method1(black_box(&serialized[..])))
+    });
+
+    c.bench_function("create_user_public_key", move |b| {
+        b.iter(|| generate_production_keypair::<KeyPair>())
     });
 }
 

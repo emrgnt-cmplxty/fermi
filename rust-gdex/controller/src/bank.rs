@@ -360,7 +360,7 @@ pub mod spot_tests {
     #[test]
     fn create_catchup_state_big() {
         // create n assets and send to k new users
-        let n_creators = 10;
+        let n_creators = 100;
         let k_receivers = 1_000;
         let mut bank_controller = BankController::default();
         for i in 0..n_creators {
@@ -370,9 +370,9 @@ pub mod spot_tests {
             }
             bank_controller.create_asset(user_kp.public()).unwrap();
             for _ in 0..k_receivers {
-                let receiver_kp = generate_production_keypair::<KeyPair>();
-                bank_controller.create_account(receiver_kp.public()).unwrap();
-                bank_controller.transfer(user_kp.public(), receiver_kp.public(), i, 1).unwrap();
+                //let receiver_kp = generate_production_keypair::<KeyPair>();
+                //bank_controller.create_account(user_kp.public()).unwrap();
+                bank_controller.transfer(user_kp.public(), user_kp.public(), i, 1).unwrap();
             }
         }
         let catchup_state = BankController::create_catchup_state(Arc::new(Mutex::new(bank_controller)), 0);

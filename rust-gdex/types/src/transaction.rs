@@ -126,6 +126,13 @@ impl ConsensusTransaction {
 // SIGNED TRANSACTION
 
 impl SignedTransaction {
+    pub fn new(transaction: Transaction, signature: &[u8; 64]) -> Self {
+        SignedTransaction {
+            transaction: Some(transaction),
+            signature: Bytes::from(signature.to_vec()),
+        }
+    }
+
     pub fn get_transaction(&self) -> Result<&Transaction, GDEXError> {
         self.transaction.as_ref().ok_or(GDEXError::DeserializationError)
     }
@@ -157,16 +164,28 @@ impl SignedTransaction {
     }
 }
 
-pub fn create_signed_transaction(transaction: Transaction, signature: &[u8; 64]) -> SignedTransaction {
-    SignedTransaction {
-        transaction: Some(transaction),
-        signature: Bytes::from(signature.to_vec()),
-    }
-}
-
 // TRANSACTION
 
 impl Transaction {
+    pub fn new(
+        sender: &AccountPubKey,
+        target_controller: ControllerType,
+        request_type: RequestType,
+        recent_block_hash: CertificateDigest,
+        fee: u64,
+        request_bytes: Vec<u8>,
+    ) -> Self {
+        Transaction {
+            version: Some(PROTO_VERSION),
+            sender: Bytes::from(sender.as_ref().to_vec()),
+            target_controller: target_controller as i32,
+            request_type: request_type as i32,
+            recent_block_hash: CertificateDigestProto::from(recent_block_hash).digest,
+            fee,
+            request_bytes: Bytes::from(request_bytes),
+        }
+    }
+
     pub fn get_sender(&self) -> Result<AccountPubKey, GDEXError> {
         AccountPubKey::from_bytes(&self.sender).map_err(|_e| GDEXError::DeserializationError)
     }
@@ -183,7 +202,7 @@ impl Transaction {
         let signature_result: Result<AccountSignature, signature::Error> =
             sender_kp.try_sign(&transaction_digest.get_array()[..]);
         match signature_result {
-            Ok(result) => Ok(create_signed_transaction(self, &result.sig.to_bytes())),
+            Ok(result) => Ok(SignedTransaction::new(self, &result.sig.to_bytes())),
             Err(..) => Err(GDEXError::SigningError),
         }
     }
@@ -196,25 +215,6 @@ impl Hash for Transaction {
         TransactionDigest::new(fastcrypto::blake2b_256(|hasher| {
             hasher.update(serialize_protobuf(self))
         }))
-    }
-}
-
-pub fn create_transaction(
-    sender: AccountPubKey,
-    target_controller: ControllerType,
-    request_type: RequestType,
-    recent_block_hash: CertificateDigest,
-    fee: u64,
-    request_bytes: Vec<u8>,
-) -> Transaction {
-    Transaction {
-        version: Some(PROTO_VERSION),
-        sender: Bytes::from(sender.as_ref().to_vec()),
-        target_controller: target_controller as i32,
-        request_type: request_type as i32,
-        recent_block_hash: CertificateDigestProto::from(recent_block_hash).digest,
-        fee,
-        request_bytes: Bytes::from(request_bytes),
     }
 }
 

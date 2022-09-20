@@ -8,11 +8,11 @@ pub mod futures_tests {
     use gdex_types::{
         account::{account_test_functions::generate_keypair_vec, AccountKeyPair, AccountPubKey},
         asset::AssetId,
-        crypto::{KeypairTraits, ToFromBytes},
+        crypto::KeypairTraits,
         error::GDEXError,
         order_book::OrderSide,
         proto::ControllerType,
-        transaction::{create_transaction, serialize_protobuf, RequestType},
+        transaction::{serialize_protobuf, RequestType, Transaction},
     };
     // mysten
     use narwhal_types::CertificateDigest;
@@ -79,11 +79,9 @@ pub mod futures_tests {
         }
 
         fn create_marketplace(&self) -> Result<(), GDEXError> {
-            let request = CreateMarketplaceRequest {
-                quote_asset_id: self.quote_asset_id,
-            };
-            let transaction = create_transaction(
-                self.admin_key.public().clone(),
+            let request = CreateMarketplaceRequest::new(self.quote_asset_id);
+            let transaction = Transaction::new(
+                &self.admin_key.public(),
                 ControllerType::Futures,
                 RequestType::CreateMarketplace,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
@@ -94,11 +92,9 @@ pub mod futures_tests {
         }
 
         fn create_market(&self) -> Result<(), GDEXError> {
-            let request = CreateMarketRequest {
-                base_asset_id: self.base_asset_id,
-            };
-            let transaction = create_transaction(
-                self.admin_key.public().clone(),
+            let request = CreateMarketRequest::new(self.base_asset_id);
+            let transaction = Transaction::new(
+                &self.admin_key.public(),
                 ControllerType::Futures,
                 RequestType::CreateMarket,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
@@ -109,12 +105,9 @@ pub mod futures_tests {
         }
 
         fn update_market_params(&self) -> Result<(), GDEXError> {
-            let request = UpdateMarketParamsRequest {
-                base_asset_id: self.base_asset_id,
-                max_leverage: TEST_MAX_LEVERAGE,
-            };
-            let transaction = create_transaction(
-                self.admin_key.public().clone(),
+            let request = UpdateMarketParamsRequest::new(self.base_asset_id, TEST_MAX_LEVERAGE);
+            let transaction = Transaction::new(
+                &self.admin_key.public(),
                 ControllerType::Futures,
                 RequestType::UpdateMarketParams,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
@@ -125,9 +118,9 @@ pub mod futures_tests {
         }
 
         fn update_time(&self, latest_time: u64) -> Result<(), GDEXError> {
-            let request = UpdateTimeRequest { latest_time };
-            let transaction = create_transaction(
-                self.admin_key.public().clone(),
+            let request = UpdateTimeRequest::new(latest_time);
+            let transaction = Transaction::new(
+                &self.admin_key.public(),
                 ControllerType::Futures,
                 RequestType::UpdateTime,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
@@ -138,9 +131,9 @@ pub mod futures_tests {
         }
 
         fn update_prices(&self, latest_prices: Vec<u64>) -> Result<(), GDEXError> {
-            let request = UpdatePricesRequest { latest_prices };
-            let transaction = create_transaction(
-                self.admin_key.public().clone(),
+            let request = UpdatePricesRequest::new(latest_prices);
+            let transaction = Transaction::new(
+                &self.admin_key.public(),
                 ControllerType::Futures,
                 RequestType::UpdatePrices,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
@@ -151,12 +144,12 @@ pub mod futures_tests {
         }
 
         fn account_deposit(&self, quantity: u64, sender: AccountPubKey) -> Result<(), GDEXError> {
-            let request = AccountDepositRequest {
-                quantity: quantity.try_into().map_err(|_| GDEXError::Conversion)?,
-                market_admin: bytes::Bytes::from(self.admin_key.public().as_bytes().to_vec()),
-            };
-            let transaction = create_transaction(
-                sender,
+            let request = AccountDepositRequest::new(
+                quantity.try_into().map_err(|_| GDEXError::Conversion)?,
+                &self.admin_key.public(),
+            );
+            let transaction = Transaction::new(
+                &sender,
                 ControllerType::Futures,
                 RequestType::AccountDeposit,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
@@ -186,17 +179,17 @@ pub mod futures_tests {
             price: u64,
             quantity: u64,
         ) -> Result<(), GDEXError> {
-            let request = FuturesLimitOrderRequest {
-                base_asset_id: self.base_asset_id,
-                quote_asset_id: self.quote_asset_id,
+            let request = FuturesLimitOrderRequest::new(
+                self.base_asset_id,
+                self.quote_asset_id,
                 side,
                 price,
                 quantity,
-                market_admin: bytes::Bytes::from(self.admin_key.public().as_bytes().to_vec()),
-            };
+                &self.admin_key.public(),
+            );
 
-            let transaction = create_transaction(
-                self.user_keys[user_index].public().clone(),
+            let transaction = Transaction::new(
+                &self.user_keys[user_index].public(),
                 ControllerType::Futures,
                 RequestType::FuturesLimitOrder,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),

@@ -405,7 +405,7 @@ pub mod spot_tests {
 
         match bincode::deserialize(&catchup_state) {
             Ok(BankController { asset_id_to_asset, bank_accounts, n_assets, .. }) => {
-                assert_eq!(n_assets, n_users);
+                assert_eq!(n_assets, n_users as u64);
                 assert_eq!(bank_accounts.keys().len(), n_users);
                 assert_eq!(asset_id_to_asset.keys().len(), n_users);
             },

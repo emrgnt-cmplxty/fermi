@@ -1,0 +1,11 @@
+{
+    "choose-profile": "选择头像",
+    "edit-profile-pic": "切换头像",
+    "no-nfts": "😞 未找到NFT...",
+    "profile-pic-failure": "设置头像失败",
+    "profile-pic-success": "设置头像成功",
+    "profile-pic-remove-failure": "删除头像失败",
+    "profile-pic-remove-success": "删除头像成功",
+    "remove": "删除",
+    "set-profile-pic": "设置头像"
+}

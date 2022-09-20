@@ -32,6 +32,7 @@ use gdex_types::{
 // external
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
+use bincode;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -103,10 +104,13 @@ impl Controller for BankController {
     }
 
     fn create_catchup_state(
-        _controller: Arc<Mutex<Self>>,
+        controller: Arc<Mutex<Self>>,
         _block_number: u64
     ) -> Result<Vec<u8>, GDEXError> {
-        Ok(Vec::new())
+        match bincode::serialize(&controller.lock().unwrap().clone()) {
+            Ok(v) => Ok(v),
+            Err(_) => Err(GDEXError::SerializationError)
+        }
     }
 }
 
@@ -342,5 +346,38 @@ pub mod spot_tests {
         );
         // check the number of assets is 1
         assert!(bank_controller.get_num_assets() == 2, "Number of assets must be 2.");
+    }
+
+    #[test]
+    fn create_catchup_state_default() {
+        let bank_controller = Arc::new(Mutex::new(BankController::default()));
+        let catchup_state = BankController::create_catchup_state(bank_controller, 0);
+        assert!(catchup_state.is_ok());
+        let catchup_state = catchup_state.unwrap();
+        println!("Catchup state is {} bytes", catchup_state.len());
+    }
+
+    #[test]
+    fn create_catchup_state_big() {
+        // create n assets and send to k new users
+        let n_creators = 10;
+        let k_receivers = 1_000;
+        let mut bank_controller = BankController::default();
+        for i in 0..n_creators {
+            let user_kp = generate_production_keypair::<KeyPair>();
+            if i > 0 {
+                bank_controller.create_account(user_kp.public()).unwrap();
+            }
+            bank_controller.create_asset(user_kp.public()).unwrap();
+            for _ in 0..k_receivers {
+                let receiver_kp = generate_production_keypair::<KeyPair>();
+                bank_controller.create_account(receiver_kp.public()).unwrap();
+                bank_controller.transfer(user_kp.public(), receiver_kp.public(), i, 1).unwrap();
+            }
+        }
+        let catchup_state = BankController::create_catchup_state(Arc::new(Mutex::new(bank_controller)), 0);
+        assert!(catchup_state.is_ok());
+        let catchup_state = catchup_state.unwrap();
+        println!("Catchup state is {} bytes for {} creators and {} receivers", catchup_state.len(), n_creators, k_receivers);
     }
 }

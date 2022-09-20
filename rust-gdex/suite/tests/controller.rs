@@ -8,7 +8,7 @@ pub mod process_tests {
         bank::controller::{BankController, CREATED_ASSET_BALANCE},
         spot::{
             controller::{SpotOrderbook, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
-            proto::create_limit_order_request,
+            proto::LimitOrderRequest,
         },
         utils::engine::order_book::OrderBookWrapper,
     };
@@ -31,7 +31,7 @@ pub mod process_tests {
         quantity: u64,
     ) {
         let limit_order_request =
-            create_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, side as u64, price, quantity);
+            LimitOrderRequest::new(BASE_ASSET_ID, QUOTE_ASSET_ID, side as u64, price, quantity);
         orderbook_interface
             .place_limit_order(account, &limit_order_request)
             .unwrap();

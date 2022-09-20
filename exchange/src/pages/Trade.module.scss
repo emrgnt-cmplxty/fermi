@@ -1,0 +1,33 @@
+@import 'variables';
+@import 'mixins';
+
+.card {
+  @include themify('background-image', 'palette.gradients.background');
+  .interestTextGreen {
+    color: rgb(120, 220, 120);
+    :global(.LIGHT) & {
+      color: rgb(20, 120, 100);
+    }
+  }
+  .interestTextRed {
+    color: rgb(255, 80, 80);
+    :global(.LIGHT) & {
+      color: rgbToHex(255, 0, 0);
+    }
+  }
+}
+
+.table {
+  border-collapse: separate;
+  border-spacing: 0 15px;
+}
+
+.tr {
+  border-radius: 10;
+  &:hover {
+    outline: thin solid;
+    // font-weight: bold;
+
+    // background-color: blue;
+  }
+}

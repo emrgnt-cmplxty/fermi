@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/src/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="./public/datafeeds/udf/dist/bundle.js" type="module" ></script>
+    <script src="./public/datafeeds/udf/dist/polyfills.js" type="module"></script>
+    <script src="./src/public/datafeeds/udf/dist/bundle.js"></script>
+    <script src="./src/public/datafeeds/udf/dist/polyfills.js"></script>
+
+    <title>DeFi Perpetual Futures Protocol</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- for algorand sdk -->
+    <script type="module">
+      import { Buffer } from 'buffer'
+      window.Buffer = Buffer
+      window.global = window
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

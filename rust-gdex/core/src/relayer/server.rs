@@ -1,4 +1,6 @@
 use crate::validator::state::ValidatorState;
+use gdex_types::account::AccountPubKey;
+use gdex_types::crypto::ToFromBytes;
 use gdex_types::proto::*;
 use narwhal_types::CertificateDigestProto;
 
@@ -112,7 +114,7 @@ impl Relayer for RelayerService {
         let base_asset_id = req.base_asset_id;
         let quote_asset_id = req.quote_asset_id;
         let orderbook_depth_key = validator_state
-            .master_controller
+            .controller_router
             .spot_controller
             .lock()
             .unwrap()
@@ -163,7 +165,35 @@ impl Relayer for RelayerService {
             Err(err) => Err(Status::unknown(err.to_string())),
         }
     }
+    async fn get_futures_positions(
+        &self,
+        request: Request<RelayerGetFuturesPositionsRequest>,
+    ) -> Result<Response<RelayerFuturesPositionsResponse>, Status> {
+        let validator_state = &self.state;
+        let req = request.into_inner();
+        let futures_controller = validator_state.controller_router.futures_controller.lock().unwrap();
 
+        let market_admin = AccountPubKey::from_bytes(&req.market_admin)
+            .map_err(|_| Status::unknown("Could not load market admin address"))?;
+        let user =
+            AccountPubKey::from_bytes(&req.user).map_err(|_| Status::unknown("Could not load requester address"))?;
+
+        let positions = futures_controller
+            .account_open_positions_by_market(&market_admin, &user)
+            .map_err(|_| Status::unknown("Could not load position data"))?;
+
+        println!("positions={:?}", positions);
+
+        // Err(Status::unknown("x"))
+        Ok(Response::new(RelayerFuturesPositionsResponse {
+            positions: positions
+                .iter()
+                .map(|position| {
+                    FuturesPosition { quantity: position.quantity, side: position.side as u64, average_price: position.average_price }
+                })
+                .collect()
+        }))
+    }
     async fn get_latest_metrics(
         &self,
         _request: Request<RelayerMetricsRequest>,

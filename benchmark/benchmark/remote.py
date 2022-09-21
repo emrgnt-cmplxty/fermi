@@ -290,7 +290,7 @@ class Bench:
                 # TODO
                 if i > 0:
                     c.put(self.local_proto_dir + PathMaker.key_file(0), self.remote_proto_dir)
-                c.put(self.local_proto_dir + "master_controller", self.remote_proto_dir)
+                c.put(self.local_proto_dir + "controller_router", self.remote_proto_dir)
 
                 for fname in os.listdir(local_committee_dir):
                     c.put(local_committee_dir + fname, remote_committee_dir)

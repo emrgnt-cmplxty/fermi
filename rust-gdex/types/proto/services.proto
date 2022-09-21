@@ -56,6 +56,9 @@ service Relayer {
     rpc GetLatestOrderbookDepth (RelayerGetLatestOrderbookDepthRequest) returns (RelayerLatestOrderbookDepthResponse);
 
     // request orderbook metrics
+    rpc GetFuturesPositions (RelayerGetFuturesPositionsRequest) returns (RelayerFuturesPositionsResponse);
+
+    // request metrics
     rpc GetLatestMetrics (RelayerMetricsRequest) returns (RelayerMetricsResponse);
 }
 
@@ -103,6 +106,22 @@ message Depth {
 message RelayerLatestOrderbookDepthResponse {
     repeated Depth bids = 1;
     repeated Depth asks = 2;
+}
+
+
+message RelayerGetFuturesPositionsRequest {
+    bytes user = 1;
+    bytes market_admin = 2;
+}
+
+message FuturesPosition {
+    uint64 quantity = 1;
+    uint64 side = 2;
+    uint64 average_price = 3;
+}
+
+message RelayerFuturesPositionsResponse {
+    repeated FuturesPosition positions = 1;
 }
 
 // metrics

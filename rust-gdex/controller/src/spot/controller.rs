@@ -60,8 +60,8 @@ impl Default for SpotController {
 
 #[async_trait]
 impl Controller for SpotController {
-    fn initialize(&mut self, master_controller: &ControllerRouter) {
-        self.bank_controller = Arc::clone(&master_controller.bank_controller);
+    fn initialize(&mut self, controller_router: &ControllerRouter) {
+        self.bank_controller = Arc::clone(&controller_router.bank_controller);
     }
 
     fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
@@ -551,24 +551,24 @@ pub mod spot_tests {
     fn place_bid_spot_controller() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let master_controller = ControllerRouter::default();
-        master_controller.initialize_controllers();
-        master_controller.initialize_controller_accounts();
+        let controller_router = ControllerRouter::default();
+        controller_router.initialize_controllers();
+        controller_router.initialize_controller_accounts();
 
-        master_controller
+        controller_router
             .bank_controller
             .lock()
             .unwrap()
             .create_asset(account.public())
             .unwrap();
-        master_controller
+        controller_router
             .bank_controller
             .lock()
             .unwrap()
             .create_asset(account.public())
             .unwrap();
 
-        master_controller
+        controller_router
             .spot_controller
             .lock()
             .unwrap()
@@ -589,14 +589,14 @@ pub mod spot_tests {
             fee,
             recent_block_hash,
         );
-        master_controller
+        controller_router
             .spot_controller
             .lock()
             .unwrap()
             .handle_consensus_transaction(&transaction)
             .unwrap();
 
-        let bank_controller_ref = Arc::clone(&master_controller.bank_controller);
+        let bank_controller_ref = Arc::clone(&controller_router.bank_controller);
 
         assert_eq!(
             bank_controller_ref

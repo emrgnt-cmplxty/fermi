@@ -52,13 +52,13 @@ async fn create_genesis_state(dir: &Path, validator_count: usize) -> ValidatorGe
         })
         .collect::<Vec<_>>();
 
-    let master_controller = ControllerRouter::default();
-    master_controller.initialize_controllers();
-    master_controller.initialize_controller_accounts();
+    let controller_router = ControllerRouter::default();
+    controller_router.initialize_controllers();
+    controller_router.initialize_controller_accounts();
 
     // create primary asset
     let validator_creator_pubkey = ValidatorPubKey::try_from(validators_info[0].public_key).unwrap();
-    master_controller
+    controller_router
         .bank_controller
         .lock()
         .unwrap()
@@ -69,7 +69,7 @@ async fn create_genesis_state(dir: &Path, validator_count: usize) -> ValidatorGe
     let transfer_amount: u64 = CREATED_ASSET_BALANCE / (validator_count as u64);
     for validator_info in &validators_info {
         let validator_pubkey = ValidatorPubKey::try_from(validator_info.public_key).unwrap();
-        master_controller
+        controller_router
             .bank_controller
             .lock()
             .unwrap()
@@ -82,7 +82,7 @@ async fn create_genesis_state(dir: &Path, validator_count: usize) -> ValidatorGe
             .unwrap();
     }
 
-    ValidatorGenesisState::new(master_controller, validators_info)
+    ValidatorGenesisState::new(controller_router, validators_info)
 }
 
 // INTERFACE
@@ -172,6 +172,20 @@ impl TestCluster {
         let mut relayer_spawner = RelayerSpawner::new(Arc::clone(&validator_state), relayer_address.clone());
         relayer_spawner.spawn_relayer().await.unwrap();
         relayer_spawner
+    }
+
+    pub async fn send_single_transaction(&mut self, signed_transaction: SignedTransaction) {
+        let receiver = self.get_validator_spawner(0);
+        let receiver_address = receiver.get_validator_address().clone();
+
+        let mut client = TransactionSubmitterClient::new(
+            client::connect_lazy(&receiver_address).expect("Failed to connect to consensus"),
+        );
+        client
+            .submit_transaction(signed_transaction)
+            .await
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+            .unwrap();
     }
 
     pub async fn send_transactions(

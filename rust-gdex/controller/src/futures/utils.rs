@@ -222,7 +222,7 @@ pub(crate) fn account_unrealized_pnl(market_place: &Marketplace, account: &Accou
     Ok(unrealized_pnl)
 }
 
-pub(crate) fn account_open_market_positions(
+pub(crate) fn account_open_positions_by_market(
     market_place: &Marketplace,
     account: &AccountPubKey,
 ) -> Result<Vec<Position>, GDEXError> {

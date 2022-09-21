@@ -264,12 +264,12 @@ impl FuturesController {
         Ok(())
     }
 
-    pub fn account_open_market_positions(
+    pub fn account_open_positions_by_market(
         &self,
         market_admin: &AccountPubKey,
         account: &AccountPubKey,
     ) -> Result<Vec<Position>, GDEXError> {
-        account_open_market_positions(
+        account_open_positions_by_market(
             self.market_places
                 .get(market_admin)
                 .ok_or(GDEXError::MarketplaceExistence)?,
@@ -329,8 +329,8 @@ impl FuturesController {
 
 #[async_trait]
 impl Controller for FuturesController {
-    fn initialize(&mut self, master_controller: &ControllerRouter) {
-        self.bank_controller = Arc::clone(&master_controller.bank_controller);
+    fn initialize(&mut self, controller_router: &ControllerRouter) {
+        self.bank_controller = Arc::clone(&controller_router.bank_controller);
     }
 
     fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {

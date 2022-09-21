@@ -76,6 +76,27 @@ pub struct RelayerLatestOrderbookDepthResponse {
     #[prost(message, repeated, tag="2")]
     pub asks: ::prost::alloc::vec::Vec<Depth>,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RelayerGetFuturesPositionsRequest {
+    #[prost(bytes="bytes", tag="1")]
+    pub user: ::prost::bytes::Bytes,
+    #[prost(bytes="bytes", tag="2")]
+    pub market_admin: ::prost::bytes::Bytes,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct FuturesPosition {
+    #[prost(uint64, tag="1")]
+    pub quantity: u64,
+    #[prost(uint64, tag="2")]
+    pub side: u64,
+    #[prost(uint64, tag="3")]
+    pub average_price: u64,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RelayerFuturesPositionsResponse {
+    #[prost(message, repeated, tag="1")]
+    pub positions: ::prost::alloc::vec::Vec<FuturesPosition>,
+}
 // metrics
 
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -434,6 +455,29 @@ pub mod relayer_client {
             self.inner.unary(request.into_request(), path, codec).await
         }
         /// request orderbook metrics
+        pub async fn get_futures_positions(
+            &mut self,
+            request: impl tonic::IntoRequest<super::RelayerGetFuturesPositionsRequest>,
+        ) -> Result<
+            tonic::Response<super::RelayerFuturesPositionsResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/services.Relayer/GetFuturesPositions",
+            );
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        /// request metrics
         pub async fn get_latest_metrics(
             &mut self,
             request: impl tonic::IntoRequest<super::RelayerMetricsRequest>,
@@ -821,6 +865,14 @@ pub mod relayer_server {
             tonic::Status,
         >;
         /// request orderbook metrics
+        async fn get_futures_positions(
+            &self,
+            request: tonic::Request<super::RelayerGetFuturesPositionsRequest>,
+        ) -> Result<
+            tonic::Response<super::RelayerFuturesPositionsResponse>,
+            tonic::Status,
+        >;
+        /// request metrics
         async fn get_latest_metrics(
             &self,
             request: tonic::Request<super::RelayerMetricsRequest>,
@@ -1026,6 +1078,49 @@ pub mod relayer_server {
                     let fut = async move {
                         let inner = inner.0;
                         let method = GetLatestOrderbookDepthSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/services.Relayer/GetFuturesPositions" => {
+                    #[allow(non_camel_case_types)]
+                    struct GetFuturesPositionsSvc<T: Relayer>(pub Arc<T>);
+                    impl<
+                        T: Relayer,
+                    > tonic::server::UnaryService<
+                        super::RelayerGetFuturesPositionsRequest,
+                    > for GetFuturesPositionsSvc<T> {
+                        type Response = super::RelayerFuturesPositionsResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<
+                                super::RelayerGetFuturesPositionsRequest,
+                            >,
+                        ) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut = async move {
+                                (*inner).get_futures_positions(request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = GetFuturesPositionsSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

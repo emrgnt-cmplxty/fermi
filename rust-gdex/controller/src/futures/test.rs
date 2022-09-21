@@ -1,4 +1,6 @@
-#[cfg(test)]
+#[allow(dead_code)]
+#[allow(unused_imports)] // flags necessary w/ feature flag
+#[cfg(any(test, feature = "testing"))]
 pub mod futures_tests {
     // crate
     use crate::futures::{proto::*, types::*};
@@ -31,11 +33,11 @@ pub mod futures_tests {
     const FINAL_ASSET_PRICES: &'static [u64] = &[12_000_000];
 
     pub struct FuturesControllerTester {
-        main_controller: ControllerRouter,
-        admin_key: AccountKeyPair,
-        user_keys: Vec<AccountKeyPair>,
-        base_asset_id: u64,
-        quote_asset_id: u64,
+        pub controller_router: ControllerRouter,
+        pub admin_key: AccountKeyPair,
+        pub user_keys: Vec<AccountKeyPair>,
+        pub base_asset_id: u64,
+        pub quote_asset_id: u64,
     }
 
     impl FuturesControllerTester {
@@ -48,7 +50,7 @@ pub mod futures_tests {
             }
 
             Self {
-                main_controller: ControllerRouter::default(),
+                controller_router: ControllerRouter::default(),
                 admin_key,
                 user_keys,
                 base_asset_id: BASE_ASSET_ID,
@@ -57,7 +59,7 @@ pub mod futures_tests {
         }
 
         fn initialize_bank_controller(&self) -> Result<(), GDEXError> {
-            let mut bank_controller = self.main_controller.bank_controller.lock().unwrap();
+            let mut bank_controller = self.controller_router.bank_controller.lock().unwrap();
             // create two assets for the base and quote of the futures market
             bank_controller.create_asset(self.admin_key.public()).unwrap();
             bank_controller.create_asset(self.admin_key.public()).unwrap();
@@ -90,7 +92,7 @@ pub mod futures_tests {
                 0,
                 serialize_protobuf(&request),
             );
-            self.main_controller.handle_consensus_transaction(&transaction)
+            self.controller_router.handle_consensus_transaction(&transaction)
         }
 
         fn create_market(&self) -> Result<(), GDEXError> {
@@ -105,7 +107,7 @@ pub mod futures_tests {
                 0,
                 serialize_protobuf(&request),
             );
-            self.main_controller.handle_consensus_transaction(&transaction)
+            self.controller_router.handle_consensus_transaction(&transaction)
         }
 
         fn update_market_params(&self) -> Result<(), GDEXError> {
@@ -121,7 +123,7 @@ pub mod futures_tests {
                 0,
                 serialize_protobuf(&request),
             );
-            self.main_controller.handle_consensus_transaction(&transaction)
+            self.controller_router.handle_consensus_transaction(&transaction)
         }
 
         fn update_time(&self, latest_time: u64) -> Result<(), GDEXError> {
@@ -134,7 +136,7 @@ pub mod futures_tests {
                 0,
                 serialize_protobuf(&request),
             );
-            self.main_controller.handle_consensus_transaction(&transaction)
+            self.controller_router.handle_consensus_transaction(&transaction)
         }
 
         fn update_prices(&self, latest_prices: Vec<u64>) -> Result<(), GDEXError> {
@@ -147,7 +149,7 @@ pub mod futures_tests {
                 0,
                 serialize_protobuf(&request),
             );
-            self.main_controller.handle_consensus_transaction(&transaction)
+            self.controller_router.handle_consensus_transaction(&transaction)
         }
 
         fn account_deposit(&self, quantity: u64, sender: AccountPubKey) -> Result<(), GDEXError> {
@@ -163,7 +165,7 @@ pub mod futures_tests {
                 0,
                 serialize_protobuf(&request),
             );
-            self.main_controller.handle_consensus_transaction(&transaction)
+            self.controller_router.handle_consensus_transaction(&transaction)
         }
 
         fn initialize_futures_controller(&self) -> Result<(), GDEXError> {
@@ -179,7 +181,7 @@ pub mod futures_tests {
             Ok(())
         }
 
-        fn futures_limit_order(
+        pub fn futures_limit_order(
             &self,
             user_index: usize,
             side: u64,
@@ -203,12 +205,12 @@ pub mod futures_tests {
                 0,
                 serialize_protobuf(&request),
             );
-            self.main_controller.handle_consensus_transaction(&transaction)
+            self.controller_router.handle_consensus_transaction(&transaction)
         }
 
         // UTIILTY FUNCTIONS
         fn get_user_total_req_collateral(&self, user_index: usize) -> Result<u64, GDEXError> {
-            self.main_controller
+            self.controller_router
                 .futures_controller
                 .lock()
                 .unwrap()
@@ -216,15 +218,15 @@ pub mod futures_tests {
         }
 
         fn get_user_open_positions(&self, user_index: usize) -> Result<Vec<Position>, GDEXError> {
-            self.main_controller
+            self.controller_router
                 .futures_controller
                 .lock()
                 .unwrap()
-                .account_open_market_positions(self.admin_key.public(), self.user_keys[user_index].public())
+                .account_open_positions_by_market(self.admin_key.public(), self.user_keys[user_index].public())
         }
 
         fn get_user_unrealized_pnl(&self, user_index: usize) -> Result<i64, GDEXError> {
-            self.main_controller
+            self.controller_router
                 .futures_controller
                 .lock()
                 .unwrap()
@@ -232,7 +234,7 @@ pub mod futures_tests {
         }
 
         fn get_account_available_deposit(&self, user_index: usize) -> Result<i64, GDEXError> {
-            self.main_controller
+            self.controller_router
                 .futures_controller
                 .lock()
                 .unwrap()
@@ -241,8 +243,8 @@ pub mod futures_tests {
     }
 
     impl ControllerTestBed for FuturesControllerTester {
-        fn get_main_controller(&self) -> &ControllerRouter {
-            &self.main_controller
+        fn get_controller_router(&self) -> &ControllerRouter {
+            &self.controller_router
         }
         fn initialize(&self) {
             self.generic_initialize();

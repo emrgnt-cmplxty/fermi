@@ -398,8 +398,7 @@ pub mod cluster_test_suite {
         let dummy_consensus_output = create_test_consensus_output();
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let fee: u64 = 1000;
-        let transaction = create_create_asset_transaction(sender_kp.public().clone(), 0, fee, recent_block_hash);
+        let transaction = create_create_asset_transaction(sender_kp.public(), recent_block_hash, 0);
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 

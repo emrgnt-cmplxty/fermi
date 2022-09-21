@@ -2,6 +2,19 @@ syntax = "proto3";
 
 package futures_requests;
 
+// ENUMS
+
+enum FuturesRequestType {
+    CREATE_MARKETPLACE = 0;
+    CREATE_MARKET = 1;
+    UPDATE_MARKET_PARAMS = 2;
+    UPDATE_TIME = 3;
+    UPDATE_PRICES = 4;
+    ACCOUNT_DEPOSIT = 5;
+    ACCOUNT_WITHDRAWAL = 6;
+    FUTURES_LIMIT_ORDER = 7;
+}
+
 // REQUESTS
 
 message CreateMarketplaceRequest {

@@ -460,8 +460,7 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let fee: u64 = 1000;
-        let transaction = create_create_asset_transaction(sender_kp.public().clone(), 0, fee, recent_block_hash);
+        let transaction = create_create_asset_transaction(sender_kp.public(), recent_block_hash, 0);
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
@@ -485,8 +484,7 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let fee: u64 = 1000;
-        let transaction = create_create_asset_transaction(sender_kp.public().clone(), 0, fee, recent_block_hash);
+        let transaction = create_create_asset_transaction(sender_kp.public(), recent_block_hash, 0);
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
@@ -503,14 +501,12 @@ mod test_validator_state {
         const TEST_ASSET_ID: u64 = 0;
         const TEST_AMOUNT: u64 = 1000000;
         let receiver_kp = generate_production_keypair::<KeyPair>();
-        let fee: u64 = 1000;
         let transaction = create_payment_transaction(
-            sender_kp.public().clone(),
+            sender_kp.public(),
+            recent_block_hash,
             receiver_kp.public(),
             TEST_ASSET_ID,
             TEST_AMOUNT,
-            fee,
-            recent_block_hash,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
@@ -535,11 +531,10 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let fee: u64 = 1000;
 
         for asset_number in 0..5 {
             let transaction =
-                create_create_asset_transaction(sender_kp.public().clone(), asset_number, fee, recent_block_hash);
+                create_create_asset_transaction(sender_kp.public(), recent_block_hash, asset_number);
             let signed_transaction = transaction.sign(&sender_kp).unwrap();
             let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
@@ -558,13 +553,11 @@ mod test_validator_state {
         const TEST_QUOTE_ASSET_ID: u64 = 2;
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let fee: u64 = 1000;
         let transaction = create_create_orderbook_transaction(
-            sender_kp.public().clone(),
+            sender_kp.public(),
+            recent_block_hash,
             TEST_BASE_ASSET_ID,
             TEST_QUOTE_ASSET_ID,
-            fee,
-            recent_block_hash,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
@@ -589,11 +582,10 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let fee: u64 = 1000;
 
         for asset_number in 0..5 {
             let transaction =
-                create_create_asset_transaction(sender_kp.public().clone(), asset_number, fee, recent_block_hash);
+                create_create_asset_transaction(sender_kp.public(), recent_block_hash, asset_number);
             let signed_transaction = transaction.sign(&sender_kp).unwrap();
             let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
@@ -611,13 +603,11 @@ mod test_validator_state {
         const TEST_BASE_ASSET_ID: u64 = 1;
         const TEST_QUOTE_ASSET_ID: u64 = 2;
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let fee: u64 = 1000;
         let transaction = create_create_orderbook_transaction(
-            sender_kp.public().clone(),
+            sender_kp.public(),
+            recent_block_hash,
             TEST_BASE_ASSET_ID,
             TEST_QUOTE_ASSET_ID,
-            fee,
-            recent_block_hash,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
@@ -633,16 +623,14 @@ mod test_validator_state {
 
         const TEST_PRICE: u64 = 100;
         const TEST_QUANTITY: u64 = 100;
-        let fee: u64 = 1000;
         let transaction = create_limit_order_transaction(
-            sender_kp.public().clone(),
+            sender_kp.public(),
+            recent_block_hash,
             TEST_BASE_ASSET_ID,
             TEST_QUOTE_ASSET_ID,
             OrderSide::Bid as u64,
             TEST_PRICE,
             TEST_QUANTITY,
-            fee,
-            recent_block_hash,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
@@ -658,15 +646,13 @@ mod test_validator_state {
 
         // cancel order
         const TEST_ORDER_ID: u64 = 1;
-        let fee: u64 = 1000;
         let transaction = create_cancel_order_transaction(
-            sender_kp.public().clone(),
+            sender_kp.public(),
+            recent_block_hash,
             TEST_BASE_ASSET_ID,
             TEST_QUOTE_ASSET_ID,
             OrderSide::Bid as u64,
             TEST_ORDER_ID,
-            fee,
-            recent_block_hash,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
@@ -691,11 +677,10 @@ mod test_validator_state {
         // create asset transaction
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let fee: u64 = 1000;
 
         for asset_number in 0..5 {
             let transaction =
-                create_create_asset_transaction(sender_kp.public().clone(), asset_number, fee, recent_block_hash);
+                create_create_asset_transaction(sender_kp.public(), recent_block_hash, asset_number);
             let signed_transaction = transaction.sign(&sender_kp).unwrap();
             let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
@@ -713,13 +698,11 @@ mod test_validator_state {
         const TEST_BASE_ASSET_ID: u64 = 1;
         const TEST_QUOTE_ASSET_ID: u64 = 2;
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let fee: u64 = 1000;
         let transaction = create_create_orderbook_transaction(
-            sender_kp.public().clone(),
+            sender_kp.public(),
+            recent_block_hash,
             TEST_BASE_ASSET_ID,
             TEST_QUOTE_ASSET_ID,
-            fee,
-            recent_block_hash,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
@@ -736,16 +719,14 @@ mod test_validator_state {
         // create limit order transaction
         const TEST_PRICE: u64 = 100;
         const TEST_QUANTITY: u64 = 100;
-        let fee: u64 = 1000;
         let transaction = create_limit_order_transaction(
-            sender_kp.public().clone(),
+            sender_kp.public(),
+            recent_block_hash,
             TEST_BASE_ASSET_ID,
             TEST_QUOTE_ASSET_ID,
             OrderSide::Bid as u64,
             TEST_PRICE,
             TEST_QUANTITY,
-            fee,
-            recent_block_hash,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
@@ -761,17 +742,15 @@ mod test_validator_state {
 
         // cancel order
         const TEST_ORDER_ID: u64 = 1;
-        let fee: u64 = 1000;
         let transaction = create_update_order_transaction(
-            sender_kp.public().clone(),
+            sender_kp.public(),
+            recent_block_hash,
             TEST_BASE_ASSET_ID,
             TEST_QUOTE_ASSET_ID,
             OrderSide::Bid as u64,
             TEST_PRICE,
             TEST_QUANTITY,
             TEST_ORDER_ID,
-            fee,
-            recent_block_hash,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);

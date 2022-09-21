@@ -13,7 +13,7 @@ use gdex_types::{
     error::GDEXError,
     order_book::OrderSide,
     store::ProcessBlockStore,
-    transaction::{deserialize_protobuf, parse_order_side, parse_request_type, RequestType, Transaction},
+    transaction::{deserialize_protobuf, parse_order_side, Transaction},
 };
 // external
 use async_trait::async_trait;
@@ -344,49 +344,46 @@ impl Controller for FuturesController {
 
     fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
         let sender = transaction.get_sender()?;
-        let request_type = parse_request_type(transaction.request_type)?;
+        let request_type: FuturesRequestType = transaction.get_request_type()?;
         match request_type {
-            RequestType::CreateMarketplace => {
+            FuturesRequestType::CreateMarketplace => {
                 let request: CreateMarketplaceRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 self.create_marketplace(sender, request)?;
             }
-            RequestType::CreateMarket => {
+            FuturesRequestType::CreateMarket => {
                 let request: CreateMarketRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 self.create_market(sender, request)?;
             }
-            RequestType::UpdateMarketParams => {
+            FuturesRequestType::UpdateMarketParams => {
                 // TODO - add market_admin verification
                 let request: UpdateMarketParamsRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 self.update_market_params(sender, request)?;
             }
-            RequestType::UpdateTime => {
+            FuturesRequestType::UpdateTime => {
                 // TODO - add market_admin verification
                 let request: UpdateTimeRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 self.update_time(sender, request)?;
             }
-            RequestType::UpdatePrices => {
+            FuturesRequestType::UpdatePrices => {
                 // TODO - add market_admin verification
                 let request: UpdatePricesRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 self.update_prices(sender, request)?;
             }
-            RequestType::AccountDeposit => {
+            FuturesRequestType::AccountDeposit => {
                 let request: AccountDepositRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 self.account_deposit(sender, request)?;
             }
-            RequestType::AccountWithdrawal => {
+            FuturesRequestType::AccountWithdrawal => {
                 let request: AccountWithdrawalRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 self.account_withdraw(sender, request)?;
             }
-            RequestType::FuturesLimitOrder => {
+            FuturesRequestType::FuturesLimitOrder => {
                 // TODO - add signature verification
                 let request: FuturesLimitOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 let market_admin =
                     AccountPubKey::from_bytes(&request.market_admin).map_err(|_| GDEXError::InvalidAddress)?;
                 self.futures_limit_order(sender, market_admin, request)?;
             }
-
-            // TODO - implement market orders
-            _ => return Err(GDEXError::InvalidRequestTypeError),
         }
         Ok(())
     }

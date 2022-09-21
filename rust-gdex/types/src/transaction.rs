@@ -41,6 +41,8 @@ pub const PROTO_VERSION: Version = Version {
     patch: 0,
 };
 
+pub const DEFAULT_TRANSACTION_FEE: u64 = 1000;
+
 // DIGEST TYPES
 
 #[derive(Clone, Copy, Serialize, Deserialize, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -86,6 +88,19 @@ pub fn deserialize_protobuf<T: Message + std::default::Default>(buf: &[u8]) -> R
         Ok(message) => Ok(message),
         Err(..) => Err(GDEXError::DeserializationError),
     }
+}
+
+// TRAITS
+
+// TODO this should be doable through proto autogen stuff,
+// but couldn't figure that out so for now we define our own trait
+pub trait RequestTypeEnum {
+    fn request_type_from_i32(value: i32) -> Result<Self, GDEXError> where Self: Sized;
+}
+
+pub trait Request {
+    fn get_controller_id() -> i32;
+    fn get_request_type_id() -> i32;
 }
 
 // INTERFACE
@@ -167,27 +182,32 @@ impl SignedTransaction {
 // TRANSACTION
 
 impl Transaction {
-    pub fn new(
+    pub fn new<T: Request + Message + std::default::Default>(
         sender: &AccountPubKey,
-        target_controller: ControllerType,
-        request_type: RequestType,
         recent_block_hash: CertificateDigest,
-        fee: u64,
-        request_bytes: Vec<u8>,
+        request: &T,
     ) -> Self {
         Transaction {
             version: Some(PROTO_VERSION),
             sender: Bytes::from(sender.as_ref().to_vec()),
-            target_controller: target_controller as i32,
-            request_type: request_type as i32,
+            target_controller: T::get_controller_id(),
+            request_type: T::get_request_type_id(),
             recent_block_hash: CertificateDigestProto::from(recent_block_hash).digest,
-            fee,
-            request_bytes: Bytes::from(request_bytes),
+            fee: DEFAULT_TRANSACTION_FEE,
+            request_bytes: Bytes::from(serialize_protobuf(request))
         }
+    }
+    
+    pub fn set_fee(&mut self, fee: u64) {
+        self.fee = fee;
     }
 
     pub fn get_sender(&self) -> Result<AccountPubKey, GDEXError> {
         AccountPubKey::from_bytes(&self.sender).map_err(|_e| GDEXError::DeserializationError)
+    }
+
+    pub fn get_request_type<T: RequestTypeEnum>(&self) -> Result<T, GDEXError> {
+        T::request_type_from_i32(self.request_type)
     }
 
     pub fn get_recent_block_digest(&self) -> Result<CertificateDigest, GDEXError> {
@@ -220,43 +240,6 @@ impl Hash for Transaction {
 
 // ENUM CONVERSIONS
 // TODO gotta be a better way to do this
-
-pub fn parse_target_controller(target_controller: i32) -> Result<ControllerType, GDEXError> {
-    match target_controller {
-        0 => Ok(ControllerType::Bank),
-        1 => Ok(ControllerType::Stake),
-        2 => Ok(ControllerType::Spot),
-        3 => Ok(ControllerType::Consensus),
-        4 => Ok(ControllerType::Futures),
-        _ => Err(GDEXError::DeserializationError),
-    }
-}
-
-pub fn parse_request_type(request_type: i32) -> Result<RequestType, GDEXError> {
-    match request_type {
-        // Spot types
-        0 => Ok(RequestType::Payment),
-        1 => Ok(RequestType::CreateAsset),
-        2 => Ok(RequestType::CreateOrderbook),
-        3 => Ok(RequestType::MarketOrder),
-        4 => Ok(RequestType::LimitOrder),
-        5 => Ok(RequestType::UpdateOrder),
-        6 => Ok(RequestType::CancelOrder),
-        // Futures types
-        7 => Ok(RequestType::CreateMarketplace),
-        8 => Ok(RequestType::CreateMarket),
-        9 => Ok(RequestType::UpdateMarketParams),
-        10 => Ok(RequestType::UpdateTime),
-        11 => Ok(RequestType::UpdatePrices),
-        12 => Ok(RequestType::AccountDeposit),
-        13 => Ok(RequestType::AccountWithdrawal),
-        14 => Ok(RequestType::FuturesMarketOrder),
-        15 => Ok(RequestType::FuturesLimitOrder),
-        16 => Ok(RequestType::FuturesUpdateOrder),
-        17 => Ok(RequestType::FuturesCancelOrder),
-        _ => Err(GDEXError::DeserializationError),
-    }
-}
 
 pub fn parse_order_side(side: u64) -> Result<OrderSide, GDEXError> {
     match side {

@@ -1,11 +1,14 @@
 // IMPORTS
 
+// crate
+use crate::router::ControllerType;
+
 // gdex
 use gdex_types::{
     account::AccountPubKey,
     crypto::ToFromBytes,
     error::GDEXError,
-    transaction::{serialize_protobuf, ControllerType, RequestType, Transaction},
+    transaction::{Request, RequestTypeEnum, Transaction},
 };
 
 // mysten
@@ -23,13 +26,34 @@ mod bank_requests;
 
 pub use bank_requests::*;
 
+// ENUMS
+
+impl RequestTypeEnum for BankRequestType {
+    fn request_type_from_i32(value: i32) -> Result<Self, GDEXError> {
+        match value {
+            0 => Ok(BankRequestType::CreateAsset),
+            1 => Ok(BankRequestType::Payment),
+            _ => Err(GDEXError::DeserializationError)
+        }
+    }
+}
+
 // INTERFACE
+
+// create asset
 
 impl CreateAssetRequest {
     pub fn new(dummy: u64) -> Self {
         CreateAssetRequest { dummy }
     }
 }
+
+impl Request for CreateAssetRequest {
+    fn get_controller_id() -> i32 { ControllerType::Bank as i32 }
+    fn get_request_type_id() -> i32 { BankRequestType::CreateAsset as i32 }
+}
+
+// payment
 
 impl PaymentRequest {
     pub fn new(receiver: &AccountPubKey, asset_id: u64, quantity: u64) -> Self {
@@ -45,40 +69,38 @@ impl PaymentRequest {
     }
 }
 
+impl Request for PaymentRequest {
+    fn get_controller_id() -> i32 { ControllerType::Bank as i32 }
+    fn get_request_type_id() -> i32 { BankRequestType::Payment as i32 }
+}
+
+
 // TRANSACTION BUILDERS
 
 // TODO get rid of dummy thing (pretty gross)
 pub fn create_create_asset_transaction(
-    sender: AccountPubKey,
-    dummy: u64,
-    fee: u64,
+    sender: &AccountPubKey,
     recent_block_hash: CertificateDigest,
+    dummy: u64,
 ) -> Transaction {
     Transaction::new(
-        &sender,
-        ControllerType::Bank,
-        RequestType::CreateAsset,
+        sender,
         recent_block_hash,
-        fee,
-        serialize_protobuf(&CreateAssetRequest::new(dummy)),
+        &CreateAssetRequest::new(dummy),
     )
 }
 
 pub fn create_payment_transaction(
-    sender: AccountPubKey, // TODO can be ref?
+    sender: &AccountPubKey,
+    recent_block_hash: CertificateDigest,
     receiver: &AccountPubKey,
     asset_id: u64,
     amount: u64,
-    fee: u64,
-    recent_block_hash: CertificateDigest,
 ) -> Transaction {
     Transaction::new(
-        &sender,
-        ControllerType::Bank,
-        RequestType::Payment,
+        sender,
         recent_block_hash,
-        fee,
-        serialize_protobuf(&PaymentRequest::new(receiver, asset_id, amount)),
+        &PaymentRequest::new(receiver, asset_id, amount),
     )
 }
 
@@ -99,14 +121,12 @@ pub mod bank_controller_test_functions {
         // TODO replace this with latest
         let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
 
-        let fee: u64 = 1000;
         let transaction = create_payment_transaction(
-            kp_sender.public().clone(),
+            kp_sender.public(),
+            dummy_batch_digest,
             kp_receiver.public(),
             PRIMARY_ASSET_ID,
             amount,
-            fee,
-            dummy_batch_digest,
         );
 
         transaction.sign(kp_sender).unwrap()

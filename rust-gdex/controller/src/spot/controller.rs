@@ -126,14 +126,14 @@ impl Controller for SpotController {
 
     async fn process_end_of_block(
         controller: Arc<Mutex<Self>>,
-        process_block_store: &PostProcessStore,
+        post_process_store: &PostProcessStore,
         block_number: u64,
     ) {
         // write out orderbook depth every ORDERBOOK_DEPTH_FREQUENCY
         if block_number % ORDERBOOK_DEPTH_FREQUENCY == 0 {
             let orderbook_depths = controller.lock().unwrap().generate_orderbook_depths();
             for (asset_pair, orderbook_depth) in orderbook_depths {
-                process_block_store
+                post_process_store
                     .latest_orderbook_depth_store
                     .write(asset_pair, orderbook_depth.clone())
                     .await;

@@ -130,13 +130,13 @@ impl ControllerRouter {
         }
     }
 
-    pub async fn process_end_of_block(&self, process_block_store: &PostProcessStore, block_number: u64) {
-        ConsensusController::process_end_of_block(self.consensus_controller.clone(), process_block_store, block_number)
+    pub async fn process_end_of_block(&self, post_process_store: &PostProcessStore, block_number: u64) {
+        ConsensusController::process_end_of_block(self.consensus_controller.clone(), post_process_store, block_number)
             .await;
-        BankController::process_end_of_block(self.bank_controller.clone(), process_block_store, block_number).await;
-        StakeController::process_end_of_block(self.stake_controller.clone(), process_block_store, block_number).await;
-        SpotController::process_end_of_block(self.spot_controller.clone(), process_block_store, block_number).await;
-        FuturesController::process_end_of_block(self.futures_controller.clone(), process_block_store, block_number)
+        BankController::process_end_of_block(self.bank_controller.clone(), post_process_store, block_number).await;
+        StakeController::process_end_of_block(self.stake_controller.clone(), post_process_store, block_number).await;
+        SpotController::process_end_of_block(self.spot_controller.clone(), post_process_store, block_number).await;
+        FuturesController::process_end_of_block(self.futures_controller.clone(), post_process_store, block_number)
             .await;
     }
 

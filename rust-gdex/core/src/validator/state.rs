@@ -40,13 +40,13 @@ pub struct ValidatorStore {
     // garbage collection depth
     gc_depth: u64,
     pub block_number: AtomicU64,
-    pub process_block_store: PostProcessStore,
+    pub post_process_store: PostProcessStore,
 }
 
 impl ValidatorStore {
     pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
-        let process_block_store: PostProcessStore = PostProcessStore::reopen(store_path);
-        let last_block_info = process_block_store.last_block_info.clone();
+        let post_process_store: PostProcessStore = PostProcessStore::reopen(store_path);
+        let last_block_info = post_process_store.last_block_info.clone();
 
         // TODO load the state if last block is not 0, i.e. not at genesis
         let block_number = match last_block_info {
@@ -74,7 +74,7 @@ impl ValidatorStore {
             transaction_cache: Mutex::new(HashMap::new()),
             block_digest_cache,
             gc_depth: 50,
-            process_block_store,
+            post_process_store,
             block_number: AtomicU64::new(block_number),
         }
     }
@@ -155,15 +155,15 @@ impl ValidatorStore {
         };
 
         // write-out the block information to associated stores
-        self.process_block_store
+        self.post_process_store
             .block_store
             .write(block_number, block.clone())
             .await;
-        self.process_block_store
+        self.post_process_store
             .block_info_store
             .write(block_number, block_info.clone())
             .await;
-        self.process_block_store
+        self.post_process_store
             .last_block_info_store
             .write(0, block_info.clone())
             .await;

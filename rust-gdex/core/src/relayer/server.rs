@@ -18,7 +18,7 @@ impl Relayer for RelayerService {
         let validator_state = &self.state;
         let returned_value = validator_state
             .validator_store
-            .process_block_store
+            .post_process_store
             .last_block_info_store
             .read(0)
             .await;
@@ -50,7 +50,7 @@ impl Relayer for RelayerService {
 
         match validator_state
             .validator_store
-            .process_block_store
+            .post_process_store
             .block_info_store
             .read(block_number)
             .await
@@ -81,7 +81,7 @@ impl Relayer for RelayerService {
 
         match validator_state
             .validator_store
-            .process_block_store
+            .post_process_store
             .block_store
             .read(block_number)
             .await
@@ -120,7 +120,7 @@ impl Relayer for RelayerService {
 
         let returned_value = validator_state
             .validator_store
-            .process_block_store
+            .post_process_store
             .latest_orderbook_depth_store
             .read(orderbook_depth_key)
             .await;

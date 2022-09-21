@@ -100,7 +100,7 @@ impl Controller for BankController {
 
     async fn process_end_of_block(
         _controller: Arc<Mutex<Self>>,
-        _process_block_store: &PostProcessStore,
+        _post_process_store: &PostProcessStore,
         _block_number: u64,
     ) {
     }

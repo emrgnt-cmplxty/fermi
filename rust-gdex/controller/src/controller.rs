@@ -21,7 +21,7 @@ pub trait Controller {
 
     async fn process_end_of_block(
         controller: Arc<Mutex<Self>>,
-        _process_block_store: &PostProcessStore,
+        _post_process_store: &PostProcessStore,
         block_number: u64,
     );
 

@@ -141,12 +141,28 @@ impl Controller for SpotController {
         }
     }
 
-    fn create_catchup_state(_controller: Arc<Mutex<Self>>, _block_number: u64) -> Result<Vec<u8>, GDEXError> {
-        Ok(Vec::new())
+    fn create_catchup_state(controller: Arc<Mutex<Self>>, _block_number: u64) -> Result<Vec<u8>, GDEXError> {
+        match bincode::serialize(&controller.lock().unwrap().clone()) {
+            Ok(v) => Ok(v),
+            Err(_) => Err(GDEXError::SerializationError),
+        }
     }
 }
 
 impl SpotController {
+
+    pub fn new(
+        controller_account: AccountPubKey,
+        orderbooks: HashMap<AssetPairKey, SpotOrderbook>,
+        bank_controller: Arc<Mutex<BankController>>
+    ) -> Self {
+        SpotController {
+            controller_account,
+            orderbooks,
+            bank_controller
+        }
+    }
+
     // HELPER FUNCTIONS
 
     pub fn get_orderbook_key(&self, base_asset_id: AssetId, quote_asset_id: AssetId) -> AssetPairKey {
@@ -1129,5 +1145,22 @@ pub mod spot_tests {
             }
         }
         let _orderbook_depth = orderbook_interface.get_orderbook_depth();
+    }
+
+    #[test]
+    fn create_spot_catchup_state_default() {
+        let spot_controller = Arc::new(Mutex::new(SpotController::default()));
+        let catchup_state = SpotController::create_catchup_state(spot_controller, 0);
+        assert!(catchup_state.is_ok());
+        let catchup_state = catchup_state.unwrap();
+        println!("Catchup state is {} bytes", catchup_state.len());
+
+        match bincode::deserialize(&catchup_state) {
+            Ok(SpotController { orderbooks, bank_controller, ..}) => {
+                assert_eq!(orderbooks.keys().len(), 0);
+                assert_eq!(bank_controller.lock().unwrap().get_num_assets(), 0);
+            },
+            Err(_) => panic!("deserializing catchup_state_default failed")
+        }
     }
 }

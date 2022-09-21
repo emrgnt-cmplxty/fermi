@@ -353,7 +353,7 @@ pub mod spot_tests {
     }
 
     #[test]
-    fn create_catchup_state_default() {
+    fn create_bank_catchup_state_default() {
         let bank_controller = Arc::new(Mutex::new(BankController::default()));
         let catchup_state = BankController::create_catchup_state(bank_controller, 0);
         assert!(catchup_state.is_ok());
@@ -371,7 +371,7 @@ pub mod spot_tests {
     }
 
     #[test]
-    fn create_catchup_state_big() {
+    fn create_bank_catchup_state_big() {
         // create keypairs initially as it is slow to generate keypairs in non-release mode
         let n_users: usize = 1_000;
         let mut keypairs: Vec<KeyPair> = Vec::new();

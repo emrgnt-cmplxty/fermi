@@ -146,7 +146,7 @@ impl ControllerRouter {
             BankController::create_catchup_state(self.bank_controller.clone(), block_number),
             StakeController::create_catchup_state(self.stake_controller.clone(), block_number),
             SpotController::create_catchup_state(self.spot_controller.clone(), block_number),
-            FuturesController::create_catchup_state(self.futures_controller.clone(), block_number)
+            FuturesController::create_catchup_state(self.futures_controller.clone(), block_number),
         ];
 
         // TODO: save to store

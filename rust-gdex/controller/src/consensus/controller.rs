@@ -86,7 +86,7 @@ impl Controller for ConsensusController {
 #[cfg(test)]
 pub mod consensus_tests {
     use super::*;
-    
+
     #[test]
     fn create_consensus_catchup_state_default() {
         let consensus_controller = Arc::new(Mutex::new(ConsensusController::default()));
@@ -96,10 +96,10 @@ pub mod consensus_tests {
         println!("Catchup state is {} bytes", catchup_state.len());
 
         match bincode::deserialize(&catchup_state) {
-            Ok(ConsensusController { batch_size, ..}) => {
+            Ok(ConsensusController { batch_size, .. }) => {
                 assert_eq!(batch_size, DEFAULT_BATCH_SIZE);
-            },
-            Err(_) => panic!("deserializing catchup_state_default failed")
+            }
+            Err(_) => panic!("deserializing catchup_state_default failed"),
         }
     }
 }

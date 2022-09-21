@@ -361,12 +361,17 @@ pub mod spot_tests {
         println!("Catchup state is {} bytes", catchup_state.len());
 
         match bincode::deserialize(&catchup_state) {
-            Ok(BankController { asset_id_to_asset, bank_accounts, n_assets, .. }) => {
+            Ok(BankController {
+                asset_id_to_asset,
+                bank_accounts,
+                n_assets,
+                ..
+            }) => {
                 assert_eq!(n_assets, 0);
                 assert_eq!(bank_accounts.keys().len(), 0);
                 assert_eq!(asset_id_to_asset.keys().len(), 0);
-            },
-            Err(_) => panic!("deserializing catchup_state_default failed")
+            }
+            Err(_) => panic!("deserializing catchup_state_default failed"),
         }
     }
 
@@ -404,12 +409,17 @@ pub mod spot_tests {
         );
 
         match bincode::deserialize(&catchup_state) {
-            Ok(BankController { asset_id_to_asset, bank_accounts, n_assets, .. }) => {
+            Ok(BankController {
+                asset_id_to_asset,
+                bank_accounts,
+                n_assets,
+                ..
+            }) => {
                 assert_eq!(n_assets, n_users as u64);
                 assert_eq!(bank_accounts.keys().len(), n_users);
                 assert_eq!(asset_id_to_asset.keys().len(), n_users);
-            },
-            Err(_) => panic!("deserializing catchup_state_default failed")
+            }
+            Err(_) => panic!("deserializing catchup_state_default failed"),
         }
     }
 }

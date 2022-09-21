@@ -2,7 +2,7 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughpu
 use gdex_controller::{
     bank::controller::BankController,
     spot::controller::{SpotOrderbook, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
-    spot::proto::create_limit_order_request as txn_create_limit_order_request,
+    spot::proto::LimitOrderRequest,
     utils::engine::{
         order_book::{OrderBookWrapper, Orderbook},
         orders::create_limit_order_request,
@@ -113,7 +113,7 @@ fn place_orders_engine_account(
         let price = rng.gen_range(1..100);
 
         let limit_order_request =
-            txn_create_limit_order_request(base_asset_id, quote_asset_id, order_type as u64, price, quantity);
+            LimitOrderRequest::new(base_asset_id, quote_asset_id, order_type as u64, price, quantity);
         let res = spot_orderbook.place_limit_order(primary, &limit_order_request).unwrap();
         if persist {
             persist_result(db, &res);

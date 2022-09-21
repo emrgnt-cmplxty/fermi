@@ -356,10 +356,10 @@ pub mod stake_tests {
         println!("Catchup state is {} bytes", catchup_state.len());
 
         match bincode::deserialize(&catchup_state) {
-            Ok(StakeController { bank_controller, ..}) => {
+            Ok(StakeController { bank_controller, .. }) => {
                 assert_eq!(bank_controller.lock().unwrap().get_num_assets(), 0);
-            },
-            Err(_) => panic!("deserializing catchup_state_default failed")
+            }
+            Err(_) => panic!("deserializing catchup_state_default failed"),
         }
     }
 }

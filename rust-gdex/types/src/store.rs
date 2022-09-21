@@ -17,15 +17,12 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Deserialize, Serialize, Default)]
 pub struct CatchupState {
     payload: Vec<u8>,
-    block_number: BlockNumber
+    block_number: BlockNumber,
 }
 
 impl CatchupState {
     pub fn new(payload: Vec<u8>, block_number: BlockNumber) -> Self {
-        CatchupState {
-            payload,
-            block_number
-        }
+        CatchupState { payload, block_number }
     }
 
     pub fn get_payload(&self) -> &Vec<u8> {
@@ -46,7 +43,7 @@ pub struct PostProcessStore {
     pub last_block_info_store: Store<u64, BlockInfo>,
     pub latest_orderbook_depth_store: Store<String, OrderbookDepth>,
     // catchup store
-    pub catchup_state_store: Store<BlockNumber, CatchupState>
+    pub catchup_state_store: Store<BlockNumber, CatchupState>,
 }
 
 impl PostProcessStore {
@@ -69,13 +66,7 @@ impl PostProcessStore {
             ],
         )
         .expect("Cannot open database");
-        let (
-            block_map,
-            block_info_map,
-            last_block_map,
-            orderbook_depth_map,
-            catchup_state_map
-        ) = reopen!(&rocksdb,
+        let (block_map, block_info_map, last_block_map, orderbook_depth_map, catchup_state_map) = reopen!(&rocksdb,
             Self::BLOCKS_CF;<BlockNumber, Block>,
             Self::BLOCK_INFO_CF;<BlockNumber, BlockInfo>,
             Self::LAST_BLOCK_CF;<u64, BlockInfo>,
@@ -97,7 +88,7 @@ impl PostProcessStore {
             block_info_store,
             last_block_info_store,
             latest_orderbook_depth_store,
-            catchup_state_store
+            catchup_state_store,
         }
     }
 }

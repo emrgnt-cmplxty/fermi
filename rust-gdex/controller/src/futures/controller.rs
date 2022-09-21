@@ -552,7 +552,7 @@ impl OrderBookWrapper for FuturesMarket {
 #[cfg(test)]
 pub mod futures_tests {
     use super::*;
-    
+
     #[test]
     fn create_futures_catchup_state_default() {
         let futures_controller = Arc::new(Mutex::new(FuturesController::default()));
@@ -562,10 +562,10 @@ pub mod futures_tests {
         println!("Catchup state is {} bytes", catchup_state.len());
 
         match bincode::deserialize(&catchup_state) {
-            Ok(FuturesController { bank_controller, ..}) => {
+            Ok(FuturesController { bank_controller, .. }) => {
                 assert_eq!(bank_controller.lock().unwrap().get_num_assets(), 0);
-            },
-            Err(_) => panic!("deserializing catchup_state_default failed")
+            }
+            Err(_) => panic!("deserializing catchup_state_default failed"),
         }
     }
 }

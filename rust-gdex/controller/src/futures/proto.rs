@@ -249,11 +249,7 @@ pub mod futures_controller_test_functions {
         };
 
         let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
-        let transaction = Transaction::new(
-            kp_sender.public(),
-            dummy_batch_digest,
-            &request,
-        );
+        let transaction = Transaction::new(kp_sender.public(), dummy_batch_digest, &request);
 
         transaction.sign(kp_sender).unwrap()
     }

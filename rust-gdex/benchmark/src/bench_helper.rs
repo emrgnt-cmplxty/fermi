@@ -28,15 +28,8 @@ fn create_signed_payment_transaction(
     amount: u64,
     block_digest: BlockDigest,
 ) -> SignedTransaction {
-    let fee: u64 = 1000;
-    let transaction = create_payment_transaction(
-        kp_sender.public().clone(),
-        kp_receiver.public(),
-        asset_id,
-        amount,
-        fee,
-        block_digest,
-    );
+    let transaction =
+        create_payment_transaction(kp_sender.public(), block_digest, kp_receiver.public(), asset_id, amount);
     transaction.sign(kp_sender).unwrap()
 }
 
@@ -45,8 +38,7 @@ fn create_signed_asset_creation_transaction(
     block_digest: BlockDigest,
     dummy: u8,
 ) -> SignedTransaction {
-    let fee: u64 = 1000;
-    let transaction = create_create_asset_transaction(kp_sender.public().clone(), dummy as u64, fee, block_digest);
+    let transaction = create_create_asset_transaction(kp_sender.public(), block_digest, dummy as u64);
     transaction.sign(kp_sender).unwrap()
 }
 
@@ -56,14 +48,8 @@ fn create_signed_orderbook_transaction(
     quote_asset_id: u64,
     block_digest: BlockDigest,
 ) -> SignedTransaction {
-    let fee: u64 = 1000;
-    let transaction = create_create_orderbook_transaction(
-        kp_sender.public().clone(),
-        base_asset_id,
-        quote_asset_id,
-        fee,
-        block_digest,
-    );
+    let transaction =
+        create_create_orderbook_transaction(kp_sender.public(), block_digest, base_asset_id, quote_asset_id);
     transaction.sign(kp_sender).unwrap()
 }
 
@@ -76,16 +62,14 @@ fn create_signed_limit_order_transaction(
     amount: u64,
     block_digest: BlockDigest,
 ) -> SignedTransaction {
-    let fee: u64 = 1000;
     let transaction = create_limit_order_transaction(
-        kp_sender.public().clone(),
+        kp_sender.public(),
+        block_digest,
         base_asset_id,
         quote_asset_id,
         order_side as u64,
         price,
         amount,
-        fee,
-        block_digest,
     );
     transaction.sign(kp_sender).unwrap()
 }

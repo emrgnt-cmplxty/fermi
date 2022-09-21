@@ -2,6 +2,16 @@ syntax = "proto3";
 
 package spot_requests;
 
+// ENUMS
+
+enum SpotRequestType {
+    CREATE_ORDERBOOK = 0;
+    MARKET_ORDER = 1;
+    LIMIT_ORDER = 2;
+    UPDATE_ORDER = 3;
+    CANCEL_ORDER = 4;
+}
+
 // REQUESTS
 
 message CreateOrderbookRequest {

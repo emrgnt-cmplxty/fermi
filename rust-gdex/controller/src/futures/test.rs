@@ -13,8 +13,8 @@ pub mod futures_tests {
         crypto::KeypairTraits,
         error::GDEXError,
         order_book::OrderSide,
-        proto::{ControllerType, FuturesPosition},
-        transaction::{serialize_protobuf, RequestType, Transaction},
+        proto::FuturesPosition,
+        transaction::Transaction,
     };
     // mysten
     use narwhal_types::CertificateDigest;
@@ -90,11 +90,8 @@ pub mod futures_tests {
             let request = CreateMarketplaceRequest::new(self.quote_asset_id);
             let transaction = Transaction::new(
                 self.admin_key.public(),
-                ControllerType::Futures,
-                RequestType::CreateMarketplace,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
-                0,
-                serialize_protobuf(&request),
+                &request,
             );
             self.controller_router.handle_consensus_transaction(&transaction)
         }
@@ -103,11 +100,8 @@ pub mod futures_tests {
             let request = CreateMarketRequest::new(self.base_asset_id);
             let transaction = Transaction::new(
                 self.admin_key.public(),
-                ControllerType::Futures,
-                RequestType::CreateMarket,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
-                0,
-                serialize_protobuf(&request),
+                &request,
             );
             self.controller_router.handle_consensus_transaction(&transaction)
         }
@@ -116,11 +110,8 @@ pub mod futures_tests {
             let request = UpdateMarketParamsRequest::new(self.base_asset_id, TEST_MAX_LEVERAGE);
             let transaction = Transaction::new(
                 self.admin_key.public(),
-                ControllerType::Futures,
-                RequestType::UpdateMarketParams,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
-                0,
-                serialize_protobuf(&request),
+                &request,
             );
             self.controller_router.handle_consensus_transaction(&transaction)
         }
@@ -129,11 +120,8 @@ pub mod futures_tests {
             let request = UpdateTimeRequest::new(latest_time);
             let transaction = Transaction::new(
                 self.admin_key.public(),
-                ControllerType::Futures,
-                RequestType::UpdateTime,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
-                0,
-                serialize_protobuf(&request),
+                &request,
             );
             self.controller_router.handle_consensus_transaction(&transaction)
         }
@@ -142,11 +130,8 @@ pub mod futures_tests {
             let request = UpdatePricesRequest::new(latest_prices);
             let transaction = Transaction::new(
                 self.admin_key.public(),
-                ControllerType::Futures,
-                RequestType::UpdatePrices,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
-                0,
-                serialize_protobuf(&request),
+                &request,
             );
             self.controller_router.handle_consensus_transaction(&transaction)
         }
@@ -156,14 +141,7 @@ pub mod futures_tests {
                 quantity.try_into().map_err(|_| GDEXError::Conversion)?,
                 self.admin_key.public(),
             );
-            let transaction = Transaction::new(
-                &sender,
-                ControllerType::Futures,
-                RequestType::AccountDeposit,
-                CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
-                0,
-                serialize_protobuf(&request),
-            );
+            let transaction = Transaction::new(&sender, CertificateDigest::new([0; fastcrypto::DIGEST_LEN]), &request);
             self.controller_router.handle_consensus_transaction(&transaction)
         }
 
@@ -198,11 +176,8 @@ pub mod futures_tests {
 
             let transaction = Transaction::new(
                 self.user_keys[user_index].public(),
-                ControllerType::Futures,
-                RequestType::FuturesLimitOrder,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
-                0,
-                serialize_protobuf(&request),
+                &request,
             );
             self.controller_router.handle_consensus_transaction(&transaction)
         }

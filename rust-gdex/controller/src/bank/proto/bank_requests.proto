@@ -2,6 +2,13 @@ syntax = "proto3";
 
 package bank_requests;
 
+// ENUMS
+
+enum BankRequestType {
+    CREATE_ASSET = 0;
+    PAYMENT = 1;
+}
+
 // REQUESTS
 
 message CreateAssetRequest {

@@ -10,11 +10,7 @@ use crate::router::ControllerRouter;
 
 // gdex
 use gdex_types::{
-    account::AccountPubKey,
-    crypto::ToFromBytes,
-    error::GDEXError,
-    store::ProcessBlockStore,
-    transaction::{parse_request_type, Transaction},
+    account::AccountPubKey, crypto::ToFromBytes, error::GDEXError, store::ProcessBlockStore, transaction::Transaction,
 };
 
 // mysten
@@ -59,13 +55,8 @@ impl Controller for ConsensusController {
         Ok(())
     }
 
-    fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
-        let request_type = parse_request_type(transaction.request_type)?;
-
-        #[allow(clippy::match_single_binding)]
-        match request_type {
-            _ => Err(GDEXError::InvalidRequestTypeError),
-        }
+    fn handle_consensus_transaction(&mut self, _transaction: &Transaction) -> Result<(), GDEXError> {
+        Err(GDEXError::InvalidRequestTypeError)
     }
 
     async fn process_end_of_block(

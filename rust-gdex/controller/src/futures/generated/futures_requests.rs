@@ -56,3 +56,17 @@ pub struct FuturesLimitOrderRequest {
     #[prost(bytes="bytes", tag="6")]
     pub market_admin: ::prost::bytes::Bytes,
 }
+// ENUMS
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum FuturesRequestType {
+    CreateMarketplace = 0,
+    CreateMarket = 1,
+    UpdateMarketParams = 2,
+    UpdateTime = 3,
+    UpdatePrices = 4,
+    AccountDeposit = 5,
+    AccountWithdrawal = 6,
+    FuturesLimitOrder = 7,
+}

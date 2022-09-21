@@ -15,14 +15,14 @@ use crate::{
 // mysten
 
 // external
-use tracing::{error, info, trace};
+use tracing::{info};
 
 // constants
 const CATCHUP_STATE_FREQUENCY: u64 = 100;
 
 use gdex_types::{
     error::GDEXError,
-    store::{CatchupState, PostProcessStore},
+    store::{PostProcessStore},
     transaction::{parse_target_controller, ControllerType, Transaction},
 };
 // external

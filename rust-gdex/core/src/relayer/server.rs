@@ -178,34 +178,65 @@ impl Relayer for RelayerService {
         let user =
             AccountPubKey::from_bytes(&req.user).map_err(|_| Status::unknown("Could not load requester address"))?;
 
-        let account_state = futures_controller
-            .account_state_by_market(&market_admin, &user)
-            .map_err(|_| Status::unknown("Could not load position data"))?;
+        let user_unrealized_pnl = futures_controller
+            .get_account_unrealized_pnl(&market_admin, &user)
+            .map_err(|_| Status::unknown("Could not load user pnl"))?;
+        let user_deposit = futures_controller
+            .get_account_available_deposit(&market_admin, &user)
+            .map_err(|_| Status::unknown("Could not load user deposit"))?;
+        let user_total_collateral_req = futures_controller
+            .get_account_total_req_collateral(&market_admin, &user)
+            .map_err(|_| Status::unknown("Could not load user total collateral required"))?;
 
-        // todo - filter and include orders in Response
-        let positions = account_state
+        let user_market_state = futures_controller
+            .get_account_state_by_market(&market_admin, &user)
+            .map_err(|_| Status::unknown("Could not load position data"))?
             .iter()
-            .map(|(_open_orders, position)| {
-                if position.is_some() {
-                    position.as_ref().unwrap().clone()
-                } else {
-                    FuturesPosition {
-                        quantity: 0,
-                        average_price: 0,
-                        side: 1,
-                    }
-                }
+            .map(|account_state| FuturesUserByMarket {
+                quote_asset_id: account_state.0,
+                orders: account_state.1.clone(),
+                position: account_state.2.clone(),
             })
             .collect();
 
-        Ok(Response::new(RelayerFuturesUserResponse { positions }))
+        Ok(Response::new(RelayerFuturesUserResponse {
+            market_state: user_market_state,
+            unrealized_pnl: user_unrealized_pnl,
+            deposit: user_deposit,
+            total_collateral_req: user_total_collateral_req,
+        }))
     }
     async fn get_futures_markets(
         &self,
-        _request: Request<RelayerGetFuturesMarketsRequest>,
+        request: Request<RelayerGetFuturesMarketsRequest>,
     ) -> Result<Response<RelayerFuturesMarketsResponse>, Status> {
-        // TODO - implement
-        Err(Status::unknown("Needs to be implemented"))
+        let validator_state = &self.state;
+        let req = request.into_inner();
+        let futures_controller = validator_state.controller_router.futures_controller.lock().unwrap();
+
+        let market_admin = AccountPubKey::from_bytes(&req.market_admin)
+            .map_err(|_| Status::unknown("Could not load market admin address"))?;
+
+        let marketplace = futures_controller
+            .get_marketplace_state(&market_admin)
+            .map_err(|_| Status::unknown("Could not load marketplace"))?;
+
+        let market_data: Vec<FuturesMarket> = marketplace
+            .1
+            .iter()
+            .map(|market| FuturesMarket {
+                oracle_price: market.oracle_price,
+                last_traded_price: market.last_traded_price,
+                open_interest: market.open_interest,
+                max_leverage: market.max_leverage,
+                base_asset_id: market.base_asset_id,
+            })
+            .collect();
+
+        Ok(Response::new(RelayerFuturesMarketsResponse {
+            market_data,
+            quote_asset_id: marketplace.0,
+        }))
     }
     async fn get_latest_metrics(
         &self,

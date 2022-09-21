@@ -18,7 +18,7 @@ use std::{
 // TODO - move futures .proto to this folder
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub(crate) struct CondensedOrder {
+pub struct CondensedOrder {
     pub side: u64,
     pub quantity: u64,
     pub price: u64,
@@ -26,7 +26,7 @@ pub(crate) struct CondensedOrder {
 }
 
 impl CondensedOrder {
-    pub(crate) fn from_order(order: &FuturesOrder, base_asset_id: u64) -> Self {
+    pub fn from_order(order: &FuturesOrder, base_asset_id: u64) -> Self {
         Self {
             side: order.side,
             quantity: order.quantity,
@@ -38,7 +38,7 @@ impl CondensedOrder {
 
 /// SpotOrderAccount is consumed by the SpotController
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub(crate) struct FuturesAccount {
+pub struct FuturesAccount {
     pub open_orders: Vec<FuturesOrder>,
     pub position: Option<FuturesPosition>,
 }
@@ -60,13 +60,15 @@ impl Default for FuturesAccount {
 pub type AssetPrice = u64;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub(crate) struct FuturesMarket {
+pub struct FuturesMarket {
     pub max_leverage: u64,
     // TODO - it is gross to have to store the base and quote asset id here
     // we should consider removing these from the orderbook
-    pub base_asset_id: u64,
-    pub quote_asset_id: u64,
-    pub latest_price: AssetPrice,
+    pub base_asset_id: AssetId,
+    pub quote_asset_id: AssetId,
+    pub open_interest: u64,
+    pub last_traded_price: AssetPrice,
+    pub oracle_price: AssetPrice,
     pub order_to_account: HashMap<OrderId, AccountPubKey>,
     pub accounts: HashMap<AccountPubKey, FuturesAccount>,
     pub orderbook: Orderbook,
@@ -75,7 +77,7 @@ pub(crate) struct FuturesMarket {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub(crate) struct Marketplace {
+pub struct Marketplace {
     pub quote_asset_id: u64,
     pub latest_time: u64,
     pub markets: HashMap<AssetId, FuturesMarket>,
@@ -84,4 +86,8 @@ pub(crate) struct Marketplace {
     pub deposits: Arc<Mutex<HashMap<AccountPubKey, i64>>>,
 }
 
-pub type AccountState = Vec<(Vec<FuturesOrder>, Option<FuturesPosition>)>;
+// market base asset id, open orders, position
+pub type AccountStateByMarket = Vec<(AssetId, Vec<FuturesOrder>, Option<FuturesPosition>)>;
+
+// marketplace quote asset id, associated futures market
+pub type MarketplaceState = (AssetId, Vec<FuturesMarket>);

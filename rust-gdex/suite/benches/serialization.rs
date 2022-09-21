@@ -46,13 +46,8 @@ fn criterion_benchmark(c: &mut Criterion) {
         let kp_sender = keys(sender_seed).pop().unwrap();
         let kp_receiver = keys(receiver_seed).pop().unwrap();
         let certificate_digest = CertificateDigest::new([0; DIGEST_LEN]);
-        let transaction = create_payment_transaction(
-            kp_sender.public(),
-            certificate_digest,
-            kp_receiver.public(),
-            0,
-            amount,
-        );
+        let transaction =
+            create_payment_transaction(kp_sender.public(), certificate_digest, kp_receiver.public(), 0, amount);
         transaction.sign(&kp_sender).unwrap()
     }
 

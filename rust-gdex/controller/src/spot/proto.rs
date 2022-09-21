@@ -32,7 +32,7 @@ impl RequestTypeEnum for SpotRequestType {
             2 => Ok(SpotRequestType::LimitOrder),
             3 => Ok(SpotRequestType::UpdateOrder),
             4 => Ok(SpotRequestType::CancelOrder),
-            _ => Err(GDEXError::DeserializationError)
+            _ => Err(GDEXError::DeserializationError),
         }
     }
 }
@@ -51,8 +51,12 @@ impl CreateOrderbookRequest {
 }
 
 impl Request for CreateOrderbookRequest {
-    fn get_controller_id() -> i32 { ControllerType::Spot as i32 }
-    fn get_request_type_id() -> i32 { SpotRequestType::CreateOrderbook as i32 }
+    fn get_controller_id() -> i32 {
+        ControllerType::Spot as i32
+    }
+    fn get_request_type_id() -> i32 {
+        SpotRequestType::CreateOrderbook as i32
+    }
 }
 
 // market order
@@ -69,8 +73,12 @@ impl MarketOrderRequest {
 }
 
 impl Request for MarketOrderRequest {
-    fn get_controller_id() -> i32 { ControllerType::Spot as i32 }
-    fn get_request_type_id() -> i32 { SpotRequestType::MarketOrder as i32 }
+    fn get_controller_id() -> i32 {
+        ControllerType::Spot as i32
+    }
+    fn get_request_type_id() -> i32 {
+        SpotRequestType::MarketOrder as i32
+    }
 }
 
 // limit order
@@ -88,8 +96,12 @@ impl LimitOrderRequest {
 }
 
 impl Request for LimitOrderRequest {
-    fn get_controller_id() -> i32 { ControllerType::Spot as i32 }
-    fn get_request_type_id() -> i32 { SpotRequestType::LimitOrder as i32 }
+    fn get_controller_id() -> i32 {
+        ControllerType::Spot as i32
+    }
+    fn get_request_type_id() -> i32 {
+        SpotRequestType::LimitOrder as i32
+    }
 }
 
 // update order
@@ -108,8 +120,12 @@ impl UpdateOrderRequest {
 }
 
 impl Request for UpdateOrderRequest {
-    fn get_controller_id() -> i32 { ControllerType::Spot as i32 }
-    fn get_request_type_id() -> i32 { SpotRequestType::UpdateOrder as i32 }
+    fn get_controller_id() -> i32 {
+        ControllerType::Spot as i32
+    }
+    fn get_request_type_id() -> i32 {
+        SpotRequestType::UpdateOrder as i32
+    }
 }
 
 // cancel order
@@ -126,8 +142,12 @@ impl CancelOrderRequest {
 }
 
 impl Request for CancelOrderRequest {
-    fn get_controller_id() -> i32 { ControllerType::Spot as i32 }
-    fn get_request_type_id() -> i32 { SpotRequestType::CancelOrder as i32 }
+    fn get_controller_id() -> i32 {
+        ControllerType::Spot as i32
+    }
+    fn get_request_type_id() -> i32 {
+        SpotRequestType::CancelOrder as i32
+    }
 }
 
 // TRANSACTION BUILDERS

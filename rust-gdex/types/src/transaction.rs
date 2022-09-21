@@ -95,7 +95,9 @@ pub fn deserialize_protobuf<T: Message + std::default::Default>(buf: &[u8]) -> R
 // TODO this should be doable through proto autogen stuff,
 // but couldn't figure that out so for now we define our own trait
 pub trait RequestTypeEnum {
-    fn request_type_from_i32(value: i32) -> Result<Self, GDEXError> where Self: Sized;
+    fn request_type_from_i32(value: i32) -> Result<Self, GDEXError>
+    where
+        Self: Sized;
 }
 
 pub trait Request {
@@ -194,10 +196,10 @@ impl Transaction {
             request_type: T::get_request_type_id(),
             recent_block_hash: CertificateDigestProto::from(recent_block_hash).digest,
             fee: DEFAULT_TRANSACTION_FEE,
-            request_bytes: Bytes::from(serialize_protobuf(request))
+            request_bytes: Bytes::from(serialize_protobuf(request)),
         }
     }
-    
+
     pub fn set_fee(&mut self, fee: u64) {
         self.fee = fee;
     }

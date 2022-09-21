@@ -33,7 +33,7 @@ impl RequestTypeEnum for BankRequestType {
         match value {
             0 => Ok(BankRequestType::CreateAsset),
             1 => Ok(BankRequestType::Payment),
-            _ => Err(GDEXError::DeserializationError)
+            _ => Err(GDEXError::DeserializationError),
         }
     }
 }
@@ -49,8 +49,12 @@ impl CreateAssetRequest {
 }
 
 impl Request for CreateAssetRequest {
-    fn get_controller_id() -> i32 { ControllerType::Bank as i32 }
-    fn get_request_type_id() -> i32 { BankRequestType::CreateAsset as i32 }
+    fn get_controller_id() -> i32 {
+        ControllerType::Bank as i32
+    }
+    fn get_request_type_id() -> i32 {
+        BankRequestType::CreateAsset as i32
+    }
 }
 
 // payment
@@ -70,10 +74,13 @@ impl PaymentRequest {
 }
 
 impl Request for PaymentRequest {
-    fn get_controller_id() -> i32 { ControllerType::Bank as i32 }
-    fn get_request_type_id() -> i32 { BankRequestType::Payment as i32 }
+    fn get_controller_id() -> i32 {
+        ControllerType::Bank as i32
+    }
+    fn get_request_type_id() -> i32 {
+        BankRequestType::Payment as i32
+    }
 }
-
 
 // TRANSACTION BUILDERS
 
@@ -83,11 +90,7 @@ pub fn create_create_asset_transaction(
     recent_block_hash: CertificateDigest,
     dummy: u64,
 ) -> Transaction {
-    Transaction::new(
-        sender,
-        recent_block_hash,
-        &CreateAssetRequest::new(dummy),
-    )
+    Transaction::new(sender, recent_block_hash, &CreateAssetRequest::new(dummy))
 }
 
 pub fn create_payment_transaction(

@@ -5,9 +5,9 @@ use crate::router::ControllerType;
 
 // gdex
 use gdex_types::{
-    error::GDEXError,
     account::AccountPubKey,
-    transaction::{Request, RequestTypeEnum}
+    error::GDEXError,
+    transaction::{Request, RequestTypeEnum},
 };
 
 // external
@@ -50,7 +50,7 @@ impl RequestTypeEnum for FuturesRequestType {
             5 => Ok(FuturesRequestType::AccountDeposit),
             6 => Ok(FuturesRequestType::AccountWithdrawal),
             7 => Ok(FuturesRequestType::FuturesLimitOrder),
-            _ => Err(GDEXError::DeserializationError)
+            _ => Err(GDEXError::DeserializationError),
         }
     }
 }
@@ -66,8 +66,12 @@ impl CreateMarketplaceRequest {
 }
 
 impl Request for CreateMarketplaceRequest {
-    fn get_controller_id() -> i32 { ControllerType::Futures as i32 }
-    fn get_request_type_id() -> i32 { FuturesRequestType::CreateMarketplace as i32 }
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_request_type_id() -> i32 {
+        FuturesRequestType::CreateMarketplace as i32
+    }
 }
 
 // create market
@@ -78,10 +82,13 @@ impl CreateMarketRequest {
     }
 }
 
-
 impl Request for CreateMarketRequest {
-    fn get_controller_id() -> i32 { ControllerType::Futures as i32 }
-    fn get_request_type_id() -> i32 { FuturesRequestType::CreateMarket as i32 }
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_request_type_id() -> i32 {
+        FuturesRequestType::CreateMarket as i32
+    }
 }
 
 // update market params
@@ -96,8 +103,12 @@ impl UpdateMarketParamsRequest {
 }
 
 impl Request for UpdateMarketParamsRequest {
-    fn get_controller_id() -> i32 { ControllerType::Futures as i32 }
-    fn get_request_type_id() -> i32 { FuturesRequestType::UpdateMarketParams as i32 }
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_request_type_id() -> i32 {
+        FuturesRequestType::UpdateMarketParams as i32
+    }
 }
 
 // update time
@@ -109,8 +120,12 @@ impl UpdateTimeRequest {
 }
 
 impl Request for UpdateTimeRequest {
-    fn get_controller_id() -> i32 { ControllerType::Futures as i32 }
-    fn get_request_type_id() -> i32 { FuturesRequestType::UpdateTime as i32 }
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_request_type_id() -> i32 {
+        FuturesRequestType::UpdateTime as i32
+    }
 }
 
 // update prices
@@ -122,8 +137,12 @@ impl UpdatePricesRequest {
 }
 
 impl Request for UpdatePricesRequest {
-    fn get_controller_id() -> i32 { ControllerType::Futures as i32 }
-    fn get_request_type_id() -> i32 { FuturesRequestType::UpdatePrices as i32 }
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_request_type_id() -> i32 {
+        FuturesRequestType::UpdatePrices as i32
+    }
 }
 
 // account deposit
@@ -139,8 +158,12 @@ impl AccountDepositRequest {
 }
 
 impl Request for AccountDepositRequest {
-    fn get_controller_id() -> i32 { ControllerType::Futures as i32 }
-    fn get_request_type_id() -> i32 { FuturesRequestType::AccountDeposit as i32 }
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_request_type_id() -> i32 {
+        FuturesRequestType::AccountDeposit as i32
+    }
 }
 
 // account withdrawal
@@ -155,8 +178,12 @@ impl AccountWithdrawalRequest {
 }
 
 impl Request for AccountWithdrawalRequest {
-    fn get_controller_id() -> i32 { ControllerType::Futures as i32 }
-    fn get_request_type_id() -> i32 { FuturesRequestType::AccountWithdrawal as i32 }
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_request_type_id() -> i32 {
+        FuturesRequestType::AccountWithdrawal as i32
+    }
 }
 
 // futures limit order
@@ -182,6 +209,10 @@ impl FuturesLimitOrderRequest {
 }
 
 impl Request for FuturesLimitOrderRequest {
-    fn get_controller_id() -> i32 { ControllerType::Futures as i32 }
-    fn get_request_type_id() -> i32 { FuturesRequestType::FuturesLimitOrder as i32 }
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_request_type_id() -> i32 {
+        FuturesRequestType::FuturesLimitOrder as i32
+    }
 }

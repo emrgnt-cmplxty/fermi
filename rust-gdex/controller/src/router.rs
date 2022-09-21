@@ -14,11 +14,7 @@ use crate::{
 
 // mysten
 
-use gdex_types::{
-    error::GDEXError,
-    store::ProcessBlockStore,
-    transaction::Transaction,
-};
+use gdex_types::{error::GDEXError, store::ProcessBlockStore, transaction::Transaction};
 // external
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -43,7 +39,7 @@ impl ControllerType {
             2 => Ok(ControllerType::Spot),
             3 => Ok(ControllerType::Consensus),
             4 => Ok(ControllerType::Futures),
-            _ => Err(GDEXError::DeserializationError)
+            _ => Err(GDEXError::DeserializationError),
         }
     }
 }

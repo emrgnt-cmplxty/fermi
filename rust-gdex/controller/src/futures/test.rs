@@ -132,11 +132,7 @@ pub mod futures_tests {
                 quantity.try_into().map_err(|_| GDEXError::Conversion)?,
                 &self.admin_key.public(),
             );
-            let transaction = Transaction::new(
-                &sender,
-                CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
-                &request,
-            );
+            let transaction = Transaction::new(&sender, CertificateDigest::new([0; fastcrypto::DIGEST_LEN]), &request);
             self.main_controller.handle_consensus_transaction(&transaction)
         }
 

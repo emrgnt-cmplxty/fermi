@@ -533,8 +533,7 @@ mod test_validator_state {
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
 
         for asset_number in 0..5 {
-            let transaction =
-                create_create_asset_transaction(sender_kp.public(), recent_block_hash, asset_number);
+            let transaction = create_create_asset_transaction(sender_kp.public(), recent_block_hash, asset_number);
             let signed_transaction = transaction.sign(&sender_kp).unwrap();
             let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
@@ -584,8 +583,7 @@ mod test_validator_state {
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
 
         for asset_number in 0..5 {
-            let transaction =
-                create_create_asset_transaction(sender_kp.public(), recent_block_hash, asset_number);
+            let transaction = create_create_asset_transaction(sender_kp.public(), recent_block_hash, asset_number);
             let signed_transaction = transaction.sign(&sender_kp).unwrap();
             let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
@@ -679,8 +677,7 @@ mod test_validator_state {
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
 
         for asset_number in 0..5 {
-            let transaction =
-                create_create_asset_transaction(sender_kp.public(), recent_block_hash, asset_number);
+            let transaction = create_create_asset_transaction(sender_kp.public(), recent_block_hash, asset_number);
             let signed_transaction = transaction.sign(&sender_kp).unwrap();
             let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 

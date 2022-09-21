@@ -28,13 +28,8 @@ fn create_signed_payment_transaction(
     amount: u64,
     block_digest: BlockDigest,
 ) -> SignedTransaction {
-    let transaction = create_payment_transaction(
-        &kp_sender.public(),
-        block_digest,
-        &kp_receiver.public(),
-        asset_id,
-        amount,
-    );
+    let transaction =
+        create_payment_transaction(kp_sender.public(), block_digest, kp_receiver.public(), asset_id, amount);
     transaction.sign(kp_sender).unwrap()
 }
 
@@ -53,12 +48,8 @@ fn create_signed_orderbook_transaction(
     quote_asset_id: u64,
     block_digest: BlockDigest,
 ) -> SignedTransaction {
-    let transaction = create_create_orderbook_transaction(
-        kp_sender.public(),
-        block_digest,
-        base_asset_id,
-        quote_asset_id,
-    );
+    let transaction =
+        create_create_orderbook_transaction(kp_sender.public(), block_digest, base_asset_id, quote_asset_id);
     transaction.sign(kp_sender).unwrap()
 }
 

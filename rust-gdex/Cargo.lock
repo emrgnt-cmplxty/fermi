@@ -2544,6 +2544,7 @@ version = "0.1.0"
 dependencies = [
  "bcs",
  "bincode",
+ "bytes",
  "config 0.1.0",
  "consensus",
  "criterion",

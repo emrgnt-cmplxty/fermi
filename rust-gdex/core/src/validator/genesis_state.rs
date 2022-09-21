@@ -21,19 +21,19 @@ use tracing::trace;
 /// An object with the necessary state to initialize a new node at blockchain genesis
 #[derive(Clone, Debug)]
 pub struct ValidatorGenesisState {
-    master_controller: ControllerRouter,
+    controller_router: ControllerRouter,
     validator_set: Vec<ValidatorInfo>,
 }
 
 impl ValidatorGenesisState {
-    pub fn new(master_controller: ControllerRouter, validator_set: Vec<ValidatorInfo>) -> Self {
+    pub fn new(controller_router: ControllerRouter, validator_set: Vec<ValidatorInfo>) -> Self {
         ValidatorGenesisState {
-            master_controller,
+            controller_router,
             validator_set,
         }
     }
-    pub fn master_controller(&self) -> &ControllerRouter {
-        &self.master_controller
+    pub fn controller_router(&self) -> &ControllerRouter {
+        &self.controller_router
     }
 
     pub fn epoch(&self) -> EpochId {
@@ -158,12 +158,12 @@ impl Serialize for ValidatorGenesisState {
 
         #[derive(Serialize)]
         struct RawGenesis<'a> {
-            master_controller: &'a ControllerRouter,
+            controller_router: &'a ControllerRouter,
             validator_set: &'a [ValidatorInfo],
         }
 
         let raw_genesis = RawGenesis {
-            master_controller: &self.master_controller,
+            controller_router: &self.controller_router,
             validator_set: &self.validator_set,
         };
 
@@ -187,7 +187,7 @@ impl<'de> Deserialize<'de> for ValidatorGenesisState {
 
         #[derive(Deserialize)]
         struct RawGenesis {
-            master_controller: ControllerRouter,
+            controller_router: ControllerRouter,
             validator_set: Vec<ValidatorInfo>,
         }
 
@@ -201,10 +201,10 @@ impl<'de> Deserialize<'de> for ValidatorGenesisState {
 
         let raw_genesis: RawGenesis = bcs::from_bytes(&bytes).map_err(|e| Error::custom(e.to_string()))?;
 
-        raw_genesis.master_controller.initialize_controllers();
+        raw_genesis.controller_router.initialize_controllers();
 
         Ok(ValidatorGenesisState {
-            master_controller: raw_genesis.master_controller,
+            controller_router: raw_genesis.controller_router,
             validator_set: raw_genesis.validator_set,
         })
     }
@@ -238,9 +238,9 @@ mod genesis_test {
 
         let _genesis_config = GenesisConfig::for_local_testing();
 
-        let master_controller = ControllerRouter::default();
-        master_controller.initialize_controllers();
-        master_controller.initialize_controller_accounts();
+        let controller_router = ControllerRouter::default();
+        controller_router.initialize_controllers();
+        controller_router.initialize_controller_accounts();
 
         let key: ValidatorKeyPair =
             get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
@@ -258,7 +258,7 @@ mod genesis_test {
         };
 
         let builder = GenesisStateBuilder::new()
-            .set_master_controller(master_controller)
+            .set_master_controller(controller_router)
             .add_validator(validator);
         builder.save(dir.path()).unwrap();
         GenesisStateBuilder::load(dir.path()).unwrap();

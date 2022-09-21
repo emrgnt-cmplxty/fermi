@@ -1,4 +1,6 @@
-#[cfg(test)]
+#[allow(dead_code)]
+#[allow(unused_imports)] // flags necessary w/ feature flag
+#[cfg(any(test, feature = "testing"))]
 pub mod futures_tests {
     // crate
     use crate::futures::{proto::*, types::*};
@@ -11,7 +13,7 @@ pub mod futures_tests {
         crypto::KeypairTraits,
         error::GDEXError,
         order_book::OrderSide,
-        proto::ControllerType,
+        proto::{ControllerType, FuturesPosition},
         transaction::{serialize_protobuf, RequestType, Transaction},
     };
     // mysten
@@ -24,18 +26,24 @@ pub mod futures_tests {
     const QUOTE_ASSET_ID: AssetId = 1;
     const TEST_MAX_LEVERAGE: u64 = 25;
     const INITIAL_TIME: u64 = 1_000_000;
-    const INITIAL_ASSET_PRICES: &'static [u64] = &[11_000_000];
+    const INITIAL_ASSET_PRICES: &[u64] = &[11_000_000];
     const ADMIN_INITIAL_DEPOSIT: AssetId = 100_000_000_000;
     const USER_INITIAL_DEPOSIT: AssetId = 10_000_000_000;
     const NUM_USER_ACCOUNTS: usize = 10;
-    const FINAL_ASSET_PRICES: &'static [u64] = &[12_000_000];
+    const FINAL_ASSET_PRICES: &[u64] = &[12_000_000];
 
     pub struct FuturesControllerTester {
-        main_controller: ControllerRouter,
-        admin_key: AccountKeyPair,
-        user_keys: Vec<AccountKeyPair>,
-        base_asset_id: u64,
-        quote_asset_id: u64,
+        pub controller_router: ControllerRouter,
+        pub admin_key: AccountKeyPair,
+        pub user_keys: Vec<AccountKeyPair>,
+        pub base_asset_id: u64,
+        pub quote_asset_id: u64,
+    }
+
+    impl Default for FuturesControllerTester {
+        fn default() -> Self {
+            Self::new()
+        }
     }
 
     impl FuturesControllerTester {
@@ -48,7 +56,7 @@ pub mod futures_tests {
             }
 
             Self {
-                main_controller: ControllerRouter::default(),
+                controller_router: ControllerRouter::default(),
                 admin_key,
                 user_keys,
                 base_asset_id: BASE_ASSET_ID,
@@ -57,7 +65,7 @@ pub mod futures_tests {
         }
 
         fn initialize_bank_controller(&self) -> Result<(), GDEXError> {
-            let mut bank_controller = self.main_controller.bank_controller.lock().unwrap();
+            let mut bank_controller = self.controller_router.bank_controller.lock().unwrap();
             // create two assets for the base and quote of the futures market
             bank_controller.create_asset(self.admin_key.public()).unwrap();
             bank_controller.create_asset(self.admin_key.public()).unwrap();
@@ -81,72 +89,72 @@ pub mod futures_tests {
         fn create_marketplace(&self) -> Result<(), GDEXError> {
             let request = CreateMarketplaceRequest::new(self.quote_asset_id);
             let transaction = Transaction::new(
-                &self.admin_key.public(),
+                self.admin_key.public(),
                 ControllerType::Futures,
                 RequestType::CreateMarketplace,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
                 0,
                 serialize_protobuf(&request),
             );
-            self.main_controller.handle_consensus_transaction(&transaction)
+            self.controller_router.handle_consensus_transaction(&transaction)
         }
 
         fn create_market(&self) -> Result<(), GDEXError> {
             let request = CreateMarketRequest::new(self.base_asset_id);
             let transaction = Transaction::new(
-                &self.admin_key.public(),
+                self.admin_key.public(),
                 ControllerType::Futures,
                 RequestType::CreateMarket,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
                 0,
                 serialize_protobuf(&request),
             );
-            self.main_controller.handle_consensus_transaction(&transaction)
+            self.controller_router.handle_consensus_transaction(&transaction)
         }
 
         fn update_market_params(&self) -> Result<(), GDEXError> {
             let request = UpdateMarketParamsRequest::new(self.base_asset_id, TEST_MAX_LEVERAGE);
             let transaction = Transaction::new(
-                &self.admin_key.public(),
+                self.admin_key.public(),
                 ControllerType::Futures,
                 RequestType::UpdateMarketParams,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
                 0,
                 serialize_protobuf(&request),
             );
-            self.main_controller.handle_consensus_transaction(&transaction)
+            self.controller_router.handle_consensus_transaction(&transaction)
         }
 
         fn update_time(&self, latest_time: u64) -> Result<(), GDEXError> {
             let request = UpdateTimeRequest::new(latest_time);
             let transaction = Transaction::new(
-                &self.admin_key.public(),
+                self.admin_key.public(),
                 ControllerType::Futures,
                 RequestType::UpdateTime,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
                 0,
                 serialize_protobuf(&request),
             );
-            self.main_controller.handle_consensus_transaction(&transaction)
+            self.controller_router.handle_consensus_transaction(&transaction)
         }
 
         fn update_prices(&self, latest_prices: Vec<u64>) -> Result<(), GDEXError> {
             let request = UpdatePricesRequest::new(latest_prices);
             let transaction = Transaction::new(
-                &self.admin_key.public(),
+                self.admin_key.public(),
                 ControllerType::Futures,
                 RequestType::UpdatePrices,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
                 0,
                 serialize_protobuf(&request),
             );
-            self.main_controller.handle_consensus_transaction(&transaction)
+            self.controller_router.handle_consensus_transaction(&transaction)
         }
 
         fn account_deposit(&self, quantity: u64, sender: AccountPubKey) -> Result<(), GDEXError> {
             let request = AccountDepositRequest::new(
                 quantity.try_into().map_err(|_| GDEXError::Conversion)?,
-                &self.admin_key.public(),
+                self.admin_key.public(),
             );
             let transaction = Transaction::new(
                 &sender,
@@ -156,7 +164,7 @@ pub mod futures_tests {
                 0,
                 serialize_protobuf(&request),
             );
-            self.main_controller.handle_consensus_transaction(&transaction)
+            self.controller_router.handle_consensus_transaction(&transaction)
         }
 
         fn initialize_futures_controller(&self) -> Result<(), GDEXError> {
@@ -172,7 +180,7 @@ pub mod futures_tests {
             Ok(())
         }
 
-        fn futures_limit_order(
+        pub fn futures_limit_order(
             &self,
             user_index: usize,
             side: u64,
@@ -185,39 +193,39 @@ pub mod futures_tests {
                 side,
                 price,
                 quantity,
-                &self.admin_key.public(),
+                self.admin_key.public(),
             );
 
             let transaction = Transaction::new(
-                &self.user_keys[user_index].public(),
+                self.user_keys[user_index].public(),
                 ControllerType::Futures,
                 RequestType::FuturesLimitOrder,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
                 0,
                 serialize_protobuf(&request),
             );
-            self.main_controller.handle_consensus_transaction(&transaction)
+            self.controller_router.handle_consensus_transaction(&transaction)
         }
 
         // UTIILTY FUNCTIONS
         fn get_user_total_req_collateral(&self, user_index: usize) -> Result<u64, GDEXError> {
-            self.main_controller
+            self.controller_router
                 .futures_controller
                 .lock()
                 .unwrap()
                 .account_total_req_collateral(self.admin_key.public(), self.user_keys[user_index].public())
         }
 
-        fn get_user_open_positions(&self, user_index: usize) -> Result<Vec<Position>, GDEXError> {
-            self.main_controller
+        fn get_user_state_by_market(&self, user_index: usize) -> Result<AccountState, GDEXError> {
+            self.controller_router
                 .futures_controller
                 .lock()
                 .unwrap()
-                .account_open_market_positions(self.admin_key.public(), self.user_keys[user_index].public())
+                .account_state_by_market(self.admin_key.public(), self.user_keys[user_index].public())
         }
 
         fn get_user_unrealized_pnl(&self, user_index: usize) -> Result<i64, GDEXError> {
-            self.main_controller
+            self.controller_router
                 .futures_controller
                 .lock()
                 .unwrap()
@@ -225,7 +233,7 @@ pub mod futures_tests {
         }
 
         fn get_account_available_deposit(&self, user_index: usize) -> Result<i64, GDEXError> {
-            self.main_controller
+            self.controller_router
                 .futures_controller
                 .lock()
                 .unwrap()
@@ -234,8 +242,8 @@ pub mod futures_tests {
     }
 
     impl ControllerTestBed for FuturesControllerTester {
-        fn get_main_controller(&self) -> &ControllerRouter {
-            &self.main_controller
+        fn get_controller_router(&self) -> &ControllerRouter {
+            &self.controller_router
         }
         fn initialize(&self) {
             self.generic_initialize();
@@ -282,14 +290,18 @@ pub mod futures_tests {
             .unwrap();
 
         let maker_position = futures_tester
-            .get_user_open_positions(maker_index)
+            .get_user_state_by_market(maker_index)
             .unwrap()
             .pop()
+            .unwrap()
+            .1
             .unwrap();
         let taker_position = futures_tester
-            .get_user_open_positions(taker_index)
+            .get_user_state_by_market(taker_index)
             .unwrap()
             .pop()
+            .unwrap()
+            .1
             .unwrap();
         // check taker and maker positions match
         assert!(maker_position.quantity == taker_position.quantity);
@@ -374,7 +386,13 @@ pub mod futures_tests {
         );
 
         // ensure that we don't have a remainder transaction
-        let user_position = futures_tester.get_user_open_positions(user_index).unwrap().pop();
+        let user_position = futures_tester
+            .get_user_state_by_market(user_index)
+            .unwrap()
+            .pop()
+            .unwrap()
+            .1;
+
         assert!(user_position.is_none())
     }
 
@@ -431,8 +449,18 @@ pub mod futures_tests {
             .futures_limit_order(taker_index, taker_side, taker_price, taker_quantity)
             .unwrap();
 
-        let maker_position = futures_tester.get_user_open_positions(maker_index).unwrap().pop();
-        let taker_position = futures_tester.get_user_open_positions(taker_index).unwrap().pop();
+        let maker_position = futures_tester
+            .get_user_state_by_market(maker_index)
+            .unwrap()
+            .pop()
+            .unwrap()
+            .1;
+        let taker_position = futures_tester
+            .get_user_state_by_market(taker_index)
+            .unwrap()
+            .pop()
+            .unwrap()
+            .1;
 
         assert!(maker_position.is_none());
         assert!(taker_position.is_none());

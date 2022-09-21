@@ -30,8 +30,7 @@ pub mod process_tests {
         price: u64,
         quantity: u64,
     ) {
-        let limit_order_request =
-            LimitOrderRequest::new(BASE_ASSET_ID, QUOTE_ASSET_ID, side as u64, price, quantity);
+        let limit_order_request = LimitOrderRequest::new(BASE_ASSET_ID, QUOTE_ASSET_ID, side as u64, price, quantity);
         orderbook_interface
             .place_limit_order(account, &limit_order_request)
             .unwrap();

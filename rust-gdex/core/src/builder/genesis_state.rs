@@ -15,12 +15,12 @@ use std::{
 };
 use tracing::trace;
 
-const GENESIS_BUILDER_CONTROLLER_OUT: &str = "master_controller";
+const GENESIS_BUILDER_CONTROLLER_OUT: &str = "controller_router";
 const GENESIS_BUILDER_COMMITTEE_DIR: &str = "committee";
 
 /// Creates a builder object which facilitates the validator genesis construction
 pub struct GenesisStateBuilder {
-    pub master_controller: ControllerRouter,
+    pub controller_router: ControllerRouter,
     pub validators: BTreeMap<ValidatorPubKeyBytes, ValidatorInfo>,
 }
 
@@ -33,7 +33,7 @@ impl Default for GenesisStateBuilder {
 impl GenesisStateBuilder {
     pub fn new() -> Self {
         Self {
-            master_controller: Default::default(),
+            controller_router: Default::default(),
             validators: Default::default(),
         }
     }
@@ -43,16 +43,16 @@ impl GenesisStateBuilder {
         self
     }
 
-    pub fn set_master_controller(mut self, master_controller: ControllerRouter) -> Self {
-        self.master_controller = master_controller;
+    pub fn set_master_controller(mut self, controller_router: ControllerRouter) -> Self {
+        self.controller_router = controller_router;
         self
     }
 
     pub fn build(self) -> ValidatorGenesisState {
         let validators = self.validators.into_iter().map(|(_, v)| v).collect::<Vec<_>>();
-        let master_controller = self.master_controller; //create_genesis_objects();
+        let controller_router = self.controller_router; //create_genesis_objects();
 
-        ValidatorGenesisState::new(master_controller, validators)
+        ValidatorGenesisState::new(controller_router, validators)
     }
 
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, anyhow::Error> {
@@ -66,7 +66,7 @@ impl GenesisStateBuilder {
 
         // Load ControllerRouter
         let master_controller_bytes = fs::read(path.join(GENESIS_BUILDER_CONTROLLER_OUT))?;
-        let master_controller: ControllerRouter = serde_yaml::from_slice(&master_controller_bytes)?;
+        let controller_router: ControllerRouter = serde_yaml::from_slice(&master_controller_bytes)?;
 
         // Load validator infos
         let mut committee = BTreeMap::new();
@@ -83,7 +83,7 @@ impl GenesisStateBuilder {
         }
 
         Ok(Self {
-            master_controller,
+            controller_router,
             validators: committee,
         })
     }
@@ -96,7 +96,7 @@ impl GenesisStateBuilder {
 
         // Write Objects
         let master_controller_dir = path.join(GENESIS_BUILDER_CONTROLLER_OUT);
-        let master_controller_bytes = serde_yaml::to_vec(&self.master_controller)?;
+        let master_controller_bytes = serde_yaml::to_vec(&self.controller_router)?;
         fs::write(master_controller_dir, master_controller_bytes)?;
 
         // Write validator infos

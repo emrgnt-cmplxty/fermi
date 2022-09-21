@@ -5,7 +5,7 @@ use std::sync::Arc;
 use tokio::task::JoinHandle;
 
 pub struct RelayerSpawner {
-    validator_state: Arc<ValidatorState>,
+    pub validator_state: Arc<ValidatorState>,
     relayer_address: Multiaddr,
     /// Handle for the server related tasks
     server_handles: Option<JoinHandle<()>>,

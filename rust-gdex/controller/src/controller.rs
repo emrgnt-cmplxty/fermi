@@ -13,7 +13,7 @@ use std::sync::{Arc, Mutex};
 // TRAIT
 #[async_trait]
 pub trait Controller {
-    fn initialize(&mut self, master_controller: &ControllerRouter);
+    fn initialize(&mut self, controller_router: &ControllerRouter);
 
     fn initialize_controller_account(&mut self) -> Result<(), GDEXError>;
 

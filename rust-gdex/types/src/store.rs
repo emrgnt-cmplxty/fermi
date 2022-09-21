@@ -11,28 +11,9 @@ use mysten_store::{
     rocks::{open_cf, DBMap, TypedStoreError},
     Map, Store,
 };
-use serde::{Deserialize, Serialize};
 
 // catchup state
-#[derive(Clone, Debug, Deserialize, Serialize, Default)]
-pub struct CatchupState {
-    payload: Vec<u8>,
-    block_number: BlockNumber,
-}
-
-impl CatchupState {
-    pub fn new(payload: Vec<u8>, block_number: BlockNumber) -> Self {
-        CatchupState { payload, block_number }
-    }
-
-    pub fn get_payload(&self) -> &Vec<u8> {
-        &self.payload
-    }
-
-    pub fn get_block_number(&self) -> BlockNumber {
-        self.block_number
-    }
-}
+pub type CatchupState = Vec<Vec<u8>>;
 
 pub struct PostProcessStore {
     // last block info

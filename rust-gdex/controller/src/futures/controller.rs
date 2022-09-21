@@ -12,7 +12,7 @@ use gdex_types::{
     crypto::ToFromBytes,
     error::GDEXError,
     order_book::OrderSide,
-    store::ProcessBlockStore,
+    store::PostProcessStore,
     transaction::{deserialize_protobuf, parse_order_side, parse_request_type, RequestType, Transaction},
 };
 // external
@@ -393,7 +393,7 @@ impl Controller for FuturesController {
 
     async fn process_end_of_block(
         _controller: Arc<Mutex<Self>>,
-        _process_block_store: &ProcessBlockStore,
+        _process_block_store: &PostProcessStore,
         _block_number: u64,
     ) {
     }

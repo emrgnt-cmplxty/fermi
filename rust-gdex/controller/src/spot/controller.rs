@@ -25,7 +25,7 @@ use gdex_types::{
     crypto::ToFromBytes,
     error::GDEXError,
     order_book::{OrderSide, OrderbookDepth},
-    store::ProcessBlockStore,
+    store::PostProcessStore,
     transaction::{deserialize_protobuf, parse_request_type, RequestType, Transaction},
 };
 
@@ -126,7 +126,7 @@ impl Controller for SpotController {
 
     async fn process_end_of_block(
         controller: Arc<Mutex<Self>>,
-        process_block_store: &ProcessBlockStore,
+        process_block_store: &PostProcessStore,
         block_number: u64,
     ) {
         // write out orderbook depth every ORDERBOOK_DEPTH_FREQUENCY

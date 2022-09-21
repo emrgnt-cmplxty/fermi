@@ -13,7 +13,7 @@ use gdex_types::{
     block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},
     committee::{Committee, ValidatorName},
     error::GDEXError,
-    store::ProcessBlockStore,
+    store::PostProcessStore,
     transaction::{ConsensusTransaction, SignedTransaction, Transaction, TransactionDigest},
 };
 use narwhal_consensus::ConsensusOutput;
@@ -40,12 +40,12 @@ pub struct ValidatorStore {
     // garbage collection depth
     gc_depth: u64,
     pub block_number: AtomicU64,
-    pub process_block_store: ProcessBlockStore,
+    pub process_block_store: PostProcessStore,
 }
 
 impl ValidatorStore {
     pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
-        let process_block_store: ProcessBlockStore = ProcessBlockStore::reopen(store_path);
+        let process_block_store: PostProcessStore = PostProcessStore::reopen(store_path);
         let last_block_info = process_block_store.last_block_info.clone();
 
         // TODO load the state if last block is not 0, i.e. not at genesis

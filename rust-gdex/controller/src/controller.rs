@@ -4,7 +4,7 @@
 use crate::router::ControllerRouter;
 
 // gdex
-use gdex_types::{error::GDEXError, store::ProcessBlockStore, transaction::Transaction};
+use gdex_types::{error::GDEXError, store::PostProcessStore, transaction::Transaction};
 
 // external
 use async_trait::async_trait;
@@ -21,7 +21,7 @@ pub trait Controller {
 
     async fn process_end_of_block(
         controller: Arc<Mutex<Self>>,
-        _process_block_store: &ProcessBlockStore,
+        _process_block_store: &PostProcessStore,
         block_number: u64,
     );
 

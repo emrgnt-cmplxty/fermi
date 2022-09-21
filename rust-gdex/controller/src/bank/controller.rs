@@ -22,7 +22,7 @@ use gdex_types::{
     asset::{Asset, AssetId},
     crypto::ToFromBytes,
     error::GDEXError,
-    store::ProcessBlockStore,
+    store::PostProcessStore,
     transaction::{deserialize_protobuf, parse_request_type, RequestType, Transaction},
 };
 
@@ -100,7 +100,7 @@ impl Controller for BankController {
 
     async fn process_end_of_block(
         _controller: Arc<Mutex<Self>>,
-        _process_block_store: &ProcessBlockStore,
+        _process_block_store: &PostProcessStore,
         _block_number: u64,
     ) {
     }

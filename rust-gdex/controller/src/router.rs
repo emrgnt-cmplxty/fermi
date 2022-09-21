@@ -16,7 +16,7 @@ use crate::{
 
 use gdex_types::{
     error::GDEXError,
-    store::ProcessBlockStore,
+    store::PostProcessStore,
     transaction::{parse_target_controller, ControllerType, Transaction},
 };
 // external
@@ -130,7 +130,7 @@ impl ControllerRouter {
         }
     }
 
-    pub async fn process_end_of_block(&self, process_block_store: &ProcessBlockStore, block_number: u64) {
+    pub async fn process_end_of_block(&self, process_block_store: &PostProcessStore, block_number: u64) {
         ConsensusController::process_end_of_block(self.consensus_controller.clone(), process_block_store, block_number)
             .await;
         BankController::process_end_of_block(self.bank_controller.clone(), process_block_store, block_number).await;
@@ -140,13 +140,13 @@ impl ControllerRouter {
             .await;
     }
 
-    // TODO: organize store
-    pub fn create_catchup_state(&self, _catchup_store: &ProcessBlockStore, block_number: u64) {
+    pub fn create_catchup_state(&self, _catchup_store: &PostProcessStore, block_number: u64) {
         let _state = vec![
             ConsensusController::create_catchup_state(self.consensus_controller.clone(), block_number),
             BankController::create_catchup_state(self.bank_controller.clone(), block_number),
             StakeController::create_catchup_state(self.stake_controller.clone(), block_number),
             SpotController::create_catchup_state(self.spot_controller.clone(), block_number),
+            FuturesController::create_catchup_state(self.futures_controller.clone(), block_number)
         ];
 
         // TODO: save to store

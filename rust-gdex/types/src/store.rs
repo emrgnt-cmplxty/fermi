@@ -11,8 +11,33 @@ use mysten_store::{
     rocks::{open_cf, DBMap, TypedStoreError},
     Map, Store,
 };
+use serde::{Deserialize, Serialize};
 
-pub struct ProcessBlockStore {
+// catchup state
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
+pub struct CatchupState {
+    payload: Vec<u8>,
+    block_number: BlockNumber
+}
+
+impl CatchupState {
+    pub fn new(payload: Vec<u8>, block_number: BlockNumber) -> Self {
+        CatchupState {
+            payload,
+            block_number
+        }
+    }
+
+    pub fn get_payload(&self) -> &Vec<u8> {
+        &self.payload
+    }
+
+    pub fn get_block_number(&self) -> BlockNumber {
+        self.block_number
+    }
+}
+
+pub struct PostProcessStore {
     // last block info
     pub last_block_info: Result<Option<BlockInfo>, TypedStoreError>,
     // stores
@@ -20,13 +45,16 @@ pub struct ProcessBlockStore {
     pub block_info_store: Store<BlockNumber, BlockInfo>,
     pub last_block_info_store: Store<u64, BlockInfo>,
     pub latest_orderbook_depth_store: Store<String, OrderbookDepth>,
+    // catchup store
+    pub catchup_state_store: Store<BlockNumber, CatchupState>
 }
 
-impl ProcessBlockStore {
+impl PostProcessStore {
     const BLOCKS_CF: &'static str = "blocks";
     const BLOCK_INFO_CF: &'static str = "block_info";
     const LAST_BLOCK_CF: &'static str = "last_block";
     const LAST_ORDERBOOK_DEPTH_CF: &'static str = "last_orderbook_depth";
+    const CATCHUP_STATE_CF: &'static str = "catchup_state";
 
     pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
         let rocksdb = open_cf(
@@ -37,14 +65,22 @@ impl ProcessBlockStore {
                 Self::BLOCK_INFO_CF,
                 Self::LAST_BLOCK_CF,
                 Self::LAST_ORDERBOOK_DEPTH_CF,
+                Self::CATCHUP_STATE_CF,
             ],
         )
         .expect("Cannot open database");
-        let (block_map, block_info_map, last_block_map, orderbook_depth_map) = reopen!(&rocksdb,
+        let (
+            block_map,
+            block_info_map,
+            last_block_map,
+            orderbook_depth_map,
+            catchup_state_map
+        ) = reopen!(&rocksdb,
             Self::BLOCKS_CF;<BlockNumber, Block>,
             Self::BLOCK_INFO_CF;<BlockNumber, BlockInfo>,
             Self::LAST_BLOCK_CF;<u64, BlockInfo>,
-            Self::LAST_ORDERBOOK_DEPTH_CF;<String, OrderbookDepth>
+            Self::LAST_ORDERBOOK_DEPTH_CF;<String, OrderbookDepth>,
+            Self::CATCHUP_STATE_CF;<BlockNumber, CatchupState>
         );
 
         let last_block_info = last_block_map.get(&0_u64);
@@ -53,6 +89,7 @@ impl ProcessBlockStore {
         let block_info_store = Store::new(block_info_map);
         let last_block_info_store = Store::new(last_block_map);
         let latest_orderbook_depth_store = Store::new(orderbook_depth_map);
+        let catchup_state_store = Store::new(catchup_state_map);
 
         Self {
             last_block_info,
@@ -60,6 +97,7 @@ impl ProcessBlockStore {
             block_info_store,
             last_block_info_store,
             latest_orderbook_depth_store,
+            catchup_state_store
         }
     }
 }

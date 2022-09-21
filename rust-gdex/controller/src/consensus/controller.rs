@@ -13,7 +13,7 @@ use gdex_types::{
     account::AccountPubKey,
     crypto::ToFromBytes,
     error::GDEXError,
-    store::ProcessBlockStore,
+    store::PostProcessStore,
     transaction::{parse_request_type, Transaction},
 };
 
@@ -70,7 +70,7 @@ impl Controller for ConsensusController {
 
     async fn process_end_of_block(
         _controller: Arc<Mutex<Self>>,
-        _process_block_store: &ProcessBlockStore,
+        _process_block_store: &PostProcessStore,
         _block_number: u64,
     ) {
     }

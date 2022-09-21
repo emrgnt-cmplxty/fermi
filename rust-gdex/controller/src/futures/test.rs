@@ -13,7 +13,7 @@ pub mod futures_tests {
         crypto::KeypairTraits,
         error::GDEXError,
         order_book::OrderSide,
-        proto::ControllerType,
+        proto::{ControllerType, FuturesPosition},
         transaction::{serialize_protobuf, RequestType, Transaction},
     };
     // mysten
@@ -210,12 +210,12 @@ pub mod futures_tests {
                 .account_total_req_collateral(self.admin_key.public(), self.user_keys[user_index].public())
         }
 
-        fn get_user_open_positions(&self, user_index: usize) -> Result<Vec<Position>, GDEXError> {
+        fn get_user_state_by_market(&self, user_index: usize) -> Result<AccountState, GDEXError> {
             self.controller_router
                 .futures_controller
                 .lock()
                 .unwrap()
-                .account_open_positions_by_market(self.admin_key.public(), self.user_keys[user_index].public())
+                .account_state_by_market(self.admin_key.public(), self.user_keys[user_index].public())
         }
 
         fn get_user_unrealized_pnl(&self, user_index: usize) -> Result<i64, GDEXError> {
@@ -284,14 +284,18 @@ pub mod futures_tests {
             .unwrap();
 
         let maker_position = futures_tester
-            .get_user_open_positions(maker_index)
+            .get_user_state_by_market(maker_index)
             .unwrap()
             .pop()
+            .unwrap()
+            .1
             .unwrap();
         let taker_position = futures_tester
-            .get_user_open_positions(taker_index)
+            .get_user_state_by_market(taker_index)
             .unwrap()
             .pop()
+            .unwrap()
+            .1
             .unwrap();
         // check taker and maker positions match
         assert!(maker_position.quantity == taker_position.quantity);
@@ -376,7 +380,13 @@ pub mod futures_tests {
         );
 
         // ensure that we don't have a remainder transaction
-        let user_position = futures_tester.get_user_open_positions(user_index).unwrap().pop();
+        let user_position = futures_tester
+            .get_user_state_by_market(user_index)
+            .unwrap()
+            .pop()
+            .unwrap()
+            .1;
+
         assert!(user_position.is_none())
     }
 
@@ -433,8 +443,18 @@ pub mod futures_tests {
             .futures_limit_order(taker_index, taker_side, taker_price, taker_quantity)
             .unwrap();
 
-        let maker_position = futures_tester.get_user_open_positions(maker_index).unwrap().pop();
-        let taker_position = futures_tester.get_user_open_positions(taker_index).unwrap().pop();
+        let maker_position = futures_tester
+            .get_user_state_by_market(maker_index)
+            .unwrap()
+            .pop()
+            .unwrap()
+            .1;
+        let taker_position = futures_tester
+            .get_user_state_by_market(taker_index)
+            .unwrap()
+            .pop()
+            .unwrap()
+            .1;
 
         assert!(maker_position.is_none());
         assert!(taker_position.is_none());

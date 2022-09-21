@@ -2,7 +2,11 @@
 use crate::utils::engine::order_book::{OrderId, Orderbook};
 
 // gdex
-use gdex_types::{account::AccountPubKey, asset::AssetId, order_book::OrderSide};
+use gdex_types::{
+    account::AccountPubKey,
+    asset::AssetId,
+    transaction::{FuturesOrder, FuturesPosition},
+};
 
 // external
 use serde::{Deserialize, Serialize};
@@ -14,30 +18,15 @@ use std::{
 // TODO - move futures .proto to this folder
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Position {
-    pub quantity: u64,
-    pub side: OrderSide,
-    pub average_price: u64,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub(crate) struct OpenOrder {
-    pub order_id: u64,
-    pub side: OrderSide,
-    pub quantity: u64,
-    pub price: u64,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct CondensedOrder {
-    pub side: OrderSide,
+    pub side: u64,
     pub quantity: u64,
     pub price: u64,
     pub base_asset_id: u64,
 }
 
 impl CondensedOrder {
-    pub(crate) fn from_order(order: &OpenOrder, base_asset_id: u64) -> Self {
+    pub(crate) fn from_order(order: &FuturesOrder, base_asset_id: u64) -> Self {
         Self {
             side: order.side,
             quantity: order.quantity,
@@ -50,8 +39,8 @@ impl CondensedOrder {
 /// SpotOrderAccount is consumed by the SpotController
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct FuturesAccount {
-    pub open_orders: Vec<OpenOrder>,
-    pub position: Option<Position>,
+    pub open_orders: Vec<FuturesOrder>,
+    pub position: Option<FuturesPosition>,
 }
 impl FuturesAccount {
     pub fn new() -> Self {
@@ -94,3 +83,5 @@ pub(crate) struct Marketplace {
     // Arc + Mutex wrapper is necessary as a reference to deposits must be passed to each FuturesMarket
     pub deposits: Arc<Mutex<HashMap<AccountPubKey, i64>>>,
 }
+
+pub type AccountState = Vec<(Vec<FuturesOrder>, Option<FuturesPosition>)>;

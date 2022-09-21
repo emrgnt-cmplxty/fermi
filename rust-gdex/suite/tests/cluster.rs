@@ -2,15 +2,11 @@
 #[cfg(test)]
 pub mod cluster_test_suite {
 
-    // IMPORTS
-    use bytes::Bytes;
     // gdex
-    use gdex_controller::bank::proto::create_create_asset_transaction;
-    use gdex_controller::futures::proto::futures_controller_test_functions::generate_signed_limit_order;
-    use gdex_controller::futures::test::futures_tests::FuturesControllerTester;
-    use gdex_controller::ControllerTestBed;
-    use gdex_core::validator::state::ValidatorState;
-
+    use gdex_controller::{
+        bank::proto::create_create_asset_transaction, futures::test::futures_tests::FuturesControllerTester,
+        ControllerTestBed,
+    };
     use gdex_core::{
         catchup::manager::{
             mock_catchup_manager::{MockCatchupManger, MockRelayServer},
@@ -29,24 +25,18 @@ pub mod cluster_test_suite {
         order_book::{Depth, OrderSide, OrderbookDepth},
         proto::{
             FaucetAirdropRequest, FaucetClient, FaucetServer, RelayerClient, RelayerGetBlockRequest,
-            RelayerGetFuturesPositionsRequest, RelayerGetLatestBlockInfoRequest, RelayerGetLatestOrderbookDepthRequest,
+            RelayerGetFuturesUserRequest, RelayerGetLatestBlockInfoRequest, RelayerGetLatestOrderbookDepthRequest,
         },
         transaction::ConsensusTransaction,
         utils,
     };
-
     // mysten
     use fastcrypto::{generate_production_keypair, Hash, DIGEST_LEN};
     use narwhal_consensus::ConsensusOutput;
     use narwhal_crypto::KeyPair;
     use narwhal_types::{Certificate, Header};
-
     // external
-    use std::{
-        collections::HashMap,
-        net::SocketAddr,
-        sync::{Arc, Mutex},
-    };
+    use std::{collections::HashMap, net::SocketAddr, sync::Arc};
     use tokio::time::{sleep, Duration};
     use tonic::transport::Server;
     use tracing::info;
@@ -537,7 +527,7 @@ pub mod cluster_test_suite {
 
     #[tokio::test]
     pub async fn test_relayer_futures_data() {
-        let mut futures_tester = FuturesControllerTester::new();
+        let futures_tester = FuturesControllerTester::new();
         futures_tester.initialize();
         let (maker_index, maker_side, maker_price, maker_quantity) = (0, OrderSide::Bid as u64, 10_000_000, 100);
         // taker must ask less than maker price in order to be a taker
@@ -574,75 +564,22 @@ pub mod cluster_test_suite {
         let market_admin = futures_tester.admin_key.public().clone();
         let market_admin_bytes = bytes::Bytes::from(market_admin.as_bytes().to_vec());
 
-        // let futures_controller = validator_state_0.controller_router.futures_controller.lock().unwrap();
-
-        // // let market_admin = AccountPubKey::from_bytes(&req.market_admin)
-        // //     .map_err(|_| Status::unknown("Could not load market admin address")).unwrap();
-        // // let requester = AccountPubKey::from_bytes(&req.user)
-        // //     .map_err(|_| Status::unknown("Could not load requester address")).unwrap();
-
-        // let positions = futures_controller
-        //     .account_open_positions_by_market(&market_admin, &user)
-        //     .unwrap();
-
-        // println!("positions={:?}", positions);
-
-        let maker_positions_from_relayer = tonic::Request::new(RelayerGetFuturesPositionsRequest {
+        let maker_positions_request = tonic::Request::new(RelayerGetFuturesUserRequest {
             user: user_bytes,
             market_admin: market_admin_bytes,
         });
 
-        let latest_maker_positions_relayer = client.get_futures_positions(maker_positions_from_relayer).await;
-        println!("latest_maker_positions_relayer: {:?}", latest_maker_positions_relayer);
-
-        // let validator_state_0 = Arc::unwrap_or_clone(spawner_0.get_validator_state().unwrap());//.into_inner();
-        // let mut validator_state_0 = spawner_0.get_validator_state().unwrap();
-        // let validator_state_0: ValidatorState = *(Arc::get_mut(&mut validator_state_0).unwrap()).clone();
-
-        // let validator_state_0 = &*(spawner_0.get_validator_state().unwrap().clone());
-        // let validator_state_0 = validator_state_0.clone();
-        // validator_state_0.set_controller_router(futures_tester.controller_router.clone());
-
-        // let relayer_1 = cluster.spawn_single_relayer(0).await;
-        // let target_endpoint = endpoint_from_multiaddr(&relayer_1.get_relayer_address()).unwrap();
-        // let endpoint = target_endpoint.endpoint();
-        // let mut client = RelayerClient::connect(endpoint.clone()).await.unwrap();
-
-        // let mut cluster = TestCluster::spawn(validator_count, None).await;
-
-        // let spawner_0 = cluster.get_validator_spawner(0);
-        // let validator_state_0 = spawner_0.get_validator_state().unwrap();
-
-        // futures_tester.update_main_controller(Arc::clone(&validator_state_0.controller_router));
-        // futures_tester.initialize();
-
-        // let (maker_index, maker_side, maker_price, maker_quantity) = (0, OrderSide::Bid as u64, 10_000_000, 100);
-        // // taker must ask less than maker price in order to be a taker
-        // let (taker_index, taker_side, taker_price, taker_quantity) = (1, OrderSide::Ask as u64, 10_000_000 - 1, 10);
-
-        // let signed_transaction = generate_signed_limit_order(
-        //     &futures_tester.user_keys[maker_index],
-        //     &futures_tester.admin_key,
-        //     futures_tester.base_asset_id,
-        //     futures_tester.quote_asset_id,
-        //     maker_side,
-        //     maker_price,
-        //     maker_quantity,
-        // );
-        // cluster.send_single_transaction(signed_transaction).await;
-
-        // let signed_transaction = generate_signed_limit_order(
-        //     &futures_tester.user_keys[taker_index],
-        //     &futures_tester.admin_key,
-        //     futures_tester.base_asset_id,
-        //     futures_tester.quote_asset_id,
-        //     taker_side,
-        //     taker_price,
-        //     taker_quantity,
-        // );
-        // cluster.send_single_transaction(signed_transaction).await;
-
-        // tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+        let mut maker_positions = client
+            .get_futures_user(maker_positions_request)
+            .await
+            .unwrap()
+            .get_ref()
+            .positions
+            .clone();
+        let maker_position = maker_positions.pop().unwrap();
+        assert!(maker_position.quantity == 10);
+        assert!(maker_position.average_price == 10000000);
+        assert!(maker_position.side == 1); // maker is long
     }
 
     pub async fn test_metrics() {

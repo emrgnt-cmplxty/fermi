@@ -55,8 +55,11 @@ service Relayer {
     // request orderbook depth snapshot
     rpc GetLatestOrderbookDepth (RelayerGetLatestOrderbookDepthRequest) returns (RelayerLatestOrderbookDepthResponse);
 
+    // request futures positions 
+    rpc GetFuturesUser (RelayerGetFuturesUserRequest) returns (RelayerFuturesUserResponse);
+    
     // request orderbook metrics
-    rpc GetFuturesPositions (RelayerGetFuturesPositionsRequest) returns (RelayerFuturesPositionsResponse);
+    rpc GetFuturesMarkets (RelayerGetFuturesMarketsRequest) returns (RelayerFuturesMarketsResponse);
 
     // request metrics
     rpc GetLatestMetrics (RelayerMetricsRequest) returns (RelayerMetricsResponse);
@@ -108,8 +111,7 @@ message RelayerLatestOrderbookDepthResponse {
     repeated Depth asks = 2;
 }
 
-
-message RelayerGetFuturesPositionsRequest {
+message RelayerGetFuturesUserRequest {
     bytes user = 1;
     bytes market_admin = 2;
 }
@@ -120,8 +122,32 @@ message FuturesPosition {
     uint64 average_price = 3;
 }
 
-message RelayerFuturesPositionsResponse {
+message FuturesOrder {
+    uint64 order_id = 1;
+    uint64 side = 2;
+    uint64 quantity = 3;
+    uint64 price = 4;
+}
+
+message RelayerFuturesUserResponse {
     repeated FuturesPosition positions = 1;
+    // repeated FuturesOrder orders = 2;
+}
+
+message RelayerGetFuturesMarketsRequest {
+    bytes user = 1;
+    bytes market_admin = 2;
+}
+
+message FuturesMarket {
+    uint64 latest_price = 1;
+    uint64 max_leverage = 2;
+    uint64 base_asset_id = 3;
+}
+
+message RelayerFuturesMarketsResponse {
+    repeated FuturesMarket market_data = 1;
+    uint64 quote_asset_id = 2;
 }
 
 // metrics

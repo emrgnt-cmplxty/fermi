@@ -108,7 +108,7 @@ pub mod futures_controller_test_functions {
     use super::*;
     use fastcrypto::DIGEST_LEN;
     use gdex_types::crypto::ToFromBytes;
-    use gdex_types::transaction::{create_transaction, serialize_protobuf, ControllerType, RequestType};
+    use gdex_types::transaction::{serialize_protobuf, ControllerType, RequestType, Transaction};
     use gdex_types::{account::AccountKeyPair, crypto::KeypairTraits, transaction::SignedTransaction};
     use narwhal_types::CertificateDigest;
 
@@ -137,8 +137,8 @@ pub mod futures_controller_test_functions {
         let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
 
         let fee: u64 = 1000;
-        let transaction = create_transaction(
-            kp_sender.public().clone(),
+        let transaction = Transaction::new(
+            kp_sender.public(),
             ControllerType::Futures,
             RequestType::FuturesLimitOrder,
             dummy_batch_digest,

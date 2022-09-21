@@ -165,10 +165,10 @@ impl Relayer for RelayerService {
             Err(err) => Err(Status::unknown(err.to_string())),
         }
     }
-    async fn get_futures_positions(
+    async fn get_futures_user(
         &self,
-        request: Request<RelayerGetFuturesPositionsRequest>,
-    ) -> Result<Response<RelayerFuturesPositionsResponse>, Status> {
+        request: Request<RelayerGetFuturesUserRequest>,
+    ) -> Result<Response<RelayerFuturesUserResponse>, Status> {
         let validator_state = &self.state;
         let req = request.into_inner();
         let futures_controller = validator_state.controller_router.futures_controller.lock().unwrap();
@@ -178,21 +178,34 @@ impl Relayer for RelayerService {
         let user =
             AccountPubKey::from_bytes(&req.user).map_err(|_| Status::unknown("Could not load requester address"))?;
 
-        let positions = futures_controller
-            .account_open_positions_by_market(&market_admin, &user)
+        let account_state = futures_controller
+            .account_state_by_market(&market_admin, &user)
             .map_err(|_| Status::unknown("Could not load position data"))?;
 
-        // Err(Status::unknown("x"))
-        Ok(Response::new(RelayerFuturesPositionsResponse {
-            positions: positions
-                .iter()
-                .map(|position| FuturesPosition {
-                    quantity: position.quantity,
-                    side: position.side as u64,
-                    average_price: position.average_price,
-                })
-                .collect(),
-        }))
+        // todo - filter and such
+        let positions = account_state
+            .iter()
+            .map(|(_open_orders, position)| {
+                if position.is_some() {
+                    position.as_ref().unwrap().clone()
+                } else {
+                    return FuturesPosition {
+                        quantity: 0,
+                        average_price: 0,
+                        side: 1,
+                    };
+                }
+            })
+            .collect();
+
+        Ok(Response::new(RelayerFuturesUserResponse { positions }))
+    }
+    async fn get_futures_markets(
+        &self,
+        _request: Request<RelayerGetFuturesMarketsRequest>,
+    ) -> Result<Response<RelayerFuturesMarketsResponse>, Status> {
+        // TODO - implement
+        Err(Status::unknown("Needs to be implemented"))
     }
     async fn get_latest_metrics(
         &self,

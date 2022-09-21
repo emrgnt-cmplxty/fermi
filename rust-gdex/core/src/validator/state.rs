@@ -7,8 +7,8 @@ use crate::validator::metrics::ValidatorMetrics;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
 use fastcrypto::Hash;
-use gdex_controller::router::ControllerRouter;
 use gdex_controller::futures::controller::FuturesController;
+use gdex_controller::router::ControllerRouter;
 use gdex_types::{
     account::ValidatorKeyPair,
     block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},

@@ -42,7 +42,11 @@ pub mod cluster_test_suite {
     use narwhal_types::{Certificate, Header};
 
     // external
-    use std::{collections::HashMap, net::SocketAddr, sync::{Arc, Mutex}};
+    use std::{
+        collections::HashMap,
+        net::SocketAddr,
+        sync::{Arc, Mutex},
+    };
     use tokio::time::{sleep, Duration};
     use tonic::transport::Server;
     use tracing::info;
@@ -546,15 +550,20 @@ pub mod cluster_test_suite {
         futures_tester
             .futures_limit_order(taker_index, taker_side, taker_price, taker_quantity)
             .unwrap();
-            
+
         let validator_count = 4;
         let mut cluster = TestCluster::spawn(validator_count, None).await;
         let spawner_0 = cluster.get_validator_spawner(0);
-        let futures_controller = futures_tester.controller_router.futures_controller.lock().unwrap().clone();
+        let futures_controller = futures_tester
+            .controller_router
+            .futures_controller
+            .lock()
+            .unwrap()
+            .clone();
 
         let validator_state_0 = &*(spawner_0.get_validator_state().unwrap().clone());
         validator_state_0.set_futures_controller(futures_controller);
-        
+
         let relayer_0 = cluster.spawn_single_relayer(0).await;
         let target_endpoint = endpoint_from_multiaddr(&relayer_0.get_relayer_address()).unwrap();
         let endpoint = target_endpoint.endpoint();
@@ -586,7 +595,6 @@ pub mod cluster_test_suite {
         let latest_maker_positions_relayer = client.get_futures_positions(maker_positions_from_relayer).await;
         println!("latest_maker_positions_relayer: {:?}", latest_maker_positions_relayer);
 
-
         // let validator_state_0 = Arc::unwrap_or_clone(spawner_0.get_validator_state().unwrap());//.into_inner();
         // let mut validator_state_0 = spawner_0.get_validator_state().unwrap();
         // let validator_state_0: ValidatorState = *(Arc::get_mut(&mut validator_state_0).unwrap()).clone();
@@ -600,8 +608,6 @@ pub mod cluster_test_suite {
         // let endpoint = target_endpoint.endpoint();
         // let mut client = RelayerClient::connect(endpoint.clone()).await.unwrap();
 
-
-        
         // let mut cluster = TestCluster::spawn(validator_count, None).await;
 
         // let spawner_0 = cluster.get_validator_spawner(0);

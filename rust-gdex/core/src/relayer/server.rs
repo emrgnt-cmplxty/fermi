@@ -182,16 +182,16 @@ impl Relayer for RelayerService {
             .account_open_positions_by_market(&market_admin, &user)
             .map_err(|_| Status::unknown("Could not load position data"))?;
 
-        println!("positions={:?}", positions);
-
         // Err(Status::unknown("x"))
         Ok(Response::new(RelayerFuturesPositionsResponse {
             positions: positions
                 .iter()
-                .map(|position| {
-                    FuturesPosition { quantity: position.quantity, side: position.side as u64, average_price: position.average_price }
+                .map(|position| FuturesPosition {
+                    quantity: position.quantity,
+                    side: position.side as u64,
+                    average_price: position.average_price,
                 })
-                .collect()
+                .collect(),
         }))
     }
     async fn get_latest_metrics(

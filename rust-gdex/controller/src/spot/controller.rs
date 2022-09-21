@@ -466,8 +466,7 @@ pub mod spot_tests {
         price: u64,
         quantity: u64,
     ) -> OrderProcessingResult {
-        let limit_order_request =
-            create_limit_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, side as u64, price, quantity);
+        let limit_order_request = LimitOrderRequest::new(BASE_ASSET_ID, QUOTE_ASSET_ID, side as u64, price, quantity);
         orderbook_interface
             .place_limit_order(account, &limit_order_request)
             .unwrap()
@@ -482,7 +481,7 @@ pub mod spot_tests {
         order_id: u64,
     ) -> OrderProcessingResult {
         let update_order_request =
-            create_update_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, side as u64, price, quantity, order_id);
+            UpdateOrderRequest::new(BASE_ASSET_ID, QUOTE_ASSET_ID, side as u64, price, quantity, order_id);
         orderbook_interface
             .place_update_order(account, &update_order_request)
             .unwrap()
@@ -494,7 +493,7 @@ pub mod spot_tests {
         side: OrderSide,
         order_id: u64,
     ) -> OrderProcessingResult {
-        let cancel_order_request = create_cancel_order_request(BASE_ASSET_ID, QUOTE_ASSET_ID, side as u64, order_id);
+        let cancel_order_request = CancelOrderRequest::new(BASE_ASSET_ID, QUOTE_ASSET_ID, side as u64, order_id);
         orderbook_interface
             .place_cancel_order(account, &cancel_order_request)
             .unwrap()

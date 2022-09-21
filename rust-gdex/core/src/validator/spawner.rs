@@ -17,7 +17,7 @@ use gdex_types::{node::ValidatorInfo, utils};
 use futures::future::join_all;
 use multiaddr::Multiaddr;
 use prometheus::Registry;
-use std::{path::PathBuf, sync::Arc, cell::RefCell};
+use std::{cell::RefCell, path::PathBuf, sync::Arc};
 use tokio::{
     sync::mpsc::{Receiver, Sender},
     task::JoinHandle,

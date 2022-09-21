@@ -7,6 +7,7 @@ use crate::validator::metrics::ValidatorMetrics;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
 use fastcrypto::Hash;
+use gdex_controller::futures::controller::FuturesController;
 use gdex_controller::router::ControllerRouter;
 use gdex_types::{
     account::ValidatorKeyPair,
@@ -211,7 +212,7 @@ pub struct ValidatorState {
     pub committee: ArcSwap<Committee>,
     /// NodeConfig for this node
     /// Controller of various blockchain modules
-    pub master_controller: ControllerRouter,
+    pub controller_router: ControllerRouter,
     /// A map of transactions which have been seen
     pub validator_store: ValidatorStore,
     /// Metrics around blockchain operations
@@ -233,7 +234,7 @@ impl ValidatorState {
             secret,
             halted: AtomicBool::new(false),
             committee: ArcSwap::from(Arc::new(genesis.committee().unwrap())),
-            master_controller: genesis.master_controller().clone(),
+            controller_router: genesis.controller_router().clone(),
             validator_store: ValidatorStore::reopen(store_db_path),
             metrics,
         }
@@ -249,6 +250,12 @@ impl ValidatorState {
 
     pub fn is_halted(&self) -> bool {
         self.halted.load(Ordering::Relaxed)
+    }
+
+    // allow the controller router to update for testing purposes
+    #[cfg(any(test, feature = "testing"))]
+    pub fn set_futures_controller(&self, futures_controller: FuturesController) {
+        *self.controller_router.futures_controller.lock().unwrap() = futures_controller;
     }
 }
 
@@ -298,7 +305,7 @@ impl ExecutionState for ValidatorState {
             return Ok((consensus_output.clone(), execution_indices, uniqueness_check));
         }
 
-        let result = self.master_controller.handle_consensus_transaction(transaction);
+        let result = self.controller_router.handle_consensus_transaction(transaction);
 
         if result.is_err() {
             self.metrics.transactions_executed_failed.inc();
@@ -355,9 +362,9 @@ mod test_validator_state {
 
     #[tokio::test]
     pub async fn single_node_init() {
-        let master_controller = ControllerRouter::default();
-        master_controller.initialize_controllers();
-        master_controller.initialize_controller_accounts();
+        let controller_router = ControllerRouter::default();
+        controller_router.initialize_controllers();
+        controller_router.initialize_controller_accounts();
 
         let key: ValidatorKeyPair =
             get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
@@ -378,7 +385,7 @@ mod test_validator_state {
         };
 
         let builder = GenesisStateBuilder::new()
-            .set_master_controller(master_controller)
+            .set_master_controller(controller_router)
             .add_validator(validator);
 
         let genesis = builder.build();
@@ -395,9 +402,9 @@ mod test_validator_state {
     }
 
     fn create_test_validator() -> ValidatorState {
-        let master_controller = ControllerRouter::default();
-        master_controller.initialize_controllers();
-        master_controller.initialize_controller_accounts();
+        let controller_router = ControllerRouter::default();
+        controller_router.initialize_controllers();
+        controller_router.initialize_controller_accounts();
 
         let key: ValidatorKeyPair =
             get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
@@ -418,7 +425,7 @@ mod test_validator_state {
         };
 
         let builder = GenesisStateBuilder::new()
-            .set_master_controller(master_controller)
+            .set_master_controller(controller_router)
             .add_validator(validator);
 
         let genesis = builder.build();

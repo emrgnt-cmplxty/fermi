@@ -59,8 +59,8 @@ impl Default for StakeController {
 
 #[async_trait]
 impl Controller for StakeController {
-    fn initialize(&mut self, master_controller: &ControllerRouter) {
-        self.bank_controller = Arc::clone(&master_controller.bank_controller);
+    fn initialize(&mut self, controller_router: &ControllerRouter) {
+        self.bank_controller = Arc::clone(&controller_router.bank_controller);
     }
 
     fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
@@ -165,25 +165,25 @@ pub mod stake_tests {
     fn stake() {
         let sender = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let master_controller = ControllerRouter::default();
-        master_controller.initialize_controllers();
-        master_controller.initialize_controller_accounts();
-        let bank_controller_ref = Arc::clone(&master_controller.bank_controller);
+        let controller_router = ControllerRouter::default();
+        controller_router.initialize_controllers();
+        controller_router.initialize_controller_accounts();
+        let bank_controller_ref = Arc::clone(&controller_router.bank_controller);
 
-        master_controller
+        controller_router
             .bank_controller
             .lock()
             .unwrap()
             .create_asset(sender.public())
             .unwrap();
-        master_controller
+        controller_router
             .bank_controller
             .lock()
             .unwrap()
             .create_asset(sender.public())
             .unwrap();
 
-        master_controller
+        controller_router
             .stake_controller
             .lock()
             .unwrap()
@@ -199,7 +199,7 @@ pub mod stake_tests {
             "unexpected balance"
         );
         assert!(
-            master_controller
+            controller_router
                 .stake_controller
                 .lock()
                 .unwrap()
@@ -210,7 +210,7 @@ pub mod stake_tests {
             "unexpected number of accounts"
         );
         assert!(
-            *master_controller
+            *controller_router
                 .stake_controller
                 .lock()
                 .unwrap()
@@ -220,7 +220,7 @@ pub mod stake_tests {
             "unexpected stake amount"
         );
         assert!(
-            master_controller.stake_controller.lock().unwrap().get_total_staked() == STAKE_AMOUNT,
+            controller_router.stake_controller.lock().unwrap().get_total_staked() == STAKE_AMOUNT,
             "unexpected total staked amount"
         );
     }
@@ -228,25 +228,25 @@ pub mod stake_tests {
     fn stake_empty() {
         let sender = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let master_controller = ControllerRouter::default();
-        master_controller.initialize_controllers();
-        master_controller.initialize_controller_accounts();
-        let bank_controller_ref = Arc::clone(&master_controller.bank_controller);
+        let controller_router = ControllerRouter::default();
+        controller_router.initialize_controllers();
+        controller_router.initialize_controller_accounts();
+        let bank_controller_ref = Arc::clone(&controller_router.bank_controller);
 
-        master_controller
+        controller_router
             .bank_controller
             .lock()
             .unwrap()
             .create_asset(sender.public())
             .unwrap();
-        master_controller
+        controller_router
             .bank_controller
             .lock()
             .unwrap()
             .create_asset(sender.public())
             .unwrap();
 
-        master_controller
+        controller_router
             .stake_controller
             .lock()
             .unwrap()
@@ -264,7 +264,7 @@ pub mod stake_tests {
         );
 
         assert!(
-            master_controller
+            controller_router
                 .stake_controller
                 .lock()
                 .unwrap()
@@ -276,7 +276,7 @@ pub mod stake_tests {
         );
 
         assert!(
-            *master_controller
+            *controller_router
                 .stake_controller
                 .lock()
                 .unwrap()
@@ -287,7 +287,7 @@ pub mod stake_tests {
         );
 
         assert!(
-            master_controller.stake_controller.lock().unwrap().get_total_staked() == STAKE_AMOUNT,
+            controller_router.stake_controller.lock().unwrap().get_total_staked() == STAKE_AMOUNT,
             "unexpected total staked amount"
         );
     }
@@ -298,18 +298,18 @@ pub mod stake_tests {
     fn failed_stake() {
         let sender = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let master_controller = ControllerRouter::default();
-        master_controller.initialize_controllers();
-        master_controller.initialize_controller_accounts();
-        let bank_controller_ref = Arc::clone(&master_controller.bank_controller);
+        let controller_router = ControllerRouter::default();
+        controller_router.initialize_controllers();
+        controller_router.initialize_controller_accounts();
+        let bank_controller_ref = Arc::clone(&controller_router.bank_controller);
 
-        master_controller
+        controller_router
             .bank_controller
             .lock()
             .unwrap()
             .create_asset(sender.public())
             .unwrap();
-        master_controller
+        controller_router
             .bank_controller
             .lock()
             .unwrap()
@@ -327,7 +327,7 @@ pub mod stake_tests {
         );
         // staking without funding should create error
         let second = generate_keypair_vec([0; 32]).pop().unwrap();
-        master_controller
+        controller_router
             .stake_controller
             .lock()
             .unwrap()

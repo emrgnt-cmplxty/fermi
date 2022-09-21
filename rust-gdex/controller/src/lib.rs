@@ -17,13 +17,13 @@ pub mod spot;
 
 pub mod stake;
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 pub trait ControllerTestBed {
-    fn get_main_controller(&self) -> &router::ControllerRouter;
+    fn get_controller_router(&self) -> &router::ControllerRouter;
 
     fn generic_initialize(&self) {
-        self.get_main_controller().initialize_controllers();
-        self.get_main_controller().initialize_controller_accounts();
+        self.get_controller_router().initialize_controllers();
+        self.get_controller_router().initialize_controller_accounts();
     }
 
     fn initialize(&self);

@@ -75,7 +75,31 @@ impl Controller for ConsensusController {
     ) {
     }
 
-    fn create_catchup_state(_controller: Arc<Mutex<Self>>, _block_number: u64) -> Result<Vec<u8>, GDEXError> {
-        Ok(Vec::new())
+    fn create_catchup_state(controller: Arc<Mutex<Self>>, _block_number: u64) -> Result<Vec<u8>, GDEXError> {
+        match bincode::serialize(&controller.lock().unwrap().clone()) {
+            Ok(v) => Ok(v),
+            Err(_) => Err(GDEXError::SerializationError),
+        }
+    }
+}
+
+#[cfg(test)]
+pub mod consensus_tests {
+    use super::*;
+    
+    #[test]
+    fn create_consensus_catchup_state_default() {
+        let consensus_controller = Arc::new(Mutex::new(ConsensusController::default()));
+        let catchup_state = ConsensusController::create_catchup_state(consensus_controller, 0);
+        assert!(catchup_state.is_ok());
+        let catchup_state = catchup_state.unwrap();
+        println!("Catchup state is {} bytes", catchup_state.len());
+
+        match bincode::deserialize(&catchup_state) {
+            Ok(ConsensusController { batch_size, ..}) => {
+                assert_eq!(batch_size, DEFAULT_BATCH_SIZE);
+            },
+            Err(_) => panic!("deserializing catchup_state_default failed")
+        }
     }
 }

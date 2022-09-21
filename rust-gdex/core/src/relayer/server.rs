@@ -1,4 +1,6 @@
 use crate::validator::state::ValidatorState;
+use gdex_types::account::AccountPubKey;
+use gdex_types::crypto::ToFromBytes;
 use gdex_types::proto::*;
 use narwhal_types::CertificateDigestProto;
 
@@ -112,7 +114,7 @@ impl Relayer for RelayerService {
         let base_asset_id = req.base_asset_id;
         let quote_asset_id = req.quote_asset_id;
         let orderbook_depth_key = validator_state
-            .master_controller
+            .controller_router
             .spot_controller
             .lock()
             .unwrap()
@@ -163,7 +165,48 @@ impl Relayer for RelayerService {
             Err(err) => Err(Status::unknown(err.to_string())),
         }
     }
+    async fn get_futures_user(
+        &self,
+        request: Request<RelayerGetFuturesUserRequest>,
+    ) -> Result<Response<RelayerFuturesUserResponse>, Status> {
+        let validator_state = &self.state;
+        let req = request.into_inner();
+        let futures_controller = validator_state.controller_router.futures_controller.lock().unwrap();
 
+        let market_admin = AccountPubKey::from_bytes(&req.market_admin)
+            .map_err(|_| Status::unknown("Could not load market admin address"))?;
+        let user =
+            AccountPubKey::from_bytes(&req.user).map_err(|_| Status::unknown("Could not load requester address"))?;
+
+        let account_state = futures_controller
+            .account_state_by_market(&market_admin, &user)
+            .map_err(|_| Status::unknown("Could not load position data"))?;
+
+        // todo - filter and include orders in Response
+        let positions = account_state
+            .iter()
+            .map(|(_open_orders, position)| {
+                if position.is_some() {
+                    position.as_ref().unwrap().clone()
+                } else {
+                    FuturesPosition {
+                        quantity: 0,
+                        average_price: 0,
+                        side: 1,
+                    }
+                }
+            })
+            .collect();
+
+        Ok(Response::new(RelayerFuturesUserResponse { positions }))
+    }
+    async fn get_futures_markets(
+        &self,
+        _request: Request<RelayerGetFuturesMarketsRequest>,
+    ) -> Result<Response<RelayerFuturesMarketsResponse>, Status> {
+        // TODO - implement
+        Err(Status::unknown("Needs to be implemented"))
+    }
     async fn get_latest_metrics(
         &self,
         _request: Request<RelayerMetricsRequest>,

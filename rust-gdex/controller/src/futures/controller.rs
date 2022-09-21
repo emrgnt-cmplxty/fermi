@@ -5,6 +5,7 @@ use crate::futures::{proto::*, types::*, utils::*};
 use crate::router::ControllerRouter;
 use crate::spot::proto::*;
 use crate::utils::engine::order_book::{OrderBookWrapper, OrderId, Orderbook};
+// TODO - include continuous OI calculation for FuturesMarket
 
 // gdex
 use gdex_types::{
@@ -13,7 +14,7 @@ use gdex_types::{
     error::GDEXError,
     order_book::OrderSide,
     store::PostProcessStore,
-    transaction::{deserialize_protobuf, parse_order_side, parse_request_type, RequestType, Transaction},
+    transaction::{deserialize_protobuf, FuturesOrder, FuturesPosition, Transaction}
 };
 // external
 use async_trait::async_trait;
@@ -232,7 +233,7 @@ impl FuturesController {
             // TODO - consider max orders per account, or some form of min balance increment per order
             let request_collateral_data = Some(CondensedOrder {
                 price: request.price,
-                side: parse_order_side(request.side)?,
+                side: request.side,
                 quantity: request.quantity,
                 base_asset_id: request.base_asset_id,
             });
@@ -264,12 +265,12 @@ impl FuturesController {
         Ok(())
     }
 
-    pub fn account_open_market_positions(
+    pub fn account_state_by_market(
         &self,
         market_admin: &AccountPubKey,
         account: &AccountPubKey,
-    ) -> Result<Vec<Position>, GDEXError> {
-        account_open_market_positions(
+    ) -> Result<AccountState, GDEXError> {
+        account_state_by_market(
             self.market_places
                 .get(market_admin)
                 .ok_or(GDEXError::MarketplaceExistence)?,
@@ -329,8 +330,8 @@ impl FuturesController {
 
 #[async_trait]
 impl Controller for FuturesController {
-    fn initialize(&mut self, master_controller: &ControllerRouter) {
-        self.bank_controller = Arc::clone(&master_controller.bank_controller);
+    fn initialize(&mut self, controller_router: &ControllerRouter) {
+        self.bank_controller = Arc::clone(&controller_router.bank_controller);
     }
 
     fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
@@ -344,49 +345,46 @@ impl Controller for FuturesController {
 
     fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
         let sender = transaction.get_sender()?;
-        let request_type = parse_request_type(transaction.request_type)?;
+        let request_type: FuturesRequestType = transaction.get_request_type()?;
         match request_type {
-            RequestType::CreateMarketplace => {
+            FuturesRequestType::CreateMarketplace => {
                 let request: CreateMarketplaceRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 self.create_marketplace(sender, request)?;
             }
-            RequestType::CreateMarket => {
+            FuturesRequestType::CreateMarket => {
                 let request: CreateMarketRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 self.create_market(sender, request)?;
             }
-            RequestType::UpdateMarketParams => {
+            FuturesRequestType::UpdateMarketParams => {
                 // TODO - add market_admin verification
                 let request: UpdateMarketParamsRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 self.update_market_params(sender, request)?;
             }
-            RequestType::UpdateTime => {
+            FuturesRequestType::UpdateTime => {
                 // TODO - add market_admin verification
                 let request: UpdateTimeRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 self.update_time(sender, request)?;
             }
-            RequestType::UpdatePrices => {
+            FuturesRequestType::UpdatePrices => {
                 // TODO - add market_admin verification
                 let request: UpdatePricesRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 self.update_prices(sender, request)?;
             }
-            RequestType::AccountDeposit => {
+            FuturesRequestType::AccountDeposit => {
                 let request: AccountDepositRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 self.account_deposit(sender, request)?;
             }
-            RequestType::AccountWithdrawal => {
+            FuturesRequestType::AccountWithdrawal => {
                 let request: AccountWithdrawalRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 self.account_withdraw(sender, request)?;
             }
-            RequestType::FuturesLimitOrder => {
+            FuturesRequestType::FuturesLimitOrder => {
                 // TODO - add signature verification
                 let request: FuturesLimitOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 let market_admin =
                     AccountPubKey::from_bytes(&request.market_admin).map_err(|_| GDEXError::InvalidAddress)?;
                 self.futures_limit_order(sender, market_admin, request)?;
             }
-
-            // TODO - implement market orders
-            _ => return Err(GDEXError::InvalidRequestTypeError),
         }
         Ok(())
     }
@@ -467,9 +465,9 @@ impl OrderBookWrapper for FuturesMarket {
             .get_mut(account)
             .ok_or(GDEXError::AccountLookup)?
             .open_orders
-            .push(OpenOrder {
+            .push(FuturesOrder {
                 order_id,
-                side,
+                side: side as u64,
                 price,
                 quantity,
             });
@@ -494,8 +492,8 @@ impl OrderBookWrapper for FuturesMarket {
 
         let account_deposit = deposits_lock.get_mut(account).ok_or(GDEXError::AccountLookup)?;
 
-        let new_position = Position {
-            side,
+        let new_position = FuturesPosition {
+            side: side as u64,
             quantity,
             average_price: price,
         };

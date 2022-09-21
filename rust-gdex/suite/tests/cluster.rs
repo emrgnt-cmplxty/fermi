@@ -2,10 +2,11 @@
 #[cfg(test)]
 pub mod cluster_test_suite {
 
-    // IMPORTS
-
     // gdex
-    use gdex_controller::bank::proto::create_create_asset_transaction;
+    use gdex_controller::{
+        bank::proto::create_create_asset_transaction, futures::test::futures_tests::FuturesControllerTester,
+        ControllerTestBed,
+    };
     use gdex_core::{
         catchup::manager::{
             mock_catchup_manager::{MockCatchupManger, MockRelayServer},
@@ -15,26 +16,25 @@ pub mod cluster_test_suite {
     };
     use gdex_node::faucet_server::{FaucetService, FAUCET_PORT};
     use gdex_suite::test_utils::test_cluster::TestCluster;
+    use gdex_types::crypto::ToFromBytes;
     use gdex_types::{
         account::{AccountKeyPair, ValidatorKeyPair},
         asset::PRIMARY_ASSET_ID,
         block::{Block, BlockDigest},
         crypto::{get_key_pair_from_rng, KeypairTraits},
-        order_book::{Depth, OrderbookDepth},
+        order_book::{Depth, OrderSide, OrderbookDepth},
         proto::{
             FaucetAirdropRequest, FaucetClient, FaucetServer, RelayerClient, RelayerGetBlockRequest,
-            RelayerGetLatestBlockInfoRequest, RelayerGetLatestOrderbookDepthRequest,
+            RelayerGetFuturesUserRequest, RelayerGetLatestBlockInfoRequest, RelayerGetLatestOrderbookDepthRequest,
         },
         transaction::ConsensusTransaction,
         utils,
     };
-
     // mysten
     use fastcrypto::{generate_production_keypair, Hash, DIGEST_LEN};
     use narwhal_consensus::ConsensusOutput;
     use narwhal_crypto::KeyPair;
     use narwhal_types::{Certificate, Header};
-
     // external
     use std::{collections::HashMap, net::SocketAddr, sync::Arc};
     use tokio::time::{sleep, Duration};
@@ -72,14 +72,14 @@ pub mod cluster_test_suite {
 
         let genesis_state = cluster.get_validator_spawner(0).get_genesis_state();
         let sender_balance = genesis_state
-            .master_controller()
+            .controller_router()
             .bank_controller
             .lock()
             .unwrap()
             .get_balance(kp_sender.public(), PRIMARY_ASSET_ID)
             .unwrap();
         let receiver_balance = genesis_state
-            .master_controller()
+            .controller_router()
             .bank_controller
             .lock()
             .unwrap()
@@ -398,8 +398,7 @@ pub mod cluster_test_suite {
         let dummy_consensus_output = create_test_consensus_output();
         let sender_kp = generate_production_keypair::<KeyPair>();
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let fee: u64 = 1000;
-        let transaction = create_create_asset_transaction(sender_kp.public().clone(), 0, fee, recent_block_hash);
+        let transaction = create_create_asset_transaction(sender_kp.public(), recent_block_hash, 0);
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
@@ -523,6 +522,63 @@ pub mod cluster_test_suite {
             assert_eq!(err.message(), "Orderbook depth was not found.");
             assert_eq!(tonic::Code::NotFound, err.code());
         }
+    }
+
+    #[tokio::test]
+    pub async fn test_relayer_futures_data() {
+        let futures_tester = FuturesControllerTester::new();
+        futures_tester.initialize();
+        let (maker_index, maker_side, maker_price, maker_quantity) = (0, OrderSide::Bid as u64, 10_000_000, 100);
+        // taker must ask less than maker price in order to be a taker
+        let (taker_index, taker_side, taker_price, taker_quantity) = (1, OrderSide::Ask as u64, 10_000_000 - 1, 10);
+
+        futures_tester
+            .futures_limit_order(maker_index, maker_side, maker_price, maker_quantity)
+            .unwrap();
+
+        futures_tester
+            .futures_limit_order(taker_index, taker_side, taker_price, taker_quantity)
+            .unwrap();
+
+        let validator_count = 4;
+        let mut cluster = TestCluster::spawn(validator_count, None).await;
+        let spawner_0 = cluster.get_validator_spawner(0);
+        let futures_controller = futures_tester
+            .controller_router
+            .futures_controller
+            .lock()
+            .unwrap()
+            .clone();
+
+        let validator_state_0 = &*(spawner_0.get_validator_state().unwrap().clone());
+        validator_state_0.set_futures_controller(futures_controller);
+
+        let relayer_0 = cluster.spawn_single_relayer(0).await;
+        let target_endpoint = endpoint_from_multiaddr(&relayer_0.get_relayer_address()).unwrap();
+        let endpoint = target_endpoint.endpoint();
+        let mut client = RelayerClient::connect(endpoint.clone()).await.unwrap();
+
+        let user = futures_tester.user_keys[maker_index].public().clone();
+        let user_bytes = bytes::Bytes::from(user.as_bytes().to_vec());
+        let market_admin = futures_tester.admin_key.public().clone();
+        let market_admin_bytes = bytes::Bytes::from(market_admin.as_bytes().to_vec());
+
+        let maker_positions_request = tonic::Request::new(RelayerGetFuturesUserRequest {
+            user: user_bytes,
+            market_admin: market_admin_bytes,
+        });
+
+        let mut maker_positions = client
+            .get_futures_user(maker_positions_request)
+            .await
+            .unwrap()
+            .get_ref()
+            .positions
+            .clone();
+        let maker_position = maker_positions.pop().unwrap();
+        assert!(maker_position.quantity == 10);
+        assert!(maker_position.average_price == 10000000);
+        assert!(maker_position.side == 1); // maker is long
     }
 
     pub async fn test_metrics() {
@@ -664,8 +720,4 @@ pub mod cluster_test_suite {
 
         // assert!(latest_block_info_response.unwrap().into_inner().successful)
     }
-
-    // TODO - implement test after merging metrics...
-    #[tokio::test]
-    pub async fn test_submit_twice() {}
 }

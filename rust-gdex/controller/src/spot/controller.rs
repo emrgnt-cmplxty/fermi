@@ -26,7 +26,7 @@ use gdex_types::{
     error::GDEXError,
     order_book::{OrderSide, OrderbookDepth},
     store::PostProcessStore,
-    transaction::{deserialize_protobuf, parse_request_type, RequestType, Transaction},
+    transaction::{deserialize_protobuf, Transaction}
 };
 
 // external
@@ -60,8 +60,8 @@ impl Default for SpotController {
 
 #[async_trait]
 impl Controller for SpotController {
-    fn initialize(&mut self, master_controller: &ControllerRouter) {
-        self.bank_controller = Arc::clone(&master_controller.bank_controller);
+    fn initialize(&mut self, controller_router: &ControllerRouter) {
+        self.bank_controller = Arc::clone(&controller_router.bank_controller);
     }
 
     fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
@@ -74,13 +74,13 @@ impl Controller for SpotController {
 
     fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
         let sender = transaction.get_sender()?;
-        let request_type = parse_request_type(transaction.request_type)?;
+        let request_type: SpotRequestType = transaction.get_request_type()?;
         match request_type {
-            RequestType::CreateOrderbook => {
+            SpotRequestType::CreateOrderbook => {
                 let request: CreateOrderbookRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 self.create_orderbook(request.base_asset_id, request.quote_asset_id)
             }
-            RequestType::MarketOrder => {
+            SpotRequestType::MarketOrder => {
                 let request: MarketOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 match self
                     .get_orderbook(request.base_asset_id, request.quote_asset_id)?
@@ -90,7 +90,7 @@ impl Controller for SpotController {
                     Err(_err) => Err(GDEXError::OrderRequest),
                 }
             }
-            RequestType::LimitOrder => {
+            SpotRequestType::LimitOrder => {
                 let request: LimitOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 match self
                     .get_orderbook(request.base_asset_id, request.quote_asset_id)?
@@ -100,7 +100,7 @@ impl Controller for SpotController {
                     Err(_err) => Err(GDEXError::OrderRequest),
                 }
             }
-            RequestType::UpdateOrder => {
+            SpotRequestType::UpdateOrder => {
                 let request: UpdateOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 match self
                     .get_orderbook(request.base_asset_id, request.quote_asset_id)?
@@ -110,7 +110,7 @@ impl Controller for SpotController {
                     Err(_err) => Err(GDEXError::OrderRequest),
                 }
             }
-            RequestType::CancelOrder => {
+            SpotRequestType::CancelOrder => {
                 let request: CancelOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 match self
                     .get_orderbook(request.base_asset_id, request.quote_asset_id)?
@@ -120,7 +120,6 @@ impl Controller for SpotController {
                     Err(_err) => Err(GDEXError::OrderRequest),
                 }
             }
-            _ => Err(GDEXError::InvalidRequestTypeError),
         }
     }
 
@@ -569,24 +568,24 @@ pub mod spot_tests {
     fn place_bid_spot_controller() {
         let account = generate_keypair_vec([0; 32]).pop().unwrap();
 
-        let master_controller = ControllerRouter::default();
-        master_controller.initialize_controllers();
-        master_controller.initialize_controller_accounts();
+        let controller_router = ControllerRouter::default();
+        controller_router.initialize_controllers();
+        controller_router.initialize_controller_accounts();
 
-        master_controller
+        controller_router
             .bank_controller
             .lock()
             .unwrap()
             .create_asset(account.public())
             .unwrap();
-        master_controller
+        controller_router
             .bank_controller
             .lock()
             .unwrap()
             .create_asset(account.public())
             .unwrap();
 
-        master_controller
+        controller_router
             .spot_controller
             .lock()
             .unwrap()
@@ -594,27 +593,25 @@ pub mod spot_tests {
             .unwrap();
 
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
-        let fee = 1000;
         let bid_size = 100;
         let bid_price = 100;
         let transaction = create_limit_order_transaction(
-            account.public().clone(),
+            account.public(),
+            recent_block_hash,
             BASE_ASSET_ID,
             QUOTE_ASSET_ID,
             OrderSide::Bid as u64,
             bid_price,
             bid_size,
-            fee,
-            recent_block_hash,
         );
-        master_controller
+        controller_router
             .spot_controller
             .lock()
             .unwrap()
             .handle_consensus_transaction(&transaction)
             .unwrap();
 
-        let bank_controller_ref = Arc::clone(&master_controller.bank_controller);
+        let bank_controller_ref = Arc::clone(&controller_router.bank_controller);
 
         assert_eq!(
             bank_controller_ref

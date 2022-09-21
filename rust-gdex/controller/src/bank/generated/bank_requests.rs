@@ -14,3 +14,11 @@ pub struct PaymentRequest {
     #[prost(uint64, tag="3")]
     pub quantity: u64,
 }
+// ENUMS
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum BankRequestType {
+    CreateAsset = 0,
+    Payment = 1,
+}

@@ -1,9 +1,10 @@
 pub mod controller;
 
-mod test;
-
 mod types;
 
 mod utils;
 
 pub mod proto;
+
+#[cfg(any(test, feature = "testing"))]
+pub mod test;

@@ -140,13 +140,13 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             let builder = GenesisStateBuilder::load(&dir)?;
 
             // Initialize controllers to default state
-            let master_controller = ControllerRouter::default();
-            master_controller.initialize_controllers();
-            master_controller.initialize_controller_accounts();
+            let controller_router = ControllerRouter::default();
+            controller_router.initialize_controllers();
+            controller_router.initialize_controller_accounts();
 
             // Create base asset of the blockchain with the null address as the owner
             let null_creator = ValidatorPubKey::try_from(ValidatorPubKeyBytes::from_bytes(&[0; 32])?)?;
-            master_controller
+            controller_router
                 .bank_controller
                 .lock()
                 .unwrap()
@@ -155,20 +155,20 @@ pub fn run(cmd: Ceremony) -> Result<()> {
             // Fund and stake the validators with the VALIDATOR_FUNDING_AMOUNT
             for (_key, validator) in builder.validators.iter() {
                 let validator_key = ValidatorPubKey::try_from(validator.public_key).unwrap();
-                master_controller.bank_controller.lock().unwrap().transfer(
+                controller_router.bank_controller.lock().unwrap().transfer(
                     &null_creator,
                     &validator_key,
                     PRIMARY_ASSET_ID,
                     validator.balance,
                 )?;
-                master_controller
+                controller_router
                     .stake_controller
                     .lock()
                     .unwrap()
                     .stake(&validator_key, validator.stake)?;
             }
 
-            builder.set_master_controller(master_controller).save(dir)?;
+            builder.set_master_controller(controller_router).save(dir)?;
         }
 
         // Build the genesis config

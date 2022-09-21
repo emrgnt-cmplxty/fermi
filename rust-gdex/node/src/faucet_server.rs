@@ -33,14 +33,12 @@ fn generate_signed_airdrop_transaction_for_faucet(
 ) -> SignedTransaction {
     // Setting a certificate_digest
     let recent_certificate_digest = CertificateDigest::new([0; DIGEST_LEN]);
-    let fee: u64 = 1000;
     let transaction = create_payment_transaction(
-        kp_sender.public().clone(),
+        kp_sender.public(),
+        recent_certificate_digest,
         kp_receiver_public_key,
         PRIMARY_ASSET_ID,
         amount,
-        fee,
-        recent_certificate_digest,
     );
     match transaction.sign(kp_sender) {
         Ok(t) => t,

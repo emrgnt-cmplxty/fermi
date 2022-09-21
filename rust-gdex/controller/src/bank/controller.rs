@@ -23,7 +23,7 @@ use gdex_types::{
     crypto::ToFromBytes,
     error::GDEXError,
     store::PostProcessStore,
-    transaction::{deserialize_protobuf, parse_request_type, RequestType, Transaction},
+    transaction::{deserialize_protobuf, Transaction},
 };
 
 // mysten
@@ -81,20 +81,19 @@ impl Controller for BankController {
     }
 
     fn handle_consensus_transaction(&mut self, transaction: &Transaction) -> Result<(), GDEXError> {
-        let request_type = parse_request_type(transaction.request_type)?;
+        let request_type: BankRequestType = transaction.get_request_type()?;
         match request_type {
-            RequestType::CreateAsset => {
+            BankRequestType::CreateAsset => {
                 let _request: CreateAssetRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 let sender = transaction.get_sender()?;
                 self.create_asset(&sender)
             }
-            RequestType::Payment => {
+            BankRequestType::Payment => {
                 let request: PaymentRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 let sender = transaction.get_sender()?;
                 let receiver = request.get_receiver()?;
                 self.transfer(&sender, &receiver, request.asset_id, request.quantity)
             }
-            _ => Err(GDEXError::InvalidRequestTypeError),
         }
     }
 

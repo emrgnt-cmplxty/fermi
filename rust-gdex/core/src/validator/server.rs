@@ -172,7 +172,7 @@ impl ValidatorService {
         // unpack validator store, metrics and controllers
         let store = &validator_state.validator_store;
         let metrics = &validator_state.metrics;
-        let master_controller = &validator_state.master_controller;
+        let controller_router = &validator_state.controller_router;
         loop {
             while let Some(message) = rx_output.recv().await {
                 let (result, serialized_txn) = message;
@@ -195,11 +195,11 @@ impl ValidatorService {
                             // metrics process end of block
                             metrics.process_end_of_block(block, block_info);
                             // controller logic process end of block
-                            master_controller
+                            controller_router
                                 .process_end_of_block(&store.post_process_store, block_number)
                                 .await;
                             // catchup generate
-                            master_controller
+                            controller_router
                                 .create_catchup_state(&store.post_process_store, block_number)
                                 .await;
 
@@ -356,9 +356,9 @@ mod test_validator_server {
     };
 
     async fn spawn_test_validator_server() -> Result<ValidatorServerHandle, io::Error> {
-        let master_controller = ControllerRouter::default();
-        master_controller.initialize_controllers();
-        master_controller.initialize_controller_accounts();
+        let controller_router = ControllerRouter::default();
+        controller_router.initialize_controllers();
+        controller_router.initialize_controller_accounts();
 
         let key: ValidatorKeyPair =
             get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
@@ -379,7 +379,7 @@ mod test_validator_server {
         };
 
         let builder = GenesisStateBuilder::new()
-            .set_master_controller(master_controller)
+            .set_master_controller(controller_router)
             .add_validator(validator);
 
         let genesis = builder.build();
@@ -425,9 +425,9 @@ mod test_validator_server {
 
     #[tokio::test]
     pub async fn spawn() {
-        let master_controller = ControllerRouter::default();
-        master_controller.initialize_controllers();
-        master_controller.initialize_controller_accounts();
+        let controller_router = ControllerRouter::default();
+        controller_router.initialize_controllers();
+        controller_router.initialize_controller_accounts();
 
         let key: ValidatorKeyPair =
             get_key_pair_from_rng::<ValidatorKeyPair, rand::rngs::OsRng>(&mut rand::rngs::OsRng);
@@ -449,7 +449,7 @@ mod test_validator_server {
         };
 
         let builder = GenesisStateBuilder::new()
-            .set_master_controller(master_controller)
+            .set_master_controller(controller_router)
             .add_validator(validator);
 
         let genesis = builder.build();

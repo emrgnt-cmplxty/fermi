@@ -182,18 +182,18 @@ impl Relayer for RelayerService {
             .account_state_by_market(&market_admin, &user)
             .map_err(|_| Status::unknown("Could not load position data"))?;
 
-        // todo - filter and such
+        // todo - filter and include orders in Response
         let positions = account_state
             .iter()
             .map(|(_open_orders, position)| {
                 if position.is_some() {
                     position.as_ref().unwrap().clone()
                 } else {
-                    return FuturesPosition {
+                    FuturesPosition {
                         quantity: 0,
                         average_price: 0,
                         side: 1,
-                    };
+                    }
                 }
             })
             .collect();

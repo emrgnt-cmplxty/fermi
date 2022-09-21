@@ -26,11 +26,11 @@ pub mod futures_tests {
     const QUOTE_ASSET_ID: AssetId = 1;
     const TEST_MAX_LEVERAGE: u64 = 25;
     const INITIAL_TIME: u64 = 1_000_000;
-    const INITIAL_ASSET_PRICES: &'static [u64] = &[11_000_000];
+    const INITIAL_ASSET_PRICES: &[u64] = &[11_000_000];
     const ADMIN_INITIAL_DEPOSIT: AssetId = 100_000_000_000;
     const USER_INITIAL_DEPOSIT: AssetId = 10_000_000_000;
     const NUM_USER_ACCOUNTS: usize = 10;
-    const FINAL_ASSET_PRICES: &'static [u64] = &[12_000_000];
+    const FINAL_ASSET_PRICES: &[u64] = &[12_000_000];
 
     pub struct FuturesControllerTester {
         pub controller_router: ControllerRouter,
@@ -38,6 +38,12 @@ pub mod futures_tests {
         pub user_keys: Vec<AccountKeyPair>,
         pub base_asset_id: u64,
         pub quote_asset_id: u64,
+    }
+
+    impl Default for FuturesControllerTester {
+        fn default() -> Self {
+            Self::new()
+        }
     }
 
     impl FuturesControllerTester {
@@ -83,7 +89,7 @@ pub mod futures_tests {
         fn create_marketplace(&self) -> Result<(), GDEXError> {
             let request = CreateMarketplaceRequest::new(self.quote_asset_id);
             let transaction = Transaction::new(
-                &self.admin_key.public(),
+                self.admin_key.public(),
                 ControllerType::Futures,
                 RequestType::CreateMarketplace,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
@@ -96,7 +102,7 @@ pub mod futures_tests {
         fn create_market(&self) -> Result<(), GDEXError> {
             let request = CreateMarketRequest::new(self.base_asset_id);
             let transaction = Transaction::new(
-                &self.admin_key.public(),
+                self.admin_key.public(),
                 ControllerType::Futures,
                 RequestType::CreateMarket,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
@@ -109,7 +115,7 @@ pub mod futures_tests {
         fn update_market_params(&self) -> Result<(), GDEXError> {
             let request = UpdateMarketParamsRequest::new(self.base_asset_id, TEST_MAX_LEVERAGE);
             let transaction = Transaction::new(
-                &self.admin_key.public(),
+                self.admin_key.public(),
                 ControllerType::Futures,
                 RequestType::UpdateMarketParams,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
@@ -122,7 +128,7 @@ pub mod futures_tests {
         fn update_time(&self, latest_time: u64) -> Result<(), GDEXError> {
             let request = UpdateTimeRequest::new(latest_time);
             let transaction = Transaction::new(
-                &self.admin_key.public(),
+                self.admin_key.public(),
                 ControllerType::Futures,
                 RequestType::UpdateTime,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
@@ -135,7 +141,7 @@ pub mod futures_tests {
         fn update_prices(&self, latest_prices: Vec<u64>) -> Result<(), GDEXError> {
             let request = UpdatePricesRequest::new(latest_prices);
             let transaction = Transaction::new(
-                &self.admin_key.public(),
+                self.admin_key.public(),
                 ControllerType::Futures,
                 RequestType::UpdatePrices,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
@@ -148,7 +154,7 @@ pub mod futures_tests {
         fn account_deposit(&self, quantity: u64, sender: AccountPubKey) -> Result<(), GDEXError> {
             let request = AccountDepositRequest::new(
                 quantity.try_into().map_err(|_| GDEXError::Conversion)?,
-                &self.admin_key.public(),
+                self.admin_key.public(),
             );
             let transaction = Transaction::new(
                 &sender,
@@ -187,11 +193,11 @@ pub mod futures_tests {
                 side,
                 price,
                 quantity,
-                &self.admin_key.public(),
+                self.admin_key.public(),
             );
 
             let transaction = Transaction::new(
-                &self.user_keys[user_index].public(),
+                self.user_keys[user_index].public(),
                 ControllerType::Futures,
                 RequestType::FuturesLimitOrder,
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),

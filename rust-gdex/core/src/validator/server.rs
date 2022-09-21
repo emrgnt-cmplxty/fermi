@@ -167,7 +167,7 @@ impl ValidatorService {
         mut rx_output: Receiver<(HandledTransaction, SerializedTransaction)>,
         validator_state: Arc<ValidatorState>,
     ) {
-        // TODO load the actual last block
+        // create vec of transactions to store in blocks on disk
         let mut serialized_txns_buf = Vec::new();
         let store = &validator_state.validator_store;
         let metrics = &validator_state.metrics;
@@ -182,7 +182,6 @@ impl ValidatorService {
                         // if next_transaction_index == 0 then the block is complete and we may write-out
                         if execution_indices.next_transaction_index == 0 {
                             // subtract round look-back from the latest round to get block number
-
                             let num_txns = serialized_txns_buf.len();
                             store.prune();
                             // write-out the new block to the validator store
@@ -192,7 +191,7 @@ impl ValidatorService {
                             metrics.process_end_of_block(block, block_info);
                             let block_number = store.block_number.load(std::sync::atomic::Ordering::SeqCst);
                             master_controller
-                                .process_end_of_block(&store.process_block_store, block_number)
+                                .process_end_of_block(&store.post_process_store, block_number)
                                 .await;
                             serialized_txns_buf.clear();
                             // This log is used in benchmarking

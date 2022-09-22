@@ -395,6 +395,9 @@ impl FuturesController {
                 .get_mut(&request.base_asset_id)
                 .ok_or(GDEXError::MarketExistence)?;
             let opposite_side = parse_order_side(request.side % 2 + 1)?;
+
+            // it actually doesn't matter what the order id is,
+            // there are no open orders anymore so that block is skipped entirely
             target_market.update_state_on_fill(&sender, 0, parsed_order_side, liquidation_price, request.quantity);
             target_market.update_state_on_fill(&target_account, 0, opposite_side, liquidation_price, request.quantity);
         } else {

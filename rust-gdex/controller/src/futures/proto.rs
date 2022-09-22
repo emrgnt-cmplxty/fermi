@@ -1,7 +1,14 @@
 // IMPORTS
 
+// crate
+use crate::router::ControllerType;
+
 // gdex
-use gdex_types::account::AccountPubKey;
+use gdex_types::{
+    account::AccountPubKey,
+    error::GDEXError,
+    transaction::{Request, RequestTypeEnum},
+};
 
 // external
 use prost::bytes::Bytes;
@@ -29,7 +36,27 @@ impl From<FuturesLimitOrderRequest> for LimitOrderRequest {
     }
 }
 
+// ENUM
+
+impl RequestTypeEnum for FuturesRequestType {
+    fn request_type_from_i32(value: i32) -> Result<Self, GDEXError> {
+        match value {
+            0 => Ok(FuturesRequestType::CreateMarketplace),
+            1 => Ok(FuturesRequestType::CreateMarket),
+            2 => Ok(FuturesRequestType::UpdateMarketParams),
+            3 => Ok(FuturesRequestType::UpdateTime),
+            4 => Ok(FuturesRequestType::UpdatePrices),
+            5 => Ok(FuturesRequestType::AccountDeposit),
+            6 => Ok(FuturesRequestType::AccountWithdrawal),
+            7 => Ok(FuturesRequestType::FuturesLimitOrder),
+            _ => Err(GDEXError::DeserializationError),
+        }
+    }
+}
+
 // INTERFACE
+
+// create marketplace
 
 impl CreateMarketplaceRequest {
     pub fn new(quote_asset_id: u64) -> Self {
@@ -37,11 +64,33 @@ impl CreateMarketplaceRequest {
     }
 }
 
+impl Request for CreateMarketplaceRequest {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_request_type_id() -> i32 {
+        FuturesRequestType::CreateMarketplace as i32
+    }
+}
+
+// create market
+
 impl CreateMarketRequest {
     pub fn new(base_asset_id: u64) -> Self {
         CreateMarketRequest { base_asset_id }
     }
 }
+
+impl Request for CreateMarketRequest {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_request_type_id() -> i32 {
+        FuturesRequestType::CreateMarket as i32
+    }
+}
+
+// update market params
 
 impl UpdateMarketParamsRequest {
     pub fn new(base_asset_id: u64, max_leverage: u64) -> Self {
@@ -52,17 +101,50 @@ impl UpdateMarketParamsRequest {
     }
 }
 
+impl Request for UpdateMarketParamsRequest {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_request_type_id() -> i32 {
+        FuturesRequestType::UpdateMarketParams as i32
+    }
+}
+
+// update time
+
 impl UpdateTimeRequest {
     pub fn new(latest_time: u64) -> Self {
         UpdateTimeRequest { latest_time }
     }
 }
 
+impl Request for UpdateTimeRequest {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_request_type_id() -> i32 {
+        FuturesRequestType::UpdateTime as i32
+    }
+}
+
+// update prices
+
 impl UpdatePricesRequest {
     pub fn new(latest_prices: Vec<u64>) -> Self {
         UpdatePricesRequest { latest_prices }
     }
 }
+
+impl Request for UpdatePricesRequest {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_request_type_id() -> i32 {
+        FuturesRequestType::UpdatePrices as i32
+    }
+}
+
+// account deposit
 
 // TODO should we use u64 here rather than i64
 impl AccountDepositRequest {
@@ -74,6 +156,17 @@ impl AccountDepositRequest {
     }
 }
 
+impl Request for AccountDepositRequest {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_request_type_id() -> i32 {
+        FuturesRequestType::AccountDeposit as i32
+    }
+}
+
+// account withdrawal
+
 impl AccountWithdrawalRequest {
     pub fn new(quantity: u64, market_admin: &AccountPubKey) -> Self {
         AccountWithdrawalRequest {
@@ -82,6 +175,17 @@ impl AccountWithdrawalRequest {
         }
     }
 }
+
+impl Request for AccountWithdrawalRequest {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_request_type_id() -> i32 {
+        FuturesRequestType::AccountWithdrawal as i32
+    }
+}
+
+// futures limit order
 
 impl FuturesLimitOrderRequest {
     pub fn new(
@@ -102,13 +206,23 @@ impl FuturesLimitOrderRequest {
         }
     }
 }
+
+impl Request for FuturesLimitOrderRequest {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_request_type_id() -> i32 {
+        FuturesRequestType::FuturesLimitOrder as i32
+    }
+}
+
 /// Begin externally available testing functions
 #[cfg(any(test, feature = "testing"))]
 pub mod futures_controller_test_functions {
     use super::*;
     use fastcrypto::DIGEST_LEN;
     use gdex_types::crypto::ToFromBytes;
-    use gdex_types::transaction::{serialize_protobuf, ControllerType, RequestType, Transaction};
+    use gdex_types::transaction::Transaction;
     use gdex_types::{account::AccountKeyPair, crypto::KeypairTraits, transaction::SignedTransaction};
     use narwhal_types::CertificateDigest;
 
@@ -135,16 +249,7 @@ pub mod futures_controller_test_functions {
         };
 
         let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
-
-        let fee: u64 = 1000;
-        let transaction = Transaction::new(
-            kp_sender.public(),
-            ControllerType::Futures,
-            RequestType::FuturesLimitOrder,
-            dummy_batch_digest,
-            fee,
-            serialize_protobuf(&request),
-        );
+        let transaction = Transaction::new(kp_sender.public(), dummy_batch_digest, &request);
 
         transaction.sign(kp_sender).unwrap()
     }

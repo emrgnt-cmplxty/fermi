@@ -1,5 +1,5 @@
 // crate
-use super::types::{AccountState, CondensedOrder, FuturesMarket, Marketplace};
+use super::types::{AccountStateByMarket, CondensedOrder, FuturesMarket, Marketplace, MarketplaceState};
 // gdex
 use gdex_types::{
     account::AccountPubKey,
@@ -121,7 +121,7 @@ pub(crate) fn account_market_req_collateral(
     let mut market_req_collateral = 0;
     // calculate the worst case collateral by assuming all orders fill in a single direction
     if let Some(position) = position {
-        market_req_collateral += position.quantity * market.latest_price / market.max_leverage;
+        market_req_collateral += position.quantity * market.oracle_price / market.max_leverage;
         // assume worst case of all orders executing 1-sided to calculate collateral req
         if position.side == OrderSide::Bid as u64 {
             market_req_collateral += condensed_bids.price * condensed_bids.quantity / market.max_leverage;
@@ -141,7 +141,7 @@ pub(crate) fn account_market_req_collateral(
 }
 
 // TODO - don't round up calc when orders and positions are empty
-pub(crate) fn account_total_req_collateral(
+pub(crate) fn get_account_total_req_collateral(
     market_place: &Marketplace,
     account: &AccountPubKey,
     new_order_data: Option<CondensedOrder>,
@@ -209,7 +209,10 @@ pub(crate) fn account_total_req_collateral(
     Ok(total_req_collateral)
 }
 
-pub(crate) fn account_unrealized_pnl(market_place: &Marketplace, account: &AccountPubKey) -> Result<i64, GDEXError> {
+pub(crate) fn get_account_unrealized_pnl(
+    market_place: &Marketplace,
+    account: &AccountPubKey,
+) -> Result<i64, GDEXError> {
     let mut unrealized_pnl = 0;
 
     // loop over each market and sum the collateral consumed by the accounts position + orders
@@ -217,7 +220,7 @@ pub(crate) fn account_unrealized_pnl(market_place: &Marketplace, account: &Accou
         if let Some(account) = market.accounts.get(account) {
             if let Some(position) = &account.position {
                 // conert the inputs to i64
-                let market_latest_price: i64 = market.latest_price.try_into().map_err(|_| GDEXError::Conversion)?;
+                let market_latest_price: i64 = market.oracle_price.try_into().map_err(|_| GDEXError::Conversion)?;
                 let position_average_price: i64 =
                     position.average_price.try_into().map_err(|_| GDEXError::Conversion)?;
                 let position_quantity: i64 = position.quantity.try_into().map_err(|_| GDEXError::Conversion)?;
@@ -234,20 +237,27 @@ pub(crate) fn account_unrealized_pnl(market_place: &Marketplace, account: &Accou
     Ok(unrealized_pnl)
 }
 
-pub(crate) fn account_state_by_market(
+pub(crate) fn get_account_state_by_market(
     market_place: &Marketplace,
     account: &AccountPubKey,
-) -> Result<AccountState, GDEXError> {
+) -> Result<AccountStateByMarket, GDEXError> {
     let mut account_state = Vec::new();
     for market in market_place.markets.values() {
         if let Some(account) = market.accounts.get(account) {
-            account_state.push((account.open_orders.clone(), account.position.clone()));
-            // if let Some(position) = &account.position {
-            //     account_state.push((account.open_orders.clone(), Some(position.clone()));
-            // } else {
-            //     account_state.push((account.open_orders.clone(), position.clone()));
-            // }
+            account_state.push((
+                market.base_asset_id,
+                account.open_orders.clone(),
+                account.position.clone(),
+            ));
         }
     }
     Ok(account_state)
+}
+
+pub(crate) fn get_marketplace_state(market_place: &Marketplace) -> Result<MarketplaceState, GDEXError> {
+    let mut market_state = Vec::new();
+    for market in market_place.markets.values() {
+        market_state.push(market.clone());
+    }
+    Ok((market_place.quote_asset_id, market_state))
 }

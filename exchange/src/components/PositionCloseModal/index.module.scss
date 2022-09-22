@@ -1,0 +1,18 @@
+@import 'variables';
+@import 'mixins';
+
+.modal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+  @include themify('background-image', 'palette.gradients.background');
+  padding: $s * 2;
+  border-radius: 16px;
+}
+.link {
+  cursor: pointer;
+  @include themify('color', 'palette.link.main');
+}

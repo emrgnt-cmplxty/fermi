@@ -1,0 +1,13 @@
+//0
+$screen-width-xs: get('DARK.breakpoints.values.xs') + px;
+//600
+$screen-width-sm: get('DARK.breakpoints.values.sm') + px;
+//900
+$screen-width-md: get('DARK.breakpoints.values.md') + px;
+//1200
+$screen-width-lg: get('DARK.breakpoints.values.lg') + px;
+//1536
+$screen-width-xl: get('DARK.breakpoints.values.xl') + px;
+$s: get('DARK.spacingValue');
+$default-font-family: get('DARK.typography.fontFamily');
+$other-font-family: get('DARK.typography.otherFontFamily');

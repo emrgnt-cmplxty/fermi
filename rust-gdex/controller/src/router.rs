@@ -14,14 +14,35 @@ use crate::{
 
 // mysten
 
-use gdex_types::{
-    error::GDEXError,
-    store::ProcessBlockStore,
-    transaction::{parse_target_controller, ControllerType, Transaction},
-};
+use gdex_types::{error::GDEXError, store::ProcessBlockStore, transaction::Transaction};
 // external
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
+
+// ENUMS
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[repr(i32)]
+pub enum ControllerType {
+    Bank = 0,
+    Stake = 1,
+    Spot = 2,
+    Consensus = 3,
+    Futures = 4,
+}
+
+impl ControllerType {
+    pub fn from_i32(value: i32) -> Result<Self, GDEXError> {
+        match value {
+            0 => Ok(ControllerType::Bank),
+            1 => Ok(ControllerType::Stake),
+            2 => Ok(ControllerType::Spot),
+            3 => Ok(ControllerType::Consensus),
+            4 => Ok(ControllerType::Futures),
+            _ => Err(GDEXError::DeserializationError),
+        }
+    }
+}
 
 // INTERFACE
 
@@ -90,7 +111,7 @@ impl ControllerRouter {
     }
 
     pub fn handle_consensus_transaction(&self, transaction: &Transaction) -> Result<(), GDEXError> {
-        let target_controller = parse_target_controller(transaction.target_controller)?;
+        let target_controller = ControllerType::from_i32(transaction.target_controller)?;
         match target_controller {
             ControllerType::Consensus => {
                 return self

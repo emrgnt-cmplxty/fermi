@@ -78,3 +78,19 @@ pub struct LiquidateRequest {
     #[prost(bytes="bytes", tag="7")]
     pub target: ::prost::bytes::Bytes,
 }
+// ENUMS
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum FuturesRequestType {
+    CreateMarketplace = 0,
+    CreateMarket = 1,
+    UpdateMarketParams = 2,
+    UpdateTime = 3,
+    UpdatePrices = 4,
+    AccountDeposit = 5,
+    AccountWithdrawal = 6,
+    FuturesLimitOrder = 7,
+    CancelAll = 8,
+    Liquidate = 9
+}

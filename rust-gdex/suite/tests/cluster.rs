@@ -584,7 +584,6 @@ pub mod cluster_test_suite {
         assert!(maker_position.average_price == 10000000);
         assert!(maker_position.side == 1); // maker is long
 
-
         let market_data_request = tonic::Request::new(RelayerGetFuturesMarketsRequest {
             market_admin: market_admin_bytes,
         });

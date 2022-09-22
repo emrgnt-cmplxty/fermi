@@ -188,15 +188,15 @@ pub mod futures_tests {
                 .futures_controller
                 .lock()
                 .unwrap()
-                .account_total_req_collateral(self.admin_key.public(), self.user_keys[user_index].public())
+                .get_account_total_req_collateral(self.admin_key.public(), self.user_keys[user_index].public())
         }
 
-        fn get_user_state_by_market(&self, user_index: usize) -> Result<AccountState, GDEXError> {
+        fn get_user_state_by_market(&self, user_index: usize) -> Result<AccountStateByMarket, GDEXError> {
             self.controller_router
                 .futures_controller
                 .lock()
                 .unwrap()
-                .account_state_by_market(self.admin_key.public(), self.user_keys[user_index].public())
+                .get_account_state_by_market(self.admin_key.public(), self.user_keys[user_index].public())
         }
 
         fn get_user_unrealized_pnl(&self, user_index: usize) -> Result<i64, GDEXError> {
@@ -204,7 +204,7 @@ pub mod futures_tests {
                 .futures_controller
                 .lock()
                 .unwrap()
-                .account_unrealized_pnl(self.admin_key.public(), self.user_keys[user_index].public())
+                .get_account_unrealized_pnl(self.admin_key.public(), self.user_keys[user_index].public())
         }
 
         fn get_account_available_deposit(&self, user_index: usize) -> Result<i64, GDEXError> {
@@ -212,7 +212,7 @@ pub mod futures_tests {
                 .futures_controller
                 .lock()
                 .unwrap()
-                .account_available_deposit(self.admin_key.public(), self.user_keys[user_index].public())
+                .get_account_available_deposit(self.admin_key.public(), self.user_keys[user_index].public())
         }
     }
 
@@ -269,14 +269,14 @@ pub mod futures_tests {
             .unwrap()
             .pop()
             .unwrap()
-            .1
+            .2
             .unwrap();
         let taker_position = futures_tester
             .get_user_state_by_market(taker_index)
             .unwrap()
             .pop()
             .unwrap()
-            .1
+            .2
             .unwrap();
         // check taker and maker positions match
         assert!(maker_position.quantity == taker_position.quantity);
@@ -366,7 +366,7 @@ pub mod futures_tests {
             .unwrap()
             .pop()
             .unwrap()
-            .1;
+            .2;
 
         assert!(user_position.is_none())
     }
@@ -429,13 +429,13 @@ pub mod futures_tests {
             .unwrap()
             .pop()
             .unwrap()
-            .1;
+            .2;
         let taker_position = futures_tester
             .get_user_state_by_market(taker_index)
             .unwrap()
             .pop()
             .unwrap()
-            .1;
+            .2;
 
         assert!(maker_position.is_none());
         assert!(taker_position.is_none());

@@ -102,7 +102,9 @@ impl FuturesController {
             market_place.markets.insert(
                 request.base_asset_id,
                 FuturesMarket {
-                    latest_price: 0,
+                    open_interest: 0,
+                    last_traded_price: 0,
+                    oracle_price: 0,
                     max_leverage: DEFAULT_MAX_LEVERAGE,
                     base_asset_id: request.base_asset_id,
                     quote_asset_id: market_place.quote_asset_id,
@@ -158,7 +160,7 @@ impl FuturesController {
 
         if let Some(market_place) = self.market_places.get_mut(&market_admin) {
             for (counter, (_asset_id, market)) in market_place.markets.iter_mut().enumerate() {
-                market.latest_price = request.latest_prices[counter];
+                market.oracle_price = request.latest_prices[counter];
             }
         } else {
             return Err(GDEXError::MarketplaceExistence);
@@ -195,10 +197,10 @@ impl FuturesController {
     fn account_withdraw(&mut self, sender: AccountPubKey, request: AccountWithdrawalRequest) -> Result<(), GDEXError> {
         let market_admin = AccountPubKey::from_bytes(&request.market_admin).map_err(|_| GDEXError::InvalidAddress)?;
         if let Some(market_place) = self.market_places.get_mut(&market_admin) {
-            let sender_used_collateral: i64 = account_total_req_collateral(market_place, &sender, None)?
+            let sender_used_collateral: i64 = get_account_total_req_collateral(market_place, &sender, None)?
                 .try_into()
                 .map_err(|_| GDEXError::Conversion)?;
-            let sender_unrealized_pnl = account_unrealized_pnl(market_place, &sender)?;
+            let sender_unrealized_pnl = get_account_unrealized_pnl(market_place, &sender)?;
 
             let mut deposit_lock = market_place.deposits.lock().unwrap();
             let sender_deposit = deposit_lock.get_mut(&sender).ok_or(GDEXError::AccountLookup)?;
@@ -237,10 +239,11 @@ impl FuturesController {
                 quantity: request.quantity,
                 base_asset_id: request.base_asset_id,
             });
-            let sender_req_collateral = account_total_req_collateral(market_place, &sender, request_collateral_data)?
-                .try_into()
-                .map_err(|_| GDEXError::Conversion)?;
-            let sender_unrealized_pnl = account_unrealized_pnl(market_place, &sender)?;
+            let sender_req_collateral =
+                get_account_total_req_collateral(market_place, &sender, request_collateral_data)?
+                    .try_into()
+                    .map_err(|_| GDEXError::Conversion)?;
+            let sender_unrealized_pnl = get_account_unrealized_pnl(market_place, &sender)?;
 
             let sender_deposit = *market_place
                 .deposits
@@ -265,12 +268,20 @@ impl FuturesController {
         Ok(())
     }
 
-    pub fn account_state_by_market(
+    pub fn get_marketplace_state(&self, market_admin: &AccountPubKey) -> Result<MarketplaceState, GDEXError> {
+        get_marketplace_state(
+            self.market_places
+                .get(market_admin)
+                .ok_or(GDEXError::MarketplaceExistence)?,
+        )
+    }
+
+    pub fn get_account_state_by_market(
         &self,
         market_admin: &AccountPubKey,
         account: &AccountPubKey,
-    ) -> Result<AccountState, GDEXError> {
-        account_state_by_market(
+    ) -> Result<AccountStateByMarket, GDEXError> {
+        get_account_state_by_market(
             self.market_places
                 .get(market_admin)
                 .ok_or(GDEXError::MarketplaceExistence)?,
@@ -278,12 +289,12 @@ impl FuturesController {
         )
     }
 
-    pub fn account_total_req_collateral(
+    pub fn get_account_total_req_collateral(
         &self,
         market_admin: &AccountPubKey,
         account: &AccountPubKey,
     ) -> Result<u64, GDEXError> {
-        account_total_req_collateral(
+        get_account_total_req_collateral(
             self.market_places
                 .get(market_admin)
                 .ok_or(GDEXError::MarketplaceExistence)?,
@@ -292,12 +303,12 @@ impl FuturesController {
         )
     }
 
-    pub fn account_unrealized_pnl(
+    pub fn get_account_unrealized_pnl(
         &self,
         market_admin: &AccountPubKey,
         account: &AccountPubKey,
     ) -> Result<i64, GDEXError> {
-        account_unrealized_pnl(
+        get_account_unrealized_pnl(
             self.market_places
                 .get(market_admin)
                 .ok_or(GDEXError::MarketplaceExistence)?,
@@ -305,7 +316,7 @@ impl FuturesController {
         )
     }
 
-    pub fn account_available_deposit(
+    pub fn get_account_available_deposit(
         &self,
         market_admin: &AccountPubKey,
         account: &AccountPubKey,
@@ -321,7 +332,7 @@ impl FuturesController {
             .ok_or(GDEXError::AccountLookup)?);
 
         let req_collateral: i64 = self
-            .account_total_req_collateral(market_admin, account)?
+            .get_account_total_req_collateral(market_admin, account)?
             .try_into()
             .map_err(|_| GDEXError::Conversion)?;
         Ok(deposit - req_collateral)
@@ -479,6 +490,9 @@ impl OrderBookWrapper for FuturesMarket {
             self.accounts.insert(account.clone(), FuturesAccount::default());
         }
 
+        // update last traded price
+        self.last_traded_price = price;
+
         let mut futures_account = self.accounts.get_mut(account).unwrap();
         let marketplace_deposits = self.marketplace_deposits.upgrade().unwrap();
         let mut deposits_lock = marketplace_deposits.lock().unwrap();
@@ -492,10 +506,17 @@ impl OrderBookWrapper for FuturesMarket {
         };
 
         if let Some(old_position) = &futures_account.position {
-            let resultant_position = combine_positions(old_position.clone(), new_position);
+            let resultant_position = combine_positions(old_position.clone(), new_position.clone());
+            if resultant_position.is_some() && resultant_position.as_ref().unwrap().quantity > old_position.quantity {
+                // when increasing position, add 1/2 to open interest (1/2 since it is summed for both users)
+                self.open_interest += new_position.quantity / 2;
+            } else {
+                self.open_interest -= new_position.quantity / 2;
+            }
             *account_deposit += compute_realized_pnl(old_position, &resultant_position, price)?;
             futures_account.position = resultant_position;
         } else {
+            self.open_interest += new_position.quantity;
             futures_account.position = Some(new_position);
         }
 

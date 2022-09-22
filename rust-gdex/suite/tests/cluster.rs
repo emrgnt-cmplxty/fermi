@@ -25,7 +25,8 @@ pub mod cluster_test_suite {
         order_book::{Depth, OrderSide, OrderbookDepth},
         proto::{
             FaucetAirdropRequest, FaucetClient, FaucetServer, RelayerClient, RelayerGetBlockRequest,
-            RelayerGetFuturesUserRequest, RelayerGetLatestBlockInfoRequest, RelayerGetLatestOrderbookDepthRequest,
+            RelayerGetFuturesMarketsRequest, RelayerGetFuturesUserRequest, RelayerGetLatestBlockInfoRequest,
+            RelayerGetLatestOrderbookDepthRequest,
         },
         transaction::ConsensusTransaction,
         utils,
@@ -565,20 +566,34 @@ pub mod cluster_test_suite {
 
         let maker_positions_request = tonic::Request::new(RelayerGetFuturesUserRequest {
             user: user_bytes,
-            market_admin: market_admin_bytes,
+            market_admin: market_admin_bytes.clone(),
         });
-
-        let mut maker_positions = client
+        let maker_positions = client
             .get_futures_user(maker_positions_request)
             .await
             .unwrap()
             .get_ref()
-            .positions
-            .clone();
-        let maker_position = maker_positions.pop().unwrap();
+            .market_state
+            .clone()
+            .pop()
+            .unwrap()
+            .position;
+
+        let maker_position = maker_positions.unwrap();
         assert!(maker_position.quantity == 10);
         assert!(maker_position.average_price == 10000000);
         assert!(maker_position.side == 1); // maker is long
+
+        let market_data_request = tonic::Request::new(RelayerGetFuturesMarketsRequest {
+            market_admin: market_admin_bytes,
+        });
+        let market_data_response = client.get_futures_markets(market_data_request).await.unwrap();
+        let market = market_data_response.get_ref().clone().market_data.pop().unwrap();
+        assert!(market.oracle_price == 11000000);
+        assert!(market.last_traded_price == 10000000);
+        assert!(market.open_interest == 20);
+        assert!(market.max_leverage == 25);
+        assert!(market.base_asset_id == 0);
     }
 
     pub async fn test_metrics() {

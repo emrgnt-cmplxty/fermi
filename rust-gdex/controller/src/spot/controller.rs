@@ -522,7 +522,7 @@ pub mod spot_tests {
         let bid_price = 100;
         place_limit_order_helper(
             &mut orderbook_interface,
-            &account.public(),
+            account.public(),
             OrderSide::Bid,
             bid_price,
             bid_size,
@@ -638,7 +638,7 @@ pub mod spot_tests {
         let bid_price = 100;
         place_limit_order_helper(
             &mut orderbook_interface,
-            &account.public(),
+            account.public(),
             OrderSide::Ask,
             bid_price,
             bid_size,
@@ -694,7 +694,7 @@ pub mod spot_tests {
         let bid_price_0: u64 = 100;
         place_limit_order_helper(
             &mut orderbook_interface,
-            &account_0.public(),
+            account_0.public(),
             OrderSide::Bid,
             bid_price_0,
             bid_size_0,
@@ -704,7 +704,7 @@ pub mod spot_tests {
         let bid_price_1: u64 = 110;
         place_limit_order_helper(
             &mut orderbook_interface,
-            &account_1.public(),
+            account_1.public(),
             OrderSide::Bid,
             bid_price_1,
             bid_size_1,
@@ -777,7 +777,7 @@ pub mod spot_tests {
         let bid_price_0: u64 = 200;
         place_limit_order_helper(
             &mut orderbook_interface,
-            &account_0.public(),
+            account_0.public(),
             OrderSide::Bid,
             bid_price_0,
             bid_size_0,
@@ -787,7 +787,7 @@ pub mod spot_tests {
         let bid_price_1: u64 = bid_price_0 - 2;
         place_limit_order_helper(
             &mut orderbook_interface,
-            &account_1.public(),
+            account_1.public(),
             OrderSide::Bid,
             bid_price_1,
             bid_size_1,
@@ -832,7 +832,7 @@ pub mod spot_tests {
         let ask_price_0: u64 = bid_price_0 - 1;
         place_limit_order_helper(
             &mut orderbook_interface,
-            &account_1.public(),
+            account_1.public(),
             OrderSide::Ask,
             ask_price_0,
             ask_size_0,
@@ -887,7 +887,7 @@ pub mod spot_tests {
         let ask_price_1: u64 = bid_price_1 - 1;
         place_limit_order_helper(
             &mut orderbook_interface,
-            &account_1.public(),
+            account_1.public(),
             OrderSide::Ask,
             ask_price_1,
             ask_size_1,
@@ -955,7 +955,7 @@ pub mod spot_tests {
         let bid_price = 100;
         let result = place_limit_order_helper(
             &mut orderbook_interface,
-            &account.public(),
+            account.public(),
             OrderSide::Bid,
             bid_price,
             bid_size,
@@ -977,7 +977,7 @@ pub mod spot_tests {
             assert_eq!(user_quote_balance, CREATED_ASSET_BALANCE - 100 * 100);
 
             // cancel order
-            place_cancel_order_helper(&mut orderbook_interface, &account.public(), side, order_id);
+            place_cancel_order_helper(&mut orderbook_interface, account.public(), side, order_id);
 
             assert!(
                 orderbook_interface.orderbook.get_order(side, order_id).is_err(),
@@ -1018,7 +1018,7 @@ pub mod spot_tests {
         const TEST_SIDE: OrderSide = OrderSide::Bid;
         let result = place_limit_order_helper(
             &mut orderbook_interface,
-            &account.public(),
+            account.public(),
             TEST_SIDE,
             TEST_PRICE,
             TEST_QUANTITY,
@@ -1028,7 +1028,7 @@ pub mod spot_tests {
             // update order
             place_update_order_helper(
                 &mut orderbook_interface,
-                &account.public(),
+                account.public(),
                 side,
                 TEST_PRICE,
                 TEST_QUANTITY + 1,
@@ -1096,7 +1096,7 @@ pub mod spot_tests {
         let bid_price = 100;
         place_limit_order_helper(
             &mut orderbook_interface,
-            &account.public(),
+            account.public(),
             OrderSide::Bid,
             bid_price,
             bid_size,
@@ -1109,14 +1109,14 @@ pub mod spot_tests {
             for _ in 0..TEST_NUM_ORDERS {
                 place_limit_order_helper(
                     &mut orderbook_interface,
-                    &account.public(),
+                    account.public(),
                     OrderSide::Bid,
                     TEST_MID - i,
                     u64::pow(10 - i, 2),
                 );
                 place_limit_order_helper(
                     &mut orderbook_interface,
-                    &account.public(),
+                    account.public(),
                     OrderSide::Ask,
                     TEST_MID + i,
                     u64::pow(10 - i, 2),

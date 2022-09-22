@@ -39,6 +39,12 @@ pub enum GDEXError {
     MarketPrices,
     #[error("Insufficient collateral for this operation")]
     InsufficientCollateral,
+    #[error("Cannot liquidate, target is above minimum collateral threshold")]
+    CannotLiquidateTargetCollateral,
+    #[error("Cannot liquidate, target still has open orders")]
+    CannotLiquidateOpenOrders,
+    #[error("Cannot liquidate, target position does not match")]
+    CannotLiquidatePosition,
     #[error("Order request failed")]
     OrderRequest,
     #[error("Orderbook creation failed")]

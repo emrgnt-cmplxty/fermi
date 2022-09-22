@@ -321,7 +321,7 @@ pub mod futures_tests {
         let maker_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
         let taker_unrealized_pnl = futures_tester.get_user_unrealized_pnl(taker_index).unwrap();
         // check that maker and taker unrealized pnl off-set
-        assert!(maker_unrealized_pnl == -1 * taker_unrealized_pnl);
+        assert!(maker_unrealized_pnl == -taker_unrealized_pnl);
         // check that pnl markdown equals difference from fill price to current price
         assert!(maker_unrealized_pnl as u64 == (INITIAL_ASSET_PRICES[0] - 10_000_000) * taker_quantity);
     }

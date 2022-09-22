@@ -114,7 +114,7 @@ impl FuturesController {
                     order_to_account: HashMap::new(),
                     orderbook: Orderbook::new(request.base_asset_id, market_place.quote_asset_id),
                     marketplace_deposits: Arc::downgrade(&market_place.deposits),
-                    liquidation_fee_percent: 10 as f64,
+                    liquidation_fee_percent: 10_f64,
                 },
             );
         } else {
@@ -336,7 +336,7 @@ impl FuturesController {
                 .ok_or(GDEXError::AccountLookup)?;
 
             if target_deposit + target_unrealized_pnl > target_req_collateral {
-                return Err(GDEXError::InsufficientCollateral); // TODO not liquidatable error
+                return Err(GDEXError::CannotLiquidateTargetCollateral);
             }
 
             let mut target_market = market_place
@@ -350,21 +350,21 @@ impl FuturesController {
 
             // open orders have to be closed first
             if !futures_account.open_orders.is_empty() {
-                return Err(GDEXError::OrderRequest); // TODO liq error
+                return Err(GDEXError::CannotLiquidateOpenOrders);
             }
 
             let target_position = futures_account.position.as_ref().ok_or(GDEXError::OrderRequest)?;
             if target_position.side != request.side || target_position.quantity < request.quantity {
-                return Err(GDEXError::OrderRequest); // TODO liq error
+                return Err(GDEXError::CannotLiquidatePosition);
             }
 
             // check liquidator has enough collateral to take over
             let parsed_order_side = parse_order_side(request.side)?;
             let liquidation_price = if parsed_order_side == OrderSide::Bid {
-                (target_market.latest_price as f64 * (100 as f64 - target_market.liquidation_fee_percent) / 100.0)
+                (target_market.latest_price as f64 * (100_f64 - target_market.liquidation_fee_percent) / 100.0)
                     as u64
             } else {
-                (target_market.latest_price as f64 * (100 as f64 + target_market.liquidation_fee_percent) / 100.0)
+                (target_market.latest_price as f64 * (100_f64 + target_market.liquidation_fee_percent) / 100.0)
                     as u64
             };
 
@@ -425,7 +425,7 @@ impl FuturesController {
                 market.place_cancel_order(&sender, &request);
             }
         }
-        return Err(GDEXError::MarketplaceExistence);
+        Err(GDEXError::MarketplaceExistence)
     }
 
     pub fn account_state_by_market(

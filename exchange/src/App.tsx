@@ -8,6 +8,7 @@ function App(): ReactElement {
   return (
     <>
       <NavigationScroll />
+
       <AppRoutes />
     </>
   )

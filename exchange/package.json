@@ -23,8 +23,7 @@
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook",
     "test": "jest",
-    "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write",
-    "postinstall": "tar -xzC src/public -f vendor/charting_library.tar;tar -xzC src/public -f vendor/datafeeds.tar"
+    "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write"
   },
   "dependencies": {
     "@emotion/react": "^11.9.0",

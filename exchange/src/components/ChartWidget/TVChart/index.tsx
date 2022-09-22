@@ -5,7 +5,7 @@ import {
   ChartingLibraryWidgetOptions,
   ResolutionString,
   widget,
-} from '../../../public/charting_library/charting_library.esm.js'
+} from '../../../charting_library/charting_library.esm.js'
 
 interface TVChartProps {
   height: number

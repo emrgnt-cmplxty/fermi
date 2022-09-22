@@ -20,7 +20,7 @@ use gdex_types::{
     crypto::ToFromBytes,
     error::GDEXError,
     store::PostProcessStore,
-    transaction::Transaction
+    transaction::Transaction,
 };
 
 // mysten

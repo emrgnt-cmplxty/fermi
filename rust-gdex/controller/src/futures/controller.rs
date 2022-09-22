@@ -14,7 +14,7 @@ use gdex_types::{
     error::GDEXError,
     order_book::OrderSide,
     store::PostProcessStore,
-    transaction::{deserialize_protobuf, FuturesOrder, FuturesPosition, Transaction}
+    transaction::{deserialize_protobuf, FuturesOrder, FuturesPosition, Transaction},
 };
 // external
 use async_trait::async_trait;

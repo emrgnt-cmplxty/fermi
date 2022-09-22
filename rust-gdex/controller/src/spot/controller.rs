@@ -26,7 +26,7 @@ use gdex_types::{
     error::GDEXError,
     order_book::{OrderSide, OrderbookDepth},
     store::PostProcessStore,
-    transaction::{deserialize_protobuf, Transaction}
+    transaction::{deserialize_protobuf, Transaction},
 };
 
 // external

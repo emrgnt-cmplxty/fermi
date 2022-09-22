@@ -9,12 +9,11 @@ use crate::{
 use anyhow::anyhow;
 use async_trait::async_trait;
 use futures::StreamExt;
-use gdex_controller::router::ControllerRouter;
 use gdex_types::{
     crypto::KeypairTraits,
     error::GDEXError,
     proto::{Empty, TransactionSubmitter, TransactionSubmitterServer},
-    transaction::{ConsensusTransaction, SignedTransaction, deserialize_protobuf},
+    transaction::{ConsensusTransaction, SignedTransaction},
 };
 use multiaddr::Multiaddr;
 use narwhal_config::Committee as ConsensusCommittee;
@@ -29,8 +28,6 @@ use tokio::{
     task::JoinHandle,
 };
 use tracing::{error, info, trace};
-
-use super::state::ValidatorStore;
 
 // constants
 // frequency of orderbook depth writes (rounds)
@@ -213,7 +210,7 @@ impl ValidatorService {
                             controller_router
                                 .process_end_of_block(&store.post_process_store, block_number)
                                 .await;
-                            
+
                             // catchup generate
                             controller_router
                                 .create_catchup_state(&store.post_process_store, block_number)
@@ -236,14 +233,13 @@ impl ValidatorService {
         let store = &validator_state.validator_store;
 
         // run transactions through catchup router
-        if let Ok(opt) = store.post_process_store.block_store.read(block_number).await {
-            if let Some(block) = opt {
-                let transactions = block.transactions;
-                for (serialized_transaction, _) in &transactions {
-                    let consensus_transaction: ConsensusTransaction = bincode::deserialize(&serialized_transaction).unwrap();
-                    let transaction = consensus_transaction.get_payload().unwrap().transaction.unwrap();
-                    catchup_router.handle_consensus_transaction(&transaction).unwrap_or(());
-                }
+        if let Ok(Some(block)) = store.post_process_store.block_store.read(block_number).await {
+            let transactions = block.transactions;
+            for (serialized_transaction, _) in &transactions {
+                let consensus_transaction: ConsensusTransaction =
+                    bincode::deserialize(serialized_transaction).unwrap();
+                let transaction = consensus_transaction.get_payload().unwrap().transaction.unwrap();
+                catchup_router.handle_consensus_transaction(&transaction).unwrap_or(());
             }
         }
 

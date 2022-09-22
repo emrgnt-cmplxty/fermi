@@ -9,10 +9,12 @@ use criterion::*;
 
 use gdex_controller::{
     bank::controller::BankController,
-    controller::Controller,
-    spot::controller::{SpotController, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
-    spot::proto::create_limit_order_request,
-    utils::engine::order_book::OrderBookWrapper,
+    spot::{
+        controller::{SpotController, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
+        proto::LimitOrderRequest,
+    },
+    controller::{Controller},
+    utils::engine::{order_book::OrderBookWrapper},
 };
 // gdex
 use fastcrypto::{generate_production_keypair, traits::KeyPair as _};
@@ -22,6 +24,7 @@ use narwhal_crypto::KeyPair;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::time::SystemTime;
 
 fn criterion_benchmark(c: &mut Criterion) {
     // setup
@@ -49,11 +52,15 @@ fn criterion_benchmark(c: &mut Criterion) {
         }
     }
 
-    let bank_controller = Arc::new(Mutex::new(bank_controller));
+    let bank_controller_clone = bank_controller.clone();
 
-    c.bench_function("bank_create_catchup_state", |b| {
-        b.iter(|| BankController::create_catchup_state(bank_controller.clone(), 0))
+    let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
+
+    c.bench_function("catchup_bank_create_catchup_state", |b| {
+        b.iter(|| BankController::create_catchup_state(bank_controller_ref.clone(), 0))
     });
+
+    c.bench_function("catchup_bank_controller_clone", |b| b.iter(|| bank_controller_clone.clone()));
 
     // setup orderbooks
     let n_users = 100_000;
@@ -113,14 +120,14 @@ fn criterion_benchmark(c: &mut Criterion) {
                 .unwrap();
 
             // place orders to orderbook
-            let bid_request = create_limit_order_request(
+            let bid_request = LimitOrderRequest::new(
                 base_asset_id,
                 quote_asset_id,
                 OrderSide::Bid as u64,
                 n_users as u64 % 100 + 1,
                 1,
-            ); //n_users as u64 % 100
-            let ask_request = create_limit_order_request(
+            );
+            let ask_request = LimitOrderRequest::new(
                 base_asset_id,
                 quote_asset_id,
                 OrderSide::Ask as u64,
@@ -144,10 +151,15 @@ fn criterion_benchmark(c: &mut Criterion) {
         }
     }
 
+    let spot_controller_clone = spot_controller.lock().unwrap().clone();
+
     // create orders on the books
-    c.bench_function("spot_create_catchup_state", |b| {
+    c.bench_function("catchup_spot_create_catchup_state", |b| {
         b.iter(|| SpotController::create_catchup_state(spot_controller.clone(), 0))
     });
+
+    // create orders on the books
+    c.bench_function("catchup_spot_controller_clone", |b| b.iter(|| spot_controller_clone.clone()));
 }
 
 criterion_group!(benches, criterion_benchmark);

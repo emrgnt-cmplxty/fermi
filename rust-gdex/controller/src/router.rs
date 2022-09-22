@@ -15,16 +15,12 @@ use crate::{
 // mysten
 
 // external
-use tracing::{info};
+use tracing::info;
 
 // constants
 const CATCHUP_STATE_FREQUENCY: u64 = 100;
 
-use gdex_types::{
-    error::GDEXError,
-    store::{PostProcessStore},
-    transaction::{Transaction},
-};
+use gdex_types::{error::GDEXError, store::PostProcessStore, transaction::Transaction};
 // external
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};

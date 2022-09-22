@@ -72,6 +72,7 @@ pub(crate) struct FuturesMarket {
     pub orderbook: Orderbook,
     // reference to parent Marketplace deposits
     pub marketplace_deposits: Weak<Mutex<HashMap<AccountPubKey, i64>>>,
+    pub liquidation_fee_percent: f64
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

@@ -47,3 +47,13 @@ message FuturesLimitOrderRequest {
 message CancelAllRequest {
     bytes target = 1;
 }
+
+message LiquidateRequest {
+    uint64 base_asset_id = 1;
+    uint64 quote_asset_id = 2;
+    uint64 side = 3;
+    uint64 price = 4;
+    uint64 quantity = 5;
+    bytes market_admin = 6;
+    bytes target = 7;
+}

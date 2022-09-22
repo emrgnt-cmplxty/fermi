@@ -20,7 +20,6 @@ use gdex_types::{
 // external
 use async_trait::async_trait;
 
-
 use serde::{Deserialize, Serialize};
 use std::borrow::BorrowMut;
 use std::{
@@ -28,6 +27,7 @@ use std::{
     convert::TryInto,
     sync::{Arc, Mutex},
 };
+use gdex_types::transaction::parse_order_side;
 
 // CONSTANTS
 
@@ -114,6 +114,7 @@ impl FuturesController {
                     order_to_account: HashMap::new(),
                     orderbook: Orderbook::new(request.base_asset_id, market_place.quote_asset_id),
                     marketplace_deposits: Arc::downgrade(&market_place.deposits),
+                    liquidation_fee_percent: 10 as f64
                 },
             );
         } else {
@@ -227,11 +228,11 @@ impl FuturesController {
         Ok(())
     }
 
-    fn cancel_open_orders(&mut self, sender: AccountPubKey, request: CancelAllRequest) -> Result<(), GDEXError>{
+    fn cancel_open_orders(&mut self, sender: AccountPubKey, market_admin: AccountPubKey, request: CancelAllRequest) -> Result<(), GDEXError> {
         let account_key = AccountPubKey::from_bytes(&request.target).unwrap();
         let sender_is_target = sender == account_key;
 
-        for (_, market_place) in &mut self.market_places {
+        if let Some(market_place) = self.market_places.get_mut(&market_admin) {
             let target_req_collateral = account_total_req_collateral(market_place, &account_key, None)?
                 .try_into()
                 .map_err(|_| GDEXError::Conversion)?;
@@ -249,16 +250,20 @@ impl FuturesController {
                 for (_, market) in &mut market_place.markets {
                     if let Some(futures_account) = market.borrow_mut().accounts.get(&account_key.clone()) {
                         for o in &futures_account.open_orders.clone() {
-                            let cancel_request = CancelOrderRequest::new(market.base_asset_id, market.quote_asset_id, o.side, o.order_id);
-                            market.place_cancel_order(
-                                &sender,
-                                &cancel_request,
-                            )?;
+                            let cancel_request = CancelOrderRequest::new(
+                                market.base_asset_id,
+                                market.quote_asset_id,
+                                o.side,
+                                o.order_id,
+                            );
+                            market.place_cancel_order(&sender, &cancel_request)?;
                         }
                     }
                 }
             }
-        }
+        } else {
+            return Err(GDEXError::MarketplaceExistence);
+        };
         Ok(())
     }
 
@@ -298,6 +303,84 @@ impl FuturesController {
                 .ok_or(GDEXError::MarketExistence)?;
 
             market.place_limit_order(&sender, &LimitOrderRequest::from(request))?;
+        } else {
+            return Err(GDEXError::MarketplaceExistence);
+        };
+        Ok(())
+    }
+
+    fn liquidate(
+        &mut self,
+        sender: AccountPubKey,
+        market_admin: AccountPubKey,
+        request: LiquidateRequest,
+    ) -> Result<(), GDEXError> {
+        if let Some(market_place) = self.market_places.get_mut(&market_admin) {
+            // check target acct is in liquidation
+            let target_account = AccountPubKey::from_bytes(&request.target)?;
+            let target_req_collateral = account_total_req_collateral(market_place, &target_account, None)?
+                .try_into()
+                .map_err(|_| GDEXError::Conversion)?;
+            let target_unrealized_pnl = account_unrealized_pnl(market_place, &target_account)?;
+
+            let target_deposit = *market_place
+                .deposits
+                .lock()
+                .unwrap()
+                .get(&sender)
+                .ok_or(GDEXError::AccountLookup)?;
+
+            if target_deposit + target_unrealized_pnl > target_req_collateral {
+                return Err(GDEXError::InsufficientCollateral); // TODO not liquidatable error
+            }
+
+            let target_market = market_place.markets.get_mut(&request.base_asset_id).ok_or(GDEXError::MarketExistence)?;
+            let futures_account = target_market.accounts.get(&target_account).ok_or(GDEXError::AccountLookup)?;
+
+            // open orders have to be closed first
+            if !futures_account.open_orders.is_empty() {
+                Err(GDEXError::OrderRequest) // TODO liq error
+            }
+
+            let target_position = futures_account.position.ok_or(GDEXError::OrderRequest)?;
+            if target_position.side != request.side || target_position.quantity < request.quantity {
+                Err(GDEXError::OrderRequest) // TODO liq error
+            }
+
+            // check liquidator has enough collateral to take over
+            let parsed_order_side = parse_order_side(request.side)?;
+            let liquidation_price = if parsed_order_side == OrderSide::Bid {
+                target_market.latest_price * (100 - target_market.liquidation_fee_percent) / 100
+            } else {
+                target_market.latest_price * (100 + target_market.liquidation_fee_percent) / 100
+            };
+
+            let request_collateral_data = Some(CondensedOrder {
+                price: liquidation_price,
+                side: request.side,
+                quantity: request.quantity,
+                base_asset_id: request.base_asset_id,
+            });
+
+            let sender_req_collateral = account_total_req_collateral(market_place, &sender, request_collateral_data)?
+                .try_into()
+                .map_err(|_| GDEXError::Conversion)?;
+            let sender_unrealized_pnl = account_unrealized_pnl(market_place, &sender)?;
+
+            let sender_deposit = *market_place
+                .deposits
+                .lock()
+                .unwrap()
+                .get(&sender)
+                .ok_or(GDEXError::AccountLookup)?;
+            if sender_deposit + sender_unrealized_pnl < sender_req_collateral {
+                return Err(GDEXError::InsufficientCollateral);
+            }
+
+            // effect the fill resulting from liquidator taking over
+            let opposite_side = parse_order_side(request.side % 2 + 1)?;
+            target_market.update_state_on_fill(&sender, 0, parsed_order_side, liquidation_price, request.quantity);
+            target_market.update_state_on_fill(&target_account, 0, opposite_side, liquidation_price, request.quantity);
         } else {
             return Err(GDEXError::MarketplaceExistence);
         };

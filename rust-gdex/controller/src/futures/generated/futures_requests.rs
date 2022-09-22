@@ -61,3 +61,18 @@ pub struct CancelAllRequest {
     #[prost(bytes="bytes", tag="1")]
     pub target: ::prost::bytes::Bytes,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct LiquidateRequest {
+    #[prost(uint64, tag="1")]
+    pub base_asset_id: u64,
+    #[prost(uint64, tag="2")]
+    pub quote_asset_id: u64,
+    #[prost(uint64, tag="3")]
+    pub side: u64,
+    #[prost(uint64, tag="4")]
+    pub quantity: u64,
+    #[prost(bytes="bytes", tag="5")]
+    pub market_admin: ::prost::bytes::Bytes,
+    #[prost(bytes="bytes", tag="6")]
+    pub target: ::prost::bytes::Bytes,
+}

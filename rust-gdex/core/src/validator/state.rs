@@ -213,6 +213,8 @@ pub struct ValidatorState {
     /// NodeConfig for this node
     /// Controller of various blockchain modules
     pub controller_router: ControllerRouter,
+    // catchup router for fast catchup snaps
+    pub catchup_router: ControllerRouter,
     /// A map of transactions which have been seen
     pub validator_store: ValidatorStore,
     /// Metrics around blockchain operations
@@ -235,6 +237,7 @@ impl ValidatorState {
             halted: AtomicBool::new(false),
             committee: ArcSwap::from(Arc::new(genesis.committee().unwrap())),
             controller_router: genesis.controller_router().clone(),
+            catchup_router: genesis.controller_router().clone(),
             validator_store: ValidatorStore::reopen(store_db_path),
             metrics,
         }

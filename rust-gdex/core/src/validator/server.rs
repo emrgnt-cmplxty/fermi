@@ -9,11 +9,12 @@ use crate::{
 use anyhow::anyhow;
 use async_trait::async_trait;
 use futures::StreamExt;
+use gdex_controller::router::ControllerRouter;
 use gdex_types::{
     crypto::KeypairTraits,
     error::GDEXError,
     proto::{Empty, TransactionSubmitter, TransactionSubmitterServer},
-    transaction::{ConsensusTransaction, SignedTransaction},
+    transaction::{ConsensusTransaction, SignedTransaction, deserialize_protobuf},
 };
 use multiaddr::Multiaddr;
 use narwhal_config::Committee as ConsensusCommittee;
@@ -28,6 +29,8 @@ use tokio::{
     task::JoinHandle,
 };
 use tracing::{error, info, trace};
+
+use super::state::ValidatorStore;
 
 // constants
 // frequency of orderbook depth writes (rounds)
@@ -173,6 +176,9 @@ impl ValidatorService {
         let store = &validator_state.validator_store;
         let metrics = &validator_state.metrics;
         let controller_router = &validator_state.controller_router;
+
+        //let (tx_pp_to_catchup, rx_pp_to_catchup) = channel(1_000);
+
         loop {
             while let Some(message) = rx_output.recv().await {
                 let (result, serialized_txn) = message;
@@ -192,12 +198,22 @@ impl ValidatorService {
                                 .await;
 
                             let block_number = store.block_number.load(std::sync::atomic::Ordering::SeqCst);
+
+                            // spawn a separate task for catchup controller
+                            //let catchup_router_clone = catchup_router.clone();
+                            //let store_clone = store.clone();
+                            let validator_state_clone = validator_state.clone();
+                            tokio::spawn(async move {
+                                Self::execute_catchup_transactions(validator_state_clone, block_number).await;
+                            });
+
                             // metrics process end of block
                             metrics.process_end_of_block(block, block_info);
                             // controller logic process end of block
                             controller_router
                                 .process_end_of_block(&store.post_process_store, block_number)
                                 .await;
+                            
                             // catchup generate
                             controller_router
                                 .create_catchup_state(&store.post_process_store, block_number)
@@ -212,6 +228,29 @@ impl ValidatorService {
                 }
             }
         }
+    }
+
+    // TODO: handle errors
+    async fn execute_catchup_transactions(validator_state: Arc<ValidatorState>, block_number: u64) {
+        let catchup_router = &validator_state.catchup_router;
+        let store = &validator_state.validator_store;
+
+        // run transactions through catchup router
+        if let Ok(opt) = store.post_process_store.block_store.read(block_number).await {
+            if let Some(block) = opt {
+                let transactions = block.transactions;
+                for (serialized_transaction, _) in &transactions {
+                    let consensus_transaction: ConsensusTransaction = bincode::deserialize(&serialized_transaction).unwrap();
+                    let transaction = consensus_transaction.get_payload().unwrap().transaction.unwrap();
+                    catchup_router.handle_consensus_transaction(&transaction).unwrap_or(());
+                }
+            }
+        }
+
+        // catchup generate
+        catchup_router
+            .create_catchup_state(&store.post_process_store, block_number)
+            .await;
     }
 
     async fn handle_transaction(

@@ -56,3 +56,8 @@ pub struct FuturesLimitOrderRequest {
     #[prost(bytes="bytes", tag="6")]
     pub market_admin: ::prost::bytes::Bytes,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CancelAllRequest {
+    #[prost(bytes="bytes", tag="1")]
+    pub target: ::prost::bytes::Bytes,
+}

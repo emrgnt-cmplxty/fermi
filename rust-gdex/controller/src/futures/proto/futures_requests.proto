@@ -43,3 +43,7 @@ message FuturesLimitOrderRequest {
     uint64 quantity = 5;
     bytes market_admin = 6;
 }
+
+message CancelAllRequest {
+    bytes target = 1;
+}

@@ -168,7 +168,7 @@ fn criterion_benchmark(c: &mut Criterion) {
 
         let mut i = 0;
         while i < 1_000 {
-            let signed_transaction: SignedTransaction = deserialize_protobuf(&signed_transaction_serialized).unwrap();
+            let _signed_transaction: SignedTransaction = deserialize_protobuf(&signed_transaction_serialized).unwrap();
             i += 1;
         }
     }

@@ -5,6 +5,7 @@ use crate::futures::{proto::*, types::*, utils::*};
 use crate::router::ControllerRouter;
 use crate::spot::proto::*;
 use crate::utils::engine::order_book::{OrderBookWrapper, OrderId, Orderbook};
+
 // TODO - include continuous OI calculation for FuturesMarket
 
 // gdex
@@ -18,7 +19,10 @@ use gdex_types::{
 };
 // external
 use async_trait::async_trait;
+
+
 use serde::{Deserialize, Serialize};
+use std::borrow::BorrowMut;
 use std::{
     collections::HashMap,
     convert::TryInto,
@@ -223,6 +227,41 @@ impl FuturesController {
         Ok(())
     }
 
+    fn cancel_open_orders(&mut self, sender: AccountPubKey, request: CancelAllRequest) -> Result<(), GDEXError>{
+        let account_key = AccountPubKey::from_bytes(&request.target).unwrap();
+        let sender_is_target = sender == account_key;
+
+        for (_, market_place) in &mut self.market_places {
+            let target_req_collateral = account_total_req_collateral(market_place, &account_key, None)?
+                .try_into()
+                .map_err(|_| GDEXError::Conversion)?;
+            let target_unrealized_pnl = account_unrealized_pnl(market_place, &account_key)?;
+
+            let target_deposit = *market_place
+                .deposits
+                .lock()
+                .unwrap()
+                .get(&sender)
+                .ok_or(GDEXError::AccountLookup)?;
+
+            let target_in_liq = (target_deposit + target_unrealized_pnl) < target_req_collateral;
+            if sender_is_target || target_in_liq {
+                for (_, market) in &mut market_place.markets {
+                    if let Some(futures_account) = market.borrow_mut().accounts.get(&account_key.clone()) {
+                        for o in &futures_account.open_orders.clone() {
+                            let cancel_request = CancelOrderRequest::new(market.base_asset_id, market.quote_asset_id, o.side, o.order_id);
+                            market.place_cancel_order(
+                                &sender,
+                                &cancel_request,
+                            )?;
+                        }
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
     fn futures_limit_order(
         &mut self,
         sender: AccountPubKey,
@@ -263,6 +302,31 @@ impl FuturesController {
             return Err(GDEXError::MarketplaceExistence);
         };
         Ok(())
+    }
+
+    fn cancel_order(
+        &mut self,
+        sender: AccountPubKey,
+        market_admin: AccountPubKey,
+        request: CancelOrderRequest,
+    ) -> Result<(), GDEXError> {
+        if let Some(market_place) = self.market_places.get_mut(&market_admin) {
+            // TODO - consider max orders per account, or some form of min balance increment per order
+            let market = market_place
+                .markets
+                .get_mut(&request.base_asset_id)
+                .ok_or(GDEXError::MarketExistence)?;
+            let is_owned = market
+                .order_to_account
+                .get(&request.order_id)
+                .ok_or(GDEXError::OrderRequest)
+                .unwrap()
+                .eq(&sender);
+            if is_owned {
+                market.place_cancel_order(&sender, &request);
+            }
+        }
+        return Err(GDEXError::MarketplaceExistence);
     }
 
     pub fn account_state_by_market(
@@ -532,13 +596,15 @@ impl OrderBookWrapper for FuturesMarket {
 
     fn update_state_on_cancel(
         &mut self,
-        _account: &AccountPubKey,
-        _order_id: u64,
+        account: &AccountPubKey,
+        order_id: u64,
         _side: OrderSide,
         _price: u64,
         _quantity: u64,
     ) -> Result<(), GDEXError> {
-        // TODO - implement cancel
-        Err(GDEXError::InvalidRequestTypeError)
+        self.order_to_account.remove(&order_id);
+        let futures_account = self.accounts.get_mut(account).ok_or(GDEXError::AccountLookup)?;
+        futures_account.open_orders.retain(|o| o.order_id != order_id);
+        Ok(())
     }
 }

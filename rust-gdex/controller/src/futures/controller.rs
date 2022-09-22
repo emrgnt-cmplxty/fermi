@@ -20,6 +20,7 @@ use gdex_types::{
 // external
 use async_trait::async_trait;
 
+use gdex_types::transaction::parse_order_side;
 use serde::{Deserialize, Serialize};
 use std::borrow::BorrowMut;
 use std::{
@@ -27,7 +28,6 @@ use std::{
     convert::TryInto,
     sync::{Arc, Mutex},
 };
-use gdex_types::transaction::parse_order_side;
 
 // CONSTANTS
 
@@ -114,7 +114,7 @@ impl FuturesController {
                     order_to_account: HashMap::new(),
                     orderbook: Orderbook::new(request.base_asset_id, market_place.quote_asset_id),
                     marketplace_deposits: Arc::downgrade(&market_place.deposits),
-                    liquidation_fee_percent: 10 as f64
+                    liquidation_fee_percent: 10 as f64,
                 },
             );
         } else {
@@ -228,7 +228,12 @@ impl FuturesController {
         Ok(())
     }
 
-    fn cancel_open_orders(&mut self, sender: AccountPubKey, market_admin: AccountPubKey, request: CancelAllRequest) -> Result<(), GDEXError> {
+    fn cancel_open_orders(
+        &mut self,
+        sender: AccountPubKey,
+        market_admin: AccountPubKey,
+        request: CancelAllRequest,
+    ) -> Result<(), GDEXError> {
         let account_key = AccountPubKey::from_bytes(&request.target).unwrap();
         let sender_is_target = sender == account_key;
 
@@ -334,8 +339,14 @@ impl FuturesController {
                 return Err(GDEXError::InsufficientCollateral); // TODO not liquidatable error
             }
 
-            let mut target_market = market_place.markets.get_mut(&request.base_asset_id).ok_or(GDEXError::MarketExistence)?;
-            let futures_account = target_market.accounts.get(&target_account).ok_or(GDEXError::AccountLookup)?;
+            let mut target_market = market_place
+                .markets
+                .get_mut(&request.base_asset_id)
+                .ok_or(GDEXError::MarketExistence)?;
+            let futures_account = target_market
+                .accounts
+                .get(&target_account)
+                .ok_or(GDEXError::AccountLookup)?;
 
             // open orders have to be closed first
             if !futures_account.open_orders.is_empty() {
@@ -350,9 +361,11 @@ impl FuturesController {
             // check liquidator has enough collateral to take over
             let parsed_order_side = parse_order_side(request.side)?;
             let liquidation_price = if parsed_order_side == OrderSide::Bid {
-                (target_market.latest_price as f64 * (100 as f64 - target_market.liquidation_fee_percent) / 100.0) as u64
+                (target_market.latest_price as f64 * (100 as f64 - target_market.liquidation_fee_percent) / 100.0)
+                    as u64
             } else {
-                (target_market.latest_price as f64 * (100 as f64 + target_market.liquidation_fee_percent) / 100.0) as u64
+                (target_market.latest_price as f64 * (100 as f64 + target_market.liquidation_fee_percent) / 100.0)
+                    as u64
             };
 
             let request_collateral_data = Some(CondensedOrder {
@@ -377,7 +390,10 @@ impl FuturesController {
 
             // effect the fill resulting from liquidator taking over
             // TODO get it again...
-            target_market = market_place.markets.get_mut(&request.base_asset_id).ok_or(GDEXError::MarketExistence)?;
+            target_market = market_place
+                .markets
+                .get_mut(&request.base_asset_id)
+                .ok_or(GDEXError::MarketExistence)?;
             let opposite_side = parse_order_side(request.side % 2 + 1)?;
             target_market.update_state_on_fill(&sender, 0, parsed_order_side, liquidation_price, request.quantity);
             target_market.update_state_on_fill(&target_account, 0, opposite_side, liquidation_price, request.quantity);

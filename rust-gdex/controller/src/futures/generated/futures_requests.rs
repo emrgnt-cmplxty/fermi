@@ -70,9 +70,11 @@ pub struct LiquidateRequest {
     #[prost(uint64, tag="3")]
     pub side: u64,
     #[prost(uint64, tag="4")]
+    pub price: u64,
+    #[prost(uint64, tag="5")]
     pub quantity: u64,
-    #[prost(bytes="bytes", tag="5")]
-    pub market_admin: ::prost::bytes::Bytes,
     #[prost(bytes="bytes", tag="6")]
+    pub market_admin: ::prost::bytes::Bytes,
+    #[prost(bytes="bytes", tag="7")]
     pub target: ::prost::bytes::Bytes,
 }

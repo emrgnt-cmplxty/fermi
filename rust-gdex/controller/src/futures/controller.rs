@@ -317,7 +317,7 @@ impl FuturesController {
     ) -> Result<(), GDEXError> {
         if let Some(market_place) = self.market_places.get_mut(&market_admin) {
             // check target acct is in liquidation
-            let target_account = AccountPubKey::from_bytes(&request.target)?;
+            let target_account = AccountPubKey::from_bytes(&request.target).map_err(|_| GDEXError::AccountLookup)?;
             let target_req_collateral = account_total_req_collateral(market_place, &target_account, None)?
                 .try_into()
                 .map_err(|_| GDEXError::Conversion)?;
@@ -334,25 +334,25 @@ impl FuturesController {
                 return Err(GDEXError::InsufficientCollateral); // TODO not liquidatable error
             }
 
-            let target_market = market_place.markets.get_mut(&request.base_asset_id).ok_or(GDEXError::MarketExistence)?;
+            let mut target_market = market_place.markets.get_mut(&request.base_asset_id).ok_or(GDEXError::MarketExistence)?;
             let futures_account = target_market.accounts.get(&target_account).ok_or(GDEXError::AccountLookup)?;
 
             // open orders have to be closed first
             if !futures_account.open_orders.is_empty() {
-                Err(GDEXError::OrderRequest) // TODO liq error
+                return Err(GDEXError::OrderRequest); // TODO liq error
             }
 
-            let target_position = futures_account.position.ok_or(GDEXError::OrderRequest)?;
+            let target_position = futures_account.position.as_ref().ok_or(GDEXError::OrderRequest)?;
             if target_position.side != request.side || target_position.quantity < request.quantity {
-                Err(GDEXError::OrderRequest) // TODO liq error
+                return Err(GDEXError::OrderRequest); // TODO liq error
             }
 
             // check liquidator has enough collateral to take over
             let parsed_order_side = parse_order_side(request.side)?;
             let liquidation_price = if parsed_order_side == OrderSide::Bid {
-                target_market.latest_price * (100 - target_market.liquidation_fee_percent) / 100
+                (target_market.latest_price as f64 * (100 as f64 - target_market.liquidation_fee_percent) / 100.0) as u64
             } else {
-                target_market.latest_price * (100 + target_market.liquidation_fee_percent) / 100
+                (target_market.latest_price as f64 * (100 as f64 + target_market.liquidation_fee_percent) / 100.0) as u64
             };
 
             let request_collateral_data = Some(CondensedOrder {
@@ -362,9 +362,7 @@ impl FuturesController {
                 base_asset_id: request.base_asset_id,
             });
 
-            let sender_req_collateral = account_total_req_collateral(market_place, &sender, request_collateral_data)?
-                .try_into()
-                .map_err(|_| GDEXError::Conversion)?;
+            let sender_req_collateral = account_total_req_collateral(market_place, &sender, request_collateral_data)?;
             let sender_unrealized_pnl = account_unrealized_pnl(market_place, &sender)?;
 
             let sender_deposit = *market_place
@@ -373,11 +371,13 @@ impl FuturesController {
                 .unwrap()
                 .get(&sender)
                 .ok_or(GDEXError::AccountLookup)?;
-            if sender_deposit + sender_unrealized_pnl < sender_req_collateral {
+            if sender_deposit + sender_unrealized_pnl < sender_req_collateral as i64 {
                 return Err(GDEXError::InsufficientCollateral);
             }
 
             // effect the fill resulting from liquidator taking over
+            // TODO get it again...
+            target_market = market_place.markets.get_mut(&request.base_asset_id).ok_or(GDEXError::MarketExistence)?;
             let opposite_side = parse_order_side(request.side % 2 + 1)?;
             target_market.update_state_on_fill(&sender, 0, parsed_order_side, liquidation_price, request.quantity);
             target_market.update_state_on_fill(&target_account, 0, opposite_side, liquidation_price, request.quantity);

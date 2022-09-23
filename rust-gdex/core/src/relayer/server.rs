@@ -165,6 +165,32 @@ impl Relayer for RelayerService {
             Err(err) => Err(Status::unknown(err.to_string())),
         }
     }
+    async fn get_latest_catchup_state(
+        &self,
+        _request: Request<RelayerGetLatestCatchupStateRequest>,
+    ) -> Result<Response<RelayerLatestCatchupStateResponse>, Status> {
+        let validator_state = &self.state;
+        let returned_value = validator_state
+            .validator_store
+            .post_process_store
+            .catchup_state_store
+            .read(0)
+            .await;
+
+        match returned_value {
+            Ok(opt) => {
+                if let Some(catchup_state) = opt {
+                    let catchup_state_bytes = bincode::serialize(&catchup_state).unwrap().into();
+                    return Ok(Response::new(RelayerLatestCatchupStateResponse {
+                        block_number: catchup_state.block_number,
+                        state: catchup_state_bytes
+                    }))
+                }
+                Err(Status::not_found("Catchup state was not found."))
+            },
+            Err(err) => Err(Status::unknown(err.to_string()))
+        }
+    }
     async fn get_futures_user(
         &self,
         request: Request<RelayerGetFuturesUserRequest>,

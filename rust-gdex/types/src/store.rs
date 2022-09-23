@@ -11,9 +11,14 @@ use mysten_store::{
     rocks::{open_cf, DBMap, TypedStoreError},
     Map, Store,
 };
+use serde::{Deserialize, Serialize};
 
 // catchup state
-pub type CatchupState = Vec<Vec<u8>>;
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct CatchupState {
+    pub block_number: u64,
+    pub state: Vec<Vec<u8>>
+}
 
 pub struct PostProcessStore {
     // last block info

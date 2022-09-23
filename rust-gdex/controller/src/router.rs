@@ -20,7 +20,7 @@ use tracing::info;
 // constants
 const CATCHUP_STATE_FREQUENCY: u64 = 100;
 
-use gdex_types::{error::GDEXError, store::PostProcessStore, transaction::Transaction};
+use gdex_types::{error::GDEXError, store::{PostProcessStore, CatchupState}, transaction::Transaction};
 // external
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -182,10 +182,15 @@ impl ControllerRouter {
                 block_number, catchup_size
             );
 
-            // store catchup state
+            let catchup_state = CatchupState {
+                block_number: block_number,
+                state: total_catchup_state
+            };
+
+            // store catchup state in first position
             post_process_store
                 .catchup_state_store
-                .write(block_number, total_catchup_state)
+                .write(0, catchup_state)
                 .await;
         }
     }

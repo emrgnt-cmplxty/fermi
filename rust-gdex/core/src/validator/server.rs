@@ -177,7 +177,7 @@ impl ValidatorService {
     /// Receives an ordered list of certificates and apply any application-specific logic.
     async fn post_process(
         mut rx_output: Receiver<(HandledTransaction, SerializedTransaction)>,
-        mut tx_pp_to_catchup: Sender<u64>,
+        tx_pp_to_catchup: Sender<u64>,
         validator_state: Arc<ValidatorState>
     ) {
         // create vec of transactions to store in blocks on disk

@@ -76,6 +76,20 @@ pub struct RelayerLatestOrderbookDepthResponse {
     #[prost(message, repeated, tag="2")]
     pub asks: ::prost::alloc::vec::Vec<Depth>,
 }
+// fast catchup state
+
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RelayerGetLatestCatchupStateRequest {
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RelayerLatestCatchupStateResponse {
+    #[prost(bytes="bytes", tag="1")]
+    pub state: ::prost::bytes::Bytes,
+    #[prost(uint64, tag="2")]
+    pub block_number: u64,
+}
+// futures orders
+
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RelayerGetFuturesUserRequest {
     #[prost(bytes="bytes", tag="1")]
@@ -486,6 +500,29 @@ pub mod relayer_client {
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/services.Relayer/GetLatestOrderbookDepth",
+            );
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        /// request catchup state
+        pub async fn get_latest_catchup_state(
+            &mut self,
+            request: impl tonic::IntoRequest<super::RelayerGetLatestCatchupStateRequest>,
+        ) -> Result<
+            tonic::Response<super::RelayerLatestCatchupStateResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/services.Relayer/GetLatestCatchupState",
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
@@ -919,6 +956,14 @@ pub mod relayer_server {
             tonic::Response<super::RelayerLatestOrderbookDepthResponse>,
             tonic::Status,
         >;
+        /// request catchup state
+        async fn get_latest_catchup_state(
+            &self,
+            request: tonic::Request<super::RelayerGetLatestCatchupStateRequest>,
+        ) -> Result<
+            tonic::Response<super::RelayerLatestCatchupStateResponse>,
+            tonic::Status,
+        >;
         /// request futures positions
         async fn get_futures_user(
             &self,
@@ -1138,6 +1183,49 @@ pub mod relayer_server {
                     let fut = async move {
                         let inner = inner.0;
                         let method = GetLatestOrderbookDepthSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/services.Relayer/GetLatestCatchupState" => {
+                    #[allow(non_camel_case_types)]
+                    struct GetLatestCatchupStateSvc<T: Relayer>(pub Arc<T>);
+                    impl<
+                        T: Relayer,
+                    > tonic::server::UnaryService<
+                        super::RelayerGetLatestCatchupStateRequest,
+                    > for GetLatestCatchupStateSvc<T> {
+                        type Response = super::RelayerLatestCatchupStateResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<
+                                super::RelayerGetLatestCatchupStateRequest,
+                            >,
+                        ) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut = async move {
+                                (*inner).get_latest_catchup_state(request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = GetLatestCatchupStateSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

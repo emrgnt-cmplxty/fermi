@@ -38,6 +38,8 @@ pub use services::{
     RelayerLatestOrderbookDepthResponse,
     RelayerMetricsRequest,
     RelayerMetricsResponse,
+    RelayerGetLatestCatchupStateRequest,
+    RelayerLatestCatchupStateResponse
 };
 
 impl Serialize for FuturesPosition {

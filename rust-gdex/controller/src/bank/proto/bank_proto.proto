@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package bank_proto;
+
+// REQUEST ENUM
+
+enum BankRequestType {
+    CREATE_ASSET = 0;
+    PAYMENT = 1;
+}
+
+enum BankEventType {
+    ASSET_CREATED = 0;
+    PAYMENT_SUCCESS = 1;
+}
+
+// REQUESTS
+
+message CreateAssetRequest {
+    uint64 dummy = 1;
+}
+
+message PaymentRequest {
+    bytes receiver = 1;
+    uint64 asset_id = 2;
+    uint64 quantity = 3;  
+}
+
+// EVENTS
+
+message AssetCreatedEvent {
+    uint64 asset_id = 1;
+}
+
+message PaymentSuccessEvent {
+    bytes sender = 1;
+    bytes receiver = 2;
+    uint64 asset_id = 3;
+    uint64 quantity = 4;
+}

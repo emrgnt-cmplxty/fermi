@@ -1,6 +1,7 @@
 // crate
 use crate::bank::controller::BankController;
 use crate::controller::Controller;
+use crate::event_manager::{EventEmitter, EventManager};
 use crate::futures::{proto::*, types::*, utils::*};
 use crate::router::ControllerRouter;
 use crate::spot::proto::*;
@@ -34,11 +35,14 @@ const DEFAULT_MAX_LEVERAGE: u64 = 20;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FuturesController {
+    // controller state
     pub controller_account: AccountPubKey,
     bank_controller: Arc<Mutex<BankController>>,
     // A market_place is created by an admin
     // and is a collection of futures market interfaces
     market_places: HashMap<AccountPubKey, Marketplace>,
+    // shared
+    event_manager: Arc<Mutex<EventManager>>,
 }
 
 impl Default for FuturesController {
@@ -47,6 +51,8 @@ impl Default for FuturesController {
             controller_account: AccountPubKey::from_bytes(FUTURES_CONTROLLER_ACCOUNT_PUBKEY).unwrap(),
             bank_controller: Arc::new(Mutex::new(BankController::default())), // TEMPORARY
             market_places: HashMap::new(),
+            // shared state
+            event_manager: Arc::new(Mutex::new(EventManager::new())), // TEMPORARY
         }
     }
 }
@@ -59,6 +65,8 @@ impl FuturesController {
             controller_account,
             bank_controller,
             market_places: HashMap::new(),
+            // shared state
+            event_manager: Arc::new(Mutex::new(EventManager::new())), // TEMPORARY
         }
     }
 
@@ -112,6 +120,7 @@ impl FuturesController {
                     order_to_account: HashMap::new(),
                     orderbook: Orderbook::new(request.base_asset_id, market_place.quote_asset_id),
                     marketplace_deposits: Arc::downgrade(&market_place.deposits),
+                    event_manager: Arc::clone(&self.event_manager),
                 },
             );
         } else {
@@ -343,6 +352,7 @@ impl FuturesController {
 impl Controller for FuturesController {
     fn initialize(&mut self, controller_router: &ControllerRouter) {
         self.bank_controller = Arc::clone(&controller_router.bank_controller);
+        self.event_manager = Arc::clone(&controller_router.event_manager);
     }
 
     fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
@@ -405,6 +415,18 @@ impl Controller for FuturesController {
         _process_block_store: &ProcessBlockStore,
         _block_number: u64,
     ) {
+    }
+}
+
+impl EventEmitter for FuturesController {
+    fn get_event_manager(&mut self) -> &mut Arc<Mutex<EventManager>> {
+        &mut self.event_manager
+    }
+}
+
+impl EventEmitter for FuturesMarket {
+    fn get_event_manager(&mut self) -> &mut Arc<Mutex<EventManager>> {
+        &mut self.event_manager
     }
 }
 
@@ -558,5 +580,43 @@ impl OrderBookWrapper for FuturesMarket {
     ) -> Result<(), GDEXError> {
         // TODO - implement cancel
         Err(GDEXError::InvalidRequestTypeError)
+    }
+
+    // event emitters
+
+    fn emit_order_new_event(&mut self, account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) {
+        self.emit_event(&FuturesOrderNewEvent::new(account, order_id, side, price, quantity));
+    }
+
+    fn emit_order_partial_fill_event(
+        &mut self,
+        account: &AccountPubKey,
+        order_id: u64,
+        side: u64,
+        price: u64,
+        quantity: u64,
+    ) {
+        self.emit_event(&FuturesOrderFillEvent::new(account, order_id, side, price, quantity));
+    }
+
+    fn emit_order_fill_event(&mut self, account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) {
+        self.emit_event(&FuturesOrderPartialFillEvent::new(
+            account, order_id, side, price, quantity,
+        ));
+    }
+
+    fn emit_order_update_event(
+        &mut self,
+        account: &AccountPubKey,
+        order_id: u64,
+        side: u64,
+        price: u64,
+        quantity: u64,
+    ) {
+        self.emit_event(&FuturesOrderUpdateEvent::new(account, order_id, side, price, quantity));
+    }
+
+    fn emit_order_cancel_event(&mut self, account: &AccountPubKey, order_id: u64) {
+        self.emit_event(&FuturesOrderCancelEvent::new(account, order_id));
     }
 }

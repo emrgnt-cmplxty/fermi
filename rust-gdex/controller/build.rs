@@ -13,7 +13,7 @@ fn main() -> Result<()> {
 
 fn build_proto(controller_name: &str) -> Result<()> {
     let proto_dir = format!("./src/{}/proto", controller_name);
-    let requests_proto_file = format!("./src/{}/proto/{}_requests.proto", controller_name, controller_name);
+    let requests_proto_file = format!("./src/{}/proto/{}_proto.proto", controller_name, controller_name);
     let generated_dir = format!("./src/{}/generated/", controller_name);
 
     let proto_files = &[requests_proto_file];

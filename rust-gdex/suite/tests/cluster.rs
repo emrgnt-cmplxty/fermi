@@ -28,7 +28,7 @@ pub mod cluster_test_suite {
             RelayerGetFuturesMarketsRequest, RelayerGetFuturesUserRequest, RelayerGetLatestBlockInfoRequest,
             RelayerGetLatestOrderbookDepthRequest,
         },
-        transaction::ConsensusTransaction,
+        transaction::{ConsensusTransaction, ExecutionResultBody},
         utils,
     };
     // mysten
@@ -406,7 +406,7 @@ pub mod cluster_test_suite {
         // Preparing serialized buf for transactions
         let mut serialized_txns_buf = Vec::new();
         let serialized_txn = consensus_transaction.serialize().unwrap();
-        serialized_txns_buf.push((serialized_txn, Ok(())));
+        serialized_txns_buf.push((serialized_txn, Ok(ExecutionResultBody::new())));
         let certificate = dummy_consensus_output.certificate;
 
         let initial_certificate = certificate.clone();

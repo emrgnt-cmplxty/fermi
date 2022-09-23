@@ -7,14 +7,19 @@
 // crate
 use crate::{
     bank::controller::BankController, consensus::controller::ConsensusController, controller::Controller,
-    futures::controller::FuturesController, spot::controller::SpotController, stake::controller::StakeController,
+    event_manager::EventManager, futures::controller::FuturesController, spot::controller::SpotController,
+    stake::controller::StakeController,
 };
 
 // gdex
+use gdex_types::{
+    error::GDEXError,
+    store::ProcessBlockStore,
+    transaction::{ExecutionResultBody, Transaction},
+};
 
 // mysten
 
-use gdex_types::{error::GDEXError, store::ProcessBlockStore, transaction::Transaction};
 // external
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -48,6 +53,9 @@ impl ControllerType {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ControllerRouter {
+    // state
+    pub event_manager: Arc<Mutex<EventManager>>,
+    // controllers
     pub consensus_controller: Arc<Mutex<ConsensusController>>,
     pub bank_controller: Arc<Mutex<BankController>>,
     pub stake_controller: Arc<Mutex<StakeController>>,
@@ -57,6 +65,9 @@ pub struct ControllerRouter {
 
 impl Default for ControllerRouter {
     fn default() -> Self {
+        // state
+        let event_manager = Arc::new(Mutex::new(EventManager::new()));
+        // controllers
         let bank_controller = Arc::new(Mutex::new(BankController::default()));
         let stake_controller = Arc::new(Mutex::new(StakeController::default()));
         let spot_controller = Arc::new(Mutex::new(SpotController::default()));
@@ -64,6 +75,9 @@ impl Default for ControllerRouter {
         let futures_controller = Arc::new(Mutex::new(FuturesController::default()));
 
         Self {
+            // state
+            event_manager,
+            // controllers
             consensus_controller,
             bank_controller,
             stake_controller,
@@ -110,45 +124,45 @@ impl ControllerRouter {
         }
     }
 
-    pub fn handle_consensus_transaction(&self, transaction: &Transaction) -> Result<(), GDEXError> {
+    pub fn handle_consensus_transaction(&self, transaction: &Transaction) -> Result<ExecutionResultBody, GDEXError> {
+        // reset execution result // TODO eventually we wont need this as we will have strong guarantees that this
+        // val gets rest on each iteration but for now we can fail halfway though (in theory) so must be reset
+        self.event_manager.lock().unwrap().reset();
+
         let target_controller = ControllerType::from_i32(transaction.target_controller)?;
         match target_controller {
             ControllerType::Consensus => {
-                return self
-                    .consensus_controller
+                self.consensus_controller
                     .lock()
                     .unwrap()
-                    .handle_consensus_transaction(transaction);
+                    .handle_consensus_transaction(transaction)?;
             }
             ControllerType::Bank => {
-                return self
-                    .bank_controller
+                self.bank_controller
                     .lock()
                     .unwrap()
-                    .handle_consensus_transaction(transaction);
+                    .handle_consensus_transaction(transaction)?;
             }
             ControllerType::Stake => {
-                return self
-                    .stake_controller
+                self.stake_controller
                     .lock()
                     .unwrap()
-                    .handle_consensus_transaction(transaction);
+                    .handle_consensus_transaction(transaction)?;
             }
             ControllerType::Spot => {
-                return self
-                    .spot_controller
+                self.spot_controller
                     .lock()
                     .unwrap()
-                    .handle_consensus_transaction(transaction);
+                    .handle_consensus_transaction(transaction)?;
             }
             ControllerType::Futures => {
-                return self
-                    .futures_controller
+                self.futures_controller
                     .lock()
                     .unwrap()
-                    .handle_consensus_transaction(transaction);
+                    .handle_consensus_transaction(transaction)?;
             }
         }
+        Ok(self.event_manager.lock().unwrap().emit())
     }
 
     pub async fn process_end_of_block(&self, process_block_store: &ProcessBlockStore, block_number: u64) {

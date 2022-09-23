@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package futures_requests;
+package futures_proto;
 
 // ENUMS
 
@@ -13,6 +13,14 @@ enum FuturesRequestType {
     ACCOUNT_DEPOSIT = 5;
     ACCOUNT_WITHDRAWAL = 6;
     FUTURES_LIMIT_ORDER = 7;
+}
+
+enum FuturesEventType {
+    ORDER_NEW = 0;
+    ORDER_FILL = 1;
+    ORDER_PARTIAL_FILL = 2;
+    ORDER_UPDATE = 3;
+    ORDER_CANCEL = 4;
 }
 
 // REQUESTS
@@ -55,4 +63,43 @@ message FuturesLimitOrderRequest {
     uint64 price = 4;
     uint64 quantity = 5;
     bytes market_admin = 6;
+}
+
+// EVENTS
+
+message FuturesOrderNewEvent {
+    bytes account = 1;
+    uint64 order_id =2;
+    uint64 side = 3;
+    uint64 price = 4;
+    uint64 quantity = 5;
+}
+
+message FuturesOrderFillEvent {
+    bytes account = 1;
+    uint64 order_id =2;
+    uint64 side = 3;
+    uint64 price = 4;
+    uint64 quantity = 5;
+}
+
+message FuturesOrderPartialFillEvent {
+    bytes account = 1;
+    uint64 order_id =2;
+    uint64 side = 3;
+    uint64 price = 4;
+    uint64 quantity = 5;
+}
+
+message FuturesOrderUpdateEvent {
+    bytes account = 1;
+    uint64 order_id =2;
+    uint64 side = 3;
+    uint64 price = 4;
+    uint64 quantity = 5;
+}
+
+message FuturesOrderCancelEvent {
+    bytes account = 1;
+    uint64 order_id =2;
 }

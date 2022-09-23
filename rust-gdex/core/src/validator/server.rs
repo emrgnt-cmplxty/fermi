@@ -13,7 +13,7 @@ use gdex_types::{
     crypto::KeypairTraits,
     error::GDEXError,
     proto::{Empty, TransactionSubmitter, TransactionSubmitterServer},
-    transaction::{ConsensusTransaction, SignedTransaction},
+    transaction::{ConsensusTransaction, ExecutionResultBody, SignedTransaction},
 };
 use multiaddr::Multiaddr;
 use narwhal_config::Committee as ConsensusCommittee;
@@ -31,7 +31,7 @@ use tracing::{error, info, trace};
 
 // constants
 // frequency of orderbook depth writes (rounds)
-type ExecutionResult = Result<(), GDEXError>;
+type ExecutionResult = Result<ExecutionResultBody, GDEXError>;
 type HandledTransaction = Result<(ConsensusOutput, ExecutionIndices, ExecutionResult), SubscriberError>;
 
 /// Contains and orchestrates a tokio handle where the validator server runs

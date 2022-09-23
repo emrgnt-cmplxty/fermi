@@ -1,4 +1,5 @@
 // crate
+use crate::event_manager::EventManager;
 use crate::utils::engine::order_book::{OrderId, Orderbook};
 
 // gdex
@@ -74,6 +75,8 @@ pub struct FuturesMarket {
     pub orderbook: Orderbook,
     // reference to parent Marketplace deposits
     pub marketplace_deposits: Weak<Mutex<HashMap<AccountPubKey, i64>>>,
+    // shared
+    pub event_manager: Arc<Mutex<EventManager>>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

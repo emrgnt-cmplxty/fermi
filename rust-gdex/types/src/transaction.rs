@@ -242,7 +242,8 @@ impl Hash for Transaction {
 
 // EXECUTION RESULT
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[allow(clippy::new_without_default)]
+#[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 pub struct ExecutionResultBody {
     pub events: Vec<ExecutionEvent>,
 }
@@ -269,7 +270,7 @@ pub trait Event {
     fn get_event_type_id() -> i32;
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 pub struct ExecutionEvent {
     pub controller_id: i32,
     pub event_type: i32,

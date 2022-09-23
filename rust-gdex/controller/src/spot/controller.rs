@@ -457,7 +457,7 @@ impl OrderBookWrapper for SpotOrderbook {
     // event emitters
 
     fn emit_order_new_event(&mut self, account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) {
-        self.emit_event(&SpotOrderNewEvent::new(&account, order_id, side, price, quantity));
+        self.emit_event(&SpotOrderNewEvent::new(account, order_id, side, price, quantity));
     }
 
     fn emit_order_partial_fill_event(
@@ -468,12 +468,12 @@ impl OrderBookWrapper for SpotOrderbook {
         price: u64,
         quantity: u64,
     ) {
-        self.emit_event(&SpotOrderFillEvent::new(&account, order_id, side, price, quantity));
+        self.emit_event(&SpotOrderFillEvent::new(account, order_id, side, price, quantity));
     }
 
     fn emit_order_fill_event(&mut self, account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) {
         self.emit_event(&SpotOrderPartialFillEvent::new(
-            &account, order_id, side, price, quantity,
+            account, order_id, side, price, quantity,
         ));
     }
 
@@ -485,11 +485,11 @@ impl OrderBookWrapper for SpotOrderbook {
         price: u64,
         quantity: u64,
     ) {
-        self.emit_event(&SpotOrderUpdateEvent::new(&account, order_id, side, price, quantity));
+        self.emit_event(&SpotOrderUpdateEvent::new(account, order_id, side, price, quantity));
     }
 
     fn emit_order_cancel_event(&mut self, account: &AccountPubKey, order_id: u64) {
-        self.emit_event(&SpotOrderCancelEvent::new(&account, order_id));
+        self.emit_event(&SpotOrderCancelEvent::new(account, order_id));
     }
 }
 
@@ -569,7 +569,7 @@ pub mod spot_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
-        let mut event_manager = EventManager::new();
+        let event_manager = EventManager::new();
         let event_manager_ref = Arc::new(Mutex::new(event_manager));
 
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
@@ -687,7 +687,7 @@ pub mod spot_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
-        let mut event_manager = EventManager::new();
+        let event_manager = EventManager::new();
         let event_manager_ref = Arc::new(Mutex::new(event_manager));
 
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
@@ -747,7 +747,7 @@ pub mod spot_tests {
 
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
-        let mut event_manager = EventManager::new();
+        let event_manager = EventManager::new();
         let event_manager_ref = Arc::new(Mutex::new(event_manager));
 
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
@@ -834,7 +834,7 @@ pub mod spot_tests {
 
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
-        let mut event_manager = EventManager::new();
+        let event_manager = EventManager::new();
         let event_manager_ref = Arc::new(Mutex::new(event_manager));
 
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
@@ -1016,7 +1016,7 @@ pub mod spot_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
-        let mut event_manager = EventManager::new();
+        let event_manager = EventManager::new();
         let event_manager_ref = Arc::new(Mutex::new(event_manager));
 
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
@@ -1082,7 +1082,7 @@ pub mod spot_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
-        let mut event_manager = EventManager::new();
+        let event_manager = EventManager::new();
         let event_manager_ref = Arc::new(Mutex::new(event_manager));
 
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
@@ -1165,7 +1165,7 @@ pub mod spot_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
-        let mut event_manager = EventManager::new();
+        let event_manager = EventManager::new();
         let event_manager_ref = Arc::new(Mutex::new(event_manager));
 
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();

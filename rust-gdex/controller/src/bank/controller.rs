@@ -196,7 +196,7 @@ impl BankController {
         self.update_balance(receiver, asset_id, quantity, Modifier::Increment)?;
 
         // emit event
-        self.emit_event(&PaymentSuccessEvent::new(&sender, &receiver, asset_id, quantity));
+        self.emit_event(&PaymentSuccessEvent::new(sender, receiver, asset_id, quantity));
 
         Ok(())
     }

@@ -564,7 +564,7 @@ impl OrderBookWrapper for FuturesMarket {
     // event emitters
 
     fn emit_order_new_event(&mut self, account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) {
-        self.emit_event(&FuturesOrderNewEvent::new(&account, order_id, side, price, quantity));
+        self.emit_event(&FuturesOrderNewEvent::new(account, order_id, side, price, quantity));
     }
 
     fn emit_order_partial_fill_event(
@@ -575,12 +575,12 @@ impl OrderBookWrapper for FuturesMarket {
         price: u64,
         quantity: u64,
     ) {
-        self.emit_event(&FuturesOrderFillEvent::new(&account, order_id, side, price, quantity));
+        self.emit_event(&FuturesOrderFillEvent::new(account, order_id, side, price, quantity));
     }
 
     fn emit_order_fill_event(&mut self, account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) {
         self.emit_event(&FuturesOrderPartialFillEvent::new(
-            &account, order_id, side, price, quantity,
+            account, order_id, side, price, quantity,
         ));
     }
 
@@ -592,10 +592,10 @@ impl OrderBookWrapper for FuturesMarket {
         price: u64,
         quantity: u64,
     ) {
-        self.emit_event(&FuturesOrderUpdateEvent::new(&account, order_id, side, price, quantity));
+        self.emit_event(&FuturesOrderUpdateEvent::new(account, order_id, side, price, quantity));
     }
 
     fn emit_order_cancel_event(&mut self, account: &AccountPubKey, order_id: u64) {
-        self.emit_event(&FuturesOrderCancelEvent::new(&account, order_id));
+        self.emit_event(&FuturesOrderCancelEvent::new(account, order_id));
     }
 }

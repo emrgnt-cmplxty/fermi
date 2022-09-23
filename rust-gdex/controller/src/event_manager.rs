@@ -18,6 +18,12 @@ pub struct EventManager {
     pub current_execution_result: ExecutionResultBody,
 }
 
+impl Default for EventManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl EventManager {
     pub fn new() -> Self {
         EventManager {

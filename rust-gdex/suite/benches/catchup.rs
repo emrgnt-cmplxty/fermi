@@ -10,12 +10,12 @@ use criterion::*;
 use gdex_controller::{
     bank::controller::BankController,
     controller::Controller,
+    event_manager::EventManager,
     spot::{
         controller::{SpotController, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
         proto::LimitOrderRequest,
     },
     utils::engine::order_book::OrderBookWrapper,
-    event_manager::EventManager
 };
 // gdex
 use fastcrypto::{generate_production_keypair, traits::KeyPair as _};

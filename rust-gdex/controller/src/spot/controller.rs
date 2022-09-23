@@ -161,13 +161,13 @@ impl SpotController {
         controller_account: AccountPubKey,
         orderbooks: HashMap<AssetPairKey, SpotOrderbook>,
         bank_controller: Arc<Mutex<BankController>>,
-        event_manager: Arc<Mutex<EventManager>>
+        event_manager: Arc<Mutex<EventManager>>,
     ) -> Self {
         SpotController {
             controller_account,
             orderbooks,
             bank_controller,
-            event_manager
+            event_manager,
         }
     }
 

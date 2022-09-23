@@ -4,8 +4,10 @@
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-core/src/authority_server.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bcuse super::state::ValidatorState;
 use crate::{
     config::node::NodeConfig,
-    validator::{consensus_adapter::ConsensusAdapter, restarter::NodeRestarter,
-        state::{ValidatorState, ExecutionResult}
+    validator::{
+        consensus_adapter::ConsensusAdapter,
+        restarter::NodeRestarter,
+        state::{ExecutionResult, ValidatorState},
     },
 };
 use anyhow::anyhow;

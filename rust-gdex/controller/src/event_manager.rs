@@ -13,7 +13,7 @@ use std::sync::{Arc, Mutex};
 
 // INTERFACE
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct EventManager {
     pub current_execution_result: ExecutionResultBody,
 }

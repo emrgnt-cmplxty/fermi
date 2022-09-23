@@ -1,13 +1,13 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use gdex_controller::{
     bank::controller::BankController,
+    event_manager::EventManager,
     spot::controller::{SpotOrderbook, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
     spot::proto::LimitOrderRequest,
     utils::engine::{
         order_book::{OrderBookWrapper, Orderbook},
         orders::create_limit_order_request,
     },
-    event_manager::EventManager,
 };
 use gdex_types::{
     account::{account_test_functions::generate_keypair_vec, AccountPubKey},

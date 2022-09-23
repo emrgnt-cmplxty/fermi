@@ -94,7 +94,7 @@ impl BenchHelper {
             accounts: Vec::new(),
             validator_client: None::<TransactionSubmitterClient<Channel>>,
             relayer_client: None::<RelayerClient<Channel>>,
-            // TODO - avoid hard coding by directly calculating created assets...
+            // TODO - https://github.com/gdexorg/gdex/issues/157 - avoid hard coding by directly calculating created assets...
             base_asset_id: 1,
             quote_asset_id: 2,
         }
@@ -198,7 +198,7 @@ impl BenchHelper {
     }
 
     /// Create a new asset in the bench helper
-    // TODO - Fetch created asset number to build this stack properly.
+    // TODO - https://github.com/gdexorg/gdex/issues/157 - Fetch created asset number to build this stack properly.
     pub async fn create_new_asset(&mut self, dummy: u8) {
         let recent_block_hash = self.get_recent_block_digest().await;
         let transaction = create_signed_asset_creation_transaction(&self.primary_keypair, recent_block_hash, dummy);
@@ -208,7 +208,7 @@ impl BenchHelper {
     }
 
     /// Create a new asset in the bench helper
-    // TODO - Fetch created asset number to build this stack properly.
+    // TODO - https://github.com/gdexorg/gdex/issues/157 - Fetch created asset number to build this stack properly.
     pub async fn create_orderbook(&mut self) {
         let recent_block_hash = self.get_recent_block_digest().await;
         let transaction = create_signed_orderbook_transaction(
@@ -225,7 +225,7 @@ impl BenchHelper {
     pub async fn fund_accounts(&mut self) {
         // preload transactions to avoid mutability issues
         let mut transactions = Vec::new();
-        // TODO - check if this causes failures, if so we need a smarter way to fund accounts as we cannot borrow inside loop below
+        // TODO - https://github.com/gdexorg/gdex/issues/157 - check if this causes failures, if so we need a smarter way to fund accounts as we cannot borrow inside loop below
         let recent_block_hash = self.get_recent_block_digest().await;
 
         for receiver_keypair in &self.accounts {

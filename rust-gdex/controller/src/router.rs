@@ -125,7 +125,9 @@ impl ControllerRouter {
     }
 
     pub fn handle_consensus_transaction(&self, transaction: &Transaction) -> Result<ExecutionResultBody, GDEXError> {
-        // reset execution result // TODO eventually we wont need this as we will have strong guarantees that this
+        // reset execution result
+        // TODO - https://github.com/gdexorg/gdex/issues/176 - elimintate the need for reset by more properly handling errors
+        // eventually we wont need this as we will have strong guarantees that this
         // val gets rest on each iteration but for now we can fail halfway though (in theory) so must be reset
         self.event_manager.lock().unwrap().reset();
 

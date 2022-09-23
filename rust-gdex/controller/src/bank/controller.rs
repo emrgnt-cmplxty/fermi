@@ -1,13 +1,8 @@
-//! Creates new assets and manages user balances
-//!
-//! TODO
-//! 0.) ADD MISSING FEATURES TO ASSET WORKFLOW, LIKE OWNER TOKEN MINTING, VARIABLE INITIAL MINT AMT., ...
-//! 1.) MAKE ROBUST ERROR HANDLING FOR ALL FUNCTIONS ~~ DONE
-//! 2.) ADD OWNER FUNCTIONS
-//! 3.) BETTER BANK ACCOUNT PUB KEY HANDLING SYSTEM & ADDRESS
-//!
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
+
+// TODO - https://github.com/gdexorg/gdex/issues/168 - Add support for additional asset params (amount, decimals, name)
+// TODO - https://github.com/gdexorg/gdex/issues/168 - Add admin functions for assets
 
 // IMPORTS
 
@@ -45,7 +40,7 @@ pub enum Modifier {
 
 // CONSTANTS
 
-// TODO need to find valid vanity address for bank controller
+// TODO - https://github.com/gdexorg/gdex/issues/169 - implement coherent system for controller account pubkeys
 pub const BANK_CONTROLLER_ACCOUNT_PUBKEY: &[u8] = b"STAKECONTROLLERAAAAAAAAAAAAAAAAA";
 
 // 10 billion w/ 6 decimals, e.g. ALGO creation specs.

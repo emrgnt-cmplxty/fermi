@@ -1,3 +1,5 @@
+// TODO - https://github.com/gdexorg/gdex/issues/170 - add support for market orders
+
 // crate
 use crate::bank::controller::BankController;
 use crate::controller::Controller;
@@ -6,7 +8,6 @@ use crate::futures::{proto::*, types::*, utils::*};
 use crate::router::ControllerRouter;
 use crate::spot::proto::*;
 use crate::utils::engine::order_book::{OrderBookWrapper, OrderId, Orderbook};
-// TODO - include continuous OI calculation for FuturesMarket
 
 // gdex
 use gdex_types::{
@@ -85,8 +86,8 @@ impl FuturesController {
             return Err(GDEXError::FuturesInitialization);
         }
 
-        // TODO - check that quote asset exists
-        // TODO - add rails against arbitrary accounts creating markets
+        // TODO - https://github.com/gdexorg/gdex/issues/158 - check that quote asset exists
+        // TODO - https://github.com/gdexorg/gdex/issues/158 - add rails against arbitrary accounts creating markets
         self.market_places.insert(
             market_admin,
             Marketplace {
@@ -100,7 +101,7 @@ impl FuturesController {
     }
 
     fn create_market(&mut self, market_admin: AccountPubKey, request: CreateMarketRequest) -> Result<(), GDEXError> {
-        // TODO - Check that quote asset does not match base asset
+        // TODO - https://github.com/gdexorg/gdex/issues/158 - Check that quote asset does not match base asset
         // ensure that the market place is valid
         if let Some(market_place) = self.market_places.get_mut(&market_admin) {
             // if the market has already been created, return an error
@@ -134,7 +135,7 @@ impl FuturesController {
         market_admin: AccountPubKey,
         request: UpdateMarketParamsRequest,
     ) -> Result<(), GDEXError> {
-        // TODO - Check that quote asset does not match base asset
+        // TODO - https://github.com/gdexorg/gdex/issues/158 - Check that quote asset does not match base asset
         // ensure that the market place is valid
         if let Some(market_place) = self.market_places.get_mut(&market_admin) {
             if let Some(market) = market_place.markets.get_mut(&request.base_asset_id) {
@@ -162,7 +163,7 @@ impl FuturesController {
     }
 
     fn update_prices(&mut self, market_admin: AccountPubKey, request: UpdatePricesRequest) -> Result<(), GDEXError> {
-        // TODO - move to more robust system to ensure that the prices are being updated in the correct order
+        // TODO - https://github.com/gdexorg/gdex/issues/159 - move to more robust system to ensure that the prices are being updated in the correct order
         if request.latest_prices.len() != self.market_places.len() {
             return Err(GDEXError::MarketPrices);
         }
@@ -241,7 +242,8 @@ impl FuturesController {
         request: FuturesLimitOrderRequest,
     ) -> Result<(), GDEXError> {
         if let Some(market_place) = self.market_places.get_mut(&market_admin) {
-            // TODO - consider max orders per account, or some form of min balance increment per order
+            // TODO - https://github.com/gdexorg/gdex/issues/160 - consider max orders per account, or some form of min balance increment per order
+            // TODO - https://github.com/gdexorg/gdex/issues/160 - prevent users from self trading
             let request_collateral_data = Some(CondensedOrder {
                 price: request.price,
                 side: request.side,
@@ -356,7 +358,6 @@ impl Controller for FuturesController {
     }
 
     fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
-        // TODO - add initialization after finding appropriate address for controller account
         self.bank_controller
             .lock()
             .unwrap()
@@ -377,17 +378,17 @@ impl Controller for FuturesController {
                 self.create_market(sender, request)?;
             }
             FuturesRequestType::UpdateMarketParams => {
-                // TODO - add market_admin verification
+                // TODO - https://github.com/gdexorg/gdex/issues/161 - add market_admin verification
                 let request: UpdateMarketParamsRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 self.update_market_params(sender, request)?;
             }
             FuturesRequestType::UpdateTime => {
-                // TODO - add market_admin verification
+                // TODO - https://github.com/gdexorg/gdex/issues/161 - add market_admin verification
                 let request: UpdateTimeRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 self.update_time(sender, request)?;
             }
             FuturesRequestType::UpdatePrices => {
-                // TODO - add market_admin verification
+                // TODO - https://github.com/gdexorg/gdex/issues/161 - add market_admin verification
                 let request: UpdatePricesRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 self.update_prices(sender, request)?;
             }
@@ -400,7 +401,6 @@ impl Controller for FuturesController {
                 self.account_withdraw(sender, request)?;
             }
             FuturesRequestType::FuturesLimitOrder => {
-                // TODO - add signature verification
                 let request: FuturesLimitOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 let market_admin =
                     AccountPubKey::from_bytes(&request.market_admin).map_err(|_| GDEXError::InvalidAddress)?;
@@ -566,7 +566,7 @@ impl OrderBookWrapper for FuturesMarket {
         _price: u64,
         _quantity: u64,
     ) -> Result<(), GDEXError> {
-        // TODO - implement update
+        // TODO - https://github.com/gdexorg/gdex/issues/163 - implement update
         Err(GDEXError::InvalidRequestTypeError)
     }
 
@@ -578,7 +578,7 @@ impl OrderBookWrapper for FuturesMarket {
         _price: u64,
         _quantity: u64,
     ) -> Result<(), GDEXError> {
-        // TODO - implement cancel
+        // TODO - https://github.com/gdexorg/gdex/issues/163 - implement cancel
         Err(GDEXError::InvalidRequestTypeError)
     }
 

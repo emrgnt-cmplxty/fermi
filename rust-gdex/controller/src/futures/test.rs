@@ -349,7 +349,7 @@ pub mod futures_tests {
             .futures_limit_order(user_index, user_side, user_price_3, user_quantity_3)
             .unwrap();
 
-        // TODO - the assert below works, but residual rounding from price calculation has been added back in
+        // TODO - https://github.com/gdexorg/gdex/issues/166 - the assert below works, but residual rounding from price calculation has been added back in
         // can we easily calculate this dynamically?
         // e.g. in this example the residual is floor(1975 * .886...) = 70, where
         // the residual .886 comes from the rounding on price = quantity_1 * price_1 + quantity_2 * price_2 / quantity_1 + quantity_2

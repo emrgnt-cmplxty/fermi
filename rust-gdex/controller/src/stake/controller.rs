@@ -1,8 +1,3 @@
-//! Manages the staking of user funds
-//!
-//! TODO
-//! 0.) ADD SIZE CHECKS ON TRANSACTIONS
-//!
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 
@@ -139,7 +134,6 @@ impl StakeController {
         }
     }
 
-    // TODO #0 //
     pub fn unstake(&mut self, account_pub_key: &AccountPubKey, amount: u64) -> Result<(), GDEXError> {
         self.total_staked -= amount;
         self.bank_controller.lock().unwrap().transfer(
@@ -305,7 +299,6 @@ pub mod stake_tests {
         );
     }
 
-    // TODO #0 //
     #[test]
     #[should_panic]
     fn failed_stake() {

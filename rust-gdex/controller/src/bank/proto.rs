@@ -135,7 +135,7 @@ impl Event for PaymentSuccessEvent {
 
 // TRANSACTION BUILDERS
 
-// TODO get rid of dummy thing (pretty gross)
+// TODO - https://github.com/gdexorg/gdex/issues/168 - add real params
 pub fn create_create_asset_transaction(
     sender: &AccountPubKey,
     recent_block_hash: CertificateDigest,
@@ -172,7 +172,6 @@ pub mod bank_controller_test_functions {
         kp_receiver: &AccountKeyPair,
         amount: u64,
     ) -> SignedTransaction {
-        // TODO replace this with latest
         let dummy_batch_digest = CertificateDigest::new([0; DIGEST_LEN]);
 
         let transaction = create_payment_transaction(

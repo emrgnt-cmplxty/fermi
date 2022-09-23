@@ -294,6 +294,8 @@ impl ExecutionState for ValidatorState {
         // get transaction
         let transaction = signed_transaction.get_transaction()?;
 
+        // TODO - https://github.com/gdexorg/gdex/issues/162 - verify transaction signature prior to handling
+
         // cache confirmed transaction
         let uniqueness_check = self
             .validator_store

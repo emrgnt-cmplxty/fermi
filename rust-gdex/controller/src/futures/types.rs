@@ -16,8 +16,6 @@ use std::{
     sync::{Arc, Mutex, Weak},
 };
 
-// TODO - move futures .proto to this folder
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CondensedOrder {
     pub side: u64,
@@ -63,8 +61,6 @@ pub type AssetPrice = u64;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FuturesMarket {
     pub max_leverage: u64,
-    // TODO - it is gross to have to store the base and quote asset id here
-    // we should consider removing these from the orderbook
     pub base_asset_id: AssetId,
     pub quote_asset_id: AssetId,
     pub open_interest: u64,

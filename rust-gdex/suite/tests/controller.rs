@@ -6,12 +6,12 @@
 pub mod process_tests {
     use gdex_controller::{
         bank::controller::{BankController, CREATED_ASSET_BALANCE},
+        event_manager::EventManager,
         spot::{
             controller::{SpotOrderbook, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
             proto::LimitOrderRequest,
         },
         utils::engine::order_book::OrderBookWrapper,
-        event_manager::EventManager,
     };
     use gdex_types::{
         account::account_test_functions::generate_keypair_vec, account::AccountPubKey, asset::AssetId,
@@ -44,7 +44,7 @@ pub mod process_tests {
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
-        
+
         let event_manager = EventManager::new();
         let event_manager_ref = Arc::new(Mutex::new(event_manager));
 
@@ -94,7 +94,7 @@ pub mod process_tests {
         bank_controller.create_asset(account.public()).unwrap();
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
-        
+
         let event_manager = EventManager::new();
         let event_manager_ref = Arc::new(Mutex::new(event_manager));
 
@@ -153,7 +153,7 @@ pub mod process_tests {
             .unwrap();
 
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
-        
+
         let event_manager = EventManager::new();
         let event_manager_ref = Arc::new(Mutex::new(event_manager));
 
@@ -239,7 +239,7 @@ pub mod process_tests {
             .unwrap();
 
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
-        
+
         let event_manager = EventManager::new();
         let event_manager_ref = Arc::new(Mutex::new(event_manager));
 

@@ -1,13 +1,7 @@
-//! Creates orderbooks and manages their interactions
-//!
-//! TODO
-//! 0.) ADD MARKET ORDER SUPPORT
-//! 2.) RESTRICT overwrite_orderbook TO BENCH ONLY MODE
-//! 3.) CONSIDER ADDITIONAL FEATURES, LIKE ESCROW IMPLEMENTATION OR ORDER LIMITS
-//! 4.) CHECK PASSED ASSETS EXIST IN BANK MODULE
-//!
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
+
+// TODO - https://github.com/gdexorg/gdex/issues/171 - verify asset existence before use
 
 // IMPORTS
 
@@ -87,6 +81,7 @@ impl Controller for SpotController {
                 let request: CreateOrderbookRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 self.create_orderbook(request.base_asset_id, request.quote_asset_id)
             }
+            // TODO - https://github.com/gdexorg/gdex/issues/170 - add support for market orders
             SpotRequestType::MarketOrder => {
                 let request: MarketOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 match self
@@ -222,11 +217,8 @@ pub struct SpotOrderbook {
     // shared
     event_manager: Arc<Mutex<EventManager>>,
 }
-// TODO - remove all asserts from orderbook impl
-impl SpotOrderbook {
-    // CONSTRUCTOR
 
-    // TODO #4 //
+impl SpotOrderbook {
     pub fn new(
         base_asset_id: AssetId,
         quote_asset_id: AssetId,
@@ -253,7 +245,7 @@ impl SpotOrderbook {
         self.orderbook.get_orderbook_depth()
     }
 
-    // TODO #2 //
+    // TODO - https://github.com/gdexorg/gdex/issues/172 - Restrict overwrite_orderbook to benchmark only
     pub fn overwrite_orderbook(&mut self, new_orderbook: Orderbook) {
         self.order_to_account = HashMap::new();
         self.orderbook = new_orderbook;

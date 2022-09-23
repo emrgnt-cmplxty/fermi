@@ -91,7 +91,6 @@ async fn main() -> Result<()> {
     client.wait().await;
 
     // initialize the orderbook if running validator 0
-    // TODO - find a more intelligent way to avoid double-initialization of the orderbook client
     client.initialize(validator_url, relayer_url).await.unwrap();
 
     info!("Starting to send transactions...");

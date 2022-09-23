@@ -23,7 +23,7 @@ pub use futures_proto::*;
 
 // HELPER
 
-use crate::spot::proto::LimitOrderRequest; // TODO bad, controllers should not depend on eachother like this
+use crate::spot::proto::LimitOrderRequest; // TODO - https://github.com/gdexorg/gdex/issues/164 - bad, controllers should not depend on eachother like this
 impl From<FuturesLimitOrderRequest> for LimitOrderRequest {
     fn from(request: FuturesLimitOrderRequest) -> Self {
         Self {
@@ -159,7 +159,7 @@ impl Request for UpdatePricesRequest {
 
 // account deposit
 
-// TODO should we use u64 here rather than i64
+// TODO - https://github.com/gdexorg/gdex/issues/165 -should we use u64 here rather than i64
 impl AccountDepositRequest {
     pub fn new(quantity: i64, market_admin: &AccountPubKey) -> Self {
         AccountDepositRequest {
@@ -364,8 +364,6 @@ pub mod futures_controller_test_functions {
         price: u64,
         quantity: u64,
     ) -> SignedTransaction {
-        // TODO replace this with latest
-
         let request = FuturesLimitOrderRequest {
             base_asset_id,
             quote_asset_id,

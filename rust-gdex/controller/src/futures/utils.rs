@@ -9,7 +9,6 @@ use gdex_types::{
 };
 
 // HELPER FUNCTIONS
-// TODO - move to utils file when controller structure is more mature
 
 // combine two collateral datas into a single data by taking the weighted average of the prices
 pub(crate) fn combine_collateral_data(
@@ -140,7 +139,7 @@ pub(crate) fn account_market_req_collateral(
     market_req_collateral
 }
 
-// TODO - don't round up calc when orders and positions are empty
+// TODO - https://github.com/gdexorg/gdex/issues/167 - don't round up calc when orders and positions are empty
 pub(crate) fn get_account_total_req_collateral(
     market_place: &Marketplace,
     account: &AccountPubKey,

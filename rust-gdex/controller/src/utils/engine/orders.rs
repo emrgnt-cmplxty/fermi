@@ -10,7 +10,7 @@ use std::time::SystemTime;
 
 /* Constructors */
 
-// TODO, we need to remove timestamp, it is not useful in a consensus network
+// TODO - https://github.com/gdexorg/gdex/issues/173 - replace timestamp as a means of sorting, it is not sufficient (or really possible) in our current construction
 
 /// Create request for the new market order
 pub fn create_market_order_request(

@@ -14,7 +14,7 @@ pub mod futures_tests {
         error::GDEXError,
         order_book::OrderSide,
         proto::FuturesPosition,
-        transaction::Transaction,
+        transaction::{ExecutionResultBody, Transaction},
     };
     // mysten
     use narwhal_types::CertificateDigest;
@@ -86,7 +86,7 @@ pub mod futures_tests {
             Ok(())
         }
 
-        fn create_marketplace(&self) -> Result<(), GDEXError> {
+        fn create_marketplace(&self) -> Result<ExecutionResultBody, GDEXError> {
             let request = CreateMarketplaceRequest::new(self.quote_asset_id);
             let transaction = Transaction::new(
                 self.admin_key.public(),
@@ -96,7 +96,7 @@ pub mod futures_tests {
             self.controller_router.handle_consensus_transaction(&transaction)
         }
 
-        fn create_market(&self) -> Result<(), GDEXError> {
+        fn create_market(&self) -> Result<ExecutionResultBody, GDEXError> {
             let request = CreateMarketRequest::new(self.base_asset_id);
             let transaction = Transaction::new(
                 self.admin_key.public(),
@@ -106,7 +106,7 @@ pub mod futures_tests {
             self.controller_router.handle_consensus_transaction(&transaction)
         }
 
-        fn update_market_params(&self) -> Result<(), GDEXError> {
+        fn update_market_params(&self) -> Result<ExecutionResultBody, GDEXError> {
             let request = UpdateMarketParamsRequest::new(self.base_asset_id, TEST_MAX_LEVERAGE);
             let transaction = Transaction::new(
                 self.admin_key.public(),
@@ -116,7 +116,7 @@ pub mod futures_tests {
             self.controller_router.handle_consensus_transaction(&transaction)
         }
 
-        fn update_time(&self, latest_time: u64) -> Result<(), GDEXError> {
+        fn update_time(&self, latest_time: u64) -> Result<ExecutionResultBody, GDEXError> {
             let request = UpdateTimeRequest::new(latest_time);
             let transaction = Transaction::new(
                 self.admin_key.public(),
@@ -126,7 +126,7 @@ pub mod futures_tests {
             self.controller_router.handle_consensus_transaction(&transaction)
         }
 
-        fn update_prices(&self, latest_prices: Vec<u64>) -> Result<(), GDEXError> {
+        fn update_prices(&self, latest_prices: Vec<u64>) -> Result<ExecutionResultBody, GDEXError> {
             let request = UpdatePricesRequest::new(latest_prices);
             let transaction = Transaction::new(
                 self.admin_key.public(),
@@ -136,7 +136,7 @@ pub mod futures_tests {
             self.controller_router.handle_consensus_transaction(&transaction)
         }
 
-        fn account_deposit(&self, quantity: u64, sender: AccountPubKey) -> Result<(), GDEXError> {
+        fn account_deposit(&self, quantity: u64, sender: AccountPubKey) -> Result<ExecutionResultBody, GDEXError> {
             let request = AccountDepositRequest::new(
                 quantity.try_into().map_err(|_| GDEXError::Conversion)?,
                 self.admin_key.public(),
@@ -164,7 +164,7 @@ pub mod futures_tests {
             side: u64,
             price: u64,
             quantity: u64,
-        ) -> Result<(), GDEXError> {
+        ) -> Result<ExecutionResultBody, GDEXError> {
             let request = FuturesLimitOrderRequest::new(
                 self.base_asset_id,
                 self.quote_asset_id,
@@ -188,15 +188,15 @@ pub mod futures_tests {
                 .futures_controller
                 .lock()
                 .unwrap()
-                .account_total_req_collateral(self.admin_key.public(), self.user_keys[user_index].public())
+                .get_account_total_req_collateral(self.admin_key.public(), self.user_keys[user_index].public())
         }
 
-        fn get_user_state_by_market(&self, user_index: usize) -> Result<AccountState, GDEXError> {
+        fn get_user_state_by_market(&self, user_index: usize) -> Result<AccountStateByMarket, GDEXError> {
             self.controller_router
                 .futures_controller
                 .lock()
                 .unwrap()
-                .account_state_by_market(self.admin_key.public(), self.user_keys[user_index].public())
+                .get_account_state_by_market(self.admin_key.public(), self.user_keys[user_index].public())
         }
 
         fn get_user_unrealized_pnl(&self, user_index: usize) -> Result<i64, GDEXError> {
@@ -204,7 +204,7 @@ pub mod futures_tests {
                 .futures_controller
                 .lock()
                 .unwrap()
-                .account_unrealized_pnl(self.admin_key.public(), self.user_keys[user_index].public())
+                .get_account_unrealized_pnl(self.admin_key.public(), self.user_keys[user_index].public())
         }
 
         fn get_account_available_deposit(&self, user_index: usize) -> Result<i64, GDEXError> {
@@ -212,7 +212,7 @@ pub mod futures_tests {
                 .futures_controller
                 .lock()
                 .unwrap()
-                .account_available_deposit(self.admin_key.public(), self.user_keys[user_index].public())
+                .get_account_available_deposit(self.admin_key.public(), self.user_keys[user_index].public())
         }
     }
 
@@ -269,14 +269,14 @@ pub mod futures_tests {
             .unwrap()
             .pop()
             .unwrap()
-            .1
+            .2
             .unwrap();
         let taker_position = futures_tester
             .get_user_state_by_market(taker_index)
             .unwrap()
             .pop()
             .unwrap()
-            .1
+            .2
             .unwrap();
         // check taker and maker positions match
         assert!(maker_position.quantity == taker_position.quantity);
@@ -349,7 +349,7 @@ pub mod futures_tests {
             .futures_limit_order(user_index, user_side, user_price_3, user_quantity_3)
             .unwrap();
 
-        // TODO - the assert below works, but residual rounding from price calculation has been added back in
+        // TODO - https://github.com/gdexorg/gdex/issues/166 - the assert below works, but residual rounding from price calculation has been added back in
         // can we easily calculate this dynamically?
         // e.g. in this example the residual is floor(1975 * .886...) = 70, where
         // the residual .886 comes from the rounding on price = quantity_1 * price_1 + quantity_2 * price_2 / quantity_1 + quantity_2
@@ -366,7 +366,7 @@ pub mod futures_tests {
             .unwrap()
             .pop()
             .unwrap()
-            .1;
+            .2;
 
         assert!(user_position.is_none())
     }
@@ -429,13 +429,13 @@ pub mod futures_tests {
             .unwrap()
             .pop()
             .unwrap()
-            .1;
+            .2;
         let taker_position = futures_tester
             .get_user_state_by_market(taker_index)
             .unwrap()
             .pop()
             .unwrap()
-            .1;
+            .2;
 
         assert!(maker_position.is_none());
         assert!(taker_position.is_none());

@@ -118,25 +118,41 @@ pub struct FuturesOrder {
     pub price: u64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct RelayerFuturesUserResponse {
-    /// repeated FuturesOrder orders = 2;
+pub struct FuturesUserByMarket {
     #[prost(message, repeated, tag="1")]
-    pub positions: ::prost::alloc::vec::Vec<FuturesPosition>,
+    pub orders: ::prost::alloc::vec::Vec<FuturesOrder>,
+    #[prost(message, optional, tag="2")]
+    pub position: ::core::option::Option<FuturesPosition>,
+    #[prost(uint64, tag="3")]
+    pub quote_asset_id: u64,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RelayerFuturesUserResponse {
+    #[prost(message, repeated, tag="1")]
+    pub market_state: ::prost::alloc::vec::Vec<FuturesUserByMarket>,
+    #[prost(uint64, tag="2")]
+    pub total_collateral_req: u64,
+    #[prost(int64, tag="3")]
+    pub unrealized_pnl: i64,
+    #[prost(int64, tag="4")]
+    pub deposit: i64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RelayerGetFuturesMarketsRequest {
     #[prost(bytes="bytes", tag="1")]
-    pub user: ::prost::bytes::Bytes,
-    #[prost(bytes="bytes", tag="2")]
     pub market_admin: ::prost::bytes::Bytes,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct FuturesMarket {
     #[prost(uint64, tag="1")]
-    pub latest_price: u64,
+    pub oracle_price: u64,
     #[prost(uint64, tag="2")]
-    pub max_leverage: u64,
+    pub last_traded_price: u64,
     #[prost(uint64, tag="3")]
+    pub open_interest: u64,
+    #[prost(uint64, tag="4")]
+    pub max_leverage: u64,
+    #[prost(uint64, tag="5")]
     pub base_asset_id: u64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]

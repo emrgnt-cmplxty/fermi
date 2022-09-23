@@ -5,6 +5,8 @@ pub mod utils;
 
 pub mod controller;
 
+pub mod event_manager;
+
 pub mod bank;
 
 pub mod consensus;

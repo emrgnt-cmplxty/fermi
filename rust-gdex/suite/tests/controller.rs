@@ -6,6 +6,7 @@
 pub mod process_tests {
     use gdex_controller::{
         bank::controller::{BankController, CREATED_ASSET_BALANCE},
+        event_manager::EventManager,
         spot::{
             controller::{SpotOrderbook, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
             proto::LimitOrderRequest,
@@ -44,6 +45,9 @@ pub mod process_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let event_manager = EventManager::new();
+        let event_manager_ref = Arc::new(Mutex::new(event_manager));
+
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
@@ -52,6 +56,7 @@ pub mod process_tests {
             QUOTE_ASSET_ID,
             controller_account,
             Arc::clone(&bank_controller_ref),
+            Arc::clone(&event_manager_ref),
         );
 
         let bid_size: u64 = 100;
@@ -90,6 +95,9 @@ pub mod process_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let event_manager = EventManager::new();
+        let event_manager_ref = Arc::new(Mutex::new(event_manager));
+
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
@@ -98,6 +106,7 @@ pub mod process_tests {
             QUOTE_ASSET_ID,
             controller_account,
             Arc::clone(&bank_controller_ref),
+            Arc::clone(&event_manager_ref),
         );
 
         let bid_size: u64 = 100;
@@ -145,6 +154,9 @@ pub mod process_tests {
 
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let event_manager = EventManager::new();
+        let event_manager_ref = Arc::new(Mutex::new(event_manager));
+
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
@@ -153,6 +165,7 @@ pub mod process_tests {
             QUOTE_ASSET_ID,
             controller_account,
             Arc::clone(&bank_controller_ref),
+            Arc::clone(&event_manager_ref),
         );
 
         let bid_size_0: u64 = 100;
@@ -227,6 +240,9 @@ pub mod process_tests {
 
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let event_manager = EventManager::new();
+        let event_manager_ref = Arc::new(Mutex::new(event_manager));
+
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
@@ -235,6 +251,7 @@ pub mod process_tests {
             QUOTE_ASSET_ID,
             controller_account,
             Arc::clone(&bank_controller_ref),
+            Arc::clone(&event_manager_ref),
         );
 
         let bid_size_0: u64 = 95;

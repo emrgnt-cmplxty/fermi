@@ -143,20 +143,29 @@ message FuturesOrder {
     uint64 price = 4;
 }
 
+message FuturesUserByMarket {
+    repeated FuturesOrder orders = 1;
+    optional FuturesPosition position = 2;
+    uint64 quote_asset_id = 3;
+}
+
 message RelayerFuturesUserResponse {
-    repeated FuturesPosition positions = 1;
-    // repeated FuturesOrder orders = 2;
+    repeated FuturesUserByMarket market_state = 1;
+    uint64 total_collateral_req = 2;
+    int64 unrealized_pnl = 3;
+    int64 deposit = 4;
 }
 
 message RelayerGetFuturesMarketsRequest {
-    bytes user = 1;
-    bytes market_admin = 2;
+    bytes market_admin = 1;
 }
 
 message FuturesMarket {
-    uint64 latest_price = 1;
-    uint64 max_leverage = 2;
-    uint64 base_asset_id = 3;
+    uint64 oracle_price = 1;
+    uint64 last_traded_price = 2;
+    uint64 open_interest = 3;
+    uint64 max_leverage = 4;
+    uint64 base_asset_id = 5;
 }
 
 message RelayerFuturesMarketsResponse {

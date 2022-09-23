@@ -1,6 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use gdex_controller::{
     bank::controller::BankController,
+    event_manager::EventManager,
     spot::controller::{SpotOrderbook, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
     spot::proto::LimitOrderRequest,
     utils::engine::{
@@ -150,6 +151,9 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+    let event_manager = EventManager::new();
+    let event_manager_ref = Arc::new(Mutex::new(event_manager));
+
     let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
     let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
@@ -158,6 +162,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         quote_asset_id,
         controller_account,
         Arc::clone(&bank_controller_ref),
+        Arc::clone(&event_manager_ref),
     );
 
     // orderbook_interface.create_account(primary.public()).unwrap();

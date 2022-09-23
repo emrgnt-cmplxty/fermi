@@ -15,7 +15,7 @@ use gdex_types::{
     committee::{Committee, ValidatorName},
     error::GDEXError,
     store::PostProcessStore,
-    transaction::{ConsensusTransaction, SignedTransaction, Transaction, TransactionDigest},
+    transaction::{ConsensusTransaction, ExecutionResultBody, SignedTransaction, Transaction, TransactionDigest},
 };
 use narwhal_consensus::ConsensusOutput;
 use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
@@ -31,7 +31,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 use tracing::{info, trace};
-type ExecutionResult = Result<(), GDEXError>;
+pub type ExecutionResult = Result<ExecutionResultBody, GDEXError>;
 
 /// Tracks recently submitted transactions to implement transaction gating
 pub struct ValidatorStore {
@@ -297,6 +297,8 @@ impl ExecutionState for ValidatorState {
         // get transaction
         let transaction = signed_transaction.get_transaction()?;
 
+        // TODO - https://github.com/gdexorg/gdex/issues/162 - verify transaction signature prior to handling
+
         // cache confirmed transaction
         let uniqueness_check = self
             .validator_store
@@ -305,16 +307,21 @@ impl ExecutionState for ValidatorState {
         // if transaction is not unique stop execution
         if uniqueness_check.is_err() {
             self.metrics.transactions_executed_failed.inc();
-            return Ok((consensus_output.clone(), execution_indices, uniqueness_check));
+            // safe to unwrap error
+            return Ok((
+                consensus_output.clone(),
+                execution_indices,
+                Err(uniqueness_check.err().unwrap()),
+            ));
         }
 
-        let result = self.controller_router.handle_consensus_transaction(transaction);
+        let execution_result = self.controller_router.handle_consensus_transaction(transaction);
 
-        if result.is_err() {
+        if execution_result.is_err() {
             self.metrics.transactions_executed_failed.inc();
         }
 
-        Ok((consensus_output.clone(), execution_indices, result))
+        Ok((consensus_output.clone(), execution_indices, execution_result))
     }
 
     fn ask_consensus_write_lock(&self) -> bool {

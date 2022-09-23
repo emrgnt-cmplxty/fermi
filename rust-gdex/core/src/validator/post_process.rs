@@ -1,15 +1,16 @@
 // IMPORTS
 
 // local
-use crate::validator::state::ValidatorState;
+use crate::validator::{
+    state::ValidatorState,
+    server::HandledTransaction
+};
 
 // gdex
-use gdex_types::{error::GDEXError, transaction::ConsensusTransaction};
+use gdex_types::{transaction::{ConsensusTransaction, ExecutionResultBody}};
 
 // external
-use anyhow::Result;
-use narwhal_consensus::ConsensusOutput;
-use narwhal_executor::{ExecutionIndices, SerializedTransaction, SubscriberError};
+use narwhal_executor::{SerializedTransaction};
 use std::sync::Arc;
 use tokio::{
     sync::mpsc::{channel, Receiver, Sender},
@@ -18,8 +19,6 @@ use tokio::{
 use tracing::{error, info};
 
 // INTERFACE
-type ExecutionResult = Result<(), GDEXError>;
-type HandledTransaction = Result<(ConsensusOutput, ExecutionIndices, ExecutionResult), SubscriberError>;
 
 pub struct PostProcessService {}
 
@@ -151,7 +150,7 @@ impl BlockProcessor {
                         let consensus_transaction: ConsensusTransaction =
                             bincode::deserialize(serialized_transaction).unwrap();
                         let transaction = consensus_transaction.get_payload().unwrap().transaction.unwrap();
-                        catchup_router.handle_consensus_transaction(&transaction).unwrap_or(());
+                        catchup_router.handle_consensus_transaction(&transaction).unwrap_or(ExecutionResultBody::new());
                     }
                 }
 

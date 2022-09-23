@@ -4,14 +4,15 @@
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-core/src/authority_server.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bcuse super::state::ValidatorState;
 use crate::{
     config::node::NodeConfig,
-    validator::{consensus_adapter::ConsensusAdapter, restarter::NodeRestarter, state::ValidatorState},
+    validator::{consensus_adapter::ConsensusAdapter, restarter::NodeRestarter,
+        state::{ValidatorState, ExecutionResult}
+    },
 };
 use anyhow::anyhow;
 use async_trait::async_trait;
 use futures::StreamExt;
 use gdex_types::{
     crypto::KeypairTraits,
-    error::GDEXError,
     proto::{Empty, TransactionSubmitter, TransactionSubmitterServer},
     transaction::{ConsensusTransaction, SignedTransaction},
 };
@@ -31,8 +32,7 @@ use tracing::{info, trace};
 
 // constants
 // frequency of orderbook depth writes (rounds)
-type ExecutionResult = Result<(), GDEXError>;
-type HandledTransaction = Result<(ConsensusOutput, ExecutionIndices, ExecutionResult), SubscriberError>;
+pub type HandledTransaction = Result<(ConsensusOutput, ExecutionIndices, ExecutionResult), SubscriberError>;
 
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {

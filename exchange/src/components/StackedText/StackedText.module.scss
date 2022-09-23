@@ -1,0 +1,24 @@
+@import 'variables';
+@import 'mixins';
+
+.container {
+  display: inline-flex;
+  flex-direction: column; 
+  text-align: var(--text-align);
+  
+  .top {
+    line-height: 1;
+    padding-bottom: $s * 0.25;
+  }
+
+  .divider {
+    @include themify('border-color', 'palette.divider');
+    border-style: dashed;
+    border-bottom-width: 2px;
+  }
+  
+  .bottom {
+    line-height: 1;
+    padding-top: $s * 0.25;
+  }
+}

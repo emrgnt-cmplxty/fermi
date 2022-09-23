@@ -1,19 +1,15 @@
-//! Creates new assets and manages user balances
-//!
-//! TODO
-//! 0.) ADD MISSING FEATURES TO ASSET WORKFLOW, LIKE OWNER TOKEN MINTING, VARIABLE INITIAL MINT AMT., ...
-//! 1.) MAKE ROBUST ERROR HANDLING FOR ALL FUNCTIONS ~~ DONE
-//! 2.) ADD OWNER FUNCTIONS
-//! 3.) BETTER BANK ACCOUNT PUB KEY HANDLING SYSTEM & ADDRESS
-//!
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
+
+// TODO - https://github.com/gdexorg/gdex/issues/168 - Add support for additional asset params (amount, decimals, name)
+// TODO - https://github.com/gdexorg/gdex/issues/168 - Add admin functions for assets
 
 // IMPORTS
 
 // crate
 use crate::bank::proto::*;
 use crate::controller::Controller;
+use crate::event_manager::{EventEmitter, EventManager};
 use crate::router::ControllerRouter;
 
 // gdex
@@ -45,7 +41,7 @@ pub enum Modifier {
 
 // CONSTANTS
 
-// TODO need to find valid vanity address for bank controller
+// TODO - https://github.com/gdexorg/gdex/issues/169 - implement coherent system for controller account pubkeys
 pub const BANK_CONTROLLER_ACCOUNT_PUBKEY: &[u8] = b"STAKECONTROLLERAAAAAAAAAAAAAAAAA";
 
 // 10 billion w/ 6 decimals, e.g. ALGO creation specs.
@@ -55,26 +51,34 @@ pub const CREATED_ASSET_BALANCE: u64 = 10_000_000_000_000_000;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BankController {
+    // controller state
     controller_account: AccountPubKey,
     asset_id_to_asset: HashMap<AssetId, Asset>,
     bank_accounts: HashMap<AccountPubKey, BankAccount>,
     n_assets: u64,
+    // shared
+    event_manager: Arc<Mutex<EventManager>>,
 }
 
 impl Default for BankController {
     fn default() -> Self {
         Self {
+            // controller state
             controller_account: AccountPubKey::from_bytes(BANK_CONTROLLER_ACCOUNT_PUBKEY).unwrap(),
             asset_id_to_asset: HashMap::new(),
             bank_accounts: HashMap::new(),
             n_assets: 0,
+            // shared state
+            event_manager: Arc::new(Mutex::new(EventManager::new())), // TEMPORARY
         }
     }
 }
 
 #[async_trait]
 impl Controller for BankController {
-    fn initialize(&mut self, _master_controller: &ControllerRouter) {}
+    fn initialize(&mut self, controller_router: &ControllerRouter) {
+        self.event_manager = Arc::clone(&controller_router.event_manager);
+    }
 
     fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
         Ok(())
@@ -109,6 +113,12 @@ impl Controller for BankController {
             Ok(v) => Ok(v),
             Err(_) => Err(GDEXError::SerializationError),
         }
+    }
+}
+
+impl EventEmitter for BankController {
+    fn get_event_manager(&mut self) -> &mut Arc<Mutex<EventManager>> {
+        &mut self.event_manager
     }
 }
 
@@ -188,6 +198,9 @@ impl BankController {
         self.update_balance(sender, asset_id, quantity, Modifier::Decrement)?;
         self.update_balance(receiver, asset_id, quantity, Modifier::Increment)?;
 
+        // emit event
+        self.emit_event(&PaymentSuccessEvent::new(sender, receiver, asset_id, quantity));
+
         Ok(())
     }
 
@@ -214,6 +227,10 @@ impl BankController {
         );
 
         self.update_balance(owner_pub_key, self.n_assets, CREATED_ASSET_BALANCE, Modifier::Increment)?;
+
+        // emit event
+        self.emit_event(&AssetCreatedEvent::new(self.n_assets));
+
         // increment asset counter & return less the increment
         self.n_assets += 1;
 

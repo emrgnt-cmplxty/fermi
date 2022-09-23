@@ -15,6 +15,7 @@ use gdex_controller::{
         proto::LimitOrderRequest,
     },
     utils::engine::order_book::OrderBookWrapper,
+    event_manager::EventManager
 };
 // gdex
 use fastcrypto::{generate_production_keypair, traits::KeyPair as _};
@@ -82,6 +83,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         controller_account,
         orderbooks,
         bank_controller.clone(),
+        Arc::new(Mutex::new(EventManager::new())), // TEMPORARY
     )));
 
     // create orderbooks

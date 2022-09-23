@@ -7,7 +7,7 @@ use crate::router::ControllerType;
 use gdex_types::{
     account::AccountPubKey,
     error::GDEXError,
-    transaction::{Request, RequestTypeEnum},
+    transaction::{Event, EventTypeEnum, Request, RequestTypeEnum},
 };
 
 // external
@@ -15,15 +15,15 @@ use prost::bytes::Bytes;
 
 // MODULE IMPORTS
 
-#[path = "./generated/futures_requests.rs"]
+#[path = "./generated/futures_proto.rs"]
 #[rustfmt::skip]
 #[allow(clippy::all)]
-mod futures_requests;
-pub use futures_requests::*;
+mod futures_proto;
+pub use futures_proto::*;
 
 // HELPER
 
-use crate::spot::proto::LimitOrderRequest; // TODO bad, controllers should not depend on eachother like this
+use crate::spot::proto::LimitOrderRequest; // TODO - https://github.com/gdexorg/gdex/issues/164 - bad, controllers should not depend on eachother like this
 impl From<FuturesLimitOrderRequest> for LimitOrderRequest {
     fn from(request: FuturesLimitOrderRequest) -> Self {
         Self {
@@ -49,6 +49,19 @@ impl RequestTypeEnum for FuturesRequestType {
             5 => Ok(FuturesRequestType::AccountDeposit),
             6 => Ok(FuturesRequestType::AccountWithdrawal),
             7 => Ok(FuturesRequestType::FuturesLimitOrder),
+            _ => Err(GDEXError::DeserializationError),
+        }
+    }
+}
+
+impl EventTypeEnum for FuturesEventType {
+    fn event_type_from_i32(value: i32) -> Result<Self, GDEXError> {
+        match value {
+            0 => Ok(FuturesEventType::OrderNew),
+            1 => Ok(FuturesEventType::OrderFill),
+            2 => Ok(FuturesEventType::OrderPartialFill),
+            3 => Ok(FuturesEventType::OrderUpdate),
+            4 => Ok(FuturesEventType::OrderCancel),
             _ => Err(GDEXError::DeserializationError),
         }
     }
@@ -146,7 +159,7 @@ impl Request for UpdatePricesRequest {
 
 // account deposit
 
-// TODO should we use u64 here rather than i64
+// TODO - https://github.com/gdexorg/gdex/issues/165 -should we use u64 here rather than i64
 impl AccountDepositRequest {
     pub fn new(quantity: i64, market_admin: &AccountPubKey) -> Self {
         AccountDepositRequest {
@@ -216,6 +229,120 @@ impl Request for FuturesLimitOrderRequest {
     }
 }
 
+// EVENTS
+
+// order new
+
+impl FuturesOrderNewEvent {
+    pub fn new(account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) -> Self {
+        FuturesOrderNewEvent {
+            account: Bytes::from(account.as_ref().to_vec()),
+            order_id,
+            side,
+            price,
+            quantity,
+        }
+    }
+}
+
+impl Event for FuturesOrderNewEvent {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_event_type_id() -> i32 {
+        FuturesEventType::OrderNew as i32
+    }
+}
+
+// order fill
+
+impl FuturesOrderFillEvent {
+    pub fn new(account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) -> Self {
+        FuturesOrderFillEvent {
+            account: Bytes::from(account.as_ref().to_vec()),
+            order_id,
+            side,
+            price,
+            quantity,
+        }
+    }
+}
+
+impl Event for FuturesOrderFillEvent {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_event_type_id() -> i32 {
+        FuturesEventType::OrderFill as i32
+    }
+}
+
+// order partial fill
+
+impl FuturesOrderPartialFillEvent {
+    pub fn new(account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) -> Self {
+        FuturesOrderPartialFillEvent {
+            account: Bytes::from(account.as_ref().to_vec()),
+            order_id,
+            side,
+            price,
+            quantity,
+        }
+    }
+}
+
+impl Event for FuturesOrderPartialFillEvent {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_event_type_id() -> i32 {
+        FuturesEventType::OrderPartialFill as i32
+    }
+}
+
+// order update
+
+impl FuturesOrderUpdateEvent {
+    pub fn new(account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) -> Self {
+        FuturesOrderUpdateEvent {
+            account: Bytes::from(account.as_ref().to_vec()),
+            order_id,
+            side,
+            price,
+            quantity,
+        }
+    }
+}
+
+impl Event for FuturesOrderUpdateEvent {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_event_type_id() -> i32 {
+        FuturesEventType::OrderUpdate as i32
+    }
+}
+
+// order cancel
+
+impl FuturesOrderCancelEvent {
+    pub fn new(account: &AccountPubKey, order_id: u64) -> Self {
+        FuturesOrderCancelEvent {
+            account: Bytes::from(account.as_ref().to_vec()),
+            order_id,
+        }
+    }
+}
+
+impl Event for FuturesOrderCancelEvent {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_event_type_id() -> i32 {
+        FuturesEventType::OrderCancel as i32
+    }
+}
+
 /// Begin externally available testing functions
 #[cfg(any(test, feature = "testing"))]
 pub mod futures_controller_test_functions {
@@ -237,8 +364,6 @@ pub mod futures_controller_test_functions {
         price: u64,
         quantity: u64,
     ) -> SignedTransaction {
-        // TODO replace this with latest
-
         let request = FuturesLimitOrderRequest {
             base_asset_id,
             quote_asset_id,

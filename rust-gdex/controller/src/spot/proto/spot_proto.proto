@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package spot_requests;
+package spot_proto;
 
 // ENUMS
 
@@ -10,6 +10,14 @@ enum SpotRequestType {
     LIMIT_ORDER = 2;
     UPDATE_ORDER = 3;
     CANCEL_ORDER = 4;
+}
+
+enum SpotEventType {
+    ORDER_NEW = 0;
+    ORDER_FILL = 1;
+    ORDER_PARTIAL_FILL = 2;
+    ORDER_UPDATE = 3;
+    ORDER_CANCEL = 4;
 }
 
 // REQUESTS
@@ -48,4 +56,43 @@ message CancelOrderRequest {
     uint64 quote_asset_id = 2;
     uint64 side = 3;
     uint64 order_id = 4;
+}
+
+// EVENTS
+
+message SpotOrderNewEvent {
+    bytes account = 1;
+    uint64 order_id =2;
+    uint64 side = 3;
+    uint64 price = 4;
+    uint64 quantity = 5;
+}
+
+message SpotOrderFillEvent {
+    bytes account = 1;
+    uint64 order_id =2;
+    uint64 side = 3;
+    uint64 price = 4;
+    uint64 quantity = 5;
+}
+
+message SpotOrderPartialFillEvent {
+    bytes account = 1;
+    uint64 order_id =2;
+    uint64 side = 3;
+    uint64 price = 4;
+    uint64 quantity = 5;
+}
+
+message SpotOrderUpdateEvent {
+    bytes account = 1;
+    uint64 order_id =2;
+    uint64 side = 3;
+    uint64 price = 4;
+    uint64 quantity = 5;
+}
+
+message SpotOrderCancelEvent {
+    bytes account = 1;
+    uint64 order_id =2;
 }

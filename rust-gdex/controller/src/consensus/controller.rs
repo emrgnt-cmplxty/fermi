@@ -7,6 +7,7 @@
 // crate
 use crate::controller::Controller;
 use crate::router::ControllerRouter;
+use crate::event_manager::{EventManager, EventEmitter};
 
 // gdex
 use gdex_types::{
@@ -32,9 +33,12 @@ const DEFAULT_MAX_DELAY_MILLIS: u64 = 200; // .2 sec
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ConsensusController {
+    // controller state
     controller_account: AccountPubKey,
     pub batch_size: usize,
     pub max_batch_delay: Duration,
+    // shared
+    event_manager: Arc<Mutex<EventManager>>,
 }
 
 impl Default for ConsensusController {
@@ -43,13 +47,17 @@ impl Default for ConsensusController {
             controller_account: AccountPubKey::from_bytes(CONSENSUS_CONTROLLER_ACCOUNT_PUBKEY).unwrap(),
             batch_size: DEFAULT_BATCH_SIZE,
             max_batch_delay: Duration::from_millis(DEFAULT_MAX_DELAY_MILLIS),
+            // shared state
+            event_manager: Arc::new(Mutex::new(EventManager::new())), // TEMPORARY
         }
     }
 }
 
 #[async_trait]
 impl Controller for ConsensusController {
-    fn initialize(&mut self, _master_controller: &ControllerRouter) {}
+    fn initialize(&mut self, controller_router: &ControllerRouter) {
+        self.event_manager = Arc::clone(&controller_router.event_manager);
+    }
 
     fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
         Ok(())
@@ -64,5 +72,11 @@ impl Controller for ConsensusController {
         _process_block_store: &ProcessBlockStore,
         _block_number: u64,
     ) {
+    }
+}
+ 
+impl EventEmitter for ConsensusController {   
+    fn get_event_manager(&mut self) -> &mut Arc<Mutex<EventManager>> {
+        &mut self.event_manager
     }
 }

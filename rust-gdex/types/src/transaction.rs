@@ -240,6 +240,60 @@ impl Hash for Transaction {
     }
 }
 
+// EXECUTION RESULT
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+pub struct ExecutionResultBody {
+    pub events: Vec<ExecutionEvent>
+}
+
+impl ExecutionResultBody {
+    pub fn new() -> Self {
+        ExecutionResultBody {
+            events: Vec::new()
+        }
+    }
+}
+
+// EVENT TYPE
+
+// TODO kinda dumb to have 2 different traits for something functionally identical to RequestTypeEnum
+pub trait EventTypeEnum {
+    fn event_type_from_i32(value: i32) -> Result<Self, GDEXError>
+    where
+        Self: Sized;
+}
+
+// EXECUTION EVENT
+
+pub trait Event {
+    fn get_controller_id() -> i32;
+    fn get_event_type_id() -> i32;
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+pub struct ExecutionEvent {
+    pub controller_id: i32,
+    pub event_type: i32,
+    pub event_bytes: Vec<u8>,
+}
+
+impl ExecutionEvent {
+    pub fn new<T: Event + Message + std::default::Default>(
+        event: &T,
+    ) -> Self {
+        ExecutionEvent {
+            controller_id: T::get_controller_id(),
+            event_type: T::get_event_type_id(),
+            event_bytes: serialize_protobuf(event),
+        }
+    }
+
+    pub fn get_event_type<T: EventTypeEnum>(&self) -> Result<T, GDEXError> {
+        T::event_type_from_i32(self.event_type)
+    }
+}
+
 // ENUM CONVERSIONS
 // TODO gotta be a better way to do this
 

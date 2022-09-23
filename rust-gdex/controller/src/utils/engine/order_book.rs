@@ -745,6 +745,52 @@ pub trait OrderBookWrapper {
         quantity: u64,
     ) -> Result<(), GDEXError>;
 
+    // event helpers
+
+    fn emit_order_new_event(
+        &mut self,
+        account: &AccountPubKey,
+        order_id: u64,
+        side: u64,
+        price: u64,
+        quantity: u64,
+    );
+    
+    fn emit_order_partial_fill_event(
+        &mut self,
+        account: &AccountPubKey,
+        order_id: u64,
+        side: u64,
+        price: u64,
+        quantity: u64,
+    );
+    
+    fn emit_order_fill_event(
+        &mut self,
+        account: &AccountPubKey,
+        order_id: u64,
+        side: u64,
+        price: u64,
+        quantity: u64,
+    );
+    
+    fn emit_order_update_event(
+        &mut self,
+        account: &AccountPubKey,
+        order_id: u64,
+        side: u64,
+        price: u64,
+        quantity: u64,
+    );
+    
+    fn emit_order_cancel_event(
+        &mut self,
+        account: &AccountPubKey,
+        order_id: u64,
+    );
+
+    // result processing
+
     fn process_order_result(
         &mut self,
         account: &AccountPubKey,
@@ -767,6 +813,8 @@ pub trait OrderBookWrapper {
                     }
                     // insert new order to map
                     self.set_order(*order_id, account.clone())?;
+                    // emit order new event
+                    self.emit_order_new_event(account, *order_id, *side as u64, *price, *quantity);
                 }
                 // subsequent orders are expected to be an PartialFill or Fill results
                 Ok(Success::PartiallyFilled {
@@ -779,6 +827,8 @@ pub trait OrderBookWrapper {
                     // update user balances
                     let existing_pub_key = self.get_pub_key_from_order_id(order_id);
                     self.update_state_on_fill(&existing_pub_key, *order_id, *side, *price, *quantity)?;
+                    // emit order partial fill event
+                    self.emit_order_partial_fill_event(&existing_pub_key, *order_id, *side as u64, *price, *quantity);
                 }
                 Ok(Success::Filled {
                     order_id,
@@ -793,6 +843,8 @@ pub trait OrderBookWrapper {
                     // TODO - Uncomment remove below after diagnosing how this can cause failures
                     // remove order from map
                     //self.order_to_account.remove(order_id).ok_or(GDEXError::OrderRequest)?;
+                    // emit order fill event
+                    self.emit_order_fill_event(&existing_pub_key, *order_id, *side as u64, *price, *quantity);
                 }
                 Ok(Success::Updated {
                     order_id,
@@ -813,6 +865,8 @@ pub trait OrderBookWrapper {
                         *price,
                         *quantity,
                     )?;
+                    // emit order update event
+                    self.emit_order_update_event(&existing_pub_key, *order_id, *side as u64, *price, *quantity);
                 }
                 Ok(Success::Cancelled {
                     order_id,
@@ -824,6 +878,8 @@ pub trait OrderBookWrapper {
                     // order has been cancelled from order book, update states
                     let existing_pub_key = self.get_pub_key_from_order_id(order_id);
                     self.update_state_on_cancel(&existing_pub_key, *order_id, *side, *price, *quantity)?;
+                    // emit order cancel event
+                    self.emit_order_cancel_event(&existing_pub_key, *order_id);
                 }
                 Err(_failure) => {
                     return Err(GDEXError::OrderRequest);

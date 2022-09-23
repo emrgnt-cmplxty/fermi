@@ -56,6 +56,67 @@ pub struct FuturesLimitOrderRequest {
     #[prost(bytes="bytes", tag="6")]
     pub market_admin: ::prost::bytes::Bytes,
 }
+// EVENTS
+
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct FuturesOrderNewEvent {
+    #[prost(bytes="bytes", tag="1")]
+    pub account: ::prost::bytes::Bytes,
+    #[prost(uint64, tag="2")]
+    pub order_id: u64,
+    #[prost(uint64, tag="3")]
+    pub side: u64,
+    #[prost(uint64, tag="4")]
+    pub price: u64,
+    #[prost(uint64, tag="5")]
+    pub quantity: u64,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct FuturesOrderFillEvent {
+    #[prost(bytes="bytes", tag="1")]
+    pub account: ::prost::bytes::Bytes,
+    #[prost(uint64, tag="2")]
+    pub order_id: u64,
+    #[prost(uint64, tag="3")]
+    pub side: u64,
+    #[prost(uint64, tag="4")]
+    pub price: u64,
+    #[prost(uint64, tag="5")]
+    pub quantity: u64,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct FuturesOrderPartialFillEvent {
+    #[prost(bytes="bytes", tag="1")]
+    pub account: ::prost::bytes::Bytes,
+    #[prost(uint64, tag="2")]
+    pub order_id: u64,
+    #[prost(uint64, tag="3")]
+    pub side: u64,
+    #[prost(uint64, tag="4")]
+    pub price: u64,
+    #[prost(uint64, tag="5")]
+    pub quantity: u64,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct FuturesOrderUpdateEvent {
+    #[prost(bytes="bytes", tag="1")]
+    pub account: ::prost::bytes::Bytes,
+    #[prost(uint64, tag="2")]
+    pub order_id: u64,
+    #[prost(uint64, tag="3")]
+    pub side: u64,
+    #[prost(uint64, tag="4")]
+    pub price: u64,
+    #[prost(uint64, tag="5")]
+    pub quantity: u64,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct FuturesOrderCancelEvent {
+    #[prost(bytes="bytes", tag="1")]
+    pub account: ::prost::bytes::Bytes,
+    #[prost(uint64, tag="2")]
+    pub order_id: u64,
+}
 // ENUMS
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
@@ -69,4 +130,13 @@ pub enum FuturesRequestType {
     AccountDeposit = 5,
     AccountWithdrawal = 6,
     FuturesLimitOrder = 7,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum FuturesEventType {
+    OrderNew = 0,
+    OrderFill = 1,
+    OrderPartialFill = 2,
+    OrderUpdate = 3,
+    OrderCancel = 4,
 }

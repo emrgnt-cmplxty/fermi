@@ -12,6 +12,7 @@
 use crate::bank::controller::BankController;
 use crate::controller::Controller;
 use crate::router::ControllerRouter;
+use crate::event_manager::{EventManager, EventEmitter};
 
 // gdex
 use gdex_types::{
@@ -40,10 +41,13 @@ pub const STAKE_CONTROLLER_ACCOUNT_PUBKEY: &[u8] = b"STAKECONTROLLERAAAAAAAAAAAA
 /// The stake controller is responsible for accessing & modifying user balances
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct StakeController {
+    // controller state
     controller_account: AccountPubKey,
     stake_accounts: HashMap<AccountPubKey, StakeAccount>,
     bank_controller: Arc<Mutex<BankController>>,
     total_staked: u64,
+    // shared
+    event_manager: Arc<Mutex<EventManager>>,
 }
 
 impl Default for StakeController {
@@ -53,6 +57,8 @@ impl Default for StakeController {
             stake_accounts: HashMap::new(),
             total_staked: 0,
             bank_controller: Arc::new(Mutex::new(BankController::default())), // TEMPORARY
+            // shared state
+            event_manager: Arc::new(Mutex::new(EventManager::new())), // TEMPORARY
         }
     }
 }
@@ -61,6 +67,7 @@ impl Default for StakeController {
 impl Controller for StakeController {
     fn initialize(&mut self, controller_router: &ControllerRouter) {
         self.bank_controller = Arc::clone(&controller_router.bank_controller);
+        self.event_manager = Arc::clone(&controller_router.event_manager);
     }
 
     fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
@@ -80,6 +87,12 @@ impl Controller for StakeController {
         _process_block_store: &ProcessBlockStore,
         _block_number: u64,
     ) {
+    }
+}
+
+impl EventEmitter for StakeController {
+    fn get_event_manager(&mut self) -> &mut Arc<Mutex<EventManager>> {
+        &mut self.event_manager
     }
 }
 

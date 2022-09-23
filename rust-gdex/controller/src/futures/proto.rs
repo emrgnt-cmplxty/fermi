@@ -7,7 +7,7 @@ use crate::router::ControllerType;
 use gdex_types::{
     account::AccountPubKey,
     error::GDEXError,
-    transaction::{Request, RequestTypeEnum},
+    transaction::{Request, RequestTypeEnum, Event, EventTypeEnum},
 };
 
 // external
@@ -15,11 +15,11 @@ use prost::bytes::Bytes;
 
 // MODULE IMPORTS
 
-#[path = "./generated/futures_requests.rs"]
+#[path = "./generated/futures_proto.rs"]
 #[rustfmt::skip]
 #[allow(clippy::all)]
-mod futures_requests;
-pub use futures_requests::*;
+mod futures_proto;
+pub use futures_proto::*;
 
 // HELPER
 
@@ -49,6 +49,19 @@ impl RequestTypeEnum for FuturesRequestType {
             5 => Ok(FuturesRequestType::AccountDeposit),
             6 => Ok(FuturesRequestType::AccountWithdrawal),
             7 => Ok(FuturesRequestType::FuturesLimitOrder),
+            _ => Err(GDEXError::DeserializationError),
+        }
+    }
+}
+
+impl EventTypeEnum for FuturesEventType {
+    fn event_type_from_i32(value: i32) -> Result<Self, GDEXError> {
+        match value {
+            0 => Ok(FuturesEventType::OrderNew),
+            1 => Ok(FuturesEventType::OrderFill),
+            2 => Ok(FuturesEventType::OrderPartialFill),
+            3 => Ok(FuturesEventType::OrderUpdate),
+            4 => Ok(FuturesEventType::OrderCancel),
             _ => Err(GDEXError::DeserializationError),
         }
     }
@@ -213,6 +226,120 @@ impl Request for FuturesLimitOrderRequest {
     }
     fn get_request_type_id() -> i32 {
         FuturesRequestType::FuturesLimitOrder as i32
+    }
+}
+
+// EVENTS
+
+// order new 
+
+impl FuturesOrderNewEvent {
+    pub fn new(account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) -> Self{
+        FuturesOrderNewEvent {
+            account: Bytes::from(account.as_ref().to_vec()),
+            order_id,
+            side,
+            price,
+            quantity,
+        }
+    }
+}
+
+impl Event for FuturesOrderNewEvent {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_event_type_id() -> i32 {
+        FuturesEventType::OrderNew as i32
+    }
+}
+
+// order fill
+
+impl FuturesOrderFillEvent {
+    pub fn new(account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) -> Self{
+        FuturesOrderFillEvent {
+            account: Bytes::from(account.as_ref().to_vec()),
+            order_id,
+            side,
+            price,
+            quantity,
+        }
+    }
+}
+
+impl Event for FuturesOrderFillEvent {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_event_type_id() -> i32 {
+        FuturesEventType::OrderFill as i32
+    }
+}
+
+// order partial fill
+
+impl FuturesOrderPartialFillEvent {
+    pub fn new(account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) -> Self {
+        FuturesOrderPartialFillEvent {
+            account: Bytes::from(account.as_ref().to_vec()),
+            order_id,
+            side,
+            price,
+            quantity,
+        }
+    }
+}
+
+impl Event for FuturesOrderPartialFillEvent {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_event_type_id() -> i32 {
+        FuturesEventType::OrderPartialFill as i32
+    }
+}
+
+// order update
+
+impl FuturesOrderUpdateEvent {
+    pub fn new(account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) -> Self {
+        FuturesOrderUpdateEvent {
+            account: Bytes::from(account.as_ref().to_vec()),
+            order_id,
+            side,
+            price,
+            quantity,
+        }
+    }
+}
+
+impl Event for FuturesOrderUpdateEvent {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_event_type_id() -> i32 {
+        FuturesEventType::OrderUpdate as i32
+    }
+}
+
+// order cancel
+
+impl FuturesOrderCancelEvent {
+    pub fn new(account: &AccountPubKey, order_id: u64) -> Self {
+        FuturesOrderCancelEvent {
+            account: Bytes::from(account.as_ref().to_vec()),
+            order_id,
+        }
+    }
+}
+
+impl Event for FuturesOrderCancelEvent {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_event_type_id() -> i32 {
+        FuturesEventType::OrderCancel as i32
     }
 }
 

@@ -183,12 +183,12 @@ impl Relayer for RelayerService {
                     let catchup_state_bytes = bincode::serialize(&catchup_state).unwrap().into();
                     return Ok(Response::new(RelayerLatestCatchupStateResponse {
                         block_number: catchup_state.block_number,
-                        state: catchup_state_bytes
-                    }))
+                        state: catchup_state_bytes,
+                    }));
                 }
                 Err(Status::not_found("Catchup state was not found."))
-            },
-            Err(err) => Err(Status::unknown(err.to_string()))
+            }
+            Err(err) => Err(Status::unknown(err.to_string())),
         }
     }
     async fn get_futures_user(

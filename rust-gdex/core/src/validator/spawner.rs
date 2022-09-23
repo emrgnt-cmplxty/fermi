@@ -6,9 +6,8 @@ use crate::{
     genesis_ceremony::GENESIS_FILENAME,
     validator::{
         consensus_adapter::ConsensusAdapter, genesis_state::ValidatorGenesisState, metrics::ValidatorMetrics,
-        server::ValidatorServer, server::ValidatorService, state::ValidatorState,
-        post_process::PostProcessService
-    }
+        post_process::PostProcessService, server::ValidatorServer, server::ValidatorService, state::ValidatorState,
+    },
 };
 
 // gdex
@@ -20,7 +19,7 @@ use multiaddr::Multiaddr;
 use prometheus::Registry;
 use std::{path::PathBuf, sync::Arc};
 use tokio::{
-    sync::mpsc::{Receiver, Sender, channel},
+    sync::mpsc::{channel, Receiver, Sender},
     task::JoinHandle,
 };
 use tracing::info;
@@ -240,14 +239,15 @@ impl ValidatorSpawner {
             Arc::clone(&validator_state),
             &prometheus_registry,
             rx_reconfigure_consensus,
-            tx_narwhal_to_post_process
+            tx_narwhal_to_post_process,
         )
         .unwrap();
         validator_handles.extend(handles);
         validator_handles.extend(prometheus_server_handle);
 
         // spawn post process service
-        let post_process_handles = PostProcessService::spawn(rx_narwhal_to_post_process, Arc::clone(&validator_state)).unwrap();
+        let post_process_handles =
+            PostProcessService::spawn(rx_narwhal_to_post_process, Arc::clone(&validator_state)).unwrap();
         validator_handles.extend(post_process_handles);
 
         self.service_handles = Some(validator_handles);

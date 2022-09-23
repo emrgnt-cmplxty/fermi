@@ -1,26 +1,21 @@
 // IMPORTS
 
 // local
-use crate::{
-    validator::{state::ValidatorState}
-};
+use crate::validator::state::ValidatorState;
 
 // gdex
-use gdex_types::{
-    error::GDEXError,
-    transaction::ConsensusTransaction
-};
+use gdex_types::{error::GDEXError, transaction::ConsensusTransaction};
 
 // external
+use anyhow::Result;
 use narwhal_consensus::ConsensusOutput;
 use narwhal_executor::{ExecutionIndices, SerializedTransaction, SubscriberError};
-use std::{sync::Arc};
+use std::sync::Arc;
 use tokio::{
-    sync::mpsc::{Receiver, Sender, channel},
+    sync::mpsc::{channel, Receiver, Sender},
     task::JoinHandle,
 };
 use tracing::{error, info};
-use anyhow::Result;
 
 // INTERFACE
 type ExecutionResult = Result<(), GDEXError>;
@@ -29,24 +24,16 @@ type HandledTransaction = Result<(ConsensusOutput, ExecutionIndices, ExecutionRe
 pub struct PostProcessService {}
 
 impl PostProcessService {
-
     pub fn spawn(
         rx_narwhal_to_post_process: Receiver<(HandledTransaction, SerializedTransaction)>,
-        validator_state: Arc<ValidatorState>
+        validator_state: Arc<ValidatorState>,
     ) -> anyhow::Result<Vec<JoinHandle<()>>> {
-
         let (tx_pp_to_catchup, rx_pp_to_catchup) = channel::<u64>(1_000);
         let validator_state_clone = validator_state.clone();
-        
-        let transaction_processor_handle = TransactionProcessor::spawn(
-            rx_narwhal_to_post_process,
-            validator_state,
-            tx_pp_to_catchup
-        );
-        let block_processor_handle = BlockProcessor::spawn(
-            validator_state_clone,
-            rx_pp_to_catchup
-        );
+
+        let transaction_processor_handle =
+            TransactionProcessor::spawn(rx_narwhal_to_post_process, validator_state, tx_pp_to_catchup);
+        let block_processor_handle = BlockProcessor::spawn(validator_state_clone, rx_pp_to_catchup);
 
         Ok(vec![transaction_processor_handle, block_processor_handle])
     }
@@ -55,15 +42,14 @@ impl PostProcessService {
 pub struct TransactionProcessor {
     rx_narwhal_to_post_process: Receiver<(HandledTransaction, SerializedTransaction)>,
     validator_state: Arc<ValidatorState>,
-    tx_pp_to_catchup: Sender<u64>
+    tx_pp_to_catchup: Sender<u64>,
 }
 
 impl TransactionProcessor {
-
     pub fn spawn(
         rx_narwhal_to_post_process: Receiver<(HandledTransaction, SerializedTransaction)>,
         validator_state: Arc<ValidatorState>,
-        tx_pp_to_catchup: Sender<u64>
+        tx_pp_to_catchup: Sender<u64>,
     ) -> JoinHandle<()> {
         tokio::spawn(async move {
             Self {
@@ -105,7 +91,10 @@ impl TransactionProcessor {
 
                             let block_number = store.block_number.load(std::sync::atomic::Ordering::SeqCst);
 
-                            self.tx_pp_to_catchup.send(block_number).await.expect("Failed to send block number to catchup process");
+                            self.tx_pp_to_catchup
+                                .send(block_number)
+                                .await
+                                .expect("Failed to send block number to catchup process");
 
                             // metrics process end of block
                             metrics.process_end_of_block(block, block_info);
@@ -133,19 +122,15 @@ impl TransactionProcessor {
 
 pub struct BlockProcessor {
     validator_state: Arc<ValidatorState>,
-    rx_pp_to_catchup: Receiver<u64>
+    rx_pp_to_catchup: Receiver<u64>,
 }
 
 impl BlockProcessor {
-
-    pub fn spawn(
-        validator_state: Arc<ValidatorState>,
-        rx_pp_to_catchup: Receiver<u64>
-    ) -> JoinHandle<()> {
+    pub fn spawn(validator_state: Arc<ValidatorState>, rx_pp_to_catchup: Receiver<u64>) -> JoinHandle<()> {
         tokio::spawn(async move {
             Self {
                 validator_state,
-                rx_pp_to_catchup
+                rx_pp_to_catchup,
             }
             .run()
             .await
@@ -170,10 +155,10 @@ impl BlockProcessor {
                     }
                 }
 
-            // catchup generate
-            catchup_router
-                .create_catchup_state(&store.post_process_store, block_number)
-                .await;
+                // catchup generate
+                catchup_router
+                    .create_catchup_state(&store.post_process_store, block_number)
+                    .await;
             }
         }
     }

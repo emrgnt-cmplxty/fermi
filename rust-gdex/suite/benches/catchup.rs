@@ -9,12 +9,12 @@ use criterion::*;
 
 use gdex_controller::{
     bank::controller::BankController,
+    controller::Controller,
     spot::{
         controller::{SpotController, SPOT_CONTROLLER_ACCOUNT_PUBKEY},
         proto::LimitOrderRequest,
     },
-    controller::{Controller},
-    utils::engine::{order_book::OrderBookWrapper},
+    utils::engine::order_book::OrderBookWrapper,
 };
 // gdex
 use fastcrypto::{generate_production_keypair, traits::KeyPair as _};
@@ -60,7 +60,9 @@ fn criterion_benchmark(c: &mut Criterion) {
         b.iter(|| BankController::create_catchup_state(bank_controller_ref.clone(), 0))
     });
 
-    c.bench_function("catchup_bank_controller_clone", |b| b.iter(|| bank_controller_clone.clone()));
+    c.bench_function("catchup_bank_controller_clone", |b| {
+        b.iter(|| bank_controller_clone.clone())
+    });
 
     // setup orderbooks
     let n_users = 100_000;
@@ -159,7 +161,9 @@ fn criterion_benchmark(c: &mut Criterion) {
     });
 
     // create orders on the books
-    c.bench_function("catchup_spot_controller_clone", |b| b.iter(|| spot_controller_clone.clone()));
+    c.bench_function("catchup_spot_controller_clone", |b| {
+        b.iter(|| spot_controller_clone.clone())
+    });
 }
 
 criterion_group!(benches, criterion_benchmark);

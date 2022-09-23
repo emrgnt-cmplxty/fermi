@@ -34,12 +34,12 @@ pub use services::{
     RelayerGetFuturesMarketsRequest,
     RelayerGetFuturesUserRequest,
     RelayerGetLatestBlockInfoRequest,
+    RelayerGetLatestCatchupStateRequest,
     RelayerGetLatestOrderbookDepthRequest,
+    RelayerLatestCatchupStateResponse,
     RelayerLatestOrderbookDepthResponse,
     RelayerMetricsRequest,
     RelayerMetricsResponse,
-    RelayerGetLatestCatchupStateRequest,
-    RelayerLatestCatchupStateResponse
 };
 
 impl Serialize for FuturesPosition {

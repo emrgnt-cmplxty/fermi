@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CatchupState {
     pub block_number: u64,
-    pub state: Vec<Vec<u8>>
+    pub state: Vec<Vec<u8>>,
 }
 
 pub struct PostProcessStore {

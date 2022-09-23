@@ -7,7 +7,7 @@ use crate::router::ControllerType;
 use gdex_types::{
     account::AccountPubKey,
     error::GDEXError,
-    transaction::{Request, RequestTypeEnum, Event, EventTypeEnum},
+    transaction::{Event, EventTypeEnum, Request, RequestTypeEnum},
 };
 
 // external
@@ -231,10 +231,10 @@ impl Request for FuturesLimitOrderRequest {
 
 // EVENTS
 
-// order new 
+// order new
 
 impl FuturesOrderNewEvent {
-    pub fn new(account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) -> Self{
+    pub fn new(account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) -> Self {
         FuturesOrderNewEvent {
             account: Bytes::from(account.as_ref().to_vec()),
             order_id,
@@ -257,7 +257,7 @@ impl Event for FuturesOrderNewEvent {
 // order fill
 
 impl FuturesOrderFillEvent {
-    pub fn new(account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) -> Self{
+    pub fn new(account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) -> Self {
         FuturesOrderFillEvent {
             account: Bytes::from(account.as_ref().to_vec()),
             order_id,

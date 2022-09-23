@@ -1,6 +1,6 @@
 // crate
-use crate::utils::engine::order_book::{OrderId, Orderbook};
 use crate::event_manager::EventManager;
+use crate::utils::engine::order_book::{OrderId, Orderbook};
 
 // gdex
 use gdex_types::{

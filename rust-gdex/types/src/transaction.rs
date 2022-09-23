@@ -244,14 +244,12 @@ impl Hash for Transaction {
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct ExecutionResultBody {
-    pub events: Vec<ExecutionEvent>
+    pub events: Vec<ExecutionEvent>,
 }
 
 impl ExecutionResultBody {
     pub fn new() -> Self {
-        ExecutionResultBody {
-            events: Vec::new()
-        }
+        ExecutionResultBody { events: Vec::new() }
     }
 }
 
@@ -279,9 +277,7 @@ pub struct ExecutionEvent {
 }
 
 impl ExecutionEvent {
-    pub fn new<T: Event + Message + std::default::Default>(
-        event: &T,
-    ) -> Self {
+    pub fn new<T: Event + Message + std::default::Default>(event: &T) -> Self {
         ExecutionEvent {
             controller_id: T::get_controller_id(),
             event_type: T::get_event_type_id(),

@@ -6,8 +6,8 @@
 
 // crate
 use crate::controller::Controller;
+use crate::event_manager::{EventEmitter, EventManager};
 use crate::router::ControllerRouter;
-use crate::event_manager::{EventManager, EventEmitter};
 
 // gdex
 use gdex_types::{
@@ -74,8 +74,8 @@ impl Controller for ConsensusController {
     ) {
     }
 }
- 
-impl EventEmitter for ConsensusController {   
+
+impl EventEmitter for ConsensusController {
     fn get_event_manager(&mut self) -> &mut Arc<Mutex<EventManager>> {
         &mut self.event_manager
     }

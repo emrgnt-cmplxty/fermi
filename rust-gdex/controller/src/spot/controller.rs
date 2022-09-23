@@ -14,11 +14,10 @@
 // crate
 use crate::bank::controller::BankController;
 use crate::controller::Controller;
+use crate::event_manager::{EventEmitter, EventManager};
 use crate::router::ControllerRouter;
 use crate::spot::proto::*;
 use crate::utils::engine::order_book::{OrderBookWrapper, OrderId, Orderbook};
-use crate::event_manager::{EventManager, EventEmitter};
-
 
 // gdex
 use gdex_types::{
@@ -233,7 +232,7 @@ impl SpotOrderbook {
         quote_asset_id: AssetId,
         controller_account: AccountPubKey,
         bank_controller: Arc<Mutex<BankController>>,
-        event_manager: Arc<Mutex<EventManager>>
+        event_manager: Arc<Mutex<EventManager>>,
     ) -> Self {
         assert!(base_asset_id != quote_asset_id);
         let orderbook = Orderbook::new(base_asset_id, quote_asset_id);
@@ -244,7 +243,7 @@ impl SpotOrderbook {
             bank_controller,
             orderbook,
             order_to_account: HashMap::new(),
-            event_manager
+            event_manager,
         }
     }
 
@@ -454,20 +453,13 @@ impl OrderBookWrapper for SpotOrderbook {
         }
         Ok(())
     }
-    
+
     // event emitters
-    
-    fn emit_order_new_event(
-        &mut self,
-        account: &AccountPubKey,
-        order_id: u64,
-        side: u64,
-        price: u64,
-        quantity: u64,
-    ) {
+
+    fn emit_order_new_event(&mut self, account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) {
         self.emit_event(&SpotOrderNewEvent::new(&account, order_id, side, price, quantity));
     }
-    
+
     fn emit_order_partial_fill_event(
         &mut self,
         account: &AccountPubKey,
@@ -478,18 +470,13 @@ impl OrderBookWrapper for SpotOrderbook {
     ) {
         self.emit_event(&SpotOrderFillEvent::new(&account, order_id, side, price, quantity));
     }
-    
-    fn emit_order_fill_event(
-        &mut self,
-        account: &AccountPubKey,
-        order_id: u64,
-        side: u64,
-        price: u64,
-        quantity: u64,
-    ) {
-        self.emit_event(&SpotOrderPartialFillEvent::new(&account, order_id, side, price, quantity));
+
+    fn emit_order_fill_event(&mut self, account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) {
+        self.emit_event(&SpotOrderPartialFillEvent::new(
+            &account, order_id, side, price, quantity,
+        ));
     }
-    
+
     fn emit_order_update_event(
         &mut self,
         account: &AccountPubKey,
@@ -500,12 +487,8 @@ impl OrderBookWrapper for SpotOrderbook {
     ) {
         self.emit_event(&SpotOrderUpdateEvent::new(&account, order_id, side, price, quantity));
     }
-    
-    fn emit_order_cancel_event(
-        &mut self,
-        account: &AccountPubKey,
-        order_id: u64,
-    ) {
+
+    fn emit_order_cancel_event(&mut self, account: &AccountPubKey, order_id: u64) {
         self.emit_event(&SpotOrderCancelEvent::new(&account, order_id));
     }
 }
@@ -597,7 +580,7 @@ pub mod spot_tests {
             QUOTE_ASSET_ID,
             controller_account,
             Arc::clone(&bank_controller_ref),
-            Arc::clone(&event_manager_ref)
+            Arc::clone(&event_manager_ref),
         );
 
         let bid_size = 100;
@@ -715,7 +698,7 @@ pub mod spot_tests {
             QUOTE_ASSET_ID,
             controller_account,
             Arc::clone(&bank_controller_ref),
-            Arc::clone(&event_manager_ref)
+            Arc::clone(&event_manager_ref),
         );
 
         let bid_size = 100;
@@ -775,7 +758,7 @@ pub mod spot_tests {
             QUOTE_ASSET_ID,
             controller_account,
             Arc::clone(&bank_controller_ref),
-            Arc::clone(&event_manager_ref)
+            Arc::clone(&event_manager_ref),
         );
 
         let bid_size_0: u64 = 100;
@@ -862,7 +845,7 @@ pub mod spot_tests {
             QUOTE_ASSET_ID,
             controller_account,
             Arc::clone(&bank_controller_ref),
-            Arc::clone(&event_manager_ref)
+            Arc::clone(&event_manager_ref),
         );
 
         let bid_size_0: u64 = 95;
@@ -1044,7 +1027,7 @@ pub mod spot_tests {
             QUOTE_ASSET_ID,
             controller_account,
             Arc::clone(&bank_controller_ref),
-            Arc::clone(&event_manager_ref)
+            Arc::clone(&event_manager_ref),
         );
 
         let bid_size = 100;
@@ -1110,7 +1093,7 @@ pub mod spot_tests {
             QUOTE_ASSET_ID,
             controller_account,
             Arc::clone(&bank_controller_ref),
-            Arc::clone(&event_manager_ref)
+            Arc::clone(&event_manager_ref),
         );
 
         const TEST_QUANTITY: u64 = 100;
@@ -1193,7 +1176,7 @@ pub mod spot_tests {
             QUOTE_ASSET_ID,
             controller_account,
             Arc::clone(&bank_controller_ref),
-            Arc::clone(&event_manager_ref)
+            Arc::clone(&event_manager_ref),
         );
 
         let bid_size = 100;

@@ -7,12 +7,16 @@
 // crate
 use crate::{
     bank::controller::BankController, consensus::controller::ConsensusController, controller::Controller,
-    futures::controller::FuturesController, spot::controller::SpotController, stake::controller::StakeController,
-    event_manager::EventManager,
+    event_manager::EventManager, futures::controller::FuturesController, spot::controller::SpotController,
+    stake::controller::StakeController,
 };
 
 // gdex
-use gdex_types::{error::GDEXError, store::ProcessBlockStore, transaction::{Transaction, ExecutionResultBody}};
+use gdex_types::{
+    error::GDEXError,
+    store::ProcessBlockStore,
+    transaction::{ExecutionResultBody, Transaction},
+};
 
 // mysten
 
@@ -124,40 +128,35 @@ impl ControllerRouter {
         // reset execution result // TODO eventually we wont need this as we will have strong guarantees that this
         // val gets rest on each iteration but for now we can fail halfway though (in theory) so must be reset
         self.event_manager.lock().unwrap().reset();
-        
+
         let target_controller = ControllerType::from_i32(transaction.target_controller)?;
         match target_controller {
             ControllerType::Consensus => {
-                self
-                    .consensus_controller
+                self.consensus_controller
                     .lock()
                     .unwrap()
                     .handle_consensus_transaction(transaction)?;
             }
             ControllerType::Bank => {
-                self
-                    .bank_controller
+                self.bank_controller
                     .lock()
                     .unwrap()
                     .handle_consensus_transaction(transaction)?;
             }
             ControllerType::Stake => {
-                self
-                    .stake_controller
+                self.stake_controller
                     .lock()
                     .unwrap()
                     .handle_consensus_transaction(transaction)?;
             }
             ControllerType::Spot => {
-                self
-                    .spot_controller
+                self.spot_controller
                     .lock()
                     .unwrap()
                     .handle_consensus_transaction(transaction)?;
             }
             ControllerType::Futures => {
-                self
-                    .futures_controller
+                self.futures_controller
                     .lock()
                     .unwrap()
                     .handle_consensus_transaction(transaction)?;

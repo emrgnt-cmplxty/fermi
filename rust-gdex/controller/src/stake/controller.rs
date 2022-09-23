@@ -11,8 +11,8 @@
 // crate
 use crate::bank::controller::BankController;
 use crate::controller::Controller;
+use crate::event_manager::{EventEmitter, EventManager};
 use crate::router::ControllerRouter;
-use crate::event_manager::{EventManager, EventEmitter};
 
 // gdex
 use gdex_types::{

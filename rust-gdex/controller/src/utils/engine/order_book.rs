@@ -747,15 +747,8 @@ pub trait OrderBookWrapper {
 
     // event helpers
 
-    fn emit_order_new_event(
-        &mut self,
-        account: &AccountPubKey,
-        order_id: u64,
-        side: u64,
-        price: u64,
-        quantity: u64,
-    );
-    
+    fn emit_order_new_event(&mut self, account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64);
+
     fn emit_order_partial_fill_event(
         &mut self,
         account: &AccountPubKey,
@@ -764,30 +757,12 @@ pub trait OrderBookWrapper {
         price: u64,
         quantity: u64,
     );
-    
-    fn emit_order_fill_event(
-        &mut self,
-        account: &AccountPubKey,
-        order_id: u64,
-        side: u64,
-        price: u64,
-        quantity: u64,
-    );
-    
-    fn emit_order_update_event(
-        &mut self,
-        account: &AccountPubKey,
-        order_id: u64,
-        side: u64,
-        price: u64,
-        quantity: u64,
-    );
-    
-    fn emit_order_cancel_event(
-        &mut self,
-        account: &AccountPubKey,
-        order_id: u64,
-    );
+
+    fn emit_order_fill_event(&mut self, account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64);
+
+    fn emit_order_update_event(&mut self, account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64);
+
+    fn emit_order_cancel_event(&mut self, account: &AccountPubKey, order_id: u64);
 
     // result processing
 

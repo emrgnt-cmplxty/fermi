@@ -8,7 +8,7 @@ use gdex_types::{
     account::AccountPubKey,
     crypto::ToFromBytes,
     error::GDEXError,
-    transaction::{Request, RequestTypeEnum, Event, EventTypeEnum, Transaction},
+    transaction::{Event, EventTypeEnum, Request, RequestTypeEnum, Transaction},
 };
 
 // mysten
@@ -98,9 +98,7 @@ impl Request for PaymentRequest {
 
 impl AssetCreatedEvent {
     pub fn new(asset_id: u64) -> Self {
-        AssetCreatedEvent {
-            asset_id
-        }
+        AssetCreatedEvent { asset_id }
     }
 }
 
@@ -121,7 +119,7 @@ impl PaymentSuccessEvent {
             sender: Bytes::from(sender.as_ref().to_vec()),
             receiver: Bytes::from(receiver.as_ref().to_vec()),
             asset_id,
-            quantity
+            quantity,
         }
     }
 }

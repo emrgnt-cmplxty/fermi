@@ -7,7 +7,7 @@ use crate::router::ControllerType;
 use gdex_types::{
     account::AccountPubKey,
     error::GDEXError,
-    transaction::{Request, RequestTypeEnum, Event, EventTypeEnum, Transaction},
+    transaction::{Event, EventTypeEnum, Request, RequestTypeEnum, Transaction},
 };
 
 // mysten
@@ -168,7 +168,7 @@ impl Request for CancelOrderRequest {
 
 // EVENTS
 
-// order new 
+// order new
 
 impl SpotOrderNewEvent {
     pub fn new(account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) -> Self {

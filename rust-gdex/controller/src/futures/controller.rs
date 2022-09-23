@@ -1,11 +1,11 @@
 // crate
 use crate::bank::controller::BankController;
 use crate::controller::Controller;
+use crate::event_manager::{EventEmitter, EventManager};
 use crate::futures::{proto::*, types::*, utils::*};
 use crate::router::ControllerRouter;
 use crate::spot::proto::*;
 use crate::utils::engine::order_book::{OrderBookWrapper, OrderId, Orderbook};
-use crate::event_manager::{EventManager, EventEmitter};
 // TODO - include continuous OI calculation for FuturesMarket
 
 // gdex
@@ -118,7 +118,7 @@ impl FuturesController {
                     order_to_account: HashMap::new(),
                     orderbook: Orderbook::new(request.base_asset_id, market_place.quote_asset_id),
                     marketplace_deposits: Arc::downgrade(&market_place.deposits),
-                    event_manager:  Arc::clone(&self.event_manager),
+                    event_manager: Arc::clone(&self.event_manager),
                 },
             );
         } else {
@@ -560,20 +560,13 @@ impl OrderBookWrapper for FuturesMarket {
         // TODO - implement cancel
         Err(GDEXError::InvalidRequestTypeError)
     }
-    
+
     // event emitters
-    
-    fn emit_order_new_event(
-        &mut self,
-        account: &AccountPubKey,
-        order_id: u64,
-        side: u64,
-        price: u64,
-        quantity: u64,
-    ) {
+
+    fn emit_order_new_event(&mut self, account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) {
         self.emit_event(&FuturesOrderNewEvent::new(&account, order_id, side, price, quantity));
     }
-    
+
     fn emit_order_partial_fill_event(
         &mut self,
         account: &AccountPubKey,
@@ -584,18 +577,13 @@ impl OrderBookWrapper for FuturesMarket {
     ) {
         self.emit_event(&FuturesOrderFillEvent::new(&account, order_id, side, price, quantity));
     }
-    
-    fn emit_order_fill_event(
-        &mut self,
-        account: &AccountPubKey,
-        order_id: u64,
-        side: u64,
-        price: u64,
-        quantity: u64,
-    ) {
-        self.emit_event(&FuturesOrderPartialFillEvent::new(&account, order_id, side, price, quantity));
+
+    fn emit_order_fill_event(&mut self, account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) {
+        self.emit_event(&FuturesOrderPartialFillEvent::new(
+            &account, order_id, side, price, quantity,
+        ));
     }
-    
+
     fn emit_order_update_event(
         &mut self,
         account: &AccountPubKey,
@@ -606,12 +594,8 @@ impl OrderBookWrapper for FuturesMarket {
     ) {
         self.emit_event(&FuturesOrderUpdateEvent::new(&account, order_id, side, price, quantity));
     }
-    
-    fn emit_order_cancel_event(
-        &mut self,
-        account: &AccountPubKey,
-        order_id: u64,
-    ) {
+
+    fn emit_order_cancel_event(&mut self, account: &AccountPubKey, order_id: u64) {
         self.emit_event(&FuturesOrderCancelEvent::new(&account, order_id));
     }
 }

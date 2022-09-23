@@ -15,7 +15,7 @@ use gdex_types::{
     committee::{Committee, ValidatorName},
     error::GDEXError,
     store::ProcessBlockStore,
-    transaction::{ConsensusTransaction, SignedTransaction, Transaction, TransactionDigest, ExecutionResultBody},
+    transaction::{ConsensusTransaction, ExecutionResultBody, SignedTransaction, Transaction, TransactionDigest},
 };
 use narwhal_consensus::ConsensusOutput;
 use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
@@ -303,7 +303,11 @@ impl ExecutionState for ValidatorState {
         if uniqueness_check.is_err() {
             self.metrics.transactions_executed_failed.inc();
             // safe to unwrap error
-            return Ok((consensus_output.clone(), execution_indices, Err(uniqueness_check.err().unwrap())));
+            return Ok((
+                consensus_output.clone(),
+                execution_indices,
+                Err(uniqueness_check.err().unwrap()),
+            ));
         }
 
         let execution_result = self.controller_router.handle_consensus_transaction(transaction);

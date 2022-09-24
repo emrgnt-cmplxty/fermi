@@ -10,48 +10,58 @@ use gdex_types::transaction::{ConsensusTransaction, ExecutionResultBody};
 use narwhal_executor::SerializedTransaction;
 use std::sync::Arc;
 use tokio::{
-    sync::mpsc::{channel, Receiver, Sender},
+    sync::{broadcast, mpsc},
     task::JoinHandle,
 };
 use tracing::{error, info};
 
 // INTERFACE
 
-pub struct PostProcessService {}
+pub struct ValidatorPostProcessService {}
 
-impl PostProcessService {
+impl ValidatorPostProcessService {
     pub fn spawn(
-        rx_narwhal_to_post_process: Receiver<(HandledTransaction, SerializedTransaction)>,
+        rx_narwhal_to_post_process: mpsc::Receiver<(HandledTransaction, SerializedTransaction)>,
         validator_state: Arc<ValidatorState>,
     ) -> anyhow::Result<Vec<JoinHandle<()>>> {
-        let (tx_pp_to_catchup, rx_pp_to_catchup) = channel::<u64>(1_000);
-        let validator_state_clone = validator_state.clone();
+        // channel to communicate from txn processor to block, catchup processors
+        let (tx_txn_to_processors, rx_txn_to_block_processor) = broadcast::channel::<u64>(1_000);
+        let rx_txn_to_catchup_processor = tx_txn_to_processors.subscribe();
 
-        let transaction_processor_handle =
-            TransactionProcessor::spawn(rx_narwhal_to_post_process, validator_state, tx_pp_to_catchup);
-        let block_processor_handle = BlockProcessor::spawn(validator_state_clone, rx_pp_to_catchup);
+        let transaction_processor_handle = TransactionProcessor::spawn(
+            rx_narwhal_to_post_process,
+            Arc::clone(&validator_state),
+            tx_txn_to_processors,
+        );
+        let block_processor_handle = BlockProcessor::spawn(Arc::clone(&validator_state), rx_txn_to_block_processor);
+        let catchup_processor_handle =
+            CatchupProcessor::spawn(Arc::clone(&validator_state), rx_txn_to_catchup_processor);
 
-        Ok(vec![transaction_processor_handle, block_processor_handle])
+        Ok(vec![
+            transaction_processor_handle,
+            block_processor_handle,
+            catchup_processor_handle,
+        ])
     }
 }
 
 pub struct TransactionProcessor {
-    rx_narwhal_to_post_process: Receiver<(HandledTransaction, SerializedTransaction)>,
+    rx_narwhal_to_post_process: mpsc::Receiver<(HandledTransaction, SerializedTransaction)>,
     validator_state: Arc<ValidatorState>,
-    tx_pp_to_catchup: Sender<u64>,
+    tx_txn_to_processors: broadcast::Sender<u64>,
 }
 
 impl TransactionProcessor {
     pub fn spawn(
-        rx_narwhal_to_post_process: Receiver<(HandledTransaction, SerializedTransaction)>,
+        rx_narwhal_to_post_process: mpsc::Receiver<(HandledTransaction, SerializedTransaction)>,
         validator_state: Arc<ValidatorState>,
-        tx_pp_to_catchup: Sender<u64>,
+        tx_txn_to_processors: broadcast::Sender<u64>,
     ) -> JoinHandle<()> {
         tokio::spawn(async move {
             Self {
                 rx_narwhal_to_post_process,
                 validator_state,
-                tx_pp_to_catchup,
+                tx_txn_to_processors,
             }
             .run()
             .await
@@ -64,8 +74,6 @@ impl TransactionProcessor {
         let mut serialized_txns_buf = Vec::new();
         // unpack validator store, metrics and controllers
         let store = &self.validator_state.validator_store;
-        let metrics = &self.validator_state.metrics;
-        let controller_router = &self.validator_state.controller_router;
 
         loop {
             while let Some(message) = self.rx_narwhal_to_post_process.recv().await {
@@ -81,28 +89,16 @@ impl TransactionProcessor {
 
                             // prune transaction cache on validator store + write out latest block
                             store.prune();
-                            let (block, block_info) = store
+
+                            // write txns to block store for use in block processor
+                            store
                                 .write_latest_block(consensus_output.certificate, serialized_txns_buf.clone())
                                 .await;
 
                             let block_number = store.block_number.load(std::sync::atomic::Ordering::SeqCst);
 
-                            self.tx_pp_to_catchup
-                                .send(block_number)
-                                .await
-                                .expect("Failed to send block number to catchup process");
-
-                            // metrics process end of block
-                            metrics.process_end_of_block(block, block_info);
-                            // controller logic process end of block
-                            controller_router
-                                .process_end_of_block(&store.post_process_store, block_number)
-                                .await;
-
-                            // catchup generate
-                            controller_router
-                                .create_catchup_state(&store.post_process_store, block_number)
-                                .await;
+                            // broadcast block number to catchup + block processors
+                            self.tx_txn_to_processors.send(block_number).unwrap();
 
                             serialized_txns_buf.clear();
                             // This log is used in benchmarking
@@ -118,15 +114,70 @@ impl TransactionProcessor {
 
 pub struct BlockProcessor {
     validator_state: Arc<ValidatorState>,
-    rx_pp_to_catchup: Receiver<u64>,
+    rx_txn_to_block_processor: broadcast::Receiver<u64>,
 }
 
 impl BlockProcessor {
-    pub fn spawn(validator_state: Arc<ValidatorState>, rx_pp_to_catchup: Receiver<u64>) -> JoinHandle<()> {
+    pub fn spawn(
+        validator_state: Arc<ValidatorState>,
+        rx_txn_to_block_processor: broadcast::Receiver<u64>,
+    ) -> JoinHandle<()> {
         tokio::spawn(async move {
             Self {
                 validator_state,
-                rx_pp_to_catchup,
+                rx_txn_to_block_processor,
+            }
+            .run()
+            .await
+        })
+    }
+
+    async fn run(&mut self) {
+        // get references to catchup router and store
+        let store = &self.validator_state.validator_store;
+        let metrics = &self.validator_state.metrics;
+        let controller_router = &self.validator_state.controller_router;
+
+        loop {
+            while let Ok(block_number) = self.rx_txn_to_block_processor.recv().await {
+                // load block and block info
+                let block = store.post_process_store.block_store.read(block_number).await.unwrap();
+
+                let block_info = store
+                    .post_process_store
+                    .block_info_store
+                    .read(block_number)
+                    .await
+                    .unwrap();
+
+                if block.is_some() && block_info.is_some() {
+                    // metrics process end of block
+                    metrics.process_end_of_block(block.unwrap(), block_info.unwrap());
+                }
+
+                // controller logic process end of block
+                controller_router
+                    .process_end_of_block(&store.post_process_store, block_number)
+                    .await;
+            }
+        }
+    }
+}
+
+pub struct CatchupProcessor {
+    validator_state: Arc<ValidatorState>,
+    rx_txn_to_catchup_processor: broadcast::Receiver<u64>,
+}
+
+impl CatchupProcessor {
+    pub fn spawn(
+        validator_state: Arc<ValidatorState>,
+        rx_txn_to_catchup_processor: broadcast::Receiver<u64>,
+    ) -> JoinHandle<()> {
+        tokio::spawn(async move {
+            Self {
+                validator_state,
+                rx_txn_to_catchup_processor,
             }
             .run()
             .await
@@ -139,7 +190,7 @@ impl BlockProcessor {
         let store = &self.validator_state.validator_store;
 
         loop {
-            while let Some(block_number) = self.rx_pp_to_catchup.recv().await {
+            while let Ok(block_number) = self.rx_txn_to_catchup_processor.recv().await {
                 // run transactions through catchup router to sync catchup router
                 if let Ok(Some(block)) = store.post_process_store.block_store.read(block_number).await {
                     let transactions = block.transactions;

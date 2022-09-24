@@ -6,7 +6,8 @@ use crate::{
     genesis_ceremony::GENESIS_FILENAME,
     validator::{
         consensus_adapter::ConsensusAdapter, genesis_state::ValidatorGenesisState, metrics::ValidatorMetrics,
-        post_process::PostProcessService, server::ValidatorServer, server::ValidatorService, state::ValidatorState,
+        post_process::ValidatorPostProcessService, server::ValidatorServer, server::ValidatorService,
+        state::ValidatorState,
     },
 };
 
@@ -234,7 +235,7 @@ impl ValidatorSpawner {
         let mut validator_handles: Vec<JoinHandle<()>> = Vec::new();
 
         // spawn the validator service, e.g. Narwhal consensus
-        let handles = ValidatorService::spawn_narwhal(
+        let narwhal_handles = ValidatorService::spawn_narwhal(
             &node_config,
             Arc::clone(&validator_state),
             &prometheus_registry,
@@ -242,12 +243,12 @@ impl ValidatorSpawner {
             tx_narwhal_to_post_process,
         )
         .unwrap();
-        validator_handles.extend(handles);
+        validator_handles.extend(narwhal_handles);
         validator_handles.extend(prometheus_server_handle);
 
         // spawn post process service
         let post_process_handles =
-            PostProcessService::spawn(rx_narwhal_to_post_process, Arc::clone(&validator_state)).unwrap();
+            ValidatorPostProcessService::spawn(rx_narwhal_to_post_process, Arc::clone(&validator_state)).unwrap();
         validator_handles.extend(post_process_handles);
 
         self.service_handles = Some(validator_handles);

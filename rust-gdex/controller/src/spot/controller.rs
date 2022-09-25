@@ -20,7 +20,7 @@ use gdex_types::{
     crypto::ToFromBytes,
     error::GDEXError,
     order_book::{OrderSide, OrderbookDepth},
-    store::ProcessBlockStore,
+    store::PostProcessStore,
     transaction::{deserialize_protobuf, Transaction},
 };
 
@@ -127,18 +127,25 @@ impl Controller for SpotController {
 
     async fn process_end_of_block(
         controller: Arc<Mutex<Self>>,
-        process_block_store: &ProcessBlockStore,
+        post_process_store: &PostProcessStore,
         block_number: u64,
     ) {
         // write out orderbook depth every ORDERBOOK_DEPTH_FREQUENCY
         if block_number % ORDERBOOK_DEPTH_FREQUENCY == 0 {
             let orderbook_depths = controller.lock().unwrap().generate_orderbook_depths();
             for (asset_pair, orderbook_depth) in orderbook_depths {
-                process_block_store
+                post_process_store
                     .latest_orderbook_depth_store
                     .write(asset_pair, orderbook_depth.clone())
                     .await;
             }
+        }
+    }
+
+    fn create_catchup_state(controller: Arc<Mutex<Self>>, _block_number: u64) -> Result<Vec<u8>, GDEXError> {
+        match bincode::serialize(&controller.lock().unwrap().clone()) {
+            Ok(v) => Ok(v),
+            Err(_) => Err(GDEXError::SerializationError),
         }
     }
 }
@@ -150,6 +157,20 @@ impl EventEmitter for SpotController {
 }
 
 impl SpotController {
+    pub fn new(
+        controller_account: AccountPubKey,
+        orderbooks: HashMap<AssetPairKey, SpotOrderbook>,
+        bank_controller: Arc<Mutex<BankController>>,
+        event_manager: Arc<Mutex<EventManager>>,
+    ) -> Self {
+        SpotController {
+            controller_account,
+            orderbooks,
+            bank_controller,
+            event_manager,
+        }
+    }
+
     // HELPER FUNCTIONS
 
     pub fn get_orderbook_key(&self, base_asset_id: AssetId, quote_asset_id: AssetId) -> AssetPairKey {
@@ -1203,5 +1224,26 @@ pub mod spot_tests {
             }
         }
         let _orderbook_depth = orderbook_interface.get_orderbook_depth();
+    }
+
+    #[test]
+    fn create_spot_catchup_state_default() {
+        let spot_controller = Arc::new(Mutex::new(SpotController::default()));
+        let catchup_state = SpotController::create_catchup_state(spot_controller, 0);
+        assert!(catchup_state.is_ok());
+        let catchup_state = catchup_state.unwrap();
+        println!("Catchup state is {} bytes", catchup_state.len());
+
+        match bincode::deserialize(&catchup_state) {
+            Ok(SpotController {
+                orderbooks,
+                bank_controller,
+                ..
+            }) => {
+                assert_eq!(orderbooks.keys().len(), 0);
+                assert_eq!(bank_controller.lock().unwrap().get_num_assets(), 0);
+            }
+            Err(_) => panic!("deserializing catchup_state_default failed"),
+        }
     }
 }

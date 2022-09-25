@@ -11,7 +11,7 @@ use crate::router::ControllerRouter;
 
 // gdex
 use gdex_types::{
-    account::AccountPubKey, crypto::ToFromBytes, error::GDEXError, store::ProcessBlockStore, transaction::Transaction,
+    account::AccountPubKey, crypto::ToFromBytes, error::GDEXError, store::PostProcessStore, transaction::Transaction,
 };
 
 // mysten
@@ -69,9 +69,37 @@ impl Controller for ConsensusController {
 
     async fn process_end_of_block(
         _controller: Arc<Mutex<Self>>,
-        _process_block_store: &ProcessBlockStore,
+        _post_process_store: &PostProcessStore,
         _block_number: u64,
     ) {
+    }
+
+    fn create_catchup_state(controller: Arc<Mutex<Self>>, _block_number: u64) -> Result<Vec<u8>, GDEXError> {
+        match bincode::serialize(&controller.lock().unwrap().clone()) {
+            Ok(v) => Ok(v),
+            Err(_) => Err(GDEXError::SerializationError),
+        }
+    }
+}
+
+#[cfg(test)]
+pub mod consensus_tests {
+    use super::*;
+
+    #[test]
+    fn create_consensus_catchup_state_default() {
+        let consensus_controller = Arc::new(Mutex::new(ConsensusController::default()));
+        let catchup_state = ConsensusController::create_catchup_state(consensus_controller, 0);
+        assert!(catchup_state.is_ok());
+        let catchup_state = catchup_state.unwrap();
+        println!("Catchup state is {} bytes", catchup_state.len());
+
+        match bincode::deserialize(&catchup_state) {
+            Ok(ConsensusController { batch_size, .. }) => {
+                assert_eq!(batch_size, DEFAULT_BATCH_SIZE);
+            }
+            Err(_) => panic!("deserializing catchup_state_default failed"),
+        }
     }
 }
 

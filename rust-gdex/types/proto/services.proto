@@ -55,6 +55,9 @@ service Relayer {
     // request orderbook depth snapshot
     rpc GetLatestOrderbookDepth (RelayerGetLatestOrderbookDepthRequest) returns (RelayerLatestOrderbookDepthResponse);
 
+    // request catchup state
+    rpc GetLatestCatchupState (RelayerGetLatestCatchupStateRequest) returns (RelayerLatestCatchupStateResponse);
+
     // request futures positions 
     rpc GetFuturesUser (RelayerGetFuturesUserRequest) returns (RelayerFuturesUserResponse);
     
@@ -110,6 +113,17 @@ message RelayerLatestOrderbookDepthResponse {
     repeated Depth bids = 1;
     repeated Depth asks = 2;
 }
+
+// fast catchup state
+
+message RelayerGetLatestCatchupStateRequest {}
+
+message RelayerLatestCatchupStateResponse {
+    bytes state = 1;
+    uint64 block_number = 2;
+}
+
+// futures orders
 
 message RelayerGetFuturesUserRequest {
     bytes user = 1;

@@ -15,7 +15,7 @@ use gdex_types::{
     crypto::ToFromBytes,
     error::GDEXError,
     order_book::OrderSide,
-    store::ProcessBlockStore,
+    store::PostProcessStore,
     transaction::{deserialize_protobuf, FuturesOrder, FuturesPosition, Transaction},
 };
 // external
@@ -412,9 +412,16 @@ impl Controller for FuturesController {
 
     async fn process_end_of_block(
         _controller: Arc<Mutex<Self>>,
-        _process_block_store: &ProcessBlockStore,
+        _post_process_store: &PostProcessStore,
         _block_number: u64,
     ) {
+    }
+
+    fn create_catchup_state(controller: Arc<Mutex<Self>>, _block_number: u64) -> Result<Vec<u8>, GDEXError> {
+        match bincode::serialize(&controller.lock().unwrap().clone()) {
+            Ok(v) => Ok(v),
+            Err(_) => Err(GDEXError::SerializationError),
+        }
     }
 }
 
@@ -618,5 +625,26 @@ impl OrderBookWrapper for FuturesMarket {
 
     fn emit_order_cancel_event(&mut self, account: &AccountPubKey, order_id: u64) {
         self.emit_event(&FuturesOrderCancelEvent::new(account, order_id));
+    }
+}
+
+#[cfg(test)]
+pub mod futures_tests {
+    use super::*;
+
+    #[test]
+    fn create_futures_catchup_state_default() {
+        let futures_controller = Arc::new(Mutex::new(FuturesController::default()));
+        let catchup_state = FuturesController::create_catchup_state(futures_controller, 0);
+        assert!(catchup_state.is_ok());
+        let catchup_state = catchup_state.unwrap();
+        println!("Catchup state is {} bytes", catchup_state.len());
+
+        match bincode::deserialize(&catchup_state) {
+            Ok(FuturesController { bank_controller, .. }) => {
+                assert_eq!(bank_controller.lock().unwrap().get_num_assets(), 0);
+            }
+            Err(_) => panic!("deserializing catchup_state_default failed"),
+        }
     }
 }

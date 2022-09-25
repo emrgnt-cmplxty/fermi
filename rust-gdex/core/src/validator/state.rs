@@ -14,7 +14,7 @@ use gdex_types::{
     block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},
     committee::{Committee, ValidatorName},
     error::GDEXError,
-    store::ProcessBlockStore,
+    store::PostProcessStore,
     transaction::{ConsensusTransaction, ExecutionResultBody, SignedTransaction, Transaction, TransactionDigest},
 };
 use narwhal_consensus::ConsensusOutput;
@@ -31,7 +31,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 use tracing::{info, trace};
-type ExecutionResult = Result<ExecutionResultBody, GDEXError>;
+pub type ExecutionResult = Result<ExecutionResultBody, GDEXError>;
 
 /// Tracks recently submitted transactions to implement transaction gating
 pub struct ValidatorStore {
@@ -41,13 +41,13 @@ pub struct ValidatorStore {
     // garbage collection depth
     gc_depth: u64,
     pub block_number: AtomicU64,
-    pub process_block_store: ProcessBlockStore,
+    pub post_process_store: PostProcessStore,
 }
 
 impl ValidatorStore {
     pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
-        let process_block_store: ProcessBlockStore = ProcessBlockStore::reopen(store_path);
-        let last_block_info = process_block_store.last_block_info.clone();
+        let post_process_store: PostProcessStore = PostProcessStore::reopen(store_path);
+        let last_block_info = post_process_store.last_block_info.clone();
 
         // TODO load the state if last block is not 0, i.e. not at genesis
         let block_number = match last_block_info {
@@ -75,7 +75,7 @@ impl ValidatorStore {
             transaction_cache: Mutex::new(HashMap::new()),
             block_digest_cache,
             gc_depth: 50,
-            process_block_store,
+            post_process_store,
             block_number: AtomicU64::new(block_number),
         }
     }
@@ -156,15 +156,15 @@ impl ValidatorStore {
         };
 
         // write-out the block information to associated stores
-        self.process_block_store
+        self.post_process_store
             .block_store
             .write(block_number, block.clone())
             .await;
-        self.process_block_store
+        self.post_process_store
             .block_info_store
             .write(block_number, block_info.clone())
             .await;
-        self.process_block_store
+        self.post_process_store
             .last_block_info_store
             .write(0, block_info.clone())
             .await;
@@ -213,6 +213,8 @@ pub struct ValidatorState {
     /// NodeConfig for this node
     /// Controller of various blockchain modules
     pub controller_router: ControllerRouter,
+    // catchup router for fast catchup snaps
+    pub catchup_router: ControllerRouter,
     /// A map of transactions which have been seen
     pub validator_store: ValidatorStore,
     /// Metrics around blockchain operations
@@ -235,6 +237,7 @@ impl ValidatorState {
             halted: AtomicBool::new(false),
             committee: ArcSwap::from(Arc::new(genesis.committee().unwrap())),
             controller_router: genesis.controller_router().clone(),
+            catchup_router: genesis.controller_router().clone(),
             validator_store: ValidatorStore::reopen(store_db_path),
             metrics,
         }

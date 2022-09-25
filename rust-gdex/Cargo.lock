@@ -2455,6 +2455,7 @@ name = "gdex-controller"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "bincode",
  "bytes",
  "crypto",
  "fastcrypto",
@@ -2466,6 +2467,7 @@ dependencies = [
  "rustversion",
  "serde 1.0.144",
  "tonic-build 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tracing",
  "types",
 ]
 

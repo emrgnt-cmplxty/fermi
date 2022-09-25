@@ -15,7 +15,7 @@ use gdex_types::{
     asset::PRIMARY_ASSET_ID,
     crypto::ToFromBytes,
     error::GDEXError,
-    store::ProcessBlockStore,
+    store::PostProcessStore,
     transaction::Transaction,
 };
 
@@ -79,9 +79,16 @@ impl Controller for StakeController {
 
     async fn process_end_of_block(
         _controller: Arc<Mutex<Self>>,
-        _process_block_store: &ProcessBlockStore,
+        _post_process_store: &PostProcessStore,
         _block_number: u64,
     ) {
+    }
+
+    fn create_catchup_state(controller: Arc<Mutex<Self>>, _block_number: u64) -> Result<Vec<u8>, GDEXError> {
+        match bincode::serialize(&controller.lock().unwrap().clone()) {
+            Ok(v) => Ok(v),
+            Err(_) => Err(GDEXError::SerializationError),
+        }
     }
 }
 
@@ -339,5 +346,21 @@ pub mod stake_tests {
             .unwrap()
             .stake(second.public(), STAKE_AMOUNT)
             .unwrap();
+    }
+
+    #[test]
+    fn create_stake_catchup_state_default() {
+        let stake_controller = Arc::new(Mutex::new(StakeController::default()));
+        let catchup_state = StakeController::create_catchup_state(stake_controller, 0);
+        assert!(catchup_state.is_ok());
+        let catchup_state = catchup_state.unwrap();
+        println!("Catchup state is {} bytes", catchup_state.len());
+
+        match bincode::deserialize(&catchup_state) {
+            Ok(StakeController { bank_controller, .. }) => {
+                assert_eq!(bank_controller.lock().unwrap().get_num_assets(), 0);
+            }
+            Err(_) => panic!("deserializing catchup_state_default failed"),
+        }
     }
 }

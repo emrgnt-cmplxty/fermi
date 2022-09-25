@@ -22,7 +22,7 @@ benchmark/benchmark-narwhal
 benchmark/benchmark_orderbook_client
 benchmark/perf.data
 benchmark/*.svg
-suite/db.rocks
+/suite/db.rocks
 target/
 !/**/src/**/target/
 .test_*

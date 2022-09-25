@@ -6,7 +6,8 @@ use crate::{
     genesis_ceremony::GENESIS_FILENAME,
     validator::{
         consensus_adapter::ConsensusAdapter, genesis_state::ValidatorGenesisState, metrics::ValidatorMetrics,
-        server::ValidatorServer, server::ValidatorService, state::ValidatorState,
+        post_process::ValidatorPostProcessService, server::ValidatorServer, server::ValidatorService,
+        state::ValidatorState,
     },
 };
 
@@ -19,7 +20,7 @@ use multiaddr::Multiaddr;
 use prometheus::Registry;
 use std::{path::PathBuf, sync::Arc};
 use tokio::{
-    sync::mpsc::{Receiver, Sender},
+    sync::mpsc::{channel, Receiver, Sender},
     task::JoinHandle,
 };
 use tracing::info;
@@ -217,7 +218,7 @@ impl ValidatorSpawner {
         let prom_address = node_config.metrics_address.clone();
         let prometheus_registry = Registry::new();
         println!("Starting Prometheus HTTP metrics endpoint at {}", prom_address);
-        let prometheus_server_handle = start_prometheus_server(prom_address, &prometheus_registry);
+        let prometheus_server_handle = vec![start_prometheus_server(prom_address, &prometheus_registry)];
 
         let metrics = Arc::new(ValidatorMetrics::new(&prometheus_registry));
         let validator_state = Arc::new(ValidatorState::new(
@@ -228,18 +229,29 @@ impl ValidatorSpawner {
             metrics,
         ));
 
+        // channel to communicate between narwhal + post process service
+        let (tx_narwhal_to_post_process, rx_narwhal_to_post_process) = channel(1_000);
+
+        let mut validator_handles: Vec<JoinHandle<()>> = Vec::new();
+
         // spawn the validator service, e.g. Narwhal consensus
-        let mut handles = ValidatorService::spawn_narwhal(
+        let narwhal_handles = ValidatorService::spawn_narwhal(
             &node_config,
             Arc::clone(&validator_state),
             &prometheus_registry,
             rx_reconfigure_consensus,
+            tx_narwhal_to_post_process,
         )
-        .await
         .unwrap();
-        handles.push(prometheus_server_handle);
+        validator_handles.extend(narwhal_handles);
+        validator_handles.extend(prometheus_server_handle);
 
-        self.service_handles = Some(handles);
+        // spawn post process service
+        let post_process_handles =
+            ValidatorPostProcessService::spawn(rx_narwhal_to_post_process, Arc::clone(&validator_state)).unwrap();
+        validator_handles.extend(post_process_handles);
+
+        self.service_handles = Some(validator_handles);
         self.set_validator_state(validator_state);
     }
 

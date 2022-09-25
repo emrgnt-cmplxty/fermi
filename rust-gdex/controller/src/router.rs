@@ -14,11 +14,17 @@ use crate::{
 // gdex
 use gdex_types::{
     error::GDEXError,
-    store::ProcessBlockStore,
+    store::{CatchupState, PostProcessStore},
     transaction::{ExecutionResultBody, Transaction},
 };
 
 // mysten
+
+// external
+use tracing::info;
+
+// constants
+const CATCHUP_STATE_FREQUENCY: u64 = 100;
 
 // external
 use serde::{Deserialize, Serialize};
@@ -167,13 +173,48 @@ impl ControllerRouter {
         Ok(self.event_manager.lock().unwrap().emit())
     }
 
-    pub async fn process_end_of_block(&self, process_block_store: &ProcessBlockStore, block_number: u64) {
-        ConsensusController::process_end_of_block(self.consensus_controller.clone(), process_block_store, block_number)
+    pub async fn create_catchup_state(&self, post_process_store: &PostProcessStore, block_number: u64) {
+        if block_number % CATCHUP_STATE_FREQUENCY == 0 {
+            let state = vec![
+                ConsensusController::create_catchup_state(self.consensus_controller.clone(), block_number),
+                BankController::create_catchup_state(self.bank_controller.clone(), block_number),
+                StakeController::create_catchup_state(self.stake_controller.clone(), block_number),
+                SpotController::create_catchup_state(self.spot_controller.clone(), block_number),
+                FuturesController::create_catchup_state(self.futures_controller.clone(), block_number),
+            ];
+            let mut total_catchup_state: Vec<Vec<u8>> = Vec::new();
+
+            // if serialization failure occurs do not save bad state
+            if state.iter().filter(|x| x.is_err()).count() == 0 {
+                for catchup_state in state {
+                    total_catchup_state.push(catchup_state.unwrap());
+                }
+            }
+
+            // print size for logging purposes
+            let catchup_size: u64 = total_catchup_state.iter().map(|x| x.len() as u64).sum();
+            info!(
+                "Generating catchup snap at block {} of size {}",
+                block_number, catchup_size
+            );
+
+            let catchup_state = CatchupState {
+                block_number,
+                state: total_catchup_state,
+            };
+
+            // store catchup state in first position
+            post_process_store.catchup_state_store.write(0, catchup_state).await;
+        }
+    }
+
+    pub async fn process_end_of_block(&self, post_process_store: &PostProcessStore, block_number: u64) {
+        ConsensusController::process_end_of_block(self.consensus_controller.clone(), post_process_store, block_number)
             .await;
-        BankController::process_end_of_block(self.bank_controller.clone(), process_block_store, block_number).await;
-        StakeController::process_end_of_block(self.stake_controller.clone(), process_block_store, block_number).await;
-        SpotController::process_end_of_block(self.spot_controller.clone(), process_block_store, block_number).await;
-        FuturesController::process_end_of_block(self.futures_controller.clone(), process_block_store, block_number)
+        BankController::process_end_of_block(self.bank_controller.clone(), post_process_store, block_number).await;
+        StakeController::process_end_of_block(self.stake_controller.clone(), post_process_store, block_number).await;
+        SpotController::process_end_of_block(self.spot_controller.clone(), post_process_store, block_number).await;
+        FuturesController::process_end_of_block(self.futures_controller.clone(), post_process_store, block_number)
             .await;
     }
 }

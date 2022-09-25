@@ -242,12 +242,12 @@ impl Hash for Transaction {
 
 // EXECUTION RESULT
 
-#[allow(clippy::new_without_default)]
 #[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 pub struct ExecutionResultBody {
     pub events: Vec<ExecutionEvent>,
 }
 
+#[allow(clippy::new_without_default)]
 impl ExecutionResultBody {
     pub fn new() -> Self {
         ExecutionResultBody { events: Vec::new() }

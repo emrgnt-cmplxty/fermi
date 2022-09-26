@@ -87,13 +87,9 @@ message RelayerGetBlockRequest {
     uint64 block_number = 1;
 }
 
-message RelayerBlock {
-    bytes block = 1;
-}
-
 message RelayerBlockResponse {
     bool successful = 1;
-    RelayerBlock block = 2;
+    block.Block block = 2;
 }
 
 // orderbook depth

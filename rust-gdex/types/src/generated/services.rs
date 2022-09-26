@@ -40,16 +40,11 @@ pub struct RelayerGetBlockRequest {
     pub block_number: u64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct RelayerBlock {
-    #[prost(bytes="bytes", tag="1")]
-    pub block: ::prost::bytes::Bytes,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RelayerBlockResponse {
     #[prost(bool, tag="1")]
     pub successful: bool,
     #[prost(message, optional, tag="2")]
-    pub block: ::core::option::Option<RelayerBlock>,
+    pub block: ::core::option::Option<super::block::Block>,
 }
 // orderbook depth
 

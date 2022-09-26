@@ -390,7 +390,7 @@ pub mod futures_tests {
         let maker_init_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
         let maker_init_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
         let maker_init_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
-        let init_is_liquidatable = maker_init_deposit + maker_init_unrealized_pnl < maker_init_req_collateral as i64;
+        let init_is_liquidatable = maker_init_deposit + maker_init_unrealized_pnl < 0_i64;
         assert!(!init_is_liquidatable);
         assert_eq!(maker_init_unrealized_pnl, 0);
 
@@ -405,7 +405,7 @@ pub mod futures_tests {
         let maker_order_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
         let maker_order_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
         let order_is_liquidatable =
-            maker_order_deposit + maker_order_unrealized_pnl < maker_order_req_collateral as i64;
+            maker_order_deposit + maker_order_unrealized_pnl < 0_i64;
 
         assert!(!order_is_liquidatable);
         assert_eq!(maker_order_unrealized_pnl, 0);
@@ -421,7 +421,7 @@ pub mod futures_tests {
         let maker_fill_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
         let maker_fill_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
         let maker_fill_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
-        let fill_is_liquidatable = maker_fill_deposit + maker_fill_unrealized_pnl < maker_fill_req_collateral as i64;
+        let fill_is_liquidatable = maker_fill_deposit + maker_fill_unrealized_pnl < 0_i64;
 
         assert!(fill_is_liquidatable); // oracle price is 11_000_000, filled at 21_000_000, immediate loss -> liquidation
         assert_eq!(maker_fill_unrealized_pnl, -960 * 10_000_000);
@@ -433,7 +433,7 @@ pub mod futures_tests {
         let maker_cancel_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
 
         let cancel_is_liquidatable =
-            maker_cancel_deposit + maker_cancel_unrealized_pnl < maker_cancel_req_collateral as i64;
+            maker_cancel_deposit + maker_cancel_unrealized_pnl < 0_i64;
         assert!(cancel_is_liquidatable); // should still be able to liquidate since the remaining order is small
         assert!(maker_cancel_req_collateral < maker_fill_req_collateral); // cancelling open orders should reduce collateral requirement
 
@@ -448,7 +448,7 @@ pub mod futures_tests {
         let maker_final_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
         let maker_final_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
         let final_is_liquidatable =
-            maker_final_deposit + maker_final_unrealized_pnl < maker_final_req_collateral as i64;
+            maker_final_deposit + maker_final_unrealized_pnl < 0_i64;
 
         assert!(!final_is_liquidatable);
         assert!(maker_final_req_collateral == 1); // zero position rounded up
@@ -470,7 +470,7 @@ pub mod futures_tests {
         let maker_init_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
         let maker_init_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
         let maker_init_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
-        let init_is_liquidatable = maker_init_deposit + maker_init_unrealized_pnl < maker_init_req_collateral as i64;
+        let init_is_liquidatable = maker_init_deposit + maker_init_unrealized_pnl < 0_i64;
         assert!(!init_is_liquidatable);
         assert_eq!(maker_init_unrealized_pnl, 0);
 
@@ -485,7 +485,7 @@ pub mod futures_tests {
         let maker_order_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
         let maker_order_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
         let order_is_liquidatable =
-            maker_order_deposit + maker_order_unrealized_pnl < maker_order_req_collateral as i64;
+            maker_order_deposit + maker_order_unrealized_pnl < 0_i64;
 
         assert!(!order_is_liquidatable);
         assert_eq!(maker_order_unrealized_pnl, 0);
@@ -501,7 +501,7 @@ pub mod futures_tests {
         let maker_fill_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
         let maker_fill_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
         let maker_fill_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
-        let fill_is_liquidatable = maker_fill_deposit + maker_fill_unrealized_pnl < maker_fill_req_collateral as i64;
+        let fill_is_liquidatable = maker_fill_deposit + maker_fill_unrealized_pnl < 0_i64;
 
         assert!(fill_is_liquidatable); // oracle price is 11_000_000, filled at 21_000_000, immediate loss -> liquidation
         assert_eq!(maker_fill_unrealized_pnl, -960 * 10_000_000);
@@ -513,38 +513,36 @@ pub mod futures_tests {
         let maker_cancel_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
 
         let cancel_is_liquidatable =
-            maker_cancel_deposit + maker_cancel_unrealized_pnl < maker_cancel_req_collateral as i64;
+            maker_cancel_deposit + maker_cancel_unrealized_pnl < 0_i64;
         assert!(cancel_is_liquidatable); // should still be able to liquidate since the remaining order is small
         assert!(maker_cancel_req_collateral < maker_fill_req_collateral); // cancelling open orders should reduce collateral requirement
 
-        let liquidate_result = futures_tester.liquidate(taker_index, maker_index, OrderSide::Bid as u64, 500);
+        let liquidate_result = futures_tester.liquidate(taker_index, maker_index, OrderSide::Bid as u64, 50);
         assert!(liquidate_result.is_ok());
 
         let maker_partial_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
-        let maker_partial_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
         let maker_partial_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
-        let final_is_liquidatable =
-            maker_partial_deposit + maker_partial_unrealized_pnl < maker_partial_req_collateral as i64;
+        let partial_is_liquidatable =
+            maker_partial_deposit + maker_partial_unrealized_pnl < 0_i64;
 
         // partial liquidation, target still liquidatable
-        assert!(final_is_liquidatable);
-        //assert!(maker_partial_req_collateral == maker_cancel_req_collateral - (500 * INITIAL_ASSET_PRICES[0]) as u64); // reduced risk by 500 lots
-        assert!(maker_partial_unrealized_pnl == -460 * 10_000_000); // left with 460 lots 10mm down from entry
+        assert!(partial_is_liquidatable);
+        assert!(maker_partial_unrealized_pnl == -910 * 10_000_000);
         assert_eq!(
             maker_partial_deposit,
             maker_init_deposit
-                - 500 * (21_000_000 - (INITIAL_ASSET_PRICES[0] as f64 * 0.99) as i64)
-                - 460 * 11_000_000 / TEST_MAX_LEVERAGE as i64
+                - 50 * (21_000_000 - (INITIAL_ASSET_PRICES[0] as f64 * 0.99) as i64)
+                - 910 * 11_000_000 / TEST_MAX_LEVERAGE as i64
         );
 
-        let liquidate_result = futures_tester.liquidate(taker_index, maker_index, OrderSide::Bid as u64, 200);
+        let liquidate_result = futures_tester.liquidate(taker_index, maker_index, OrderSide::Bid as u64, 650);
         assert!(liquidate_result.is_ok());
 
         let maker_final_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
         let maker_final_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
         let maker_final_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
         let final_is_liquidatable =
-            maker_final_deposit + maker_final_unrealized_pnl < maker_final_req_collateral as i64;
+            maker_final_deposit + maker_final_unrealized_pnl < 0_i64;
 
         assert!(!final_is_liquidatable);
 

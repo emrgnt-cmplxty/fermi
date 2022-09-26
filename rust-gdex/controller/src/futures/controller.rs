@@ -339,13 +339,10 @@ impl FuturesController {
         if let Some(market_place) = self.market_places.get_mut(&market_admin) {
             // check target acct is in liquidation
             let target_account = AccountPubKey::from_bytes(&request.target).map_err(|_| GDEXError::AccountLookup)?;
-            let target_req_collateral = get_account_total_req_collateral(market_place, &target_account, None)?
-                .try_into()
-                .map_err(|_| GDEXError::Conversion)?;
             let target_unrealized_pnl = get_account_unrealized_pnl(market_place, &target_account)?;
-            let target_deposit = get_account_deposit_net_of_req_collateral(market_place, &target_account)?;
+            let target_deposit_net_of_collateral = get_account_deposit_net_of_req_collateral(market_place, &target_account)?;
 
-            if target_deposit + target_unrealized_pnl > target_req_collateral {
+            if target_deposit_net_of_collateral + target_unrealized_pnl >= 0 {
                 return Err(GDEXError::CannotLiquidateTargetCollateral);
             }
 

@@ -60,6 +60,8 @@ pub struct FuturesLimitOrderRequest {
 pub struct CancelAllRequest {
     #[prost(bytes="bytes", tag="1")]
     pub target: ::prost::bytes::Bytes,
+    #[prost(bytes="bytes", tag="2")]
+    pub market_admin: ::prost::bytes::Bytes,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct LiquidateRequest {
@@ -70,12 +72,10 @@ pub struct LiquidateRequest {
     #[prost(uint64, tag="3")]
     pub side: u64,
     #[prost(uint64, tag="4")]
-    pub price: u64,
-    #[prost(uint64, tag="5")]
     pub quantity: u64,
-    #[prost(bytes="bytes", tag="6")]
+    #[prost(bytes="bytes", tag="5")]
     pub market_admin: ::prost::bytes::Bytes,
-    #[prost(bytes="bytes", tag="7")]
+    #[prost(bytes="bytes", tag="6")]
     pub target: ::prost::bytes::Bytes,
 }
 // ENUMS
@@ -91,6 +91,7 @@ pub enum FuturesRequestType {
     AccountDeposit = 5,
     AccountWithdrawal = 6,
     FuturesLimitOrder = 7,
-    CancelAll = 8,
-    Liquidate = 9
+    CancelOrder = 8,
+    CancelAll = 9,
+    Liquidate = 10,
 }

@@ -264,7 +264,7 @@ impl FuturesController {
             let target_in_liq = (target_deposit + target_unrealized_pnl) < target_req_collateral;
 
             if sender_is_target || target_in_liq {
-                for (_, market) in &mut market_place.markets {
+                for market in market_place.markets.values_mut() {
                     if let Some(futures_account) = market.borrow_mut().accounts.get(&account_key.clone()) {
                         for o in &futures_account.open_orders.clone() {
                             let cancel_request = CancelOrderRequest::new(
@@ -405,8 +405,8 @@ impl FuturesController {
 
             // it actually doesn't matter what the order id is,
             // there are no open orders anymore so that block is skipped entirely
-            target_market.update_state_on_fill(&sender, 0, parsed_order_side, liquidation_price, request.quantity);
-            target_market.update_state_on_fill(&target_account, 0, opposite_side, liquidation_price, request.quantity);
+            target_market.update_state_on_fill(&sender, 0, parsed_order_side, liquidation_price, request.quantity)?;
+            target_market.update_state_on_fill(&target_account, 0, opposite_side, liquidation_price, request.quantity)?;
         } else {
             return Err(GDEXError::MarketplaceExistence);
         };
@@ -432,7 +432,7 @@ impl FuturesController {
                 .unwrap()
                 .eq(&sender);
             if is_owned {
-                market.place_cancel_order(&sender, &request);
+                market.place_cancel_order(&sender, &request)?;
             }
         }
         Err(GDEXError::MarketplaceExistence)

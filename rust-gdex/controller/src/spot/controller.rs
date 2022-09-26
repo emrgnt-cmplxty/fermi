@@ -26,6 +26,7 @@ use gdex_types::{
 
 // external
 use async_trait::async_trait;
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -503,6 +504,17 @@ impl OrderBookWrapper for SpotOrderbook {
 
     fn emit_order_cancel_event(&mut self, account: &AccountPubKey, order_id: u64) {
         self.emit_event(&SpotOrderCancelEvent::new(account, order_id));
+    }
+
+    fn emit_liquidate_event(
+        &mut self,
+        _sender: &AccountPubKey,
+        _target_account: &AccountPubKey,
+        _side: u64,
+        _price: u64,
+        _quantity: u64,
+    ) {
+        todo!()
     }
 }
 

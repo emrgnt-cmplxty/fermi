@@ -21,6 +21,7 @@ use gdex_types::{
 // external
 use async_trait::async_trait;
 
+
 use gdex_types::transaction::parse_order_side;
 use serde::{Deserialize, Serialize};
 use std::borrow::BorrowMut;
@@ -406,7 +407,20 @@ impl FuturesController {
             // it actually doesn't matter what the order id is,
             // there are no open orders anymore so that block is skipped entirely
             target_market.update_state_on_fill(&sender, 0, parsed_order_side, liquidation_price, request.quantity)?;
-            target_market.update_state_on_fill(&target_account, 0, opposite_side, liquidation_price, request.quantity)?;
+            target_market.update_state_on_fill(
+                &target_account,
+                0,
+                opposite_side,
+                liquidation_price,
+                request.quantity,
+            )?;
+            target_market.emit_liquidate_event(
+                &sender,
+                &target_account,
+                request.side,
+                liquidation_price,
+                request.quantity,
+            );
         } else {
             return Err(GDEXError::MarketplaceExistence);
         };
@@ -420,7 +434,6 @@ impl FuturesController {
         request: CancelOrderRequest,
     ) -> Result<(), GDEXError> {
         if let Some(market_place) = self.market_places.get_mut(&market_admin) {
-            // TODO - consider max orders per account, or some form of min balance increment per order
             let market = market_place
                 .markets
                 .get_mut(&request.base_asset_id)
@@ -826,6 +839,23 @@ impl OrderBookWrapper for FuturesMarket {
 
     fn emit_order_cancel_event(&mut self, account: &AccountPubKey, order_id: u64) {
         self.emit_event(&FuturesOrderCancelEvent::new(account, order_id));
+    }
+
+    fn emit_liquidate_event(
+        &mut self,
+        sender: &AccountPubKey,
+        target_account: &AccountPubKey,
+        side: u64,
+        price: u64,
+        quantity: u64,
+    ) {
+        self.emit_event(&FuturesLiquidateEvent::new(
+            sender,
+            target_account,
+            side,
+            price,
+            quantity,
+        ))
     }
 }
 

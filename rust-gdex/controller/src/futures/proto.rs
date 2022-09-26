@@ -384,6 +384,27 @@ impl FuturesOrderCancelEvent {
     }
 }
 
+impl FuturesLiquidateEvent {
+    pub fn new(sender: &AccountPubKey, target: &AccountPubKey, side: u64, price: u64, quantity: u64) -> Self {
+        FuturesLiquidateEvent {
+            sender: Bytes::from(sender.as_ref().to_vec()),
+            target_account: Bytes::from(target.as_ref().to_vec()),
+            side,
+            price,
+            quantity,
+        }
+    }
+}
+
+impl Event for FuturesLiquidateEvent {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_event_type_id() -> i32 {
+        FuturesEventType::LiquidateEvent as i32
+    }
+}
+
 impl Event for FuturesOrderCancelEvent {
     fn get_controller_id() -> i32 {
         ControllerType::Futures as i32

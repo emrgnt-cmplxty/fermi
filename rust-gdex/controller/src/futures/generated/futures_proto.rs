@@ -137,6 +137,19 @@ pub struct FuturesOrderCancelEvent {
     #[prost(uint64, tag="2")]
     pub order_id: u64,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct FuturesLiquidateEvent {
+    #[prost(bytes="bytes", tag="1")]
+    pub sender: ::prost::bytes::Bytes,
+    #[prost(bytes="bytes", tag="2")]
+    pub target_account: ::prost::bytes::Bytes,
+    #[prost(uint64, tag="3")]
+    pub side: u64,
+    #[prost(uint64, tag="4")]
+    pub price: u64,
+    #[prost(uint64, tag="5")]
+    pub quantity: u64,
+}
 // ENUMS
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
@@ -162,4 +175,5 @@ pub enum FuturesEventType {
     OrderPartialFill = 2,
     OrderUpdate = 3,
     OrderCancel = 4,
+    LiquidateEvent = 5,
 }

@@ -24,6 +24,7 @@ enum FuturesEventType {
     ORDER_PARTIAL_FILL = 2;
     ORDER_UPDATE = 3;
     ORDER_CANCEL = 4;
+    LIQUIDATE_EVENT = 5;
 }
 
 // REQUESTS
@@ -85,7 +86,7 @@ message LiquidateRequest {
 
 message FuturesOrderNewEvent {
     bytes account = 1;
-    uint64 order_id =2;
+    uint64 order_id = 2;
     uint64 side = 3;
     uint64 price = 4;
     uint64 quantity = 5;
@@ -93,7 +94,7 @@ message FuturesOrderNewEvent {
 
 message FuturesOrderFillEvent {
     bytes account = 1;
-    uint64 order_id =2;
+    uint64 order_id = 2;
     uint64 side = 3;
     uint64 price = 4;
     uint64 quantity = 5;
@@ -101,7 +102,7 @@ message FuturesOrderFillEvent {
 
 message FuturesOrderPartialFillEvent {
     bytes account = 1;
-    uint64 order_id =2;
+    uint64 order_id = 2;
     uint64 side = 3;
     uint64 price = 4;
     uint64 quantity = 5;
@@ -109,7 +110,7 @@ message FuturesOrderPartialFillEvent {
 
 message FuturesOrderUpdateEvent {
     bytes account = 1;
-    uint64 order_id =2;
+    uint64 order_id = 2;
     uint64 side = 3;
     uint64 price = 4;
     uint64 quantity = 5;
@@ -117,5 +118,14 @@ message FuturesOrderUpdateEvent {
 
 message FuturesOrderCancelEvent {
     bytes account = 1;
-    uint64 order_id =2;
+    uint64 order_id = 2;
 }
+
+message FuturesLiquidateEvent {
+    bytes sender = 1;
+    bytes target_account = 2;
+    uint64 side = 3;
+    uint64 price = 4;
+    uint64 quantity = 5;
+}
+

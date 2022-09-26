@@ -755,6 +755,15 @@ pub trait OrderBookWrapper {
 
     fn emit_order_cancel_event(&mut self, account: &AccountPubKey, order_id: u64);
 
+    fn emit_liquidate_event(
+        &mut self,
+        sender: &AccountPubKey,
+        target_account: &AccountPubKey,
+        side: u64,
+        price: u64,
+        quantity: u64,
+    );
+
     // result processing
 
     fn process_order_result(

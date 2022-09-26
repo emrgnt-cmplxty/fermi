@@ -7,7 +7,6 @@ use gdex_types::transaction::ConsensusTransaction;
 use narwhal_types::CertificateDigestProto;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
-use tracing::info;
 pub struct RelayerService {
     pub state: Arc<ValidatorState>,
 }
@@ -112,7 +111,7 @@ impl Relayer for RelayerService {
 
                         let exec_string = match exec_result {
                             Ok(_) => "Success".to_string(),
-                            Err(err) => err.to_string(),
+                            Err(err) => format!("Error: {}", err.to_string()),
                         };
 
                         let executed_transaction = ExecutedTransaction {

@@ -422,7 +422,6 @@ pub mod futures_tests {
         assert!(fill_is_liquidatable); // oracle price is 11_000_000, filled at 21_000_000, immediate loss -> liquidation
         assert_eq!(maker_fill_unrealized_pnl, -960 * 10_000_000);
 
-
         cancel_result = futures_tester.cancel_open_orders(taker_index, maker_index);
         assert!(cancel_result.is_ok());
         let maker_cancel_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
@@ -503,7 +502,6 @@ pub mod futures_tests {
         assert!(fill_is_liquidatable); // oracle price is 11_000_000, filled at 21_000_000, immediate loss -> liquidation
         assert_eq!(maker_fill_unrealized_pnl, -960 * 10_000_000);
 
-
         cancel_result = futures_tester.cancel_open_orders(taker_index, maker_index);
         assert!(cancel_result.is_ok());
         let maker_cancel_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
@@ -528,7 +526,12 @@ pub mod futures_tests {
         assert!(final_is_liquidatable);
         //assert!(maker_partial_req_collateral == maker_cancel_req_collateral - (500 * INITIAL_ASSET_PRICES[0]) as u64); // reduced risk by 500 lots
         assert!(maker_partial_unrealized_pnl == -460 * 10_000_000); // left with 460 lots 10mm down from entry
-        assert_eq!(maker_partial_deposit, maker_init_deposit - 500 * (21_000_000 - (INITIAL_ASSET_PRICES[0] as f64 * 0.99) as i64) - 460 * 11_000_000 / TEST_MAX_LEVERAGE as i64);
+        assert_eq!(
+            maker_partial_deposit,
+            maker_init_deposit
+                - 500 * (21_000_000 - (INITIAL_ASSET_PRICES[0] as f64 * 0.99) as i64)
+                - 460 * 11_000_000 / TEST_MAX_LEVERAGE as i64
+        );
 
         let liquidate_result = futures_tester.liquidate(taker_index, maker_index, OrderSide::Bid as u64, 200);
         assert!(liquidate_result.is_ok());
@@ -543,7 +546,13 @@ pub mod futures_tests {
 
         assert!(maker_final_req_collateral == 260 * 11_000_000 / TEST_MAX_LEVERAGE as u64 + 1);
         assert!(maker_final_unrealized_pnl == -260 * 10_000_000);
-        assert_eq!(maker_final_deposit, maker_init_deposit - 700 * (21_000_000 - (INITIAL_ASSET_PRICES[0] as f64 * 0.99) as i64) - maker_final_req_collateral as i64 + 1);
+        assert_eq!(
+            maker_final_deposit,
+            maker_init_deposit
+                - 700 * (21_000_000 - (INITIAL_ASSET_PRICES[0] as f64 * 0.99) as i64)
+                - maker_final_req_collateral as i64
+                + 1
+        );
     }
 
     #[test]

@@ -6,8 +6,6 @@ use crate::error::GDEXError;
 #[rustfmt::skip]
 #[allow(clippy::all)]
 mod services;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-
 pub use services::{
     // faucet
     faucet_client::FaucetClient,
@@ -26,7 +24,6 @@ pub use services::{
     FuturesOrder,
     FuturesPosition,
     FuturesUserByMarket,
-    RelayerBlock,
     RelayerBlockInfoResponse,
     RelayerBlockResponse,
     RelayerFuturesMarketsResponse,
@@ -43,6 +40,19 @@ pub use services::{
     RelayerMetricsRequest,
     RelayerMetricsResponse,
 };
+
+#[path = "generated/block.rs"]
+#[rustfmt::skip]
+#[allow(clippy::all)]
+mod block;
+pub use block::*;
+
+#[path = "generated/transaction.rs"]
+#[rustfmt::skip]
+#[allow(clippy::all)]
+mod transaction;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+pub use transaction::*;
 
 impl Serialize for FuturesPosition {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -91,16 +101,3 @@ impl<'de> Deserialize<'de> for FuturesOrder {
         }
     }
 }
-#[path = "generated/block.rs"]
-#[rustfmt::skip]
-#[allow(clippy::all)]
-mod block;
-
-pub use block::*;
-
-#[path = "generated/transaction.rs"]
-#[rustfmt::skip]
-#[allow(clippy::all)]
-mod transaction;
-
-pub use transaction::*;

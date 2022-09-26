@@ -8,9 +8,14 @@ import "transaction.proto";
 
 // INTERFACE
 
+message ExecutedTransaction {
+    bytes digest = 1;
+    string result = 2;
+    transaction.SignedTransaction signed_transaction = 3;
+}
+
 message Block {
-    bytes block_certificate = 1;
-    repeated transaction.SignedTransaction transactions = 2;
+    repeated ExecutedTransaction executed_transactions = 1;
 }
 
 message BlockInfo {

@@ -111,7 +111,7 @@ impl Relayer for RelayerService {
 
                         let exec_string = match exec_result {
                             Ok(_) => "Success".to_string(),
-                            Err(err) => format!("Error: {}", err.to_string()),
+                            Err(err) => format!("Error: {}", err),
                         };
 
                         let executed_transaction = ExecutedTransaction {

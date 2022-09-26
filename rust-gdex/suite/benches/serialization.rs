@@ -7,7 +7,7 @@ extern crate bincode;
 extern crate criterion;
 
 use criterion::*;
-use fastcrypto::{DIGEST_LEN};
+use fastcrypto::DIGEST_LEN;
 use gdex_controller::bank::proto::create_payment_transaction;
 use gdex_types::{
     account::AccountKeyPair,

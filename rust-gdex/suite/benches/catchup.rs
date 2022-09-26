@@ -26,7 +26,6 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::Mutex;
 
-
 fn criterion_benchmark(c: &mut Criterion) {
     // setup
 

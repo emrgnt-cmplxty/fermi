@@ -404,8 +404,7 @@ pub mod futures_tests {
         let maker_order_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
         let maker_order_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
         let maker_order_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
-        let order_is_liquidatable =
-            maker_order_deposit + maker_order_unrealized_pnl < 0_i64;
+        let order_is_liquidatable = maker_order_deposit + maker_order_unrealized_pnl < 0_i64;
 
         assert!(!order_is_liquidatable);
         assert_eq!(maker_order_unrealized_pnl, 0);
@@ -432,8 +431,7 @@ pub mod futures_tests {
         let maker_cancel_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
         let maker_cancel_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
 
-        let cancel_is_liquidatable =
-            maker_cancel_deposit + maker_cancel_unrealized_pnl < 0_i64;
+        let cancel_is_liquidatable = maker_cancel_deposit + maker_cancel_unrealized_pnl < 0_i64;
         assert!(cancel_is_liquidatable); // should still be able to liquidate since the remaining order is small
         assert!(maker_cancel_req_collateral < maker_fill_req_collateral); // cancelling open orders should reduce collateral requirement
 
@@ -447,8 +445,7 @@ pub mod futures_tests {
         let maker_final_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
         let maker_final_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
         let maker_final_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
-        let final_is_liquidatable =
-            maker_final_deposit + maker_final_unrealized_pnl < 0_i64;
+        let final_is_liquidatable = maker_final_deposit + maker_final_unrealized_pnl < 0_i64;
 
         assert!(!final_is_liquidatable);
         assert!(maker_final_req_collateral == 1); // zero position rounded up
@@ -484,8 +481,7 @@ pub mod futures_tests {
         let maker_order_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
         let maker_order_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
         let maker_order_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
-        let order_is_liquidatable =
-            maker_order_deposit + maker_order_unrealized_pnl < 0_i64;
+        let order_is_liquidatable = maker_order_deposit + maker_order_unrealized_pnl < 0_i64;
 
         assert!(!order_is_liquidatable);
         assert_eq!(maker_order_unrealized_pnl, 0);
@@ -512,8 +508,7 @@ pub mod futures_tests {
         let maker_cancel_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
         let maker_cancel_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
 
-        let cancel_is_liquidatable =
-            maker_cancel_deposit + maker_cancel_unrealized_pnl < 0_i64;
+        let cancel_is_liquidatable = maker_cancel_deposit + maker_cancel_unrealized_pnl < 0_i64;
         assert!(cancel_is_liquidatable); // should still be able to liquidate since the remaining order is small
         assert!(maker_cancel_req_collateral < maker_fill_req_collateral); // cancelling open orders should reduce collateral requirement
 
@@ -522,8 +517,7 @@ pub mod futures_tests {
 
         let maker_partial_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
         let maker_partial_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
-        let partial_is_liquidatable =
-            maker_partial_deposit + maker_partial_unrealized_pnl < 0_i64;
+        let partial_is_liquidatable = maker_partial_deposit + maker_partial_unrealized_pnl < 0_i64;
 
         // partial liquidation, target still liquidatable
         assert!(partial_is_liquidatable);
@@ -541,8 +535,7 @@ pub mod futures_tests {
         let maker_final_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
         let maker_final_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
         let maker_final_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
-        let final_is_liquidatable =
-            maker_final_deposit + maker_final_unrealized_pnl < 0_i64;
+        let final_is_liquidatable = maker_final_deposit + maker_final_unrealized_pnl < 0_i64;
 
         assert!(!final_is_liquidatable);
 

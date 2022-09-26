@@ -1,12 +1,12 @@
 use crate::validator::state::ValidatorState;
+use bytes::Bytes;
 use gdex_types::account::AccountPubKey;
 use gdex_types::crypto::ToFromBytes;
 use gdex_types::proto::*;
+use gdex_types::transaction::ConsensusTransaction;
 use narwhal_types::CertificateDigestProto;
-
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
-
 pub struct RelayerService {
     pub state: Arc<ValidatorState>,
 }
@@ -20,7 +20,7 @@ impl Relayer for RelayerService {
         let validator_state = &self.state;
         let returned_value = validator_state
             .validator_store
-            .process_block_store
+            .post_process_store
             .last_block_info_store
             .read(0)
             .await;
@@ -52,7 +52,7 @@ impl Relayer for RelayerService {
 
         match validator_state
             .validator_store
-            .process_block_store
+            .post_process_store
             .block_info_store
             .read(block_number)
             .await
@@ -63,7 +63,8 @@ impl Relayer for RelayerService {
                         successful: true,
                         block_info: Some(BlockInfo {
                             block_number: block_info.block_number,
-                            digest: CertificateDigestProto::from(block_info.block_digest).digest, // TODO egregious hack (MI)
+                            // TODO clean up this egregious hack (MI)
+                            digest: CertificateDigestProto::from(block_info.block_digest).digest,
                         }),
                     }))
                 } else {
@@ -83,17 +84,47 @@ impl Relayer for RelayerService {
 
         match validator_state
             .validator_store
-            .process_block_store
+            .post_process_store
             .block_store
             .read(block_number)
             .await
         {
             Ok(opt) => {
                 if let Some(block) = opt {
-                    let block_bytes = bincode::serialize(&block).unwrap().into();
+                    let mut executed_transactions = Vec::new();
+                    for (serialized_transaction, exec_result) in block.transactions.iter() {
+                        let consensus_transaction: ConsensusTransaction =
+                            ConsensusTransaction::deserialize(serialized_transaction.clone())
+                                .map_err(|_| Status::unknown("Error deserializing consensus transaction"))?;
+
+                        let signed_transaction: SignedTransaction = consensus_transaction
+                            .get_payload()
+                            .map_err(|_| Status::unknown("Error deserializing transactions"))?;
+
+                        let transaction_digest = Bytes::from(
+                            signed_transaction
+                                .get_transaction_digest()
+                                .map_err(|_| Status::unknown("Error calculating transaction digest"))?
+                                .get_array()
+                                .to_vec(),
+                        );
+
+                        let exec_string = match exec_result {
+                            Ok(_) => "Success".to_string(),
+                            Err(err) => format!("Error: {}", err),
+                        };
+
+                        let executed_transaction = ExecutedTransaction {
+                            digest: transaction_digest,
+                            result: exec_string,
+                            signed_transaction: Some(signed_transaction),
+                        };
+                        executed_transactions.push(executed_transaction);
+                    }
+
                     Ok(Response::new(RelayerBlockResponse {
                         successful: true,
-                        block: Some(RelayerBlock { block: block_bytes }),
+                        block: Some(Block { executed_transactions }),
                     }))
                 } else {
                     Err(Status::not_found("Block was not found."))
@@ -122,7 +153,7 @@ impl Relayer for RelayerService {
 
         let returned_value = validator_state
             .validator_store
-            .process_block_store
+            .post_process_store
             .latest_orderbook_depth_store
             .read(orderbook_depth_key)
             .await;
@@ -162,6 +193,32 @@ impl Relayer for RelayerService {
                 }
             }
             // Propogate a tonic error to client
+            Err(err) => Err(Status::unknown(err.to_string())),
+        }
+    }
+    async fn get_latest_catchup_state(
+        &self,
+        _request: Request<RelayerGetLatestCatchupStateRequest>,
+    ) -> Result<Response<RelayerLatestCatchupStateResponse>, Status> {
+        let validator_state = &self.state;
+        let returned_value = validator_state
+            .validator_store
+            .post_process_store
+            .catchup_state_store
+            .read(0)
+            .await;
+
+        match returned_value {
+            Ok(opt) => {
+                if let Some(catchup_state) = opt {
+                    let catchup_state_bytes = bincode::serialize(&catchup_state).unwrap().into();
+                    return Ok(Response::new(RelayerLatestCatchupStateResponse {
+                        block_number: catchup_state.block_number,
+                        state: catchup_state_bytes,
+                    }));
+                }
+                Err(Status::not_found("Catchup state was not found."))
+            }
             Err(err) => Err(Status::unknown(err.to_string())),
         }
     }

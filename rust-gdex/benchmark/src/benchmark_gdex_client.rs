@@ -122,7 +122,7 @@ async fn main() -> Result<()> {
     client.send().await.context("Failed to submit transactions")
 }
 
-/// TODO - cleanup client to use bench helper
+/// TODO - https://github.com/gdexorg/gdex/issues/157 - cleanup client to use bench helper
 struct Client {
     target: Url,
     relayer: Url,

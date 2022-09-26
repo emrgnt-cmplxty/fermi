@@ -1,8 +1,3 @@
-//! Manages the staking of user funds
-//!
-//! TODO
-//! 0.) ADD SIZE CHECKS ON TRANSACTIONS
-//!
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 
@@ -11,6 +6,7 @@
 // crate
 use crate::bank::controller::BankController;
 use crate::controller::Controller;
+use crate::event_manager::{EventEmitter, EventManager};
 use crate::router::ControllerRouter;
 
 // gdex
@@ -19,7 +15,7 @@ use gdex_types::{
     asset::PRIMARY_ASSET_ID,
     crypto::ToFromBytes,
     error::GDEXError,
-    store::ProcessBlockStore,
+    store::PostProcessStore,
     transaction::Transaction,
 };
 
@@ -40,10 +36,13 @@ pub const STAKE_CONTROLLER_ACCOUNT_PUBKEY: &[u8] = b"STAKECONTROLLERAAAAAAAAAAAA
 /// The stake controller is responsible for accessing & modifying user balances
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct StakeController {
+    // controller state
     controller_account: AccountPubKey,
     stake_accounts: HashMap<AccountPubKey, StakeAccount>,
     bank_controller: Arc<Mutex<BankController>>,
     total_staked: u64,
+    // shared
+    event_manager: Arc<Mutex<EventManager>>,
 }
 
 impl Default for StakeController {
@@ -53,6 +52,8 @@ impl Default for StakeController {
             stake_accounts: HashMap::new(),
             total_staked: 0,
             bank_controller: Arc::new(Mutex::new(BankController::default())), // TEMPORARY
+            // shared state
+            event_manager: Arc::new(Mutex::new(EventManager::new())), // TEMPORARY
         }
     }
 }
@@ -61,6 +62,7 @@ impl Default for StakeController {
 impl Controller for StakeController {
     fn initialize(&mut self, controller_router: &ControllerRouter) {
         self.bank_controller = Arc::clone(&controller_router.bank_controller);
+        self.event_manager = Arc::clone(&controller_router.event_manager);
     }
 
     fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
@@ -77,9 +79,22 @@ impl Controller for StakeController {
 
     async fn process_end_of_block(
         _controller: Arc<Mutex<Self>>,
-        _process_block_store: &ProcessBlockStore,
+        _post_process_store: &PostProcessStore,
         _block_number: u64,
     ) {
+    }
+
+    fn create_catchup_state(controller: Arc<Mutex<Self>>, _block_number: u64) -> Result<Vec<u8>, GDEXError> {
+        match bincode::serialize(&controller.lock().unwrap().clone()) {
+            Ok(v) => Ok(v),
+            Err(_) => Err(GDEXError::SerializationError),
+        }
+    }
+}
+
+impl EventEmitter for StakeController {
+    fn get_event_manager(&mut self) -> &mut Arc<Mutex<EventManager>> {
+        &mut self.event_manager
     }
 }
 
@@ -126,7 +141,6 @@ impl StakeController {
         }
     }
 
-    // TODO #0 //
     pub fn unstake(&mut self, account_pub_key: &AccountPubKey, amount: u64) -> Result<(), GDEXError> {
         self.total_staked -= amount;
         self.bank_controller.lock().unwrap().transfer(
@@ -292,7 +306,6 @@ pub mod stake_tests {
         );
     }
 
-    // TODO #0 //
     #[test]
     #[should_panic]
     fn failed_stake() {
@@ -333,5 +346,21 @@ pub mod stake_tests {
             .unwrap()
             .stake(second.public(), STAKE_AMOUNT)
             .unwrap();
+    }
+
+    #[test]
+    fn create_stake_catchup_state_default() {
+        let stake_controller = Arc::new(Mutex::new(StakeController::default()));
+        let catchup_state = StakeController::create_catchup_state(stake_controller, 0);
+        assert!(catchup_state.is_ok());
+        let catchup_state = catchup_state.unwrap();
+        println!("Catchup state is {} bytes", catchup_state.len());
+
+        match bincode::deserialize(&catchup_state) {
+            Ok(StakeController { bank_controller, .. }) => {
+                assert_eq!(bank_controller.lock().unwrap().get_num_assets(), 0);
+            }
+            Err(_) => panic!("deserializing catchup_state_default failed"),
+        }
     }
 }

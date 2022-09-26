@@ -7,20 +7,23 @@ use crate::router::ControllerType;
 use gdex_types::{
     account::AccountPubKey,
     error::GDEXError,
-    transaction::{Request, RequestTypeEnum, Transaction},
+    transaction::{Event, EventTypeEnum, Request, RequestTypeEnum, Transaction},
 };
 
 // mysten
 use narwhal_types::CertificateDigest;
 
+// external
+use prost::bytes::Bytes;
+
 // MODULE IMPORTS
 
-#[path = "./generated/spot_requests.rs"]
+#[path = "./generated/spot_proto.rs"]
 #[rustfmt::skip]
 #[allow(clippy::all)]
-mod spot_requests;
+mod spot_proto;
 
-pub use spot_requests::*;
+pub use spot_proto::*;
 
 // ENUMS
 
@@ -32,6 +35,19 @@ impl RequestTypeEnum for SpotRequestType {
             2 => Ok(SpotRequestType::LimitOrder),
             3 => Ok(SpotRequestType::UpdateOrder),
             4 => Ok(SpotRequestType::CancelOrder),
+            _ => Err(GDEXError::DeserializationError),
+        }
+    }
+}
+
+impl EventTypeEnum for SpotEventType {
+    fn event_type_from_i32(value: i32) -> Result<Self, GDEXError> {
+        match value {
+            0 => Ok(SpotEventType::OrderNew),
+            1 => Ok(SpotEventType::OrderFill),
+            2 => Ok(SpotEventType::OrderPartialFill),
+            3 => Ok(SpotEventType::OrderUpdate),
+            4 => Ok(SpotEventType::OrderCancel),
             _ => Err(GDEXError::DeserializationError),
         }
     }
@@ -148,6 +164,120 @@ impl Request for CancelOrderRequest {
     }
     fn get_request_type_id() -> i32 {
         SpotRequestType::CancelOrder as i32
+    }
+}
+
+// EVENTS
+
+// order new
+
+impl SpotOrderNewEvent {
+    pub fn new(account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) -> Self {
+        SpotOrderNewEvent {
+            account: Bytes::from(account.as_ref().to_vec()),
+            order_id,
+            side,
+            price,
+            quantity,
+        }
+    }
+}
+
+impl Event for SpotOrderNewEvent {
+    fn get_controller_id() -> i32 {
+        ControllerType::Spot as i32
+    }
+    fn get_event_type_id() -> i32 {
+        SpotEventType::OrderNew as i32
+    }
+}
+
+// order fill
+
+impl SpotOrderFillEvent {
+    pub fn new(account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) -> Self {
+        SpotOrderFillEvent {
+            account: Bytes::from(account.as_ref().to_vec()),
+            order_id,
+            side,
+            price,
+            quantity,
+        }
+    }
+}
+
+impl Event for SpotOrderFillEvent {
+    fn get_controller_id() -> i32 {
+        ControllerType::Spot as i32
+    }
+    fn get_event_type_id() -> i32 {
+        SpotEventType::OrderFill as i32
+    }
+}
+
+// order partial fill
+
+impl SpotOrderPartialFillEvent {
+    pub fn new(account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) -> Self {
+        SpotOrderPartialFillEvent {
+            account: Bytes::from(account.as_ref().to_vec()),
+            order_id,
+            side,
+            price,
+            quantity,
+        }
+    }
+}
+
+impl Event for SpotOrderPartialFillEvent {
+    fn get_controller_id() -> i32 {
+        ControllerType::Spot as i32
+    }
+    fn get_event_type_id() -> i32 {
+        SpotEventType::OrderPartialFill as i32
+    }
+}
+
+// order update
+
+impl SpotOrderUpdateEvent {
+    pub fn new(account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) -> Self {
+        SpotOrderUpdateEvent {
+            account: Bytes::from(account.as_ref().to_vec()),
+            order_id,
+            side,
+            price,
+            quantity,
+        }
+    }
+}
+
+impl Event for SpotOrderUpdateEvent {
+    fn get_controller_id() -> i32 {
+        ControllerType::Spot as i32
+    }
+    fn get_event_type_id() -> i32 {
+        SpotEventType::OrderUpdate as i32
+    }
+}
+
+// order cancel
+
+impl SpotOrderCancelEvent {
+    pub fn new(account: &AccountPubKey, order_id: u64) -> Self {
+        SpotOrderCancelEvent {
+            account: Bytes::from(account.as_ref().to_vec()),
+            order_id,
+        }
+    }
+}
+
+impl Event for SpotOrderCancelEvent {
+    fn get_controller_id() -> i32 {
+        ControllerType::Spot as i32
+    }
+    fn get_event_type_id() -> i32 {
+        SpotEventType::OrderCancel as i32
     }
 }
 

@@ -7,14 +7,25 @@
 // crate
 use crate::{
     bank::controller::BankController, consensus::controller::ConsensusController, controller::Controller,
-    futures::controller::FuturesController, spot::controller::SpotController, stake::controller::StakeController,
+    event_manager::EventManager, futures::controller::FuturesController, spot::controller::SpotController,
+    stake::controller::StakeController,
 };
 
 // gdex
+use gdex_types::{
+    error::GDEXError,
+    store::{CatchupState, PostProcessStore},
+    transaction::{ExecutionResultBody, Transaction},
+};
 
 // mysten
 
-use gdex_types::{error::GDEXError, store::ProcessBlockStore, transaction::Transaction};
+// external
+use tracing::info;
+
+// constants
+const CATCHUP_STATE_FREQUENCY: u64 = 100;
+
 // external
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -48,6 +59,9 @@ impl ControllerType {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ControllerRouter {
+    // state
+    pub event_manager: Arc<Mutex<EventManager>>,
+    // controllers
     pub consensus_controller: Arc<Mutex<ConsensusController>>,
     pub bank_controller: Arc<Mutex<BankController>>,
     pub stake_controller: Arc<Mutex<StakeController>>,
@@ -57,6 +71,9 @@ pub struct ControllerRouter {
 
 impl Default for ControllerRouter {
     fn default() -> Self {
+        // state
+        let event_manager = Arc::new(Mutex::new(EventManager::new()));
+        // controllers
         let bank_controller = Arc::new(Mutex::new(BankController::default()));
         let stake_controller = Arc::new(Mutex::new(StakeController::default()));
         let spot_controller = Arc::new(Mutex::new(SpotController::default()));
@@ -64,6 +81,9 @@ impl Default for ControllerRouter {
         let futures_controller = Arc::new(Mutex::new(FuturesController::default()));
 
         Self {
+            // state
+            event_manager,
+            // controllers
             consensus_controller,
             bank_controller,
             stake_controller,
@@ -110,54 +130,91 @@ impl ControllerRouter {
         }
     }
 
-    pub fn handle_consensus_transaction(&self, transaction: &Transaction) -> Result<(), GDEXError> {
+    pub fn handle_consensus_transaction(&self, transaction: &Transaction) -> Result<ExecutionResultBody, GDEXError> {
+        // reset execution result
+        // TODO - https://github.com/gdexorg/gdex/issues/176 - elimintate the need for reset by more properly handling errors
+        // eventually we wont need this as we will have strong guarantees that this
+        // val gets rest on each iteration but for now we can fail halfway though (in theory) so must be reset
+        self.event_manager.lock().unwrap().reset();
+
         let target_controller = ControllerType::from_i32(transaction.target_controller)?;
         match target_controller {
             ControllerType::Consensus => {
-                return self
-                    .consensus_controller
+                self.consensus_controller
                     .lock()
                     .unwrap()
-                    .handle_consensus_transaction(transaction);
+                    .handle_consensus_transaction(transaction)?;
             }
             ControllerType::Bank => {
-                return self
-                    .bank_controller
+                self.bank_controller
                     .lock()
                     .unwrap()
-                    .handle_consensus_transaction(transaction);
+                    .handle_consensus_transaction(transaction)?;
             }
             ControllerType::Stake => {
-                return self
-                    .stake_controller
+                self.stake_controller
                     .lock()
                     .unwrap()
-                    .handle_consensus_transaction(transaction);
+                    .handle_consensus_transaction(transaction)?;
             }
             ControllerType::Spot => {
-                return self
-                    .spot_controller
+                self.spot_controller
                     .lock()
                     .unwrap()
-                    .handle_consensus_transaction(transaction);
+                    .handle_consensus_transaction(transaction)?;
             }
             ControllerType::Futures => {
-                return self
-                    .futures_controller
+                self.futures_controller
                     .lock()
                     .unwrap()
-                    .handle_consensus_transaction(transaction);
+                    .handle_consensus_transaction(transaction)?;
             }
+        }
+        Ok(self.event_manager.lock().unwrap().emit())
+    }
+
+    pub async fn create_catchup_state(&self, post_process_store: &PostProcessStore, block_number: u64) {
+        if block_number % CATCHUP_STATE_FREQUENCY == 0 {
+            let state = vec![
+                ConsensusController::create_catchup_state(self.consensus_controller.clone(), block_number),
+                BankController::create_catchup_state(self.bank_controller.clone(), block_number),
+                StakeController::create_catchup_state(self.stake_controller.clone(), block_number),
+                SpotController::create_catchup_state(self.spot_controller.clone(), block_number),
+                FuturesController::create_catchup_state(self.futures_controller.clone(), block_number),
+            ];
+            let mut total_catchup_state: Vec<Vec<u8>> = Vec::new();
+
+            // if serialization failure occurs do not save bad state
+            if state.iter().filter(|x| x.is_err()).count() == 0 {
+                for catchup_state in state {
+                    total_catchup_state.push(catchup_state.unwrap());
+                }
+            }
+
+            // print size for logging purposes
+            let catchup_size: u64 = total_catchup_state.iter().map(|x| x.len() as u64).sum();
+            info!(
+                "Generating catchup snap at block {} of size {}",
+                block_number, catchup_size
+            );
+
+            let catchup_state = CatchupState {
+                block_number,
+                state: total_catchup_state,
+            };
+
+            // store catchup state in first position
+            post_process_store.catchup_state_store.write(0, catchup_state).await;
         }
     }
 
-    pub async fn process_end_of_block(&self, process_block_store: &ProcessBlockStore, block_number: u64) {
-        ConsensusController::process_end_of_block(self.consensus_controller.clone(), process_block_store, block_number)
+    pub async fn process_end_of_block(&self, post_process_store: &PostProcessStore, block_number: u64) {
+        ConsensusController::process_end_of_block(self.consensus_controller.clone(), post_process_store, block_number)
             .await;
-        BankController::process_end_of_block(self.bank_controller.clone(), process_block_store, block_number).await;
-        StakeController::process_end_of_block(self.stake_controller.clone(), process_block_store, block_number).await;
-        SpotController::process_end_of_block(self.spot_controller.clone(), process_block_store, block_number).await;
-        FuturesController::process_end_of_block(self.futures_controller.clone(), process_block_store, block_number)
+        BankController::process_end_of_block(self.bank_controller.clone(), post_process_store, block_number).await;
+        StakeController::process_end_of_block(self.stake_controller.clone(), post_process_store, block_number).await;
+        SpotController::process_end_of_block(self.spot_controller.clone(), post_process_store, block_number).await;
+        FuturesController::process_end_of_block(self.futures_controller.clone(), post_process_store, block_number)
             .await;
     }
 }

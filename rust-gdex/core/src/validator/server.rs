@@ -4,14 +4,17 @@
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-core/src/authority_server.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bcuse super::state::ValidatorState;
 use crate::{
     config::node::NodeConfig,
-    validator::{consensus_adapter::ConsensusAdapter, restarter::NodeRestarter, state::ValidatorState},
+    validator::{
+        consensus_adapter::ConsensusAdapter,
+        restarter::NodeRestarter,
+        state::{ExecutionResult, ValidatorState},
+    },
 };
 use anyhow::anyhow;
 use async_trait::async_trait;
 use futures::StreamExt;
 use gdex_types::{
     crypto::KeypairTraits,
-    error::GDEXError,
     proto::{Empty, TransactionSubmitter, TransactionSubmitterServer},
     transaction::{ConsensusTransaction, SignedTransaction},
 };
@@ -24,15 +27,14 @@ use narwhal_types::TransactionProto as ConsensusTransactionWrapper;
 use prometheus::Registry;
 use std::{io, sync::Arc, time::SystemTime};
 use tokio::{
-    sync::mpsc::{channel, Receiver, Sender},
+    sync::mpsc::{Receiver, Sender},
     task::JoinHandle,
 };
-use tracing::{error, info, trace};
+use tracing::{info, trace};
 
 // constants
 // frequency of orderbook depth writes (rounds)
-type ExecutionResult = Result<(), GDEXError>;
-type HandledTransaction = Result<(ConsensusOutput, ExecutionIndices, ExecutionResult), SubscriberError>;
+pub type HandledTransaction = Result<(ConsensusOutput, ExecutionIndices, ExecutionResult), SubscriberError>;
 
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
@@ -119,13 +121,13 @@ pub struct ValidatorService {
 impl ValidatorService {
     /// Spawn all the subsystems run by a gdex valdiator: a consensus node, a gdex valdiator server,
     /// and a consensus listener bridging the consensus node and the gdex valdiator.
-    pub async fn spawn_narwhal(
+    pub fn spawn_narwhal(
         config: &NodeConfig,
         state: Arc<ValidatorState>,
         prometheus_registry: &Registry,
         rx_reconfigure_consensus: Receiver<(ConsensusKeyPair, ConsensusCommittee)>,
+        tx_narwhal_to_post_process: Sender<(HandledTransaction, SerializedTransaction)>,
     ) -> anyhow::Result<Vec<JoinHandle<()>>> {
-        let (tx_consensus_to_gdex, rx_consensus_to_gdex) = channel(1_000);
         // Spawn the consensus node of this authority.
         let consensus_config = config
             .consensus_config()
@@ -149,61 +151,13 @@ impl ValidatorService {
                 consensus_execution_state,
                 consensus_parameters,
                 rx_reconfigure_consensus,
-                tx_consensus_to_gdex,
+                tx_narwhal_to_post_process,
                 &registry,
             )
             .await
         });
-        // Create a new task to listen to received transactions
-        let post_process_handle = tokio::spawn(async move {
-            Self::post_process(rx_consensus_to_gdex, Arc::clone(&state)).await;
-        });
 
-        Ok(vec![restarter_handle, post_process_handle])
-    }
-
-    /// Receives an ordered list of certificates and apply any application-specific logic.
-    async fn post_process(
-        mut rx_output: Receiver<(HandledTransaction, SerializedTransaction)>,
-        validator_state: Arc<ValidatorState>,
-    ) {
-        // TODO load the actual last block
-        let mut serialized_txns_buf = Vec::new();
-        let store = &validator_state.validator_store;
-        let metrics = &validator_state.metrics;
-        let controller_router = &validator_state.controller_router;
-        loop {
-            while let Some(message) = rx_output.recv().await {
-                let (result, serialized_txn) = message;
-                match result {
-                    Ok((consensus_output, execution_indices, execution_result)) => {
-                        serialized_txns_buf.push((serialized_txn, execution_result));
-
-                        // if next_transaction_index == 0 then the block is complete and we may write-out
-                        if execution_indices.next_transaction_index == 0 {
-                            // subtract round look-back from the latest round to get block number
-
-                            let num_txns = serialized_txns_buf.len();
-                            store.prune();
-                            // write-out the new block to the validator store
-                            let (block, block_info) = store
-                                .write_latest_block(consensus_output.certificate, serialized_txns_buf.clone())
-                                .await;
-                            metrics.process_end_of_block(block, block_info);
-                            let block_number = store.block_number.load(std::sync::atomic::Ordering::SeqCst);
-                            controller_router
-                                .process_end_of_block(&store.process_block_store, block_number)
-                                .await;
-                            serialized_txns_buf.clear();
-                            // This log is used in benchmarking
-                            info!("Finalized block {block_number} contains {num_txns} transactions");
-                        }
-                    }
-                    Err(e) => error!("{:?}", e), // TODO
-                }
-                // NOTE: Notify the user that its transaction has been processed.
-            }
-        }
+        Ok(vec![restarter_handle])
     }
 
     async fn handle_transaction(

@@ -20,7 +20,7 @@ pub mod cluster_test_suite {
     use gdex_types::{
         account::{AccountKeyPair, ValidatorKeyPair},
         asset::PRIMARY_ASSET_ID,
-        block::{Block, BlockDigest},
+        block::BlockDigest,
         crypto::{get_key_pair_from_rng, KeypairTraits},
         order_book::{Depth, OrderSide, OrderbookDepth},
         proto::{
@@ -28,7 +28,7 @@ pub mod cluster_test_suite {
             RelayerGetFuturesMarketsRequest, RelayerGetFuturesUserRequest, RelayerGetLatestBlockInfoRequest,
             RelayerGetLatestOrderbookDepthRequest,
         },
-        transaction::ConsensusTransaction,
+        transaction::{ConsensusTransaction, ExecutionResultBody},
         utils,
     };
     // mysten
@@ -163,7 +163,7 @@ pub mod cluster_test_suite {
         }
 
         let mut total = 0;
-        let block_db = validator_store.process_block_store.block_store.iter(None).await;
+        let block_db = validator_store.post_process_store.block_store.iter(None).await;
         let mut block_db_iter = block_db.iter();
 
         // TODO - more rigorously check exact match of transactions
@@ -258,7 +258,7 @@ pub mod cluster_test_suite {
 
         // Verify that blocks do not match before running catchup
         let latest_block_store_node_0 = validator_store_node_1
-            .process_block_store
+            .post_process_store
             .last_block_info_store
             .read(0)
             .await
@@ -267,7 +267,7 @@ pub mod cluster_test_suite {
 
         let latest_block_store_target = restarted_validator_state
             .validator_store
-            .process_block_store
+            .post_process_store
             .last_block_info_store
             .read(0)
             .await
@@ -291,7 +291,7 @@ pub mod cluster_test_suite {
 
         // Verify that blocks do match after running catchup
         let latest_block_store_node_1 = validator_store_node_1
-            .process_block_store
+            .post_process_store
             .last_block_info_store
             .read(0)
             .await
@@ -300,7 +300,7 @@ pub mod cluster_test_suite {
 
         let latest_block_store_target = restarted_validator_state
             .validator_store
-            .process_block_store
+            .post_process_store
             .last_block_info_store
             .read(0)
             .await
@@ -406,7 +406,7 @@ pub mod cluster_test_suite {
         // Preparing serialized buf for transactions
         let mut serialized_txns_buf = Vec::new();
         let serialized_txn = consensus_transaction.serialize().unwrap();
-        serialized_txns_buf.push((serialized_txn, Ok(())));
+        serialized_txns_buf.push((serialized_txn, Ok(ExecutionResultBody::new())));
         let certificate = dummy_consensus_output.certificate;
 
         let initial_certificate = certificate.clone();
@@ -418,36 +418,17 @@ pub mod cluster_test_suite {
             .write_latest_block(initial_certificate, initial_serialized_txns_buf)
             .await;
 
-        // TODO clean
+        // TODO make sure we have coverage for relayer endpoints - https://github.com/gdexorg/gdex/issues/178
 
         let relayer_1 = cluster.spawn_single_relayer(1).await;
         let target_endpoint = endpoint_from_multiaddr(&relayer_1.get_relayer_address()).unwrap();
         let endpoint = target_endpoint.endpoint();
         let mut client = RelayerClient::connect(endpoint.clone()).await.unwrap();
 
-        let specific_block_request = tonic::Request::new(RelayerGetBlockRequest { block_number: 0 });
+        let _specific_block_request = tonic::Request::new(RelayerGetBlockRequest { block_number: 0 });
         let latest_block_info_request = tonic::Request::new(RelayerGetLatestBlockInfoRequest {});
 
-        // Act
-        let specific_block_response = client.get_block(specific_block_request).await;
-
         let _latest_block_info_response = client.get_latest_block_info(latest_block_info_request).await;
-
-        let block_bytes_returned = specific_block_response.unwrap().into_inner().block.unwrap().block;
-
-        // Assert
-        let deserialized_block: Block = bincode::deserialize(&block_bytes_returned).unwrap();
-
-        let final_certificate = certificate.clone();
-        let final_serialized_txns_buf = serialized_txns_buf.clone();
-        let block_to_check_against = Block {
-            block_certificate: final_certificate,
-            transactions: final_serialized_txns_buf,
-        };
-
-        assert!(block_to_check_against.block_certificate == deserialized_block.block_certificate);
-        assert!(block_to_check_against.transactions == deserialized_block.transactions);
-        // assert!(latest_block_info_response.unwrap().into_inner().successful)
     }
 
     #[tokio::test]
@@ -482,7 +463,7 @@ pub mod cluster_test_suite {
         for (asset_pair, orderbook_depth) in orderbook_depths {
             validator_state_1
                 .validator_store
-                .process_block_store
+                .post_process_store
                 .latest_orderbook_depth_store
                 .write(asset_pair, orderbook_depth)
                 .await;
@@ -711,7 +692,7 @@ pub mod cluster_test_suite {
         for (asset_pair, orderbook_depth) in orderbook_depths {
             validator_state_1
                 .validator_store
-                .process_block_store
+                .post_process_store
                 .latest_orderbook_depth_store
                 .write(asset_pair, orderbook_depth)
                 .await;

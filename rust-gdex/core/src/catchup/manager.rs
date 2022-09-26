@@ -40,7 +40,7 @@ pub mod mock_catchup_manager {
         pub async fn fetch_latest_block_info(&self) -> Result<BlockInfo, GDEXError> {
             let result = self
                 .mock_store
-                .process_block_store
+                .post_process_store
                 .last_block_info_store
                 .read(0)
                 .await
@@ -56,7 +56,7 @@ pub mod mock_catchup_manager {
         pub async fn fetch_block_info(&self, block_number: BlockNumber) -> Result<BlockInfo, GDEXError> {
             let next_block_info = self
                 .mock_store
-                .process_block_store
+                .post_process_store
                 .block_info_store
                 .read(block_number)
                 .await
@@ -72,7 +72,7 @@ pub mod mock_catchup_manager {
         pub async fn fetch_block(&self, block_number: BlockNumber) -> Result<Block, GDEXError> {
             let next_block = self
                 .mock_store
-                .process_block_store
+                .post_process_store
                 .block_store
                 .read(block_number)
                 .await
@@ -145,7 +145,7 @@ pub mod mock_catchup_manager {
                     // if we have already received this block, skip forward
                     if new_state
                         .validator_store
-                        .process_block_store
+                        .post_process_store
                         .block_info_store
                         .read(next_block_number)
                         .await
@@ -201,7 +201,7 @@ pub mod mock_catchup_manager {
                 let latest_block_network = mock_server.fetch_latest_block_info().await?.clone();
                 let latest_block_local = new_state
                     .validator_store
-                    .process_block_store
+                    .post_process_store
                     .last_block_info_store
                     .read(0)
                     .await
@@ -259,7 +259,7 @@ impl CatchupManager {
             let latest_block_local = self
                 .validator_state
                 .validator_store
-                .process_block_store
+                .post_process_store
                 .last_block_info_store
                 .read(0)
                 .await

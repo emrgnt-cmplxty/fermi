@@ -1,19 +1,14 @@
-//! Creates orderbooks and manages their interactions
-//!
-//! TODO
-//! 0.) ADD MARKET ORDER SUPPORT
-//! 2.) RESTRICT overwrite_orderbook TO BENCH ONLY MODE
-//! 3.) CONSIDER ADDITIONAL FEATURES, LIKE ESCROW IMPLEMENTATION OR ORDER LIMITS
-//! 4.) CHECK PASSED ASSETS EXIST IN BANK MODULE
-//!
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
+
+// TODO - https://github.com/gdexorg/gdex/issues/171 - verify asset existence before use
 
 // IMPORTS
 
 // crate
 use crate::bank::controller::BankController;
 use crate::controller::Controller;
+use crate::event_manager::{EventEmitter, EventManager};
 use crate::router::ControllerRouter;
 use crate::spot::proto::*;
 use crate::utils::engine::order_book::{OrderBookWrapper, OrderId, Orderbook};
@@ -25,7 +20,7 @@ use gdex_types::{
     crypto::ToFromBytes,
     error::GDEXError,
     order_book::{OrderSide, OrderbookDepth},
-    store::ProcessBlockStore,
+    store::PostProcessStore,
     transaction::{deserialize_protobuf, Transaction},
 };
 
@@ -43,9 +38,12 @@ const ORDERBOOK_DEPTH_FREQUENCY: u64 = 100;
 // INTERFACE
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpotController {
+    // controller state
     controller_account: AccountPubKey,
     orderbooks: HashMap<AssetPairKey, SpotOrderbook>,
     bank_controller: Arc<Mutex<BankController>>,
+    // shared
+    event_manager: Arc<Mutex<EventManager>>,
 }
 
 impl Default for SpotController {
@@ -54,6 +52,8 @@ impl Default for SpotController {
             controller_account: AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap(),
             orderbooks: HashMap::new(),
             bank_controller: Arc::new(Mutex::new(BankController::default())), // TEMPORARY
+            // shared state
+            event_manager: Arc::new(Mutex::new(EventManager::new())), // TEMPORARY
         }
     }
 }
@@ -62,6 +62,7 @@ impl Default for SpotController {
 impl Controller for SpotController {
     fn initialize(&mut self, controller_router: &ControllerRouter) {
         self.bank_controller = Arc::clone(&controller_router.bank_controller);
+        self.event_manager = Arc::clone(&controller_router.event_manager);
     }
 
     fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
@@ -80,6 +81,7 @@ impl Controller for SpotController {
                 let request: CreateOrderbookRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 self.create_orderbook(request.base_asset_id, request.quote_asset_id)
             }
+            // TODO - https://github.com/gdexorg/gdex/issues/170 - add support for market orders
             SpotRequestType::MarketOrder => {
                 let request: MarketOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
                 match self
@@ -125,23 +127,50 @@ impl Controller for SpotController {
 
     async fn process_end_of_block(
         controller: Arc<Mutex<Self>>,
-        process_block_store: &ProcessBlockStore,
+        post_process_store: &PostProcessStore,
         block_number: u64,
     ) {
         // write out orderbook depth every ORDERBOOK_DEPTH_FREQUENCY
         if block_number % ORDERBOOK_DEPTH_FREQUENCY == 0 {
             let orderbook_depths = controller.lock().unwrap().generate_orderbook_depths();
             for (asset_pair, orderbook_depth) in orderbook_depths {
-                process_block_store
+                post_process_store
                     .latest_orderbook_depth_store
                     .write(asset_pair, orderbook_depth.clone())
                     .await;
             }
         }
     }
+
+    fn create_catchup_state(controller: Arc<Mutex<Self>>, _block_number: u64) -> Result<Vec<u8>, GDEXError> {
+        match bincode::serialize(&controller.lock().unwrap().clone()) {
+            Ok(v) => Ok(v),
+            Err(_) => Err(GDEXError::SerializationError),
+        }
+    }
+}
+
+impl EventEmitter for SpotController {
+    fn get_event_manager(&mut self) -> &mut Arc<Mutex<EventManager>> {
+        &mut self.event_manager
+    }
 }
 
 impl SpotController {
+    pub fn new(
+        controller_account: AccountPubKey,
+        orderbooks: HashMap<AssetPairKey, SpotOrderbook>,
+        bank_controller: Arc<Mutex<BankController>>,
+        event_manager: Arc<Mutex<EventManager>>,
+    ) -> Self {
+        SpotController {
+            controller_account,
+            orderbooks,
+            bank_controller,
+            event_manager,
+        }
+    }
+
     // HELPER FUNCTIONS
 
     pub fn get_orderbook_key(&self, base_asset_id: AssetId, quote_asset_id: AssetId) -> AssetPairKey {
@@ -185,6 +214,7 @@ impl SpotController {
                     quote_asset_id,
                     self.controller_account.clone(),
                     Arc::clone(&self.bank_controller),
+                    Arc::clone(&self.event_manager),
                 ),
             );
             Ok(())
@@ -205,17 +235,17 @@ pub struct SpotOrderbook {
     bank_controller: Arc<Mutex<BankController>>,
     orderbook: Orderbook,
     order_to_account: HashMap<OrderId, AccountPubKey>,
+    // shared
+    event_manager: Arc<Mutex<EventManager>>,
 }
-// TODO - remove all asserts from orderbook impl
-impl SpotOrderbook {
-    // CONSTRUCTOR
 
-    // TODO #4 //
+impl SpotOrderbook {
     pub fn new(
         base_asset_id: AssetId,
         quote_asset_id: AssetId,
         controller_account: AccountPubKey,
         bank_controller: Arc<Mutex<BankController>>,
+        event_manager: Arc<Mutex<EventManager>>,
     ) -> Self {
         assert!(base_asset_id != quote_asset_id);
         let orderbook = Orderbook::new(base_asset_id, quote_asset_id);
@@ -226,6 +256,7 @@ impl SpotOrderbook {
             bank_controller,
             orderbook,
             order_to_account: HashMap::new(),
+            event_manager,
         }
     }
 
@@ -235,7 +266,7 @@ impl SpotOrderbook {
         self.orderbook.get_orderbook_depth()
     }
 
-    // TODO #2 //
+    // TODO - https://github.com/gdexorg/gdex/issues/172 - Restrict overwrite_orderbook to benchmark only
     pub fn overwrite_orderbook(&mut self, new_orderbook: Orderbook) {
         self.order_to_account = HashMap::new();
         self.orderbook = new_orderbook;
@@ -295,6 +326,12 @@ impl SpotOrderbook {
             quantity,
         )?;
         Ok(())
+    }
+}
+
+impl EventEmitter for SpotOrderbook {
+    fn get_event_manager(&mut self) -> &mut Arc<Mutex<EventManager>> {
+        &mut self.event_manager
     }
 }
 
@@ -429,6 +466,44 @@ impl OrderBookWrapper for SpotOrderbook {
         }
         Ok(())
     }
+
+    // event emitters
+
+    fn emit_order_new_event(&mut self, account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) {
+        self.emit_event(&SpotOrderNewEvent::new(account, order_id, side, price, quantity));
+    }
+
+    fn emit_order_partial_fill_event(
+        &mut self,
+        account: &AccountPubKey,
+        order_id: u64,
+        side: u64,
+        price: u64,
+        quantity: u64,
+    ) {
+        self.emit_event(&SpotOrderFillEvent::new(account, order_id, side, price, quantity));
+    }
+
+    fn emit_order_fill_event(&mut self, account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64) {
+        self.emit_event(&SpotOrderPartialFillEvent::new(
+            account, order_id, side, price, quantity,
+        ));
+    }
+
+    fn emit_order_update_event(
+        &mut self,
+        account: &AccountPubKey,
+        order_id: u64,
+        side: u64,
+        price: u64,
+        quantity: u64,
+    ) {
+        self.emit_event(&SpotOrderUpdateEvent::new(account, order_id, side, price, quantity));
+    }
+
+    fn emit_order_cancel_event(&mut self, account: &AccountPubKey, order_id: u64) {
+        self.emit_event(&SpotOrderCancelEvent::new(account, order_id));
+    }
 }
 
 // TESTS
@@ -507,6 +582,9 @@ pub mod spot_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let event_manager = EventManager::new();
+        let event_manager_ref = Arc::new(Mutex::new(event_manager));
+
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
@@ -515,6 +593,7 @@ pub mod spot_tests {
             QUOTE_ASSET_ID,
             controller_account,
             Arc::clone(&bank_controller_ref),
+            Arc::clone(&event_manager_ref),
         );
 
         let bid_size = 100;
@@ -621,6 +700,9 @@ pub mod spot_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let event_manager = EventManager::new();
+        let event_manager_ref = Arc::new(Mutex::new(event_manager));
+
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
@@ -629,6 +711,7 @@ pub mod spot_tests {
             QUOTE_ASSET_ID,
             controller_account,
             Arc::clone(&bank_controller_ref),
+            Arc::clone(&event_manager_ref),
         );
 
         let bid_size = 100;
@@ -677,6 +760,9 @@ pub mod spot_tests {
 
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let event_manager = EventManager::new();
+        let event_manager_ref = Arc::new(Mutex::new(event_manager));
+
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
@@ -685,6 +771,7 @@ pub mod spot_tests {
             QUOTE_ASSET_ID,
             controller_account,
             Arc::clone(&bank_controller_ref),
+            Arc::clone(&event_manager_ref),
         );
 
         let bid_size_0: u64 = 100;
@@ -760,6 +847,9 @@ pub mod spot_tests {
 
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let event_manager = EventManager::new();
+        let event_manager_ref = Arc::new(Mutex::new(event_manager));
+
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
@@ -768,6 +858,7 @@ pub mod spot_tests {
             QUOTE_ASSET_ID,
             controller_account,
             Arc::clone(&bank_controller_ref),
+            Arc::clone(&event_manager_ref),
         );
 
         let bid_size_0: u64 = 95;
@@ -938,6 +1029,9 @@ pub mod spot_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let event_manager = EventManager::new();
+        let event_manager_ref = Arc::new(Mutex::new(event_manager));
+
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
@@ -946,6 +1040,7 @@ pub mod spot_tests {
             QUOTE_ASSET_ID,
             controller_account,
             Arc::clone(&bank_controller_ref),
+            Arc::clone(&event_manager_ref),
         );
 
         let bid_size = 100;
@@ -1000,6 +1095,9 @@ pub mod spot_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let event_manager = EventManager::new();
+        let event_manager_ref = Arc::new(Mutex::new(event_manager));
+
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
@@ -1008,6 +1106,7 @@ pub mod spot_tests {
             QUOTE_ASSET_ID,
             controller_account,
             Arc::clone(&bank_controller_ref),
+            Arc::clone(&event_manager_ref),
         );
 
         const TEST_QUANTITY: u64 = 100;
@@ -1079,6 +1178,9 @@ pub mod spot_tests {
         bank_controller.create_asset(account.public()).unwrap();
         let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
 
+        let event_manager = EventManager::new();
+        let event_manager_ref = Arc::new(Mutex::new(event_manager));
+
         let controller_account = AccountPubKey::from_bytes(SPOT_CONTROLLER_ACCOUNT_PUBKEY).unwrap();
         let _create_account_result = bank_controller_ref.lock().unwrap().create_account(&controller_account);
 
@@ -1087,6 +1189,7 @@ pub mod spot_tests {
             QUOTE_ASSET_ID,
             controller_account,
             Arc::clone(&bank_controller_ref),
+            Arc::clone(&event_manager_ref),
         );
 
         let bid_size = 100;
@@ -1121,5 +1224,26 @@ pub mod spot_tests {
             }
         }
         let _orderbook_depth = orderbook_interface.get_orderbook_depth();
+    }
+
+    #[test]
+    fn create_spot_catchup_state_default() {
+        let spot_controller = Arc::new(Mutex::new(SpotController::default()));
+        let catchup_state = SpotController::create_catchup_state(spot_controller, 0);
+        assert!(catchup_state.is_ok());
+        let catchup_state = catchup_state.unwrap();
+        println!("Catchup state is {} bytes", catchup_state.len());
+
+        match bincode::deserialize(&catchup_state) {
+            Ok(SpotController {
+                orderbooks,
+                bank_controller,
+                ..
+            }) => {
+                assert_eq!(orderbooks.keys().len(), 0);
+                assert_eq!(bank_controller.lock().unwrap().get_num_assets(), 0);
+            }
+            Err(_) => panic!("deserializing catchup_state_default failed"),
+        }
     }
 }

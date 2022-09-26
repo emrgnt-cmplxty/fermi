@@ -13,6 +13,7 @@ use super::order_queues::OrderQueue;
 use super::orders::{create_cancel_order_request, create_limit_order_request, create_update_order_request};
 use super::sequence;
 use super::validation::OrderRequestValidator;
+// TODO - https://github.com/gdexorg/gdex/issues/164 - we should not depend on or import anything from specific controllers
 use crate::spot::proto::*;
 
 use gdex_types::{
@@ -46,17 +47,6 @@ pub struct Orderbook {
 }
 
 impl Orderbook {
-    /// Create new orderbook for pair of assets
-    ///
-    /// # Examples
-    ///
-    /// Basic usage:
-    /// ```
-    ///// let mut orderbook = Orderbook::new(Asset::BTC, Asset::USD);
-    ///// let result = orderbook.process_order(OrderRequest::MarketOrder{  });
-    ///// assert_eq!(orderbook)
-    /// ```
-    // todo fix doc test!
     pub fn new(base_asset: AssetId, quote_asset: AssetId) -> Self {
         Orderbook {
             base_asset,
@@ -597,7 +587,7 @@ pub trait OrderBookWrapper {
     // SETTERS
     fn set_order(&mut self, order_id: OrderId, account: AccountPubKey) -> Result<(), GDEXError>;
 
-    // TODO - remove gating from the order_book level
+    // TODO - https://github.com/gdexorg/gdex/issues/174 - remove gating from the order_book level
     // this creates awkward tension in any instance of cross-margin
     fn validate_controller(
         &self,
@@ -611,7 +601,8 @@ pub trait OrderBookWrapper {
 
     // PLACERS [ORDERS]
 
-    // PLACE MARKET ORDER : TODO : UNIMPLEMENTED
+    // PLACE MARKET ORDER
+    // TODO - https://github.com/gdexorg/gdex/issues/170 - implement market orders
 
     fn place_market_order(&mut self, _account: &AccountPubKey, _request: &MarketOrderRequest) -> Result<(), GDEXError> {
         Ok(())
@@ -745,6 +736,27 @@ pub trait OrderBookWrapper {
         quantity: u64,
     ) -> Result<(), GDEXError>;
 
+    // event helpers
+
+    fn emit_order_new_event(&mut self, account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64);
+
+    fn emit_order_partial_fill_event(
+        &mut self,
+        account: &AccountPubKey,
+        order_id: u64,
+        side: u64,
+        price: u64,
+        quantity: u64,
+    );
+
+    fn emit_order_fill_event(&mut self, account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64);
+
+    fn emit_order_update_event(&mut self, account: &AccountPubKey, order_id: u64, side: u64, price: u64, quantity: u64);
+
+    fn emit_order_cancel_event(&mut self, account: &AccountPubKey, order_id: u64);
+
+    // result processing
+
     fn process_order_result(
         &mut self,
         account: &AccountPubKey,
@@ -767,6 +779,8 @@ pub trait OrderBookWrapper {
                     }
                     // insert new order to map
                     self.set_order(*order_id, account.clone())?;
+                    // emit order new event
+                    self.emit_order_new_event(account, *order_id, *side as u64, *price, *quantity);
                 }
                 // subsequent orders are expected to be an PartialFill or Fill results
                 Ok(Success::PartiallyFilled {
@@ -779,6 +793,8 @@ pub trait OrderBookWrapper {
                     // update user balances
                     let existing_pub_key = self.get_pub_key_from_order_id(order_id);
                     self.update_state_on_fill(&existing_pub_key, *order_id, *side, *price, *quantity)?;
+                    // emit order partial fill event
+                    self.emit_order_partial_fill_event(&existing_pub_key, *order_id, *side as u64, *price, *quantity);
                 }
                 Ok(Success::Filled {
                     order_id,
@@ -790,9 +806,11 @@ pub trait OrderBookWrapper {
                     // update user balances
                     let existing_pub_key = self.get_pub_key_from_order_id(order_id);
                     self.update_state_on_fill(&existing_pub_key, *order_id, *side, *price, *quantity)?;
-                    // TODO - Uncomment remove below after diagnosing how this can cause failures
+                    // TODO - https://github.com/gdexorg/gdex/issues/175 - Uncomment remove below after diagnosing how this can cause failures
                     // remove order from map
                     //self.order_to_account.remove(order_id).ok_or(GDEXError::OrderRequest)?;
+                    // emit order fill event
+                    self.emit_order_fill_event(&existing_pub_key, *order_id, *side as u64, *price, *quantity);
                 }
                 Ok(Success::Updated {
                     order_id,
@@ -813,6 +831,8 @@ pub trait OrderBookWrapper {
                         *price,
                         *quantity,
                     )?;
+                    // emit order update event
+                    self.emit_order_update_event(&existing_pub_key, *order_id, *side as u64, *price, *quantity);
                 }
                 Ok(Success::Cancelled {
                     order_id,
@@ -824,6 +844,8 @@ pub trait OrderBookWrapper {
                     // order has been cancelled from order book, update states
                     let existing_pub_key = self.get_pub_key_from_order_id(order_id);
                     self.update_state_on_cancel(&existing_pub_key, *order_id, *side, *price, *quantity)?;
+                    // emit order cancel event
+                    self.emit_order_cancel_event(&existing_pub_key, *order_id);
                 }
                 Err(_failure) => {
                     return Err(GDEXError::OrderRequest);

@@ -1,19 +1,15 @@
-//! Creates new assets and manages user balances
-//!
-//! TODO
-//! 0.) ADD MISSING FEATURES TO ASSET WORKFLOW, LIKE OWNER TOKEN MINTING, VARIABLE INITIAL MINT AMT., ...
-//! 1.) MAKE ROBUST ERROR HANDLING FOR ALL FUNCTIONS ~~ DONE
-//! 2.) ADD OWNER FUNCTIONS
-//! 3.) BETTER BANK ACCOUNT PUB KEY HANDLING SYSTEM & ADDRESS
-//!
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
+
+// TODO - https://github.com/gdexorg/gdex/issues/168 - Add support for additional asset params (amount, decimals, name)
+// TODO - https://github.com/gdexorg/gdex/issues/168 - Add admin functions for assets
 
 // IMPORTS
 
 // crate
 use crate::bank::proto::*;
 use crate::controller::Controller;
+use crate::event_manager::{EventEmitter, EventManager};
 use crate::router::ControllerRouter;
 
 // gdex
@@ -22,7 +18,7 @@ use gdex_types::{
     asset::{Asset, AssetId},
     crypto::ToFromBytes,
     error::GDEXError,
-    store::ProcessBlockStore,
+    store::PostProcessStore,
     transaction::{deserialize_protobuf, Transaction},
 };
 
@@ -30,6 +26,7 @@ use gdex_types::{
 
 // external
 use async_trait::async_trait;
+use bincode;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -44,7 +41,7 @@ pub enum Modifier {
 
 // CONSTANTS
 
-// TODO need to find valid vanity address for bank controller
+// TODO - https://github.com/gdexorg/gdex/issues/169 - implement coherent system for controller account pubkeys
 pub const BANK_CONTROLLER_ACCOUNT_PUBKEY: &[u8] = b"STAKECONTROLLERAAAAAAAAAAAAAAAAA";
 
 // 10 billion w/ 6 decimals, e.g. ALGO creation specs.
@@ -54,26 +51,34 @@ pub const CREATED_ASSET_BALANCE: u64 = 10_000_000_000_000_000;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BankController {
+    // controller state
     controller_account: AccountPubKey,
     asset_id_to_asset: HashMap<AssetId, Asset>,
     bank_accounts: HashMap<AccountPubKey, BankAccount>,
     n_assets: u64,
+    // shared
+    event_manager: Arc<Mutex<EventManager>>,
 }
 
 impl Default for BankController {
     fn default() -> Self {
         Self {
+            // controller state
             controller_account: AccountPubKey::from_bytes(BANK_CONTROLLER_ACCOUNT_PUBKEY).unwrap(),
             asset_id_to_asset: HashMap::new(),
             bank_accounts: HashMap::new(),
             n_assets: 0,
+            // shared state
+            event_manager: Arc::new(Mutex::new(EventManager::new())), // TEMPORARY
         }
     }
 }
 
 #[async_trait]
 impl Controller for BankController {
-    fn initialize(&mut self, _master_controller: &ControllerRouter) {}
+    fn initialize(&mut self, controller_router: &ControllerRouter) {
+        self.event_manager = Arc::clone(&controller_router.event_manager);
+    }
 
     fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
         Ok(())
@@ -98,9 +103,22 @@ impl Controller for BankController {
 
     async fn process_end_of_block(
         _controller: Arc<Mutex<Self>>,
-        _process_block_store: &ProcessBlockStore,
+        _post_process_store: &PostProcessStore,
         _block_number: u64,
     ) {
+    }
+
+    fn create_catchup_state(controller: Arc<Mutex<Self>>, _block_number: u64) -> Result<Vec<u8>, GDEXError> {
+        match bincode::serialize(&controller.lock().unwrap().clone()) {
+            Ok(v) => Ok(v),
+            Err(_) => Err(GDEXError::SerializationError),
+        }
+    }
+}
+
+impl EventEmitter for BankController {
+    fn get_event_manager(&mut self) -> &mut Arc<Mutex<EventManager>> {
+        &mut self.event_manager
     }
 }
 
@@ -180,6 +198,9 @@ impl BankController {
         self.update_balance(sender, asset_id, quantity, Modifier::Decrement)?;
         self.update_balance(receiver, asset_id, quantity, Modifier::Increment)?;
 
+        // emit event
+        self.emit_event(&PaymentSuccessEvent::new(sender, receiver, asset_id, quantity));
+
         Ok(())
     }
 
@@ -187,7 +208,7 @@ impl BankController {
         // special handling for genesis
         // an account must be created in this instance
         // since account creation is gated by receipt and balance of primary blockchain asset
-        if self.n_assets == 0 {
+        if self.n_assets == 0 && !self.check_account_exists(owner_pub_key) {
             self.create_account(owner_pub_key)?
         }
 
@@ -206,6 +227,10 @@ impl BankController {
         );
 
         self.update_balance(owner_pub_key, self.n_assets, CREATED_ASSET_BALANCE, Modifier::Increment)?;
+
+        // emit event
+        self.emit_event(&AssetCreatedEvent::new(self.n_assets));
+
         // increment asset counter & return less the increment
         self.n_assets += 1;
 
@@ -341,5 +366,76 @@ pub mod spot_tests {
         );
         // check the number of assets is 1
         assert!(bank_controller.get_num_assets() == 2, "Number of assets must be 2.");
+    }
+
+    #[test]
+    fn create_bank_catchup_state_default() {
+        let bank_controller = Arc::new(Mutex::new(BankController::default()));
+        let catchup_state = BankController::create_catchup_state(bank_controller, 0);
+        assert!(catchup_state.is_ok());
+        let catchup_state = catchup_state.unwrap();
+        println!("Catchup state is {} bytes", catchup_state.len());
+
+        match bincode::deserialize(&catchup_state) {
+            Ok(BankController {
+                asset_id_to_asset,
+                bank_accounts,
+                n_assets,
+                ..
+            }) => {
+                assert_eq!(n_assets, 0);
+                assert_eq!(bank_accounts.keys().len(), 0);
+                assert_eq!(asset_id_to_asset.keys().len(), 0);
+            }
+            Err(_) => panic!("deserializing catchup_state_default failed"),
+        }
+    }
+
+    #[test]
+    fn create_bank_catchup_state_big() {
+        // create keypairs initially as it is slow to generate keypairs in non-release mode
+        let n_users: usize = 1_000;
+        let mut keypairs: Vec<KeyPair> = Vec::new();
+        let mut bank_controller = BankController::default();
+        for _ in 0..n_users {
+            let keypair = generate_production_keypair::<KeyPair>();
+            bank_controller.create_account(keypair.public()).unwrap();
+            bank_controller.create_asset(keypair.public()).unwrap();
+            keypairs.push(keypair);
+        }
+
+        for i in 0..n_users {
+            let sender_kp = &keypairs[i];
+            for j in 0..n_users {
+                let receiver_kp = &keypairs[j];
+                bank_controller
+                    .transfer(sender_kp.public(), receiver_kp.public(), i as u64, 1)
+                    .unwrap();
+            }
+        }
+
+        let catchup_state = BankController::create_catchup_state(Arc::new(Mutex::new(bank_controller)), 0);
+        assert!(catchup_state.is_ok());
+        let catchup_state = catchup_state.unwrap();
+        println!(
+            "Catchup state is {} GB for {} creators and {} receivers",
+            (catchup_state.len() as f64) / 1e9,
+            n_users,
+            n_users
+        );
+
+        match bincode::deserialize(&catchup_state) {
+            Ok(BankController {
+                asset_id_to_asset,
+                bank_accounts,
+                n_assets,
+                ..
+            }) => {
+                assert_eq!(n_assets, n_users as u64);
+                assert_eq!(bank_accounts.keys().len(), n_users);
+                assert_eq!(asset_id_to_asset.keys().len(), n_users);
+            }
+            Err(_) => panic!("deserializing catchup_state_default failed"),
+        }
     }
 }

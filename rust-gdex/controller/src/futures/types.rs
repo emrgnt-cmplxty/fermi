@@ -1,4 +1,5 @@
 // crate
+use crate::event_manager::EventManager;
 use crate::utils::engine::order_book::{OrderId, Orderbook};
 
 // gdex
@@ -14,8 +15,6 @@ use std::{
     collections::HashMap,
     sync::{Arc, Mutex, Weak},
 };
-
-// TODO - move futures .proto to this folder
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CondensedOrder {
@@ -62,8 +61,6 @@ pub type AssetPrice = u64;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FuturesMarket {
     pub max_leverage: u64,
-    // TODO - it is gross to have to store the base and quote asset id here
-    // we should consider removing these from the orderbook
     pub base_asset_id: AssetId,
     pub quote_asset_id: AssetId,
     pub open_interest: u64,
@@ -75,6 +72,8 @@ pub struct FuturesMarket {
     // reference to parent Marketplace deposits
     pub marketplace_deposits: Weak<Mutex<HashMap<AccountPubKey, i64>>>,
     pub liquidation_fee_percent: f64,
+    // shared
+    pub event_manager: Arc<Mutex<EventManager>>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

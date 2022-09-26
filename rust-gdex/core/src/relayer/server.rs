@@ -102,8 +102,6 @@ impl Relayer for RelayerService {
                             .get_payload()
                             .map_err(|_| Status::unknown("Error deserializing transactions"))?;
 
-                        info!("signed_transaction: {:?}", signed_transaction);
-
                         let transaction_digest = Bytes::from(
                             signed_transaction
                                 .get_transaction_digest()

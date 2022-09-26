@@ -26,7 +26,7 @@ test('Payment transaction workflow', async () => {
   const signedTransaction = await client.buildSignedTransaction(
     /* request */ request,
     /* senderPrivKey */ testData.defaultSender,
-    /* recent_block_hash */ testData.defaultBlockDigest
+    /* defaultBlockDigest */ testData.defaultBlockDigest
   )
   const _transactionId = await client.sendAndConfirmTransaction(signedTransaction)
 })
@@ -40,7 +40,7 @@ test('Build marketplace', async () => {
   const signedTransaction = await client.buildSignedTransaction(
     /* request */ request,
     /* senderPrivKey */ testData.defaultAdmin,
-    /* recent_block_hash */ testData.defaultBlockDigest
+    /* defaultBlockDigest */ testData.defaultBlockDigest
   )
   const _transactionId = await client.sendAndConfirmTransaction(signedTransaction)
 })
@@ -54,7 +54,7 @@ test('Build market', async () => {
   const signedTransaction = await client.buildSignedTransaction(
     /* request */ request,
     /* senderPrivKey */ testData.defaultAdmin,
-    /* recent_block_hash */ testData.defaultBlockDigest
+    /* defaultBlockDigest */ testData.defaultBlockDigest
   )
   const _transactionId = await client.sendAndConfirmTransaction(signedTransaction)
 })
@@ -68,7 +68,7 @@ test('Update market params request', async () => {
   const signedTransaction = await client.buildSignedTransaction(
     /* request */ request,
     /* senderPrivKey */ testData.defaultAdmin,
-    /* recent_block_hash */ testData.defaultBlockDigest
+    /* defaultBlockDigest */ testData.defaultBlockDigest
   )
   const _transactionId = await client.sendAndConfirmTransaction(signedTransaction)
 })
@@ -82,7 +82,7 @@ test('Update time request', async () => {
   const signedTransaction = await client.buildSignedTransaction(
     /* request */ request,
     /* senderPrivKey */ testData.defaultAdmin,
-    /* recent_block_hash */ testData.defaultBlockDigest
+    /* defaultBlockDigest */ testData.defaultBlockDigest
   )
   const _transactionId = await client.sendAndConfirmTransaction(signedTransaction)
 })
@@ -96,7 +96,7 @@ test('Update prices request', async () => {
   const signedTransaction = await client.buildSignedTransaction(
     /* request */ request,
     /* senderPrivKey */ testData.defaultAdmin,
-    /* recent_block_hash */ testData.defaultBlockDigest
+    /* defaultBlockDigest */ testData.defaultBlockDigest
   )
   const _transactionId = await client.sendAndConfirmTransaction(signedTransaction)
 })
@@ -111,7 +111,7 @@ test('Futures deposit workflow', async () => {
   const signedTransaction = await client.buildSignedTransaction(
     /* request */ request,
     /* senderPrivKey */ testData.defaultSender,
-    /* recent_block_hash */ testData.defaultBlockDigest
+    /* defaultBlockDigest */ testData.defaultBlockDigest
   )
   const _transactionId = await client.sendAndConfirmTransaction(signedTransaction)
 })
@@ -126,7 +126,7 @@ test('Futures limit order workflow', async () => {
   const signedTransaction = await client.buildSignedTransaction(
     /* request */ request,
     /* senderPrivKey */ testData.defaultSender,
-    /* recent_block_hash */ testData.defaultBlockDigest
+    /* defaultBlockDigest */ testData.defaultBlockDigest
   )
   const _transactionId = await client.sendAndConfirmTransaction(signedTransaction)
 })
@@ -141,7 +141,7 @@ test('Futures withdrawal workflow', async () => {
   const signedTransaction = await client.buildSignedTransaction(
     /* request */ request,
     /* senderPrivKey */ testData.defaultSender,
-    /* recent_block_hash */ testData.defaultBlockDigest
+    /* defaultBlockDigest */ testData.defaultBlockDigest
   )
   const _transactionId = await client.sendAndConfirmTransaction(signedTransaction)
 })

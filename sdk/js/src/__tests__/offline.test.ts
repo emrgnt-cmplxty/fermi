@@ -25,14 +25,14 @@ test('Payment transaction workflow', async () => {
   const transaction = await client.buildTransaction(
     /* request */ paymentRequest,
     /* sender */ sender,
-    /* recent_block_hash */ testData.defaultBlockDigest
+    /* defaultBlockDigest */ testData.defaultBlockDigest
   )
   expect(getTransactionDigest(transaction)).toStrictEqual(testData.expectedPaymentDigest)
 
   const signedTransaction = await client.buildSignedTransaction(
     /* request */ paymentRequest,
     /* senderPrivKey */ testData.defaultSender,
-    /* recent_block_hash */ testData.defaultBlockDigest
+    /* defaultBlockDigest */ testData.defaultBlockDigest
   )
   expect(signedTransaction.getSignature()).toStrictEqual(testData.expectedPaymentSignature)
 })
@@ -48,14 +48,14 @@ test('Futures deposit workflow', async () => {
   const transaction = await client.buildTransaction(
     /* request */ depositRequest,
     /* sender */ sender,
-    /* recent_block_hash */ testData.defaultBlockDigest
+    /* defaultBlockDigest */ testData.defaultBlockDigest
   )
   expect(getTransactionDigest(transaction)).toStrictEqual(testData.expectedAccountDepositDigest)
 
   const signedTransaction = await client.buildSignedTransaction(
     /* request */ depositRequest,
     /* senderPrivKey */ testData.defaultSender,
-    /* recent_block_hash */ testData.defaultBlockDigest
+    /* defaultBlockDigest */ testData.defaultBlockDigest
   )
   expect(signedTransaction.getSignature()).toStrictEqual(testData.expectedAccountDepositSignature)
 })
@@ -71,14 +71,14 @@ test('Futures withdrawal workflow', async () => {
   const transaction = await client.buildTransaction(
     /* request */ withdrawalRequest,
     /* sender */ sender,
-    /* recent_block_hash */ testData.defaultBlockDigest
+    /* defaultBlockDigest */ testData.defaultBlockDigest
   )
   expect(getTransactionDigest(transaction)).toStrictEqual(testData.expectedAccountWithdrawalDigest)
 
   const signedTransaction = await client.buildSignedTransaction(
     /* request */ withdrawalRequest,
     /* senderPrivKey */ testData.defaultSender,
-    /* recent_block_hash */ testData.defaultBlockDigest
+    /* defaultBlockDigest */ testData.defaultBlockDigest
   )
   expect(signedTransaction.getSignature()).toStrictEqual(testData.expectedAccountWithdrawalSignature)
 })
@@ -94,14 +94,14 @@ test('Futures limit order workflow', async () => {
   const transaction = await client.buildTransaction(
     /* request */ orderRequest,
     /* sender */ sender,
-    /* recent_block_hash */ testData.defaultBlockDigest
+    /* defaultBlockDigest */ testData.defaultBlockDigest
   )
   expect(getTransactionDigest(transaction)).toStrictEqual(testData.expectedFuturesLimitOrderDigest)
 
   const signedTransaction = await client.buildSignedTransaction(
     /* request */ orderRequest,
     /* senderPrivKey */ testData.defaultSender,
-    /* recent_block_hash */ testData.defaultBlockDigest
+    /* defaultBlockDigest */ testData.defaultBlockDigest
   )
   expect(signedTransaction.getSignature()).toStrictEqual(testData.expectedFuturesLimitOrderSignature)
 })

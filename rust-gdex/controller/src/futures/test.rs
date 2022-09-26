@@ -182,13 +182,56 @@ pub mod futures_tests {
             self.controller_router.handle_consensus_transaction(&transaction)
         }
 
-        // UTIILTY FUNCTIONS
+        pub fn cancel_open_orders(&self, sender_index: usize, target_index: usize) -> Result<(), GDEXError> {
+            let request = CancelAllRequest::new(self.user_keys[target_index].public(), self.admin_key.public());
+
+            let transaction = Transaction::new(
+                self.user_keys[sender_index].public(),
+                CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
+                &request,
+            );
+            self.controller_router.handle_consensus_transaction(&transaction)
+        }
+
+        pub fn liquidate(
+            &self,
+            sender_index: usize,
+            target_index: usize,
+            side: u64,
+            quantity: u64,
+        ) -> Result<(), GDEXError> {
+            let request = LiquidateRequest::new(
+                self.base_asset_id,
+                self.quote_asset_id,
+                side,
+                quantity,
+                self.user_keys[target_index].public(),
+                self.admin_key.public(),
+            );
+
+            let transaction = Transaction::new(
+                self.user_keys[sender_index].public(),
+                CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
+                &request,
+            );
+            self.controller_router.handle_consensus_transaction(&transaction)
+        }
+
+        // UTIILITY FUNCTIONS
         fn get_user_total_req_collateral(&self, user_index: usize) -> Result<u64, GDEXError> {
             self.controller_router
                 .futures_controller
                 .lock()
                 .unwrap()
                 .get_account_total_req_collateral(self.admin_key.public(), self.user_keys[user_index].public())
+        }
+
+        fn get_user_account_value(&self, user_index: usize) -> Result<i64, GDEXError> {
+            self.controller_router
+                .futures_controller
+                .lock()
+                .unwrap()
+                .get_account_value(self.admin_key.public(), self.user_keys[user_index].public())
         }
 
         fn get_user_state_by_market(&self, user_index: usize) -> Result<AccountStateByMarket, GDEXError> {
@@ -213,6 +256,25 @@ pub mod futures_tests {
                 .lock()
                 .unwrap()
                 .get_account_available_deposit(self.admin_key.public(), self.user_keys[user_index].public())
+        }
+
+        fn get_account_deposit(&self, user_index: usize) -> Result<i64, GDEXError> {
+            self.controller_router
+                .futures_controller
+                .lock()
+                .unwrap()
+                .get_account_deposit(self.admin_key.public(), self.user_keys[user_index].public())
+        }
+
+        fn get_account_position(&self, user_index: usize) -> Result<FuturesPosition, GDEXError> {
+            let account_state = self
+                .controller_router
+                .futures_controller
+                .lock()
+                .unwrap()
+                .get_account_state_by_market(self.admin_key.public(), self.user_keys[user_index].public())?;
+            let position = account_state.get(0).unwrap().2.as_ref().unwrap();
+            Ok(position.clone())
         }
     }
 
@@ -311,6 +373,82 @@ pub mod futures_tests {
         let result = futures_tester.futures_limit_order(user_index, user_side, user_price, user_quantity);
 
         assert!(result.unwrap_err() == GDEXError::InsufficientCollateral);
+    }
+
+    #[test]
+    fn liquidate_long_full() {
+        let futures_tester = FuturesControllerTester::new();
+        futures_tester.initialize();
+        let (maker_index, maker_side, maker_price, maker_quantity) = (0, OrderSide::Bid as u64, 21_000_000, 961);
+        // taker must ask less than maker price in order to be a taker
+        let (taker_index, taker_side, taker_price, taker_quantity) = (1, OrderSide::Ask as u64, 21_000_000, 960);
+
+        let maker_init_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
+        let maker_init_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
+        let maker_init_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
+        let init_is_liquidatable = maker_init_deposit + maker_init_unrealized_pnl < maker_init_req_collateral as i64;
+        assert!(!init_is_liquidatable);
+        assert_eq!(maker_init_unrealized_pnl, 0);
+
+        let liquidate_result = futures_tester.liquidate(taker_index, maker_index, OrderSide::Bid as u64, 960);
+        assert!(liquidate_result.is_err());
+
+        futures_tester
+            .futures_limit_order(maker_index, maker_side, maker_price, maker_quantity)
+            .unwrap();
+
+        let maker_order_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
+        let maker_order_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
+        let maker_order_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
+        let order_is_liquidatable =
+            maker_order_deposit + maker_order_unrealized_pnl < maker_order_req_collateral as i64;
+
+        assert!(!order_is_liquidatable);
+        assert_eq!(maker_order_unrealized_pnl, 0);
+        assert!(maker_order_req_collateral > maker_init_req_collateral); // open orders require collateral
+
+        let mut cancel_result = futures_tester.cancel_open_orders(taker_index, maker_index);
+        assert!(cancel_result.unwrap_err() == GDEXError::OrderRequest);
+
+        futures_tester
+            .futures_limit_order(taker_index, taker_side, taker_price, taker_quantity)
+            .unwrap();
+
+        let maker_fill_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
+        let maker_fill_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
+        let maker_fill_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
+        let fill_is_liquidatable = maker_fill_deposit + maker_fill_unrealized_pnl < maker_fill_req_collateral as i64;
+
+        assert!(fill_is_liquidatable); // oracle price is 11_000_000, filled at 21_000_000, immediate loss -> liquidation
+        assert_eq!(maker_fill_unrealized_pnl, -960 * 10_000_000);
+
+        cancel_result = futures_tester.cancel_open_orders(taker_index, maker_index);
+        assert!(cancel_result.is_ok());
+        let maker_cancel_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
+        let maker_cancel_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
+        let maker_cancel_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
+
+        let cancel_is_liquidatable =
+            maker_cancel_deposit + maker_cancel_unrealized_pnl < maker_cancel_req_collateral as i64;
+        assert!(cancel_is_liquidatable); // should still be able to liquidate since the remaining order is small
+        assert!(maker_cancel_req_collateral < maker_fill_req_collateral); // cancelling open orders should reduce collateral requirement
+
+        let liquidate_result = futures_tester.liquidate(taker_index, maker_index, OrderSide::Bid as u64, 960);
+        assert!(liquidate_result.is_ok());
+
+        let maker_final_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
+        let maker_final_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
+        let maker_final_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
+        let final_is_liquidatable =
+            maker_final_deposit + maker_final_unrealized_pnl < maker_final_req_collateral as i64;
+
+        assert!(!final_is_liquidatable);
+        assert!(maker_final_req_collateral == 1); // zero position rounded up
+        assert!(maker_final_unrealized_pnl == 0); // all pnl realized
+        assert!(
+            maker_final_deposit
+                == maker_init_deposit - 960 * (21_000_000 - (INITIAL_ASSET_PRICES[0] as f64 * 0.99) as i64)
+        );
     }
 
     #[test]

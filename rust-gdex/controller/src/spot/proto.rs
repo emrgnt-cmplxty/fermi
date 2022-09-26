@@ -1,5 +1,5 @@
+use bytes::Bytes;
 // IMPORTS
-
 // crate
 use crate::router::ControllerType;
 
@@ -137,6 +137,7 @@ impl CancelOrderRequest {
             quote_asset_id,
             side,
             order_id,
+            market_admin: Bytes::from(vec![0]),
         }
     }
 }

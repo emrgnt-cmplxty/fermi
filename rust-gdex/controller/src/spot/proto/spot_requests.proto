@@ -48,4 +48,5 @@ message CancelOrderRequest {
     uint64 quote_asset_id = 2;
     uint64 side = 3;
     uint64 order_id = 4;
+    bytes market_admin = 5;
 }

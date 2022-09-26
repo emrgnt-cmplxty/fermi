@@ -78,8 +78,6 @@ pub struct LiquidateRequest {
     #[prost(bytes="bytes", tag="6")]
     pub target: ::prost::bytes::Bytes,
 }
-// EVENTS
-
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct FuturesOrderNewEvent {
     #[prost(bytes="bytes", tag="1")]

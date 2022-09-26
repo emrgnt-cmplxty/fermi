@@ -182,7 +182,11 @@ pub mod futures_tests {
             self.controller_router.handle_consensus_transaction(&transaction)
         }
 
-        pub fn cancel_open_orders(&self, sender_index: usize, target_index: usize) -> Result<(), GDEXError> {
+        pub fn cancel_open_orders(
+            &self,
+            sender_index: usize,
+            target_index: usize,
+        ) -> Result<ExecutionResultBody, GDEXError> {
             let request = CancelAllRequest::new(self.user_keys[target_index].public(), self.admin_key.public());
 
             let transaction = Transaction::new(
@@ -199,7 +203,7 @@ pub mod futures_tests {
             target_index: usize,
             side: u64,
             quantity: u64,
-        ) -> Result<(), GDEXError> {
+        ) -> Result<ExecutionResultBody, GDEXError> {
             let request = LiquidateRequest::new(
                 self.base_asset_id,
                 self.quote_asset_id,

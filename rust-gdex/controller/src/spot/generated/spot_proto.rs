@@ -56,6 +56,8 @@ pub struct CancelOrderRequest {
     pub side: u64,
     #[prost(uint64, tag="4")]
     pub order_id: u64,
+    #[prost(bytes="bytes", tag="5")]
+    pub market_admin: ::prost::bytes::Bytes,
 }
 // EVENTS
 

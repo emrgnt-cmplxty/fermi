@@ -311,7 +311,7 @@ pub mod futures_tests {
 
         let req_collateral = futures_tester.get_user_total_req_collateral(user_index).unwrap();
         // assert order used collateral equal to price times quantity // leverage + 1
-        assert!(req_collateral == (user_price * user_quantity) / TEST_MAX_LEVERAGE + 1);
+        assert_eq!(req_collateral, (user_price * user_quantity) / TEST_MAX_LEVERAGE + 1);
     }
 
     #[test]
@@ -345,26 +345,32 @@ pub mod futures_tests {
             .2
             .unwrap();
         // check taker and maker positions match
-        assert!(maker_position.quantity == taker_position.quantity);
-        assert!(maker_position.average_price == taker_position.average_price);
+        assert_eq!(maker_position.quantity, taker_position.quantity);
+        assert_eq!(maker_position.average_price, taker_position.average_price);
         // now check taker was completely filled
-        assert!(maker_position.quantity == taker_quantity);
+        assert_eq!(maker_position.quantity, taker_quantity);
         // note, average price should be at maker fill price
-        assert!(maker_position.average_price == maker_price);
+        assert_eq!(maker_position.average_price, maker_price);
 
         // check taker and maker collateral requirements are consistent w/ expected state
         let maker_total_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
         let taker_total_req_collateral = futures_tester.get_user_total_req_collateral(taker_index).unwrap();
         let maker_order_req_collateral = (maker_quantity - taker_quantity) * maker_price / TEST_MAX_LEVERAGE;
         // maker required collateral should equal taker required collateral + remaining order collateral
-        assert!(maker_total_req_collateral - maker_order_req_collateral == taker_total_req_collateral);
+        assert_eq!(
+            maker_total_req_collateral - maker_order_req_collateral,
+            taker_total_req_collateral
+        );
 
         let maker_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
         let taker_unrealized_pnl = futures_tester.get_user_unrealized_pnl(taker_index).unwrap();
         // check that maker and taker unrealized pnl off-set
-        assert!(maker_unrealized_pnl == -taker_unrealized_pnl);
+        assert_eq!(maker_unrealized_pnl, -taker_unrealized_pnl);
         // check that pnl markdown equals difference from fill price to current price
-        assert!(maker_unrealized_pnl as u64 == (INITIAL_ASSET_PRICES[0] - 10_000_000) * taker_quantity);
+        assert_eq!(
+            maker_unrealized_pnl as u64,
+            (INITIAL_ASSET_PRICES[0] - 10_000_000) * taker_quantity
+        );
     }
 
     #[test]
@@ -376,19 +382,19 @@ pub mod futures_tests {
 
         let result = futures_tester.futures_limit_order(user_index, user_side, user_price, user_quantity);
 
-        assert!(result.unwrap_err() == GDEXError::InsufficientCollateral);
+        assert_eq!(result.unwrap_err(), GDEXError::InsufficientCollateral);
     }
 
     #[test]
     fn liquidate_long_full() {
         let trade_size = 960;
+        let fill_price = 21_000_000;
         let futures_tester = FuturesControllerTester::new();
         futures_tester.initialize();
         let (maker_index, maker_side, maker_price, maker_quantity) =
-            (0, OrderSide::Bid as u64, FINAL_ASSET_PRICES[0], trade_size + 1);
+            (0, OrderSide::Bid as u64, fill_price, trade_size + 1);
         // taker must ask less than maker price in order to be a taker
-        let (taker_index, taker_side, taker_price, taker_quantity) =
-            (1, OrderSide::Ask as u64, FINAL_ASSET_PRICES[0], trade_size);
+        let (taker_index, taker_side, taker_price, taker_quantity) = (1, OrderSide::Ask as u64, fill_price, trade_size);
 
         let maker_init_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
         let maker_init_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
@@ -414,7 +420,7 @@ pub mod futures_tests {
         assert!(maker_order_req_collateral > maker_init_req_collateral); // open orders require collateral
 
         let mut cancel_result = futures_tester.cancel_open_orders(taker_index, maker_index);
-        assert!(cancel_result.unwrap_err() == GDEXError::OrderRequest);
+        assert_eq!(cancel_result.unwrap_err(), GDEXError::OrderRequest);
 
         futures_tester
             .futures_limit_order(taker_index, taker_side, taker_price, taker_quantity)
@@ -425,10 +431,10 @@ pub mod futures_tests {
         let maker_fill_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
         let fill_is_liquidatable = maker_fill_deposit + maker_fill_unrealized_pnl < 0_i64;
 
-        assert!(fill_is_liquidatable); // oracle price is 11_000_000, filled at FINAL_ASSET_PRICES[0], immediate loss -> liquidation
+        assert!(fill_is_liquidatable); // oracle price is 11_000_000, filled at fill_price, immediate loss -> liquidation
         assert_eq!(
             maker_fill_unrealized_pnl,
-            -1_i64 * trade_size as i64 * (FINAL_ASSET_PRICES[0] - INITIAL_ASSET_PRICES[0]) as i64
+            -1_i64 * (trade_size * (fill_price - INITIAL_ASSET_PRICES[0])) as i64
         );
 
         cancel_result = futures_tester.cancel_open_orders(taker_index, maker_index);
@@ -454,27 +460,24 @@ pub mod futures_tests {
         let final_is_liquidatable = maker_final_deposit + maker_final_unrealized_pnl < 0_i64;
 
         assert!(!final_is_liquidatable);
-        assert!(maker_final_req_collateral == 1); // zero position rounded up
-        assert!(maker_final_unrealized_pnl == 0); // all pnl realized
+        assert_eq!(maker_final_req_collateral, 1); // zero position rounded up
+        assert_eq!(maker_final_unrealized_pnl, 0); // all pnl realized
         assert_eq!(
             maker_final_deposit,
             maker_init_deposit
-                - 1_i64
-                    * trade_size as i64
-                    * (FINAL_ASSET_PRICES[0] - (INITIAL_ASSET_PRICES[0] as f64 * 0.99) as u64) as i64
+                - 1_i64 * (trade_size * (fill_price - (INITIAL_ASSET_PRICES[0] as f64 * 0.99) as u64)) as i64
         );
     }
 
     #[test]
     fn liquidate_long_partial() {
         let trade_size = 960;
+        let fill_price = 21_000_000;
         let futures_tester = FuturesControllerTester::new();
         futures_tester.initialize();
-        let (maker_index, maker_side, maker_price, maker_quantity) =
-            (0, OrderSide::Bid as u64, FINAL_ASSET_PRICES[0], 961);
+        let (maker_index, maker_side, maker_price, maker_quantity) = (0, OrderSide::Bid as u64, fill_price, 961);
         // taker must ask less than maker price in order to be a taker
-        let (taker_index, taker_side, taker_price, taker_quantity) =
-            (1, OrderSide::Ask as u64, FINAL_ASSET_PRICES[0], trade_size);
+        let (taker_index, taker_side, taker_price, taker_quantity) = (1, OrderSide::Ask as u64, fill_price, trade_size);
 
         let maker_init_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
         let maker_init_req_collateral = futures_tester.get_user_total_req_collateral(maker_index).unwrap();
@@ -500,7 +503,7 @@ pub mod futures_tests {
         assert!(maker_order_req_collateral > maker_init_req_collateral); // open orders require collateral
 
         let mut cancel_result = futures_tester.cancel_open_orders(taker_index, maker_index);
-        assert!(cancel_result.unwrap_err() == GDEXError::OrderRequest);
+        assert_eq!(cancel_result.unwrap_err(), GDEXError::OrderRequest);
 
         futures_tester
             .futures_limit_order(taker_index, taker_side, taker_price, taker_quantity)
@@ -511,10 +514,10 @@ pub mod futures_tests {
         let maker_fill_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
         let fill_is_liquidatable = maker_fill_deposit + maker_fill_unrealized_pnl < 0_i64;
 
-        assert!(fill_is_liquidatable); // oracle price is 11_000_000, filled at FINAL_ASSET_PRICES[0], immediate loss -> liquidation
+        assert!(fill_is_liquidatable); // oracle price is 11_000_000, filled at fill_price, immediate loss -> liquidation
         assert_eq!(
             maker_fill_unrealized_pnl,
-            -1_i64 * trade_size as i64 * (FINAL_ASSET_PRICES[0] - INITIAL_ASSET_PRICES[0]) as i64
+            -1_i64 * (trade_size * (fill_price - INITIAL_ASSET_PRICES[0])) as i64
         );
 
         cancel_result = futures_tester.cancel_open_orders(taker_index, maker_index);
@@ -527,7 +530,9 @@ pub mod futures_tests {
         assert!(cancel_is_liquidatable); // should still be able to liquidate since the remaining order is small
         assert!(maker_cancel_req_collateral < maker_fill_req_collateral); // cancelling open orders should reduce collateral requirement
 
-        let liquidate_result = futures_tester.liquidate(taker_index, maker_index, OrderSide::Bid as u64, 50);
+        let first_liq_quantity = 50;
+        let liquidate_result =
+            futures_tester.liquidate(taker_index, maker_index, OrderSide::Bid as u64, first_liq_quantity);
         assert!(liquidate_result.is_ok());
 
         let maker_partial_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
@@ -536,15 +541,17 @@ pub mod futures_tests {
 
         // partial liquidation, target still liquidatable
         assert!(partial_is_liquidatable);
-        assert!(maker_partial_unrealized_pnl == -910 * 10_000_000);
+        assert_eq!(maker_partial_unrealized_pnl, -910 * 10_000_000);
         assert_eq!(
             maker_partial_deposit,
             maker_init_deposit
-                - 50_i64 * (FINAL_ASSET_PRICES[0] as i64 - (INITIAL_ASSET_PRICES[0] as f64 * 0.99) as i64) as i64
-                - 910_i64 * INITIAL_ASSET_PRICES[0] as i64 / TEST_MAX_LEVERAGE as i64
+                - first_liq_quantity as i64 * (fill_price - (INITIAL_ASSET_PRICES[0] as f64 * 0.99) as u64) as i64
+                - (taker_quantity - first_liq_quantity) as i64 * (INITIAL_ASSET_PRICES[0] / TEST_MAX_LEVERAGE) as i64
         );
 
-        let liquidate_result = futures_tester.liquidate(taker_index, maker_index, OrderSide::Bid as u64, 650);
+        let second_liq_quantity = 650;
+        let liquidate_result =
+            futures_tester.liquidate(taker_index, maker_index, OrderSide::Bid as u64, second_liq_quantity);
         assert!(liquidate_result.is_ok());
 
         let maker_final_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
@@ -554,12 +561,22 @@ pub mod futures_tests {
 
         assert!(!final_is_liquidatable);
 
-        assert!(maker_final_req_collateral == 260 * INITIAL_ASSET_PRICES[0] / TEST_MAX_LEVERAGE as u64 + 1);
-        assert!(maker_final_unrealized_pnl == -260 * 10_000_000);
+        assert_eq!(
+            maker_final_req_collateral,
+            (taker_quantity - first_liq_quantity - second_liq_quantity) * INITIAL_ASSET_PRICES[0] / TEST_MAX_LEVERAGE
+                + 1
+        );
+        assert_eq!(
+            maker_final_unrealized_pnl,
+            -1_i64
+                * ((taker_quantity - first_liq_quantity - second_liq_quantity) * (fill_price - INITIAL_ASSET_PRICES[0]))
+                    as i64
+        );
         assert_eq!(
             maker_final_deposit,
             maker_init_deposit
-                - 700_i64 * (FINAL_ASSET_PRICES[0] - (INITIAL_ASSET_PRICES[0] as f64 * 0.99) as u64) as i64
+                - (first_liq_quantity + second_liq_quantity) as i64
+                    * (fill_price - (INITIAL_ASSET_PRICES[0] as f64 * 0.99) as u64) as i64
                 - maker_final_req_collateral as i64
                 + 1
         );
@@ -600,7 +617,7 @@ pub mod futures_tests {
         assert!(maker_order_req_collateral > maker_init_req_collateral); // open orders require collateral
 
         let mut cancel_result = futures_tester.cancel_open_orders(taker_index, maker_index);
-        assert!(cancel_result.unwrap_err() == GDEXError::OrderRequest);
+        assert_eq!(cancel_result.unwrap_err(), GDEXError::OrderRequest);
 
         futures_tester
             .futures_limit_order(taker_index, taker_side, taker_price, taker_quantity)
@@ -614,7 +631,7 @@ pub mod futures_tests {
         assert!(fill_is_liquidatable); // oracle price is 11_000_000, filled at 21_000_000, immediate loss -> liquidation
         assert_eq!(
             maker_fill_unrealized_pnl,
-            -1_i64 * trade_size as i64 * (INITIAL_ASSET_PRICES[0] - fill_price) as i64
+            -1_i64 * (trade_size * (INITIAL_ASSET_PRICES[0] - fill_price)) as i64
         );
 
         cancel_result = futures_tester.cancel_open_orders(taker_index, maker_index);
@@ -640,14 +657,12 @@ pub mod futures_tests {
         let final_is_liquidatable = maker_final_deposit + maker_final_unrealized_pnl < 0_i64;
 
         assert!(!final_is_liquidatable);
-        assert!(maker_final_req_collateral == 1); // zero position rounded up
-        assert!(maker_final_unrealized_pnl == 0); // all pnl realized
-        assert!(
-            maker_final_deposit
-                == maker_init_deposit
-                    - 1_i64
-                        * trade_size as i64 as i64
-                        * ((INITIAL_ASSET_PRICES[0] as f64 * 1.01) as i64 - fill_price as i64)
+        assert_eq!(maker_final_req_collateral, 1); // zero position rounded up
+        assert_eq!(maker_final_unrealized_pnl, 0); // all pnl realized
+        assert_eq!(
+            maker_final_deposit,
+            maker_init_deposit
+                - 1_i64 * (trade_size * ((INITIAL_ASSET_PRICES[0] as f64 * 1.01) as u64 - fill_price)) as i64
         );
     }
 
@@ -686,7 +701,7 @@ pub mod futures_tests {
         assert!(maker_order_req_collateral > maker_init_req_collateral); // open orders require collateral
 
         let mut cancel_result = futures_tester.cancel_open_orders(taker_index, maker_index);
-        assert!(cancel_result.unwrap_err() == GDEXError::OrderRequest);
+        assert_eq!(cancel_result.unwrap_err(), GDEXError::OrderRequest);
 
         futures_tester
             .futures_limit_order(taker_index, taker_side, taker_price, taker_quantity)
@@ -700,7 +715,7 @@ pub mod futures_tests {
 
         assert_eq!(
             maker_fill_unrealized_pnl,
-            -1_i64 * trade_size as i64 * (INITIAL_ASSET_PRICES[0] - fill_price) as i64
+            -1_i64 * (trade_size * (INITIAL_ASSET_PRICES[0] - fill_price)) as i64
         );
 
         cancel_result = futures_tester.cancel_open_orders(taker_index, maker_index);
@@ -722,12 +737,15 @@ pub mod futures_tests {
 
         // partial liquidation, target still liquidatable
         assert!(partial_is_liquidatable);
-        assert!(maker_partial_unrealized_pnl == -910 * (INITIAL_ASSET_PRICES[0] - fill_price) as i64);
+        assert_eq!(
+            maker_partial_unrealized_pnl,
+            -910 * (INITIAL_ASSET_PRICES[0] - fill_price) as i64
+        );
         assert_eq!(
             maker_partial_deposit,
             maker_init_deposit
                 - 50_i64 * ((INITIAL_ASSET_PRICES[0] as f64 * 1.01) as u64 - fill_price) as i64
-                - 910_i64 * INITIAL_ASSET_PRICES[0] as i64 / TEST_MAX_LEVERAGE as i64
+                - 910_i64 * (INITIAL_ASSET_PRICES[0] / TEST_MAX_LEVERAGE) as i64
         );
 
         let liquidate_result = futures_tester.liquidate(taker_index, maker_index, OrderSide::Ask as u64, 650);
@@ -740,8 +758,11 @@ pub mod futures_tests {
 
         assert!(!final_is_liquidatable);
 
-        assert!(maker_final_req_collateral == 260 * INITIAL_ASSET_PRICES[0] / TEST_MAX_LEVERAGE as u64 + 1);
-        assert!(maker_final_unrealized_pnl == -260 * 10_000_000);
+        assert_eq!(
+            maker_final_req_collateral,
+            260 * INITIAL_ASSET_PRICES[0] / TEST_MAX_LEVERAGE as u64 + 1
+        );
+        assert_eq!(maker_final_unrealized_pnl, -260 * 10_000_000);
         assert_eq!(
             maker_final_deposit,
             maker_init_deposit
@@ -767,9 +788,9 @@ pub mod futures_tests {
 
         // check that collateral requirements of orders sums over price*quantity
         let user_req_collateral = futures_tester.get_user_total_req_collateral(user_index).unwrap();
-        assert!(
-            user_req_collateral
-                == (user_price_0 * user_quantity_0 + user_price_1 * user_quantity_1) / TEST_MAX_LEVERAGE + 1
+        assert_eq!(
+            user_req_collateral,
+            (user_price_0 * user_quantity_0 + user_price_1 * user_quantity_1) / TEST_MAX_LEVERAGE + 1
         );
 
         // a bid on opposite side which does not cross spread will not modify req collateral
@@ -779,7 +800,7 @@ pub mod futures_tests {
             .futures_limit_order(user_index, user_side, user_price_2, user_quantity_2)
             .unwrap();
         let user_req_collateral_post_ask = futures_tester.get_user_total_req_collateral(user_index).unwrap();
-        assert!(user_req_collateral == user_req_collateral_post_ask);
+        assert_eq!(user_req_collateral, user_req_collateral_post_ask);
 
         // an ask that crosses will modify the required collateral by removing open orders
         let (user_side, user_price_3, user_quantity_3) = (OrderSide::Ask as u64, 999_000, 25);
@@ -793,9 +814,9 @@ pub mod futures_tests {
         // the residual .886 comes from the rounding on price = quantity_1 * price_1 + quantity_2 * price_2 / quantity_1 + quantity_2
         let user_req_collateral_post_cross = futures_tester.get_user_total_req_collateral(user_index).unwrap();
 
-        assert!(
-            user_req_collateral
-                == user_req_collateral_post_cross + (user_price_1 * user_quantity_3) / TEST_MAX_LEVERAGE + 70
+        assert_eq!(
+            user_req_collateral,
+            user_req_collateral_post_cross + (user_price_1 * user_quantity_3) / TEST_MAX_LEVERAGE + 70
         );
 
         // ensure that we don't have a remainder transaction
@@ -833,7 +854,10 @@ pub mod futures_tests {
         let maker_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
 
         // check that pnl markdown equals difference from fill price to current price
-        assert!(maker_unrealized_pnl as u64 == (FINAL_ASSET_PRICES[0] - 10_000_000) * taker_quantity);
+        assert_eq!(
+            maker_unrealized_pnl as u64,
+            (FINAL_ASSET_PRICES[0] - 10_000_000) * taker_quantity
+        );
     }
 
     #[test]
@@ -885,7 +909,13 @@ pub mod futures_tests {
         let maker_available_deposit = futures_tester.get_account_available_deposit(maker_index).unwrap();
         let taker_available_deposit = futures_tester.get_account_available_deposit(taker_index).unwrap();
 
-        assert!(maker_available_deposit as u64 == USER_INITIAL_DEPOSIT + 1_000_000 * 10 - 1);
-        assert!(taker_available_deposit as u64 == USER_INITIAL_DEPOSIT - 1_000_000 * 10 - 1);
+        assert_eq!(
+            maker_available_deposit as u64,
+            USER_INITIAL_DEPOSIT + 1_000_000 * 10 - 1
+        );
+        assert_eq!(
+            taker_available_deposit as u64,
+            USER_INITIAL_DEPOSIT - 1_000_000 * 10 - 1
+        );
     }
 }

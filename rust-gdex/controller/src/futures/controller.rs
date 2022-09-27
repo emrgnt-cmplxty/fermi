@@ -21,7 +21,6 @@ use gdex_types::{
 // external
 use async_trait::async_trait;
 
-
 use gdex_types::transaction::parse_order_side;
 use serde::{Deserialize, Serialize};
 use std::borrow::BorrowMut;

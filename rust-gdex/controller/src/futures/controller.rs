@@ -124,7 +124,7 @@ impl FuturesController {
                     order_to_account: HashMap::new(),
                     orderbook: Orderbook::new(request.base_asset_id, market_place.quote_asset_id),
                     marketplace_deposits: Arc::downgrade(&market_place.deposits),
-                    liquidation_fee_percent: 1_f64,
+                    liquidation_fee_percent: 1,
                     event_manager: Arc::clone(&self.event_manager),
                 },
             );
@@ -369,9 +369,9 @@ impl FuturesController {
             // check liquidator has enough collateral to take over
             let parsed_order_side = parse_order_side(request.side)?;
             let liquidation_price = if parsed_order_side == OrderSide::Bid {
-                (target_market.oracle_price as f64 * (100_f64 - target_market.liquidation_fee_percent) / 100.0) as u64
+                (target_market.oracle_price * (100 - target_market.liquidation_fee_percent)) / 100
             } else {
-                (target_market.oracle_price as f64 * (100_f64 + target_market.liquidation_fee_percent) / 100.0) as u64
+                (target_market.oracle_price * (100 + target_market.liquidation_fee_percent)) / 100
             };
 
             let request_collateral_data = Some(CondensedOrder {
@@ -391,6 +391,7 @@ impl FuturesController {
                 .unwrap()
                 .get(&sender)
                 .ok_or(GDEXError::AccountLookup)?;
+
             if sender_deposit + sender_unrealized_pnl < sender_req_collateral as i64 {
                 return Err(GDEXError::InsufficientCollateral);
             }

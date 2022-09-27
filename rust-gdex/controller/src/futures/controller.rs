@@ -20,7 +20,10 @@ use gdex_types::{
 };
 // external
 use async_trait::async_trait;
+
+use gdex_types::transaction::parse_order_side;
 use serde::{Deserialize, Serialize};
+use std::borrow::BorrowMut;
 use std::{
     collections::HashMap,
     convert::TryInto,
@@ -121,6 +124,7 @@ impl FuturesController {
                     order_to_account: HashMap::new(),
                     orderbook: Orderbook::new(request.base_asset_id, market_place.quote_asset_id),
                     marketplace_deposits: Arc::downgrade(&market_place.deposits),
+                    liquidation_fee_percent: 1,
                     event_manager: Arc::clone(&self.event_manager),
                 },
             );
@@ -235,6 +239,53 @@ impl FuturesController {
         Ok(())
     }
 
+    fn cancel_open_orders(
+        &mut self,
+        sender: AccountPubKey,
+        market_admin: AccountPubKey,
+        request: CancelAllRequest,
+    ) -> Result<(), GDEXError> {
+        let account_key = AccountPubKey::from_bytes(&request.target).unwrap();
+        let sender_is_target = sender == account_key;
+
+        if let Some(market_place) = self.market_places.get_mut(&market_admin) {
+            let target_req_collateral = get_account_total_req_collateral(market_place, &account_key, None)?
+                .try_into()
+                .map_err(|_| GDEXError::Conversion)?;
+            let target_unrealized_pnl = get_account_unrealized_pnl(market_place, &account_key)?;
+
+            let target_deposit = *market_place
+                .deposits
+                .lock()
+                .unwrap()
+                .get(&sender)
+                .ok_or(GDEXError::AccountLookup)?;
+
+            let target_in_liq = (target_deposit + target_unrealized_pnl) < target_req_collateral;
+
+            if sender_is_target || target_in_liq {
+                for market in market_place.markets.values_mut() {
+                    if let Some(futures_account) = market.borrow_mut().accounts.get(&account_key.clone()) {
+                        for o in &futures_account.open_orders.clone() {
+                            let cancel_request = CancelOrderRequest::new(
+                                market.base_asset_id,
+                                market.quote_asset_id,
+                                o.side,
+                                o.order_id,
+                            );
+                            market.place_cancel_order(&sender, &cancel_request)?;
+                        }
+                    }
+                }
+            } else {
+                return Err(GDEXError::OrderRequest);
+            }
+        } else {
+            return Err(GDEXError::MarketplaceExistence);
+        };
+        Ok(())
+    }
+
     fn futures_limit_order(
         &mut self,
         sender: AccountPubKey,
@@ -277,6 +328,127 @@ impl FuturesController {
             return Err(GDEXError::MarketplaceExistence);
         };
         Ok(())
+    }
+
+    fn liquidate(
+        &mut self,
+        sender: AccountPubKey,
+        market_admin: AccountPubKey,
+        request: LiquidateRequest,
+    ) -> Result<(), GDEXError> {
+        if let Some(market_place) = self.market_places.get_mut(&market_admin) {
+            // check target acct is in liquidation
+            let target_account = AccountPubKey::from_bytes(&request.target).map_err(|_| GDEXError::AccountLookup)?;
+            let target_unrealized_pnl = get_account_unrealized_pnl(market_place, &target_account)?;
+            let target_deposit_net_of_collateral =
+                get_account_deposit_net_of_req_collateral(market_place, &target_account)?;
+
+            if target_deposit_net_of_collateral + target_unrealized_pnl >= 0 {
+                return Err(GDEXError::CannotLiquidateTargetCollateral);
+            }
+
+            let mut target_market = market_place
+                .markets
+                .get_mut(&request.base_asset_id)
+                .ok_or(GDEXError::MarketExistence)?;
+            let futures_account = target_market
+                .accounts
+                .get(&target_account)
+                .ok_or(GDEXError::AccountLookup)?;
+
+            // open orders have to be closed first
+            if !futures_account.open_orders.is_empty() {
+                return Err(GDEXError::CannotLiquidateOpenOrders);
+            }
+
+            let target_position = futures_account.position.as_ref().ok_or(GDEXError::OrderRequest)?;
+            if target_position.side != request.side || target_position.quantity < request.quantity {
+                return Err(GDEXError::CannotLiquidatePosition);
+            }
+
+            // check liquidator has enough collateral to take over
+            let parsed_order_side = parse_order_side(request.side)?;
+            let liquidation_price = if parsed_order_side == OrderSide::Bid {
+                (target_market.oracle_price * (100 - target_market.liquidation_fee_percent)) / 100
+            } else {
+                (target_market.oracle_price * (100 + target_market.liquidation_fee_percent)) / 100
+            };
+
+            let request_collateral_data = Some(CondensedOrder {
+                price: liquidation_price,
+                side: request.side,
+                quantity: request.quantity,
+                base_asset_id: request.base_asset_id,
+            });
+
+            let sender_req_collateral =
+                get_account_total_req_collateral(market_place, &sender, request_collateral_data)?;
+            let sender_unrealized_pnl = get_account_unrealized_pnl(market_place, &sender)?;
+
+            let sender_deposit = *market_place
+                .deposits
+                .lock()
+                .unwrap()
+                .get(&sender)
+                .ok_or(GDEXError::AccountLookup)?;
+
+            if sender_deposit + sender_unrealized_pnl < sender_req_collateral as i64 {
+                return Err(GDEXError::InsufficientCollateral);
+            }
+
+            // effect the fill resulting from liquidator taking over
+            // TODO get it again...
+            target_market = market_place
+                .markets
+                .get_mut(&request.base_asset_id)
+                .ok_or(GDEXError::MarketExistence)?;
+            let opposite_side = parse_order_side(request.side % 2 + 1)?;
+
+            // it actually doesn't matter what the order id is,
+            // there are no open orders anymore so that block is skipped entirely
+            target_market.update_state_on_fill(&sender, 0, parsed_order_side, liquidation_price, request.quantity)?;
+            target_market.update_state_on_fill(
+                &target_account,
+                0,
+                opposite_side,
+                liquidation_price,
+                request.quantity,
+            )?;
+            target_market.emit_liquidate_event(
+                &sender,
+                &target_account,
+                request.side,
+                liquidation_price,
+                request.quantity,
+            );
+        } else {
+            return Err(GDEXError::MarketplaceExistence);
+        };
+        Ok(())
+    }
+
+    fn cancel_order(
+        &mut self,
+        sender: AccountPubKey,
+        market_admin: AccountPubKey,
+        request: CancelOrderRequest,
+    ) -> Result<(), GDEXError> {
+        if let Some(market_place) = self.market_places.get_mut(&market_admin) {
+            let market = market_place
+                .markets
+                .get_mut(&request.base_asset_id)
+                .ok_or(GDEXError::MarketExistence)?;
+            let is_owned = market
+                .order_to_account
+                .get(&request.order_id)
+                .ok_or(GDEXError::OrderRequest)
+                .unwrap()
+                .eq(&sender);
+            if is_owned {
+                market.place_cancel_order(&sender, &request)?;
+            }
+        }
+        Err(GDEXError::MarketplaceExistence)
     }
 
     pub fn get_marketplace_state(&self, market_admin: &AccountPubKey) -> Result<MarketplaceState, GDEXError> {
@@ -327,11 +499,7 @@ impl FuturesController {
         )
     }
 
-    pub fn get_account_available_deposit(
-        &self,
-        market_admin: &AccountPubKey,
-        account: &AccountPubKey,
-    ) -> Result<i64, GDEXError> {
+    pub fn get_account_value(&self, market_admin: &AccountPubKey, account: &AccountPubKey) -> Result<i64, GDEXError> {
         let deposit = *(self
             .market_places
             .get(market_admin)
@@ -342,11 +510,36 @@ impl FuturesController {
             .get(account)
             .ok_or(GDEXError::AccountLookup)?);
 
-        let req_collateral: i64 = self
-            .get_account_total_req_collateral(market_admin, account)?
-            .try_into()
-            .map_err(|_| GDEXError::Conversion)?;
-        Ok(deposit - req_collateral)
+        let unrealized_pnl = self.get_account_unrealized_pnl(market_admin, account)?;
+
+        Ok(deposit + unrealized_pnl)
+    }
+
+    pub fn get_account_available_deposit(
+        &self,
+        market_admin: &AccountPubKey,
+        account: &AccountPubKey,
+    ) -> Result<i64, GDEXError> {
+        get_account_deposit_net_of_req_collateral(
+            self.market_places
+                .get(market_admin)
+                .ok_or(GDEXError::MarketplaceExistence)?,
+            account,
+        )
+    }
+
+    pub fn get_account_deposit(&self, market_admin: &AccountPubKey, account: &AccountPubKey) -> Result<i64, GDEXError> {
+        let deposit = *(self
+            .market_places
+            .get(market_admin)
+            .ok_or(GDEXError::MarketplaceExistence)?
+            .deposits
+            .lock()
+            .unwrap()
+            .get(account)
+            .ok_or(GDEXError::AccountLookup)?);
+
+        Ok(deposit)
     }
 }
 
@@ -405,6 +598,24 @@ impl Controller for FuturesController {
                 let market_admin =
                     AccountPubKey::from_bytes(&request.market_admin).map_err(|_| GDEXError::InvalidAddress)?;
                 self.futures_limit_order(sender, market_admin, request)?;
+            }
+            FuturesRequestType::CancelOrder => {
+                let request: CancelOrderRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                let market_admin =
+                    AccountPubKey::from_bytes(&request.market_admin).map_err(|_| GDEXError::InvalidAddress)?;
+                self.cancel_order(sender, market_admin, request)?;
+            }
+            FuturesRequestType::CancelAll => {
+                let request: CancelAllRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                let market_admin =
+                    AccountPubKey::from_bytes(&request.market_admin).map_err(|_| GDEXError::InvalidAddress)?;
+                self.cancel_open_orders(sender, market_admin, request)?;
+            }
+            FuturesRequestType::Liquidate => {
+                let request: LiquidateRequest = deserialize_protobuf(&transaction.request_bytes)?;
+                let market_admin =
+                    AccountPubKey::from_bytes(&request.market_admin).map_err(|_| GDEXError::InvalidAddress)?;
+                self.liquidate(sender, market_admin, request)?;
             }
         }
         Ok(())
@@ -579,14 +790,17 @@ impl OrderBookWrapper for FuturesMarket {
 
     fn update_state_on_cancel(
         &mut self,
-        _account: &AccountPubKey,
-        _order_id: u64,
+        account: &AccountPubKey,
+        order_id: u64,
         _side: OrderSide,
         _price: u64,
         _quantity: u64,
     ) -> Result<(), GDEXError> {
         // TODO - https://github.com/gdexorg/gdex/issues/163 - implement cancel
-        Err(GDEXError::InvalidRequestTypeError)
+        self.order_to_account.remove(&order_id);
+        let futures_account = self.accounts.get_mut(account).ok_or(GDEXError::AccountLookup)?;
+        futures_account.open_orders.retain(|o| o.order_id != order_id);
+        Ok(())
     }
 
     // event emitters
@@ -625,6 +839,23 @@ impl OrderBookWrapper for FuturesMarket {
 
     fn emit_order_cancel_event(&mut self, account: &AccountPubKey, order_id: u64) {
         self.emit_event(&FuturesOrderCancelEvent::new(account, order_id));
+    }
+
+    fn emit_liquidate_event(
+        &mut self,
+        sender: &AccountPubKey,
+        target_account: &AccountPubKey,
+        side: u64,
+        price: u64,
+        quantity: u64,
+    ) {
+        self.emit_event(&FuturesLiquidateEvent::new(
+            sender,
+            target_account,
+            side,
+            price,
+            quantity,
+        ))
     }
 }
 

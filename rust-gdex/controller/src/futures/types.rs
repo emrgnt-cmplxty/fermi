@@ -71,6 +71,7 @@ pub struct FuturesMarket {
     pub orderbook: Orderbook,
     // reference to parent Marketplace deposits
     pub marketplace_deposits: Weak<Mutex<HashMap<AccountPubKey, i64>>>,
+    pub liquidation_fee_percent: u64,
     // shared
     pub event_manager: Arc<Mutex<EventManager>>,
 }

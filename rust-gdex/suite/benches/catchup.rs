@@ -25,7 +25,6 @@ use narwhal_crypto::KeyPair;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::time::SystemTime;
 
 fn criterion_benchmark(c: &mut Criterion) {
     // setup

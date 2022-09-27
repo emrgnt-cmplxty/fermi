@@ -49,6 +49,9 @@ impl RequestTypeEnum for FuturesRequestType {
             5 => Ok(FuturesRequestType::AccountDeposit),
             6 => Ok(FuturesRequestType::AccountWithdrawal),
             7 => Ok(FuturesRequestType::FuturesLimitOrder),
+            8 => Ok(FuturesRequestType::CancelOrder),
+            9 => Ok(FuturesRequestType::CancelAll),
+            10 => Ok(FuturesRequestType::Liquidate),
             _ => Err(GDEXError::DeserializationError),
         }
     }
@@ -220,6 +223,53 @@ impl FuturesLimitOrderRequest {
     }
 }
 
+impl CancelAllRequest {
+    pub fn new(target: &AccountPubKey, market_admin: &AccountPubKey) -> Self {
+        CancelAllRequest {
+            target: Bytes::from(target.as_ref().to_vec()),
+            market_admin: Bytes::from(market_admin.as_ref().to_vec()),
+        }
+    }
+}
+
+impl LiquidateRequest {
+    pub fn new(
+        base_asset_id: u64,
+        quote_asset_id: u64,
+        side: u64,
+        quantity: u64,
+        market_admin: &AccountPubKey,
+        target: &AccountPubKey,
+    ) -> Self {
+        LiquidateRequest {
+            base_asset_id,
+            quote_asset_id,
+            side,
+            quantity,
+            market_admin: Bytes::from(market_admin.as_ref().to_vec()),
+            target: Bytes::from(target.as_ref().to_vec()),
+        }
+    }
+}
+
+impl Request for LiquidateRequest {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_request_type_id() -> i32 {
+        FuturesRequestType::Liquidate as i32
+    }
+}
+
+impl Request for CancelAllRequest {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_request_type_id() -> i32 {
+        FuturesRequestType::CancelAll as i32
+    }
+}
+
 impl Request for FuturesLimitOrderRequest {
     fn get_controller_id() -> i32 {
         ControllerType::Futures as i32
@@ -331,6 +381,27 @@ impl FuturesOrderCancelEvent {
             account: Bytes::from(account.as_ref().to_vec()),
             order_id,
         }
+    }
+}
+
+impl FuturesLiquidateEvent {
+    pub fn new(sender: &AccountPubKey, target: &AccountPubKey, side: u64, price: u64, quantity: u64) -> Self {
+        FuturesLiquidateEvent {
+            sender: Bytes::from(sender.as_ref().to_vec()),
+            target_account: Bytes::from(target.as_ref().to_vec()),
+            side,
+            price,
+            quantity,
+        }
+    }
+}
+
+impl Event for FuturesLiquidateEvent {
+    fn get_controller_id() -> i32 {
+        ControllerType::Futures as i32
+    }
+    fn get_event_type_id() -> i32 {
+        FuturesEventType::LiquidateEvent as i32
     }
 }
 

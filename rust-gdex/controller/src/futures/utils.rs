@@ -236,6 +236,23 @@ pub(crate) fn get_account_unrealized_pnl(
     Ok(unrealized_pnl)
 }
 
+pub(crate) fn get_account_deposit_net_of_req_collateral(
+    market_place: &Marketplace,
+    account: &AccountPubKey,
+) -> Result<i64, GDEXError> {
+    let deposit = *market_place
+        .deposits
+        .lock()
+        .unwrap()
+        .get(account)
+        .ok_or(GDEXError::AccountLookup)?;
+
+    let req_collateral: i64 = get_account_total_req_collateral(market_place, account, None)?
+        .try_into()
+        .map_err(|_| GDEXError::Conversion)?;
+    Ok(deposit - req_collateral)
+}
+
 pub(crate) fn get_account_state_by_market(
     market_place: &Marketplace,
     account: &AccountPubKey,

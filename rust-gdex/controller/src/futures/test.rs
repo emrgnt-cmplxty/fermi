@@ -3,9 +3,12 @@
 #[cfg(any(test, feature = "testing"))]
 pub mod futures_tests {
     // crate
-    use crate::futures::{proto::*, types::*};
+    use crate::controller::Controller;
+    use crate::futures::{controller::FuturesController, proto::*, types::*};
     use crate::router::ControllerRouter;
     use crate::ControllerTestBed;
+    use gdex_types::store::RPCStore;
+
     // gdex
     use gdex_types::{
         account::{account_test_functions::generate_keypair_vec, AccountKeyPair, AccountPubKey},
@@ -13,27 +16,28 @@ pub mod futures_tests {
         crypto::KeypairTraits,
         error::GDEXError,
         order_book::OrderSide,
-        proto::FuturesPosition,
-        transaction::{ExecutionResultBody, Transaction},
+        transaction::{ExecutionEvents, Transaction},
     };
     // mysten
     use narwhal_types::CertificateDigest;
     // external
     use std::convert::TryInto;
-
+    use std::sync::Arc;
+    use std::sync::Mutex;
     // setup constants
-    const BASE_ASSET_ID: AssetId = 0;
-    const QUOTE_ASSET_ID: AssetId = 1;
-    const TEST_MAX_LEVERAGE: u64 = 25;
-    const INITIAL_TIME: u64 = 1_000_000;
-    const INITIAL_ASSET_PRICES: &[u64] = &[11_000_000];
-    const ADMIN_INITIAL_DEPOSIT: AssetId = 100_000_000_000;
-    const USER_INITIAL_DEPOSIT: AssetId = 10_000_000_000;
-    const NUM_USER_ACCOUNTS: usize = 10;
-    const FINAL_ASSET_PRICES: &[u64] = &[12_000_000];
+    pub const BASE_ASSET_ID: AssetId = 0;
+    pub const QUOTE_ASSET_ID: AssetId = 1;
+    pub const TEST_MAX_LEVERAGE: u64 = 25;
+    pub const INITIAL_TIME: u64 = 1_000_000;
+    pub const INITIAL_ASSET_PRICES: &[u64] = &[11_000_000];
+    pub const ADMIN_INITIAL_DEPOSIT: AssetId = 100_000_000_000;
+    pub const USER_INITIAL_DEPOSIT: AssetId = 10_000_000_000;
+    pub const NUM_USER_ACCOUNTS: usize = 10;
+    pub const FINAL_ASSET_PRICES: &[u64] = &[12_000_000];
 
     pub struct FuturesControllerTester {
-        pub controller_router: ControllerRouter,
+        // wrap in an Arc<Mutex to make it easier to share across test environments
+        pub controller_router: Arc<Mutex<ControllerRouter>>,
         pub admin_key: AccountKeyPair,
         pub user_keys: Vec<AccountKeyPair>,
         pub base_asset_id: u64,
@@ -49,6 +53,10 @@ pub mod futures_tests {
     impl FuturesControllerTester {
         pub fn new() -> Self {
             let admin_key = generate_keypair_vec([0; 32]).pop().unwrap();
+            Self::from_admin(admin_key)
+        }
+
+        pub fn from_admin(admin_key: AccountKeyPair) -> Self {
             let mut user_keys = Vec::new();
             for i in 0..NUM_USER_ACCOUNTS {
                 let user_key = generate_keypair_vec([i as u8; 32]).pop().unwrap();
@@ -56,7 +64,7 @@ pub mod futures_tests {
             }
 
             Self {
-                controller_router: ControllerRouter::default(),
+                controller_router: Arc::new(Mutex::new(ControllerRouter::default())),
                 admin_key,
                 user_keys,
                 base_asset_id: BASE_ASSET_ID,
@@ -64,8 +72,9 @@ pub mod futures_tests {
             }
         }
 
-        fn initialize_bank_controller(&self) -> Result<(), GDEXError> {
-            let mut bank_controller = self.controller_router.bank_controller.lock().unwrap();
+        pub fn initialize_bank_controller(&self) -> Result<(), GDEXError> {
+            let controller_router = self.controller_router.lock().unwrap();
+            let mut bank_controller = controller_router.bank_controller.lock().unwrap();
             // create two assets for the base and quote of the futures market
             bank_controller.create_asset(self.admin_key.public()).unwrap();
             bank_controller.create_asset(self.admin_key.public()).unwrap();
@@ -86,66 +95,84 @@ pub mod futures_tests {
             Ok(())
         }
 
-        fn create_marketplace(&self) -> Result<ExecutionResultBody, GDEXError> {
+        pub fn create_marketplace(&self) -> Result<ExecutionEvents, GDEXError> {
             let request = CreateMarketplaceRequest::new(self.quote_asset_id);
             let transaction = Transaction::new(
                 self.admin_key.public(),
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
                 &request,
             );
-            self.controller_router.handle_consensus_transaction(&transaction)
+            self.controller_router
+                .lock()
+                .unwrap()
+                .handle_consensus_transaction(&transaction)
         }
 
-        fn create_market(&self) -> Result<ExecutionResultBody, GDEXError> {
+        pub fn create_market(&self) -> Result<ExecutionEvents, GDEXError> {
             let request = CreateMarketRequest::new(self.base_asset_id);
             let transaction = Transaction::new(
                 self.admin_key.public(),
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
                 &request,
             );
-            self.controller_router.handle_consensus_transaction(&transaction)
+            self.controller_router
+                .lock()
+                .unwrap()
+                .handle_consensus_transaction(&transaction)
         }
 
-        fn update_market_params(&self) -> Result<ExecutionResultBody, GDEXError> {
+        pub fn update_market_params(&self) -> Result<ExecutionEvents, GDEXError> {
             let request = UpdateMarketParamsRequest::new(self.base_asset_id, TEST_MAX_LEVERAGE);
             let transaction = Transaction::new(
                 self.admin_key.public(),
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
                 &request,
             );
-            self.controller_router.handle_consensus_transaction(&transaction)
+            self.controller_router
+                .lock()
+                .unwrap()
+                .handle_consensus_transaction(&transaction)
         }
 
-        fn update_time(&self, latest_time: u64) -> Result<ExecutionResultBody, GDEXError> {
+        pub fn update_time(&self, latest_time: u64) -> Result<ExecutionEvents, GDEXError> {
             let request = UpdateTimeRequest::new(latest_time);
             let transaction = Transaction::new(
                 self.admin_key.public(),
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
                 &request,
             );
-            self.controller_router.handle_consensus_transaction(&transaction)
+            self.controller_router
+                .lock()
+                .unwrap()
+                .handle_consensus_transaction(&transaction)
         }
 
-        fn update_prices(&self, latest_prices: Vec<u64>) -> Result<ExecutionResultBody, GDEXError> {
+        pub fn update_prices(&self, latest_prices: Vec<u64>) -> Result<ExecutionEvents, GDEXError> {
             let request = UpdatePricesRequest::new(latest_prices);
             let transaction = Transaction::new(
                 self.admin_key.public(),
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
                 &request,
             );
-            self.controller_router.handle_consensus_transaction(&transaction)
+            self.controller_router
+                .lock()
+                .unwrap()
+                .handle_consensus_transaction(&transaction)
         }
 
-        fn account_deposit(&self, quantity: u64, sender: AccountPubKey) -> Result<ExecutionResultBody, GDEXError> {
+        pub fn account_deposit(&self, quantity: u64, sender: AccountPubKey) -> Result<ExecutionEvents, GDEXError> {
             let request = AccountDepositRequest::new(
                 quantity.try_into().map_err(|_| GDEXError::Conversion)?,
                 self.admin_key.public(),
             );
             let transaction = Transaction::new(&sender, CertificateDigest::new([0; fastcrypto::DIGEST_LEN]), &request);
-            self.controller_router.handle_consensus_transaction(&transaction)
+            self.controller_router
+                .lock()
+                .unwrap()
+                .handle_consensus_transaction(&transaction)
         }
 
-        fn initialize_futures_controller(&self) -> Result<(), GDEXError> {
+        pub fn initialize_futures_controller(&self) -> Result<(), GDEXError> {
             self.create_marketplace()?;
             self.create_market()?;
             self.update_market_params()?;
@@ -164,7 +191,7 @@ pub mod futures_tests {
             side: u64,
             price: u64,
             quantity: u64,
-        ) -> Result<ExecutionResultBody, GDEXError> {
+        ) -> Result<ExecutionEvents, GDEXError> {
             let request = FuturesLimitOrderRequest::new(
                 self.base_asset_id,
                 self.quote_asset_id,
@@ -179,14 +206,17 @@ pub mod futures_tests {
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
                 &request,
             );
-            self.controller_router.handle_consensus_transaction(&transaction)
+            self.controller_router
+                .lock()
+                .unwrap()
+                .handle_consensus_transaction(&transaction)
         }
 
         pub fn cancel_open_orders(
             &self,
             sender_index: usize,
             target_index: usize,
-        ) -> Result<ExecutionResultBody, GDEXError> {
+        ) -> Result<ExecutionEvents, GDEXError> {
             let request = CancelAllRequest::new(self.user_keys[target_index].public(), self.admin_key.public());
 
             let transaction = Transaction::new(
@@ -194,7 +224,10 @@ pub mod futures_tests {
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
                 &request,
             );
-            self.controller_router.handle_consensus_transaction(&transaction)
+            self.controller_router
+                .lock()
+                .unwrap()
+                .handle_consensus_transaction(&transaction)
         }
 
         pub fn liquidate(
@@ -203,7 +236,7 @@ pub mod futures_tests {
             target_index: usize,
             side: u64,
             quantity: u64,
-        ) -> Result<ExecutionResultBody, GDEXError> {
+        ) -> Result<ExecutionEvents, GDEXError> {
             let request = LiquidateRequest::new(
                 self.base_asset_id,
                 self.quote_asset_id,
@@ -218,61 +251,78 @@ pub mod futures_tests {
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
                 &request,
             );
-            self.controller_router.handle_consensus_transaction(&transaction)
+            self.controller_router
+                .lock()
+                .unwrap()
+                .handle_consensus_transaction(&transaction)
         }
 
         // UTIILITY FUNCTIONS
-        fn get_user_total_req_collateral(&self, user_index: usize) -> Result<u64, GDEXError> {
+        pub fn get_user_total_req_collateral(&self, user_index: usize) -> Result<u64, GDEXError> {
             self.controller_router
+                .lock()
+                .unwrap()
                 .futures_controller
                 .lock()
                 .unwrap()
                 .get_account_total_req_collateral(self.admin_key.public(), self.user_keys[user_index].public())
         }
 
-        fn get_user_account_value(&self, user_index: usize) -> Result<i64, GDEXError> {
+        pub fn get_user_account_value(&self, user_index: usize) -> Result<i64, GDEXError> {
             self.controller_router
+                .lock()
+                .unwrap()
                 .futures_controller
                 .lock()
                 .unwrap()
                 .get_account_value(self.admin_key.public(), self.user_keys[user_index].public())
         }
 
-        fn get_user_state_by_market(&self, user_index: usize) -> Result<AccountStateByMarket, GDEXError> {
+        pub fn get_user_state_by_market(&self, user_index: usize) -> Result<AccountStateByMarket, GDEXError> {
             self.controller_router
+                .lock()
+                .unwrap()
                 .futures_controller
                 .lock()
                 .unwrap()
                 .get_account_state_by_market(self.admin_key.public(), self.user_keys[user_index].public())
         }
 
-        fn get_user_unrealized_pnl(&self, user_index: usize) -> Result<i64, GDEXError> {
+        pub fn get_user_unrealized_pnl(&self, user_index: usize) -> Result<i64, GDEXError> {
             self.controller_router
+                .lock()
+                .unwrap()
                 .futures_controller
                 .lock()
                 .unwrap()
                 .get_account_unrealized_pnl(self.admin_key.public(), self.user_keys[user_index].public())
         }
 
-        fn get_account_available_deposit(&self, user_index: usize) -> Result<i64, GDEXError> {
+        pub fn get_account_available_deposit(&self, user_index: usize) -> Result<i64, GDEXError> {
             self.controller_router
+                .lock()
+                .unwrap()
                 .futures_controller
                 .lock()
                 .unwrap()
                 .get_account_available_deposit(self.admin_key.public(), self.user_keys[user_index].public())
         }
 
-        fn get_account_deposit(&self, user_index: usize) -> Result<i64, GDEXError> {
+        pub fn get_account_deposit(&self, user_index: usize) -> Result<i64, GDEXError> {
             self.controller_router
+                .lock()
+                .unwrap()
                 .futures_controller
                 .lock()
                 .unwrap()
                 .get_account_deposit(self.admin_key.public(), self.user_keys[user_index].public())
         }
 
-        fn get_account_position(&self, user_index: usize) -> Result<FuturesPosition, GDEXError> {
+        pub fn get_account_position(&self, user_index: usize) -> Result<FuturesPosition, GDEXError> {
             let account_state = self
                 .controller_router
+                .lock()
+                .unwrap()
                 .futures_controller
                 .lock()
                 .unwrap()
@@ -280,11 +330,20 @@ pub mod futures_tests {
             let position = account_state.get(0).unwrap().2.as_ref().unwrap();
             Ok(position.clone())
         }
+
+        pub async fn generate_orderbook_depths(&self, rpc_store: &RPCStore, block_number: u64) {
+            let futures_controller = self.controller_router.lock().unwrap().futures_controller.clone();
+
+            futures_controller
+                .lock()
+                .unwrap()
+                .non_critical_process_end_of_block(rpc_store, block_number);
+        }
     }
 
     impl ControllerTestBed for FuturesControllerTester {
-        fn get_controller_router(&self) -> &ControllerRouter {
-            &self.controller_router
+        fn get_controller_router(&self) -> Arc<Mutex<ControllerRouter>> {
+            Arc::clone(&self.controller_router)
         }
         fn initialize(&self) {
             self.generic_initialize();

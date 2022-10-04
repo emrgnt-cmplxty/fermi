@@ -5,6 +5,7 @@
 
 // crate
 use crate::bank::controller::BankController;
+use crate::consensus::rpc_server::UnimplementedRPC;
 use crate::controller::Controller;
 use crate::event_manager::{EventEmitter, EventManager};
 use crate::router::ControllerRouter;
@@ -15,7 +16,6 @@ use gdex_types::{
     asset::PRIMARY_ASSET_ID,
     crypto::ToFromBytes,
     error::GDEXError,
-    store::PostProcessStore,
     transaction::Transaction,
 };
 
@@ -59,13 +59,13 @@ impl Default for StakeController {
 }
 
 #[async_trait]
-impl Controller for StakeController {
+impl Controller<UnimplementedRPC> for StakeController {
     fn initialize(&mut self, controller_router: &ControllerRouter) {
         self.bank_controller = Arc::clone(&controller_router.bank_controller);
         self.event_manager = Arc::clone(&controller_router.event_manager);
     }
 
-    fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
+    fn initialize_controller_account(&self) -> Result<(), GDEXError> {
         self.bank_controller
             .lock()
             .unwrap()
@@ -75,20 +75,6 @@ impl Controller for StakeController {
 
     fn handle_consensus_transaction(&mut self, _transaction: &Transaction) -> Result<(), GDEXError> {
         Err(GDEXError::InvalidRequestTypeError)
-    }
-
-    async fn process_end_of_block(
-        _controller: Arc<Mutex<Self>>,
-        _post_process_store: &PostProcessStore,
-        _block_number: u64,
-    ) {
-    }
-
-    fn create_catchup_state(controller: Arc<Mutex<Self>>, _block_number: u64) -> Result<Vec<u8>, GDEXError> {
-        match bincode::serialize(&controller.lock().unwrap().clone()) {
-            Ok(v) => Ok(v),
-            Err(_) => Err(GDEXError::SerializationError),
-        }
     }
 }
 
@@ -350,8 +336,9 @@ pub mod stake_tests {
 
     #[test]
     fn create_stake_catchup_state_default() {
-        let stake_controller = Arc::new(Mutex::new(StakeController::default()));
-        let catchup_state = StakeController::create_catchup_state(stake_controller, 0);
+        let stake_controller = StakeController::default();
+        let catchup_state = stake_controller.get_catchup_state();
+
         assert!(catchup_state.is_ok());
         let catchup_state = catchup_state.unwrap();
         println!("Catchup state is {} bytes", catchup_state.len());

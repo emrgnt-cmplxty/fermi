@@ -6,10 +6,10 @@ use gdex_controller::{
 use gdex_types::transaction::serialize_protobuf;
 use gdex_types::{
     account::AccountKeyPair,
-    block::BlockDigest,
+    block::{BlockDigest, BlockInfo},
     order_book::OrderSide,
-    proto::{Empty, RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionSubmitterClient},
-    transaction::{ConsensusTransaction, SignedTransaction},
+    proto::{Empty, LatestBlockInfoRequest, ValidatorGrpcClient},
+    transaction::SignedTransaction,
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use tokio::time::{sleep, Duration};
@@ -18,7 +18,7 @@ use tonic::transport::Channel;
 use tracing::{info, warn};
 use url::Url;
 
-const BLOCK_INFO_REQUEST: RelayerGetLatestBlockInfoRequest = RelayerGetLatestBlockInfoRequest {};
+const BLOCK_INFO_REQUEST: LatestBlockInfoRequest = LatestBlockInfoRequest {};
 const MATCH_FREQUENCY: u64 = 100;
 
 fn create_signed_payment_transaction(
@@ -77,8 +77,7 @@ fn create_signed_limit_order_transaction(
 pub struct BenchHelper {
     primary_keypair: AccountKeyPair,
     accounts: Vec<AccountKeyPair>,
-    validator_client: Option<TransactionSubmitterClient<Channel>>,
-    relayer_client: Option<RelayerClient<Channel>>,
+    validator_client: Option<ValidatorGrpcClient<Channel>>,
     base_asset_id: u64,
     quote_asset_id: u64,
 }
@@ -92,8 +91,7 @@ impl BenchHelper {
         BenchHelper {
             primary_keypair,
             accounts: Vec::new(),
-            validator_client: None::<TransactionSubmitterClient<Channel>>,
-            relayer_client: None::<RelayerClient<Channel>>,
+            validator_client: None::<ValidatorGrpcClient<Channel>>,
             // TODO - https://github.com/gdexorg/gdex/issues/157 - avoid hard coding by directly calculating created assets...
             base_asset_id: 1,
             quote_asset_id: 2,
@@ -105,23 +103,19 @@ impl BenchHelper {
     async fn get_recent_block_digest(&mut self) -> BlockDigest {
         // fetch recent block digest before starting another round of payments
         let response = self
-            .relayer_client
+            .validator_client
             .as_mut()
-            .expect("Relayer client not initialized")
+            .expect("Validator client not initialized")
             .get_latest_block_info(BLOCK_INFO_REQUEST.clone())
             .await;
 
-        match response {
-            Ok(relayer_block_response) => match relayer_block_response.into_inner().block_info {
-                Some(block_info) => return bincode::deserialize(block_info.digest.as_ref()).unwrap(),
-                None => warn!("Failed to get latest block digest, returning default. Empty result"),
-            },
-            Err(status) => warn!(
-                "Failed to get latest block digest, returning default. Bad status {:?}",
-                status
-            ),
+        if let Ok(block_info_response) = response {
+            let block_info: BlockInfo =
+                bincode::deserialize(&block_info_response.into_inner().serialized_block_info).unwrap();
+            block_info.block_digest
+        } else {
+            BlockDigest::new([0; 32])
         }
-        BlockDigest::new([0; 32])
     }
 
     async fn submit_transaction(
@@ -264,19 +258,12 @@ impl BenchHelper {
     }
 
     /// Initialize the bench helper
-    pub async fn initialize(
-        &mut self,
-        validator_url: Url,
-        relayer_url: Url,
-        seed: [u8; 32],
-        accounts_to_generate: u64,
-    ) {
+    pub async fn initialize(&mut self, validator_url: Url, seed: [u8; 32], accounts_to_generate: u64) {
         self.validator_client = Some(
-            TransactionSubmitterClient::connect(validator_url.as_str().to_owned())
+            ValidatorGrpcClient::connect(validator_url.as_str().to_owned())
                 .await
                 .unwrap(),
         );
-        self.relayer_client = Some(RelayerClient::connect(relayer_url.as_str().to_owned()).await.unwrap());
         self.generate_accounts(seed, accounts_to_generate);
 
         // log the transaction size to help python client calculate throughput
@@ -285,13 +272,12 @@ impl BenchHelper {
         let recent_block_hash = self.get_recent_block_digest().await;
 
         let signed_transaction = create_signed_asset_creation_transaction(&self.primary_keypair, recent_block_hash, 0);
-
-        let serialized_consensus_transaction = match ConsensusTransaction::new(&signed_transaction).serialize() {
+        let serialized_signed_transaction = match bincode::serialize(&signed_transaction) {
             Ok(t) => t,
             _ => panic!("Error serializing transaction"),
         };
 
-        let transaction_size = serialized_consensus_transaction.len();
+        let transaction_size = serialized_signed_transaction.len();
 
         info!("Transactions size: {transaction_size} B");
     }

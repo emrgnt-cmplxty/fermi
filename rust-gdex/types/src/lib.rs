@@ -12,6 +12,8 @@ pub mod crypto;
 
 pub mod error;
 
+pub mod json_rpc;
+
 pub mod node;
 
 pub mod proto;

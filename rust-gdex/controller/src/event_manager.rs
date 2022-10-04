@@ -3,7 +3,7 @@
 // crate
 
 // gdex
-use gdex_types::transaction::{Event, ExecutionEvent, ExecutionResultBody};
+use gdex_types::transaction::{Event, ExecutionEvent, ExecutionEvents};
 
 // external
 use prost::Message;
@@ -15,7 +15,7 @@ use std::sync::{Arc, Mutex};
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct EventManager {
-    pub current_execution_result: ExecutionResultBody,
+    pub current_execution_result: ExecutionEvents,
 }
 
 impl Default for EventManager {
@@ -27,20 +27,20 @@ impl Default for EventManager {
 impl EventManager {
     pub fn new() -> Self {
         EventManager {
-            current_execution_result: ExecutionResultBody::new(),
+            current_execution_result: Vec::new(),
         }
     }
 
     pub fn reset(&mut self) {
-        self.current_execution_result = ExecutionResultBody::new();
+        self.current_execution_result = Vec::new();
     }
 
     pub fn push(&mut self, event: ExecutionEvent) {
-        self.current_execution_result.events.push(event);
+        self.current_execution_result.push(event);
     }
 
-    pub fn emit(&mut self) -> ExecutionResultBody {
-        let mut execution_result = ExecutionResultBody::new();
+    pub fn emit(&mut self) -> ExecutionEvents {
+        let mut execution_result = Vec::new();
         mem::swap(&mut self.current_execution_result, &mut execution_result);
         execution_result
     }

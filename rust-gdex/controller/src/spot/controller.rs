@@ -7,6 +7,7 @@
 
 // crate
 use crate::bank::controller::BankController;
+use crate::consensus::rpc_server::UnimplementedRPC;
 use crate::controller::Controller;
 use crate::event_manager::{EventEmitter, EventManager};
 use crate::router::ControllerRouter;
@@ -20,7 +21,6 @@ use gdex_types::{
     crypto::ToFromBytes,
     error::GDEXError,
     order_book::{OrderSide, OrderbookDepth},
-    store::PostProcessStore,
     transaction::{deserialize_protobuf, Transaction},
 };
 
@@ -34,7 +34,6 @@ use std::sync::{Arc, Mutex};
 // CONSTANTS
 
 pub const SPOT_CONTROLLER_ACCOUNT_PUBKEY: &[u8] = b"SPOTCONTROLLERAAAAAAAAAAAAAAAAAA";
-const ORDERBOOK_DEPTH_FREQUENCY: u64 = 100;
 
 // INTERFACE
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -60,13 +59,13 @@ impl Default for SpotController {
 }
 
 #[async_trait]
-impl Controller for SpotController {
+impl Controller<UnimplementedRPC> for SpotController {
     fn initialize(&mut self, controller_router: &ControllerRouter) {
         self.bank_controller = Arc::clone(&controller_router.bank_controller);
         self.event_manager = Arc::clone(&controller_router.event_manager);
     }
 
-    fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
+    fn initialize_controller_account(&self) -> Result<(), GDEXError> {
         self.bank_controller
             .lock()
             .unwrap()
@@ -123,30 +122,6 @@ impl Controller for SpotController {
                     Err(_err) => Err(GDEXError::OrderRequest),
                 }
             }
-        }
-    }
-
-    async fn process_end_of_block(
-        controller: Arc<Mutex<Self>>,
-        post_process_store: &PostProcessStore,
-        block_number: u64,
-    ) {
-        // write out orderbook depth every ORDERBOOK_DEPTH_FREQUENCY
-        if block_number % ORDERBOOK_DEPTH_FREQUENCY == 0 {
-            let orderbook_depths = controller.lock().unwrap().generate_orderbook_depths();
-            for (asset_pair, orderbook_depth) in orderbook_depths {
-                post_process_store
-                    .latest_orderbook_depth_store
-                    .write(asset_pair, orderbook_depth.clone())
-                    .await;
-            }
-        }
-    }
-
-    fn create_catchup_state(controller: Arc<Mutex<Self>>, _block_number: u64) -> Result<Vec<u8>, GDEXError> {
-        match bincode::serialize(&controller.lock().unwrap().clone()) {
-            Ok(v) => Ok(v),
-            Err(_) => Err(GDEXError::SerializationError),
         }
     }
 }
@@ -1240,8 +1215,8 @@ pub mod spot_tests {
 
     #[test]
     fn create_spot_catchup_state_default() {
-        let spot_controller = Arc::new(Mutex::new(SpotController::default()));
-        let catchup_state = SpotController::create_catchup_state(spot_controller, 0);
+        let spot_controller = SpotController::default();
+        let catchup_state = spot_controller.get_catchup_state();
         assert!(catchup_state.is_ok());
         let catchup_state = catchup_state.unwrap();
         println!("Catchup state is {} bytes", catchup_state.len());

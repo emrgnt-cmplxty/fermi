@@ -13,6 +13,33 @@ from benchmark.plot import Ploter, PlotError
 from benchmark.instance import InstanceManager
 from benchmark.remote import Bench, BenchError
 
+
+@task
+def sandbox(ctx, debug=True):
+    ''' Run benchmarks on Narwhal node. '''
+    bench_params = {
+        'faults': 0,
+        'workers': 1,
+        'nodes': 4,
+        'rate': 5_000,
+        'tx_size': 213,
+        'duration': 6000,
+        'mem_profiling': False,
+        'flamegraph': None, # node or None
+        'genesis_dir': '.data/',
+        'key_dir': '.data/',
+        'do_orderbook': False,
+        # the database dir will be wiped before running the benchmark
+        'db_dir': '.data/db',
+        'starting_balance': 5000000000
+    }
+    try:
+        ret = GDEXBench().run(bench_params, debug)
+        print(ret.result())
+    except BenchError as e:
+        Print.error(e)
+
+
 @task
 def gdex(ctx, debug=True):
     ''' Run benchmarks on Narwhal node. '''

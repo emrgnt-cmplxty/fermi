@@ -2,11 +2,12 @@
 
 // local
 use crate::{
-    config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, GDEX_DB_NAME},
+    config::{consensus::ConsensusConfig, node::NodeConfig, Genesis, CONSENSUS_DB_NAME, GRPC_DB_NAME, JSONRPC_DB_NAME},
     genesis_ceremony::GENESIS_FILENAME,
+    json_rpc::spawner::JSONServiceSpawner,
     validator::{
         consensus_adapter::ConsensusAdapter, genesis_state::ValidatorGenesisState, metrics::ValidatorMetrics,
-        post_process::ValidatorPostProcessService, server::ValidatorServer, server::ValidatorService,
+        post_processor::ValidatorPostProcessor, server::ValidatorServer, server::ValidatorService,
         state::ValidatorState,
     },
 };
@@ -32,7 +33,9 @@ use narwhal_node::metrics::start_prometheus_server;
 
 // INTERFACE
 
-// TODO lets clean up these comments
+// TODO - Cleanup the commentary in this file
+// TODO - Create style guide for pub vs. getter functions
+
 /// Can spawn a validator server handle at the internal address
 /// the server handle contains a validator api (grpc) that exposes a validator service
 pub struct ValidatorSpawner {
@@ -46,8 +49,11 @@ pub struct ValidatorSpawner {
     genesis_state: ValidatorGenesisState,
     /// Validator which is fetched from the genesis state according to initial name
     validator_info: ValidatorInfo,
-    /// Address for communication to the validator server
-    validator_address: Multiaddr,
+    /// Address for communication to the validator GRPC server
+    grpc_address: Multiaddr,
+    /// Address for communication to the validator JSON RPC server
+    // TODO - make this a multiaddr
+    jsonrpc_address: Multiaddr,
     /// Address for communication to the metrics server
     metrics_address: Multiaddr,
 
@@ -55,6 +61,7 @@ pub struct ValidatorSpawner {
 
     /// Validator state passed to the instances spawned
     validator_state: Option<Arc<ValidatorState>>,
+    /// Consensus adapter used to send transactions and fetch blocks
     consensus_adapter: Option<Arc<ConsensusAdapter>>,
 
     /// Begin objects initialized after calling spawn_validator_service
@@ -72,7 +79,8 @@ impl ValidatorSpawner {
         db_path: PathBuf,
         key_path: PathBuf,
         genesis_path: PathBuf,
-        validator_address: Multiaddr,
+        grpc_address: Multiaddr,
+        jsonrpc_address: Multiaddr,
         metrics_address: Multiaddr,
         validator_name: String,
     ) -> Self {
@@ -87,12 +95,15 @@ impl ValidatorSpawner {
             .pop()
             .expect("Could not locate validator {validator_name}")
             .clone();
+
         Self {
             db_path,
             key_path,
             genesis_state,
             validator_info,
-            validator_address,
+            grpc_address,
+            // TODO - make this configurable
+            jsonrpc_address,
             metrics_address,
             validator_state: None,
             consensus_adapter: None,
@@ -103,8 +114,12 @@ impl ValidatorSpawner {
     }
 
     // GETTERS
-    pub fn get_validator_address(&self) -> &Multiaddr {
-        &self.validator_address
+    pub fn get_grpc_address(&self) -> &Multiaddr {
+        &self.grpc_address
+    }
+
+    pub fn get_jsonrpc_address(&self) -> &Multiaddr {
+        &self.jsonrpc_address
     }
 
     pub fn get_validator_info(&self) -> &ValidatorInfo {
@@ -176,9 +191,9 @@ impl ValidatorSpawner {
         let consensus_db_path = self
             .db_path
             .join(format!("{}-{}", self.validator_info.name, CONSENSUS_DB_NAME));
-        let gdex_db_path = self
+        let grpc_db_path = self
             .db_path
-            .join(format!("{}-{}", self.validator_info.name, GDEX_DB_NAME));
+            .join(format!("{}-{}", self.validator_info.name, GRPC_DB_NAME));
 
         info!(
             "Spawning a validator with the initial validator info = {:?}",
@@ -203,10 +218,10 @@ impl ValidatorSpawner {
         let node_config = NodeConfig {
             key_pair,
             consensus_db_path,
-            gdex_db_path: gdex_db_path.clone(),
+            grpc_db_path: grpc_db_path.clone(),
             metrics_address: self.metrics_address.clone(),
             admin_interface_port: utils::get_available_port(),
-            json_rpc_address: utils::available_local_socket_address(),
+            json_rpc_address: self.jsonrpc_address.clone(),
             websocket_address: Some(utils::available_local_socket_address()),
             consensus_config: Some(consensus_config),
             enable_event_processing: true,
@@ -217,7 +232,7 @@ impl ValidatorSpawner {
 
         let prom_address = node_config.metrics_address.clone();
         let prometheus_registry = Registry::new();
-        println!("Starting Prometheus HTTP metrics endpoint at {}", prom_address);
+        info!("Starting Prometheus HTTP metrics endpoint at {}", prom_address);
         let prometheus_server_handle = vec![start_prometheus_server(prom_address, &prometheus_registry)];
 
         let metrics = Arc::new(ValidatorMetrics::new(&prometheus_registry));
@@ -225,7 +240,7 @@ impl ValidatorSpawner {
             pubilc_key,
             Arc::pin(utils::read_keypair_from_file(&key_file).unwrap()),
             &self.genesis_state,
-            &gdex_db_path,
+            &grpc_db_path,
             metrics,
         ));
 
@@ -243,12 +258,13 @@ impl ValidatorSpawner {
             tx_narwhal_to_post_process,
         )
         .unwrap();
+
         validator_handles.extend(narwhal_handles);
         validator_handles.extend(prometheus_server_handle);
 
         // spawn post process service
         let post_process_handles =
-            ValidatorPostProcessService::spawn(rx_narwhal_to_post_process, Arc::clone(&validator_state)).unwrap();
+            ValidatorPostProcessor::spawn(rx_narwhal_to_post_process, Arc::clone(&validator_state)).unwrap();
         validator_handles.extend(post_process_handles);
 
         self.service_handles = Some(validator_handles);
@@ -262,9 +278,13 @@ impl ValidatorSpawner {
             panic!("The validator server already been spawned");
         };
 
+        let jsonrpc_db_path = self
+            .db_path
+            .join(format!("{}-{}", self.validator_info.name, JSONRPC_DB_NAME));
+
         let consensus_addresses = self.validator_info.narwhal_consensus_addresses.clone();
         let validator_server = ValidatorServer::new(
-            self.validator_address.clone(),
+            self.grpc_address.clone(),
             // unwrapping is safe as validator state must have been created in spawn_validator_service
             Arc::clone(self.validator_state.as_ref().unwrap()),
             consensus_addresses,
@@ -274,7 +294,17 @@ impl ValidatorSpawner {
         let validator_server_handle = validator_server.spawn().await.unwrap();
         self.set_consensus_adapter(validator_server_handle.get_adapter());
 
-        self.server_handles = Some(vec![validator_server_handle.get_handle()]);
+        let mut jsonrpc_spawner = JSONServiceSpawner::new(
+            self.genesis_state.clone(),
+            self.grpc_address.clone(),
+            self.jsonrpc_address.clone(),
+            jsonrpc_db_path.clone(),
+        );
+
+        let mut jsonrpc_handle = jsonrpc_spawner.spawn_jsonrpc_service().await.unwrap();
+        jsonrpc_handle.push(validator_server_handle.get_handle());
+
+        self.server_handles = Some(jsonrpc_handle);
     }
 
     pub async fn spawn_validator(&mut self) {

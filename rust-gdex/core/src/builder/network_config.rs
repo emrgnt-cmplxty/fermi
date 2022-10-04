@@ -9,7 +9,7 @@ use crate::{
         genesis::{GenesisConfig, ValidatorGenesisStateInfo},
         network::NetworkConfig,
         node::NodeConfig,
-        {CONSENSUS_DB_NAME, DEFAULT_BALANCE, DEFAULT_STAKE, GDEX_DB_NAME},
+        {CONSENSUS_DB_NAME, DEFAULT_BALANCE, DEFAULT_STAKE, GRPC_DB_NAME},
     },
 };
 use gdex_types::{
@@ -143,9 +143,9 @@ impl NetworkConfigBuilder {
                     .config_directory
                     .join(CONSENSUS_DB_NAME)
                     .join(utils::encode_bytes_hex(&public_key));
-                let gdex_db_path = self
+                let grpc_db_path = self
                     .config_directory
-                    .join(GDEX_DB_NAME)
+                    .join(GRPC_DB_NAME)
                     .join(utils::encode_bytes_hex(&public_key));
                 let consensus_config = ConsensusConfig {
                     consensus_addresses,
@@ -156,10 +156,10 @@ impl NetworkConfigBuilder {
                 NodeConfig {
                     key_pair: Arc::new(validator.key_pair),
                     consensus_db_path,
-                    gdex_db_path,
+                    grpc_db_path,
                     metrics_address: utils::new_network_address(),
                     admin_interface_port: utils::get_available_port(),
-                    json_rpc_address: utils::available_local_socket_address(),
+                    json_rpc_address: utils::new_network_address(),
                     websocket_address: None,
                     consensus_config: Some(consensus_config),
                     enable_event_processing: false,

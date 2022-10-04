@@ -13,7 +13,7 @@ use gdex_types::{
     account::AccountKeyPair,
     crypto::KeypairTraits,
     error::GDEXError,
-    transaction::{deserialize_protobuf, serialize_protobuf, ConsensusTransaction, SignedTransaction},
+    transaction::{deserialize_protobuf, serialize_protobuf, SignedTransaction},
 };
 
 use narwhal_types::{Batch, CertificateDigest, WorkerMessage};
@@ -24,20 +24,14 @@ pub fn keys(seed: [u8; 32]) -> Vec<AccountKeyPair> {
     (0..4).map(|_| AccountKeyPair::generate(&mut rng)).collect()
 }
 
-fn verify_incoming_transaction(raw_consensus_transaction: Vec<u8>) -> Result<(), GDEXError> {
-    // remove trailing zeros & deserialize transaction
-    let consensus_transaction_result = ConsensusTransaction::deserialize(raw_consensus_transaction);
-
-    match consensus_transaction_result {
-        Ok(consensus_transaction) => match consensus_transaction.get_payload() {
-            Ok(signed_transaction) => match signed_transaction.verify_signature() {
-                Ok(_) => Ok(()),
-                Err(sig_error) => Err(sig_error),
-            },
-            Err(get_payload_error) => Err(get_payload_error),
+fn verify_incoming_transaction(signed_transaction_bytes: Vec<u8>) -> Result<(), GDEXError> {
+    match bincode::deserialize::<SignedTransaction>(&signed_transaction_bytes) {
+        Ok(signed_transaction) => match signed_transaction.verify_signature() {
+            Ok(_) => Ok(()),
+            Err(sig_error) => Err(sig_error),
         },
         // deserialization failed
-        Err(derserialize_err) => Err(derserialize_err),
+        Err(_) => Err(GDEXError::DeserializationError),
     }
 }
 
@@ -51,33 +45,27 @@ fn criterion_benchmark(c: &mut Criterion) {
         transaction.sign(&kp_sender).unwrap()
     }
 
-    fn get_consensus_transaction(sender_seed: [u8; 32], receiver_seed: [u8; 32], amount: u64) -> ConsensusTransaction {
-        let signed_transaction = get_signed_transaction(sender_seed, receiver_seed, amount);
-        ConsensusTransaction::new(&signed_transaction)
-    }
-
     // bench serializing singletons
     fn serialize_1_000(sender_seed: [u8; 32], receiver_seed: [u8; 32]) {
-        let consensus_transaction = get_consensus_transaction(sender_seed, receiver_seed, 10);
+        let signed_transaction = get_signed_transaction(sender_seed, receiver_seed, 10);
 
         let mut i = 0;
         while i < 1_000 {
             // wrap signed transaction in black box to protect compiler from advance knowledge
-            let _ = black_box(consensus_transaction.clone()).serialize().unwrap();
+            let _ = black_box(bincode::serialize(&signed_transaction).unwrap());
             i += 1;
         }
     }
 
     // bench deserializing singletons
     fn deserialize_1_000(sender_seed: [u8; 32], receiver_seed: [u8; 32]) {
-        let consensus_transaction_serialized = get_consensus_transaction(sender_seed, receiver_seed, 10)
-            .serialize()
-            .unwrap();
+        let signed_transaction = get_signed_transaction(sender_seed, receiver_seed, 10);
+        let signed_transaction_serialized = bincode::serialize(&signed_transaction).unwrap();
 
         let mut i = 0;
         while i < 1_000 {
             // wrap signed transaction in black box to protect compiler from advance knowledge
-            let _ = ConsensusTransaction::deserialize(black_box(consensus_transaction_serialized.clone())).unwrap();
+            let _: SignedTransaction = black_box(bincode::deserialize(&signed_transaction_serialized).unwrap());
             i += 1;
         }
     }
@@ -94,19 +82,19 @@ fn criterion_benchmark(c: &mut Criterion) {
     let mut batch = Vec::new();
     while i < 1_000 {
         let amount = rand::thread_rng().gen_range(10..100);
-        let consensus_transaction = get_consensus_transaction([0; 32], [1; 32], amount);
-        batch.push(bincode::serialize(&consensus_transaction).unwrap());
+        let signed_transaction = get_signed_transaction([0; 32], [1; 32], amount);
+        batch.push(bincode::serialize(&signed_transaction).unwrap());
         i += 1;
     }
 
     // bench deserializing a batch w/ no verification
     fn deserialize_batch_method1(batch: &[u8]) {
         match bincode::deserialize(batch).unwrap() {
-            WorkerMessage::Batch(Batch(transactions)) => {
-                for raw_transaction in transactions {
-                    let transaction: Vec<u8> = raw_transaction.to_vec();
+            WorkerMessage::Batch(Batch(signed_transactions)) => {
+                for raw_signed_transaction in signed_transactions {
+                    let signed_transaction_bytes: Vec<u8> = raw_signed_transaction.to_vec();
 
-                    let _ = ConsensusTransaction::deserialize(transaction).unwrap();
+                    let _: SignedTransaction = bincode::deserialize(&signed_transaction_bytes).unwrap();
                 }
             }
             _ => {
@@ -118,11 +106,11 @@ fn criterion_benchmark(c: &mut Criterion) {
     // bench deserializing a batch w/ verification
     fn deserialize_batch_and_verify_method1(batch: &[u8]) {
         match bincode::deserialize(batch).unwrap() {
-            WorkerMessage::Batch(Batch(transactions)) => {
-                for raw_transaction in transactions {
-                    let transaction: Vec<u8> = raw_transaction.to_vec();
+            WorkerMessage::Batch(Batch(signed_transactions)) => {
+                for raw_signed_transaction in signed_transactions {
+                    let signed_transaction_bytes: Vec<u8> = raw_signed_transaction.to_vec();
 
-                    verify_incoming_transaction(transaction).unwrap();
+                    verify_incoming_transaction(signed_transaction_bytes).unwrap();
                 }
             }
             _ => {
@@ -161,7 +149,7 @@ fn criterion_benchmark(c: &mut Criterion) {
 
         let mut i = 0;
         while i < 1_000 {
-            let _signed_transaction: SignedTransaction = deserialize_protobuf(&signed_transaction_serialized).unwrap();
+            let signed_transaction: SignedTransaction = deserialize_protobuf(&signed_transaction_serialized).unwrap();
             i += 1;
         }
     }

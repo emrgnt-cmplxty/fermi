@@ -1,12 +1,11 @@
 // IMPORTS
 
-// gdex
+// local
 use gdex_controller::bank::proto::bank_controller_test_functions::generate_signed_test_transaction;
 use gdex_controller::{bank::controller::CREATED_ASSET_BALANCE, router::ControllerRouter};
 use gdex_core::{
     client,
     genesis_ceremony::{GENESIS_FILENAME, VALIDATOR_BALANCE, VALIDATOR_FUNDING_AMOUNT},
-    relayer::spawner::RelayerSpawner,
     validator::{genesis_state::ValidatorGenesisState, spawner::ValidatorSpawner},
 };
 use gdex_types::{
@@ -14,16 +13,17 @@ use gdex_types::{
     asset::PRIMARY_ASSET_ID,
     crypto::{get_key_pair_from_rng, KeypairTraits},
     node::ValidatorInfo,
-    proto::TransactionSubmitterClient,
+    proto::ValidatorGrpcClient,
     transaction::SignedTransaction,
     utils,
 };
 
 // external
-use std::{io, path::Path, path::PathBuf, sync::Arc};
+use std::{io, path::Path, path::PathBuf};
 use tempfile::TempDir;
 use tokio::task::JoinHandle;
 use tokio::time::{sleep, Duration};
+use tonic::transport::Channel;
 use tracing::info;
 
 // HELPER FUNCTIONS
@@ -110,9 +110,10 @@ impl TestCluster {
             validator_counter += 1;
             let key_file = format!("{}.key", validator_info.name);
             let mut validator_spawner = ValidatorSpawner::new(
-                working_dir.clone(),                                                               // db path
-                PathBuf::from(working_dir.to_str().unwrap().to_owned() + "/" + key_file.as_str()), // key path
-                working_dir.clone(),                                                               // genesis path
+                working_dir.clone(),
+                PathBuf::from(working_dir.to_str().unwrap().to_owned() + "/" + key_file.as_str()),
+                working_dir.clone(),
+                utils::new_network_address(),
                 utils::new_network_address(),
                 utils::new_network_address(),
                 validator_info.name.clone(),
@@ -164,23 +165,18 @@ impl TestCluster {
         spawner.get_validator_state().unwrap().unhalt_validator();
     }
 
-    pub async fn spawn_single_relayer(&mut self, index: usize) -> RelayerSpawner {
-        let spawner = self.get_validator_spawner(index);
-        let validator_state = spawner.get_validator_state().unwrap();
-
-        let relayer_address = utils::new_network_address();
-        let mut relayer_spawner = RelayerSpawner::new(Arc::clone(&validator_state), relayer_address.clone());
-        relayer_spawner.spawn_relayer().await.unwrap();
-        relayer_spawner
+    pub fn get_validator_client(&mut self, index: usize) -> ValidatorGrpcClient<Channel> {
+        let receiver = self.get_validator_spawner(index);
+        let receiver_address = receiver.get_grpc_address().clone();
+        ValidatorGrpcClient::new(client::connect_lazy(&receiver_address).expect("Failed to connect to consensus"))
     }
 
     pub async fn send_single_transaction(&mut self, signed_transaction: SignedTransaction) {
         let receiver = self.get_validator_spawner(0);
-        let receiver_address = receiver.get_validator_address().clone();
+        let receiver_address = receiver.get_grpc_address().clone();
 
-        let mut client = TransactionSubmitterClient::new(
-            client::connect_lazy(&receiver_address).expect("Failed to connect to consensus"),
-        );
+        let mut client =
+            ValidatorGrpcClient::new(client::connect_lazy(&receiver_address).expect("Failed to connect to consensus"));
         client
             .submit_transaction(signed_transaction)
             .await
@@ -202,11 +198,10 @@ impl TestCluster {
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
 
         let receiver = self.get_validator_spawner(receiving_validator);
-        let receiver_address = receiver.get_validator_address().clone();
+        let receiver_address = receiver.get_grpc_address().clone();
 
-        let mut client = TransactionSubmitterClient::new(
-            client::connect_lazy(&receiver_address).expect("Failed to connect to consensus"),
-        );
+        let mut client =
+            ValidatorGrpcClient::new(client::connect_lazy(&receiver_address).expect("Failed to connect to consensus"));
 
         let mut signed_transactions = Vec::new();
         let mut i = 1;
@@ -239,11 +234,10 @@ impl TestCluster {
         let kp_receiver = generate_keypair_vec([1; 32]).pop().unwrap();
 
         let receiver = self.get_validator_spawner(receiving_validator);
-        let receiver_address = receiver.get_validator_address().clone();
+        let receiver_address = receiver.get_grpc_address().clone();
 
-        let mut client = TransactionSubmitterClient::new(
-            client::connect_lazy(&receiver_address).expect("Failed to connect to consensus"),
-        );
+        let mut client =
+            ValidatorGrpcClient::new(client::connect_lazy(&receiver_address).expect("Failed to connect to consensus"));
 
         let mut signed_transactions = Vec::new();
         let mut i = 1;

@@ -27,12 +27,12 @@ pub struct NodeConfig {
     #[serde_as(as = "Arc<KeyPairBase64>")]
     pub key_pair: Arc<ValidatorKeyPair>,
     pub consensus_db_path: PathBuf,
-    pub gdex_db_path: PathBuf,
-    #[serde(default = "default_json_rpc_address")]
-    pub json_rpc_address: SocketAddr,
+    pub grpc_db_path: PathBuf,
     #[serde(default = "default_websocket_address")]
     pub websocket_address: Option<SocketAddr>,
 
+    #[serde(default = "default_json_rpc_address")]
+    pub json_rpc_address: Multiaddr,
     #[serde(default = "default_metrics_address")]
     pub metrics_address: Multiaddr,
     #[serde(default = "default_admin_interface_port")]
@@ -65,9 +65,8 @@ pub fn default_admin_interface_port() -> u16 {
     1337
 }
 
-pub fn default_json_rpc_address() -> SocketAddr {
-    use std::net::{IpAddr, Ipv4Addr};
-    SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), 9000)
+pub fn default_json_rpc_address() -> Multiaddr {
+    "/ip4/127.0.0.1/tcp/9185".parse().unwrap()
 }
 
 pub fn default_websocket_address() -> Option<SocketAddr> {
@@ -94,8 +93,8 @@ impl NodeConfig {
         &self.consensus_db_path
     }
 
-    pub fn gdex_db_path(&self) -> &Path {
-        &self.gdex_db_path
+    pub fn grpc_db_path(&self) -> &Path {
+        &self.grpc_db_path
     }
 
     pub fn consensus_config(&self) -> Option<&ConsensusConfig> {
@@ -132,7 +131,7 @@ mod node_tests {
         let _public_key = validator_config.public_key();
         let _gdex_address = validator_config.gdex_address();
         let _consensus_db_path = validator_config.consensus_db_path();
-        let _gdex_db_path = validator_config.gdex_db_path();
+        let _grpc_db_path = validator_config.grpc_db_path();
         let _consensus_config = validator_config.consensus_config();
         let _genesis = validator_config.genesis();
     }

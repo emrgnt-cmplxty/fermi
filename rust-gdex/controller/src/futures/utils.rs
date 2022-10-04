@@ -1,12 +1,8 @@
-// crate
-use super::types::{AccountStateByMarket, CondensedOrder, FuturesMarket, Marketplace, MarketplaceState};
-// gdex
-use gdex_types::{
-    account::AccountPubKey,
-    error::GDEXError,
-    order_book::OrderSide,
-    transaction::{FuturesOrder, FuturesPosition},
+// local
+use super::types::{
+    AccountStateByMarket, CondensedOrder, FuturesMarket, FuturesOrder, FuturesPosition, Marketplace, MarketplaceState,
 };
+use gdex_types::{account::AccountPubKey, error::GDEXError, order_book::OrderSide};
 
 // HELPER FUNCTIONS
 

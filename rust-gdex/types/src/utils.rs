@@ -40,19 +40,19 @@ fn get_ephemeral_port() -> ::std::io::Result<u16> {
 
 /// This function is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/utils.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 pub fn new_network_address() -> multiaddr::Multiaddr {
-    format!("/ip4/127.0.0.1/tcp/{}/http", get_available_port())
+    format!("/ip4/0.0.0.0/tcp/{}/http", get_available_port())
         .parse()
         .unwrap()
 }
 
 /// This function is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/utils.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 pub fn available_local_socket_address() -> std::net::SocketAddr {
-    format!("127.0.0.1:{}", get_available_port()).parse().unwrap()
+    format!("0.0.0.0:{}", get_available_port()).parse().unwrap()
 }
 
 /// This function is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-types/src/base_types.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 pub fn encode_bytes_hex<B: AsRef<[u8]>>(bytes: B) -> String {
-    hex::encode(bytes.as_ref())
+    format!("0x{}", hex::encode(bytes.as_ref()))
 }
 
 /// This function is taken directly from https://github.com/MystenLabs/sui/blob/main/crates/sui-types/src/base_types.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc

@@ -139,16 +139,16 @@ class GDEXBench:
             rate_share = ceil(bench_parameters.rate[0] / (bench_parameters.workers * bench_parameters.nodes[0]))
             for i, name in enumerate(committee.json['authorities'].keys()):
                 validator_dict = committee.json['authorities'][name]
-                validator_address = validator_dict['network_address']
-                relayer_address = validator_dict['relayer_address']
+                validator_grpc_address = validator_dict['grpc_address']
+                validator_jsonrpc_address = validator_dict['jsonrpc_address']
                 metrics_address = validator_dict['metrics_address']
                 cmd = CommandMaker.run_gdex_node(
                     os.path.abspath(bench_parameters.db_dir),
                     os.path.abspath(bench_parameters.key_dir),
                     os.path.abspath(bench_parameters.key_dir + PathMaker.key_file(i)),
                     name,
-                    validator_address,
-                    relayer_address,
+                    validator_grpc_address,
+                    validator_jsonrpc_address,
                     metrics_address,
                     debug,
                     bench_parameters.flamegraph
@@ -164,23 +164,21 @@ class GDEXBench:
             for i, name in enumerate(committee.json['authorities'].keys()):
               for worker_idx in range(bench_parameters.workers):
                 validator_dict = committee.json['authorities'][name]
-                validator_address = validator_dict['network_address']
-                relayer_address = validator_dict['relayer_address']
+                validator_grpc_address = validator_dict['grpc_address']
+                validator_jsonrpc_address = validator_dict['jsonrpc_address']
                 if bench_parameters.order_bench:
                     cmd = CommandMaker.run_gdex_orderbook_client(
-                        multiaddr_to_url_data(validator_address),
-                        multiaddr_to_url_data(relayer_address),
+                        multiaddr_to_url_data(validator_grpc_address),
                         os.path.abspath(bench_parameters.key_dir + PathMaker.key_file(0)),
                         rate_share,
-                        [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
+                        [multiaddr_to_url_data(node['grpc_address']) for node in committee.json['authorities'].values() if node['grpc_address'] != validator_grpc_address]
                     )
                 else:
                     cmd = CommandMaker.run_gdex_client(
-                        multiaddr_to_url_data(validator_address),
-                        multiaddr_to_url_data(relayer_address),
+                        multiaddr_to_url_data(validator_grpc_address),
                         os.path.abspath(bench_parameters.key_dir + PathMaker.key_file(i)),
                         rate_share,
-                        [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
+                        [multiaddr_to_url_data(node['grpc_address']) for node in committee.json['authorities'].values() if node['grpc_address'] != validator_grpc_address]
                     )
                 log_file = PathMaker.client_log_file(i, worker_idx)
                 print(cmd, ">>", log_file)

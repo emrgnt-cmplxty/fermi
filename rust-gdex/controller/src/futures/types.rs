@@ -3,18 +3,38 @@ use crate::event_manager::EventManager;
 use crate::utils::engine::order_book::{OrderId, Orderbook};
 
 // gdex
-use gdex_types::{
-    account::AccountPubKey,
-    asset::AssetId,
-    transaction::{FuturesOrder, FuturesPosition},
-};
+use gdex_types::{account::AccountPubKey, asset::AssetId};
 
 // external
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex, Weak},
 };
+
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+pub struct FuturesPosition {
+    pub quantity: u64,
+    pub side: u64,
+    pub average_price: u64,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+pub struct FuturesOrder {
+    pub order_id: u64,
+    // TODO - replace with order side before merging PR
+    pub side: u64,
+    pub quantity: u64,
+    pub price: u64,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+pub struct FuturesUserByMarket {
+    pub orders: Vec<FuturesOrder>,
+    pub position: Option<FuturesPosition>,
+    pub base_asset_id: u64,
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CondensedOrder {
@@ -35,7 +55,6 @@ impl CondensedOrder {
     }
 }
 
-/// SpotOrderAccount is consumed by the SpotController
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FuturesAccount {
     pub open_orders: Vec<FuturesOrder>,
@@ -91,3 +110,31 @@ pub type AccountStateByMarket = Vec<(AssetId, Vec<FuturesOrder>, Option<FuturesP
 
 // marketplace quote asset id, associated futures market
 pub type MarketplaceState = (AssetId, Vec<FuturesMarket>);
+
+// JSON RPC Response structs
+
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+pub struct MarketplaceUserInfoResponse {
+    pub user_deposit: i64,
+    pub user_collateral_req: u64,
+    pub user_unrealized_pnl: i64,
+    pub user_market_info: Vec<FuturesUserByMarket>,
+    pub quote_asset_id: u64,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+pub struct MarketplaceResponse {
+    pub quote_asset_id: u64,
+    pub supported_base_asset_ids: Vec<u64>,
+    pub admin: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+pub struct MarketResponse {
+    pub max_leverage: u64,
+    pub base_asset_id: AssetId,
+    pub quote_asset_id: AssetId,
+    pub open_interest: u64,
+    pub last_traded_price: AssetPrice,
+    pub oracle_price: AssetPrice,
+}

@@ -1,9 +1,7 @@
 // crate
-use crate::error::GDEXError;
-use crate::transaction::ExecutionResultBody;
+use crate::transaction::ExecutedTransaction;
 
 // mysten
-use narwhal_executor::SerializedTransaction;
 use narwhal_types::{Certificate, CertificateDigest};
 
 // external
@@ -13,13 +11,10 @@ pub type BlockNumber = u64;
 pub type BlockDigest = CertificateDigest;
 pub type BlockCertificate = Certificate;
 
-// TODO we define this in many places, centralize
-type ExecutionResult = Result<ExecutionResultBody, GDEXError>;
-
 #[derive(Clone, Debug, Deserialize, Serialize, Default)]
 pub struct Block {
     pub block_certificate: BlockCertificate,
-    pub transactions: Vec<(SerializedTransaction, ExecutionResult)>,
+    pub transactions: Vec<ExecutedTransaction>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Default)]

@@ -16,6 +16,9 @@ workspace.xml
 
 # project specific ignore
 
+# benchmark
+benchmark/.data
+
 # keystore ignore
 .gdex/*
 
@@ -30,3 +33,4 @@ metrics/__pycache__/*
 
 # sdk ignore
 sdk/js/dist/*
+sdk/js/node_modules/*

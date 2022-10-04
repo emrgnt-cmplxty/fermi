@@ -4,7 +4,7 @@ use gdex_core::client;
 use gdex_types::{
     account::AccountKeyPair,
     crypto::KeypairTraits,
-    proto::{Faucet, FaucetAirdropRequest, FaucetAirdropResponse, FaucetServer, TransactionSubmitterClient},
+    proto::{Faucet, FaucetAirdropRequest, FaucetAirdropResponse, FaucetServer, ValidatorGrpcClient},
     transaction::SignedTransaction,
     utils,
 };
@@ -68,7 +68,7 @@ impl Faucet for FaucetService {
 
         // Getting the validator port from the second cli argument
         // The port for the validator that we will send the transaction to is passed in as the second cli argument when the server is starting
-        let mut client = TransactionSubmitterClient::new(
+        let mut client = ValidatorGrpcClient::new(
             client::connect_lazy(&self.validator_addr).expect("Failed to connect to consensus"),
         );
 

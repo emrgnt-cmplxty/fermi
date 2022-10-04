@@ -7,21 +7,71 @@ package services;
 
 // IMPORTS
 
-import "block.proto";
 import "transaction.proto";
 
 // INTERFACE
 
 message Empty {}
 
-// SUBMITTER
+// VALIDATOR GRPC
 
-service TransactionSubmitter {
+service ValidatorGRPC {
+    
+    // GET
+    
+    // request latest block info
+    rpc GetLatestBlockInfo (LatestBlockInfoRequest) returns (BlockInfoResponse);
+
+    // request block info by block number
+    rpc GetBlockInfo (BlockInfoRequest) returns (BlockInfoResponse);
+
+    // request block (includes transactions)
+    rpc GetBlock (BlockRequest) returns (BlockResponse);
+
+    // request metrics
+    rpc GetLatestMetrics (MetricsRequest) returns (MetricsResponse);
+    
+    // PUT
+    
     // submit a transaction
     rpc SubmitTransaction(transaction.SignedTransaction) returns (Empty) {}
     
     // submit a transaction via stream
     rpc SubmitTransactionStream(stream transaction.SignedTransaction) returns (Empty) {}
+    
+}
+
+// block info
+
+message LatestBlockInfoRequest {}
+
+message BlockInfoRequest {
+    uint64 block_number = 1;
+}
+
+message BlockInfoResponse {
+    bool successful = 1;
+    bytes serialized_block_info = 2;
+}
+
+// block
+
+message BlockRequest {
+    uint64 block_number = 1;
+}
+
+message BlockResponse {
+    bool successful = 1;
+    bytes serialized_block = 2;
+}
+
+// metrics
+
+message MetricsRequest {}
+
+message MetricsResponse {
+    uint64 average_latency = 1;
+    double average_tps = 2;
 }
 
 // FAUCET
@@ -38,142 +88,4 @@ message FaucetAirdropRequest {
 
 message FaucetAirdropResponse {
     bool successful = 1;
-}
-
-// RELAYER
-
-service Relayer {
-    // request latest block info
-    rpc GetLatestBlockInfo (RelayerGetLatestBlockInfoRequest) returns (RelayerBlockInfoResponse);
-
-    // request block info by block number
-    rpc GetBlockInfo (RelayerGetBlockInfoRequest) returns (RelayerBlockInfoResponse);
-
-    // request block (includes transactions)
-    rpc GetBlock (RelayerGetBlockRequest) returns (RelayerBlockResponse);
-
-    // request orderbook depth snapshot
-    rpc GetLatestOrderbookDepth (RelayerGetLatestOrderbookDepthRequest) returns (RelayerLatestOrderbookDepthResponse);
-
-    // request catchup state
-    rpc GetLatestCatchupState (RelayerGetLatestCatchupStateRequest) returns (RelayerLatestCatchupStateResponse);
-
-    // request futures positions 
-    rpc GetFuturesUser (RelayerGetFuturesUserRequest) returns (RelayerFuturesUserResponse);
-    
-    // request orderbook metrics
-    rpc GetFuturesMarkets (RelayerGetFuturesMarketsRequest) returns (RelayerFuturesMarketsResponse);
-
-    // request metrics
-    rpc GetLatestMetrics (RelayerMetricsRequest) returns (RelayerMetricsResponse);
-}
-
-// block info
-
-message RelayerGetLatestBlockInfoRequest {}
-
-message RelayerGetBlockInfoRequest {
-    uint64 block_number = 1;
-}
-
-message RelayerBlockInfoResponse {
-    bool successful = 1;
-    block.BlockInfo block_info = 2;
-}
-
-// block
-
-message RelayerGetBlockRequest {
-    uint64 block_number = 1;
-}
-
-message RelayerBlockResponse {
-    bool successful = 1;
-    block.Block block = 2;
-}
-
-// orderbook depth
-
-message RelayerGetLatestOrderbookDepthRequest {
-    uint64 base_asset_id = 1;
-    uint64 quote_asset_id = 2;
-    uint64 depth = 3;
-}
-
-message Depth {
-    uint64 price = 1;
-    uint64 quantity = 2;
-}
-
-message RelayerLatestOrderbookDepthResponse {
-    repeated Depth bids = 1;
-    repeated Depth asks = 2;
-}
-
-// fast catchup state
-
-message RelayerGetLatestCatchupStateRequest {}
-
-message RelayerLatestCatchupStateResponse {
-    bytes state = 1;
-    uint64 block_number = 2;
-}
-
-// futures orders
-
-message RelayerGetFuturesUserRequest {
-    bytes user = 1;
-    bytes market_admin = 2;
-}
-
-message FuturesPosition {
-    uint64 quantity = 1;
-    uint64 side = 2;
-    uint64 average_price = 3;
-}
-
-message FuturesOrder {
-    uint64 order_id = 1;
-    uint64 side = 2;
-    uint64 quantity = 3;
-    uint64 price = 4;
-}
-
-message FuturesUserByMarket {
-    repeated FuturesOrder orders = 1;
-    optional FuturesPosition position = 2;
-    uint64 quote_asset_id = 3;
-}
-
-message RelayerFuturesUserResponse {
-    repeated FuturesUserByMarket market_state = 1;
-    uint64 total_collateral_req = 2;
-    int64 unrealized_pnl = 3;
-    int64 deposit = 4;
-}
-
-message RelayerGetFuturesMarketsRequest {
-    bytes market_admin = 1;
-}
-
-message FuturesMarket {
-    uint64 oracle_price = 1;
-    uint64 last_traded_price = 2;
-    uint64 open_interest = 3;
-    uint64 max_leverage = 4;
-    uint64 base_asset_id = 5;
-}
-
-message RelayerFuturesMarketsResponse {
-    repeated FuturesMarket market_data = 1;
-    uint64 quote_asset_id = 2;
-}
-
-// metrics
-
-message RelayerMetricsRequest {}
-
-message RelayerMetricsResponse {
-    uint64 average_latency = 1;
-    double average_tps = 2;
 }

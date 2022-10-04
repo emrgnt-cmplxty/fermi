@@ -8,9 +8,9 @@ use futures::{future::join_all, StreamExt};
 use gdex_controller::bank::proto::create_payment_transaction;
 use gdex_types::{
     account::{AccountKeyPair, ValidatorKeyPair},
-    block::BlockDigest,
-    proto::{RelayerClient, RelayerGetLatestBlockInfoRequest, TransactionSubmitterClient},
-    transaction::{ConsensusTransaction, SignedTransaction},
+    block::{BlockDigest, BlockInfo},
+    proto::{LatestBlockInfoRequest, ValidatorGrpcClient},
+    transaction::SignedTransaction,
     utils::read_keypair_from_file,
 };
 use rand::{rngs::StdRng, Rng, SeedableRng};
@@ -54,7 +54,6 @@ async fn main() -> Result<()> {
         .version(crate_version!())
         .about("Benchmark client for Narwhal and Tusk.")
         .args_from_usage("<ADDR> 'The network address of the node where to send txs'")
-        .args_from_usage("--relayer=<ADDR> 'Relayer address to send requests to'")
         .args_from_usage("--rate=<INT> 'The rate (txs/s) at which to send the transactions'")
         .args_from_usage("--validator_key_fpath=<FILE> 'The validator key file'")
         .args_from_usage("--nodes=[ADDR]... 'Network addresses that must be reachable before starting the benchmark.'")
@@ -81,11 +80,6 @@ async fn main() -> Result<()> {
     let target = target_str
         .parse::<Url>()
         .with_context(|| format!("Invalid url format {target_str}"))?;
-    let relayer = matches
-        .value_of("relayer")
-        .unwrap()
-        .parse::<Url>()
-        .context("Invalid relayer url")?;
     let rate = matches
         .value_of("rate")
         .unwrap()
@@ -111,7 +105,6 @@ async fn main() -> Result<()> {
         target,
         rate,
         nodes,
-        relayer,
         validator_key_fpath,
     };
 
@@ -125,7 +118,6 @@ async fn main() -> Result<()> {
 /// TODO - https://github.com/gdexorg/gdex/issues/157 - cleanup client to use bench helper
 struct Client {
     target: Url,
-    relayer: Url,
     rate: u64,
     nodes: Vec<Url>,
     validator_key_fpath: PathBuf,
@@ -136,11 +128,10 @@ impl Client {
         const PRECISION: u64 = 20; // Sample precision.
         const BURST_DURATION: u64 = 1000 / PRECISION;
 
-        let mut client = TransactionSubmitterClient::connect(self.target.as_str().to_owned())
+        let mut client = ValidatorGrpcClient::connect(self.target.as_str().to_owned())
             .await
             .unwrap();
-        let mut relayer_client = RelayerClient::connect(self.relayer.as_str().to_owned()).await.unwrap();
-        let block_info_request = RelayerGetLatestBlockInfoRequest {};
+        let block_info_request = LatestBlockInfoRequest {};
 
         // Submit all transactions.
         let burst = self.rate / PRECISION;
@@ -157,13 +148,15 @@ impl Client {
         info!("Start sending transactions");
         loop {
             // fetch recent block digest before starting another round of payments
-            let response = relayer_client.get_latest_block_info(block_info_request.clone()).await;
+            let response = client.get_latest_block_info(block_info_request.clone()).await;
 
             let mut block_digest = BlockDigest::new([0; 32]);
 
-            if let Ok(relayer_block_response) = response {
-                if let Some(block_info) = relayer_block_response.into_inner().block_info {
-                    block_digest = bincode::deserialize(block_info.digest.as_ref()).unwrap()
+            if let Ok(block_response) = response {
+                if let Ok(block_info) =
+                    bincode::deserialize::<BlockInfo>(&block_response.into_inner().serialized_block_info)
+                {
+                    block_digest = block_info.block_digest;
                 }
             };
 
@@ -174,12 +167,11 @@ impl Client {
 
             if counter == 0 {
                 let signed_transaction = create_signed_transaction(&keypair, &kp_receiver, 1, block_digest.clone());
-                let serialized_consensus_transaction = match ConsensusTransaction::new(&signed_transaction).serialize()
-                {
+                let serialized_signed_transaction = match bincode::serialize(&signed_transaction) {
                     Ok(t) => t,
                     _ => panic!("Error serializing transaction"),
                 };
-                let transaction_size = serialized_consensus_transaction.len();
+                let transaction_size = serialized_signed_transaction.len();
                 info!("Transactions size: {transaction_size} B");
             }
 

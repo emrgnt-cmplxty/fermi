@@ -54,10 +54,8 @@ fn criterion_benchmark(c: &mut Criterion) {
 
     let bank_controller_clone = bank_controller.clone();
 
-    let bank_controller_ref = Arc::new(Mutex::new(bank_controller));
-
-    c.bench_function("catchup_bank_create_catchup_state", |b| {
-        b.iter(|| BankController::create_catchup_state(bank_controller_ref.clone(), 0))
+    c.bench_function("catchup_bank_get_catchup_state", |b| {
+        b.iter(|| bank_controller_clone.get_catchup_state())
     });
 
     c.bench_function("catchup_bank_controller_clone", |b| {
@@ -157,8 +155,8 @@ fn criterion_benchmark(c: &mut Criterion) {
     let spot_controller_clone = spot_controller.lock().unwrap().clone();
 
     // create orders on the books
-    c.bench_function("catchup_spot_create_catchup_state", |b| {
-        b.iter(|| SpotController::create_catchup_state(spot_controller.clone(), 0))
+    c.bench_function("catchup_spot_get_catchup_state", |b| {
+        b.iter(|| spot_controller_clone.get_catchup_state())
     });
 
     // create orders on the books

@@ -20,13 +20,13 @@ flamegraph -o primary-flamegraph-0.svg -- ./benchmark-narwhal -vvv run --keys .n
 
 # ---- GDEX Flamegraph ----
 # Launch nodes
-flamegraph -o node-flamegraph-0.svg -- ./gdex-node -vvv run --db-dir . --genesis-dir  ../.proto/ --key-dir ../.proto/ --validator-name validator-0 --validator-address /dns/localhost/tcp/3003/http --relayer-address /dns/localhost/tcp/3004/http >> logs/primary-0.log
-./gdex-node -vvv run --db-dir . --genesis-dir  ../.proto/ --key-dir ../.proto/ --validator-name validator-1 --validator-address /dns/localhost/tcp/3013/http --relayer-address /dns/localhost/tcp/3014/http >> logs/primary-1.log
-./gdex-node -vvv run --db-dir . --genesis-dir  ../.proto/ --key-dir ../.proto/ --validator-name validator-2 --validator-address /dns/localhost/tcp/3023/http --relayer-address /dns/localhost/tcp/3024/http >> logs/primary-2.log
-./gdex-node -vvv run --db-dir . --genesis-dir  ../.proto/ --key-dir ../.proto/ --validator-name validator-3 --validator-address /dns/localhost/tcp/3033/http --relayer-address /dns/localhost/tcp/3034/http >> logs/primary-3.log
+flamegraph -o node-flamegraph-0.svg -- ./gdex-node -vvv run --db-dir . --genesis-dir  ../.proto/ --key-dir ../.proto/ --validator-name validator-0 --validator-address /dns/localhost/tcp/3003/http >> logs/primary-0.log
+./gdex-node -vvv run --db-dir . --genesis-dir  ../.proto/ --key-dir ../.proto/ --validator-name validator-1 --validator-address /dns/localhost/tcp/3013/http >> logs/primary-1.log
+./gdex-node -vvv run --db-dir . --genesis-dir  ../.proto/ --key-dir ../.proto/ --validator-name validator-2 --validator-address /dns/localhost/tcp/3023/http >> logs/primary-2.log
+./gdex-node -vvv run --db-dir . --genesis-dir  ../.proto/ --key-dir ../.proto/ --validator-name validator-3 --validator-address /dns/localhost/tcp/3033/http >> logs/primary-3.log
 
 # Launch clients
-./benchmark_gdex_client http://localhost:3003 --relayer http://localhost:3004 --validator_key_fpath ../.proto/validator-0.key --rate 12500  --nodes --nodes http://localhost:3013 http://localhost:3023 http://localhost:3033 >> logs/client-0-0.log
-./benchmark_gdex_client http://localhost:3013 --relayer http://localhost:3014 --validator_key_fpath ../.proto/validator-1.key --rate 12500  --nodes --nodes http://localhost:3003 http://localhost:3023 http://localhost:3033 >> logs/client-1-0.log
-./benchmark_gdex_client http://localhost:3023 --relayer http://localhost:3024 --validator_key_fpath ../.proto/validator-2.key --rate 12500  --nodes --nodes http://localhost:3003 http://localhost:3013 http://localhost:3033 >> logs/client-2-0.log
-./benchmark_gdex_client http://localhost:3033 --relayer http://localhost:3034 --validator_key_fpath ../.proto/validator-3.key --rate 12500  --nodes --nodes http://localhost:3003 http://localhost:3013 http://localhost:3023 >> logs/client-3-0.log
+./benchmark_gdex_client http://localhost:3003 --validator_key_fpath ../.proto/validator-0.key --rate 12500  --nodes --nodes http://localhost:3013 http://localhost:3023 http://localhost:3033 >> logs/client-0-0.log
+./benchmark_gdex_client http://localhost:3013 --validator_key_fpath ../.proto/validator-1.key --rate 12500  --nodes --nodes http://localhost:3003 http://localhost:3023 http://localhost:3033 >> logs/client-1-0.log
+./benchmark_gdex_client http://localhost:3023 --validator_key_fpath ../.proto/validator-2.key --rate 12500  --nodes --nodes http://localhost:3003 http://localhost:3013 http://localhost:3033 >> logs/client-2-0.log
+./benchmark_gdex_client http://localhost:3033 --validator_key_fpath ../.proto/validator-3.key --rate 12500  --nodes --nodes http://localhost:3003 http://localhost:3013 http://localhost:3023 >> logs/client-3-0.log

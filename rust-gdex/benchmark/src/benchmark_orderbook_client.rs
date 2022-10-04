@@ -1,7 +1,7 @@
 // Copyright (c) 2021, Facebook, Inc. and its affiliates
 // Copyright (c) 2022, Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
-// benchmark % ../target/release/benchmark_orderbook_client http://localhost:3003 --relayer http://localhost:3004 --validator_key_fpath ../.proto/validator-3.key --rate 12500
+// benchmark % ../target/release/benchmark_orderbook_client http://localhost:3003 --validator_key_fpath ../.proto/validator-3.key --rate 12500
 
 use anyhow::{Context, Result};
 use benchmark_gdex::bench_helper::BenchHelper;
@@ -25,7 +25,6 @@ async fn main() -> Result<()> {
         .version(crate_version!())
         .about("Benchmark client for GDEX Orderbook.")
         .args_from_usage("<ADDR> 'The network address of the node where to send txs'")
-        .args_from_usage("--relayer=<ADDR> 'Relayer address to send requests to'")
         .args_from_usage("--rate=<INT> 'The rate (txs/s) at which to send the transactions'")
         .args_from_usage("--validator_key_fpath=<FILE> 'The validator key file'")
         .args_from_usage("--nodes=[ADDR]... 'Network addresses that must be reachable before starting the benchmark.'")
@@ -52,11 +51,6 @@ async fn main() -> Result<()> {
     let validator_url = target_str
         .parse::<Url>()
         .with_context(|| format!("Invalid url format {target_str}"))?;
-    let relayer_url = matches
-        .value_of("relayer")
-        .unwrap()
-        .parse::<Url>()
-        .context("Invalid relayer url")?;
     let rate = matches
         .value_of("rate")
         .unwrap()
@@ -76,7 +70,6 @@ async fn main() -> Result<()> {
         .with_context(|| format!("Invalid url format {target_str}"))?;
 
     info!("Node URL: {validator_url}");
-    info!("Relayer URL: {relayer_url}");
     info!("Transactions rate: {rate} tx/s");
 
     let primary_keypair = read_keypair_from_file(validator_key_fpath).unwrap();
@@ -91,7 +84,7 @@ async fn main() -> Result<()> {
     client.wait().await;
 
     // initialize the orderbook if running validator 0
-    client.initialize(validator_url, relayer_url).await.unwrap();
+    client.initialize(validator_url).await.unwrap();
 
     info!("Starting to send transactions...");
 
@@ -109,9 +102,9 @@ struct Client {
 }
 
 impl Client {
-    pub async fn initialize(&mut self, validator_url: Url, relayer_url: Url) -> Result<()> {
+    pub async fn initialize(&mut self, validator_url: Url) -> Result<()> {
         self.bench_helper
-            .initialize(validator_url, relayer_url, [0u8; 32], ACCOUNTS_TO_GENERATE)
+            .initialize(validator_url, [0u8; 32], ACCOUNTS_TO_GENERATE)
             .await;
 
         self.bench_helper.prepare_orderbook().await;

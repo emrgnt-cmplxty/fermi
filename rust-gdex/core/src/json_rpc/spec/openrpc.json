@@ -1,0 +1,89 @@
+{
+  "openrpc": "1.2.6",
+  "info": {
+    "title": "Sui JSON-RPC",
+    "description": "Sui JSON-RPC API for interaction with the Sui network gateway.",
+    "contact": {
+      "name": "Mysten Labs",
+      "url": "https://mystenlabs.com",
+      "email": "build@mystenlabs.com"
+    },
+    "license": {
+      "name": "Apache-2.0",
+      "url": "https://raw.githubusercontent.com/MystenLabs/sui/main/LICENSE"
+    },
+    "version": "0.6.1"
+  },
+  "methods": [
+    {
+      "name": "tenex_getAccountBalance",
+      "tags": [
+        {
+          "name": "Primary RPC API"
+        }
+      ],
+      "params": [
+        {
+          "name": "account_bytes",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "uint8",
+              "minimum": 0.0
+            }
+          }
+        },
+        {
+          "name": "asset_id",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0.0
+          }
+        }
+      ],
+      "result": {
+        "name": "u64",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        }
+      }
+    },
+    {
+      "name": "tenex_submitTransaction",
+      "tags": [
+        {
+          "name": "Primary RPC API"
+        }
+      ],
+      "params": [
+        {
+          "name": "transaction_bytes",
+          "required": true,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "uint8",
+              "minimum": 0.0
+            }
+          }
+        }
+      ],
+      "result": {
+        "name": "String",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "components": {}
+}

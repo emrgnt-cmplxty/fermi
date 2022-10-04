@@ -1,6 +1,7 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 use crate::asset::{AssetAmount, AssetId, AssetPrice};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::{fmt::Debug, time::SystemTime};
 
@@ -151,13 +152,13 @@ pub enum Failed {
 
 pub type OrderProcessingResult = Vec<Result<Success, Failed>>;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 pub struct Depth {
     pub price: u64,
     pub quantity: u64,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 pub struct OrderbookDepth {
     pub bids: Vec<Depth>,
     pub asks: Vec<Depth>,

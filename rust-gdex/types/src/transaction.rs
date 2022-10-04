@@ -14,6 +14,7 @@ use crate::{
     error::GDEXError,
     order_book::OrderSide,
     serialization::{Base64, Encoding},
+    utils,
 };
 
 pub use crate::proto::*;
@@ -28,7 +29,8 @@ use narwhal_types::{CertificateDigest, CertificateDigestProto};
 use blake2::digest::Update;
 use prost::bytes::Bytes;
 use prost::Message;
-use serde::{Deserialize, Serialize};
+use schemars::{gen::SchemaGenerator, schema::Schema, schema_for, JsonSchema};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
 use std::io::Cursor;
 use std::ops::Deref;
@@ -107,39 +109,6 @@ pub trait Request {
 
 // INTERFACE
 
-// CONSENSUS TRANSACTION
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct ConsensusTransaction {
-    signed_transaction_bytes: Vec<u8>,
-}
-
-impl ConsensusTransaction {
-    pub fn new(signed_transaction: &SignedTransaction) -> Self {
-        ConsensusTransaction {
-            signed_transaction_bytes: serialize_protobuf(signed_transaction),
-        }
-    }
-
-    pub fn deserialize(byte_vec: Vec<u8>) -> Result<Self, GDEXError> {
-        match bincode::deserialize(&byte_vec[..]) {
-            Ok(result) => Ok(result),
-            Err(..) => Err(GDEXError::DeserializationError),
-        }
-    }
-
-    pub fn serialize(&self) -> Result<Vec<u8>, GDEXError> {
-        match bincode::serialize(&self) {
-            Ok(result) => Ok(result),
-            Err(..) => Err(GDEXError::SerializationError),
-        }
-    }
-
-    pub fn get_payload(&self) -> Result<SignedTransaction, GDEXError> {
-        deserialize_protobuf(&self.signed_transaction_bytes)
-    }
-}
-
 // SIGNED TRANSACTION
 
 impl SignedTransaction {
@@ -181,6 +150,40 @@ impl SignedTransaction {
     }
 }
 
+impl Serialize for SignedTransaction {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let bytes = serialize_protobuf(self);
+        serializer.serialize_bytes(&bytes)
+    }
+}
+
+impl<'de> Deserialize<'de> for SignedTransaction {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let bytes: Vec<u8> = Vec::deserialize(deserializer)?;
+        let position: Result<SignedTransaction, GDEXError> = super::transaction::deserialize_protobuf(&bytes);
+        match position {
+            Ok(p) => Ok(p),
+            Err(e) => Err(serde::de::Error::custom(e.to_string())),
+        }
+    }
+}
+
+impl JsonSchema for SignedTransaction {
+    fn schema_name() -> String {
+        "SignedTransaction".to_string()
+    }
+
+    fn json_schema(_gen: &mut SchemaGenerator) -> Schema {
+        let root_schema = schema_for!(SignedTransaction);
+        root_schema.schema.into()
+    }
+}
 // TRANSACTION
 
 impl Transaction {
@@ -242,18 +245,51 @@ impl Hash for Transaction {
 
 // EXECUTION RESULT
 
-#[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
-pub struct ExecutionResultBody {
-    pub events: Vec<ExecutionEvent>,
+pub type ExecutionEvents = Vec<ExecutionEvent>;
+pub type ExecutionResult = Result<(), GDEXError>;
+
+#[derive(Serialize)]
+pub struct MyStruct {
+    pub my_int: i32,
+    pub my_bool: bool,
+    pub my_nullable_enum: Option<MyEnum>,
 }
 
-#[allow(clippy::new_without_default)]
-impl ExecutionResultBody {
-    pub fn new() -> Self {
-        ExecutionResultBody { events: Vec::new() }
+#[derive(Serialize)]
+pub enum MyEnum {
+    StringNewType(String),
+    StructVariant { floats: Vec<f32> },
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
+pub struct ExecutedTransaction {
+    pub signed_transaction: SignedTransaction,
+    pub events: ExecutionEvents,
+    pub result: ExecutionResult,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
+pub struct QueriedTransaction {
+    pub executed_transaction: ExecutedTransaction,
+    pub transaction_id: String,
+}
+
+impl From<ExecutedTransaction> for QueriedTransaction {
+    fn from(executed_transaction: ExecutedTransaction) -> Self {
+        if let Ok(transaction) = executed_transaction.signed_transaction.get_transaction() {
+            let transaction_digest = transaction.digest().get_array();
+            QueriedTransaction {
+                executed_transaction,
+                transaction_id: utils::encode_bytes_hex(transaction_digest),
+            }
+        } else {
+            QueriedTransaction {
+                executed_transaction,
+                transaction_id: "".to_string(),
+            }
+        }
     }
 }
-
 // EVENT TYPE
 
 // TODO kinda dumb to have 2 different traits for something functionally identical to RequestTypeEnum
@@ -270,7 +306,7 @@ pub trait Event {
     fn get_event_type_id() -> i32;
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq, JsonSchema)]
 pub struct ExecutionEvent {
     pub controller_id: i32,
     pub event_type: i32,

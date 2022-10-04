@@ -7,18 +7,17 @@ use crate::validator::metrics::ValidatorMetrics;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
 use fastcrypto::Hash;
-use gdex_controller::futures::controller::FuturesController;
 use gdex_controller::router::ControllerRouter;
 use gdex_types::{
     account::ValidatorKeyPair,
     block::{Block, BlockCertificate, BlockDigest, BlockInfo, BlockNumber},
     committee::{Committee, ValidatorName},
     error::GDEXError,
-    store::PostProcessStore,
-    transaction::{ConsensusTransaction, ExecutionResultBody, SignedTransaction, Transaction, TransactionDigest},
+    store::CriticalPathStore,
+    transaction::{ExecutedTransaction, SignedTransaction, Transaction, TransactionDigest},
 };
 use narwhal_consensus::ConsensusOutput;
-use narwhal_executor::{ExecutionIndices, ExecutionState, SerializedTransaction};
+use narwhal_executor::{ExecutionIndices, ExecutionState};
 use narwhal_types::CertificateDigest;
 use std::{
     collections::HashMap,
@@ -31,7 +30,6 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 use tracing::{info, trace};
-pub type ExecutionResult = Result<ExecutionResultBody, GDEXError>;
 
 /// Tracks recently submitted transactions to implement transaction gating
 pub struct ValidatorStore {
@@ -41,13 +39,13 @@ pub struct ValidatorStore {
     // garbage collection depth
     gc_depth: u64,
     pub block_number: AtomicU64,
-    pub post_process_store: PostProcessStore,
+    pub critical_path_store: CriticalPathStore,
 }
 
 impl ValidatorStore {
     pub fn reopen<Path: AsRef<std::path::Path>>(store_path: Path) -> Self {
-        let post_process_store: PostProcessStore = PostProcessStore::reopen(store_path);
-        let last_block_info = post_process_store.last_block_info.clone();
+        let critical_path_store = CriticalPathStore::reopen(store_path);
+        let last_block_info = critical_path_store.last_block_info.clone();
 
         // TODO load the state if last block is not 0, i.e. not at genesis
         let block_number = match last_block_info {
@@ -75,7 +73,7 @@ impl ValidatorStore {
             transaction_cache: Mutex::new(HashMap::new()),
             block_digest_cache,
             gc_depth: 50,
-            post_process_store,
+            critical_path_store,
             block_number: AtomicU64::new(block_number),
         }
     }
@@ -128,10 +126,12 @@ impl ValidatorStore {
     pub async fn write_latest_block(
         &self,
         block_certificate: BlockCertificate,
-        transactions: Vec<(SerializedTransaction, ExecutionResult)>,
+        transactions: Vec<ExecutedTransaction>,
     ) -> (Block, BlockInfo) {
         // TODO - is there a way to acquire a mutable reference to the block-number without demanding &mut self?
         // this would allow us to avoid separate commands to load and add to the counter
+        // update the block number
+        self.block_number.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
 
         let block_number = self.block_number.load(std::sync::atomic::Ordering::SeqCst);
         let block_digest = block_certificate.digest();
@@ -156,20 +156,18 @@ impl ValidatorStore {
         };
 
         // write-out the block information to associated stores
-        self.post_process_store
+        self.critical_path_store
             .block_store
             .write(block_number, block.clone())
             .await;
-        self.post_process_store
+        self.critical_path_store
             .block_info_store
             .write(block_number, block_info.clone())
             .await;
-        self.post_process_store
+        self.critical_path_store
             .last_block_info_store
             .write(0, block_info.clone())
             .await;
-        // update the block number
-        self.block_number.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         (block, block_info)
     }
 
@@ -254,12 +252,6 @@ impl ValidatorState {
     pub fn is_halted(&self) -> bool {
         self.halted.load(Ordering::Relaxed)
     }
-
-    // allow the controller router to update for testing purposes
-    #[cfg(any(test, feature = "testing"))]
-    pub fn set_futures_controller(&self, futures_controller: FuturesController) {
-        *self.controller_router.futures_controller.lock().unwrap() = futures_controller;
-    }
 }
 
 impl ValidatorState {
@@ -274,22 +266,19 @@ impl ValidatorState {
 
 #[async_trait]
 impl ExecutionState for ValidatorState {
-    type Transaction = ConsensusTransaction;
+    type Transaction = SignedTransaction;
     type Error = GDEXError;
-    type Outcome = (ConsensusOutput, ExecutionIndices, ExecutionResult);
+    type Outcome = (ConsensusOutput, ExecutionIndices, ExecutedTransaction);
 
     async fn handle_consensus_transaction(
         &self,
         consensus_output: &narwhal_consensus::ConsensusOutput,
         execution_indices: ExecutionIndices,
-        consensus_transaction: Self::Transaction,
+        signed_transaction: Self::Transaction,
     ) -> Result<Self::Outcome, Self::Error> {
         self.metrics.transactions_executed.inc();
 
-        // deserialize signed transaction
-        let signed_transaction = consensus_transaction
-            .get_payload()
-            .map_err(|e| tonic::Status::internal(e.to_string()))?;
+        // verify signed transaction signature
         let _ = signed_transaction
             .verify_signature()
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
@@ -311,17 +300,34 @@ impl ExecutionState for ValidatorState {
             return Ok((
                 consensus_output.clone(),
                 execution_indices,
-                Err(uniqueness_check.err().unwrap()),
+                ExecutedTransaction {
+                    signed_transaction,
+                    events: Vec::new(),
+                    result: Err(uniqueness_check.err().unwrap()),
+                },
             ));
         }
 
         let execution_result = self.controller_router.handle_consensus_transaction(transaction);
 
-        if execution_result.is_err() {
-            self.metrics.transactions_executed_failed.inc();
-        }
+        let executed_transaction = match execution_result {
+            Ok(executed_events) => ExecutedTransaction {
+                signed_transaction,
+                events: executed_events,
+                result: Ok(()),
+            },
+            Err(e) => {
+                self.metrics.transactions_executed_failed.inc();
 
-        Ok((consensus_output.clone(), execution_indices, execution_result))
+                ExecutedTransaction {
+                    signed_transaction,
+                    events: Vec::new(),
+                    result: Err(e),
+                }
+            }
+        };
+
+        Ok((consensus_output.clone(), execution_indices, executed_transaction))
     }
 
     fn ask_consensus_write_lock(&self) -> bool {
@@ -343,7 +349,7 @@ impl ExecutionState for ValidatorState {
 }
 
 #[cfg(test)]
-mod test_validator_state {
+pub mod test_validator_state {
     use super::*;
     use crate::{
         builder::genesis_state::GenesisStateBuilder,
@@ -370,8 +376,7 @@ mod test_validator_state {
     use narwhal_types::{Certificate, Header};
     use prometheus::Registry;
 
-    #[tokio::test]
-    pub async fn single_node_init() {
+    pub fn get_test_validator_state() -> ValidatorState {
         let controller_router = ControllerRouter::default();
         controller_router.initialize_controllers();
         controller_router.initialize_controller_accounts();
@@ -406,7 +411,12 @@ mod test_validator_state {
         let registry = Registry::default();
         let metrics = Arc::new(ValidatorMetrics::new(&registry));
         let validator = ValidatorState::new(public_key, secret, &genesis, &store_path, metrics);
+        validator
+    }
 
+    #[tokio::test]
+    pub async fn single_node_init() {
+        let validator = get_test_validator_state();
         validator.halt_validator();
         validator.unhalt_validator();
     }
@@ -479,13 +489,12 @@ mod test_validator_state {
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
         let transaction = create_create_asset_transaction(sender_kp.public(), recent_block_hash, 0);
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
-        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                consensus_transaction,
+                signed_transaction,
             )
             .await
             .unwrap();
@@ -503,13 +512,12 @@ mod test_validator_state {
         let recent_block_hash = BlockDigest::new([0; DIGEST_LEN]);
         let transaction = create_create_asset_transaction(sender_kp.public(), recent_block_hash, 0);
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
-        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                consensus_transaction,
+                signed_transaction,
             )
             .await
             .unwrap();
@@ -526,13 +534,12 @@ mod test_validator_state {
             TEST_AMOUNT,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
-        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                consensus_transaction,
+                signed_transaction,
             )
             .await
             .unwrap();
@@ -552,13 +559,12 @@ mod test_validator_state {
         for asset_number in 0..5 {
             let transaction = create_create_asset_transaction(sender_kp.public(), recent_block_hash, asset_number);
             let signed_transaction = transaction.sign(&sender_kp).unwrap();
-            let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
             validator
                 .handle_consensus_transaction(
                     &dummy_consensus_output,
                     dummy_execution_indices.clone(),
-                    consensus_transaction.clone(),
+                    signed_transaction.clone(),
                 )
                 .await
                 .unwrap();
@@ -576,13 +582,12 @@ mod test_validator_state {
             TEST_QUOTE_ASSET_ID,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
-        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                consensus_transaction,
+                signed_transaction,
             )
             .await
             .unwrap();
@@ -602,13 +607,12 @@ mod test_validator_state {
         for asset_number in 0..5 {
             let transaction = create_create_asset_transaction(sender_kp.public(), recent_block_hash, asset_number);
             let signed_transaction = transaction.sign(&sender_kp).unwrap();
-            let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
             validator
                 .handle_consensus_transaction(
                     &dummy_consensus_output,
                     dummy_execution_indices.clone(),
-                    consensus_transaction.clone(),
+                    signed_transaction.clone(),
                 )
                 .await
                 .unwrap();
@@ -625,13 +629,12 @@ mod test_validator_state {
             TEST_QUOTE_ASSET_ID,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
-        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                consensus_transaction,
+                signed_transaction,
             )
             .await
             .unwrap();
@@ -648,13 +651,12 @@ mod test_validator_state {
             TEST_QUANTITY,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
-        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                consensus_transaction,
+                signed_transaction,
             )
             .await
             .unwrap();
@@ -670,13 +672,12 @@ mod test_validator_state {
             TEST_ORDER_ID,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
-        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                consensus_transaction,
+                signed_transaction,
             )
             .await
             .unwrap();
@@ -696,13 +697,12 @@ mod test_validator_state {
         for asset_number in 0..5 {
             let transaction = create_create_asset_transaction(sender_kp.public(), recent_block_hash, asset_number);
             let signed_transaction = transaction.sign(&sender_kp).unwrap();
-            let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
             validator
                 .handle_consensus_transaction(
                     &dummy_consensus_output,
                     dummy_execution_indices.clone(),
-                    consensus_transaction.clone(),
+                    signed_transaction.clone(),
                 )
                 .await
                 .unwrap();
@@ -719,13 +719,12 @@ mod test_validator_state {
             TEST_QUOTE_ASSET_ID,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
-        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                consensus_transaction,
+                signed_transaction,
             )
             .await
             .unwrap();
@@ -743,13 +742,12 @@ mod test_validator_state {
             TEST_QUANTITY,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
-        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                consensus_transaction,
+                signed_transaction,
             )
             .await
             .unwrap();
@@ -767,13 +765,12 @@ mod test_validator_state {
             TEST_ORDER_ID,
         );
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
-        let consensus_transaction = ConsensusTransaction::new(&signed_transaction);
 
         validator
             .handle_consensus_transaction(
                 &dummy_consensus_output,
                 dummy_execution_indices.clone(),
-                consensus_transaction,
+                signed_transaction,
             )
             .await
             .unwrap();

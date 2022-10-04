@@ -122,8 +122,8 @@ class CommandMaker:
         genesis_dir,
         key_path,
         validator_name,
-        validator_address,
-        relayer_address,
+        validator_grpc_address,
+        validator_jsonrpc_address,
         metrics_address,
         debug=False,
         flamegraph=None,
@@ -132,15 +132,14 @@ class CommandMaker:
         assert isinstance(genesis_dir, str)
         assert isinstance(key_path, str)
         assert isinstance(validator_name, str)
-        assert isinstance(validator_address, str)
-        assert isinstance(relayer_address, str)
+        assert isinstance(validator_grpc_address, str)
         assert isinstance(debug, bool)
         v = "-vvv" if debug else "-vv"
         flamegraph = "flamegraph -- " if flamegraph else ""
 
         command = (
             f"{flamegraph}./gdex-node {v} run --db-dir {db_dir} --genesis-dir  {genesis_dir} "
-            f"--key-path {key_path} --validator-name {validator_name} --validator-address {validator_address} --relayer-address {relayer_address} --metrics-address {metrics_address}"
+            f"--key-path {key_path} --name {validator_name} --grpc-address {validator_grpc_address} --jsonrpc-address {validator_jsonrpc_address} --metrics-address {metrics_address}"
         )
         print("Returning execution command = ", command)
         return command
@@ -189,24 +188,24 @@ class CommandMaker:
         return command
 
     @staticmethod
-    def run_gdex_client(address, relayer_address, validator_key_path, rate, nodes):
+    def run_gdex_client(address, validator_key_path, rate, nodes):
         assert isinstance(address, str)
         assert isinstance(rate, int) and rate >= 0
         assert isinstance(nodes, list)
         assert all(isinstance(x, str) for x in nodes)
         nodes = f'--nodes {" ".join(nodes)}' if nodes else ""
-        command = f"./benchmark_gdex_client {address} --relayer {relayer_address} --validator_key_fpath {validator_key_path} --rate {rate} {nodes}"
+        command = f"./benchmark_gdex_client {address} --validator_key_fpath {validator_key_path} --rate {rate} {nodes}"
         print("Returning execution command = ", command)
         return command
 
     @staticmethod
-    def run_gdex_orderbook_client(address, relayer_address, validator_key_path, rate, nodes):
+    def run_gdex_orderbook_client(address, validator_key_path, rate, nodes):
         assert isinstance(address, str)
         assert isinstance(rate, int) and rate >= 0
         assert isinstance(nodes, list)
         assert all(isinstance(x, str) for x in nodes)
         nodes = f'{" ".join(nodes)}' if nodes else ""
-        command = f"./benchmark_orderbook_client {address} --relayer {relayer_address} --validator_key_fpath {validator_key_path} --rate {rate}  --nodes {nodes}"
+        command = f"./benchmark_orderbook_client {address} --validator_key_fpath {validator_key_path} --rate {rate}  --nodes {nodes}"
         print("Returning execution command = ", command)
         return command
 

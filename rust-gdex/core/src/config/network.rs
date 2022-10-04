@@ -4,7 +4,7 @@
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-config/src/swarm.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bc
 use crate::{
     builder::network_config::NetworkConfigBuilder,
-    config::{node::NodeConfig, Config, CONSENSUS_DB_NAME, GDEX_DB_NAME},
+    config::{node::NodeConfig, Config, CONSENSUS_DB_NAME, GRPC_DB_NAME},
     validator::genesis_state::ValidatorGenesisState,
 };
 use gdex_types::{
@@ -74,10 +74,10 @@ impl NetworkConfig {
         NodeConfig {
             key_pair,
             consensus_db_path: db_path.join(CONSENSUS_DB_NAME),
-            gdex_db_path: db_path.join(GDEX_DB_NAME),
+            grpc_db_path: db_path.join(GRPC_DB_NAME),
             metrics_address: utils::new_network_address(),
             admin_interface_port: utils::get_available_port(),
-            json_rpc_address: utils::available_local_socket_address(),
+            json_rpc_address: utils::new_network_address(),
             websocket_address: Some(utils::available_local_socket_address()),
             consensus_config: None,
             enable_event_processing: true,

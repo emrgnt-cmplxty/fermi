@@ -12,15 +12,20 @@ use crate::utils::engine::order_book::{OrderBookWrapper, OrderId, Orderbook};
 // gdex
 use gdex_types::{
     account::AccountPubKey,
+    asset::{AssetId, FuturesOrderbookKey},
     crypto::ToFromBytes,
     error::GDEXError,
-    order_book::OrderSide,
-    store::PostProcessStore,
-    transaction::{deserialize_protobuf, FuturesOrder, FuturesPosition, Transaction},
+    order_book::{OrderSide, OrderbookDepth},
+    store::{RPCStore, RPCStoreHandle},
+    transaction::{deserialize_protobuf, Transaction},
+    utils,
 };
+
+// mysten
+use sui_json_rpc::SuiRpcModule;
+
 // external
 use async_trait::async_trait;
-
 use gdex_types::transaction::parse_order_side;
 use serde::{Deserialize, Serialize};
 use std::borrow::BorrowMut;
@@ -33,7 +38,8 @@ use std::{
 // CONSTANTS
 
 pub const FUTURES_CONTROLLER_ACCOUNT_PUBKEY: &[u8] = b"FUTURESSSCONTROLLERAAAAAAAAAAAAA";
-const DEFAULT_MAX_LEVERAGE: u64 = 20;
+pub const DEFAULT_MAX_LEVERAGE: u64 = 20;
+pub const ORDERBOOK_DEPTH_FREQUENCY: u64 = 100;
 
 // INTERFACE
 
@@ -330,6 +336,10 @@ impl FuturesController {
         Ok(())
     }
 
+    pub fn get_marketplaces(&self) -> &HashMap<AccountPubKey, Marketplace> {
+        &self.market_places
+    }
+
     fn liquidate(
         &mut self,
         sender: AccountPubKey,
@@ -472,6 +482,20 @@ impl FuturesController {
         )
     }
 
+    pub fn get_account_deposit(&self, market_admin: &AccountPubKey, account: &AccountPubKey) -> Result<i64, GDEXError> {
+        let deposit = *(self
+            .market_places
+            .get(market_admin)
+            .ok_or(GDEXError::MarketplaceExistence)?
+            .deposits
+            .lock()
+            .unwrap()
+            .get(account)
+            .ok_or(GDEXError::AccountLookup)?);
+
+        Ok(deposit)
+    }
+
     pub fn get_account_total_req_collateral(
         &self,
         market_admin: &AccountPubKey,
@@ -528,29 +552,39 @@ impl FuturesController {
         )
     }
 
-    pub fn get_account_deposit(&self, market_admin: &AccountPubKey, account: &AccountPubKey) -> Result<i64, GDEXError> {
-        let deposit = *(self
-            .market_places
-            .get(market_admin)
-            .ok_or(GDEXError::MarketplaceExistence)?
-            .deposits
-            .lock()
-            .unwrap()
-            .get(account)
-            .ok_or(GDEXError::AccountLookup)?);
+    pub fn get_orderbook_key(
+        market_admin: &AccountPubKey,
+        base_asset_id: AssetId,
+        quote_asset_id: AssetId,
+    ) -> FuturesOrderbookKey {
+        format!(
+            "{}-{}-{}",
+            utils::encode_bytes_hex(market_admin),
+            base_asset_id,
+            quote_asset_id
+        )
+    }
 
-        Ok(deposit)
+    pub fn generate_orderbook_depths(&self) -> HashMap<FuturesOrderbookKey, OrderbookDepth> {
+        let mut orderbook_depths: HashMap<FuturesOrderbookKey, OrderbookDepth> = HashMap::new();
+        for (market_admin, marketplace) in self.market_places.iter() {
+            for (base_asset_id, market) in marketplace.markets.iter() {
+                let asset_pair_key = Self::get_orderbook_key(market_admin, *base_asset_id, marketplace.quote_asset_id);
+                orderbook_depths.insert(asset_pair_key, market.orderbook.get_orderbook_depth());
+            }
+        }
+        orderbook_depths
     }
 }
 
 #[async_trait]
-impl Controller for FuturesController {
+impl Controller<crate::futures::rpc_server::JSONRPCService> for FuturesController {
     fn initialize(&mut self, controller_router: &ControllerRouter) {
         self.bank_controller = Arc::clone(&controller_router.bank_controller);
         self.event_manager = Arc::clone(&controller_router.event_manager);
     }
 
-    fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
+    fn initialize_controller_account(&self) -> Result<(), GDEXError> {
         self.bank_controller
             .lock()
             .unwrap()
@@ -621,18 +655,30 @@ impl Controller for FuturesController {
         Ok(())
     }
 
-    async fn process_end_of_block(
-        _controller: Arc<Mutex<Self>>,
-        _post_process_store: &PostProcessStore,
-        _block_number: u64,
-    ) {
+    fn non_critical_process_end_of_block(&self, rpc_store: &RPCStore, block_number: u64) {
+        // write out orderbook depth every ORDERBOOK_DEPTH_FREQUENCY
+        if block_number % ORDERBOOK_DEPTH_FREQUENCY == 0 {
+            let orderbook_depths = self.generate_orderbook_depths();
+            // iterate over orderbook keys and values and write out to rpc store
+            for (orderbook_key, orderbook_depth) in orderbook_depths.iter() {
+                // write out orderbook depth to rpc store
+                rpc_store
+                    .latest_orderbook_depth_store
+                    .try_write(orderbook_key.clone(), orderbook_depth.clone());
+            }
+        }
     }
 
-    fn create_catchup_state(controller: Arc<Mutex<Self>>, _block_number: u64) -> Result<Vec<u8>, GDEXError> {
-        match bincode::serialize(&controller.lock().unwrap().clone()) {
-            Ok(v) => Ok(v),
-            Err(_) => Err(GDEXError::SerializationError),
-        }
+    fn rpc_is_implemented() -> bool {
+        true
+    }
+
+    fn generate_json_rpc_module(
+        state_manager: Arc<Mutex<ControllerRouter>>,
+        rpc_store_handle: Arc<RPCStoreHandle>,
+    ) -> Result<jsonrpsee::RpcModule<crate::futures::rpc_server::JSONRPCService>, GDEXError> {
+        let result = crate::futures::rpc_server::JSONRPCService::new(state_manager, rpc_store_handle).rpc();
+        Ok(result)
     }
 }
 
@@ -796,7 +842,6 @@ impl OrderBookWrapper for FuturesMarket {
         _price: u64,
         _quantity: u64,
     ) -> Result<(), GDEXError> {
-        // TODO - https://github.com/gdexorg/gdex/issues/163 - implement cancel
         self.order_to_account.remove(&order_id);
         let futures_account = self.accounts.get_mut(account).ok_or(GDEXError::AccountLookup)?;
         futures_account.open_orders.retain(|o| o.order_id != order_id);
@@ -865,8 +910,8 @@ pub mod futures_tests {
 
     #[test]
     fn create_futures_catchup_state_default() {
-        let futures_controller = Arc::new(Mutex::new(FuturesController::default()));
-        let catchup_state = FuturesController::create_catchup_state(futures_controller, 0);
+        let futures_controller = FuturesController::default();
+        let catchup_state = futures_controller.get_catchup_state();
         assert!(catchup_state.is_ok());
         let catchup_state = catchup_state.unwrap();
         println!("Catchup state is {} bytes", catchup_state.len());

@@ -14,14 +14,14 @@ use crate::{
 // gdex
 use gdex_types::{
     error::GDEXError,
-    store::{CatchupState, PostProcessStore},
-    transaction::{ExecutionResultBody, Transaction},
+    store::{CatchupState, CriticalPathStore, RPCStore, RPCStoreHandle},
+    transaction::{ExecutionEvents, Transaction},
 };
 
 // mysten
 
 // external
-use tracing::info;
+use jsonrpsee::RpcModule;
 
 // constants
 const CATCHUP_STATE_FREQUENCY: u64 = 100;
@@ -130,7 +130,9 @@ impl ControllerRouter {
         }
     }
 
-    pub fn handle_consensus_transaction(&self, transaction: &Transaction) -> Result<ExecutionResultBody, GDEXError> {
+    // TODO - Change the return signature of this to "ExecutionEvents" and roll the error into ExecutionEvents
+    // This will also remove the need for the type ExecutionResult
+    pub fn handle_consensus_transaction(&self, transaction: &Transaction) -> Result<ExecutionEvents, GDEXError> {
         // reset execution result
         // TODO - https://github.com/gdexorg/gdex/issues/176 - elimintate the need for reset by more properly handling errors
         // eventually we wont need this as we will have strong guarantees that this
@@ -173,48 +175,161 @@ impl ControllerRouter {
         Ok(self.event_manager.lock().unwrap().emit())
     }
 
-    pub async fn create_catchup_state(&self, post_process_store: &PostProcessStore, block_number: u64) {
-        if block_number % CATCHUP_STATE_FREQUENCY == 0 {
-            let state = vec![
-                ConsensusController::create_catchup_state(self.consensus_controller.clone(), block_number),
-                BankController::create_catchup_state(self.bank_controller.clone(), block_number),
-                StakeController::create_catchup_state(self.stake_controller.clone(), block_number),
-                SpotController::create_catchup_state(self.spot_controller.clone(), block_number),
-                FuturesController::create_catchup_state(self.futures_controller.clone(), block_number),
-            ];
-            let mut total_catchup_state: Vec<Vec<u8>> = Vec::new();
+    pub fn critical_process_end_of_block(
+        &self,
+        critical_path_store: &CriticalPathStore,
+        block_number: u64,
+    ) -> Result<(), GDEXError> {
+        self.consensus_controller
+            .lock()
+            .unwrap()
+            .critical_process_end_of_block(critical_path_store, block_number);
 
-            // if serialization failure occurs do not save bad state
-            if state.iter().filter(|x| x.is_err()).count() == 0 {
-                for catchup_state in state {
-                    total_catchup_state.push(catchup_state.unwrap());
-                }
-            }
+        self.bank_controller
+            .lock()
+            .unwrap()
+            .critical_process_end_of_block(critical_path_store, block_number);
 
-            // print size for logging purposes
-            let catchup_size: u64 = total_catchup_state.iter().map(|x| x.len() as u64).sum();
-            info!(
-                "Generating catchup snap at block {} of size {}",
-                block_number, catchup_size
-            );
+        self.stake_controller
+            .lock()
+            .unwrap()
+            .critical_process_end_of_block(critical_path_store, block_number);
 
-            let catchup_state = CatchupState {
-                block_number,
-                state: total_catchup_state,
-            };
+        self.spot_controller
+            .lock()
+            .unwrap()
+            .critical_process_end_of_block(critical_path_store, block_number);
 
-            // store catchup state in first position
-            post_process_store.catchup_state_store.write(0, catchup_state).await;
-        }
+        self.futures_controller
+            .lock()
+            .unwrap()
+            .critical_process_end_of_block(critical_path_store, block_number);
+        Ok(())
     }
 
-    pub async fn process_end_of_block(&self, post_process_store: &PostProcessStore, block_number: u64) {
-        ConsensusController::process_end_of_block(self.consensus_controller.clone(), post_process_store, block_number)
-            .await;
-        BankController::process_end_of_block(self.bank_controller.clone(), post_process_store, block_number).await;
-        StakeController::process_end_of_block(self.stake_controller.clone(), post_process_store, block_number).await;
-        SpotController::process_end_of_block(self.spot_controller.clone(), post_process_store, block_number).await;
-        FuturesController::process_end_of_block(self.futures_controller.clone(), post_process_store, block_number)
-            .await;
+    // Same todo previously mentioned, need to move away from using non-async mutex's for controller related functionality
+    pub fn non_critical_process_end_of_block(&self, rpc_store: &RPCStore, block_number: u64) -> Result<(), GDEXError> {
+        if block_number % CATCHUP_STATE_FREQUENCY == 0 {
+            // TODO - It is quite gross and potentially error prone to just stick the catch-up states into
+            // A vector and then write them to the store. We should probably have a more structured way of
+            // doing this. Moreover, it should fit into the Controller workflow more directly.
+            let consensus_controller_state = self.consensus_controller.lock().unwrap().get_catchup_state()?;
+            let bank_controller_state = self.bank_controller.lock().unwrap().get_catchup_state()?;
+            let stake_controller_state = self.stake_controller.lock().unwrap().get_catchup_state()?;
+            let spot_controller_state = self.spot_controller.lock().unwrap().get_catchup_state()?;
+            let futures_controller_state = self.futures_controller.lock().unwrap().get_catchup_state()?;
+
+            let state = vec![
+                consensus_controller_state,
+                bank_controller_state,
+                stake_controller_state,
+                spot_controller_state,
+                futures_controller_state,
+            ];
+
+            rpc_store.catchup_state_store.try_write(0, CatchupState { state });
+        }
+
+        self.consensus_controller
+            .lock()
+            .unwrap()
+            .non_critical_process_end_of_block(rpc_store, block_number);
+
+        self.bank_controller
+            .lock()
+            .unwrap()
+            .non_critical_process_end_of_block(rpc_store, block_number);
+
+        self.consensus_controller
+            .lock()
+            .unwrap()
+            .non_critical_process_end_of_block(rpc_store, block_number);
+
+        self.stake_controller
+            .lock()
+            .unwrap()
+            .non_critical_process_end_of_block(rpc_store, block_number);
+
+        self.spot_controller
+            .lock()
+            .unwrap()
+            .non_critical_process_end_of_block(rpc_store, block_number);
+
+        self.futures_controller
+            .lock()
+            .unwrap()
+            .non_critical_process_end_of_block(rpc_store, block_number);
+
+        Ok(())
+    }
+
+    pub fn generate_rpc_module(
+        controller_router: Arc<Mutex<ControllerRouter>>,
+        rpc_store_handle: Arc<RPCStoreHandle>,
+    ) -> RpcModule<()> {
+        let mut module = RpcModule::new(());
+
+        // note - we intentionally use unwraps inside this function because we want the program to panic if the rpc module fails to initialize
+
+        if ConsensusController::rpc_is_implemented() {
+            module
+                .merge(
+                    ConsensusController::generate_json_rpc_module(
+                        Arc::clone(&controller_router),
+                        Arc::clone(&rpc_store_handle),
+                    )
+                    .unwrap(),
+                )
+                .unwrap()
+        }
+
+        if BankController::rpc_is_implemented() {
+            module
+                .merge(
+                    BankController::generate_json_rpc_module(
+                        Arc::clone(&controller_router),
+                        Arc::clone(&rpc_store_handle),
+                    )
+                    .unwrap(),
+                )
+                .unwrap()
+        }
+
+        if StakeController::rpc_is_implemented() {
+            module
+                .merge(
+                    StakeController::generate_json_rpc_module(
+                        Arc::clone(&controller_router),
+                        Arc::clone(&rpc_store_handle),
+                    )
+                    .unwrap(),
+                )
+                .unwrap()
+        }
+
+        if SpotController::rpc_is_implemented() {
+            module
+                .merge(
+                    SpotController::generate_json_rpc_module(
+                        Arc::clone(&controller_router),
+                        Arc::clone(&rpc_store_handle),
+                    )
+                    .unwrap(),
+                )
+                .unwrap()
+        }
+
+        if FuturesController::rpc_is_implemented() {
+            module
+                .merge(
+                    FuturesController::generate_json_rpc_module(
+                        Arc::clone(&controller_router),
+                        Arc::clone(&rpc_store_handle),
+                    )
+                    .unwrap(),
+                )
+                .unwrap()
+        }
+        module
     }
 }

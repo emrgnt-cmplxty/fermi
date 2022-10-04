@@ -3,16 +3,17 @@
 //! SPDX-License-Identifier: Apache-2.0
 use async_trait::async_trait;
 use narwhal_executor::ExecutionStateError;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-#[derive(Eq, PartialEq, Clone, Debug, Serialize, Deserialize, Error, Hash)]
+
+#[derive(Eq, PartialEq, Clone, Debug, Serialize, Deserialize, Error, Hash, JsonSchema)]
 pub enum GDEXError {
     // committee associated errors
     #[error("Invalid committee composition")]
     InvalidCommittee(String),
     #[error("Invalid address")]
     InvalidAddress,
-
     // controller associated errors
     #[error("Account already exists")]
     AccountCreation,
@@ -20,6 +21,8 @@ pub enum GDEXError {
     AccountLookup,
     #[error("Failed to find asset")]
     AssetLookup,
+    #[error("Not implemented")]
+    NotImplemented,
 
     // transaction associated errors
     // TODO - clean up error layout
@@ -33,6 +36,8 @@ pub enum GDEXError {
     FuturesWithdrawal,
     #[error("Marketplace does not exist.")]
     MarketplaceExistence,
+    #[error("Orderbook does not exist.")]
+    OrderbookExistence,
     #[error("Market existence check failed")]
     MarketExistence,
     #[error("Market updating market prices")]
@@ -59,7 +64,6 @@ pub enum GDEXError {
     TransactionDeserialization,
     #[error("Failed to process duplicate transaction")]
     TransactionDuplicate,
-
     // other errors
     #[error("Error while converting type")]
     Conversion,

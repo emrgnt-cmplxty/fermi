@@ -80,17 +80,19 @@ class Committee:
                 }
                 port += 3
 
-            network_address = f'/ip4/{host}/tcp/{port}/http'
-            relayer_address = f'/ip4/{host}/tcp/{port + 1}/http'
-            port += 2
+            grpc_address = f'/ip4/{host}/tcp/{port}/http'
+            port += 1
+
+            jsonrpc_address = f'/ip4/{host}/tcp/{port}/http'
+            port += 1
 
             metrics_address = f'/ip4/{host}/tcp/{port}/http'
             port += 1
 
             self.json['authorities'][name] = {
                 'stake': 1,
-                'network_address': network_address,
-                'relayer_address': relayer_address,
+                'grpc_address': grpc_address,
+                'jsonrpc_address': jsonrpc_address,
                 'metrics_address': metrics_address,
                 'primary': primary_addr,
                 'workers': workers_addr

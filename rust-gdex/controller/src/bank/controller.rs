@@ -18,15 +18,15 @@ use gdex_types::{
     asset::{Asset, AssetId},
     crypto::ToFromBytes,
     error::GDEXError,
-    store::PostProcessStore,
+    store::RPCStoreHandle,
     transaction::{deserialize_protobuf, Transaction},
 };
 
 // mysten
+use sui_json_rpc::SuiRpcModule;
 
 // external
 use async_trait::async_trait;
-use bincode;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -75,12 +75,12 @@ impl Default for BankController {
 }
 
 #[async_trait]
-impl Controller for BankController {
+impl Controller<crate::bank::rpc_server::JSONRPCService> for BankController {
     fn initialize(&mut self, controller_router: &ControllerRouter) {
         self.event_manager = Arc::clone(&controller_router.event_manager);
     }
 
-    fn initialize_controller_account(&mut self) -> Result<(), GDEXError> {
+    fn initialize_controller_account(&self) -> Result<(), GDEXError> {
         Ok(())
     }
 
@@ -101,18 +101,16 @@ impl Controller for BankController {
         }
     }
 
-    async fn process_end_of_block(
-        _controller: Arc<Mutex<Self>>,
-        _post_process_store: &PostProcessStore,
-        _block_number: u64,
-    ) {
+    fn rpc_is_implemented() -> bool {
+        true
     }
 
-    fn create_catchup_state(controller: Arc<Mutex<Self>>, _block_number: u64) -> Result<Vec<u8>, GDEXError> {
-        match bincode::serialize(&controller.lock().unwrap().clone()) {
-            Ok(v) => Ok(v),
-            Err(_) => Err(GDEXError::SerializationError),
-        }
+    fn generate_json_rpc_module(
+        state_manager: Arc<Mutex<ControllerRouter>>,
+        rpc_store_handle: Arc<RPCStoreHandle>,
+    ) -> Result<jsonrpsee::RpcModule<crate::bank::rpc_server::JSONRPCService>, GDEXError> {
+        let result = crate::bank::rpc_server::JSONRPCService::new(state_manager, rpc_store_handle).rpc();
+        Ok(result)
     }
 }
 
@@ -370,8 +368,8 @@ pub mod spot_tests {
 
     #[test]
     fn create_bank_catchup_state_default() {
-        let bank_controller = Arc::new(Mutex::new(BankController::default()));
-        let catchup_state = BankController::create_catchup_state(bank_controller, 0);
+        let bank_controller = BankController::default();
+        let catchup_state = bank_controller.get_catchup_state();
         assert!(catchup_state.is_ok());
         let catchup_state = catchup_state.unwrap();
         println!("Catchup state is {} bytes", catchup_state.len());
@@ -414,7 +412,7 @@ pub mod spot_tests {
             }
         }
 
-        let catchup_state = BankController::create_catchup_state(Arc::new(Mutex::new(bank_controller)), 0);
+        let catchup_state = bank_controller.get_catchup_state();
         assert!(catchup_state.is_ok());
         let catchup_state = catchup_state.unwrap();
         println!(

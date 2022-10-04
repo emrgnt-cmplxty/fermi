@@ -36,17 +36,20 @@ mod tests {
         orderbook.process_order(order1);
         let res = orderbook.process_order(order2);
 
-        if !matches!(res[0], Ok(Success::Accepted { order_id: 2, .. })) || !matches!(res[1], Ok(Success::Filled {
+        if !matches!(res[0], Ok(Success::Accepted { order_id: 2, .. }))
+            || !matches!(res[1], Ok(Success::Filled {
                 order_id: 2,
                 price,
                 quantity,
                 ..
-            }) if price == 10 && quantity == 1) || !matches!(res[2], Ok(Success::PartiallyFilled {
+            }) if price == 10 && quantity == 1)
+            || !matches!(res[2], Ok(Success::PartiallyFilled {
                 order_id: 1,
                 price,
                 quantity,
                 ..
-            }) if price == 10 && quantity == 1) {
+            }) if price == 10 && quantity == 1)
+        {
             panic!("unexpected event sequence: {:?}", res)
         }
     }
@@ -80,27 +83,32 @@ mod tests {
         orderbook.process_order(order2);
         let res = orderbook.process_order(order3);
 
-        if !matches!(res[0], Ok(Success::Accepted { order_id: 3, .. })) || !matches!(res[1], Ok(Success::PartiallyFilled {
+        if !matches!(res[0], Ok(Success::Accepted { order_id: 3, .. }))
+            || !matches!(res[1], Ok(Success::PartiallyFilled {
                 order_id: 3,
                 price,
                 quantity,
                 ..
-            }) if price == 12 && quantity == 10) || !matches!(res[2], Ok(Success::Filled {
+            }) if price == 12 && quantity == 10)
+            || !matches!(res[2], Ok(Success::Filled {
                 order_id: 2,
                 price,
                 quantity,
                 ..
-            }) if price == 12 && quantity == 10) || !matches!(res[3], Ok(Success::Filled {
+            }) if price == 12 && quantity == 10)
+            || !matches!(res[3], Ok(Success::Filled {
                 order_id: 3,
                 price,
                 quantity,
                 ..
-            }) if price == 10 && quantity == 5) || !matches!(res[4], Ok(Success::PartiallyFilled {
+            }) if price == 10 && quantity == 5)
+            || !matches!(res[4], Ok(Success::PartiallyFilled {
                 order_id: 1,
                 price,
                 quantity,
                 ..
-            }) if price == 10 && quantity == 5) {
+            }) if price == 10 && quantity == 5)
+        {
             panic!("unexpected event sequence: {:?}", res)
         }
     }
@@ -151,17 +159,20 @@ mod tests {
         orderbook.process_order(order1);
         let res = orderbook.process_order(order2);
 
-        if !matches!(res[0], Ok(Success::Accepted { order_id: 2, .. })) || !matches!(res[1], Ok(Success::Filled {
+        if !matches!(res[0], Ok(Success::Accepted { order_id: 2, .. }))
+            || !matches!(res[1], Ok(Success::Filled {
                 order_id: 2,
                 price,
                 quantity,
                 ..
-            }) if price == 100 && quantity == 50) || !matches!(res[2], Ok(Success::PartiallyFilled {
+            }) if price == 100 && quantity == 50)
+            || !matches!(res[2], Ok(Success::PartiallyFilled {
                 order_id: 1,
                 price,
                 quantity,
                 ..
-            }) if price == 100 && quantity == 50) {
+            }) if price == 100 && quantity == 50)
+        {
             panic!("unexpected event sequence: {:?}", res)
         }
     }
@@ -185,17 +196,20 @@ mod tests {
         orderbook.process_order(order1);
         let res = orderbook.process_order(order2);
 
-        if !matches!(res[0], Ok(Success::Accepted { order_id: 2, .. })) || !matches!(res[1], Ok(Success::Filled {
+        if !matches!(res[0], Ok(Success::Accepted { order_id: 2, .. }))
+            || !matches!(res[1], Ok(Success::Filled {
                 order_id: 2,
                 price,
                 quantity,
                 ..
-            }) if price == 100 && quantity == 5) || !matches!(res[2], Ok(Success::PartiallyFilled {
+            }) if price == 100 && quantity == 5)
+            || !matches!(res[2], Ok(Success::PartiallyFilled {
                 order_id: 1,
                 price,
                 quantity,
                 ..
-            }) if price == 100 && quantity == 5) {
+            }) if price == 100 && quantity == 5)
+        {
             panic!("unexpected event sequence: {:?}", res)
         }
 
@@ -204,17 +218,20 @@ mod tests {
 
         let res2 = orderbook.process_order(order3);
 
-        if !matches!(res2[0], Ok(Success::Accepted { order_id: 3, .. })) || !matches!(res2[1], Ok(Success::Filled {
+        if !matches!(res2[0], Ok(Success::Accepted { order_id: 3, .. }))
+            || !matches!(res2[1], Ok(Success::Filled {
                 order_id: 3,
                 price,
                 quantity,
                 ..
-            }) if price == 100 && quantity == 5) || !matches!(res2[2], Ok(Success::Filled {
+            }) if price == 100 && quantity == 5)
+            || !matches!(res2[2], Ok(Success::Filled {
                 order_id: 1,
                 price,
                 quantity,
                 ..
-            }) if price == 100 && quantity == 5) {
+            }) if price == 100 && quantity == 5)
+        {
             panic!("unexpected event sequence: {:?}", res2)
         }
 

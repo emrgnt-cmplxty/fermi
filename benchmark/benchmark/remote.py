@@ -315,25 +315,21 @@ class Bench:
         rate_share = ceil(rate / len(committee.json['authorities']))
         for i, name in enumerate(committee.json['authorities'].keys()):
             validator_dict = committee.json['authorities'][name]
-            validator_address = validator_dict['network_address'].split('/')
-            validator_address[2] = '0.0.0.0'
-            validator_address = '/'.join(validator_address)
-            relayer_address = validator_dict['relayer_address'].split('/')
-            relayer_address[2] = '0.0.0.0'
-            relayer_address = '/'.join(relayer_address)
+            validator_grpc_address = validator_dict['grpc_address'].split('/')
+            validator_grpc_address[2] = '0.0.0.0'
+            validator_grpc_address = '/'.join(validator_grpc_address)
 
             metrics_address = validator_dict['metrics_address'].split('/')
             metrics_address[2] = '0.0.0.0'
             metrics_address = '/'.join(metrics_address)
 
-            host = Committee.ip_from_multi_address(validator_dict['network_address'])
+            host = Committee.ip_from_multi_address(validator_dict['grpc_address'])
             cmd = CommandMaker.run_gdex_node(
                 self.remote_proto_dir,
                 self.remote_proto_dir,
                 self.remote_proto_dir + PathMaker.key_file(i),
                 name,
-                validator_address,
-                relayer_address,
+                validator_grpc_address,
                 metrics_address
             )
 
@@ -344,24 +340,21 @@ class Bench:
         Print.info('Booting clients...')
         for i, name in enumerate(committee.json['authorities'].keys()):
             validator_dict = committee.json['authorities'][name]
-            validator_address = validator_dict['network_address']
-            relayer_address = validator_dict['relayer_address']
-            host = Committee.ip_from_multi_address(validator_address)
+            validator_grpc_address = validator_dict['grpc_address']
+            host = Committee.ip_from_multi_address(validator_grpc_address)
             if self.bench_parameters.order_bench:
                 cmd = CommandMaker.run_gdex_orderbook_client(
-                    multiaddr_to_url_data(validator_address),
-                    multiaddr_to_url_data(relayer_address),
+                    multiaddr_to_url_data(validator_grpc_address),
                     self.remote_proto_dir + PathMaker.key_file(0),
                     rate_share,
-                    [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
+                    [multiaddr_to_url_data(node['grpc_address']) for node in committee.json['authorities'].values() if node['grpc_address'] != validator_grpc_address]
                 )
             else:
                 cmd = CommandMaker.run_gdex_client(
-                    multiaddr_to_url_data(validator_address),
-                    multiaddr_to_url_data(relayer_address),
+                    multiaddr_to_url_data(validator_grpc_address),
                     self.remote_proto_dir + PathMaker.key_file(i),
                     rate_share,
-                    [multiaddr_to_url_data(node['network_address']) for node in committee.json['authorities'].values() if node['network_address'] != validator_address]
+                    [multiaddr_to_url_data(node['grpc_address']) for node in committee.json['authorities'].values() if node['grpc_address'] != validator_grpc_address]
                 )
             log_file = PathMaker.client_log_file(i, 0)
             self._background_run(host, cmd, log_file)

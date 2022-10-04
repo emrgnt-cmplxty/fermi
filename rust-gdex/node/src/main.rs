@@ -3,12 +3,11 @@
 // SPDX-License-Identifier: Apache-2.0
 use anyhow::Result;
 use clap::{crate_name, crate_version, App, AppSettings, ArgMatches, SubCommand};
-use gdex_core::{relayer::spawner::RelayerSpawner, validator::spawner::ValidatorSpawner};
+use gdex_core::validator::spawner::ValidatorSpawner;
 use multiaddr::Multiaddr;
-use std::{path::Path, str::FromStr, sync::Arc};
+use std::{path::Path, str::FromStr};
 use tracing::info;
 
-const DEFAULT_RELAY_MULTIADDR: &str = "/dns/localhost/tcp/61000/http";
 const DEFAULT_VALIDATOR_MULTIADDR: &str = "/dns/localhost/tcp/62000/http";
 const DEFAULT_METRICS_MULTIADDR: &str = "/dns/localhost/tcp/63000/http";
 
@@ -24,10 +23,10 @@ async fn main() -> Result<()> {
                 .args_from_usage("--db-dir=<FOLDER> 'The folder containing a the database'")
                 .args_from_usage("--key-path=<FILE> 'The file containing the node keys'")
                 .args_from_usage("--genesis-dir=<FOLDER> 'The folder containing the genesis blob'")
-                .args_from_usage("--validator-name=<NAME> 'The validator name'")
-                .args_from_usage("--validator-address=<ADDR> 'The validator address'")
-                .args_from_usage("--metrics-address=<ADDR> 'The metrics address'")
-                .args_from_usage("--relayer-address=<ADDR> 'The relayer address'"),
+                .args_from_usage("--name=<NAME> 'The validator name'")
+                .args_from_usage("--grpc-address=<ADDR> 'The validator grpc address'")
+                .args_from_usage("--jsonrpc-address=<ADDR> 'The validator jsonrpc address'")
+                .args_from_usage("--metrics-address=<ADDR> 'The metrics address'"),
         )
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .get_matches();
@@ -77,37 +76,30 @@ async fn run(matches: &ArgMatches<'_>) {
 
     let key_path = Path::new(matches.value_of("key-path").unwrap()).to_path_buf();
 
-    let validator_name = matches.value_of("validator-name").unwrap();
+    let name = matches.value_of("name").unwrap();
 
-    let validator_address = matches
-        .value_of("validator-address")
+    let grpc_address = matches.value_of("grpc-address").unwrap_or(DEFAULT_VALIDATOR_MULTIADDR);
+    let grpc_address = Multiaddr::from_str(grpc_address).unwrap();
+
+    let jsonrpc_address = matches
+        .value_of("jsonrpc-address")
         .unwrap_or(DEFAULT_VALIDATOR_MULTIADDR);
-    let validator_address = Multiaddr::from_str(validator_address).unwrap();
+    let jsonrpc_address = Multiaddr::from_str(jsonrpc_address).unwrap();
 
     let metrics_address = matches.value_of("metrics-address").unwrap_or(DEFAULT_METRICS_MULTIADDR);
     let metrics_address = Multiaddr::from_str(metrics_address).unwrap();
 
-    info!("Spawning validator and relayer");
+    info!("Spawning validator and json rpc");
     let mut validator_spawner = ValidatorSpawner::new(
-        /* db_path */ db_path,
+        /* db_path */ db_path.clone(),
         /* key_path */ key_path,
-        /* genesis_path */ genesis_path,
-        /* validator_address */ validator_address,
+        /* genesis_path */ genesis_path.clone(),
+        /* grpc_address */ grpc_address.clone(),
+        /* jsonrpc_address */ jsonrpc_address.clone(),
         /* metrics_address */ metrics_address,
-        /* validator_name */ validator_name.to_string(),
+        /* validator_name */ name.to_string(),
     );
-
     validator_spawner.spawn_validator().await;
 
-    let validator_state = validator_spawner.get_validator_state().unwrap();
-    validator_state.unhalt_validator();
-
-    let relayer_address = matches.value_of("relayer-address").unwrap_or(DEFAULT_RELAY_MULTIADDR);
-    let relayer_address = Multiaddr::from_str(relayer_address).unwrap();
-
-    let mut relayer_spawner = RelayerSpawner::new(Arc::clone(&validator_state), relayer_address);
-    relayer_spawner.spawn_relayer().await.unwrap();
-
     validator_spawner.await_handles().await;
-    relayer_spawner.await_handles().await;
 }

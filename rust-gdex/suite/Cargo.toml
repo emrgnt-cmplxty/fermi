@@ -10,6 +10,8 @@ bincode = "1.3.3"
 bytes = "1.2.1"
 criterion = { version = "0.3.5", features = ["async_tokio"] }
 hex = "0.4.3"
+jsonrpsee = { version = "0.15.1", features = ["full"] }
+jsonrpsee-core = "0.15.1"
 rand =  "0.8.5"
 rocksdb = { version = "0.19", default-features = false, features = ["lz4", "multi-threaded-cf", "snappy", "zlib", "zstd"] }
 serde = { version = "1.0.141", features = ["derive"] }

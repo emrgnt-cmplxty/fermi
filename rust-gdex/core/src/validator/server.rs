@@ -2,39 +2,50 @@
 //! Copyright (c) 2022, BTI
 //! SPDX-License-Identifier: Apache-2.0
 //! This file is largely inspired by https://github.com/MystenLabs/sui/blob/main/crates/sui-core/src/authority_server.rs, commit #e91604e0863c86c77ea1def8d9bd116127bee0bcuse super::state::ValidatorState;
+
+// IMPORTS
+
+// crate
 use crate::{
     config::node::NodeConfig,
-    validator::{
-        consensus_adapter::ConsensusAdapter,
-        restarter::NodeRestarter,
-        state::{ExecutionResult, ValidatorState},
-    },
+    validator::{consensus_adapter::ConsensusAdapter, restarter::NodeRestarter, state::ValidatorState},
 };
-use anyhow::anyhow;
-use async_trait::async_trait;
-use futures::StreamExt;
+
+// local
 use gdex_types::{
     crypto::KeypairTraits,
-    proto::{Empty, TransactionSubmitter, TransactionSubmitterServer},
-    transaction::{ConsensusTransaction, SignedTransaction},
+    proto::{
+        BlockInfoRequest, BlockInfoResponse, BlockRequest, BlockResponse, Empty, LatestBlockInfoRequest,
+        MetricsRequest, MetricsResponse, ValidatorGrpc, ValidatorGrpcServer,
+    },
+    transaction::{ExecutedTransaction, SignedTransaction},
 };
-use multiaddr::Multiaddr;
+
+// mysten
 use narwhal_config::Committee as ConsensusCommittee;
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
 use narwhal_executor::{ExecutionIndices, SerializedTransaction, SubscriberError};
-use narwhal_types::TransactionProto as ConsensusTransactionWrapper;
+use narwhal_types::{TransactionProto as SignedTransactionWrapper};
+
+// external
+use anyhow::anyhow;
+use async_trait::async_trait;
+use bytes::Bytes;
+use futures::StreamExt;
+use multiaddr::Multiaddr;
 use prometheus::Registry;
 use std::{io, sync::Arc, time::SystemTime};
 use tokio::{
     sync::mpsc::{Receiver, Sender},
     task::JoinHandle,
 };
+use tonic::{Request, Response, Status};
 use tracing::{info, trace};
 
 // constants
 // frequency of orderbook depth writes (rounds)
-pub type HandledTransaction = Result<(ConsensusOutput, ExecutionIndices, ExecutionResult), SubscriberError>;
+pub type HandledTransaction = Result<(ConsensusOutput, ExecutionIndices, ExecutedTransaction), SubscriberError>;
 
 /// Contains and orchestrates a tokio handle where the validator server runs
 pub struct ValidatorServerHandle {
@@ -44,7 +55,7 @@ pub struct ValidatorServerHandle {
 }
 
 impl ValidatorServerHandle {
-    pub fn validator_address(&self) -> &Multiaddr {
+    pub fn grpc_address(&self) -> &Multiaddr {
         &self.local_addr
     }
 
@@ -57,17 +68,17 @@ impl ValidatorServerHandle {
     }
 }
 
-/// Can spawn a validator server handle at the internal validator_address
+/// Can spawn a validator server handle at the internal grpc_address
 /// the server handle contains a validator api (grpc) that exposes a validator service
 pub struct ValidatorServer {
-    validator_address: Multiaddr,
+    grpc_address: Multiaddr,
     state: Arc<ValidatorState>,
     consensus_adapter: Arc<ConsensusAdapter>,
 }
 
 impl ValidatorServer {
     pub fn new(
-        validator_address: Multiaddr,
+        grpc_address: Multiaddr,
         state: Arc<ValidatorState>,
         consensus_addresses: Vec<Multiaddr>,
         tx_reconfigure_consensus: Sender<(ConsensusKeyPair, ConsensusCommittee)>,
@@ -75,7 +86,7 @@ impl ValidatorServer {
         let consensus_adapter = Arc::new(ConsensusAdapter::new(consensus_addresses, tx_reconfigure_consensus));
 
         Self {
-            validator_address,
+            grpc_address,
             state,
             consensus_adapter,
         }
@@ -83,22 +94,22 @@ impl ValidatorServer {
 
     // TODO this is kinda dumb
     pub async fn spawn(self) -> Result<ValidatorServerHandle, io::Error> {
-        let validator_address = self.validator_address.clone();
+        let grpc_address = self.grpc_address.clone();
         info!(
-            "Calling spawn to produce a the validator server with port validator_address = {:?}",
-            validator_address
+            "Calling spawn to produce a the validator server with port grpc_address = {:?}",
+            grpc_address
         );
-        self.run(validator_address).await
+        self.run(grpc_address).await
     }
 
-    pub async fn run(self, validator_address: Multiaddr) -> Result<ValidatorServerHandle, io::Error> {
+    pub async fn run(self, grpc_address: Multiaddr) -> Result<ValidatorServerHandle, io::Error> {
         let server = crate::config::server::ServerConfig::new()
             .server_builder()
-            .add_service(TransactionSubmitterServer::new(ValidatorService {
+            .add_service(ValidatorGrpcServer::new(ValidatorService {
                 state: self.state.clone(),
                 consensus_adapter: self.consensus_adapter.clone(),
             }))
-            .bind(&validator_address)
+            .bind(&grpc_address)
             .await
             .unwrap();
         let local_addr = server.local_addr().to_owned();
@@ -210,11 +221,10 @@ impl ValidatorService {
         }
 
         // submit transaction
-        let serialized_consensus_transaction = ConsensusTransaction::new(&signed_transaction)
-            .serialize()
-            .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
-        let consensus_transaction_wrapper = ConsensusTransactionWrapper {
-            transaction: serialized_consensus_transaction.into(),
+        let serialized_signed_transaction =
+            bincode::serialize(&signed_transaction).map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
+        let consensus_transaction_wrapper = SignedTransactionWrapper {
+            transaction: serialized_signed_transaction.into(),
         };
 
         consensus_adapter
@@ -242,14 +252,122 @@ impl ValidatorService {
     }
 }
 
-/// Spawns a tonic grpc which parses incoming transactions and forwards them to the handle_transaction method of ValidatorService
+/// Spawns a tonic grpc to parse and handle incoming requests
 #[async_trait]
-impl TransactionSubmitter for ValidatorService {
+impl ValidatorGrpc for ValidatorService {
+    // GET REQUESTS
+
+    // TODO -  - get_latest_block_info and get_block_info can be rolled into a single call with an optional block number to save code
+    // TODO -  - this is currently grabbing data off of state which is shared accross threads, is this thread safe?
+
+    async fn get_latest_block_info(
+        &self,
+        _request: Request<LatestBlockInfoRequest>,
+    ) -> Result<Response<BlockInfoResponse>, Status> {
+        let validator_state = &self.state;
+        let returned_value = validator_state
+            .validator_store
+            .critical_path_store
+            .last_block_info_store
+            .read(0)
+            .await;
+
+        match returned_value {
+            Ok(opt) => {
+                if let Some(block_info) = opt {
+                    let serialized_block_info = Bytes::from(
+                        bincode::serialize(&block_info).map_err(|_| Status::unknown("Failed to serialize block"))?,
+                    );
+
+                    Ok(Response::new(BlockInfoResponse {
+                        successful: true,
+                        serialized_block_info,
+                    }))
+                } else {
+                    Err(Status::not_found("Latest block info was not found."))
+                }
+            }
+            Err(err) => Err(Status::unknown(err.to_string())),
+        }
+    }
+
+    async fn get_block_info(&self, request: Request<BlockInfoRequest>) -> Result<Response<BlockInfoResponse>, Status> {
+        let validator_state = &self.state;
+        let req = request.into_inner();
+        let block_number = req.block_number;
+
+        match validator_state
+            .validator_store
+            .critical_path_store
+            .block_info_store
+            .read(block_number)
+            .await
+        {
+            Ok(opt) => {
+                if let Some(block_info) = opt {
+                    let serialized_block_info = Bytes::from(
+                        bincode::serialize(&block_info).map_err(|_| Status::unknown("Failed to serialize block"))?,
+                    );
+
+                    Ok(Response::new(BlockInfoResponse {
+                        successful: true,
+                        serialized_block_info,
+                    }))
+                } else {
+                    Err(Status::not_found("Block info was not found."))
+                }
+            }
+            Err(err) => Err(Status::unknown(err.to_string())),
+        }
+    }
+
+    async fn get_block(&self, request: Request<BlockRequest>) -> Result<Response<BlockResponse>, Status> {
+        let validator_state = &self.state;
+        let req = request.into_inner();
+        let block_number = req.block_number;
+
+        match validator_state
+            .validator_store
+            .critical_path_store
+            .block_store
+            .read(block_number)
+            .await
+        {
+            Ok(opt) => {
+                if let Some(block) = opt {
+                    let serialized_block = Bytes::from(
+                        bincode::serialize(&block).map_err(|_| Status::unknown("Failed to serialize block"))?,
+                    );
+
+                    Ok(Response::new(BlockResponse {
+                        successful: true,
+                        serialized_block,
+                    }))
+                } else {
+                    Err(Status::not_found("Block was not found."))
+                }
+            }
+            Err(err) => Err(Status::unknown(err.to_string())),
+        }
+    }
+
+    async fn get_latest_metrics(&self, _request: Request<MetricsRequest>) -> Result<Response<MetricsResponse>, Status> {
+        let validator_state = &self.state;
+        let metrics = &validator_state.metrics;
+
+        Ok(Response::new(MetricsResponse {
+            average_latency: metrics.get_average_latency_in_micros(),
+            average_tps: metrics.get_average_tps(),
+        }))
+    }
+
+    // PUT REQUESTS
+
     async fn submit_transaction(
         &self,
         request: tonic::Request<SignedTransaction>,
     ) -> Result<tonic::Response<Empty>, tonic::Status> {
-        trace!("Handling a new transaction with a ValidatorService ValidatorAPI",);
+        trace!("Handling a new transaction in ValidatorGrpc submit_transaction",);
         let signed_transaction = request.into_inner();
         let state = self.state.clone();
         let consensus_adapter = self.consensus_adapter.clone();
@@ -266,10 +384,10 @@ impl TransactionSubmitter for ValidatorService {
         request: tonic::Request<tonic::Streaming<SignedTransaction>>,
     ) -> Result<tonic::Response<Empty>, tonic::Status> {
         let mut signed_transactions = request.into_inner();
-        trace!("Handling a new transaction stream with a ValidatorService ValidatorAPI",);
+        trace!("Handling a new transaction in ValidatorGrpc submit_transaction_stream",);
 
         while let Some(Ok(signed_transaction)) = signed_transactions.next().await {
-            trace!("Streaming a new transaction with a ValidatorService ValidatorAPI",);
+            trace!("Streaming a new transaction with ValidatorGrpc submit_transaction_stream",);
 
             let state = self.state.clone();
             let consensus_adapter = self.consensus_adapter.clone();
@@ -297,7 +415,7 @@ mod test_validator_server {
         account::{account_test_functions::generate_keypair_vec, ValidatorKeyPair, ValidatorPubKeyBytes},
         crypto::{get_key_pair_from_rng, KeypairTraits},
         node::ValidatorInfo,
-        proto::TransactionSubmitterClient,
+        proto::ValidatorGrpcClient,
         utils,
     };
 
@@ -355,8 +473,8 @@ mod test_validator_server {
     pub async fn server_process_transaction() {
         let handle_result = spawn_test_validator_server().await;
         let handle = handle_result.unwrap();
-        let mut client = TransactionSubmitterClient::new(
-            client::connect_lazy(handle.validator_address()).expect("Failed to connect to consensus"),
+        let mut client = ValidatorGrpcClient::new(
+            client::connect_lazy(handle.grpc_address()).expect("Failed to connect to consensus"),
         );
 
         let kp_sender = generate_keypair_vec([0; 32]).pop().unwrap();

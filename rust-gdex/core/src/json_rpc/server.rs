@@ -6,6 +6,7 @@ use gdex_types::json_rpc::{BlockInfoReply, BlockReply};
 use gdex_types::{
     proto::{BlockInfoRequest, LatestBlockInfoRequest, ValidatorGrpcClient},
     transaction::{deserialize_protobuf, SignedTransaction},
+    utils,
 };
 
 use gdex_types::transaction::BlockRequest;
@@ -30,7 +31,7 @@ use tonic::transport::Channel;
 #[rpc(server, client, namespace = "tenex")]
 pub trait Main {
     #[method(name = "submitTransaction")]
-    async fn submit_transaction(&self, signed_transaction_bytes: Vec<u8>) -> RpcResult<String>;
+    async fn submit_transaction(&self, signed_transaction_bytes: String) -> RpcResult<String>;
     #[method(name = "getBlock")]
     async fn get_block(&self, block_number: u64) -> RpcResult<BlockReply>;
     #[method(name = "getBlockInfo")]
@@ -58,16 +59,20 @@ impl JSONRPCService {
 
 #[async_trait]
 impl MainServer for JSONRPCService {
-    async fn submit_transaction(&self, signed_transaction_bytes: Vec<u8>) -> RpcResult<String> {
+    async fn submit_transaction(&self, signed_transaction_hex: String) -> RpcResult<String> {
+        let signed_transaction_bytes: Vec<u8> = utils::decode_bytes_hex(&signed_transaction_hex)
+            .map_err(|_| Error::Custom("Invalid transaction hex".to_string()))?;
+
         let signed_transaction: SignedTransaction = deserialize_protobuf(&signed_transaction_bytes)
             .map_err(|_| Error::Custom("Invalid transaction bytes".to_string()))?;
+
         self.grpc_client
             .lock()
             .await
             .submit_transaction(signed_transaction)
             .await
             .map_err(|e| Error::Custom(e.message().to_string()))?;
-        Ok("Transaction submitted".to_string())
+        Ok("Success".to_string())
     }
 
     async fn get_block(&self, block_number: u64) -> RpcResult<BlockReply> {

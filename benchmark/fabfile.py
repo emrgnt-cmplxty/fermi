@@ -23,7 +23,7 @@ def sandbox(ctx, debug=True):
         'nodes': 4,
         'rate': 5_000,
         'tx_size': 213,
-        'duration': 6000,
+        'duration': 1_000_000,
         'mem_profiling': False,
         'flamegraph': None, # node or None
         'genesis_dir': '.data/',

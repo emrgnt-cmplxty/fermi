@@ -385,7 +385,9 @@ pub mod cluster_test_suite {
         let transaction = create_create_asset_transaction(sender_kp.public(), recent_block_hash, 0);
         let signed_transaction = transaction.sign(&sender_kp).unwrap();
         let signed_transaction_bytes = serialize_protobuf(&signed_transaction);
+        let signed_transaction_hex = utils::encode_bytes_hex(&signed_transaction_bytes);
 
+        println!("signed_transaction_hex={}", signed_transaction_hex);
         let spawner = cluster.get_validator_spawner(0);
         let json_rpc_addr = spawner.get_jsonrpc_address();
 
@@ -394,7 +396,8 @@ pub mod cluster_test_suite {
 
         let client = HttpClientBuilder::default().build(url).unwrap();
 
-        let params = rpc_params![/* signed_transaction_bytes */ signed_transaction_bytes];
+        let params = rpc_params![/* signed_transaction_bytes */ signed_transaction_hex];
         let _response: Result<String, _> = client.request("tenex_submitTransaction", params).await;
+        println!("response={:?}", _response);
     }
 }

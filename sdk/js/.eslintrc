@@ -1,15 +1,15 @@
 {
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-        "project": "./tsconfig.json"
-    },
-    "rules": {
-        "@typescript-eslint/camelcase": 0,
-        "@typescript-eslint/no-var-requires": 0,
-        "@typescript-eslint/ban-ts-ignore": 0
-    },
-    "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier"],
-    "env": {
-        "es6": true
-    }
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "rules": {
+    "@typescript-eslint/camelcase": 0,
+    "@typescript-eslint/no-var-requires": 0,
+    "@typescript-eslint/ban-ts-ignore": 0
+  },
+  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier"],
+  "env": {
+    "es6": true
+  }
 }

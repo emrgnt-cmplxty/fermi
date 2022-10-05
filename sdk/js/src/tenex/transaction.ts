@@ -1,15 +1,60 @@
-import assert from 'assert'
+// IMPORTS
+
+// INTERNAL
+import { BankRequestType, CreateAssetRequest, PaymentRequest } from '../../lib/proto/bank_requests_pb'
 import {
-  CreateMarketplaceRequest,
-  CreateMarketRequest,
-  UpdateMarketParamsRequest,
-  UpdatePricesRequest,
-  UpdateTimeRequest,
+  FuturesRequestType,
+  FuturesLimitOrderRequest,
   AccountDepositRequest,
   AccountWithdrawalRequest,
-  FuturesLimitOrderRequest,
-} from '../../dist/proto/futures_requests_pb'
+  UpdateMarketParamsRequest,
+  CreateMarketRequest,
+  CreateMarketplaceRequest,
+  UpdateTimeRequest,
+  UpdatePricesRequest,
+} from '../../lib/proto/futures_requests_pb'
+import { Transaction, SignedTransaction, Version } from '../../lib/proto/transaction_pb'
 
+// EXTERNAL
+import assert from 'assert'
+
+// EXPORTS
+export {
+  BankRequestType,
+  CreateAssetRequest,
+  PaymentRequest,
+  FuturesRequestType,
+  FuturesLimitOrderRequest,
+  AccountDepositRequest,
+  AccountWithdrawalRequest,
+  UpdateMarketParamsRequest,
+  CreateMarketRequest,
+  CreateMarketplaceRequest,
+  UpdateTimeRequest,
+  UpdatePricesRequest,
+  Transaction,
+  SignedTransaction,
+  Version,
+}
+
+// BANK CONTROLLER UTILITIES
+export function buildPaymentRequest(receiver: Uint8Array, assetId: number, quantity: number): PaymentRequest {
+  const paymentRequest = new PaymentRequest()
+  paymentRequest.setReceiver(receiver)
+  paymentRequest.setAssetId(assetId)
+  paymentRequest.setQuantity(quantity)
+
+  return paymentRequest
+}
+
+export function buildCreateAssetRequest(dummy: number): CreateAssetRequest {
+  const createAssetRequest = new CreateAssetRequest()
+  createAssetRequest.setDummy(dummy)
+
+  return createAssetRequest
+}
+
+// FUTURES CONTROLLER UTILITIES
 export function buildCreateMarketplaceRequest(quoteAssetId: number): CreateMarketplaceRequest {
   const createMarketplaceRequest = new CreateMarketplaceRequest()
   createMarketplaceRequest.setQuoteAssetId(quoteAssetId)

@@ -26,7 +26,7 @@ use narwhal_config::Committee as ConsensusCommittee;
 use narwhal_consensus::ConsensusOutput;
 use narwhal_crypto::KeyPair as ConsensusKeyPair;
 use narwhal_executor::{ExecutionIndices, SerializedTransaction, SubscriberError};
-use narwhal_types::{TransactionProto as SignedTransactionWrapper};
+use narwhal_types::TransactionProto as SignedTransactionWrapper;
 
 // external
 use anyhow::anyhow;

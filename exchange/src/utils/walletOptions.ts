@@ -19,6 +19,7 @@ export enum WalletType {
   TORUS = 'torus',
   FRAME = 'frame',
   GNOSIS = 'gnosis',
+  IN_MEMORY = 'in_memory',
 }
 
 const APP_NAME = 'Aave'

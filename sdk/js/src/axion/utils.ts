@@ -38,3 +38,10 @@ export function getTransactionDigest(transaction: AxionTypes.Transaction): Diges
 export function getTransactionId(transaction: AxionTypes.Transaction): AxionTypes.TransactionId {
   return bytesToHex(getTransactionDigest(transaction), AxionTypes.transactionIdLen)
 }
+
+export function checkSubmissionResult(transaction: AxionTypes.QueriedTransaction) {
+  const status = transaction.executed_transaction.result;
+  if (!Object.prototype.hasOwnProperty.call(status, "Ok")) {
+    throw Error(transaction.executed_transaction.result)
+  }
+}

@@ -1,7 +1,7 @@
 {
-  "name": "gdex-sdk-js",
+  "name": "axion-tenex-js",
   "version": "1.0.0",
-  "author": "Armstrong Park",
+  "author": "Axion Foundation",
   "license": "MIT",
   "main": "dist/index.js",
   "module": "dist/index.js",

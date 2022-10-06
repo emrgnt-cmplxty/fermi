@@ -53,6 +53,10 @@ const navSectionItems: NavItem[] = [
     path: '/app/governance',
   },
   {
+    title: 'faucet',
+    path: '/app/faucet',
+  },
+  {
     title: 'more',
     path: '/app/more',
     children: [

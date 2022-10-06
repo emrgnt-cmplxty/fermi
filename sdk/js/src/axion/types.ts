@@ -1,7 +1,7 @@
 // IMPORTS
 
 // INTERNAL
-import { Transaction, SignedTransaction, Version } from '../../lib/proto/transaction_pb'
+import { Transaction, SignedTransaction, Version } from '../../dist/proto/transaction_pb'
 
 // TYPES
 

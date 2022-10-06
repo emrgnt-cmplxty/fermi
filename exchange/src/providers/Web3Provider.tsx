@@ -8,7 +8,6 @@ import {
 import { AbstractConnector } from '@web3-react/abstract-connector'
 import { useWeb3React } from '@web3-react/core'
 import { TorusConnector } from '@web3-react/torus-connector'
-// import { API_ETH_MOCK_ADDRESS, transactionType } from '@aave/contract-helpers';
 import { WalletConnectConnector } from '@web3-react/walletconnect-connector'
 import { WalletLinkConnector } from '@web3-react/walletlink-connector'
 import { BigNumber, providers } from 'ethers'
@@ -17,8 +16,8 @@ import { ReactElement, useCallback, useEffect, useState } from 'react'
 import { hexToAscii } from 'utils/formatters'
 import { getNetworkConfig } from 'utils/marketsAndNetworksConfig'
 import { getWallet, WalletType } from 'utils/walletOptions'
+import { AxionAccount, AxionUtils } from 'tenex-axion-sdk'
 
-const API_ETH_MOCK_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
 
 type transactionType = {
   value?: string | undefined
@@ -28,34 +27,23 @@ type transactionType = {
   gasLimit?: BigNumber | undefined
   gasPrice?: BigNumber | undefined
   data?: string | undefined
-  chainId?: number | undefined
 }
 
-export type ERC20TokenType = {
-  address: string
-  symbol: string
-  decimals: number
-  image?: string
-  aToken?: boolean
-}
 
 export type Web3Data = {
-  connectWallet: (wallet: WalletType) => Promise<void>
+  connectWallet: (account: AxionAccount.AxionAccount | undefined) => Promise<void>
   disconnectWallet: () => void
-  currentAccount: string
-  connected: boolean
   loading: boolean
+  connected: boolean,
+  publicAddress: string
+  privateKey: Uint8Array,
+  publicKey: Uint8Array,
   provider: JsonRpcProvider | undefined
-  chainId: number
-  switchNetwork: (chainId: number) => Promise<void>
   getTxError: (txHash: string) => Promise<string>
   sendTx: (txData: transactionType) => Promise<TransactionResponse>
-  addERC20Token: (args: ERC20TokenType) => Promise<boolean>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   signTxData: (unsignedData: string) => Promise<SignatureLike>
   error: Error | undefined
-  switchNetworkError: Error | undefined
-  setSwitchNetworkError: (err: Error | undefined) => void
 }
 
 export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({
@@ -73,199 +61,66 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({
   } = useWeb3React<providers.Web3Provider>()
 
   // const [provider, setProvider] = useState<JsonRpcProvider>();
-  const [connector, setConnector] = useState<AbstractConnector>()
-  const [chainId, setChainId] = useState(1)
   const [loading, setLoading] = useState(false)
-  const [currentAccount, setCurrentAccount] = useState('')
-  const [tried, setTried] = useState(false)
-  const [deactivated, setDeactivated] = useState(false)
-  const [selectedWallet, setSelectedWallet] = useState<WalletType>()
-  const [triedSafe, setTriedSafe] = useState(false)
-  const [switchNetworkError, setSwitchNetworkError] = useState<Error>()
-
-  // listener handlers
-  const handleAccountsChanged = (accounts: string[]) => {
-    if (accounts.length > 0 && selectedWallet) {
-      connectWallet(selectedWallet)
-    }
-  }
-
-  // for now we use network changed as it returns the chain string instead of hex
-  // const handleChainChanged = (chainId: number) => {
-  //   console.log('chainChanged', chainId);
-  //   if (selectedWallet) {
-  //     connectWallet(selectedWallet);
-  //   }
-  // };
-
-  const handleNetworkChanged = () => {
-    if (selectedWallet) {
-      connectWallet(selectedWallet)
-    }
-  }
-
-  // Wallet connection and disconnection
-  // clean local storage
-  const cleanConnectorStorage = useCallback((): void => {
-    if (connector instanceof WalletConnectConnector) {
-      localStorage.removeItem('walletconnect')
-    } else if (connector instanceof WalletLinkConnector) {
-      localStorage.removeItem('-walletlink:https://www.walletlink.org:version')
-      localStorage.removeItem(
-        '-walletlink:https://www.walletlink.org:session:id',
-      )
-      localStorage.removeItem(
-        '-walletlink:https://www.walletlink.org:session:secret',
-      )
-      localStorage.removeItem(
-        '-walletlink:https://www.walletlink.org:session:linked',
-      )
-      localStorage.removeItem(
-        '-walletlink:https://www.walletlink.org:AppVersion',
-      )
-      localStorage.removeItem(
-        '-walletlink:https://www.walletlink.org:Addresses',
-      )
-      localStorage.removeItem(
-        '-walletlink:https://www.walletlink.org:walletUsername',
-      )
-    } else if (connector instanceof TorusConnector) {
-      localStorage.removeItem('loglevel:torus.js')
-      localStorage.removeItem('loglevel:torus-embed')
-      localStorage.removeItem('loglevel:http-helpers')
-    }
-  }, [connector])
+  const [publicAddress, setCurrentAccount] = useState('')
+  const [privateKey, setPrivateKey] = useState(Uint8Array.from([]))
+  const [publicKey, setPublicKey] = useState(Uint8Array.from([]))
+  const [connected, setConnected] = useState(false)
 
   const disconnectWallet = useCallback(async () => {
-    cleanConnectorStorage()
-    localStorage.removeItem('walletProvider')
+    localStorage.removeItem('axionPrivateKeyHex')
+    localStorage.removeItem('axionPublicKeyHex')
     deactivate()
-    // @ts-expect-error close can be returned by wallet
-    if (connector && connector.close) {
-      // @ts-expect-error close can be returned by wallet
-      // close will remove wallet from DOM if provided by wallet
-      await connector.close()
-    }
-
-    setSelectedWallet(undefined)
+    setCurrentAccount("")
+    setPublicKey(Uint8Array.from([]))
+    setPrivateKey(Uint8Array.from([]))
+    setConnected(false)
     setLoading(false)
-    setDeactivated(true)
-    setCurrentAccount('')
-    setSwitchNetworkError(undefined)
-  }, [provider, connector])
+}, [])
+
 
   // connect to the wallet specified by wallet type
   const connectWallet = useCallback(
-    async (wallet: WalletType) => {
+    async (account: AxionAccount.AxionAccount | undefined) => {
       setLoading(true)
       try {
-        const connector: AbstractConnector = getWallet(wallet, chainId)
-
-        if (connector instanceof WalletConnectConnector) {
-          connector.walletConnectProvider = undefined
+        if (account === undefined) {
+          account = await AxionAccount.generateAccount()
+          localStorage.setItem('axionPrivateKeyHex', AxionUtils.bytesToHex(account.privateKey))
+          localStorage.setItem('axionPublicKeyHex', AxionUtils.bytesToHex(account.publicKey))
         }
-
-        await activate(connector, undefined, true)
-        setConnector(connector)
-        setSelectedWallet(wallet)
-        setSwitchNetworkError(undefined)
-        localStorage.setItem('walletProvider', wallet.toString())
-        // connector.on('chainChanged', handleChainChanged);
-        connector.on('accountsChanged', handleAccountsChanged)
-
-        // TODO: take a look why this doesnt work fro frame
-        connector.on('networkChanged', handleNetworkChanged)
-
-        const address = await connector.getAccount()
-        setCurrentAccount(address?.toLowerCase() || '')
-        const connectorChainId = await connector.getChainId()
-        setChainId(Number(connectorChainId))
-        // TODO: add listeners to account changed and chain changed
-        setDeactivated(false)
+        setCurrentAccount(account.publicAddress)
+        setPublicKey(account.privateKey)
+        setPrivateKey(account.publicKey)
+        setConnected(true)
         setLoading(false)
       } catch (e) {
-        console.log('error on activation', e)
         setError(e)
-        // disconnectWallet();
+        disconnectWallet();
         setLoading(false)
       }
     },
-    [disconnectWallet],
+    [],
   )
 
-  // first, try connecting to a gnosis safe
-  useEffect(() => {
-    if (!triedSafe) {
-      const gnosisConnector = getWallet(WalletType.GNOSIS)
-      // @ts-expect-error isSafeApp not in abstract connector type
-      gnosisConnector.isSafeApp().then((loadedInSafe) => {
-        if (loadedInSafe) {
-          connectWallet(WalletType.GNOSIS).catch(() => {
-            setTriedSafe(true)
-          })
-        } else {
-          setTriedSafe(true)
-        }
-      })
-    }
-    setTriedSafe(true)
-  }, [connectWallet, setTriedSafe, triedSafe])
-
-  // handle logic to eagerly connect to the injected ethereum provider,
+    // handle logic to eagerly connect to the injected ethereum provider,
   // if it exists and has granted access already
   useEffect(() => {
-    const lastWalletProvider = localStorage.getItem('walletProvider')
-    if (!active && !deactivated && triedSafe) {
-      if (lastWalletProvider) {
-        connectWallet(lastWalletProvider as WalletType).catch(() => {
-          setTried(true)
-        })
-      } else {
-        setTried(true)
-        // For now we will not eagerly connect to injected provider
-        // const injected = getWallet(WalletType.INJECTED);
-        // // @ts-expect-error isAuthorized not in AbstractConnector type. But method is there for
-        // // injected provider
-        // injected.isAuthorized().then((isAuthorized: boolean) => {
-        //   if (isAuthorized) {
-        //     connectWallet(WalletType.INJECTED).catch(() => {
-        //       setTried(true);
-        //     });
-        //   } else {
-        //     setTried(true);
-        //   }
-        // });
-      }
+    const axionPrivateKeyHex = localStorage.getItem('axionPrivateKeyHex')
+    const axionPublicKeyHex = localStorage.getItem('axionPublicKeyHex')
+    if (axionPrivateKeyHex && axionPublicKeyHex) {
+      const account =  {
+        privateKey: AxionUtils.hexToBytes(axionPrivateKeyHex),
+        publicKey: AxionUtils.hexToBytes(axionPublicKeyHex),
+        publicAddress: axionPublicKeyHex
+      } as AxionAccount.AxionAccount
+      connectWallet(account).catch((e) => {throw Error(e)})
     }
-  }, [activate, setTried, active, connectWallet, deactivated, triedSafe])
-
-  // if the connection worked, wait until we get confirmation of that to flip the flag
-  useEffect(() => {
-    if (!tried && active) {
-      setTried(true)
-    }
-  }, [tried, active])
-
-  useEffect(() => {
-    const address = localStorage.getItem('mockWalletAddress')
-    if (address) {
-      setCurrentAccount(address)
-    } else {
-      setCurrentAccount(account?.toLowerCase() || '')
-    }
-  }, [account])
-
-  useEffect(() => {
-    if (provider) {
-      provider.getNetwork().then((networkInfo: Network) => {
-        setChainId(networkInfo.chainId)
-      })
-    }
-  }, [provider])
+  }, [])
 
   // Tx methods
 
-  // TODO: we use from instead of currentAccount because of the mock wallet.
+  // TODO: we use from instead of publicAddress because of the mock wallet.
   // If we used current account then the tx could get executed
   const sendTx = async (
     txData: transactionType,
@@ -284,10 +139,10 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({
 
   // TODO: recheck that it works on all wallets
   const signTxData = async (unsignedData: string): Promise<SignatureLike> => {
-    if (provider && currentAccount) {
+    if (provider && publicAddress) {
       const signature: SignatureLike = await provider.send(
         'eth_signTypedData_v4',
-        [currentAccount, unsignedData],
+        [publicAddress, unsignedData],
       )
 
       return signature
@@ -295,50 +150,6 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({
     throw new Error('Error initializing permit signature')
   }
 
-  const switchNetwork = async (newChainId: number) => {
-    if (provider) {
-      try {
-        await provider.send('wallet_switchEthereumChain', [
-          { chainId: `0x${newChainId.toString(16)}` },
-        ])
-        setSwitchNetworkError(undefined)
-      } catch (switchError) {
-        const networkInfo = getNetworkConfig(newChainId)
-        if (switchError.code === 4902) {
-          try {
-            try {
-              await provider.send('wallet_addEthereumChain', [
-                {
-                  chainId: `0x${newChainId.toString(16)}`,
-                  chainName: networkInfo.name,
-                  nativeCurrency: {
-                    symbol: networkInfo.baseAssetSymbol,
-                    decimals: networkInfo.baseAssetDecimals,
-                  },
-                  rpcUrls: [
-                    ...networkInfo.publicJsonRPCUrl,
-                    networkInfo.publicJsonRPCWSUrl,
-                  ],
-                  blockExplorerUrls: [networkInfo.explorerLink],
-                },
-              ])
-            } catch (error) {
-              if (error.code !== 4001) {
-                throw error
-              }
-            }
-            setSwitchNetworkError(undefined)
-          } catch (addError) {
-            setSwitchNetworkError(addError)
-          }
-        } else if (switchError.code === 4001) {
-          setSwitchNetworkError(undefined)
-        } else {
-          setSwitchNetworkError(switchError)
-        }
-      }
-    }
-  }
 
   const getTxError = async (txHash: string): Promise<string> => {
     if (provider) {
@@ -351,56 +162,22 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({
     throw new Error('Error getting transaction. Provider not found')
   }
 
-  const addERC20Token = async ({
-    address,
-    symbol,
-    decimals,
-    image,
-  }: ERC20TokenType): Promise<boolean> => {
-    // using window.ethereum as looks like its only supported for metamask
-    // and didn't manage to make the call with ethersjs
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const injectedProvider = (window as any).ethereum
-    if (provider && currentAccount && window && injectedProvider) {
-      if (address.toLowerCase() !== API_ETH_MOCK_ADDRESS.toLowerCase()) {
-        await injectedProvider.request({
-          method: 'wallet_watchAsset',
-          params: {
-            type: 'ERC20',
-            options: {
-              address,
-              symbol,
-              decimals,
-              image,
-            },
-          },
-        })
-
-        return true
-      }
-    }
-    return false
-  }
-
   return (
     <Web3Context.Provider
       value={{
         web3ProviderData: {
           connectWallet,
           disconnectWallet,
-          provider,
-          connected: active,
           loading,
-          chainId,
-          switchNetwork,
+          connected,
+          publicAddress,
+          privateKey,
+          publicKey,
+          provider,
           getTxError,
           sendTx,
           signTxData,
-          currentAccount,
-          addERC20Token,
           error,
-          switchNetworkError,
-          setSwitchNetworkError,
         },
       }}
     >

@@ -46,7 +46,7 @@ const SidebarContent = () => {
             </RouterLink>
 
             <Typography variant="h5" component="div">
-              DMEX
+              TENEX
             </Typography>
           </Grid>
         </Grid>{' '}

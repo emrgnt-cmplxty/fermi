@@ -7,10 +7,10 @@ import { UserData } from 'utils/globals'
 
 export const useUserData = (options?: UseQueryOptions<UserData, Error>) => {
   const { settingsState } = useContext(SettingsContext)
-  const { currentAccount } = useWeb3Context()
+  const { publicAddress } = useWeb3Context()
 
   return useQuery<any, Error>(
-    ['userData', currentAccount, settingsState],
+    ['userData', publicAddress, settingsState],
     async () => {
       const totalCollateralUSD = 1000000
       const usedCollateralUSD = 100000

@@ -1,0 +1,22 @@
+{
+  "name": "protonet-standup",
+  "version": "1.0.0",
+  "author": "Axion Foundation",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "files": [
+    "dist/"
+  ],
+  "dependencies": {
+    "tenex-axion-sdk": "file:../../sdk/js"
+  },
+  "scripts": {
+    "deploy-futures": "yarn tsc deployFuturesMarket.ts --esModuleInterop --resolveJsonModule && npx ts-node deployFuturesMarket.ts",
+    "execute-trade": "yarn tsc trade.ts --esModuleInterop --resolveJsonModule && npx ts-node trade.ts",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "typescript": "^4.8.2"
+  }
+}

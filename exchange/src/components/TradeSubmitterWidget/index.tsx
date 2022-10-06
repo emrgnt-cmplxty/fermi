@@ -374,13 +374,13 @@ const OrderButton = ({ tab, setOpenLogin }: OrderButtonProps) => {
         fullWidth
         sx={{
           color: 'black',
-          backgroundColor: currentContext?.currentAccount
+          backgroundColor: currentContext?.publicAddress
             ? tab === TabType.BUY
               ? 'tradeColors.bid'
               : 'tradeColors.ask'
             : undefined,
           '&:hover': {
-            backgroundColor: currentContext?.currentAccount
+            backgroundColor: currentContext?.publicAddress
               ? tab === TabType.BUY
                 ? 'tradeColors.bidBright'
                 : 'tradeColors.askBright'
@@ -388,11 +388,11 @@ const OrderButton = ({ tab, setOpenLogin }: OrderButtonProps) => {
           },
         }}
         onClick={() => {
-          !currentContext?.currentAccount && setOpenLogin(true)
+          !currentContext?.publicAddress && setOpenLogin(true)
         }}
       >
         {getButtonText(
-          currentContext?.currentAccount,
+          currentContext?.publicAddress,
           currentOrderState.baseSymbol || '',
           tab,
         )}

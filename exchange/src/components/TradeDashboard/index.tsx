@@ -247,7 +247,7 @@ export default function TradeDashboard() {
   return (
     <Grid sx={{ mt: -7.25 }}>
       <Helmet>
-        <title>{`${recentTrades?.[0]?.price || ''} BTC-PERP | DMEX`}</title>
+        <title>{`${recentTrades?.[0]?.price || ''} BTC-PERP | TENEX`}</title>
       </Helmet>
       <ResponsiveGridLayout
         class="react-grid-layout"

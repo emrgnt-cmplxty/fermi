@@ -1,7 +1,7 @@
 // IMPORTS
 
 // INTERNAL
-import { BankRequestType, CreateAssetRequest, PaymentRequest } from '../../lib/proto/bank_requests_pb'
+import { BankRequestType, CreateAssetRequest, PaymentRequest } from '../../dist/proto/bank_requests_pb'
 import {
   FuturesRequestType,
   FuturesLimitOrderRequest,
@@ -12,8 +12,8 @@ import {
   CreateMarketplaceRequest,
   UpdateTimeRequest,
   UpdatePricesRequest,
-} from '../../lib/proto/futures_requests_pb'
-import { Transaction, SignedTransaction, Version } from '../../lib/proto/transaction_pb'
+} from '../../dist/proto/futures_requests_pb'
+import { Transaction, SignedTransaction, Version } from '../../dist/proto/transaction_pb'
 
 // EXTERNAL
 import assert from 'assert'

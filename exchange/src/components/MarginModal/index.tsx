@@ -92,7 +92,7 @@ const WalletRow = ({ walletName, walletType }: WalletRowProps) => {
         mb: '8px',
       }}
       size="large"
-      onClick={() => connectWallet(walletType)}
+      onClick={() => connectWallet(undefined)}
       endIcon={getWalletIcon(walletType)}
     >
       {walletName}
@@ -217,13 +217,13 @@ export default function LoginModal({
   openModal,
   setOpenModal,
 }: LoginModalProps) {
-  const { currentAccount } = useWeb3Context()
+  const { publicAddress } = useWeb3Context()
 
   return (
     <Modal
       aria-labelledby="transition-modal-title"
       aria-describedby="transition-modal-description"
-      open={openModal && !currentAccount}
+      open={openModal && !publicAddress}
       onClose={(event, reason) => {
         setOpenModal(false)
       }}

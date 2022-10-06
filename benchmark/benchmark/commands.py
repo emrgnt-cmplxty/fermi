@@ -16,7 +16,7 @@ class CommandMaker:
             f"rm .data/*.key ; "
             f"rm .data/*.blob ; "
             f"rm .data/*controller ; "
-            f"rm .data/.*.json ; "
+            f"rm .data/*.json ; "
             f"mkdir -p {PathMaker.results_path()} ; "
         )
 

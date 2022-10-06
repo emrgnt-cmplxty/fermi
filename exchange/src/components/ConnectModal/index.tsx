@@ -16,9 +16,9 @@ import coinbase from 'assets/icons/wallets/coinbase.svg'
 import frame from 'assets/icons/wallets/frame.svg'
 import torus from 'assets/icons/wallets/torus.svg'
 import walletConnect from 'assets/icons/wallets/walletConnect.svg'
+import KeyIcon from '@mui/icons-material/Key';
 import { useWeb3Context } from 'hooks/useWeb3Context'
 import { WalletType } from 'utils/walletOptions'
-
 import styles from './index.module.scss'
 
 export type WalletRowProps = {
@@ -76,6 +76,10 @@ const WalletRow = ({ walletName, walletType }: WalletRowProps) => {
             alt={`browser wallet icon`}
           />
         )
+      case WalletType.IN_MEMORY:
+          return (
+            <KeyIcon />
+          )
       default:
         return null
     }
@@ -92,8 +96,9 @@ const WalletRow = ({ walletName, walletType }: WalletRowProps) => {
         mb: '8px',
       }}
       size="large"
-      onClick={() => connectWallet(walletType)}
+      onClick={() => connectWallet(undefined)}
       endIcon={getWalletIcon(walletType)}
+      disabled={walletType != WalletType.IN_MEMORY}
     >
       {walletName}
     </Button>
@@ -181,10 +186,15 @@ const WalletSelector = ({ setOpenModal }: WalletSelectorProps) => {
         walletName="Torus"
         walletType={WalletType.TORUS}
       />
-      <WalletRow
+      {/* <WalletRow
         key="frame_wallet"
         walletName="Frame"
         walletType={WalletType.FRAME}
+      /> */}
+      <WalletRow
+        key="in_memory_wallet"
+        walletName="In Browser Memory"
+        walletType={WalletType.IN_MEMORY}
       />
       <Typography
         variant="helper"
@@ -217,13 +227,13 @@ export default function LoginModal({
   openModal,
   setOpenModal,
 }: LoginModalProps) {
-  const { currentAccount } = useWeb3Context()
+  const { publicAddress } = useWeb3Context()
 
   return (
     <Modal
       aria-labelledby="transition-modal-title"
       aria-describedby="transition-modal-description"
-      open={openModal && !currentAccount}
+      open={openModal && !publicAddress}
       onClose={(event, reason) => {
         setOpenModal(false)
       }}

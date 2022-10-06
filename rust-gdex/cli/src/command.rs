@@ -393,6 +393,7 @@ impl GDEXCommand {
 
                 let keystore_path = keystore_path.unwrap_or(gdex_config_dir()?);
                 let keystore_name = keystore_name.unwrap_or_else(|| String::from(GDEX_KEYSTORE_FILENAME));
+                let keystore_name_raw = format!("raw_{}", keystore_name);
 
                 if !keystore_path.exists() {
                     fs::create_dir_all(&keystore_path)?;
@@ -404,6 +405,8 @@ impl GDEXCommand {
                         println!("Writing keypair to file {:?}", keystore_path.join(&keystore_name));
 
                         utils::write_keypair_to_file(&keypair, &keystore_path.join(&keystore_name))
+                            .expect("An error occurred during key generation.");
+                        utils::write_keypair_to_file_raw(&keypair, &keystore_path.join(&keystore_name_raw))
                             .expect("An error occurred during key generation.");
                     }
                     Err(..) => {

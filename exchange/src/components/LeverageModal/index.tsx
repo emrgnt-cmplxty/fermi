@@ -282,7 +282,7 @@ export default function LeverageModal({
   openModal,
   setOpenModal,
 }: LeverageModalProps) {
-  const { currentAccount } = useWeb3Context()
+  const { publicAddress } = useWeb3Context()
 
   return (
     <Modal

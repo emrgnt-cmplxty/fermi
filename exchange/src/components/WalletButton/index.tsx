@@ -110,11 +110,11 @@ export const WalletButton = () => {
 
   const clickMenu = (symbol: string) => {
     if (symbol === 'copy') {
-      navigator.clipboard.writeText(currentContext.currentAccount)
+      navigator.clipboard.writeText(currentContext.publicAddress)
     }
     if (symbol === 'explorer') {
       window.open(
-        `https://etherscan.io/address/${currentContext.currentAccount}`,
+        `https://etherscan.io/address/${currentContext.publicAddress}`,
         '_blank',
       )
     }
@@ -170,7 +170,7 @@ export const WalletButton = () => {
       {currentContext?.connected && (
         <ConnectedButton
           handleConnectedClick={handleConnectedClick}
-          account={currentContext.currentAccount}
+          account={currentContext.publicAddress}
           openMenu={openMenu}
         />
       )}

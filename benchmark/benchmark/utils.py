@@ -47,7 +47,7 @@ class PathMaker:
     @staticmethod
     def key_file(i):
         assert isinstance(i, int) and i >= 0
-        return f'.node-{i}.json'
+        return f'node-{i}.json'
 
     @staticmethod
     def db_path(i, j=None):

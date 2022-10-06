@@ -9,6 +9,7 @@ import { Navigate, RouteObject, useRoutes } from 'react-router-dom'
 const TradePage = lazy(() => import('pages/Trade'))
 const FuturesPage = lazy(() => import('pages/Futures'))
 const MarketsPage = lazy(() => import('pages/Markets'))
+const FaucetPage = lazy(() => import('pages/Faucet'))
 const PortfolioPage = lazy(() => import('pages/Portfolio'))
 
 function AppRoutes() {
@@ -50,6 +51,14 @@ function AppRoutes() {
           element: (
             <Suspense fallback={<Loader />}>
               <FuturesPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'faucet/',
+          element: (
+            <Suspense fallback={<Loader />}>
+              <FaucetPage />
             </Suspense>
           ),
         },

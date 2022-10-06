@@ -2,7 +2,7 @@
 import base64
 from json import dump, load
 from collections import OrderedDict
-from benchmark.utils import multiaddr_to_url_data
+from benchmark.utils import multiaddr_to_url_data, PathMaker
 
 
 class ConfigError(Exception):
@@ -63,6 +63,7 @@ class Committee:
 
         port = base_port
         self.json = {'authorities': OrderedDict(), 'epoch': 0}
+        authority_counter = 0
         for name, hosts in addresses.items():
             host = hosts.pop(0)
             primary_addr = {
@@ -89,7 +90,11 @@ class Committee:
             metrics_address = f'/ip4/{host}/tcp/{port}/http'
             port += 1
 
+            with open(f'.data/raw_%s' % PathMaker.key_file(authority_counter), 'r') as f:
+                private_key = f.read().strip()
+
             self.json['authorities'][name] = {
+                'private_key': private_key,
                 'stake': 1,
                 'grpc_address': grpc_address,
                 'jsonrpc_address': jsonrpc_address,
@@ -97,6 +102,8 @@ class Committee:
                 'primary': primary_addr,
                 'workers': workers_addr
             }
+
+            authority_counter += 1
 
     def primary_addresses(self, faults=0):
         ''' Returns an ordered list of primaries' addresses. '''

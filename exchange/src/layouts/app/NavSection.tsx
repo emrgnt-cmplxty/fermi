@@ -252,7 +252,7 @@ export default function NavSection({ ...rest }) {
                   <img style={{ width: '21px', height: '21px' }} src={logo} />
                 </ListItemIcon>
               </Grid>
-              DMEX
+              TENEX
             </Grid>
           </Typography>
           {navSectionItems.map((item, i) => (

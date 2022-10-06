@@ -19,11 +19,13 @@
     "dev": "vite --port 3001",
     "build": "npx vite build",
     "preview": "vite preview",
-    "prepare": "husky install",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook",
     "test": "jest",
-    "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write"
+    "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write",
+    "prepublishOnly": "pinst --disable",
+    "postpublish": "pinst --enable",
+    "postinstall": "mkdir public; tar -xzC public -f vendor/charting_library.tgz; tar -xzC public -f vendor/datafeeds.tgz; tar -xzC src/ -f vendor/charting_library.tgz"
   },
   "dependencies": {
     "@emotion/react": "^11.9.0",
@@ -48,6 +50,7 @@
     "@web3-react/torus-connector": "^6.2.9",
     "@web3-react/walletconnect-connector": "^7.0.2-alpha.0",
     "@web3-react/walletlink-connector": "^6.2.13",
+    "tenex-axion-sdk": "file:../sdk/js",
     "big.js": "^6.1.1",
     "buffer": "^6.0.3",
     "clsx": "^1.1.1",

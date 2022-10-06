@@ -1,7 +1,7 @@
 // IMPORTS
 import { getPublicKey, sign, utils } from '@noble/ed25519'
-
-export { getPublicKey, sign, utils }
+import * as AxionUtils from './utils'
+export { getPublicKey, sign }
 
 export default class AxionAccount {
   public privateKey: Uint8Array
@@ -11,7 +11,7 @@ export default class AxionAccount {
   constructor(privateKey: Uint8Array, publicKey: Uint8Array) {
     this.privateKey = privateKey
     this.publicKey = publicKey
-    this.publicAddress = utils.bytesToHex(this.publicKey)
+    this.publicAddress = AxionUtils.bytesToHex(this.publicKey)
   }
 }
 

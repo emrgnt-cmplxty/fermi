@@ -1,3 +1,5 @@
+src/charting_library
+public/
 # Logs
 logs
 *.log

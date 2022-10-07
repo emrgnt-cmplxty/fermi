@@ -8,9 +8,6 @@ import {
   Modal,
   Typography,
 } from '@mui/material'
-import { UnsupportedChainIdError } from '@web3-react/core'
-import { NoEthereumProviderError } from '@web3-react/injected-connector'
-import { UserRejectedRequestError } from '@web3-react/walletconnect-connector'
 import browserWallet from 'assets/icons/wallets/browserWallet.svg'
 import coinbase from 'assets/icons/wallets/coinbase.svg'
 import frame from 'assets/icons/wallets/frame.svg'
@@ -18,8 +15,18 @@ import torus from 'assets/icons/wallets/torus.svg'
 import walletConnect from 'assets/icons/wallets/walletConnect.svg'
 import KeyIcon from '@mui/icons-material/Key';
 import { useWeb3Context } from 'hooks/useWeb3Context'
-import { WalletType } from 'utils/walletOptions'
 import styles from './index.module.scss'
+
+export enum WalletType {
+  INJECTED = 'injected',
+  WALLET_CONNECT = 'wallet_connect',
+  WALLET_LINK = 'wallet_link',
+  TORUS = 'torus',
+  FRAME = 'frame',
+  GNOSIS = 'gnosis',
+  IN_MEMORY = 'in_memory',
+}
+
 
 export type WalletRowProps = {
   walletName: string
@@ -119,34 +126,12 @@ const WalletSelector = ({ setOpenModal }: WalletSelectorProps) => {
 
   let blockingError: ErrorType | undefined = undefined
   if (error) {
-    if (error instanceof UnsupportedChainIdError) {
-      blockingError = ErrorType.UNSUPORTED_CHAIN
-    } else if (error instanceof UserRejectedRequestError) {
-      blockingError = ErrorType.USER_REJECTED_REQUEST
-    } else if (error instanceof NoEthereumProviderError) {
-      blockingError = ErrorType.NO_WALLET_DETECTED
-    } else {
       blockingError = ErrorType.UNDETERMINED_ERROR
-    }
-    // TODO: add other errors
   }
 
   const handleBlocking = () => {
-    switch (blockingError) {
-      case ErrorType.UNSUPORTED_CHAIN:
-        return <Trans>Network not supported for this wallet</Trans>
-      case ErrorType.USER_REJECTED_REQUEST:
-        return <Trans>Rejected connection request</Trans>
-      case ErrorType.NO_WALLET_DETECTED:
-        return (
-          <Trans>
-            Wallet not detected. Connect or install wallet and retry
-          </Trans>
-        )
-      default:
-        console.log('Uncatched error: ', error)
-        return <Trans>Error connecting. Try refreshing the page.</Trans>
-    }
+      console.log('Uncaught error: ', blockingError)
+      return <Trans>Error connecting. Try refreshing the page.</Trans>
   }
 
   return (

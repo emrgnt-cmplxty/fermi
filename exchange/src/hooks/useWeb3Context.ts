@@ -2,10 +2,8 @@ import React, { useContext } from 'react'
 
 import { Web3Data } from '../providers/Web3Provider'
 
-// import { Web3Data } from '../web3-data-provider/Web3ContextProvider';
-
 export type Web3ContextData = {
-  web3ProviderData: Web3Data
+  web3ProviderData: Web3Data 
 }
 
 export const Web3Context = React.createContext({} as Web3ContextData)

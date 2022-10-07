@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    // Tells TypeScript to read JS files, as
+    // normally they are ignored as source files
+    "allowJs": true,
+    // Generate d.ts files
+    "declaration": true,
+    // Types should go into this directory.
+    // Removing this would place the .d.ts files
+    // next to the .js files
+    "outDir": "./dist",
+    // go to js file when using IDE functions like
+    // "Go to Definition" in VSCode
+    "declarationMap": true,
+    "target": "es6",
+    "module": "commonjs",
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    // By default all visible ”@types” packages are included in your compilation.
+    // Packages in node_modules/@types of any enclosing folder are considered visible
+    "typeRoots": ["node_modules/@types"],
+    // https://www.typescriptlang.org/tsconfig#esModuleInterop
+    "esModuleInterop": true
+  },
+  "include": ["src/**/*"]
+}

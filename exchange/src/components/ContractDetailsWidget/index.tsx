@@ -1,24 +1,12 @@
 import {
-  Box,
-  Button,
   Divider,
   Grid,
-  LinearProgress,
   Typography,
 } from '@mui/material'
-import { StyledHeader } from 'components/TradeDashboard'
-import WidgetCloseIcon from 'components/WidgetCloseIcon'
 import { useSelectMarketDataSymbol } from 'hooks/react-query/useMarketOverview'
-import { useUserData } from 'hooks/react-query/useUser'
 import { CurrentMarketContext } from 'providers/CurrentMarketProvider'
-import {
-  CurrentOrderContext,
-  orderModeToName,
-} from 'providers/CurrentOrderProvider'
 import { useContext, useState } from 'react'
-import { rgbToHex } from 'utils/formatters'
 import { formatNumber } from 'utils/formatters'
-import { toHHMMSS } from 'utils/formatters'
 
 interface HeaderContentProps {
   marketSymbol: string
@@ -49,18 +37,6 @@ interface ContractDetailsWidget {
 }
 
 const ContractDetailsWidget = () => {
-  const { data: userData } = useUserData()
-  const { currentOrderState } = useContext(CurrentOrderContext)
-
-  const health =
-    (100 * userData?.usedCollateralUSD) / userData?.totalCollateralUSD
-  const AMT_RED = parseInt(String(20 + 2 * health))
-  const AMT_GREEN = parseInt(String(200 - 1.2 * health))
-  const AMT_BLUE = parseInt(String(100 - health))
-  // green -> red & health = 100
-  const startVal = rgbToHex(20, 120, 100)
-  const endVal = rgbToHex(AMT_RED, AMT_GREEN, AMT_BLUE)
-
   const {
     currentMarketState: { marketSymbol, baseSymbol, recentTrades, type },
   } = useContext(CurrentMarketContext)
@@ -68,17 +44,8 @@ const ContractDetailsWidget = () => {
     refetchInterval: 1000,
   })
 
-  const timeToFunding = selectedMarket?.nextFundingTime - new Date()
-  const name =
-    selectedMarket?.type === 'futures'
-      ? `${selectedMarket?.baseName} Futures`
-      : `${selectedMarket?.baseName} Spot`
-  const spot = recentTrades?.[0]?.price || selectedMarket?.price
   const mark = selectedMarket?.markPrice
   const index = selectedMarket?.indexPrice
-  const delta = selectedMarket?.dailyChange
-  const funding = selectedMarket?.fundingRate
-  const fundingTimer = toHHMMSS(timeToFunding / 1000)
   const openInterest = selectedMarket?.openInterest
   const high = selectedMarket?.dailyHigh
   const low = selectedMarket?.dailyLow

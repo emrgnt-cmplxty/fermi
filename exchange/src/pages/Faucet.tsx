@@ -1,19 +1,33 @@
 import { Button, Grid, useMediaQuery } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
-import { useState } from 'react'
-import { MarketType } from 'utils/globals'
 import { useWeb3Context } from 'hooks/useWeb3Context'
-import { testnetData } from '../testnet/config'
-import { AxionClient, AxionTypes, AxionUtils, AxionAccount, TenexTransaction, TenexUtils } from 'tenex-axion-sdk'
+import config from "../../../configs/protonet.json"
 
-async function airdrop(userPublicKey: AxionAccount.publicKey) {
+import { AxionClient, AxionTypes, AxionUtils, AxionAccount } from 'axion-js-sdk'
+import { TenexTransaction, TenexUtils } from 'tenex-js-sdk'
 
-  let client = new AxionClient(testnetData.defaultJSONRPC)
-  let privateKeyHex = testnetData.airdropPrivateKey
+// TODO - type Authority if we keep a workflow like this
+function getJsonRpcUrl(authority: any) {
+  // construct the URL dynamically from the multiaddr
+  var link = authority['jsonrpc_address'].split('/')[2];
+  var port = authority['jsonrpc_address'].split('/')[4];
+  var url = "http://" + link + ":" + port;
+  return url;
+}
+
+async function airdrop(userPublicKey: AxionTypes.PublicKey) {
+  const authorities = Object.keys(config["authorities"])
+  //@ts-ignore
+  const authority = config['authorities'][authorities[0]]
+  console.log("authority = ", authority)
+  console.log("getJsonRpcUrl(authority) = ", getJsonRpcUrl(authority))
+  
+  let client = new AxionClient(getJsonRpcUrl(authority))
+
+  let privateKeyHex = authority.private_key
   let faucetPrivateKey = AxionUtils.hexToBytes(privateKeyHex)
-  let faucetPublicKey = await AxionAccount.getPublicKey(faucetPrivateKey);
-  const paymentRequest = TenexTransaction.buildPaymentRequest(faucetPublicKey, 0, 100)
-
+  
+  const paymentRequest = TenexTransaction.buildPaymentRequest(userPublicKey, 0, 100)
   const signedTransaction = await TenexUtils.buildSignedTransaction(
     /* request */ paymentRequest,
     /* senderPrivKey */ faucetPrivateKey,
@@ -21,7 +35,10 @@ async function airdrop(userPublicKey: AxionAccount.publicKey) {
     /* fee */ undefined,
     /* client */ client
   )
+
+  console.log("Submitting airdrop now")
   const result: AxionTypes.QueriedTransaction = await client.sendAndConfirmTransaction(signedTransaction)
+  console.log("result=", result)
 
   let status = result.executed_transaction.result;
   if (!status.hasOwnProperty("Ok")) {

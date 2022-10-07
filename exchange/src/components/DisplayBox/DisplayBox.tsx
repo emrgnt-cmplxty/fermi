@@ -1,12 +1,7 @@
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
-import { Avatar, Box, Card, Typography } from '@mui/material'
+import {  Box, Typography } from '@mui/material'
 import { Variant } from '@mui/material/styles/createTypography'
 import { SettingsContext } from 'providers/SettingsProvider'
 import { useContext } from 'react'
-import { BaseSymbol } from 'utils/globals'
-import { SYMBOL_TO_IMAGE_DICT } from 'utils/tokenData'
-
-import styles from './index.module.scss'
 
 interface DisplayBoxProps {
   title: string

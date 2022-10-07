@@ -1,0 +1,30 @@
+{
+  "unversionedId": "tutorials/examples/hello-near",
+  "id": "tutorials/examples/hello-near",
+  "title": "Hello Axion",
+  "description": "Hello Axion! is a friendly decentralized App that stores a greeting message. It is one of the simplest",
+  "source": "@site/../docs/3.tutorials/examples/hello-near.md",
+  "sourceDirName": "3.tutorials/examples",
+  "slug": "/tutorials/examples/hello-near",
+  "permalink": "/tutorials/examples/hello-near",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/3.tutorials/examples/hello-near.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "hello-near",
+    "title": "Hello Axion"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Examples & Tutorials",
+    "permalink": "/tutorials/welcome"
+  },
+  "next": {
+    "title": "Count on Axion",
+    "permalink": "/tutorials/examples/count-near"
+  }
+}

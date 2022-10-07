@@ -1,0 +1,26 @@
+{
+  "unversionedId": "sdk/rust/contract-size",
+  "id": "sdk/rust/contract-size",
+  "title": "Reducing Contract Size",
+  "description": "Advice & examples",
+  "source": "@site/../docs/sdk/rust/reduce-size.md",
+  "sourceDirName": "sdk/rust",
+  "slug": "/sdk/rust/contract-size",
+  "permalink": "/sdk/rust/contract-size",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/sdk/rust/reduce-size.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "contract-size",
+    "title": "Reducing Contract Size"
+  },
+  "sidebar": "sdk",
+  "previous": {
+    "title": "Best Practices",
+    "permalink": "/sdk/rust/best-practices"
+  }
+}

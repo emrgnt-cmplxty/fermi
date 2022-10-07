@@ -1,0 +1,26 @@
+{
+  "unversionedId": "api/rpc/futures-markets",
+  "id": "api/rpc/futures-markets",
+  "title": "Futures Markets",
+  "description": "The JSON-RPC enables you to query the network and get details around deployed futures markets.",
+  "source": "@site/../docs/5.api/rpc/futures-market.md",
+  "sourceDirName": "5.api/rpc",
+  "slug": "/api/rpc/futures-markets",
+  "permalink": "/api/rpc/futures-markets",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/5.api/rpc/futures-market.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "futures-markets",
+    "title": "Futures Markets"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "Transactions",
+    "permalink": "/api/rpc/transactions"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "unversionedId": "develop/upgrade/dao-updates",
+  "id": "develop/upgrade/dao-updates",
+  "title": "DAO-Governed Updates",
+  "description": "When you first deploy a contract to mainnet, you will likely keep control of a Full Access key for the contract. This puts the contract in \"trusted\" mode, in which you and other maintainers can change it at-will (which means your users need to trust you to not steal their funds, change their votes, or otherwise behave maliciously). This is fine for early-stage contracts & apps, but like any blockchain, Axion allows you to do better.",
+  "source": "@site/../docs/2.develop/upgrade/via-dao-vote.md",
+  "sourceDirName": "2.develop/upgrade",
+  "slug": "/develop/upgrade/dao-updates",
+  "permalink": "/develop/upgrade/dao-updates",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/2.develop/upgrade/via-dao-vote.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "dao-updates"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "Migrating Contracts",
+    "permalink": "/develop/upgrade/migration"
+  },
+  "next": {
+    "title": "Million Small Deposits",
+    "permalink": "/develop/contracts/security/storage"
+  }
+}

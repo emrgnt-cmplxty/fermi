@@ -1,0 +1,18 @@
+{
+  "pluginId": "near-api-js",
+  "version": "__dummy",
+  "label": "__dummy",
+  "banner": null,
+  "badge": false,
+  "noIndex": false,
+  "className": "docs-version-__dummy",
+  "isLast": true,
+  "docsSidebars": {},
+  "docs": {
+    "dummy": {
+      "id": "dummy",
+      "title": "dummy",
+      "description": "dummy for near-api-js"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "unversionedId": "api/rpc/gas",
+  "id": "api/rpc/gas",
+  "title": "Gas",
+  "description": "The JSON-RPC enables you to query the gas price for a specific block or hash.",
+  "source": "@site/../docs/5.api/rpc/gas.md",
+  "sourceDirName": "5.api/rpc",
+  "slug": "/api/rpc/gas",
+  "permalink": "/api/rpc/gas",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/5.api/rpc/gas.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "gas",
+    "title": "Gas"
+  }
+}

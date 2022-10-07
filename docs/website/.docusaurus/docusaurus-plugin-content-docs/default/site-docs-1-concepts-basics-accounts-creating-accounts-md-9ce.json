@@ -1,0 +1,30 @@
+{
+  "unversionedId": "concepts/basics/accounts/creating-accounts",
+  "id": "concepts/basics/accounts/creating-accounts",
+  "title": "Creating Accounts",
+  "description": "The simplest way to create Axion accounts is through the Axion Wallet, however, you can also create",
+  "source": "@site/../docs/1.concepts/basics/accounts/creating-accounts.md",
+  "sourceDirName": "1.concepts/basics/accounts",
+  "slug": "/concepts/basics/accounts/creating-accounts",
+  "permalink": "/concepts/basics/accounts/creating-accounts",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/1.concepts/basics/accounts/creating-accounts.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "creating-accounts",
+    "title": "Creating Accounts"
+  },
+  "sidebar": "concepts",
+  "previous": {
+    "title": "State",
+    "permalink": "/concepts/basics/accounts/state"
+  },
+  "next": {
+    "title": "Overview",
+    "permalink": "/concepts/basics/transactions/overview"
+  }
+}

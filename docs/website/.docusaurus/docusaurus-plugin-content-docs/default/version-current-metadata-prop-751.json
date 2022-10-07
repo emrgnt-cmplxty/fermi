@@ -1,0 +1,2479 @@
+{
+  "pluginId": "default",
+  "version": "current",
+  "label": "Next",
+  "banner": null,
+  "badge": false,
+  "noIndex": false,
+  "className": "docs-version-current",
+  "isLast": true,
+  "docsSidebars": {
+    "concepts": [
+      {
+        "type": "link",
+        "label": "Home",
+        "href": "/concepts/welcome",
+        "docId": "concepts/welcome"
+      },
+      {
+        "type": "html",
+        "value": "<hr/>"
+      },
+      {
+        "type": "html",
+        "value": "<span class='menu__link'><b><small> The Axion Protocol </small></b></span>"
+      },
+      {
+        "type": "link",
+        "label": "⭐ What is Axion?",
+        "href": "/concepts/basics/protocol",
+        "docId": "concepts/basics/protocol"
+      },
+      {
+        "type": "category",
+        "label": "Accounts",
+        "items": [
+          {
+            "type": "link",
+            "label": "Account Model",
+            "href": "/concepts/basics/accounts/model",
+            "docId": "concepts/basics/accounts/model"
+          },
+          {
+            "type": "link",
+            "label": "Address (Account ID)",
+            "href": "/concepts/basics/accounts/account-id",
+            "docId": "concepts/basics/accounts/account-id"
+          },
+          {
+            "type": "link",
+            "label": "Access Keys",
+            "href": "/concepts/basics/accounts/access-keys",
+            "docId": "concepts/basics/accounts/access-keys"
+          },
+          {
+            "type": "link",
+            "label": "Smart Contract",
+            "href": "/concepts/basics/accounts/smartcontract",
+            "docId": "concepts/basics/accounts/smartcontract"
+          },
+          {
+            "type": "link",
+            "label": "State",
+            "href": "/concepts/basics/accounts/state",
+            "docId": "concepts/basics/accounts/state"
+          },
+          {
+            "type": "html",
+            "value": "<hr/>"
+          },
+          {
+            "type": "link",
+            "label": "Creating Accounts",
+            "href": "/concepts/basics/accounts/creating-accounts",
+            "docId": "concepts/basics/accounts/creating-accounts"
+          }
+        ],
+        "collapsed": true,
+        "collapsible": true
+      },
+      {
+        "type": "category",
+        "label": "Transactions",
+        "items": [
+          {
+            "type": "link",
+            "label": "Overview",
+            "href": "/concepts/basics/transactions/overview",
+            "docId": "concepts/basics/transactions/overview"
+          },
+          {
+            "type": "category",
+            "label": "Gas",
+            "items": [
+              {
+                "type": "link",
+                "label": "Gas",
+                "href": "/concepts/basics/transactions/gas",
+                "docId": "concepts/basics/transactions/gas"
+              },
+              {
+                "type": "link",
+                "label": "Gas - Advanced",
+                "href": "/concepts/basics/transactions/gas-advanced",
+                "docId": "concepts/basics/transactions/gas-advanced"
+              }
+            ],
+            "collapsed": true,
+            "collapsible": true
+          }
+        ],
+        "collapsed": true,
+        "collapsible": true
+      },
+      {
+        "type": "category",
+        "label": "Tokens",
+        "items": [
+          {
+            "type": "link",
+            "label": "Tokens",
+            "href": "/concepts/basics/tokens",
+            "docId": "concepts/basics/tokens"
+          },
+          {
+            "type": "link",
+            "label": "Avoiding Token Loss",
+            "href": "/concepts/basics/token-loss",
+            "docId": "concepts/basics/token-loss"
+          }
+        ],
+        "collapsed": true,
+        "collapsible": true
+      },
+      {
+        "type": "category",
+        "label": "Storage",
+        "items": [
+          {
+            "type": "link",
+            "label": "Storage on Axion",
+            "href": "/concepts/storage/data-storage",
+            "docId": "concepts/storage/data-storage"
+          },
+          {
+            "type": "link",
+            "label": "Storage Staking",
+            "href": "/concepts/storage/storage-staking",
+            "docId": "concepts/storage/storage-staking"
+          },
+          {
+            "type": "link",
+            "label": "Alternative Solutions",
+            "href": "/concepts/storage/storage-solutions",
+            "docId": "concepts/storage/storage-solutions"
+          }
+        ],
+        "collapsed": true,
+        "collapsible": true
+      },
+      {
+        "type": "link",
+        "label": "Validators",
+        "href": "/concepts/basics/validators",
+        "docId": "concepts/basics/validators"
+      },
+      {
+        "type": "link",
+        "label": "Networks",
+        "href": "/concepts/basics/networks",
+        "docId": "concepts/basics/networks"
+      },
+      {
+        "type": "link",
+        "label": "Epoch",
+        "href": "/concepts/basics/epoch",
+        "docId": "concepts/basics/epoch"
+      },
+      {
+        "type": "html",
+        "value": "<hr/>"
+      },
+      {
+        "type": "html",
+        "value": "<span class='menu__link'><b><small> Advanced Topics </small></b></span>"
+      },
+      {
+        "type": "link",
+        "label": "Runtime",
+        "href": "/concepts/basics/runtime",
+        "docId": "concepts/basics/runtime"
+      },
+      {
+        "type": "link",
+        "label": "Specification",
+        "href": "/concepts/advanced/specification",
+        "docId": "concepts/advanced/specification"
+      },
+      {
+        "type": "link",
+        "label": "Papers",
+        "href": "/concepts/advanced/papers",
+        "docId": "concepts/advanced/papers"
+      },
+      {
+        "type": "html",
+        "value": "<hr/>"
+      },
+      {
+        "type": "html",
+        "value": "<span class='menu__link'><b><small> From Web 2 to Web 3 </small></b></span>"
+      },
+      {
+        "type": "link",
+        "label": "Introduction",
+        "href": "/concepts/web3/intro",
+        "docId": "concepts/web3/intro"
+      },
+      {
+        "type": "link",
+        "label": "Blockchain basics",
+        "href": "/concepts/web3/basics",
+        "docId": "concepts/web3/basics"
+      },
+      {
+        "type": "link",
+        "label": "Axion Protocol",
+        "href": "/concepts/web3/near",
+        "docId": "concepts/web3/near"
+      },
+      {
+        "type": "link",
+        "label": "Economics",
+        "href": "/concepts/web3/economics",
+        "docId": "concepts/web3/economics"
+      },
+      {
+        "type": "link",
+        "label": "NFTs for Web 2.0 Apps",
+        "href": "/concepts/web3/nfts",
+        "docId": "concepts/web3/nfts"
+      }
+    ],
+    "develop": [
+      {
+        "type": "link",
+        "label": "Home",
+        "href": "/develop/welcome",
+        "docId": "develop/welcome"
+      },
+      {
+        "type": "html",
+        "value": "<hr/>"
+      },
+      {
+        "type": "html",
+        "value": "<span class='menu__link'><b><small> Building Decentralized Apps </small></b></span>"
+      },
+      {
+        "type": "link",
+        "label": "⭐ Quickstart",
+        "href": "/develop/quickstart-guide",
+        "docId": "develop/quickstart-guide"
+      },
+      {
+        "type": "link",
+        "label": "Examples & Tutorials ↗",
+        "href": "/tutorials/welcome",
+        "docId": "tutorials/welcome"
+      },
+      {
+        "type": "category",
+        "label": "Develop a Contract",
+        "items": [
+          {
+            "type": "link",
+            "label": "What is a Smart Contract?",
+            "href": "/develop/contracts/whatisacontract",
+            "docId": "develop/contracts/whatisacontract"
+          },
+          {
+            "type": "category",
+            "label": "Build",
+            "items": [
+              {
+                "type": "link",
+                "label": "Getting Started",
+                "href": "/develop/contracts/introduction",
+                "docId": "develop/contracts/introduction"
+              },
+              {
+                "type": "link",
+                "label": "Types, Classes & Modules",
+                "href": "/develop/contracts/anatomy",
+                "docId": "develop/contracts/anatomy"
+              },
+              {
+                "type": "link",
+                "label": "Environmental Variables",
+                "href": "/develop/contracts/environment/",
+                "docId": "develop/contracts/environment/environment"
+              },
+              {
+                "type": "link",
+                "label": "Storage & Data Structures",
+                "href": "/develop/contracts/storage",
+                "docId": "develop/contracts/storage"
+              },
+              {
+                "type": "link",
+                "label": "Transfers & Actions",
+                "href": "/develop/contracts/actions",
+                "docId": "develop/contracts/actions"
+              },
+              {
+                "type": "link",
+                "label": "Cross-Contract Calls",
+                "href": "/develop/contracts/crosscontract",
+                "docId": "develop/contracts/crosscontract"
+              },
+              {
+                "type": "link",
+                "label": "✅ Checklist",
+                "href": "/develop/contracts/security/checklist",
+                "docId": "develop/contracts/security/checklist"
+              }
+            ],
+            "collapsed": true,
+            "collapsible": true
+          },
+          {
+            "type": "category",
+            "label": "Test",
+            "items": [
+              {
+                "type": "link",
+                "label": "Introduction",
+                "href": "/develop/testing/introduction",
+                "docId": "develop/testing/introduction"
+              },
+              {
+                "type": "link",
+                "label": "Unit Testing",
+                "href": "/develop/testing/unit-test",
+                "docId": "develop/testing/unit-test"
+              },
+              {
+                "type": "link",
+                "label": "Integration Test",
+                "href": "/develop/testing/integration-test",
+                "docId": "develop/testing/integration-test"
+              },
+              {
+                "type": "html",
+                "value": "<hr/>"
+              },
+              {
+                "type": "link",
+                "label": "Local Development",
+                "href": "/develop/testing/kurtosis-localnet",
+                "docId": "develop/testing/kurtosis-localnet"
+              },
+              {
+                "type": "link",
+                "label": "Workspaces Migration",
+                "href": "/develop/testing/workspaces-migration",
+                "docId": "develop/testing/workspaces-migration"
+              }
+            ],
+            "collapsed": true,
+            "collapsible": true
+          },
+          {
+            "type": "category",
+            "label": "Deploy & Maintain",
+            "items": [
+              {
+                "type": "link",
+                "label": "Deploying and Using",
+                "href": "/develop/deploy",
+                "docId": "develop/deploy"
+              },
+              {
+                "type": "link",
+                "label": "Upgrading and Locking",
+                "href": "/develop/upgrade-and-lock",
+                "docId": "develop/upgrade-and-lock"
+              },
+              {
+                "type": "link",
+                "label": "Migrating Contracts",
+                "href": "/develop/upgrade/migration",
+                "docId": "develop/upgrade/migration"
+              },
+              {
+                "type": "html",
+                "value": "<hr/>"
+              },
+              {
+                "type": "link",
+                "label": "DAO-Governed Updates",
+                "href": "/develop/upgrade/dao-updates",
+                "docId": "develop/upgrade/dao-updates"
+              }
+            ],
+            "collapsed": true,
+            "collapsible": true
+          },
+          {
+            "type": "html",
+            "value": "<hr/>"
+          },
+          {
+            "type": "category",
+            "label": "Notes on Security",
+            "items": [
+              {
+                "type": "link",
+                "label": "Million Small Deposits",
+                "href": "/develop/contracts/security/storage",
+                "docId": "develop/contracts/security/storage"
+              },
+              {
+                "type": "link",
+                "label": "Cross-Contract Calls",
+                "href": "/develop/contracts/security/callbacks",
+                "docId": "develop/contracts/security/callbacks"
+              },
+              {
+                "type": "link",
+                "label": "Ensure it is the User (1yⓃ)",
+                "href": "/develop/contracts/security/one-yocto",
+                "docId": "develop/contracts/security/one-yocto"
+              },
+              {
+                "type": "link",
+                "label": "Sybil Attacks",
+                "href": "/develop/contracts/security/sybil",
+                "docId": "develop/contracts/security/sybil"
+              },
+              {
+                "type": "link",
+                "label": "Front Running",
+                "href": "/develop/contracts/security/frontrunning",
+                "docId": "develop/contracts/security/frontrunning"
+              },
+              {
+                "type": "link",
+                "label": "Random Numbers",
+                "href": "/develop/contracts/security/random",
+                "docId": "develop/contracts/security/random"
+              }
+            ],
+            "collapsed": true,
+            "collapsible": true
+          }
+        ],
+        "collapsed": true,
+        "collapsible": true
+      },
+      {
+        "type": "link",
+        "label": "Build the Web Frontend",
+        "href": "/develop/integrate/frontend",
+        "docId": "develop/integrate/frontend"
+      },
+      {
+        "type": "category",
+        "label": "Monitor User Activity",
+        "items": [
+          {
+            "type": "link",
+            "label": "Track Real Time Events",
+            "href": "/tools/realtime",
+            "docId": "tools/realtime"
+          },
+          {
+            "type": "link",
+            "label": "Query the Blockchain History",
+            "href": "/tools/indexer-for-explorer",
+            "docId": "tools/indexer-for-explorer"
+          }
+        ],
+        "collapsed": true,
+        "collapsible": true
+      },
+      {
+        "type": "html",
+        "value": "<hr/>"
+      },
+      {
+        "type": "html",
+        "value": "<span class='menu__link'><b><small> Developer Tools </small></b></span>"
+      },
+      {
+        "type": "category",
+        "label": "NEAR SDK",
+        "items": [
+          {
+            "type": "link",
+            "label": "JavaScript SDK",
+            "href": "/tools/near-sdk-js",
+            "docId": "tools/near-sdk-js"
+          },
+          {
+            "type": "link",
+            "label": "Rust SDK",
+            "href": "/tools/near-sdk-rs",
+            "docId": "tools/near-sdk-rs"
+          }
+        ],
+        "collapsed": true,
+        "collapsible": true
+      },
+      {
+        "type": "link",
+        "label": "Axion CLI",
+        "href": "/tools/near-cli",
+        "docId": "tools/near-cli"
+      },
+      {
+        "type": "category",
+        "label": "JavaScript API",
+        "items": [
+          {
+            "type": "link",
+            "label": "Using JavaScript API",
+            "href": "/tools/near-api-js/quick-reference",
+            "docId": "tools/near-api-js/quick-reference"
+          },
+          {
+            "type": "link",
+            "label": "Cookbook",
+            "href": "/tools/near-api-js/cookbook",
+            "docId": "tools/near-api-js/cookbook"
+          },
+          {
+            "type": "link",
+            "label": "FAQ",
+            "href": "/tools/near-api-js/faq",
+            "docId": "tools/near-api-js/faq"
+          },
+          {
+            "type": "link",
+            "label": "Handling Passphrases",
+            "href": "https://github.com/near/near-seed-phrase"
+          },
+          {
+            "type": "link",
+            "label": "Type Docs",
+            "href": "https://near.github.io/near-api-js/"
+          }
+        ],
+        "collapsed": true,
+        "collapsible": true
+      },
+      {
+        "type": "link",
+        "label": "JSON-RPC ↗",
+        "href": "/api/rpc/introduction"
+      },
+      {
+        "type": "html",
+        "value": "<hr/>"
+      },
+      {
+        "type": "html",
+        "value": "<span class='menu__link'><b><small> Community Tools </small></b></span>"
+      },
+      {
+        "type": "category",
+        "label": "Wallets & Explorers",
+        "items": [
+          {
+            "type": "link",
+            "label": "👛 Wallets",
+            "href": "https://wallet.near.org"
+          },
+          {
+            "type": "link",
+            "label": "🔗 Explorers",
+            "href": "/tools/explorer",
+            "docId": "tools/explorer"
+          }
+        ],
+        "collapsed": true,
+        "collapsible": true
+      },
+      {
+        "type": "category",
+        "label": "Finance",
+        "items": [
+          {
+            "type": "link",
+            "label": "🌈 Rainbow Bridge",
+            "href": "https://rainbowbridge.app/transfer"
+          },
+          {
+            "type": "link",
+            "label": "💱 Fiat On-Ramp",
+            "href": "https://awesomenear.com/categories/payments"
+          },
+          {
+            "type": "link",
+            "label": "🔮 Oracles",
+            "href": "/develop/relevant-contracts/oracles",
+            "docId": "develop/relevant-contracts/oracles"
+          }
+        ],
+        "collapsed": true,
+        "collapsible": true
+      },
+      {
+        "type": "category",
+        "label": "Governance",
+        "items": [
+          {
+            "type": "link",
+            "label": "🏛️ AstroDAO",
+            "href": "https://astrodao.com/"
+          },
+          {
+            "type": "link",
+            "label": "🔑 Multisig",
+            "href": "https://multisafe.io"
+          }
+        ],
+        "collapsed": true,
+        "collapsible": true
+      },
+      {
+        "type": "html",
+        "value": "<hr/>"
+      },
+      {
+        "type": "html",
+        "value": "<span class='menu__link'><b><small> Virtual Machines </small></b></span>"
+      },
+      {
+        "type": "link",
+        "label": "Aurora (EVM)",
+        "href": "https://aurora.dev"
+      },
+      {
+        "type": "html",
+        "value": "<hr/>"
+      },
+      {
+        "type": "html",
+        "value": "<span class='menu__link'><b><small> Educational Resources </small></b></span>"
+      },
+      {
+        "type": "link",
+        "label": "🎓 NEAR University",
+        "href": "https://near.university"
+      }
+    ],
+    "api": [
+      {
+        "type": "link",
+        "label": "Home",
+        "href": "/api/rpc/introduction",
+        "docId": "api/rpc/introduction"
+      },
+      {
+        "type": "link",
+        "label": "RPC Providers",
+        "href": "/api/rpc/providers",
+        "docId": "api/rpc/providers"
+      },
+      {
+        "type": "html",
+        "value": "<hr/>"
+      },
+      {
+        "type": "html",
+        "value": "<span class='menu__link'><b><small> AXION JSON-RPC </small></b></span>"
+      },
+      {
+        "type": "link",
+        "label": "Setup",
+        "href": "/api/rpc/setup",
+        "docId": "api/rpc/setup"
+      },
+      {
+        "type": "link",
+        "label": "Block",
+        "href": "/api/rpc/block-info",
+        "docId": "api/rpc/block-info"
+      },
+      {
+        "type": "link",
+        "label": "Transactions",
+        "href": "/api/rpc/transactions",
+        "docId": "api/rpc/transactions"
+      },
+      {
+        "type": "html",
+        "value": "<span class='menu__link'><b><small> TENEX JSON-RPC </small></b></span>"
+      },
+      {
+        "type": "link",
+        "label": "Futures Markets",
+        "href": "/api/rpc/futures-markets",
+        "docId": "api/rpc/futures-markets"
+      }
+    ],
+    "tutorials": [
+      {
+        "type": "link",
+        "label": "Home",
+        "href": "/tutorials/welcome",
+        "docId": "tutorials/welcome"
+      },
+      {
+        "type": "html",
+        "value": "<hr/>"
+      },
+      {
+        "type": "html",
+        "value": "<span class='menu__link'><b><small> Basic Examples </small></b></span>"
+      },
+      {
+        "type": "link",
+        "label": "Hello Axion",
+        "href": "/tutorials/examples/hello-near",
+        "docId": "tutorials/examples/hello-near"
+      },
+      {
+        "type": "link",
+        "label": "Count on Axion",
+        "href": "/tutorials/examples/count-near",
+        "docId": "tutorials/examples/count-near"
+      },
+      {
+        "type": "link",
+        "label": "Guest Book",
+        "href": "/tutorials/examples/guest-book",
+        "docId": "tutorials/examples/guest-book"
+      },
+      {
+        "type": "link",
+        "label": "Donation",
+        "href": "/tutorials/examples/donation",
+        "docId": "tutorials/examples/donation"
+      },
+      {
+        "type": "link",
+        "label": "Cross Contract Call",
+        "href": "/tutorials/examples/xcc",
+        "docId": "tutorials/examples/xcc"
+      },
+      {
+        "type": "link",
+        "label": "Coin Flip",
+        "href": "/tutorials/examples/coin-flip",
+        "docId": "tutorials/examples/coin-flip"
+      },
+      {
+        "type": "html",
+        "value": "<hr/>"
+      },
+      {
+        "type": "html",
+        "value": "<span class='menu__link'><b><small> Tutorials </small></b></span>"
+      },
+      {
+        "type": "category",
+        "label": "Fungible Tokens",
+        "items": [
+          {
+            "type": "link",
+            "label": "Fungible Tokens",
+            "href": "/develop/relevant-contracts/ft",
+            "docId": "develop/relevant-contracts/ft"
+          },
+          {
+            "type": "link",
+            "label": "Minting FTs (Simple)",
+            "href": "/tutorials/fts/simple-fts",
+            "docId": "tutorials/fts/simple-fts"
+          }
+        ],
+        "collapsed": true,
+        "collapsible": true
+      },
+      {
+        "type": "category",
+        "label": "Non Fungible Tokens",
+        "items": [
+          {
+            "type": "link",
+            "label": "Non Fungible Tokens",
+            "href": "/develop/relevant-contracts/nft",
+            "docId": "develop/relevant-contracts/nft"
+          },
+          {
+            "type": "link",
+            "label": "Minting NFTs",
+            "href": "/tutorials/nfts/minting-nfts",
+            "docId": "tutorials/nfts/minting-nfts"
+          },
+          {
+            "type": "link",
+            "label": "Minting Front-end",
+            "href": "/tutorials/nfts/minting-nft-frontend",
+            "docId": "tutorials/nfts/minting-nft-frontend"
+          },
+          {
+            "type": "link",
+            "label": "Minecraft NFTs",
+            "href": "/tutorials/nfts/minecraft-nfts",
+            "docId": "tutorials/nfts/minecraft-nfts"
+          },
+          {
+            "type": "link",
+            "label": "Building a Frontend",
+            "href": "https://github.com/near-examples/nft-tutorial-frontend"
+          }
+        ],
+        "collapsed": true,
+        "collapsible": true
+      },
+      {
+        "type": "link",
+        "label": "Autonomous Organizations",
+        "href": "/develop/relevant-contracts/dao",
+        "docId": "develop/relevant-contracts/dao"
+      },
+      {
+        "type": "html",
+        "value": "<hr/>"
+      },
+      {
+        "type": "html",
+        "value": "<span class='menu__link'><b><small> Zero to Hero </small></b></span>"
+      },
+      {
+        "type": "category",
+        "label": "Master NFTs on NEAR",
+        "items": [
+          {
+            "type": "category",
+            "label": "🌐 Using the JavaScript SDK",
+            "items": [
+              {
+                "type": "link",
+                "label": "Introduction",
+                "href": "/tutorials/nfts/js/introduction",
+                "docId": "tutorials/nfts/js/introduction"
+              },
+              {
+                "type": "link",
+                "label": "Pre-deployed Contract",
+                "href": "/tutorials/nfts/js/predeployed-contract",
+                "docId": "tutorials/nfts/js/predeployed-contract"
+              },
+              {
+                "type": "link",
+                "label": "Contract Architecture",
+                "href": "/tutorials/nfts/js/skeleton",
+                "docId": "tutorials/nfts/js/skeleton"
+              },
+              {
+                "type": "link",
+                "label": "Minting",
+                "href": "/tutorials/nfts/js/minting",
+                "docId": "tutorials/nfts/js/minting"
+              },
+              {
+                "type": "link",
+                "label": "Upgrade a Contract",
+                "href": "/tutorials/nfts/js/upgrade-contract",
+                "docId": "tutorials/nfts/js/upgrade-contract"
+              },
+              {
+                "type": "link",
+                "label": "Enumeration",
+                "href": "/tutorials/nfts/js/enumeration",
+                "docId": "tutorials/nfts/js/enumeration"
+              },
+              {
+                "type": "link",
+                "label": "Core",
+                "href": "/tutorials/nfts/js/core",
+                "docId": "tutorials/nfts/js/core"
+              },
+              {
+                "type": "link",
+                "label": "Approvals",
+                "href": "/tutorials/nfts/js/approvals",
+                "docId": "tutorials/nfts/js/approvals"
+              },
+              {
+                "type": "link",
+                "label": "Royalty",
+                "href": "/tutorials/nfts/js/royalty",
+                "docId": "tutorials/nfts/js/royalty"
+              },
+              {
+                "type": "link",
+                "label": "Events",
+                "href": "/tutorials/nfts/js/events",
+                "docId": "tutorials/nfts/js/events"
+              },
+              {
+                "type": "link",
+                "label": "Marketplace",
+                "href": "/tutorials/nfts/js/marketplace",
+                "docId": "tutorials/nfts/js/marketplace"
+              }
+            ],
+            "collapsed": true,
+            "collapsible": true
+          },
+          {
+            "type": "category",
+            "label": "🦀 Using the Rust SDK",
+            "items": [
+              {
+                "type": "link",
+                "label": "Introduction",
+                "href": "/tutorials/nfts/introduction",
+                "docId": "tutorials/nfts/introduction"
+              },
+              {
+                "type": "link",
+                "label": "Pre-deployed Contract",
+                "href": "/tutorials/nfts/predeployed-contract",
+                "docId": "tutorials/nfts/predeployed-contract"
+              },
+              {
+                "type": "link",
+                "label": "Contract Architecture",
+                "href": "/tutorials/nfts/skeleton",
+                "docId": "tutorials/nfts/skeleton"
+              },
+              {
+                "type": "link",
+                "label": "Minting",
+                "href": "/tutorials/nfts/minting",
+                "docId": "tutorials/nfts/minting"
+              },
+              {
+                "type": "link",
+                "label": "Upgrade a Contract",
+                "href": "/tutorials/nfts/upgrade-contract",
+                "docId": "tutorials/nfts/upgrade-contract"
+              },
+              {
+                "type": "link",
+                "label": "Enumeration",
+                "href": "/tutorials/nfts/enumeration",
+                "docId": "tutorials/nfts/enumeration"
+              },
+              {
+                "type": "link",
+                "label": "Core",
+                "href": "/tutorials/nfts/core",
+                "docId": "tutorials/nfts/core"
+              },
+              {
+                "type": "link",
+                "label": "Approvals",
+                "href": "/tutorials/nfts/approvals",
+                "docId": "tutorials/nfts/approvals"
+              },
+              {
+                "type": "link",
+                "label": "Royalty",
+                "href": "/tutorials/nfts/royalty",
+                "docId": "tutorials/nfts/royalty"
+              },
+              {
+                "type": "link",
+                "label": "Events",
+                "href": "/tutorials/nfts/events",
+                "docId": "tutorials/nfts/events"
+              },
+              {
+                "type": "link",
+                "label": "Marketplace",
+                "href": "/tutorials/nfts/marketplace",
+                "docId": "tutorials/nfts/marketplace"
+              },
+              {
+                "type": "link",
+                "label": "Lazy Minting, Collections, and More!",
+                "href": "/tutorials/nfts/series",
+                "docId": "tutorials/nfts/series"
+              }
+            ],
+            "collapsed": true,
+            "collapsible": true
+          }
+        ],
+        "collapsed": true,
+        "collapsible": true
+      },
+      {
+        "type": "category",
+        "label": "Build a Crossword Game",
+        "items": [
+          {
+            "type": "category",
+            "label": "Basics",
+            "items": [
+              {
+                "type": "link",
+                "label": "Overview",
+                "href": "/tutorials/crosswords/basics/overview",
+                "docId": "tutorials/crosswords/basics/overview"
+              },
+              {
+                "type": "link",
+                "label": "Set up Rust and a contract skeleton",
+                "href": "/tutorials/crosswords/basics/set-up-skeleton",
+                "docId": "tutorials/crosswords/basics/set-up-skeleton"
+              },
+              {
+                "type": "link",
+                "label": "Add basic code, create a subaccount, and call methods",
+                "href": "/tutorials/crosswords/basics/add-functions-call",
+                "docId": "tutorials/crosswords/basics/add-functions-call"
+              },
+              {
+                "type": "link",
+                "label": "Hash the solution, unit tests, and an init method",
+                "href": "/tutorials/crosswords/basics/hashing-and-unit-tests",
+                "docId": "tutorials/crosswords/basics/hashing-and-unit-tests"
+              },
+              {
+                "type": "link",
+                "label": "Add simple frontend",
+                "href": "/tutorials/crosswords/basics/simple-frontend",
+                "docId": "tutorials/crosswords/basics/simple-frontend"
+              }
+            ],
+            "collapsed": true,
+            "collapsible": true
+          },
+          {
+            "type": "category",
+            "label": "Beginner",
+            "items": [
+              {
+                "type": "link",
+                "label": "Overview",
+                "href": "/tutorials/crosswords/beginner/overview",
+                "docId": "tutorials/crosswords/beginner/overview"
+              },
+              {
+                "type": "link",
+                "label": "Store multiple puzzles",
+                "href": "/tutorials/crosswords/beginner/collections",
+                "docId": "tutorials/crosswords/beginner/collections"
+              },
+              {
+                "type": "link",
+                "label": "Using structs and enums",
+                "href": "/tutorials/crosswords/beginner/structs-enums",
+                "docId": "tutorials/crosswords/beginner/structs-enums"
+              },
+              {
+                "type": "link",
+                "label": "Actions and sending Axion",
+                "href": "/tutorials/crosswords/beginner/actions",
+                "docId": "tutorials/crosswords/beginner/actions"
+              },
+              {
+                "type": "link",
+                "label": "Add a puzzle",
+                "href": "/tutorials/crosswords/beginner/adding-a-puzzle",
+                "docId": "tutorials/crosswords/beginner/adding-a-puzzle"
+              },
+              {
+                "type": "link",
+                "label": "Access keys and login 1/2",
+                "href": "/tutorials/crosswords/beginner/logging-in",
+                "docId": "tutorials/crosswords/beginner/logging-in"
+              },
+              {
+                "type": "link",
+                "label": "Access keys and login 2/2",
+                "href": "/tutorials/crosswords/beginner/logging-in-implementation",
+                "docId": "tutorials/crosswords/beginner/logging-in-implementation"
+              }
+            ],
+            "collapsed": true,
+            "collapsible": true
+          },
+          {
+            "type": "category",
+            "label": "Intermediate",
+            "items": [
+              {
+                "type": "link",
+                "label": "Overview",
+                "href": "/tutorials/crosswords/intermediate/overview",
+                "docId": "tutorials/crosswords/intermediate/overview"
+              },
+              {
+                "type": "link",
+                "label": "Solution as seed phrase",
+                "href": "/tutorials/crosswords/intermediate/access-key-solution",
+                "docId": "tutorials/crosswords/intermediate/access-key-solution"
+              },
+              {
+                "type": "link",
+                "label": "Seed phrase logic",
+                "href": "/tutorials/crosswords/intermediate/use-seed-phrase",
+                "docId": "tutorials/crosswords/intermediate/use-seed-phrase"
+              },
+              {
+                "type": "link",
+                "label": "Linkdrop contract",
+                "href": "/tutorials/crosswords/intermediate/linkdrop",
+                "docId": "tutorials/crosswords/intermediate/linkdrop"
+              },
+              {
+                "type": "link",
+                "label": "Cross-contract calls, etc.",
+                "href": "/tutorials/crosswords/intermediate/cross-contract-calls",
+                "docId": "tutorials/crosswords/intermediate/cross-contract-calls"
+              },
+              {
+                "type": "link",
+                "label": "Base64 params, wrap up",
+                "href": "/tutorials/crosswords/intermediate/base64vecu8",
+                "docId": "tutorials/crosswords/intermediate/base64vecu8"
+              }
+            ],
+            "collapsed": true,
+            "collapsible": true
+          }
+        ],
+        "collapsed": true,
+        "collapsible": true
+      }
+    ],
+    "sdk": [
+      {
+        "type": "link",
+        "label": "Axion SDKs",
+        "href": "/sdk/welcome",
+        "docId": "sdk/welcome"
+      },
+      {
+        "type": "category",
+        "label": "Rust SDK",
+        "items": [
+          {
+            "type": "link",
+            "label": "Getting Started",
+            "href": "/sdk/rust/introduction",
+            "docId": "sdk/rust/introduction"
+          },
+          {
+            "type": "category",
+            "label": "Structure of a Contract",
+            "items": [
+              {
+                "type": "link",
+                "label": "near_bindgen",
+                "href": "/sdk/rust/contract-structure/near-bindgen",
+                "docId": "sdk/rust/contract-structure/near-bindgen"
+              },
+              {
+                "type": "link",
+                "label": "Collections",
+                "href": "/sdk/rust/contract-structure/collections",
+                "docId": "sdk/rust/contract-structure/collections"
+              },
+              {
+                "type": "link",
+                "label": "Collections Nesting",
+                "href": "/sdk/rust/contract-structure/nesting",
+                "docId": "sdk/rust/contract-structure/nesting"
+              }
+            ],
+            "collapsed": true,
+            "collapsible": true
+          },
+          {
+            "type": "category",
+            "label": "Contract Interface",
+            "items": [
+              {
+                "type": "link",
+                "label": "Public Method Types",
+                "href": "/sdk/rust/contract-interface/public-methods",
+                "docId": "sdk/rust/contract-interface/public-methods"
+              },
+              {
+                "type": "link",
+                "label": "Contract Mutability",
+                "href": "/sdk/rust/contract-interface/contract-mutability",
+                "docId": "sdk/rust/contract-interface/contract-mutability"
+              },
+              {
+                "type": "link",
+                "label": "Private Methods",
+                "href": "/sdk/rust/contract-interface/private-methods",
+                "docId": "sdk/rust/contract-interface/private-methods"
+              },
+              {
+                "type": "link",
+                "label": "Payable Methods",
+                "href": "/sdk/rust/contract-interface/payable-methods",
+                "docId": "sdk/rust/contract-interface/payable-methods"
+              },
+              {
+                "type": "link",
+                "label": "Serialization Protocols",
+                "href": "/sdk/rust/contract-interface/serialization-interface",
+                "docId": "sdk/rust/contract-interface/serialization-interface"
+              }
+            ],
+            "collapsed": true,
+            "collapsible": true
+          },
+          {
+            "type": "category",
+            "label": "Cross-Contract Calls",
+            "items": [
+              {
+                "type": "link",
+                "label": "Callbacks",
+                "href": "/sdk/rust/cross-contract/callbacks",
+                "docId": "sdk/rust/cross-contract/callbacks"
+              }
+            ],
+            "collapsed": true,
+            "collapsible": true
+          },
+          {
+            "type": "category",
+            "label": "Promises",
+            "items": [
+              {
+                "type": "link",
+                "label": "Introduction",
+                "href": "/sdk/rust/promises/intro",
+                "docId": "sdk/rust/promises/intro"
+              },
+              {
+                "type": "link",
+                "label": "Sending $Axion",
+                "href": "/sdk/rust/promises/token-tx",
+                "docId": "sdk/rust/promises/token-tx"
+              },
+              {
+                "type": "link",
+                "label": "Creating Accounts",
+                "href": "/sdk/rust/promises/create-account",
+                "docId": "sdk/rust/promises/create-account"
+              },
+              {
+                "type": "link",
+                "label": "Deploying Contracts",
+                "href": "/sdk/rust/promises/deploy-contract",
+                "docId": "sdk/rust/promises/deploy-contract"
+              }
+            ],
+            "collapsed": true,
+            "collapsible": true
+          },
+          {
+            "type": "category",
+            "label": "Building Contracts",
+            "items": [
+              {
+                "type": "link",
+                "label": "Basic Instructions",
+                "href": "/sdk/rust/building/basics",
+                "docId": "sdk/rust/building/basics"
+              },
+              {
+                "type": "link",
+                "label": "Rapid Prototyping",
+                "href": "/sdk/rust/building/prototyping",
+                "docId": "sdk/rust/building/prototyping"
+              },
+              {
+                "type": "link",
+                "label": "Post Processing Tools",
+                "href": "/sdk/rust/building/post-processing",
+                "docId": "sdk/rust/building/post-processing"
+              },
+              {
+                "type": "link",
+                "label": "Reproducible Builds",
+                "href": "/sdk/rust/building/reproducible-builds",
+                "docId": "sdk/rust/building/reproducible-builds"
+              }
+            ],
+            "collapsed": true,
+            "collapsible": true
+          },
+          {
+            "type": "category",
+            "label": "Testing",
+            "items": [
+              {
+                "type": "link",
+                "label": "Integration Tests",
+                "href": "/sdk/rust/testing/integration-tests",
+                "docId": "sdk/rust/testing/integration-tests"
+              },
+              {
+                "type": "link",
+                "label": "Unit Tests",
+                "href": "/sdk/rust/testing/unit-tests",
+                "docId": "sdk/rust/testing/unit-tests"
+              }
+            ],
+            "collapsed": true,
+            "collapsible": true
+          },
+          {
+            "type": "link",
+            "label": "Best Practices",
+            "href": "/sdk/rust/best-practices",
+            "docId": "sdk/rust/best-practices"
+          },
+          {
+            "type": "link",
+            "label": "Reducing Contract Size",
+            "href": "/sdk/rust/contract-size",
+            "docId": "sdk/rust/contract-size"
+          }
+        ],
+        "collapsed": true,
+        "collapsible": true
+      }
+    ],
+    "integrate": [
+      {
+        "type": "category",
+        "label": "Integration",
+        "items": [
+          {
+            "type": "link",
+            "label": "Exchange Integration",
+            "href": "/integrator/exchange-integration",
+            "docId": "integrator/exchange-integration"
+          },
+          {
+            "type": "link",
+            "label": "Balance Changes",
+            "href": "/integrator/balance-changes",
+            "docId": "integrator/balance-changes"
+          },
+          {
+            "type": "link",
+            "label": "Accounts",
+            "href": "/integrator/accounts",
+            "docId": "integrator/accounts"
+          },
+          {
+            "type": "link",
+            "label": "Create a Transaction",
+            "href": "/integrator/create-transactions",
+            "docId": "integrator/create-transactions"
+          },
+          {
+            "type": "link",
+            "label": "Fungible Tokens",
+            "href": "/integrator/fungible-tokens",
+            "docId": "integrator/fungible-tokens"
+          },
+          {
+            "type": "link",
+            "label": "Implicit Accounts",
+            "href": "/integrator/implicit-accounts",
+            "docId": "integrator/implicit-accounts"
+          }
+        ],
+        "collapsed": true,
+        "collapsible": true
+      },
+      {
+        "type": "category",
+        "label": "Understanding Errors",
+        "items": [
+          {
+            "type": "link",
+            "label": "Introduction",
+            "href": "/integrator/errors/introduction",
+            "docId": "integrator/errors/introduction"
+          },
+          {
+            "type": "link",
+            "label": "Source Code Survey",
+            "href": "/integrator/errors/error-implementation",
+            "docId": "integrator/errors/error-implementation"
+          },
+          {
+            "type": "link",
+            "label": "Avoiding Token Loss",
+            "href": "/integrator/errors/token-loss",
+            "docId": "integrator/errors/token-loss"
+          }
+        ],
+        "collapsed": true,
+        "collapsible": true
+      },
+      {
+        "type": "link",
+        "label": "Integrator FAQ",
+        "href": "/integrator/faq",
+        "docId": "integrator/faq"
+      }
+    ]
+  },
+  "docs": {
+    "api/rpc/access-keys": {
+      "id": "api/rpc/access-keys",
+      "title": "Setup",
+      "description": "In order to use the JSON-RPC you will need to setup the correct RPC endpoints."
+    },
+    "api/rpc/block-info": {
+      "id": "api/rpc/block-info",
+      "title": "Block",
+      "description": "The JSON-RPC enables you to query the network and get details about specific blocks.",
+      "sidebar": "api"
+    },
+    "api/rpc/contracts": {
+      "id": "api/rpc/contracts",
+      "title": "Accounts / Contracts",
+      "description": "The JSON-RPC enables you to view details about accounts and contracts as well as perform contract calls."
+    },
+    "api/rpc/futures-markets": {
+      "id": "api/rpc/futures-markets",
+      "title": "Futures Markets",
+      "description": "The JSON-RPC enables you to query the network and get details around deployed futures markets.",
+      "sidebar": "api"
+    },
+    "api/rpc/gas": {
+      "id": "api/rpc/gas",
+      "title": "Gas",
+      "description": "The JSON-RPC enables you to query the gas price for a specific block or hash."
+    },
+    "api/rpc/introduction": {
+      "id": "api/rpc/introduction",
+      "title": "Axion JSON-RPC",
+      "description": "The JSNO-RPC allows clients to communicate directly with the Axion network. For example,",
+      "sidebar": "api"
+    },
+    "api/rpc/network": {
+      "id": "api/rpc/network",
+      "title": "Network",
+      "description": "The JSON-RPC enables you to query status information for nodes and validators."
+    },
+    "api/rpc/protocol": {
+      "id": "api/rpc/protocol",
+      "title": "Protocol",
+      "description": "The JSON-RPC enables you to retrieve the current genesis and protocol configuration."
+    },
+    "api/rpc/providers": {
+      "id": "api/rpc/providers",
+      "title": "RPC Providers",
+      "description": "There are multiple RPC providers from which you can choose from. These providers will work as intermediaries to help you interact with the Axion network.",
+      "sidebar": "api"
+    },
+    "api/rpc/setup": {
+      "id": "api/rpc/setup",
+      "title": "Setup",
+      "description": "In order to use the JSON-RPC you will need to setup the correct RPC endpoints.",
+      "sidebar": "api"
+    },
+    "api/rpc/transactions": {
+      "id": "api/rpc/transactions",
+      "title": "Transactions",
+      "description": "The JSON-RPC enables you to send transactions and query their status.",
+      "sidebar": "api"
+    },
+    "concepts/advanced/papers": {
+      "id": "concepts/advanced/papers",
+      "title": "Papers",
+      "description": "Join us as we dive deep into our technology.",
+      "sidebar": "concepts"
+    },
+    "concepts/advanced/specification": {
+      "id": "concepts/advanced/specification",
+      "title": "Axion Protocol Specification",
+      "description": "Axion Protocol Specifications and Standards are tracked in two places:",
+      "sidebar": "concepts"
+    },
+    "concepts/advanced/vm": {
+      "id": "concepts/advanced/vm",
+      "title": "Virtual Machine",
+      "description": "Talk about execution here"
+    },
+    "concepts/basics/accounts/access-keys": {
+      "id": "concepts/basics/accounts/access-keys",
+      "title": "Access Keys",
+      "description": "In blockchain, using an account actually refers to using a private key to sign transactions.",
+      "sidebar": "concepts"
+    },
+    "concepts/basics/accounts/account-id": {
+      "id": "concepts/basics/accounts/account-id",
+      "title": "Address (Account ID)",
+      "description": "Every Axion account is identified by a specific address. Based on their name, two types of accounts can be distinguished:",
+      "sidebar": "concepts"
+    },
+    "concepts/basics/accounts/creating-accounts": {
+      "id": "concepts/basics/accounts/creating-accounts",
+      "title": "Creating Accounts",
+      "description": "The simplest way to create Axion accounts is through the Axion Wallet, however, you can also create",
+      "sidebar": "concepts"
+    },
+    "concepts/basics/accounts/model": {
+      "id": "concepts/basics/accounts/model",
+      "title": "Account Model",
+      "description": "In order to join the Axion ecosystem, users need to create an account. Axion accounts are unique when compared to other blockchain ecosystems.",
+      "sidebar": "concepts"
+    },
+    "concepts/basics/accounts/smartcontract": {
+      "id": "concepts/basics/accounts/smartcontract",
+      "title": "Smart Contract",
+      "description": "Smart contracts are pieces of executable code stored in the account's state that have their own storage, and perform transactions in the account's name.",
+      "sidebar": "concepts"
+    },
+    "concepts/basics/accounts/state": {
+      "id": "concepts/basics/accounts/state",
+      "title": "State",
+      "description": "Each account has an state associated where it stores its metadata and all the contract-related data (contract's code + storage).",
+      "sidebar": "concepts"
+    },
+    "concepts/basics/actors": {
+      "id": "concepts/basics/actors",
+      "title": "Actors of Axion",
+      "description": "There are 3 main actors interacting to form the Axion ecosystem:"
+    },
+    "concepts/basics/epoch": {
+      "id": "concepts/basics/epoch",
+      "title": "Epoch",
+      "description": "An epoch is a unit of time when validators of the network remain constant. It is measured in blocks:",
+      "sidebar": "concepts"
+    },
+    "concepts/basics/networks": {
+      "id": "concepts/basics/networks",
+      "title": "Axion Networks",
+      "description": "Axion Protocol operates on several networks each operating with their own independent validators and unique state. These networks are as follows:",
+      "sidebar": "concepts"
+    },
+    "concepts/basics/overview": {
+      "id": "concepts/basics/overview",
+      "title": "Quick Overview",
+      "description": "Lets start with a quick overview of the different elements that compose the Axion blockchain."
+    },
+    "concepts/basics/protocol": {
+      "id": "concepts/basics/protocol",
+      "title": "What is Axion?",
+      "description": "Axion is a SDK that allows developers to build webscale applicatitons within a sovereign blockchain.",
+      "sidebar": "concepts"
+    },
+    "concepts/basics/runtime": {
+      "id": "concepts/basics/runtime",
+      "title": "Runtime",
+      "description": "This section contains videos that explore the core Runtime, its operation, and how it implements cross-contract calls.",
+      "sidebar": "concepts"
+    },
+    "concepts/basics/technical_stuff": {
+      "id": "concepts/basics/technical_stuff",
+      "title": "technical_stuff",
+      "description": "Interaction with Axion is done with JSON JSON-RPC via HTTP calls."
+    },
+    "concepts/basics/token-loss": {
+      "id": "concepts/basics/token-loss",
+      "title": "Avoiding Token Loss",
+      "description": "Careful! Losing tokens means losing money!",
+      "sidebar": "concepts"
+    },
+    "concepts/basics/tokens": {
+      "id": "concepts/basics/tokens",
+      "title": "Tokens",
+      "description": "This is the native token used in Axion Protocol.",
+      "sidebar": "concepts"
+    },
+    "concepts/basics/transactions/gas": {
+      "id": "concepts/basics/transactions/gas",
+      "title": "Gas",
+      "description": "On every transaction you send to the network Axion charges you a fee (aka gas fee). This fee is used to indirectly pay the people that keep the network infrastructure, and to incentivize developers of smart contracts.",
+      "sidebar": "concepts"
+    },
+    "concepts/basics/transactions/gas-advanced": {
+      "id": "concepts/basics/transactions/gas-advanced",
+      "title": "Gas - Advanced",
+      "description": "Costs of complex actions",
+      "sidebar": "concepts"
+    },
+    "concepts/basics/transactions/overview": {
+      "id": "concepts/basics/transactions/overview",
+      "title": "Transactions",
+      "description": "Axion is asynchronous by design. While it opens a wide range of possibilities for smart contracts implementations, it may also add to confusion among beginners and newcomers from other blockchain platforms.",
+      "sidebar": "concepts"
+    },
+    "concepts/basics/validators": {
+      "id": "concepts/basics/validators",
+      "title": "Validators",
+      "description": "The Axion network is decentralized, meaning that multiple people collaborate in order to keep it safe. We call such people validators.",
+      "sidebar": "concepts"
+    },
+    "concepts/storage/data-storage": {
+      "id": "concepts/storage/data-storage",
+      "title": "Data Storage / Collections",
+      "description": "All data stored on the Axion blockchain is done in key / value pairs. There are several collection methods in the SDKs we've created that will help you store your data on chain.",
+      "sidebar": "concepts"
+    },
+    "concepts/storage/storage-solutions": {
+      "id": "concepts/storage/storage-solutions",
+      "title": "Decentralized Storage Solutions",
+      "description": "In this article you'll find a brief overview of different decentralized storage solutions that can be integrated into your decentralized applications (dApps). This will allow you to store large amounts of data using a more economical alternative to native Axion storage.",
+      "sidebar": "concepts"
+    },
+    "concepts/storage/storage-staking": {
+      "id": "concepts/storage/storage-staking",
+      "title": "Storage Staking",
+      "description": "When you deploy a smart contract to Axion, you pay for the storage that this contract requires using a mechanism called storage staking.",
+      "sidebar": "concepts"
+    },
+    "concepts/web3/basics": {
+      "id": "concepts/web3/basics",
+      "title": "Blockchain basics",
+      "description": "Before diving deeper into the intricacies of Web 3 development, let’s explore what it is and why it exists.",
+      "sidebar": "concepts"
+    },
+    "concepts/web3/economics": {
+      "id": "concepts/web3/economics",
+      "title": "Web 3.0 Economics",
+      "description": "With technological decentralization also came economical decentralization. It stands on 3 pillars - Non-Fungible tokens (NFTs), Fungible tokens (FTs) and Decentralized Finance (DeFi).",
+      "sidebar": "concepts"
+    },
+    "concepts/web3/intro": {
+      "id": "concepts/web3/intro",
+      "title": "Moving from Web 2 to Web 3",
+      "description": "by Sigma Software",
+      "sidebar": "concepts"
+    },
+    "concepts/web3/near": {
+      "id": "concepts/web3/near",
+      "title": "Axion Protocol",
+      "description": "For the beginners, it’s always better to start with documentation, and Axion has an excellent one. Here, we only focus on basic concepts which are necessary to understand later chapters, so an entire guideline could be understood without prior Axion knowledge.",
+      "sidebar": "concepts"
+    },
+    "concepts/web3/nfts": {
+      "id": "concepts/web3/nfts",
+      "title": "NFTs for Web 2 Applications",
+      "description": "At the first stage of our Web 3 transformation, let’s decentralize ownership of our digital assets using blockchain technology. By doing this, we can create a user-owned economy, where digital assets are exchanged and traded without any participation or control from the developers. Later, we’ll discuss how to bring it to the next level by adding Fungible Tokens into the mix.",
+      "sidebar": "concepts"
+    },
+    "concepts/welcome": {
+      "id": "concepts/welcome",
+      "title": "Protocol Documentation",
+      "description": "Welcome! Here we will explain you what Axion Protocol is, its components, and how it works.",
+      "sidebar": "concepts"
+    },
+    "develop/contracts/actions": {
+      "id": "develop/contracts/actions",
+      "title": "Transfers & Actions",
+      "description": "Smart contracts can perform specific Actions such as transferring Axion, or calling other contracts.",
+      "sidebar": "develop"
+    },
+    "develop/contracts/anatomy": {
+      "id": "develop/contracts/anatomy",
+      "title": "Anatomy of a Contract",
+      "description": "When writing smart contracts you will leverage common programming concepts such as types, collections, modules, interfaces, objects and more.",
+      "sidebar": "develop"
+    },
+    "develop/contracts/crosscontract": {
+      "id": "develop/contracts/crosscontract",
+      "title": "Cross-Contract Calls",
+      "description": "Cross-contract calls allow your contract to interact with other deployed contracts. This is useful for:",
+      "sidebar": "develop"
+    },
+    "develop/contracts/environment/environment": {
+      "id": "develop/contracts/environment/environment",
+      "title": "Environmental Variables",
+      "description": "Every method execution has an environment associated with information such as:",
+      "sidebar": "develop"
+    },
+    "develop/contracts/environment/table.as": {
+      "id": "develop/contracts/environment/table.as",
+      "title": "table.as",
+      "description": "| Variable Name          | SDK Variable                   | Description                                                            |"
+    },
+    "develop/contracts/environment/table.js": {
+      "id": "develop/contracts/environment/table.js",
+      "title": "table.js",
+      "description": "| Variable Name          | SDK Variable                  | Description                                                                          |"
+    },
+    "develop/contracts/environment/table.rs": {
+      "id": "develop/contracts/environment/table.rs",
+      "title": "table.rs",
+      "description": "| Variable Name          | SDK Variable                    | Description                                                            |"
+    },
+    "develop/contracts/introduction": {
+      "id": "develop/contracts/introduction",
+      "title": "Introduction",
+      "description": "In order to start building a smart contract you need to first properly setup your computer.",
+      "sidebar": "develop"
+    },
+    "develop/contracts/security/callbacks": {
+      "id": "develop/contracts/security/callbacks",
+      "title": "Cross-Contract Calls",
+      "description": "While writing cross-contract calls there is a significant aspect to keep in mind",
+      "sidebar": "develop"
+    },
+    "develop/contracts/security/checklist": {
+      "id": "develop/contracts/security/checklist",
+      "title": "✅ Checklist",
+      "description": "Once you finished developing your smart contract please go through the following list in order to ensure everything is safe for the end user.",
+      "sidebar": "develop"
+    },
+    "develop/contracts/security/frontrunning": {
+      "id": "develop/contracts/security/frontrunning",
+      "title": "Front Running",
+      "description": "In the Axion network, validators have access to the transaction pool, and can therefore see them before they execute. This enables validators to analyze transactions for a potential profit and frontrun them with a transaction of their own.",
+      "sidebar": "develop"
+    },
+    "develop/contracts/security/one-yocto": {
+      "id": "develop/contracts/security/one-yocto",
+      "title": "Ensure it is the User (1yⓃ)",
+      "description": "Axion uses a system of Access Keys to simplify handling accounts.",
+      "sidebar": "develop"
+    },
+    "develop/contracts/security/random": {
+      "id": "develop/contracts/security/random",
+      "title": "Random Numbers",
+      "description": "When writing smart contracts in Axion you have access to a random seed that enables you to create random numbers/strings",
+      "sidebar": "develop"
+    },
+    "develop/contracts/security/reentrancy-attacks": {
+      "id": "develop/contracts/security/reentrancy-attacks",
+      "title": "Reentrancy Attacks",
+      "description": ""
+    },
+    "develop/contracts/security/storage": {
+      "id": "develop/contracts/security/storage",
+      "title": "Million Small Deposits",
+      "description": "On Axion, your contract pays for the storage it uses. This means that the more data you store, the more balance you need to cover for storage. If you don't handle these costs correctly (e.g. asking the user to cover their storage usage), then a million little deposits can drain your contract of its funds.",
+      "sidebar": "develop"
+    },
+    "develop/contracts/security/sybil": {
+      "id": "develop/contracts/security/sybil",
+      "title": "Sybil Attacks",
+      "description": "While developing your smart contract, keep in mind that an individual can potentially create multiple Axion accounts. This is especially relevant in ecosystems involving crowd decisions, such as DAOs.",
+      "sidebar": "develop"
+    },
+    "develop/contracts/standards": {
+      "id": "develop/contracts/standards",
+      "title": "Contract Standards",
+      "description": "The Axion community can prose and vote on a series of standards called Near Enhancement Proposals (NEP). These standards define"
+    },
+    "develop/contracts/storage": {
+      "id": "develop/contracts/storage",
+      "title": "Storage & Data Structures",
+      "description": "Each contract has its own storage, which only they can modify but anyone can see.",
+      "sidebar": "develop"
+    },
+    "develop/contracts/whatisacontract": {
+      "id": "develop/contracts/whatisacontract",
+      "title": "What is a Smart Contract?",
+      "description": "Smart contracts are simple programs that live in a Axion network. As any modern application, smart contracts store data and expose methods to interact with them.",
+      "sidebar": "develop"
+    },
+    "develop/deploy": {
+      "id": "develop/deploy",
+      "title": "Axion CLI - Basics",
+      "description": "After your contract is ready you can deploy it in the Axion network for everyone to use it.",
+      "sidebar": "develop"
+    },
+    "develop/integrate/cli": {
+      "id": "develop/integrate/cli",
+      "title": "Axion CLI - Basics",
+      "description": "Once your contract is deployed you can interact with it using your favorite shell. For this, you can use the Axion CLI."
+    },
+    "develop/integrate/frontend": {
+      "id": "develop/integrate/frontend",
+      "title": "Build the Web Frontend",
+      "description": "Once your contract is deployed it is highly likely that you will want to interact with it from a web frontend.",
+      "sidebar": "develop"
+    },
+    "develop/integrate/rpc": {
+      "id": "develop/integrate/rpc",
+      "title": "Remote Procedural Call",
+      "description": "Here we will only briefly mention how to use the Axion RPC."
+    },
+    "develop/prerequisites": {
+      "id": "develop/prerequisites",
+      "title": "Prerequisites",
+      "description": "In order to develop smart contracts you will need Node.js for javascript, and the rust toolchain for Rust."
+    },
+    "develop/quickstart-guide": {
+      "id": "develop/quickstart-guide",
+      "title": "Hello Axion 👋",
+      "description": "Hi! Let us guide you in starting and interacting with your first decentralized app (dApp) in Axion: Hello Axion.",
+      "sidebar": "develop"
+    },
+    "develop/relevant-contracts/dao": {
+      "id": "develop/relevant-contracts/dao",
+      "title": "Decentralized Autonomous Organizations",
+      "description": "Decentralized Autonomous Organizations (DAOs) are self-organized groups that form around common purposes. Membership, decision making,",
+      "sidebar": "tutorials"
+    },
+    "develop/relevant-contracts/ft": {
+      "id": "develop/relevant-contracts/ft",
+      "title": "Fungible Tokens",
+      "description": "Besides the native Axion token, Axion accounts have access to a multitude of fungible tokens (e.g. these whitelisted tokens). Moreover, it is even possible for users to create their own fungible tokens.",
+      "sidebar": "tutorials"
+    },
+    "develop/relevant-contracts/nft": {
+      "id": "develop/relevant-contracts/nft",
+      "title": "Non Fungible Tokens",
+      "description": "In contrast with fungible tokens, non-fungible tokens (NFT) are unitary and therefore unique. This makes NFTs ideal to represent ownership of assets such as a piece of digital content, or a ticket for an event.",
+      "sidebar": "tutorials"
+    },
+    "develop/relevant-contracts/oracles": {
+      "id": "develop/relevant-contracts/oracles",
+      "title": "Oracles",
+      "description": "Oracles are smart contracts that enable you to query the current price of an asset. Since smart contracts cannot connect to",
+      "sidebar": "develop"
+    },
+    "develop/testing/integration-test": {
+      "id": "develop/testing/integration-test",
+      "title": "Integration Test",
+      "description": "Integration tests enable to deploy your contract in the Axion testnet or a local sandbox, and create test-users to interact with it. In this way, you can thoroughly test your contract in a realistic environment.",
+      "sidebar": "develop"
+    },
+    "develop/testing/introduction": {
+      "id": "develop/testing/introduction",
+      "title": "Introduction",
+      "description": "While developing your smart contract you will want to test that it works as it is supposed to, and moreover, does so securely. In Axion we have developed tools to help you carry out such tests. Basically, there are two types of tests you can perform:",
+      "sidebar": "develop"
+    },
+    "develop/testing/kurtosis-localnet": {
+      "id": "develop/testing/kurtosis-localnet",
+      "title": "Creating a Local Development Environment",
+      "description": "Using Kurtosis Axion Module to develop locally",
+      "sidebar": "develop"
+    },
+    "develop/testing/unit-test": {
+      "id": "develop/testing/unit-test",
+      "title": "Unit Testing",
+      "description": "Unit tests allow you to test the contract methods individually. They are suitable to check the storage is updated correctly, and that methods return their expected values. They are written in the contract's language and execute locally.",
+      "sidebar": "develop"
+    },
+    "develop/testing/workspaces-migration": {
+      "id": "develop/testing/workspaces-migration",
+      "title": "Migrating from Simulation Testing to Workspaces",
+      "description": "Why did we stop supporting Simulation Testing?",
+      "sidebar": "develop"
+    },
+    "develop/upgrade-and-lock": {
+      "id": "develop/upgrade-and-lock",
+      "title": "Upgrading and Locking",
+      "description": "After deploying your contract you might realize that you need to maintain it, either to fix a bug or add new functionality.",
+      "sidebar": "develop"
+    },
+    "develop/upgrade/dao-updates": {
+      "id": "develop/upgrade/dao-updates",
+      "title": "DAO-Governed Updates",
+      "description": "When you first deploy a contract to mainnet, you will likely keep control of a Full Access key for the contract. This puts the contract in \"trusted\" mode, in which you and other maintainers can change it at-will (which means your users need to trust you to not steal their funds, change their votes, or otherwise behave maliciously). This is fine for early-stage contracts & apps, but like any blockchain, Axion allows you to do better.",
+      "sidebar": "develop"
+    },
+    "develop/upgrade/migration": {
+      "id": "develop/upgrade/migration",
+      "title": "Upgrading Contracts: Production App Basics",
+      "description": "When deploying new code to production contracts, you obviously can't destroy old account state, as you do during rapid prototyping. So how to you prevent the dreaded error?",
+      "sidebar": "develop"
+    },
+    "develop/welcome": {
+      "id": "develop/welcome",
+      "title": "Developer Documentation",
+      "description": "Welcome! Here you will find documentation on how to develop decentralized apps using Axion.",
+      "sidebar": "develop"
+    },
+    "integrator/accounts": {
+      "id": "integrator/accounts",
+      "title": "Accounts",
+      "description": "Introduction",
+      "sidebar": "integrate"
+    },
+    "integrator/balance-changes": {
+      "id": "integrator/balance-changes",
+      "title": "Balance changes",
+      "description": "Prerequisites",
+      "sidebar": "integrate"
+    },
+    "integrator/create-transactions": {
+      "id": "integrator/create-transactions",
+      "title": "Create Transactions",
+      "description": "To construct & process transactions you will need our API JavaScript library: near-api-js. There are many ways to create transactions but for this example we'll show you two ways to create a simple token transfer transaction.",
+      "sidebar": "integrate"
+    },
+    "integrator/errors/error-implementation": {
+      "id": "integrator/errors/error-implementation",
+      "title": "Source Code Survey",
+      "description": "This page provides a very high level, sometimes \"pseudocode\", view of error types and related messages as implemented by the Axion platform.",
+      "sidebar": "integrate"
+    },
+    "integrator/errors/introduction": {
+      "id": "integrator/errors/introduction",
+      "title": "Introduction",
+      "description": "did you know?",
+      "sidebar": "integrate"
+    },
+    "integrator/errors/token-loss": {
+      "id": "integrator/errors/token-loss",
+      "title": "Avoiding Token Loss",
+      "description": "Careful! Losing tokens means losing money!",
+      "sidebar": "integrate"
+    },
+    "integrator/exchange-integration": {
+      "id": "integrator/exchange-integration",
+      "title": "Exchange Integration",
+      "description": "Integration Reference",
+      "sidebar": "integrate"
+    },
+    "integrator/faq": {
+      "id": "integrator/faq",
+      "title": "Integrator FAQ",
+      "description": "Orientation",
+      "sidebar": "integrate"
+    },
+    "integrator/fungible-tokens": {
+      "id": "integrator/fungible-tokens",
+      "title": "Fungible tokens",
+      "description": "Introduction",
+      "sidebar": "integrate"
+    },
+    "integrator/implicit-accounts": {
+      "id": "integrator/implicit-accounts",
+      "title": "Implicit Accounts",
+      "description": "Background",
+      "sidebar": "integrate"
+    },
+    "sdk/rust/best-practices": {
+      "id": "sdk/rust/best-practices",
+      "title": "Best Practices",
+      "description": "Enable overflow checks",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/building/basics": {
+      "id": "sdk/rust/building/basics",
+      "title": "Basic Instructions",
+      "description": "To compile release version of the smart contract you can run:",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/building/post-processing": {
+      "id": "sdk/rust/building/post-processing",
+      "title": "Post Processing Tools",
+      "description": "The size of the contract is a critical characteristic. The best way to keep it small is a well-designed minimalistic code with a reduced number of dependencies. It is especially important for large contracts and huge multi-contract dApps that can take a fortune to deploy.",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/building/prototyping": {
+      "id": "sdk/rust/building/prototyping",
+      "title": "Upgrading Contracts: Rapid Prototyping",
+      "description": "When you change the interface of a contract and re-deploy it, you may see this error:",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/building/reproducible-builds": {
+      "id": "sdk/rust/building/reproducible-builds",
+      "title": "Reproducible Builds",
+      "description": "Reproducible builds let different people build the same program and get the exact same outputs as one another. It helps users trust that deployed contracts are built correctly and correspond to the source code. To verify your contract user can build it themselves and check that the binaries are identical.",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/contract-interface/contract-mutability": {
+      "id": "sdk/rust/contract-interface/contract-mutability",
+      "title": "Contract Mutability",
+      "description": "Contract state mutability is handled automatically based on how self is used in the function parameters. Depending on which is used, the #[near_bindgen] macro will generate the respective code to load/deserialize state for any function which uses self and serialize/store state only for when &mut self is used.",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/contract-interface/payable-methods": {
+      "id": "sdk/rust/contract-interface/payable-methods",
+      "title": "Payable Methods",
+      "description": "We can allow methods to accept token transfer together with the function call. This is done so that contracts can define a fee in tokens that needs to be paid when they are used. By default the methods are not payable and they will panic if someone will attempt to transfer tokens to them during the invocation. This is done for safety reason, in case someone accidentally transfers tokens during the function call.",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/contract-interface/private-methods": {
+      "id": "sdk/rust/contract-interface/private-methods",
+      "title": "Private Methods",
+      "description": "When using callbacks",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/contract-interface/public-methods": {
+      "id": "sdk/rust/contract-interface/public-methods",
+      "title": "Public Method Types",
+      "description": "Methods can be called externally by using the pub identifier within the #[near_bindgen] macro which will expose the method in the compiled WASM bytecode.",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/contract-interface/serialization-interface": {
+      "id": "sdk/rust/contract-interface/serialization-interface",
+      "title": "Serialization Protocols",
+      "description": "Serialization formats within the SDK define how data structures are translated into bytes which are needed for passing data into methods of the smart contract or storing data in state. For the case of method parameters, JSON (default) and Borsh are supported with the SDK and for storing data on-chain Borsh is used.",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/contract-size": {
+      "id": "sdk/rust/contract-size",
+      "title": "Reducing Contract Size",
+      "description": "Advice & examples",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/contract-structure/collections": {
+      "id": "sdk/rust/contract-structure/collections",
+      "title": "Collections",
+      "description": "When deciding on data structures to use for the data of the application, it is important to minimize the amount of data read and written to storage but also the amount of data serialized and deserialized to minimize the cost of transactions. It is important to understand the tradeoffs of data structures in your smart contract because it can become a bottleneck as the application scales and migrating the state to the new data structures will come at a cost.",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/contract-structure/near-bindgen": {
+      "id": "sdk/rust/contract-structure/near-bindgen",
+      "title": "near_bindgen",
+      "description": "The #[near_bindgen] macro is used on a struct and the function implementations to generate the necessary code to be a valid Axion contract and expose the intended functions to be able to be called externally.",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/contract-structure/nesting": {
+      "id": "sdk/rust/contract-structure/nesting",
+      "title": "Collections Nesting",
+      "description": "Traditional approach for unique prefixes",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/cross-contract/callbacks": {
+      "id": "sdk/rust/cross-contract/callbacks",
+      "title": "Callbacks",
+      "description": "Axion Protocol is a sharded, proof-of-stake blockchain that behaves differently than proof-of-work blockchains. When interacting with a native Rust (compiled to Wasm) smart contract, cross-contract calls are asynchronous. Callbacks are used to either get the result of a cross-contract call or tell if a cross-contract call has succeeded or failed.",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/introduction": {
+      "id": "sdk/rust/introduction",
+      "title": "Getting Started",
+      "description": "Install Rust and Wasm toolchain",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/promises/create-account": {
+      "id": "sdk/rust/promises/create-account",
+      "title": "Creating Accounts",
+      "description": "You might want to create an account from a contract for many reasons. One example:",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/promises/deploy-contract": {
+      "id": "sdk/rust/promises/deploy-contract",
+      "title": "Deploying Contracts",
+      "description": "You might want your smart contract to deploy subsequent smart contract code for a few reasons:",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/promises/intro": {
+      "id": "sdk/rust/promises/intro",
+      "title": "Promises",
+      "description": "Transactions can be sent asynchronously from a contract through a Promise. Like Promises in many programming languages, these will cause code to be executed in the future. In the case of Axion, this \"in the future\" means a transaction to be executed in the next block_ (or thereabouts), rather than in the same block as the original function call.",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/promises/token-tx": {
+      "id": "sdk/rust/promises/token-tx",
+      "title": "Sending $Axion",
+      "description": "You might want to send tokens from a contract for many reasons.",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/testing/integration-tests": {
+      "id": "sdk/rust/testing/integration-tests",
+      "title": "Integration Tests",
+      "description": "Note: Simulation tests are no longer actively supported. Axion Simulator was meant to be an in-place replacement of a blockchain environment for the purpose of testing Axion contracts. However, simulating Axion ledger turned out to be a much more complex endeavor than was anticipated. Eventually, the idea of workspaces was born - a library for automating workflows and writing tests for Axion smart contracts using a real Axion network (localnet, testnet or mainnet). Thus, Axion Simulator is being deprecated in favor of workspaces-rs, the Rust edition of workspaces. As the two libraries have two vastly different APIs this guide was created to ease the migration process for developers.",
+      "sidebar": "sdk"
+    },
+    "sdk/rust/testing/unit-tests": {
+      "id": "sdk/rust/testing/unit-tests",
+      "title": "Unit Tests",
+      "description": "Testing contract functionality can be done through the cargo test framework. These tests will run with a mocked blockchain and will allow testing function calls directly without having to set up/deploy to a network and sign serialized transactions on this network.",
+      "sidebar": "sdk"
+    },
+    "sdk/welcome": {
+      "id": "sdk/welcome",
+      "title": "Axion SDKs",
+      "description": "Explore our language-specific SDK documentation",
+      "sidebar": "sdk"
+    },
+    "tools/explorer": {
+      "id": "tools/explorer",
+      "title": "Explorer",
+      "description": "An Explorer allows you to quickly obtain information from the blockchain through a friendly user interface.",
+      "sidebar": "develop"
+    },
+    "tools/indexer-for-explorer": {
+      "id": "tools/indexer-for-explorer",
+      "title": "Axion Indexer for Explorer",
+      "description": "While developing a decentralized app you might want to query usage information for a contract such as:",
+      "sidebar": "develop"
+    },
+    "tools/near-api-js/account": {
+      "id": "tools/near-api-js/account",
+      "title": "Account",
+      "description": "You can interact with, create or delete Axion accounts."
+    },
+    "tools/near-api-js/contract": {
+      "id": "tools/near-api-js/contract",
+      "title": "Contract",
+      "description": "When you instantiate an instance of Contract you need to specify the names of the functions you have on your smart contract."
+    },
+    "tools/near-api-js/cookbook": {
+      "id": "tools/near-api-js/cookbook",
+      "title": "Common Use Cases",
+      "description": "The repository contains many recipes that you can readily use to solve common case scenarios.",
+      "sidebar": "develop"
+    },
+    "tools/near-api-js/faq": {
+      "id": "tools/near-api-js/faq",
+      "title": "FAQ for Axion JavaScript API",
+      "description": "A collection of Frequently Asked Questions by the community.",
+      "sidebar": "develop"
+    },
+    "tools/near-api-js/quick-reference": {
+      "id": "tools/near-api-js/quick-reference",
+      "title": "Using JavaScript API to interact with Axion",
+      "description": "What is near-api-js",
+      "sidebar": "develop"
+    },
+    "tools/near-api-js/utils": {
+      "id": "tools/near-api-js/utils",
+      "title": "Utils",
+      "description": "Axion => yoctoNEAR"
+    },
+    "tools/near-api-js/wallet": {
+      "id": "tools/near-api-js/wallet",
+      "title": "Interacting with the Wallet",
+      "description": "Wallet interaction is possible only in the browser, because Axion's Wallet is web-based."
+    },
+    "tools/near-cli": {
+      "id": "tools/near-cli",
+      "title": "Axion CLI",
+      "description": "The Axion Command Line Interface (CLI) is a tool that enables to interact with the Axion network directly from the shell. Among other things,",
+      "sidebar": "develop"
+    },
+    "tools/near-sdk-js": {
+      "id": "tools/near-sdk-js",
+      "title": "JavaScript SDK",
+      "description": "JavaScript is the most popular programming language, used by nearly 14 million developers worldwide. You can write smart-contracts in JavaScript or Typescript, and our SDK will pack them with a lightweight runtime. This can then be compiled into a single Wasm file that can be deployed into the Axion network.",
+      "sidebar": "develop"
+    },
+    "tools/near-sdk-rs": {
+      "id": "tools/near-sdk-rs",
+      "title": "Rust SDK",
+      "description": "Rust is a programming language designed for performance and safety. It is syntactically similar to C++, but can guarantee memory safety without resorting to garbage collection. Rust has proven to be a mature and secure language, which makes it ideal to write smart contracts. Because of this, Rust is the preferred programming language for writing smart contracts on Axion. While there might be a learning curve for those coming from web development, learning Rust enables to write safer and faster contracts. Furthermore, core contracts such as Fungible Tokens and DAOs are currently only available in Rust.",
+      "sidebar": "develop"
+    },
+    "tools/realtime": {
+      "id": "tools/realtime",
+      "title": "Track Real Time Events",
+      "description": "While developing a decentralized app you might want track specific events in real time. For example, you could want",
+      "sidebar": "develop"
+    },
+    "tools/usecases": {
+      "id": "tools/usecases",
+      "title": "Interacting with a Contract",
+      "description": "Here we enumerate case scenarios, and point to where the documentation is present."
+    },
+    "tools/welcome": {
+      "id": "tools/welcome",
+      "title": "Tools",
+      "description": "Welcome! The Axion ecosystem has a complete set of tools for you to make the most out of the Axion network."
+    },
+    "tutorials/crosswords/basics/add-functions-call": {
+      "id": "tutorials/crosswords/basics/add-functions-call",
+      "title": "Alter the smart contract, learning about basics of development",
+      "description": "This section will modify the smart contract skeleton from the previous section. This tutorial will start by writing a contract in a somewhat useless way in order to learn the basics. Once we've got a solid understanding, we'll iterate until we have a crossword puzzle.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/crosswords/basics/hashing-and-unit-tests": {
+      "id": "tutorials/crosswords/basics/hashing-and-unit-tests",
+      "title": "Introduction to basic hashing and adding unit tests",
+      "description": "In the previous section, we stored the crossword solution as plain text as a String type on the smart contract. If we're trying to hide the solution from the users, this isn't a great approach as it'll be public to anyone looking at the state. Let's instead hash our crossword solution and store that instead. There are different ways to hash data, but let's use sha256 which is one of the hashing algorithms available in the Rust SDK.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/crosswords/basics/overview": {
+      "id": "tutorials/crosswords/basics/overview",
+      "title": "Basics overview laying out what will be accomplished in this first section.",
+      "description": "This first chapter of the crossword puzzle tutorial will introduce fundamental concepts to smart contract development in a beginner-friendly way. By the end of this chapter you'll have a proof-of-concept contract that can be interacted with via Axion CLI and a simple frontend that uses the near-api-js library.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/crosswords/basics/set-up-skeleton": {
+      "id": "tutorials/crosswords/basics/set-up-skeleton",
+      "title": "Set up Rust, get a Axion testnet account, Axion CLI, and get a basic smart contract skeleton ready",
+      "description": "In this tutorial we'll get a testnet account, use Axion CLI to add a key to our computer's file system, and set up the basic skeleton of a Rust smart contract.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/crosswords/basics/simple-frontend": {
+      "id": "tutorials/crosswords/basics/simple-frontend",
+      "title": "Add a simple frontend to the crossword puzzle that checks the solution's hash",
+      "description": "This will be the final section in this chapter, where we'll add a simple frontend using React and near-api-js to communicate with the smart contract.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/crosswords/beginner/actions": {
+      "id": "tutorials/crosswords/beginner/actions",
+      "title": "There are several Actions an account can do, including sending the winner of the crossword puzzle Axion using the Transfer Action",
+      "description": "We're going to introduce a new Action: Transfer. In this chapter, we'd like the first person to solve the crossword puzzle to earn some prize money, sent in Axion.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/crosswords/beginner/adding-a-puzzle": {
+      "id": "tutorials/crosswords/beginner/adding-a-puzzle",
+      "title": "Adding a new puzzle now that we're using a collection that can contain multiple crossword puzzles",
+      "description": "We're going to make a new puzzle, which means we need to provide the smart contract with a set of clues and info about the answers.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/crosswords/beginner/collections": {
+      "id": "tutorials/crosswords/beginner/collections",
+      "title": "Store multiple crossword puzzles using a specialized collection in Axion called a LookupMap",
+      "description": "As mentioned in the previous chapter, the online Rust Book is a great reference for folks getting started with Rust, but there are concepts that differ when we're dealing with the blockchain. One of these differences is the use of collections.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/crosswords/beginner/logging-in": {
+      "id": "tutorials/crosswords/beginner/logging-in",
+      "title": "Covering access keys and login",
+      "description": "Previously…",
+      "sidebar": "tutorials"
+    },
+    "tutorials/crosswords/beginner/logging-in-implementation": {
+      "id": "tutorials/crosswords/beginner/logging-in-implementation",
+      "title": "Implementing the login button",
+      "description": "Plan",
+      "sidebar": "tutorials"
+    },
+    "tutorials/crosswords/beginner/overview": {
+      "id": "tutorials/crosswords/beginner/overview",
+      "title": "Highlights of some beginner topics covered.",
+      "description": "In the last chapter we installed Rust and got up and running with a simple smart contract. The contract has a few issues, however, and isn't as powerful as we'd like it to be. For instance, we can only store one crossword puzzle in the smart contract, the frontend is  hardcoded, and we don't offer any incentives to the person who wins.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/crosswords/beginner/structs-enums": {
+      "id": "tutorials/crosswords/beginner/structs-enums",
+      "title": "How to think about structs and enums when writing a Rust smart contract on Axion",
+      "description": "Overview",
+      "sidebar": "tutorials"
+    },
+    "tutorials/crosswords/intermediate/access-key-solution": {
+      "id": "tutorials/crosswords/intermediate/access-key-solution",
+      "title": "Replacing the solution hash with an access key",
+      "description": "So far in this tutorial, the user sends the plaintext solution to the crossword puzzle smart contract, where it's hashed and compared with the known answer.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/crosswords/intermediate/base64vecu8": {
+      "id": "tutorials/crosswords/intermediate/base64vecu8",
+      "title": "Using base64-encoded arguments when we create a new crossword puzzle",
+      "description": "Let's modify our new_puzzle method a bit, and demonstrate how a smart contract author might use base64-encoded arguments.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/crosswords/intermediate/cross-contract-calls": {
+      "id": "tutorials/crosswords/intermediate/cross-contract-calls",
+      "title": "Adding cross-contract calls, access key shuffling, etc.",
+      "description": "To reiterate, we'd like anyone to be able to participate in the crossword puzzle, even folks who don't have a Axion account.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/crosswords/intermediate/linkdrop": {
+      "id": "tutorials/crosswords/intermediate/linkdrop",
+      "title": "Introducing the linkdrop contract we can use",
+      "description": "We're going to take a small detour to talk about the linkdrop smart contract.  It's best that we first understand this contract and its purpose, then discuss calling a method on this contract.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/crosswords/intermediate/overview": {
+      "id": "tutorials/crosswords/intermediate/overview",
+      "title": "Intermediate concepts (cross-contract calls and more)",
+      "description": "This chapter will go a bit faster than the previous ones.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/crosswords/intermediate/use-seed-phrase": {
+      "id": "tutorials/crosswords/intermediate/use-seed-phrase",
+      "title": "Implementing the seed phrase logic from the necessary libraries",
+      "description": "There are two separate things we'll want to do:",
+      "sidebar": "tutorials"
+    },
+    "tutorials/examples/coin-flip": {
+      "id": "tutorials/examples/coin-flip",
+      "title": "Coin Flip",
+      "description": "Coin Flip is a game where the player tries to guess the outcome of a coin flip. It is one of the simplest contracts implementing random numbers.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/examples/count-near": {
+      "id": "tutorials/examples/count-near",
+      "title": "Count on Axion",
+      "description": "Our counter example is a friendly decentralized app that stores a number and exposes methods to increment,",
+      "sidebar": "tutorials"
+    },
+    "tutorials/examples/donation": {
+      "id": "tutorials/examples/donation",
+      "title": "Donation",
+      "description": "Our donation example enables to forward money to an account while keeping track of it.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/examples/guest-book": {
+      "id": "tutorials/examples/guest-book",
+      "title": "Guest Book",
+      "description": "Our Guest Book example is a simple app composed by two main components:",
+      "sidebar": "tutorials"
+    },
+    "tutorials/examples/hello-near": {
+      "id": "tutorials/examples/hello-near",
+      "title": "Hello Axion",
+      "description": "Hello Axion! is a friendly decentralized App that stores a greeting message. It is one of the simplest",
+      "sidebar": "tutorials"
+    },
+    "tutorials/examples/xcc": {
+      "id": "tutorials/examples/xcc",
+      "title": "Cross Contract Call",
+      "description": "This example performs the simplest cross-contract call possible: it calls our Hello Axion example to set and retrieve a greeting.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/fts/simple-fts": {
+      "id": "tutorials/fts/simple-fts",
+      "title": "Minting FTs (Simple)",
+      "description": "In this tutorial, you'll learn how to easily create your own Fungible Tokens (FT) without doing any software development by using a readily-available smart contract.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/approvals": {
+      "id": "tutorials/nfts/approvals",
+      "title": "Approvals",
+      "description": "In this tutorial you'll learn the basics of an approval management system which will allow you to grant others access to transfer NFTs on your behalf. This is the backbone of all NFT marketplaces and allows for some complex yet beautiful scenarios to happen. If you're joining us for the first time, feel free to clone this repository and checkout the 4.core branch to follow along.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/core": {
+      "id": "tutorials/nfts/core",
+      "title": "Core",
+      "description": "In this tutorial you'll learn how to implement the core standards into your smart contract. If you're joining us for the first time, feel free to clone this repo and checkout the 3.enumeration branch to follow along.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/enumeration": {
+      "id": "tutorials/nfts/enumeration",
+      "title": "Enumeration",
+      "description": "In the previous tutorials, you looked at ways to integrate the minting functionality into a skeleton smart contract. In order to get your NFTs to show in the wallet, you also had to deploy a patch fix that implemented one of the enumeration methods. In this tutorial, you'll expand on and finish the rest of the enumeration methods as per the standard",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/events": {
+      "id": "tutorials/nfts/events",
+      "title": "Events",
+      "description": "In this tutorial, you'll learn about the events standard and how to implement it in your smart contract.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/introduction": {
+      "id": "tutorials/nfts/introduction",
+      "title": "NFT Zero to Hero",
+      "description": "In this Zero to Hero series, you'll find a set of tutorials that will cover every aspect of a non-fungible token (NFT) smart contract.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/js/approvals": {
+      "id": "tutorials/nfts/js/approvals",
+      "title": "Approvals",
+      "description": "In this tutorial you'll learn the basics of an approval management system which will allow you to grant others access to transfer NFTs on your behalf. This is the backbone of all NFT marketplaces and allows for some complex yet beautiful scenarios to happen. If you're joining us for the first time, feel free to clone this repository and checkout the 4.core branch to follow along.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/js/core": {
+      "id": "tutorials/nfts/js/core",
+      "title": "Core",
+      "description": "In this tutorial you'll learn how to implement the core standards into your smart contract. If you're joining us for the first time, feel free to clone this repo and checkout the 3.enumeration branch to follow along.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/js/enumeration": {
+      "id": "tutorials/nfts/js/enumeration",
+      "title": "Enumeration",
+      "description": "In the previous tutorials, you looked at ways to integrate the minting functionality into a skeleton smart contract. In order to get your NFTs to show in the wallet, you also had to deploy a patch fix that implemented one of the enumeration methods. In this tutorial, you'll expand on and finish the rest of the enumeration methods as per the standard",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/js/events": {
+      "id": "tutorials/nfts/js/events",
+      "title": "Events",
+      "description": "In this tutorial, you'll learn about the events standard and how to implement it in your smart contract.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/js/introduction": {
+      "id": "tutorials/nfts/js/introduction",
+      "title": "NFT Zero to Hero JavaScript Edition",
+      "description": "In this Zero to Hero series, you'll find a set of tutorials that will cover every aspect of a non-fungible token (NFT) smart contract.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/js/marketplace": {
+      "id": "tutorials/nfts/js/marketplace",
+      "title": "Marketplace",
+      "description": "In this tutorial, you'll learn the basics of an NFT marketplace contract where you can buy and sell non-fungible tokens for $Axion. In the previous tutorials, you went through and created a fully fledged NFT contract that incorporates all the standards found in the NFT standard.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/js/minting": {
+      "id": "tutorials/nfts/js/minting",
+      "title": "Minting",
+      "description": "This is the first of many tutorials in a series where you'll be creating a complete NFT smart contract from scratch that conforms with all the Axion NFT standards. Today you'll learn how to create the logic needed to mint NFTs and have them show up in your Axion wallet. You will be modifying a bare-bones skeleton smart contract by filling in the necessary code snippets needed to add minting functionalities.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/js/predeployed-contract": {
+      "id": "tutorials/nfts/js/predeployed-contract",
+      "title": "Pre-deployed Contract",
+      "description": "Learn how to easily create your own non-fungible tokens without doing any software development by using a readily-available NFT smart contract.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/js/royalty": {
+      "id": "tutorials/nfts/js/royalty",
+      "title": "Royalty",
+      "description": "In this tutorial you'll continue building your non-fungible token (NFT) smart contract, and learn how to implement perpetual royalties into your NFTs. This will allow people to get a percentage of the purchase price when an NFT is sold.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/js/skeleton": {
+      "id": "tutorials/nfts/js/skeleton",
+      "title": "Skeleton and JavaScript Architecture",
+      "description": "In this article, you'll learn about the basic architecture behind the NFT contract that you'll develop while following this \"Zero to Hero\" series.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/js/upgrade-contract": {
+      "id": "tutorials/nfts/js/upgrade-contract",
+      "title": "Upgrading the Contract",
+      "description": "In this tutorial, you'll build off the work you previously did to implement the minting functionality on a skeleton smart contract. You got to the point where NFTs could be minted, however, the wallet had no way of displaying the tokens since your contract didn't implement the method that the wallet was trying to call.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/marketplace": {
+      "id": "tutorials/nfts/marketplace",
+      "title": "Marketplace",
+      "description": "In this tutorial, you'll learn the basics of an NFT marketplace contract where you can buy and sell non-fungible tokens for $Axion. In the previous tutorials, you went through and created a fully fledged NFT contract that incorporates all the standards found in the NFT standard.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/minecraft-nfts": {
+      "id": "tutorials/nfts/minecraft-nfts",
+      "title": "Create NFTs in Minecraft",
+      "description": "In this tutorial you'll learn how to take your custom Minecraft creations and mint the schematics into NFTs on the Axion blockchain!",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/minting": {
+      "id": "tutorials/nfts/minting",
+      "title": "Minting",
+      "description": "This is the first of many tutorials in a series where you'll be creating a complete NFT smart contract from scratch that conforms with all the Axion NFT standards. Today you'll learn how to create the logic needed to mint NFTs and have them show up in your Axion wallet. You will be modifying a bare-bones skeleton smart contract by filling in the necessary code snippets needed to add minting functionalities.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/minting-nft-frontend": {
+      "id": "tutorials/nfts/minting-nft-frontend",
+      "title": "Minting NFT Front-end",
+      "description": "In this tutorial you'll learn how to create a simple NFT front-end and mint a \"Go Team\" NFT on the Axion blockchain straight from your web browser.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/minting-nfts": {
+      "id": "tutorials/nfts/minting-nfts",
+      "title": "Minting NFTs",
+      "description": "In this tutorial you'll learn how to easily create your own NFTs without doing any software development by using a readily-available smart contract and a decentralized storage solution like IPFS.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/predeployed-contract": {
+      "id": "tutorials/nfts/predeployed-contract",
+      "title": "Pre-deployed Contract",
+      "description": "Learn how to easily create your own non-fungible tokens without doing any software development by using a readily-available NFT smart contract.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/royalty": {
+      "id": "tutorials/nfts/royalty",
+      "title": "Royalty",
+      "description": "In this tutorial you'll continue building your non-fungible token (NFT) smart contract, and learn how to implement perpetual royalties into your NFTs. This will allow people to get a percentage of the purchase price when an NFT is sold.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/series": {
+      "id": "tutorials/nfts/series",
+      "title": "Customizing the NFT Contract",
+      "description": "In this tutorial, you'll learn how to take the existing NFT contract you've been working with and modify it to meet some of the most common needs in the ecosystem. This includes:",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/skeleton": {
+      "id": "tutorials/nfts/skeleton",
+      "title": "Skeleton and Rust Architecture",
+      "description": "In this article, you'll learn about the basic architecture behind the NFT contract that you'll develop while following this \"Zero to Hero\" series.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/nfts/upgrade-contract": {
+      "id": "tutorials/nfts/upgrade-contract",
+      "title": "Upgrading the Contract",
+      "description": "In this tutorial, you'll build off the work you previously did to implement the minting functionality on a skeleton smart contract. You got to the point where NFTs could be minted and the wallet correctly picked up on the fact that you owned an NFT. However, it had no way of displaying the tokens since your contract didn't implement the method that the wallet was trying to call.",
+      "sidebar": "tutorials"
+    },
+    "tutorials/welcome": {
+      "id": "tutorials/welcome",
+      "title": "Examples & Tutorials",
+      "description": "Explore our collection of Examples and Tutorials",
+      "sidebar": "tutorials"
+    },
+    "welcome": {
+      "id": "welcome",
+      "title": "Welcome to Axion",
+      "description": "Welcome! This is the starting point for all the documentation in Axion."
+    }
+  }
+}

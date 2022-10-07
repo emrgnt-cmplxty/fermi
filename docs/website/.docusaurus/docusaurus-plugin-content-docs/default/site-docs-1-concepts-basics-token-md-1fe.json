@@ -1,0 +1,30 @@
+{
+  "unversionedId": "concepts/basics/tokens",
+  "id": "concepts/basics/tokens",
+  "title": "Tokens",
+  "description": "This is the native token used in Axion Protocol.",
+  "source": "@site/../docs/1.concepts/basics/token.md",
+  "sourceDirName": "1.concepts/basics",
+  "slug": "/concepts/basics/tokens",
+  "permalink": "/concepts/basics/tokens",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/1.concepts/basics/token.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "tokens",
+    "title": "Tokens"
+  },
+  "sidebar": "concepts",
+  "previous": {
+    "title": "Gas - Advanced",
+    "permalink": "/concepts/basics/transactions/gas-advanced"
+  },
+  "next": {
+    "title": "Avoiding Token Loss",
+    "permalink": "/concepts/basics/token-loss"
+  }
+}

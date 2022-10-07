@@ -1,0 +1,30 @@
+{
+  "unversionedId": "tutorials/examples/donation",
+  "id": "tutorials/examples/donation",
+  "title": "Donation",
+  "description": "Our donation example enables to forward money to an account while keeping track of it.",
+  "source": "@site/../docs/3.tutorials/examples/donation.md",
+  "sourceDirName": "3.tutorials/examples",
+  "slug": "/tutorials/examples/donation",
+  "permalink": "/tutorials/examples/donation",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/3.tutorials/examples/donation.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "donation",
+    "title": "Donation"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Guest Book",
+    "permalink": "/tutorials/examples/guest-book"
+  },
+  "next": {
+    "title": "Cross Contract Call",
+    "permalink": "/tutorials/examples/xcc"
+  }
+}

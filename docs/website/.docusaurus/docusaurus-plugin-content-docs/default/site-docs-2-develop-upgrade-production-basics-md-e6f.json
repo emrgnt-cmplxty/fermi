@@ -1,0 +1,31 @@
+{
+  "unversionedId": "develop/upgrade/migration",
+  "id": "develop/upgrade/migration",
+  "title": "Upgrading Contracts: Production App Basics",
+  "description": "When deploying new code to production contracts, you obviously can't destroy old account state, as you do during rapid prototyping. So how to you prevent the dreaded error?",
+  "source": "@site/../docs/2.develop/upgrade/production-basics.md",
+  "sourceDirName": "2.develop/upgrade",
+  "slug": "/develop/upgrade/migration",
+  "permalink": "/develop/upgrade/migration",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/2.develop/upgrade/production-basics.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "migration",
+    "sidebar_label": "Migrating Contracts",
+    "title": "Upgrading Contracts: Production App Basics"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "Upgrading and Locking",
+    "permalink": "/develop/upgrade-and-lock"
+  },
+  "next": {
+    "title": "DAO-Governed Updates",
+    "permalink": "/develop/upgrade/dao-updates"
+  }
+}

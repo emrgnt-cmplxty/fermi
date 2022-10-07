@@ -1,0 +1,28 @@
+{
+  "unversionedId": "concepts/welcome",
+  "id": "concepts/welcome",
+  "title": "Protocol Documentation",
+  "description": "Welcome! Here we will explain you what Axion Protocol is, its components, and how it works.",
+  "source": "@site/../docs/1.concepts/welcome.md",
+  "sourceDirName": "1.concepts",
+  "slug": "/concepts/welcome",
+  "permalink": "/concepts/welcome",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/1.concepts/welcome.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "welcome",
+    "title": "Protocol Documentation",
+    "sidebar_label": "Home",
+    "hide_table_of_contents": true
+  },
+  "sidebar": "concepts",
+  "next": {
+    "title": "⭐ What is Axion?",
+    "permalink": "/concepts/basics/protocol"
+  }
+}

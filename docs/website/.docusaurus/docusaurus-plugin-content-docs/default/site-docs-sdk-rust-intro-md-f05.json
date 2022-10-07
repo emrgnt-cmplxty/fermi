@@ -1,0 +1,29 @@
+{
+  "unversionedId": "sdk/rust/introduction",
+  "id": "sdk/rust/introduction",
+  "title": "Getting Started",
+  "description": "Install Rust and Wasm toolchain",
+  "source": "@site/../docs/sdk/rust/intro.md",
+  "sourceDirName": "sdk/rust",
+  "slug": "/sdk/rust/introduction",
+  "permalink": "/sdk/rust/introduction",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/sdk/rust/intro.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "introduction"
+  },
+  "sidebar": "sdk",
+  "previous": {
+    "title": "Axion SDKs",
+    "permalink": "/sdk/welcome"
+  },
+  "next": {
+    "title": "near_bindgen",
+    "permalink": "/sdk/rust/contract-structure/near-bindgen"
+  }
+}

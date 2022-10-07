@@ -1,0 +1,22 @@
+{
+  "unversionedId": "tools/near-api-js/utils",
+  "id": "tools/near-api-js/utils",
+  "title": "Utils",
+  "description": "Axion => yoctoNEAR",
+  "source": "@site/../docs/4.tools/near-api-js/naj-utils.md",
+  "sourceDirName": "4.tools/near-api-js",
+  "slug": "/tools/near-api-js/utils",
+  "permalink": "/tools/near-api-js/utils",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/4.tools/near-api-js/naj-utils.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "utils",
+    "title": "Utils",
+    "sidebar_label": "Utils"
+  }
+}

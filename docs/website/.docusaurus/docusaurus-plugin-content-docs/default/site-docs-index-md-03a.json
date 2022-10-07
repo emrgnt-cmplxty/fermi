@@ -1,0 +1,22 @@
+{
+  "unversionedId": "welcome",
+  "id": "welcome",
+  "title": "Welcome to Axion",
+  "description": "Welcome! This is the starting point for all the documentation in Axion.",
+  "source": "@site/../docs/index.md",
+  "sourceDirName": ".",
+  "slug": "/",
+  "permalink": "/",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/index.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "welcome",
+    "title": "Welcome to Axion",
+    "hide_table_of_contents": true
+  }
+}

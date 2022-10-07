@@ -1,0 +1,31 @@
+{
+  "unversionedId": "develop/deploy",
+  "id": "develop/deploy",
+  "title": "Axion CLI - Basics",
+  "description": "After your contract is ready you can deploy it in the Axion network for everyone to use it.",
+  "source": "@site/../docs/2.develop/deploy.md",
+  "sourceDirName": "2.develop",
+  "slug": "/develop/deploy",
+  "permalink": "/develop/deploy",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/2.develop/deploy.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "deploy",
+    "title": "Axion CLI - Basics",
+    "sidebar_label": "Deploying and Using"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "Workspaces Migration",
+    "permalink": "/develop/testing/workspaces-migration"
+  },
+  "next": {
+    "title": "Upgrading and Locking",
+    "permalink": "/develop/upgrade-and-lock"
+  }
+}

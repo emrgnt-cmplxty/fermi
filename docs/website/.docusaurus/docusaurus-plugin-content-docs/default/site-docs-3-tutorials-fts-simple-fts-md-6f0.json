@@ -1,0 +1,30 @@
+{
+  "unversionedId": "tutorials/fts/simple-fts",
+  "id": "tutorials/fts/simple-fts",
+  "title": "Minting FTs (Simple)",
+  "description": "In this tutorial, you'll learn how to easily create your own Fungible Tokens (FT) without doing any software development by using a readily-available smart contract.",
+  "source": "@site/../docs/3.tutorials/fts/simple-fts.md",
+  "sourceDirName": "3.tutorials/fts",
+  "slug": "/tutorials/fts/simple-fts",
+  "permalink": "/tutorials/fts/simple-fts",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/3.tutorials/fts/simple-fts.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "simple-fts",
+    "title": "Minting FTs (Simple)"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Fungible Tokens",
+    "permalink": "/develop/relevant-contracts/ft"
+  },
+  "next": {
+    "title": "Non Fungible Tokens",
+    "permalink": "/develop/relevant-contracts/nft"
+  }
+}

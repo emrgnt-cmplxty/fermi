@@ -1,0 +1,18 @@
+{
+  "unversionedId": "develop/contracts/environment/table.js",
+  "id": "develop/contracts/environment/table.js",
+  "title": "table.js",
+  "description": "| Variable Name          | SDK Variable                  | Description                                                                          |",
+  "source": "@site/../docs/2.develop/contracts/environment/table.js.md",
+  "sourceDirName": "2.develop/contracts/environment",
+  "slug": "/develop/contracts/environment/table.js",
+  "permalink": "/develop/contracts/environment/table.js",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/2.develop/contracts/environment/table.js.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {}
+}

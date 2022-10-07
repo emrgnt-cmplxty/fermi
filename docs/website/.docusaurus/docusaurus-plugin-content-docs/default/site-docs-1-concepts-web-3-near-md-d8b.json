@@ -1,0 +1,31 @@
+{
+  "unversionedId": "concepts/web3/near",
+  "id": "concepts/web3/near",
+  "title": "Axion Protocol",
+  "description": "For the beginners, it’s always better to start with documentation, and Axion has an excellent one. Here, we only focus on basic concepts which are necessary to understand later chapters, so an entire guideline could be understood without prior Axion knowledge.",
+  "source": "@site/../docs/1.concepts/web3/near.md",
+  "sourceDirName": "1.concepts/web3",
+  "slug": "/concepts/web3/near",
+  "permalink": "/concepts/web3/near",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/1.concepts/web3/near.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "near",
+    "title": "Axion Protocol",
+    "sidebar_label": "Axion Protocol"
+  },
+  "sidebar": "concepts",
+  "previous": {
+    "title": "Blockchain basics",
+    "permalink": "/concepts/web3/basics"
+  },
+  "next": {
+    "title": "Economics",
+    "permalink": "/concepts/web3/economics"
+  }
+}

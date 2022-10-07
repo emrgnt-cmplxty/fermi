@@ -1,0 +1,31 @@
+{
+  "unversionedId": "integrator/errors/token-loss",
+  "id": "integrator/errors/token-loss",
+  "title": "Avoiding Token Loss",
+  "description": "Careful! Losing tokens means losing money!",
+  "source": "@site/../docs/6.integrator/errors/token-loss.md",
+  "sourceDirName": "6.integrator/errors",
+  "slug": "/integrator/errors/token-loss",
+  "permalink": "/integrator/errors/token-loss",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/6.integrator/errors/token-loss.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "token-loss",
+    "title": "Avoiding Token Loss",
+    "sidebar_label": "Avoiding Token Loss"
+  },
+  "sidebar": "integrate",
+  "previous": {
+    "title": "Source Code Survey",
+    "permalink": "/integrator/errors/error-implementation"
+  },
+  "next": {
+    "title": "Integrator FAQ",
+    "permalink": "/integrator/faq"
+  }
+}

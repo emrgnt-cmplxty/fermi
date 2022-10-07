@@ -1,0 +1,22 @@
+{
+  "unversionedId": "develop/integrate/cli",
+  "id": "develop/integrate/cli",
+  "title": "Axion CLI - Basics",
+  "description": "Once your contract is deployed you can interact with it using your favorite shell. For this, you can use the Axion CLI.",
+  "source": "@site/../docs/2.develop/integrate/cli.md",
+  "sourceDirName": "2.develop/integrate",
+  "slug": "/develop/integrate/cli",
+  "permalink": "/develop/integrate/cli",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/2.develop/integrate/cli.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "cli",
+    "title": "Axion CLI - Basics",
+    "sidebar_label": "Interacting From the Terminal"
+  }
+}

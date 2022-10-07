@@ -1,0 +1,30 @@
+{
+  "unversionedId": "api/rpc/setup",
+  "id": "api/rpc/setup",
+  "title": "Setup",
+  "description": "In order to use the JSON-RPC you will need to setup the correct RPC endpoints.",
+  "source": "@site/../docs/5.api/rpc/setup.md",
+  "sourceDirName": "5.api/rpc",
+  "slug": "/api/rpc/setup",
+  "permalink": "/api/rpc/setup",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/5.api/rpc/setup.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "setup",
+    "title": "Setup"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "RPC Providers",
+    "permalink": "/api/rpc/providers"
+  },
+  "next": {
+    "title": "Block",
+    "permalink": "/api/rpc/block-info"
+  }
+}

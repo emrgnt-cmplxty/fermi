@@ -1,0 +1,31 @@
+{
+  "unversionedId": "tutorials/nfts/minecraft-nfts",
+  "id": "tutorials/nfts/minecraft-nfts",
+  "title": "Create NFTs in Minecraft",
+  "description": "In this tutorial you'll learn how to take your custom Minecraft creations and mint the schematics into NFTs on the Axion blockchain!",
+  "source": "@site/../docs/3.tutorials/nfts/minecraft-nfts.md",
+  "sourceDirName": "3.tutorials/nfts",
+  "slug": "/tutorials/nfts/minecraft-nfts",
+  "permalink": "/tutorials/nfts/minecraft-nfts",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/3.tutorials/nfts/minecraft-nfts.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "minecraft-nfts",
+    "title": "Create NFTs in Minecraft",
+    "sidebar_label": "Minecraft NFTs"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Minting Front-end",
+    "permalink": "/tutorials/nfts/minting-nft-frontend"
+  },
+  "next": {
+    "title": "Autonomous Organizations",
+    "permalink": "/develop/relevant-contracts/dao"
+  }
+}

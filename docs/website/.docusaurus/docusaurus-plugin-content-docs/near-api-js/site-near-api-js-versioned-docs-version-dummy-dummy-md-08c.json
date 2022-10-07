@@ -1,0 +1,14 @@
+{
+  "unversionedId": "dummy",
+  "id": "version-__dummy/dummy",
+  "title": "dummy",
+  "description": "dummy for near-api-js",
+  "source": "@site/near-api-js_versioned_docs/version-__dummy/dummy.md",
+  "sourceDirName": ".",
+  "slug": "/dummy",
+  "permalink": "/tools/near-api-js/reference/dummy",
+  "draft": false,
+  "tags": [],
+  "version": "__dummy",
+  "frontMatter": {}
+}

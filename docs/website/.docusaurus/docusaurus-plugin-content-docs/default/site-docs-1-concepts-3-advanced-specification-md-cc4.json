@@ -1,0 +1,31 @@
+{
+  "unversionedId": "concepts/advanced/specification",
+  "id": "concepts/advanced/specification",
+  "title": "Axion Protocol Specification",
+  "description": "Axion Protocol Specifications and Standards are tracked in two places:",
+  "source": "@site/../docs/1.concepts/3.advanced/specification.md",
+  "sourceDirName": "1.concepts/3.advanced",
+  "slug": "/concepts/advanced/specification",
+  "permalink": "/concepts/advanced/specification",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/1.concepts/3.advanced/specification.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "specification",
+    "title": "Axion Protocol Specification",
+    "sidebar_label": "Specification"
+  },
+  "sidebar": "concepts",
+  "previous": {
+    "title": "Runtime",
+    "permalink": "/concepts/basics/runtime"
+  },
+  "next": {
+    "title": "Papers",
+    "permalink": "/concepts/advanced/papers"
+  }
+}

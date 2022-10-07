@@ -1,0 +1,30 @@
+{
+  "unversionedId": "api/rpc/block-info",
+  "id": "api/rpc/block-info",
+  "title": "Block",
+  "description": "The JSON-RPC enables you to query the network and get details about specific blocks.",
+  "source": "@site/../docs/5.api/rpc/block-info.md",
+  "sourceDirName": "5.api/rpc",
+  "slug": "/api/rpc/block-info",
+  "permalink": "/api/rpc/block-info",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/5.api/rpc/block-info.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "block-info",
+    "title": "Block"
+  },
+  "sidebar": "api",
+  "previous": {
+    "title": "Setup",
+    "permalink": "/api/rpc/setup"
+  },
+  "next": {
+    "title": "Transactions",
+    "permalink": "/api/rpc/transactions"
+  }
+}

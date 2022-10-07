@@ -1,0 +1,21 @@
+{
+  "unversionedId": "api/rpc/access-keys",
+  "id": "api/rpc/access-keys",
+  "title": "Setup",
+  "description": "In order to use the JSON-RPC you will need to setup the correct RPC endpoints.",
+  "source": "@site/../docs/5.api/rpc/access-keys.md",
+  "sourceDirName": "5.api/rpc",
+  "slug": "/api/rpc/access-keys",
+  "permalink": "/api/rpc/access-keys",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/5.api/rpc/access-keys.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "access-keys",
+    "title": "Setup"
+  }
+}

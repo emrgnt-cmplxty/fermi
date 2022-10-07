@@ -1,0 +1,31 @@
+{
+  "unversionedId": "develop/contracts/introduction",
+  "id": "develop/contracts/introduction",
+  "title": "Introduction",
+  "description": "In order to start building a smart contract you need to first properly setup your computer.",
+  "source": "@site/../docs/2.develop/contracts/introduction.md",
+  "sourceDirName": "2.develop/contracts",
+  "slug": "/develop/contracts/introduction",
+  "permalink": "/develop/contracts/introduction",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/2.develop/contracts/introduction.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "introduction",
+    "title": "Introduction",
+    "sidebar_label": "Getting Started"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "What is a Smart Contract?",
+    "permalink": "/develop/contracts/whatisacontract"
+  },
+  "next": {
+    "title": "Types, Classes & Modules",
+    "permalink": "/develop/contracts/anatomy"
+  }
+}

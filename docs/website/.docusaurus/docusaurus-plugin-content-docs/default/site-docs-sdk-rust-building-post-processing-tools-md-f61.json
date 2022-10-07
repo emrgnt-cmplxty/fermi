@@ -1,0 +1,30 @@
+{
+  "unversionedId": "sdk/rust/building/post-processing",
+  "id": "sdk/rust/building/post-processing",
+  "title": "Post Processing Tools",
+  "description": "The size of the contract is a critical characteristic. The best way to keep it small is a well-designed minimalistic code with a reduced number of dependencies. It is especially important for large contracts and huge multi-contract dApps that can take a fortune to deploy.",
+  "source": "@site/../docs/sdk/rust/building/post-processing-tools.md",
+  "sourceDirName": "sdk/rust/building",
+  "slug": "/sdk/rust/building/post-processing",
+  "permalink": "/sdk/rust/building/post-processing",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/sdk/rust/building/post-processing-tools.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "post-processing",
+    "title": "Post Processing Tools"
+  },
+  "sidebar": "sdk",
+  "previous": {
+    "title": "Rapid Prototyping",
+    "permalink": "/sdk/rust/building/prototyping"
+  },
+  "next": {
+    "title": "Reproducible Builds",
+    "permalink": "/sdk/rust/building/reproducible-builds"
+  }
+}

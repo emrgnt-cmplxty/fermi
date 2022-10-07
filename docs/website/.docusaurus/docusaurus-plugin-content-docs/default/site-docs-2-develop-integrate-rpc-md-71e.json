@@ -1,0 +1,21 @@
+{
+  "unversionedId": "develop/integrate/rpc",
+  "id": "develop/integrate/rpc",
+  "title": "Remote Procedural Call",
+  "description": "Here we will only briefly mention how to use the Axion RPC.",
+  "source": "@site/../docs/2.develop/integrate/rpc.md",
+  "sourceDirName": "2.develop/integrate",
+  "slug": "/develop/integrate/rpc",
+  "permalink": "/develop/integrate/rpc",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/2.develop/integrate/rpc.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "rpc",
+    "title": "Remote Procedural Call"
+  }
+}

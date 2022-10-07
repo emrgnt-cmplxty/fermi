@@ -1,0 +1,30 @@
+{
+  "unversionedId": "concepts/basics/transactions/gas-advanced",
+  "id": "concepts/basics/transactions/gas-advanced",
+  "title": "Gas - Advanced",
+  "description": "Costs of complex actions",
+  "source": "@site/../docs/1.concepts/basics/transactions/gas-advanced.md",
+  "sourceDirName": "1.concepts/basics/transactions",
+  "slug": "/concepts/basics/transactions/gas-advanced",
+  "permalink": "/concepts/basics/transactions/gas-advanced",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/1.concepts/basics/transactions/gas-advanced.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "gas-advanced",
+    "title": "Gas - Advanced"
+  },
+  "sidebar": "concepts",
+  "previous": {
+    "title": "Gas",
+    "permalink": "/concepts/basics/transactions/gas"
+  },
+  "next": {
+    "title": "Tokens",
+    "permalink": "/concepts/basics/tokens"
+  }
+}

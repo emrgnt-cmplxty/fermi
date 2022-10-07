@@ -1,0 +1,30 @@
+{
+  "unversionedId": "concepts/basics/accounts/state",
+  "id": "concepts/basics/accounts/state",
+  "title": "State",
+  "description": "Each account has an state associated where it stores its metadata and all the contract-related data (contract's code + storage).",
+  "source": "@site/../docs/1.concepts/basics/accounts/state.md",
+  "sourceDirName": "1.concepts/basics/accounts",
+  "slug": "/concepts/basics/accounts/state",
+  "permalink": "/concepts/basics/accounts/state",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/1.concepts/basics/accounts/state.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "state",
+    "title": "State"
+  },
+  "sidebar": "concepts",
+  "previous": {
+    "title": "Smart Contract",
+    "permalink": "/concepts/basics/accounts/smartcontract"
+  },
+  "next": {
+    "title": "Creating Accounts",
+    "permalink": "/concepts/basics/accounts/creating-accounts"
+  }
+}

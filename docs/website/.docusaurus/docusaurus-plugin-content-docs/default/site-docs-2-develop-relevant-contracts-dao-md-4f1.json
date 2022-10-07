@@ -1,0 +1,31 @@
+{
+  "unversionedId": "develop/relevant-contracts/dao",
+  "id": "develop/relevant-contracts/dao",
+  "title": "Decentralized Autonomous Organizations",
+  "description": "Decentralized Autonomous Organizations (DAOs) are self-organized groups that form around common purposes. Membership, decision making,",
+  "source": "@site/../docs/2.develop/relevant-contracts/dao.md",
+  "sourceDirName": "2.develop/relevant-contracts",
+  "slug": "/develop/relevant-contracts/dao",
+  "permalink": "/develop/relevant-contracts/dao",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/2.develop/relevant-contracts/dao.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "dao",
+    "sidebar_label": "Autonomous Organizations",
+    "title": "Decentralized Autonomous Organizations"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Minecraft NFTs",
+    "permalink": "/tutorials/nfts/minecraft-nfts"
+  },
+  "next": {
+    "title": "Introduction",
+    "permalink": "/tutorials/nfts/js/introduction"
+  }
+}

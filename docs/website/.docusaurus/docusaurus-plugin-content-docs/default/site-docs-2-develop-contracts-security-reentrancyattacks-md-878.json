@@ -1,0 +1,21 @@
+{
+  "unversionedId": "develop/contracts/security/reentrancy-attacks",
+  "id": "develop/contracts/security/reentrancy-attacks",
+  "title": "Reentrancy Attacks",
+  "description": "",
+  "source": "@site/../docs/2.develop/contracts/security/reentrancyattacks.md",
+  "sourceDirName": "2.develop/contracts/security",
+  "slug": "/develop/contracts/security/reentrancy-attacks",
+  "permalink": "/develop/contracts/security/reentrancy-attacks",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/2.develop/contracts/security/reentrancyattacks.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "reentrancy-attacks",
+    "title": "Reentrancy Attacks"
+  }
+}

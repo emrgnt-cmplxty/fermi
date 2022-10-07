@@ -1,0 +1,31 @@
+{
+  "unversionedId": "integrator/balance-changes",
+  "id": "integrator/balance-changes",
+  "title": "Balance changes",
+  "description": "Prerequisites",
+  "source": "@site/../docs/6.integrator/balance.md",
+  "sourceDirName": "6.integrator",
+  "slug": "/integrator/balance-changes",
+  "permalink": "/integrator/balance-changes",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/6.integrator/balance.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {
+    "id": "balance-changes",
+    "title": "Balance changes",
+    "sidebar_label": "Balance Changes"
+  },
+  "sidebar": "integrate",
+  "previous": {
+    "title": "Exchange Integration",
+    "permalink": "/integrator/exchange-integration"
+  },
+  "next": {
+    "title": "Accounts",
+    "permalink": "/integrator/accounts"
+  }
+}

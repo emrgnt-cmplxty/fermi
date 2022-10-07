@@ -1,0 +1,18 @@
+{
+  "unversionedId": "concepts/basics/technical_stuff",
+  "id": "concepts/basics/technical_stuff",
+  "title": "technical_stuff",
+  "description": "Interaction with Axion is done with JSON JSON-RPC via HTTP calls.",
+  "source": "@site/../docs/1.concepts/basics/technical_stuff.md",
+  "sourceDirName": "1.concepts/basics",
+  "slug": "/concepts/basics/technical_stuff",
+  "permalink": "/concepts/basics/technical_stuff",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/1.concepts/basics/technical_stuff.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {}
+}

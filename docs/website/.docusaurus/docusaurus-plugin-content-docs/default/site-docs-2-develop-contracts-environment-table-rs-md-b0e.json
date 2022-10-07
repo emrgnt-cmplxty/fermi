@@ -1,0 +1,18 @@
+{
+  "unversionedId": "develop/contracts/environment/table.rs",
+  "id": "develop/contracts/environment/table.rs",
+  "title": "table.rs",
+  "description": "| Variable Name          | SDK Variable                    | Description                                                            |",
+  "source": "@site/../docs/2.develop/contracts/environment/table.rs.md",
+  "sourceDirName": "2.develop/contracts/environment",
+  "slug": "/develop/contracts/environment/table.rs",
+  "permalink": "/develop/contracts/environment/table.rs",
+  "draft": false,
+  "editUrl": "https://github.com/near/docs/edit/master/website/../docs/2.develop/contracts/environment/table.rs.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Author",
+  "lastUpdatedAt": 1539502055,
+  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "frontMatter": {}
+}

@@ -20,9 +20,9 @@ class PathMaker:
     @staticmethod
     def binary_path(release=True):
         if release:
-            return join('..', 'rust-gdex', 'target', 'release')
+            return join('..', 'gdex-rs', 'target', 'release')
         else:
-            return join('..', 'rust-gdex', 'target', 'debug')
+            return join('..', 'gdex-rs', 'target', 'debug')
 
     @staticmethod
     def narwhal_node_crate_path():
@@ -30,7 +30,7 @@ class PathMaker:
 
     @staticmethod
     def gdex_build_path():
-        return "../rust-gdex/"
+        return "../gdex-rs/"
 
     @staticmethod
     def examples_crate_path():

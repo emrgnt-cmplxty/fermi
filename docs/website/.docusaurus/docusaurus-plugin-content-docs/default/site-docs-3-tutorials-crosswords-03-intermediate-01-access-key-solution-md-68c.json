@@ -19,14 +19,5 @@
     "sidebar_position": 2,
     "sidebar_label": "Solution as seed phrase",
     "title": "Replacing the solution hash with an access key"
-  },
-  "sidebar": "tutorials",
-  "previous": {
-    "title": "Overview",
-    "permalink": "/tutorials/crosswords/intermediate/overview"
-  },
-  "next": {
-    "title": "Seed phrase logic",
-    "permalink": "/tutorials/crosswords/intermediate/use-seed-phrase"
   }
 }

@@ -18,10 +18,5 @@
     "id": "oracles",
     "title": "Oracles",
     "sidebar_label": "🔮 Oracles"
-  },
-  "sidebar": "develop",
-  "previous": {
-    "title": "🔗 Explorers",
-    "permalink": "/tools/explorer"
   }
 }

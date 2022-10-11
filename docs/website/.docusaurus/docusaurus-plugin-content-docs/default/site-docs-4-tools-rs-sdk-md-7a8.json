@@ -17,14 +17,5 @@
   "frontMatter": {
     "id": "near-sdk-rs",
     "title": "Rust SDK"
-  },
-  "sidebar": "develop",
-  "previous": {
-    "title": "JavaScript SDK",
-    "permalink": "/tools/near-sdk-js"
-  },
-  "next": {
-    "title": "Axion CLI",
-    "permalink": "/tools/near-cli"
   }
 }

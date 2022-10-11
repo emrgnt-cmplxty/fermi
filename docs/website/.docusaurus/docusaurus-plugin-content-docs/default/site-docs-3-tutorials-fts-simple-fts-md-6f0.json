@@ -17,14 +17,5 @@
   "frontMatter": {
     "id": "simple-fts",
     "title": "Minting FTs (Simple)"
-  },
-  "sidebar": "tutorials",
-  "previous": {
-    "title": "Fungible Tokens",
-    "permalink": "/develop/relevant-contracts/ft"
-  },
-  "next": {
-    "title": "Non Fungible Tokens",
-    "permalink": "/develop/relevant-contracts/nft"
   }
 }

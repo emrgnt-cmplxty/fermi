@@ -17,14 +17,5 @@
   "frontMatter": {
     "id": "post-processing",
     "title": "Post Processing Tools"
-  },
-  "sidebar": "sdk",
-  "previous": {
-    "title": "Rapid Prototyping",
-    "permalink": "/sdk/rust/building/prototyping"
-  },
-  "next": {
-    "title": "Reproducible Builds",
-    "permalink": "/sdk/rust/building/reproducible-builds"
   }
 }

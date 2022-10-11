@@ -1,0 +1,47 @@
+@import 'variables';
+@import 'mixins';
+
+html,
+body,
+body > div:first-child,
+div#__next {
+  height: 100%;
+}
+
+.DARK {
+  $color: red;
+}
+.LIGHT {
+  $color: blue;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+@font-face {
+  font-family: "Soehne Breit";
+  src: url("./fonts/soehne-breit-web-kraftig.woff")
+      format("woff"),
+    url("./fonts/soehne-breit-web-kraftig.woff2")
+      format("woff2");
+}
+
+@font-face {
+  font-family: "Soehne";
+  src: url("./fonts/soehne-web-kraftig.woff") format("woff"),
+    url("./fonts/soehne-web-kraftig.woff2") format("woff2");
+}
+

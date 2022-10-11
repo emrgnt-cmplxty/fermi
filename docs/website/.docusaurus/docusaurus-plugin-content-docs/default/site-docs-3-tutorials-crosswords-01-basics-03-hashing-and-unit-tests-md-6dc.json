@@ -19,14 +19,5 @@
     "sidebar_position": 4,
     "sidebar_label": "Hash the solution, unit tests, and an init method",
     "title": "Introduction to basic hashing and adding unit tests"
-  },
-  "sidebar": "tutorials",
-  "previous": {
-    "title": "Add basic code, create a subaccount, and call methods",
-    "permalink": "/tutorials/crosswords/basics/add-functions-call"
-  },
-  "next": {
-    "title": "Add simple frontend",
-    "permalink": "/tutorials/crosswords/basics/simple-frontend"
   }
 }

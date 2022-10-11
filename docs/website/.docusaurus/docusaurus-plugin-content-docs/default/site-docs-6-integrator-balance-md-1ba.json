@@ -18,14 +18,5 @@
     "id": "balance-changes",
     "title": "Balance changes",
     "sidebar_label": "Balance Changes"
-  },
-  "sidebar": "integrate",
-  "previous": {
-    "title": "Exchange Integration",
-    "permalink": "/integrator/exchange-integration"
-  },
-  "next": {
-    "title": "Accounts",
-    "permalink": "/integrator/accounts"
   }
 }

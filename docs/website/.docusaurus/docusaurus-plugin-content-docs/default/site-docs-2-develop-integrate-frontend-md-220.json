@@ -17,14 +17,5 @@
   "frontMatter": {
     "id": "frontend",
     "title": "Build the Web Frontend"
-  },
-  "sidebar": "develop",
-  "previous": {
-    "title": "Random Numbers",
-    "permalink": "/develop/contracts/security/random"
-  },
-  "next": {
-    "title": "Track Real Time Events",
-    "permalink": "/tools/realtime"
   }
 }

@@ -18,14 +18,5 @@
     "id": "introduction",
     "title": "Introduction",
     "sidebar_label": "Introduction"
-  },
-  "sidebar": "integrate",
-  "previous": {
-    "title": "Implicit Accounts",
-    "permalink": "/integrator/implicit-accounts"
-  },
-  "next": {
-    "title": "Source Code Survey",
-    "permalink": "/integrator/errors/error-implementation"
   }
 }

@@ -18,14 +18,5 @@
     "id": "dao",
     "sidebar_label": "Autonomous Organizations",
     "title": "Decentralized Autonomous Organizations"
-  },
-  "sidebar": "tutorials",
-  "previous": {
-    "title": "Minecraft NFTs",
-    "permalink": "/tutorials/nfts/minecraft-nfts"
-  },
-  "next": {
-    "title": "Introduction",
-    "permalink": "/tutorials/nfts/js/introduction"
   }
 }

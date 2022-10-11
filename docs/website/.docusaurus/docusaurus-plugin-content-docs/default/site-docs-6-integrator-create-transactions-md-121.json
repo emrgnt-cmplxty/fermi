@@ -18,14 +18,5 @@
     "id": "create-transactions",
     "title": "Create Transactions",
     "sidebar_label": "Create a Transaction"
-  },
-  "sidebar": "integrate",
-  "previous": {
-    "title": "Accounts",
-    "permalink": "/integrator/accounts"
-  },
-  "next": {
-    "title": "Fungible Tokens",
-    "permalink": "/integrator/fungible-tokens"
   }
 }

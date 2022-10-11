@@ -18,14 +18,5 @@
     "id": "minting-nfts",
     "title": "Minting NFTs",
     "sidebar_label": "Minting NFTs"
-  },
-  "sidebar": "tutorials",
-  "previous": {
-    "title": "Non Fungible Tokens",
-    "permalink": "/develop/relevant-contracts/nft"
-  },
-  "next": {
-    "title": "Minting Front-end",
-    "permalink": "/tutorials/nfts/minting-nft-frontend"
   }
 }

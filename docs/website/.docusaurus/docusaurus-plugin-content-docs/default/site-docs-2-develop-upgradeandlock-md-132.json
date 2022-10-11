@@ -17,14 +17,5 @@
   "frontMatter": {
     "id": "upgrade-and-lock",
     "title": "Upgrading and Locking"
-  },
-  "sidebar": "develop",
-  "previous": {
-    "title": "Deploying and Using",
-    "permalink": "/develop/deploy"
-  },
-  "next": {
-    "title": "Migrating Contracts",
-    "permalink": "/develop/upgrade/migration"
   }
 }

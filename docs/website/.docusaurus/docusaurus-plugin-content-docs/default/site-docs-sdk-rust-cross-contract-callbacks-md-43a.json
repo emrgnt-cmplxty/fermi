@@ -17,14 +17,5 @@
   "sidebarPosition": 2,
   "frontMatter": {
     "sidebar_position": 2
-  },
-  "sidebar": "sdk",
-  "previous": {
-    "title": "Serialization Protocols",
-    "permalink": "/sdk/rust/contract-interface/serialization-interface"
-  },
-  "next": {
-    "title": "Promises: Introduction",
-    "permalink": "/sdk/rust/promises/intro"
   }
 }

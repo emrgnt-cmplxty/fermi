@@ -19,14 +19,5 @@
     "id": "predeployed-contract",
     "title": "Pre-deployed Contract",
     "sidebar_label": "Pre-deployed Contract"
-  },
-  "sidebar": "tutorials",
-  "previous": {
-    "title": "Introduction",
-    "permalink": "/tutorials/nfts/js/introduction"
-  },
-  "next": {
-    "title": "Contract Architecture",
-    "permalink": "/tutorials/nfts/js/skeleton"
   }
 }

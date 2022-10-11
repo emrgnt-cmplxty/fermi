@@ -17,14 +17,5 @@
   "frontMatter": {
     "id": "guest-book",
     "title": "Guest Book"
-  },
-  "sidebar": "tutorials",
-  "previous": {
-    "title": "Count on Axion",
-    "permalink": "/tutorials/examples/count-near"
-  },
-  "next": {
-    "title": "Donation",
-    "permalink": "/tutorials/examples/donation"
   }
 }

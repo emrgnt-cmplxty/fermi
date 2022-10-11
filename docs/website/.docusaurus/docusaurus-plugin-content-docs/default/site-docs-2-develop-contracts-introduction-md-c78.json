@@ -18,14 +18,5 @@
     "id": "introduction",
     "title": "Introduction",
     "sidebar_label": "Getting Started"
-  },
-  "sidebar": "develop",
-  "previous": {
-    "title": "What is a Smart Contract?",
-    "permalink": "/develop/contracts/whatisacontract"
-  },
-  "next": {
-    "title": "Types, Classes & Modules",
-    "permalink": "/develop/contracts/anatomy"
   }
 }

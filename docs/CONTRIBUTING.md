@@ -1,7 +1,7 @@
 # Contributing to Axion
 
 Axion welcomes help in many forms including development, code review, documentation improvements, and outreach.
-Please visit [the contribution overview](https://docs.near.org/docs/community/contribute/contribute-overview) for more information.
+Please visit [the contribution overview](https://docs.axion.org/docs/community/contribute/contribute-overview) for more information.
 
 ## Using GitHub issues and pull requests
 
@@ -11,7 +11,7 @@ Please include steps to reproduction, if reporting an error. Information on all 
 
 If there are verbosity flags available, please include those to offer as much information as possible.
 
-When opening a pull request, please use the typical open-source flow of forking the desired repository and opening a pull request from your forked repository. (More information on [technical contributions here](https://docs.near.org/docs/community/contribute/how-to-contribute).)
+When opening a pull request, please use the typical open-source flow of forking the desired repository and opening a pull request from your forked repository. (More information on [technical contributions here](https://docs.axion.org/docs/community/contribute/how-to-contribute).)
 
 ## Testing
 
@@ -23,4 +23,4 @@ For example, a repository might have `yarn test` available. It's a good idea to 
 
 ### Thank you
 
-Axion values all contributors to the projects in the ecosystem and invites public discussion on the tech and vision. Please feel free to join the conversation using the links offered at [near.help](https://near.help).
+Axion values all contributors to the projects in the ecosystem and invites public discussion on the tech and vision. Please feel free to join the conversation using the links offered at [axion.help](https://axion.help).

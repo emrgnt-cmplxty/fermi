@@ -17,14 +17,5 @@
   "frontMatter": {
     "id": "nft",
     "title": "Non Fungible Tokens"
-  },
-  "sidebar": "tutorials",
-  "previous": {
-    "title": "Minting FTs (Simple)",
-    "permalink": "/tutorials/fts/simple-fts"
-  },
-  "next": {
-    "title": "Minting NFTs",
-    "permalink": "/tutorials/nfts/minting-nfts"
   }
 }

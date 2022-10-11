@@ -17,14 +17,5 @@
   "frontMatter": {
     "id": "introduction",
     "title": "Introduction"
-  },
-  "sidebar": "develop",
-  "previous": {
-    "title": "✅ Checklist",
-    "permalink": "/develop/contracts/security/checklist"
-  },
-  "next": {
-    "title": "Unit Testing",
-    "permalink": "/develop/testing/unit-test"
   }
 }

@@ -17,14 +17,5 @@
   "sidebarPosition": 1,
   "frontMatter": {
     "sidebar_position": 1
-  },
-  "sidebar": "sdk",
-  "previous": {
-    "title": "Getting Started",
-    "permalink": "/sdk/rust/introduction"
-  },
-  "next": {
-    "title": "Collections",
-    "permalink": "/sdk/rust/contract-structure/collections"
   }
 }

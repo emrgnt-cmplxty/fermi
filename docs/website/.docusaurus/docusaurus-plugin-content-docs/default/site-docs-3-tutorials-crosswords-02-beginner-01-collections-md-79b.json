@@ -19,14 +19,5 @@
     "sidebar_position": 2,
     "sidebar_label": "Store multiple puzzles",
     "title": "Store multiple crossword puzzles using a specialized collection in Axion called a LookupMap"
-  },
-  "sidebar": "tutorials",
-  "previous": {
-    "title": "Overview",
-    "permalink": "/tutorials/crosswords/beginner/overview"
-  },
-  "next": {
-    "title": "Using structs and enums",
-    "permalink": "/tutorials/crosswords/beginner/structs-enums"
   }
 }

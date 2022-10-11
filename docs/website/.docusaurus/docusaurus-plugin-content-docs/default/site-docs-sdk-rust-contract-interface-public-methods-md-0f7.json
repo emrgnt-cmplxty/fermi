@@ -17,14 +17,5 @@
   "sidebarPosition": 1,
   "frontMatter": {
     "sidebar_position": 1
-  },
-  "sidebar": "sdk",
-  "previous": {
-    "title": "Collections Nesting",
-    "permalink": "/sdk/rust/contract-structure/nesting"
-  },
-  "next": {
-    "title": "Contract Mutability",
-    "permalink": "/sdk/rust/contract-interface/contract-mutability"
   }
 }

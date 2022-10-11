@@ -18,14 +18,5 @@
     "id": "migration",
     "sidebar_label": "Migrating Contracts",
     "title": "Upgrading Contracts: Production App Basics"
-  },
-  "sidebar": "develop",
-  "previous": {
-    "title": "Upgrading and Locking",
-    "permalink": "/develop/upgrade-and-lock"
-  },
-  "next": {
-    "title": "DAO-Governed Updates",
-    "permalink": "/develop/upgrade/dao-updates"
   }
 }

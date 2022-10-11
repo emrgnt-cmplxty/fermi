@@ -18,14 +18,5 @@
     "id": "accounts",
     "title": "Accounts",
     "sidebar_label": "Accounts"
-  },
-  "sidebar": "integrate",
-  "previous": {
-    "title": "Balance Changes",
-    "permalink": "/integrator/balance-changes"
-  },
-  "next": {
-    "title": "Create a Transaction",
-    "permalink": "/integrator/create-transactions"
   }
 }

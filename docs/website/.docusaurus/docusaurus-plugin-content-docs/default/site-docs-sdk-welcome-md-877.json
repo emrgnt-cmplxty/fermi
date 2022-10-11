@@ -18,10 +18,5 @@
     "id": "welcome",
     "title": "Axion SDKs",
     "hide_table_of_contents": false
-  },
-  "sidebar": "sdk",
-  "next": {
-    "title": "Getting Started",
-    "permalink": "/sdk/rust/introduction"
   }
 }

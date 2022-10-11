@@ -17,14 +17,5 @@
   "frontMatter": {
     "id": "near-sdk-js",
     "title": "JavaScript SDK"
-  },
-  "sidebar": "develop",
-  "previous": {
-    "title": "Query the Blockchain History",
-    "permalink": "/tools/indexer-for-explorer"
-  },
-  "next": {
-    "title": "Rust SDK",
-    "permalink": "/tools/near-sdk-rs"
   }
 }

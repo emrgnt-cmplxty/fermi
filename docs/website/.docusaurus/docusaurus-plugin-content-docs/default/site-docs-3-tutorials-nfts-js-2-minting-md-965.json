@@ -19,14 +19,5 @@
     "id": "minting",
     "title": "Minting",
     "sidebar_label": "Minting"
-  },
-  "sidebar": "tutorials",
-  "previous": {
-    "title": "Contract Architecture",
-    "permalink": "/tutorials/nfts/js/skeleton"
-  },
-  "next": {
-    "title": "Upgrade a Contract",
-    "permalink": "/tutorials/nfts/js/upgrade-contract"
   }
 }

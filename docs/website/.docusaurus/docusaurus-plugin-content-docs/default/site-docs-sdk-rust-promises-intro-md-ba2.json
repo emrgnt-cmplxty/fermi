@@ -19,14 +19,5 @@
     "sidebar_position": 1,
     "sidebar_label": "Introduction",
     "pagination_label": "Promises: Introduction"
-  },
-  "sidebar": "sdk",
-  "previous": {
-    "title": "Callbacks",
-    "permalink": "/sdk/rust/cross-contract/callbacks"
-  },
-  "next": {
-    "title": "Sending $Axion",
-    "permalink": "/sdk/rust/promises/token-tx"
   }
 }

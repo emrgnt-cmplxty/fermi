@@ -18,14 +18,5 @@
     "id": "indexer-for-explorer",
     "title": "Axion Indexer for Explorer",
     "sidebar_label": "Query the Blockchain History"
-  },
-  "sidebar": "develop",
-  "previous": {
-    "title": "Track Real Time Events",
-    "permalink": "/tools/realtime"
-  },
-  "next": {
-    "title": "JavaScript SDK",
-    "permalink": "/tools/near-sdk-js"
   }
 }

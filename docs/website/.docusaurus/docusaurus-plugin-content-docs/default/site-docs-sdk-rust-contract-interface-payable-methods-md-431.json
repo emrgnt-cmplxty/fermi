@@ -17,14 +17,5 @@
   "sidebarPosition": 4,
   "frontMatter": {
     "sidebar_position": 4
-  },
-  "sidebar": "sdk",
-  "previous": {
-    "title": "Private Methods",
-    "permalink": "/sdk/rust/contract-interface/private-methods"
-  },
-  "next": {
-    "title": "Serialization Protocols",
-    "permalink": "/sdk/rust/contract-interface/serialization-interface"
   }
 }

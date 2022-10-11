@@ -17,14 +17,5 @@
   "sidebarPosition": 4,
   "frontMatter": {
     "sidebar_position": 4
-  },
-  "sidebar": "sdk",
-  "previous": {
-    "title": "Creating Accounts",
-    "permalink": "/sdk/rust/promises/create-account"
-  },
-  "next": {
-    "title": "Basic Instructions",
-    "permalink": "/sdk/rust/building/basics"
   }
 }

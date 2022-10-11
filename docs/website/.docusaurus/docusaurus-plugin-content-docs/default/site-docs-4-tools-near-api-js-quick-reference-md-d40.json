@@ -18,14 +18,5 @@
     "id": "quick-reference",
     "title": "Using JavaScript API to interact with Axion",
     "sidebar_label": "Using JavaScript API"
-  },
-  "sidebar": "develop",
-  "previous": {
-    "title": "Axion CLI",
-    "permalink": "/tools/near-cli"
-  },
-  "next": {
-    "title": "Cookbook",
-    "permalink": "/tools/near-api-js/cookbook"
   }
 }

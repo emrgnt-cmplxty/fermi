@@ -17,14 +17,5 @@
   "frontMatter": {
     "id": "actions",
     "title": "Transfers & Actions"
-  },
-  "sidebar": "develop",
-  "previous": {
-    "title": "Storage & Data Structures",
-    "permalink": "/develop/contracts/storage"
-  },
-  "next": {
-    "title": "Cross-Contract Calls",
-    "permalink": "/develop/contracts/crosscontract"
   }
 }

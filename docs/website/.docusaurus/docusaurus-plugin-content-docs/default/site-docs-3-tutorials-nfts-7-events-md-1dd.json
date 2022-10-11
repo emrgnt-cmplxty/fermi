@@ -19,14 +19,5 @@
     "id": "events",
     "title": "Events",
     "sidebar_label": "Events"
-  },
-  "sidebar": "tutorials",
-  "previous": {
-    "title": "Royalty",
-    "permalink": "/tutorials/nfts/royalty"
-  },
-  "next": {
-    "title": "Marketplace",
-    "permalink": "/tutorials/nfts/marketplace"
   }
 }

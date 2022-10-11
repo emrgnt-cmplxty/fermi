@@ -19,14 +19,5 @@
     "id": "marketplace",
     "title": "Marketplace",
     "sidebar_label": "Marketplace"
-  },
-  "sidebar": "tutorials",
-  "previous": {
-    "title": "Events",
-    "permalink": "/tutorials/nfts/events"
-  },
-  "next": {
-    "title": "Lazy Minting, Collections, and More!",
-    "permalink": "/tutorials/nfts/series"
   }
 }

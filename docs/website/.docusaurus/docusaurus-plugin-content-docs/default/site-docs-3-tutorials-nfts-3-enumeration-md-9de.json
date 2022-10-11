@@ -19,14 +19,5 @@
     "id": "enumeration",
     "title": "Enumeration",
     "sidebar_label": "Enumeration"
-  },
-  "sidebar": "tutorials",
-  "previous": {
-    "title": "Upgrade a Contract",
-    "permalink": "/tutorials/nfts/upgrade-contract"
-  },
-  "next": {
-    "title": "Core",
-    "permalink": "/tutorials/nfts/core"
   }
 }

@@ -19,10 +19,5 @@
     "title": "Developer Documentation",
     "sidebar_label": "Home",
     "hide_table_of_contents": true
-  },
-  "sidebar": "develop",
-  "next": {
-    "title": "⭐ Quickstart",
-    "permalink": "/develop/quickstart-guide"
   }
 }

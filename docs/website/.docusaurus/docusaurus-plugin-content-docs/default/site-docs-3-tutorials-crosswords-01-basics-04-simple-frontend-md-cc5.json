@@ -19,14 +19,5 @@
     "sidebar_position": 5,
     "sidebar_label": "Add simple frontend",
     "title": "Add a simple frontend to the crossword puzzle that checks the solution's hash"
-  },
-  "sidebar": "tutorials",
-  "previous": {
-    "title": "Hash the solution, unit tests, and an init method",
-    "permalink": "/tutorials/crosswords/basics/hashing-and-unit-tests"
-  },
-  "next": {
-    "title": "Overview",
-    "permalink": "/tutorials/crosswords/beginner/overview"
   }
 }

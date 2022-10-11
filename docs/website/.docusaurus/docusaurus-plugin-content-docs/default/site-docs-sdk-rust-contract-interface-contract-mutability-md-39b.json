@@ -17,14 +17,5 @@
   "sidebarPosition": 2,
   "frontMatter": {
     "sidebar_position": 2
-  },
-  "sidebar": "sdk",
-  "previous": {
-    "title": "Public Method Types",
-    "permalink": "/sdk/rust/contract-interface/public-methods"
-  },
-  "next": {
-    "title": "Private Methods",
-    "permalink": "/sdk/rust/contract-interface/private-methods"
   }
 }

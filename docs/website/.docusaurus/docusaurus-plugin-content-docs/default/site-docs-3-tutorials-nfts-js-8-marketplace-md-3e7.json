@@ -19,14 +19,5 @@
     "id": "marketplace",
     "title": "Marketplace",
     "sidebar_label": "Marketplace"
-  },
-  "sidebar": "tutorials",
-  "previous": {
-    "title": "Events",
-    "permalink": "/tutorials/nfts/js/events"
-  },
-  "next": {
-    "title": "Introduction",
-    "permalink": "/tutorials/nfts/introduction"
   }
 }

@@ -18,14 +18,5 @@
     "id": "faq",
     "title": "FAQ for Axion JavaScript API",
     "sidebar_label": "FAQ"
-  },
-  "sidebar": "develop",
-  "previous": {
-    "title": "Cookbook",
-    "permalink": "/tools/near-api-js/cookbook"
-  },
-  "next": {
-    "title": "🔗 Explorers",
-    "permalink": "/tools/explorer"
   }
 }

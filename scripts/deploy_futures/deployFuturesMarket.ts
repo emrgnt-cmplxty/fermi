@@ -11,13 +11,14 @@ import localConfig from "./localConfig.json"
 import { getJsonRpcUrl } from "./utils"
 
 // EXTERNAL
-import { AxionClient, AxionTypes, AxionUtils, AxionAccount, TenexTransaction, TenexUtils } from 'tenex-axion-sdk'
+import { AxionClient, AxionTypes, AxionUtils, AxionAccount } from 'axion-sdk'
+import { TenexTransaction, TenexUtils } from 'tenex-sdk'
 
 class DeploymentBuilder {
     public privateKey: Uint8Array
-    public client: AxionClient.AxionClient
+    public client: AxionClient
   
-    constructor(privateKey: Uint8Array, client: AxionClient.AxionClient) {
+    constructor(privateKey: Uint8Array, client: AxionClient) {
       this.privateKey = privateKey
       this.client = client
     }

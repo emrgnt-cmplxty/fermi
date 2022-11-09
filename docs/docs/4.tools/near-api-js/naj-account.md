@@ -4,7 +4,7 @@ title: Account
 sidebar_label: Account
 ---
 
-You can interact with, create or delete Axion accounts.
+You can interact with, create or delete Fermi accounts.
 
 ### Load Account {#load-account}
 
@@ -79,7 +79,7 @@ const transactionOutcome = await account.deployContract(fs.readFileSync('example
 
 ### Send Tokens {#send-tokens}
 
-Transfer Axion tokens between accounts. This returns an object with transaction and receipts outcomes and status.
+Transfer Fermi tokens between accounts. This returns an object with transaction and receipts outcomes and status.
 
 ```js
 const account = await nearConnection.account("sender-account.testnet");

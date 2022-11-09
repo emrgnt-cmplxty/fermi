@@ -2,13 +2,13 @@
 id: creating-accounts
 title: Creating Accounts
 ---
-The simplest way to create Axion accounts is through the [Axion Wallet](https://mynearwallet.com/), however, you can also create
+The simplest way to create Fermi accounts is through the [Fermi Wallet](https://mynearwallet.com/), however, you can also create
 accounts using local tools.
 
 ---
 
-## The Axion Wallet
-The Axion wallet is our web-based user-friendly wallet. You can readily use it without installing software or add-ons.
+## The Fermi Wallet
+The Fermi wallet is our web-based user-friendly wallet. You can readily use it without installing software or add-ons.
 
 #### Testnet
 In **testnet** you can directly create [named accounts](account-id.md#named-accounts). Simply go to the [wallet](https://testnet.mynearwallet.com/create),
@@ -33,7 +33,7 @@ near generate-key my-new-account
 A new key-pair will be stored at `~/.near-credentials/testnet/my-new-account.json`.
 
 #### 2. Convert the public_key to an account ID. {#converting-a-public-key-to-an-account-id}
-Use [`near-cli`](../../../4.tools/cli.md) once more to convert the `public_key` from the `.json` file to its related Axion account address.
+Use [`near-cli`](../../../4.tools/cli.md) once more to convert the `public_key` from the `.json` file to its related Fermi account address.
 
 ```bash
 # Open the javascript console of near-cli

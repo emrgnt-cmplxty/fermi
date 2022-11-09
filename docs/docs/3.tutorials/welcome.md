@@ -11,8 +11,8 @@ Explore our collection of Examples and Tutorials
 
 <FeatureList>
   <Column title="Examples">
-    <Feature url="/tutorials/examples/hello-near" title="Hello Axion" subtitle="A friendly app that stores a greeting" image="hello-near.png" />
-    <Feature url="/tutorials/examples/count-near" title="Count on Axion" subtitle="A counter in the blockchain" image="count-near.png" />
+    <Feature url="/tutorials/examples/hello-near" title="Hello Fermi" subtitle="A friendly app that stores a greeting" image="hello-near.png" />
+    <Feature url="/tutorials/examples/count-near" title="Count on Fermi" subtitle="A counter in the blockchain" image="count-near.png" />
     <Feature url="/tutorials/examples/guest-book" title="Guest Book" subtitle="Create a simple guest book" image="guest-book.png" />
     <Feature url="/tutorials/examples/donation" title="Donation" subtitle="How to receive and send tokens" image="donation.png" />
     <Feature url="/tutorials/examples/xcc" title="Cross-Contract Call" subtitle="Learn how to call other contracts" image="cross-call.png" />
@@ -24,8 +24,8 @@ Explore our collection of Examples and Tutorials
     <Feature url="/develop/relevant-contracts/dao" title="Autonomous Organizations" subtitle="Understand autonomous organizations" image="dao.png" />
   </Column>
   <Column title="From Zero to Hero">
-    <Feature url="/tutorials/nfts/js/introduction" title="Master NFT in Axion (JS)" subtitle="Learn everything about NFT in JS" image="nft-marketplace-js.png" />
-    <Feature url="/tutorials/nfts/introduction" title="Master NFT in Axion (RS)" subtitle="Learn everything about NFT in Rust" image="nft-marketplace-rs.png" />
+    <Feature url="/tutorials/nfts/js/introduction" title="Master NFT in Fermi (JS)" subtitle="Learn everything about NFT in JS" image="nft-marketplace-js.png" />
+    <Feature url="/tutorials/nfts/introduction" title="Master NFT in Fermi (RS)" subtitle="Learn everything about NFT in Rust" image="nft-marketplace-rs.png" />
     <Feature url="/tutorials/crosswords/basics/overview" title="Crossword Game" subtitle="Build a Crossword Game from zero" image="crossword.png" />
   </Column>
 </FeatureList>
@@ -58,7 +58,7 @@ If you have any questions, or simply would want to chat with us, please do throu
           src={require("@site/static/docs/assets/home/discord.png").default} />
         <div class="avatar__intro">
           <div class="avatar__name">Discord</div>
-          <small class="avatar__subtitle"><a href="https://discord.gg/kwYjDn4yka">Axion Protocol</a></small>
+          <small class="avatar__subtitle"><a href="https://discord.gg/kwYjDn4yka">Fermi Protocol</a></small>
         </div>
       </div>
     </div>

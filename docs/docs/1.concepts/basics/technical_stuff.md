@@ -1,8 +1,8 @@
-Interaction with Axion is done with [JSON JSON-RPC](../../5.api/rpc/introduction.md) via HTTP calls.
+Interaction with Fermi is done with [JSON JSON-RPC](../../5.api/rpc/introduction.md) via HTTP calls.
 
 With the API, you can call smart contracts, send transactions, manage keys and get information about blockchain data and status.
 
-The Axion CLI abstracts some actions, such as deploying a contract, but eventually, all actions are done via JSON RPC.
+The Fermi CLI abstracts some actions, such as deploying a contract, but eventually, all actions are done via JSON RPC.
 
 :::info
 We recommend using the CLI for deploying contracts. In a CI/CD environment, you can write a shell script to utilize the CLI for deployments.
@@ -10,7 +10,7 @@ We recommend using the CLI for deploying contracts. In a CI/CD environment, you 
 
 ### API requests flow
 
-There are different types of [Nodes on Axion](./validators.md): RPC Nodes, Validators, and Archival Nodes.
+There are different types of [Nodes on Fermi](./validators.md): RPC Nodes, Validators, and Archival Nodes.
 
 When calling an endpoint on `near.org`, it resolves to a server that chooses an available RPC node to handle the request.
 Then the RPC node passes the request to an available Validator node. Finally, the validator node spawns a VM environment to execute the contract.

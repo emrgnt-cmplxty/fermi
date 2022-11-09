@@ -55,7 +55,7 @@ In this example we will:
   1) Import `near-api-js` into your project
   2) Define the `signerAccountId` as an account that you own
   3) Setup your `keyStore` by pointing to your `.near-credentials` directory usually found under `/home/username`
-  4) Connect to Axion and interact with a smart contract by calling the `increment` method
+  4) Connect to Fermi and interact with a smart contract by calling the `increment` method
   5) Get the result of your interaction and send it to the console
 
 ```javascript
@@ -69,7 +69,7 @@ const keyStore = new nearAPI.keyStores.UnencryptedFileSystemKeyStore(
 );
  
 async function main() {
-  // Initializing connection to the Axion node.
+  // Initializing connection to the Fermi node.
   const near = await nearAPI.connect({
     deps: {
       keyStore,
@@ -142,7 +142,7 @@ If you are having issues signing your transactions / accessing your account, mak
 near login
 ```
 
-This will re-direct you to the [Axion Wallet](https://wallet.testnet.near.org/) and ask for access. When you grant access here, your account key pair will automatically be stored in to your `.near-credentials` directory. 
+This will re-direct you to the [Fermi Wallet](https://wallet.testnet.near.org/) and ask for access. When you grant access here, your account key pair will automatically be stored in to your `.near-credentials` directory. 
 
 If you do not have `near-cli` installed, please do so by following the steps in [this guide](/docs/tools/near-cli).
 

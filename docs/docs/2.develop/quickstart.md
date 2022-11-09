@@ -1,21 +1,21 @@
 ---
 id: quickstart-guide
-title: Hello Axion 👋
+title: Hello Fermi 👋
 sidebar_label: ⭐ Quickstart
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import {CodeTabs, Language, Github} from "@site/components/codetabs"
 
-Hi! Let us guide you in starting and interacting with your first decentralized app (dApp) in Axion: Hello Axion.
+Hi! Let us guide you in starting and interacting with your first decentralized app (dApp) in Fermi: Hello Fermi.
 
-**Hello Axion** is a friendly dApp composed by two main components:  
+**Hello Fermi** is a friendly dApp composed by two main components:  
   1. A smart contract that stores and retrieves a greeting message
   2. A simple web-based frontend that displays the greeting and enables to change it.
 
 ---
 
-## Try Hello Axion in Your Browser
+## Try Hello Fermi in Your Browser
 
 A new browser window will open automatically with the code, give it a minute and the frontend will pop-up (make sure the pop-up window is not blocked).
 
@@ -26,7 +26,7 @@ A new browser window will open automatically with the code, give it a minute and
 
 ---
 
-## Try Hello Axion Locally
+## Try Hello Fermi Locally
 If you already have node installed, simply run:
 
 ```bash 
@@ -39,14 +39,14 @@ Once the folder is ready, check the README! It will show you how to **build** yo
 
 ---
 
-## Interacting With Hello Axion
+## Interacting With Hello Fermi
 
-Once the app starts you will see the screen bellow. Now go ahead and sign in with your Axion account. If you don't have one, you will be able to create one in the moment.
+Once the app starts you will see the screen bellow. Now go ahead and sign in with your Fermi account. If you don't have one, you will be able to create one in the moment.
 
 ![img](/docs/assets/examples/hello-near.png)
-*Frontend of Hello Axion*
+*Frontend of Hello Fermi*
 
-Once logged in, change the greeting and see how our Hello Axion app greets you!
+Once logged in, change the greeting and see how our Hello Fermi app greets you!
 
 
 ---

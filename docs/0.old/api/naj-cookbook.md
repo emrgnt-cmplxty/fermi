@@ -1,6 +1,6 @@
 ---
 id: naj-cookbook
-title: Axion-API-JS Cookbook
+title: Fermi-API-JS Cookbook
 sidebar_label: Cookbook
 ---
 
@@ -21,7 +21,7 @@ import TabItem from '@theme/TabItem';
 | Name                                                      | Description                                                                                 |
 | --------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | **ACCOUNTS**                                              |                                                                                             |
-| [Create Account](#create-account)                         | Create [Axion accounts](/docs/concepts/account) without using Axion Wallet.                   |
+| [Create Account](#create-account)                         | Create [Fermi accounts](/docs/concepts/account) without using Fermi Wallet.                   |
 | [Access Key Rotation](#access-key-rotation)               | Create and delete [access keys](/docs/concepts/account#access-keys) for added security.     |
 | **TRANSACTIONS**                                          |                                                                                             |
 | [Get Transaction Status](#get-transaction-status)         | Gets transaction status using a tx hash and associated account/contract ID.                 |
@@ -31,7 +31,7 @@ import TabItem from '@theme/TabItem';
 | [Deploy Contract](#deploy-contract)                       | Deploys a smart contract using a pre-compiled WASM file.                                    |
 | [Calculate Gas](#calculate-gas)                           | Calculate [gas burnt](/docs/concepts/gas) from any contract call.                           |
 | [Read State w/o Account](#read-state-without-an-account)  | Read state of a contract without instantiating an account.                                  |
-| [Wrap & Unwrap Axion](#wrap-and-unwrap-near)               | Wrap and unwrap Axion using the `wrap.near` smart contract.                                  |
+| [Wrap & Unwrap Fermi](#wrap-and-unwrap-near)               | Wrap and unwrap Fermi using the `wrap.near` smart contract.                                  |
 | [Verify Signature](#verify-signature)                     | Verify a key pair signature.                                                                |
 
 ---
@@ -40,7 +40,7 @@ import TabItem from '@theme/TabItem';
 
 ### Create Account {#create-account}
 
-> Programmatically create Axion accounts without using Axion Wallet.
+> Programmatically create Fermi accounts without using Fermi Wallet.
 
 <Tabs>
 <TabItem value="testnet" label="testnet" default>
@@ -147,7 +147,7 @@ async function createAccount(creatorAccountId, newAccountId, amount) {
 
 ### Access Key Rotation {#access-key-rotation}
 
-> [Access keys](/docs/concepts/account#access-keys) are unique on the Axion platform as you can have as many keys as you like. Sometimes users practice "rotating keys" or adding new keys and deleting old ones. Here are snippets for creating and deleting access keys.
+> [Access keys](/docs/concepts/account#access-keys) are unique on the Fermi platform as you can have as many keys as you like. Sometimes users practice "rotating keys" or adding new keys and deleting old ones. Here are snippets for creating and deleting access keys.
 
 #### Create New Full Access Key {#create-new-full-access-key}
 
@@ -542,7 +542,7 @@ async function calculateGas(contractId, methodName, args, depositAmount) {
 
 ### Read State without an Account {#read-state-without-an-account}
 
-> Allows you to query the JSON RPC provider _without_ having to instantiate a Axion account.
+> Allows you to query the JSON RPC provider _without_ having to instantiate a Fermi account.
 
 ```js
 // demonstrates how to query the state without setting
@@ -568,12 +568,12 @@ async function getState() {
 }
 ```
 
-### Wrap and Unwrap Axion {#wrap-and-unwrap-near}
+### Wrap and Unwrap Fermi {#wrap-and-unwrap-near}
 
-> Wrap and unwrap Axion using the wrap.near smart contract.
+> Wrap and unwrap Fermi using the wrap.near smart contract.
 
 ```js
-const HELP = `To convert N $Axion to wNEAR,  run this script in the following format:
+const HELP = `To convert N $Fermi to wNEAR,  run this script in the following format:
     node wrap-near.js YOU.near N
 Note: runs on mainnet!`;
 
@@ -605,10 +605,10 @@ async function wrapNear(accountId, wrapAmount) {
 
   const actions = [
     transactions.functionCall(
-      "near_deposit", // contract method to deposit Axion for wNEAR
+      "near_deposit", // contract method to deposit Fermi for wNEAR
       {},
       30000000000000, // attached gas
-      utils.format.parseNearAmount(wrapAmount) // amount of Axion to deposit and wrap
+      utils.format.parseNearAmount(wrapAmount) // amount of Fermi to deposit and wrap
     ),
   ];
 
@@ -626,7 +626,7 @@ async function wrapNear(accountId, wrapAmount) {
         "storage_deposit", // method to create an account
         {},
         30000000000000, // attached gas
-        utils.format.parseNearAmount('0.00125') // account creation costs 0.00125 Axion for storage
+        utils.format.parseNearAmount('0.00125') // account creation costs 0.00125 Fermi for storage
       )
     );
   }

@@ -27,7 +27,7 @@ The JSON-RPC enables you to query the gas price for a specific block or hash.
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "gas_price",
   "params": [17824600]
 }
@@ -44,7 +44,7 @@ const response = await near.connection.provider.gasPrice(17824600);
 <TabItem value="http" label="HTTPie">
 
 ```bash
-http post https://rpc.testnet.near.org jsonrpc=2.0 method=gas_price params:='[17824600]' id=axion
+http post https://rpc.testnet.near.org jsonrpc=2.0 method=gas_price params:='[17824600]' id=fermi
 ```
 
 </TabItem>
@@ -58,7 +58,7 @@ http post https://rpc.testnet.near.org jsonrpc=2.0 method=gas_price params:='[17
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "gas_price",
   "params": ["AXa8CHDQSA8RdFCt12rtpFraVq4fDUgJbLPxwbaZcZrj"]
 }
@@ -77,7 +77,7 @@ const response = await near.connection.provider.gasPrice(
 <TabItem value="http" label="HTTPie">
 
 ```bash
-http post https://rpc.testnet.near.org jsonrpc=2.0 method=gas_price params:='["AXa8CHDQSA8RdFCt12rtpFraVq4fDUgJbLPxwbaZcZrj"]' id=axion
+http post https://rpc.testnet.near.org jsonrpc=2.0 method=gas_price params:='["AXa8CHDQSA8RdFCt12rtpFraVq4fDUgJbLPxwbaZcZrj"]' id=fermi
 ```
 
 </TabItem>
@@ -91,7 +91,7 @@ http post https://rpc.testnet.near.org jsonrpc=2.0 method=gas_price params:='["A
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "gas_price",
   "params": [null]
 }
@@ -108,7 +108,7 @@ const response = await near.connection.provider.gasPrice(null);
 <TabItem value="http" label="HTTPie">
 
 ```bash
-http post https://rpc.testnet.near.org jsonrpc=2.0 method=gas_price params:='[null]' id=axion
+http post https://rpc.testnet.near.org jsonrpc=2.0 method=gas_price params:='[null]' id=fermi
 ```
 
 </TabItem>
@@ -124,7 +124,7 @@ http post https://rpc.testnet.near.org jsonrpc=2.0 method=gas_price params:='[nu
   "result": {
     "gas_price": "100000000"
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 
@@ -148,7 +148,7 @@ When API request fails, RPC server returns a structured error response with a li
         "data": String,
         "message": "Server error",
     },
-    "id": "axion",
+    "id": "fermi",
     "jsonrpc": "2.0"
 }
 ```

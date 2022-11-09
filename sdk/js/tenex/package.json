@@ -16,7 +16,7 @@
     "@types/yargs": "^15.0.3",
     "@typescript-eslint/eslint-plugin": "^5.39.0",
     "@typescript-eslint/parser": "^5.39.0",
-    "axion-js-sdk": "file:../axion",
+    "fermi-js-sdk": "file:../fermi",
     "blakejs": "^1.2.1",
     "cli-table": "^0.3.1",
     "eslint": "^7.8.0",

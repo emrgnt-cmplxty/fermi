@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # near_bindgen
 
-The `#[near_bindgen]` macro is used on a `struct` and the function implementations to generate the necessary code to be a valid Axion contract and expose the intended functions to be able to be called externally.
+The `#[near_bindgen]` macro is used on a `struct` and the function implementations to generate the necessary code to be a valid Fermi contract and expose the intended functions to be able to be called externally.
 
 For example, on a simple counter contract, the macro will be applied as such:
 

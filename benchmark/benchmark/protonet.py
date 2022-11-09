@@ -14,7 +14,7 @@ import subprocess
 from benchmark.config import Committee, Key, NodeParameters, BenchParameters, ConfigError, GDEXBenchParameters
 from benchmark.utils import BenchError, Print, PathMaker, progress_bar, multiaddr_to_url_data
 from benchmark.commands import CommandMaker
-from benchmark.gdex_logs import LogParser, ParseError
+from benchmark.fermi_logs import LogParser, ParseError
 from benchmark.instance import InstanceManager
 from benchmark.remote import Bench
 
@@ -54,7 +54,7 @@ class Protonet(Bench):
             metrics_address = '/'.join(metrics_address)
 
             host = Committee.ip_from_multi_address(validator_dict['grpc_address'])
-            cmd = CommandMaker.run_gdex_node(
+            cmd = CommandMaker.run_fermi_node(
                 self.remote_proto_dir,
                 self.remote_proto_dir,
                 self.remote_proto_dir + PathMaker.key_file(i),
@@ -73,14 +73,14 @@ class Protonet(Bench):
             validator_grpc_address = validator_dict['grpc_address']
             host = Committee.ip_from_multi_address(validator_grpc_address)
             if self.bench_parameters.order_bench:
-                cmd = CommandMaker.run_gdex_orderbook_client(
+                cmd = CommandMaker.run_fermi_orderbook_client(
                     multiaddr_to_url_data(validator_grpc_address),
                     self.remote_proto_dir + PathMaker.key_file(0),
                     rate_share,
                     [multiaddr_to_url_data(node['grpc_address']) for node in committee.json['authorities'].values() if node['grpc_address'] != validator_grpc_address]
                 )
             else:
-                cmd = CommandMaker.run_gdex_client(
+                cmd = CommandMaker.run_fermi_client(
                     multiaddr_to_url_data(validator_grpc_address),
                     self.remote_proto_dir + PathMaker.key_file(i),
                     rate_share,

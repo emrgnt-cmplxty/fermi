@@ -25,7 +25,7 @@ The JSON-RPC enables you to query the network and get details around deployed fu
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "getFuturesMarketPlaces",
   "params": []
 }
@@ -58,7 +58,7 @@ const response = await tenexClient.getFuturesMarketPlaces();
       },
     ]
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 
@@ -83,7 +83,7 @@ const response = await tenexClient.getFuturesMarketPlaces();
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "getFuturesMarkets",
   "params": ["0x409aa8642d2b75eaa7ebc6fb5413e2abbc30e78bddef59130570d3066b6c3888"]
 }
@@ -119,7 +119,7 @@ const response = await tenexClient.getFuturesMarketPlaces();
       }
     ]
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 
@@ -145,7 +145,7 @@ const response = await tenexClient.getFuturesMarketPlaces();
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "getUserMarketplaceInfo",
   "params": ["0x409aa8642d2b75eaa7ebc6fb5413e2abbc30e78bddef59130570d3066b6c3888", "0x409aa8642d2b75eaa7ebc6fb5413e2abbc30e78bddef59130570d3066b6c3888"]
 }
@@ -180,7 +180,7 @@ const response = await tenexClient.getUserMarketplaceInfo(marketAdminPubKey, use
       }
     ]
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 

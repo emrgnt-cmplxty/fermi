@@ -10,9 +10,9 @@ In order to use the JSON-RPC you will need to setup the correct RPC endpoints.
 ## RPC Endpoint Setup
 - `POST` for all methods
 - `JSON RPC 2.0`
-- `id: "axion"`
+- `id: "fermi"`
 - endpoint URL varies by network:
-  - protonet `https://rpc.mainnet.axion.network`
+  - protonet `https://rpc.mainnet.fermi.network`
 ### Limits
 - Maximum number of requests per IP: unlimited req/min
 
@@ -20,7 +20,7 @@ In order to use the JSON-RPC you will need to setup the correct RPC endpoints.
 ---
 ## JavaScript Setup {#javascript-setup}
 
-All of the queries listed in this documentation page can be called using [`tenex-js-sdk`](https://github.com/gdexorg/gdex/tree/main/sdk/js/tenex).
+All of the queries listed in this documentation page can be called using [`tenex-js-sdk`](https://github.com/fermiorg/fermi/tree/main/sdk/js/tenex).
 
 The example below demonstrates a typical client workflow.
 

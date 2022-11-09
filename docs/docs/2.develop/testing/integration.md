@@ -5,7 +5,7 @@ title: Integration Test
 ---
 import {CodeTabs, Language, Github} from "@site/components/codetabs"
 
-Integration tests enable to deploy your contract in the Axion `testnet` or a local `sandbox`, and create test-users to interact with it. In this way, you can thoroughly test your contract in a realistic environment.
+Integration tests enable to deploy your contract in the Fermi `testnet` or a local `sandbox`, and create test-users to interact with it. In this way, you can thoroughly test your contract in a realistic environment.
 
 Moreover, when using the local `sandbox` you gain complete control of the network:
 
@@ -13,15 +13,15 @@ Moreover, when using the local `sandbox` you gain complete control of the networ
 2. Simulate errors on callbacks.
 3. Control the time-flow and fast-forward into the future (Rust ready, TS coming soon).
 
-### Axion Workspaces
-In Axion, integration tests are implemented using a framework called **Workspaces**. Workspaces comes in two flavors: [🦀 Rust](https://github.com/near/workspaces-rs) and [🌐 Typescript](https://github.com/near/workspaces-js).
+### Fermi Workspaces
+In Fermi, integration tests are implemented using a framework called **Workspaces**. Workspaces comes in two flavors: [🦀 Rust](https://github.com/near/workspaces-rs) and [🌐 Typescript](https://github.com/near/workspaces-js).
 
 If you used one of our [examples](https://github.com/near-examples/docs-examples) as template, then integration testing using `workspaces-js` is already implemented, and you simply need to run `yarn test:integration` from the project's root folder.
 
 ---
 
-## Snippet I: Testing Hello Axion
-Lets take a look at the test of our [Quickstart Project](../quickstart.md) [👋 Hello Axion](https://github.com/near-examples/hello-near-rs), where we deploy the contract on an account and test it correctly retrieves and sets the greeting.
+## Snippet I: Testing Hello Fermi
+Lets take a look at the test of our [Quickstart Project](../quickstart.md) [👋 Hello Fermi](https://github.com/near-examples/hello-near-rs), where we deploy the contract on an account and test it correctly retrieves and sets the greeting.
 
 <CodeTabs>
   <Language value="🌐 - Typescript" language="ts">
@@ -47,11 +47,11 @@ In most cases we will want to test complex methods involving multiple users and 
 
 ## Sandbox Testing
 
-Axion Workspaces allows you to write tests once, and run them both on `testnet` and on a controlled local `Sandbox`. By **default**, Workspaces will start a **sandbox** and run your tests **locally**. Lets dive into the features of our framework and see how they can help you.
+Fermi Workspaces allows you to write tests once, and run them both on `testnet` and on a controlled local `Sandbox`. By **default**, Workspaces will start a **sandbox** and run your tests **locally**. Lets dive into the features of our framework and see how they can help you.
 
 ### Spooning Contracts
 
-[Spooning a blockchain](https://coinmarketcap.com/alexandria/glossary/spoon-blockchain) is copying the data from one network into a different network. Axion Workspaces makes it easy to copy data from Mainnet or Testnet contracts into your local Sandbox environment:
+[Spooning a blockchain](https://coinmarketcap.com/alexandria/glossary/spoon-blockchain) is copying the data from one network into a different network. Fermi Workspaces makes it easy to copy data from Mainnet or Testnet contracts into your local Sandbox environment:
 
 <Tabs>
 <TabItem value="🌐 JavaScript" label="JavaScript" default>
@@ -90,7 +90,7 @@ async fn pull_contract(owner: &Account, worker: &Worker<Sandbox>) -> anyhow::Res
     let contract_id: AccountId = CONTRACT_ACCOUNT.parse()?;
 ```
 
-This next line will actually pull down the relevant contract from testnet and set an initial balance on it with 1000 Axion.
+This next line will actually pull down the relevant contract from testnet and set an initial balance on it with 1000 Fermi.
 
 ```rust
     let contract = worker
@@ -251,7 +251,7 @@ For a full Rust example, take a look at [examples/src/fast_forward.rs](https://g
 
 ## Using Testnet
 
-Axion Workspaces is set up so that you can write tests once and run them against a local Sandbox node (the default behavior) or against [Axion TestNet](../../1.concepts/basics/networks.md). Some reasons this might be helpful:
+Fermi Workspaces is set up so that you can write tests once and run them against a local Sandbox node (the default behavior) or against [Fermi TestNet](../../1.concepts/basics/networks.md). Some reasons this might be helpful:
 
 * Gives higher confidence that your contracts work as expected
 * You can test against deployed testnet contracts

@@ -1,24 +1,24 @@
 ---
 id: introduction
 sidebar_label: Home
-title: Axion JSON-RPC
+title: Fermi JSON-RPC
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-The JSNO-RPC allows clients to communicate directly with the Axion network. For example,
-tools such as [axion-js-sdk](https://github.com/gdexorg/gdex/tree/main/sdk/js/tenex) just create abstractions around the JSON-RPC calls.
+The JSNO-RPC allows clients to communicate directly with the Fermi network. For example,
+tools such as [fermi-js-sdk](https://github.com/fermiorg/fermi/tree/main/sdk/js/tenex) just create abstractions around the JSON-RPC calls.
 
 <hr class="subsection" />
 
 ## RPC Providers
 
-There are multiple [RPC providers which you can choose from](./providers.md). These providers will work as intermediaries to help you interact with the Axion network.
+There are multiple [RPC providers which you can choose from](./providers.md). These providers will work as intermediaries to help you interact with the Fermi network.
 
 <hr class="subsection" />
 
-## Axion RPC - Quick Links
+## Fermi RPC - Quick Links
 
 | API                                        | Description                                                                  |
 | ------------------------------------------ | ---------------------------------------------------------------------------- |

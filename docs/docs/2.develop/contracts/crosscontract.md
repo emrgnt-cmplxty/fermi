@@ -22,7 +22,7 @@ There is a delay between the call and the callback in which everyone can still i
 
 ## Snippet: Querying Information
 
-While making your contract, it is likely that you will want to query information from another contract. Below, you can see a basic example in which we query the greeting message from our [Hello Axion](../quickstart.md) example.
+While making your contract, it is likely that you will want to query information from another contract. Below, you can see a basic example in which we query the greeting message from our [Hello Fermi](../quickstart.md) example.
 
 <CodeTabs>
   <Language value="🌐 JavaScript" language="ts">
@@ -49,7 +49,7 @@ While making your contract, it is likely that you will want to query information
 ---
 
 ## Snippet: Sending Information
-Calling another contract passing information is also a common scenario. Bellow you can see a method that interacts with the [Hello Axion](../quickstart.md) example to change its greeting message.
+Calling another contract passing information is also a common scenario. Bellow you can see a method that interacts with the [Hello Fermi](../quickstart.md) example to change its greeting message.
 
 <CodeTabs>
 <Language value="🌐 JavaScript" language="ts">
@@ -109,7 +109,7 @@ Both promises take the same arguments:
    - The method that you want to execute
    - The (**encoded**) arguments to pass to the method
    - The amount of GAS to use (deducted from the **attached Gas**)
-   - The amount of Axion to attach (deducted from **your contract’s balance**)
+   - The amount of Fermi to attach (deducted from **your contract’s balance**)
 
 :::tip
 Notice that the callback could be made to **any** contract. This means that, if you want, the result could be potentially handled by another contract.
@@ -181,12 +181,12 @@ In case the call finishes successfully, the resulting object will have a `status
 If the external method fails (i.e. it panics), then your callback will be **executed anyway**. Here you need to **manually rollback** any changes made in your
 contract during the original call. Particularly:
 
-1. If the contract attached Axion to the call, the funds are sent back to **the contract's account**.
+1. If the contract attached Fermi to the call, the funds are sent back to **the contract's account**.
 2. If the original method made any state changes (i.e. changed or stored data), they **won't be automatically reverted**.
 
 :::warning
 If your original method finishes correctly then the callback executes **even if the external method panics**. Your state will **not** rollback automatically,
-and $Axion will **not** be returned to the signer automatically. Always make sure to check in the callback if the external method failed, and manually rollback any
+and $Fermi will **not** be returned to the signer automatically. Always make sure to check in the callback if the external method failed, and manually rollback any
 operation if necessary.
 :::
 

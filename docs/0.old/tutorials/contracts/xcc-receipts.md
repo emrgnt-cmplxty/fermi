@@ -8,9 +8,9 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 
-A cross contract call happens when a smart contract invokes a method on another smart contract. This ability allows a developer to create complicated interactions by composing various smart contracts together. In order to make this composability easier for developers, Axion introduces promises. Promises allow developers to synchronize cross contract calls using familiar `.then` syntax.
+A cross contract call happens when a smart contract invokes a method on another smart contract. This ability allows a developer to create complicated interactions by composing various smart contracts together. In order to make this composability easier for developers, Fermi introduces promises. Promises allow developers to synchronize cross contract calls using familiar `.then` syntax.
 
-Since Axion is a sharded blockchain, much of this is accomplished by something akin to the [Actor Model](https://en.wikipedia.org/wiki/Actor_model). While making cross contract calls, we are sending messages (`ActionReceipt`) to other contracts. When the other contract finishes, they send back a message (`DataReceipt`) containing returned data. This returned data can be processed by registering a callback using the `.then` syntax.
+Since Fermi is a sharded blockchain, much of this is accomplished by something akin to the [Actor Model](https://en.wikipedia.org/wiki/Actor_model). While making cross contract calls, we are sending messages (`ActionReceipt`) to other contracts. When the other contract finishes, they send back a message (`DataReceipt`) containing returned data. This returned data can be processed by registering a callback using the `.then` syntax.
 
 ## Prerequisites {#prerequisites}
 
@@ -27,7 +27,7 @@ Since Axion is a sharded blockchain, much of this is accomplished by something a
 
 ## Calling Smart Contract Methods {#calling-smart-contract-methods}
 
-Since Axion is a sharded blockchain, the runtime packages the call from `A` to `B` into an `ActionReceipt`. At the same time, the shard containing `A` registers a callback by creating a pending `ActionReceipt`. On the next block, the shard containing `B` will process the `ActionReceipt` from `A` invoking the method on `B`. It will then take the returned value from `B` and package it into a `DataReceipt`. Then, on the next block, the shard containing `A` will process the `DataReceipt` from `B` and trigger the pending `ActionReceipt` from earlier, invoking the registered callback.
+Since Fermi is a sharded blockchain, the runtime packages the call from `A` to `B` into an `ActionReceipt`. At the same time, the shard containing `A` registers a callback by creating a pending `ActionReceipt`. On the next block, the shard containing `B` will process the `ActionReceipt` from `A` invoking the method on `B`. It will then take the returned value from `B` and package it into a `DataReceipt`. Then, on the next block, the shard containing `A` will process the `DataReceipt` from `B` and trigger the pending `ActionReceipt` from earlier, invoking the registered callback.
 
 1. Contract `A` calls contract `B`
 2. The runtime prepares the cross contract call by:
@@ -59,14 +59,14 @@ pub trait ContractA {
 ext_contract_b::method_on_b(
     "arg_1".to_string(),
     &"contract-b.near", // contract account id
-    0, // yocto Axion to attach
+    0, // yocto Fermi to attach
     5_000_000_000_000 // gas to attach
 )
 // When the cross contract call from A to B finishes the my_callback method is triggered.
 // Since my_callback is a callback, it will have access to the returned data from B
 .then(ext_self::my_callback(
     &env::current_account_id(), // this contract's account id
-    0, // yocto Axion to attach to the callback
+    0, // yocto Fermi to attach to the callback
     5_000_000_000_000 // gas to attach to the callback
 ))
 ```
@@ -88,7 +88,7 @@ ContractPromise.create<ContractBMethodOnB>(
     arg_1: "arg_1",
   },
   5_000_000_000_000, // gas to attach
-  u128.Zero // yocto Axion to attach
+  u128.Zero // yocto Fermi to attach
 )
   // When the cross contract call from A to B finishes the my_callback method is triggered.
   // Since my_callback is a callback, it will have access to the returned data from B
@@ -138,14 +138,14 @@ impl Contract {
         ext_ft::ft_balance_of(
             account_id.into(),
             &"banana.ft-fin.testnet", // contract account id
-            0, // yocto Axion to attach
+            0, // yocto Fermi to attach
             5_000_000_000_000 // gas to attach
         )
         // After the smart contract method finishes a DataReceipt will be sent back
         // .then registers a method to handle that incoming DataReceipt
         .then(ext_self::my_callback(
             &env::current_account_id(), // this contract's account id
-            0, // yocto Axion to attach to the callback
+            0, // yocto Fermi to attach to the callback
             5_000_000_000_000 // gas to attach to the callback
         ))
     }
@@ -199,7 +199,7 @@ export function myFirstCrossContractCall(accountId: string): void {
       account_id: accountId,
     },
     5_000_000_000_000, // gas to attach
-    u128.Zero // yocto Axion to attach
+    u128.Zero // yocto Fermi to attach
   )
     // After the smart contract method finishes a DataReceipt will be sent back
     // .then registers a method to handle that incoming DataReceipt
@@ -208,7 +208,7 @@ export function myFirstCrossContractCall(accountId: string): void {
       "myCallback", // the method to call after the previous cross contract call finishes
       {},
       5_000_000_000_000, // gas to attach to the callback
-      u128.Zero // yocto Axion to attach to the callback
+      u128.Zero // yocto Fermi to attach to the callback
     )
     .returnAsResult(); // return the result of myCallback
 }
@@ -294,7 +294,7 @@ impl Contract {
             env::predecessor_account_id(), // voter AccountId
             total_votes.into(),            // total votes for candidate
             candidate_id,                  // contract AccountId for candidate
-            0,                             // attached yocto Axion
+            0,                             // attached yocto Fermi
             5_000_000_000_000,             // attached gas
         )
     }
@@ -358,7 +358,7 @@ export function candidate_vote_call(candidate_id: string): void {
       total_votes,
     },
     5_000_000_000_000, // attached gas
-    u128.Zero // attached yocto Axion
+    u128.Zero // attached yocto Fermi
   ).returnAsResult();
 }
 

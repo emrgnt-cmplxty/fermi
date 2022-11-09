@@ -44,7 +44,7 @@ Your contract will then be **compiled** and **deployed** to an **account** in th
 ---
 
 ## Interacting With the Counter
-Go ahead and log in with your Axion account. If you don't have one, you can create one on the fly. Once logged in, use the `tails` and `heads` buttons to try to guess the next coin flip outcome.
+Go ahead and log in with your Fermi account. If you don't have one, you can create one on the fly. Once logged in, use the `tails` and `heads` buttons to try to guess the next coin flip outcome.
 
 ![img](/docs/assets/examples/coin-flip.png)
 *Frontend of the Game*

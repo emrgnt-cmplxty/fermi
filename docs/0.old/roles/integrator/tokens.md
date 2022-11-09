@@ -12,7 +12,7 @@ One notable aspect of the standard is that method names are prefixed with `ft_`.
 
 ## Get balance {#get-balance}
 
-Using the abstraction of the [Axion CLI](/tools/cli) tool, we can check the balance of a user's account with [`near view`](/tools/cli#near-view):
+Using the abstraction of the [Fermi CLI](/tools/cli) tool, we can check the balance of a user's account with [`near view`](/tools/cli#near-view):
 
 `near view ft.demo.testnet ft_balance_of '{"account_id": "mike.testnet"}'`
 
@@ -48,7 +48,7 @@ content-type: application/json
 date: Thu, 27 May 2021 12:53:38 GMT
 
 {
-    "id": "axion",
+    "id": "fermi",
     "jsonrpc": "2.0",
     "result": {
         "block_hash": "3mvNHpZAsXiJ6SuHU1mbLVB4iXCfh5i5d41pnkaSoaJ5",
@@ -72,7 +72,7 @@ Returns:
 ## Get info about the FT {#get-info-about-the-ft}
 
 You can get `name`, `decimals`, `icon` and other parameters by calling the next function:
-  - using Axion CLI:
+  - using Fermi CLI:
 
       ```bash
       near view <contract_account_id> ft_metadata
@@ -143,10 +143,10 @@ You can get `name`, `decimals`, `icon` and other parameters by calling the next 
 
 To follow this guide, please check the [step by step instructions](/docs/tutorials/create-transactions#low-level----create-a-transaction) on how to create a transaction first.
 
-In order to send a fungible token to an account, the receiver must have a storage deposit. This is because each smart contract on Axion must account for storage used, and each account on a fungible token contract is a key-value pair, taking up a small amount of storage. For more information, please see [how storage works in Axion](/docs/concepts/storage-staking). To check if account has deposited the storage for this FT do the following:
+In order to send a fungible token to an account, the receiver must have a storage deposit. This is because each smart contract on Fermi must account for storage used, and each account on a fungible token contract is a key-value pair, taking up a small amount of storage. For more information, please see [how storage works in Fermi](/docs/concepts/storage-staking). To check if account has deposited the storage for this FT do the following:
 
 Get storage balance of the account. `storage_balance_of` function returns the amount of deposited storage or `null` if there is no deposit.
-  - using Axion CLI:
+  - using Fermi CLI:
 
     ```bash
     near view <contract_account_id> storage_balance_of '{"account_id": "<user_account_id>"}'
@@ -196,7 +196,7 @@ Get storage balance of the account. `storage_balance_of` function returns the am
       Decoded result in this case is `null`.
 
 Get the minimum storage required for FT. (The storage used for an account's key-value pair.)
-  - using Axion CLI:
+  - using Fermi CLI:
 
     ```bash
     near view <contract_account_id> storage_balance_bounds`
@@ -255,7 +255,7 @@ Get the minimum storage required for FT. (The storage used for an account's key-
 Basic fungible tokens are simple smart contracts that don't have variable storage as compared to a smart contract that might store free-form text, for instance. The only storage needed is for an accounts key-value pair, which will always be covered by the `1250000000000000000000` yoctoⓃ storage balance.
 
 If there is not enough deposit for the storage or returned value is `null` - you should deposit more storage with the next command:
-  - using Axion CLI, don't forget to convert from yoctoⓃ to Ⓝ:
+  - using Fermi CLI, don't forget to convert from yoctoⓃ to Ⓝ:
 
     ```bash
     near call <contract_account_id> storage_deposit '{"account_id": "<user_account_id>"}' --accountId <sender_account_id> --deposit <deposit in Ⓝ>
@@ -264,7 +264,7 @@ If there is not enough deposit for the storage or returned value is `null` - you
     Result example:
 
     ```bash
-    Scheduling a call: ft.demo.testnet.storage_deposit() with attached 0.125 Axion
+    Scheduling a call: ft.demo.testnet.storage_deposit() with attached 0.125 Fermi
     Transaction Id 9CMrMMt3UzeU63FFrUyFb1gNGuHXxvKfHqYJzyFTAk6z
     To see the transaction in the transaction explorer, please open this url in your browser
     https://explorer.testnet.near.org/transactions/9CMrMMt3UzeU63FFrUyFb1gNGuHXxvKfHqYJzyFTAk6z
@@ -296,7 +296,7 @@ Transaction: {
 ```
 
       ```bash
-      http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=broadcast_tx_commit \
+      http post https://rpc.testnet.near.org jsonrpc=2.0 id=fermi method=broadcast_tx_commit \
           params:='["DgAAAHNlcmhpaS50ZXN0bmV0AEKEp54fyVkp8dJE2l/m1ErjdhDGodBK8ZF6JLeHFMeZi/qoVEgrAAAPAAAAZnQuZGVtby50ZXN0bmV0JYbWPOu0P9T32vtUKnZSh+EaoboQqg0/De2i8Y+AjHIBAAAAAg8AAABzdG9yYWdlX2RlcG9zaXQCAAAAe30AQHoQ81oAAAAAILSd2XlDeBoAAAAAAAAAZF7+s4lcHOzy+re59VErt7LcZkPMMUVgOJV8LH5TsLBBv+8h/5tZ6+HFwxSp605A4c46oS9Jw4KBRXZD07lKCg=="]'
       ```
 
@@ -518,7 +518,7 @@ Transaction: {
 </details>
 
 Transfer the tokens:
-  - using Axion CLI:
+  - using Fermi CLI:
 
     ```bash
     near call <contract_account_id> ft_transfer '{"receiver_id": "<receiver_account_id>", "amount": "1"}' --accountId <sender_account_id> --amount 0.000000000000000000000001
@@ -527,7 +527,7 @@ Transfer the tokens:
     Result example:
 
     ```bash
-    Scheduling a call: berryclub.ek.near.ft_transfer({"receiver_id": "volovyk.near", "amount": "1"}) with attached 0.000000000000000000000001 Axion
+    Scheduling a call: berryclub.ek.near.ft_transfer({"receiver_id": "volovyk.near", "amount": "1"}) with attached 0.000000000000000000000001 Fermi
     Receipt: GDeE3Kv1JHgs71A22NEUbgq55r2Hvcnis8gCMyJtQ2mx
     	Log [berryclub.ek.near]: Transfer 1 from serhii.near to volovyk.near
     Transaction Id 3MkWKbXVP8wyy4pBofELqiE1pwx7ie2v3SKCwaobNcEe
@@ -560,7 +560,7 @@ Transaction: {
 ```
 
       ```bash
-      http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=broadcast_tx_commit \
+      http post https://rpc.testnet.near.org jsonrpc=2.0 id=fermi method=broadcast_tx_commit \
           params:='["CwAAAHNlcmhpaS5uZWFyAAmQpgZcJM5nMc6f3tqmw/YI4eAvc84ZgsKMRRRzhY/6CQAAAAAAAAARAAAAYmVycnljbHViLmVrLm5lYXLLWPIiUOElkDF3u4hLAMJ0Sjeo1V338pDdHIp70va3ewEAAAACCwAAAGZ0X3RyYW5zZmVyKwAAAHsicmVjZWl2ZXJfaWQiOiJ2b2xvdnlrLm5lYXIiLCJhbW91bnQiOiIxIn0AQHoQ81oAAAEAAAAAAAAAAAAAAAAAAAAA7fDOZQt3zCtdS05Y8XaZFlwO/Gd5wkkNAHShzDiLQXk4Q4ixpraLPMJivs35PZD0gocXl1iGFbQ46NG3VllzCA=="]'
       ```
 
@@ -746,22 +746,22 @@ http post https://archival-rpc.mainnet.near.org jsonrpc=2.0 method=EXPERIMENTAL_
 
 You can get the same info later by the transaction hash from the previous call:
 
-  - using Axion Explorer: https://explorer.near.org
+  - using Fermi Explorer: https://explorer.near.org
 
 <!--
-- using Axion CLI:
+- using Fermi CLI:
 near tx-status <transaction_hash> --accountId <transaction_signer>
 -->
 
   - with JSON RPC call
 
   ```bash
-      http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=EXPERIMENTAL_tx_status \
+      http post https://rpc.testnet.near.org jsonrpc=2.0 id=fermi method=EXPERIMENTAL_tx_status \
       params:='[ "2Fy4714idMCoja7QLdGAbQZHzV2XEnUdwZX6yGa46VMX", "sender.testnet"]'
   ```
 
 Let's create test transaction that should fail and investigate the response. We will try to send more tokens that are available on this account:
-  - using Axion CLI:
+  - using Fermi CLI:
 
     ```bash
     near call <contract_account_id> ft_transfer '{"receiver_id": "<user_account_id>", "amount": "10000000000"}' --accountId <sender_account_id> --amount 0.000000000000000000000001
@@ -791,7 +791,7 @@ Transaction: {
 ```
 
     ```bash
-      http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=broadcast_tx_commit \
+      http post https://rpc.testnet.near.org jsonrpc=2.0 id=fermi method=broadcast_tx_commit \
       params:='["DgAAAHNlcmhpaS50ZXN0bmV0AEKEp54fyVkp8dJE2l/m1ErjdhDGodBK8ZF6JLeHFMeZofqoVEgrAAAgAAAAZGV2LTE2MjMzMzM3OTU2MjMtMjEzOTk5NTk3NzgxNTm8Xq8BTIi6utG0424Gg7CknYzLH8RH/A409jq5o0zi7gEAAAACCwAAAGZ0X3RyYW5zZmVyPwAAAHsicmVjZWl2ZXJfaWQiOiJkZXYtMTYyMzMzMzkxNjM2OC01ODcwNzQzNDg3ODUzMyIsImFtb3VudCI6IjEifQBAehDzWgAAAQAAAAAAAAAAAAAAAAAAAABCwjqayKdpWgM6PE0ixzm/Gy0EtdpxVn0xehMTBReVfVAKIBTDPoPSaOdT8fAhk343F5uOMfSijhTqU2mWV3oD"]'
     ```
 
@@ -1053,7 +1053,7 @@ Let's call `ft_transfer_call` function on `ft` contract (receiver) and examine s
 ### Successful transfer and call {#successful-transfer-and-call}
   Let's send 10 N to `DEFI` contract that requires only 9 N.
 
-  - using Axion CLI
+  - using Fermi CLI
     ```bash
     near call <ft_contract_id> ft_transfer_call '{"receiver_id": "<defi_contract_id>", "amount": "10", "msg": "take-my-money"}' --accountId <user_account_id> --amount 0.000000000000000000000001
     ```
@@ -1082,7 +1082,7 @@ Transaction: {
 ```
 
     ```bash
-      http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=broadcast_tx_commit \
+      http post https://rpc.testnet.near.org jsonrpc=2.0 id=fermi method=broadcast_tx_commit \
       params:='["DgAAAHNlcmhpaS50ZXN0bmV0AEKEp54fyVkp8dJE2l/m1ErjdhDGodBK8ZF6JLeHFMeZqPqoVEgrAAAgAAAAZGV2LTE2MjMzMzM3OTU2MjMtMjEzOTk5NTk3NzgxNTn9j4g2IJ8nGQ38i3+k+4WBAeJL1xP7ygQhC7CrvEG4NQEAAAACEAAAAGZ0X3RyYW5zZmVyX2NhbGxWAAAAeyJyZWNlaXZlcl9pZCI6ImRldi0xNjIzNjkzMTIxOTU1LTcxNjY3NjMyNTMxMTc2IiwiYW1vdW50IjoiMTAiLCJtc2ciOiJ0YWtlLW15LW1vbmV5In0AQHoQ81oAAAEAAAAAAAAAAAAAAAAAAAAANY2lHqJlAJYNDGEQiUNnmfiBV44Q1sdg45xNlNvlROOM+AtN1z3PSJqM6M6jAKXUwANoQTzFqXhIMHIjIPbTAA=="]'
     ```
 
@@ -1437,7 +1437,7 @@ In summary:
 ### Failed transfer and call {#failed-transfer-and-call}
 Let's try to send more tokens than the account has:
 
-  - using Axion CLI
+  - using Fermi CLI
     ```bash
         near call <ft_contract_id> ft_transfer_call '{"receiver_id": "<defi_contract_id>", "amount": "1000000000", "msg": "take-my-money"}' --accountId <user_account_id> --amount 0.000000000000000000000001
     ```
@@ -1465,7 +1465,7 @@ Transaction: {
 
   - with JSON RPC call
       ```bash
-          http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=broadcast_tx_commit \
+          http post https://rpc.testnet.near.org jsonrpc=2.0 id=fermi method=broadcast_tx_commit \
           params:='["DgAAAHNlcmhpaS50ZXN0bmV0AEKEp54fyVkp8dJE2l/m1ErjdhDGodBK8ZF6JLeHFMeZn/qoVEgrAAAgAAAAZGV2LTE2MjMzMzM3OTU2MjMtMjEzOTk5NTk3NzgxNTnrbOQ93Wv9xxBwmq4yDYrssCpwKSI2bzjNNCCCHMZKNwEAAAACEAAAAGZ0X3RyYW5zZmVyX2NhbGxeAAAAeyJyZWNlaXZlcl9pZCI6ImRldi0xNjIzMzMzOTE2MzY4LTU4NzA3NDM0ODc4NTMzIiwiYW1vdW50IjoiMTAwMDAwMDAwMCIsIm1zZyI6InRha2UtbXktbW9uZXkifQBAehDzWgAAAQAAAAAAAAAAAAAAAAAAAABQh3k+7zG2m/Yz3O/FBrvLaBwR/5YRB5FbFnb27Nfu6BW/Wh77RFH7+ktBwGLBwFbJGxiumIcsqBiGXgg1EPMN"]'
       ```
 

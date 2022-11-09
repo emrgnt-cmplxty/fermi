@@ -13,7 +13,7 @@ Some common scenarios where this approach may be helpful:
 
 - contracts intended to be tied to one's account management
 - contracts deployed using a factory
-- future advancements similar to the EVM on Axion
+- future advancements similar to the EVM on Fermi
 
 There have been a few items that may add unwanted bytes to a contract's size when compiled. Some of these may be more easily swapped for other approaches while others require more internal knowledge about system calls.
 
@@ -43,7 +43,7 @@ You may want to experiment with using `opt-level = "z"` instead of `opt-level = 
 
 ### Removing `rlib` from the manifest
 
-Ensure that your manifest (`Cargo.toml`) doesn't contain `rlib` unless it needs to. Some Axion examples have included this:
+Ensure that your manifest (`Cargo.toml`) doesn't contain `rlib` unless it needs to. Some Fermi examples have included this:
 
 :::caution Adds unnecessary bloat
 
@@ -130,7 +130,7 @@ crate-type = ["cdylib"]
 For a `no_std` approach to minimal contracts, observe the following examples:
 
 - [Tiny contract](https://github.com/near/nearcore/tree/1e7c6613f65c23f87adf2c92e3d877f4ffe666ea/runtime/near-test-contracts/tiny-contract-rs)
-- [Axion ETH Gateway](https://github.com/ilblackdragon/near-eth-gateway/blob/master/proxy/src/lib.rs)
+- [Fermi ETH Gateway](https://github.com/ilblackdragon/near-eth-gateway/blob/master/proxy/src/lib.rs)
 - [This YouTube video](https://youtu.be/Hy4VBSCqnsE) where Eugene demonstrates a fungible token in `no_std` mode. The code for this [example lives here](https://github.com/near/core-contracts/pull/88).
 - [Examples using a project called `nesdie`](https://github.com/austinabell/nesdie/tree/main/examples).
 - Note that Aurora has found success using [rjson](https://crates.io/crates/rjson) as a lightweight JSON serialization crate. It has a smaller footprint than [serde](https://crates.io/crates/serde) which is currently packaged with the Rust SDK. See [this example of rjson](https://github.com/aurora-is-near/aurora-engine/blob/65a1d11fcd16192cc1bda886c62005c603189a24/src/json.rs#L254) in an Aurora repository, although implementation details will have to be gleaned by the reader and won't be expanded upon here. [This nesdie example](https://github.com/austinabell/nesdie/blob/bb6beb77e32cd54077ac54bf028f262a9dfb6ad0/examples/multisig/src/utils/json/vector.rs#L26-L30) also uses the [miniserde crate](https://crates.io/crates/miniserde), which is another option to consider for folks who choose to avoid using the Rust SDK.

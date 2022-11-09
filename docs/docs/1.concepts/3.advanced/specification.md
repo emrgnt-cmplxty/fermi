@@ -1,10 +1,10 @@
 ---
 id: specification
-title: Axion Protocol Specification
+title: Fermi Protocol Specification
 sidebar_label: Specification
 ---
 
-Axion Protocol Specifications and Standards are tracked in two places:
+Fermi Protocol Specifications and Standards are tracked in two places:
 
-- Axion Protocol Specification Documentation: [ [Nomicon.io](https://nomicon.io) ] 
-- Axion Enhancement Proposals GitHub Repository: [ [Axion NEPs](https://github.com/near/NEPs) ]
+- Fermi Protocol Specification Documentation: [ [Nomicon.io](https://nomicon.io) ] 
+- Fermi Enhancement Proposals GitHub Repository: [ [Fermi NEPs](https://github.com/near/NEPs) ]

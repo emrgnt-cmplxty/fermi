@@ -3,48 +3,13 @@ import ComponentCreator from '@docusaurus/ComponentCreator';
 
 export default [
   {
-    path: '/__docusaurus/debug',
-    component: ComponentCreator('/__docusaurus/debug', 'a8e'),
-    exact: true
-  },
-  {
-    path: '/__docusaurus/debug/config',
-    component: ComponentCreator('/__docusaurus/debug/config', '2c0'),
-    exact: true
-  },
-  {
-    path: '/__docusaurus/debug/content',
-    component: ComponentCreator('/__docusaurus/debug/content', '4bd'),
-    exact: true
-  },
-  {
-    path: '/__docusaurus/debug/globalData',
-    component: ComponentCreator('/__docusaurus/debug/globalData', '28f'),
-    exact: true
-  },
-  {
-    path: '/__docusaurus/debug/metadata',
-    component: ComponentCreator('/__docusaurus/debug/metadata', '404'),
-    exact: true
-  },
-  {
-    path: '/__docusaurus/debug/registry',
-    component: ComponentCreator('/__docusaurus/debug/registry', 'e95'),
-    exact: true
-  },
-  {
-    path: '/__docusaurus/debug/routes',
-    component: ComponentCreator('/__docusaurus/debug/routes', '43d'),
-    exact: true
-  },
-  {
     path: '/search',
-    component: ComponentCreator('/search', 'f11'),
+    component: ComponentCreator('/search', '121'),
     exact: true
   },
   {
     path: '/tools/near-api-js/reference',
-    component: ComponentCreator('/tools/near-api-js/reference', '27a'),
+    component: ComponentCreator('/tools/near-api-js/reference', 'd5c'),
     routes: [
       {
         path: '/tools/near-api-js/reference/dummy',
@@ -55,7 +20,7 @@ export default [
   },
   {
     path: '/tools/near-sdk-js/reference',
-    component: ComponentCreator('/tools/near-sdk-js/reference', '558'),
+    component: ComponentCreator('/tools/near-sdk-js/reference', '962'),
     routes: [
       {
         path: '/tools/near-sdk-js/reference/dummy',
@@ -66,7 +31,7 @@ export default [
   },
   {
     path: '/',
-    component: ComponentCreator('/', '9f7'),
+    component: ComponentCreator('/', 'fda'),
     routes: [
       {
         path: '/',

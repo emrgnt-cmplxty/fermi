@@ -1,7 +1,7 @@
 ---
 sidebar_position: 3
 sidebar_label: "Using structs and enums"
-title: "How to think about structs and enums when writing a Rust smart contract on Axion"
+title: "How to think about structs and enums when writing a Rust smart contract on Fermi"
 ---
 
 import basicCrossword from '/docs/assets/crosswords/basics-crossword.jpg';

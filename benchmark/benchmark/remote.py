@@ -14,7 +14,7 @@ import subprocess
 from benchmark.config import Committee, Key, NodeParameters, BenchParameters, ConfigError, GDEXBenchParameters
 from benchmark.utils import BenchError, Print, PathMaker, progress_bar, multiaddr_to_url_data
 from benchmark.commands import CommandMaker
-from benchmark.gdex_logs import LogParser, ParseError
+from benchmark.fermi_logs import LogParser, ParseError
 from benchmark.instance import InstanceManager
 
 class FabricError(Exception):
@@ -143,7 +143,7 @@ class Bench:
                 selected.append(ips)
             return selected
 
-    def _background_run(self, host, command, log_file, cwd='~/gdex-core/benchmark'):
+    def _background_run(self, host, command, log_file, cwd='~/fermi-core/benchmark'):
         name = splitext(basename(log_file))[0]
         cmd = f'(cd {cwd}) && tmux new -d -s "{name}" "{command} |& tee {log_file}"'
         c = Connection(host, user='ubuntu', connect_kwargs=self.connect)
@@ -166,9 +166,9 @@ class Bench:
             f'(cd {self.settings.repo_name} && git checkout -f {self.settings.branch})',
             f'(cd {self.settings.repo_name} && git pull -f)',
             'source $HOME/.cargo/env',
-            f'(cd {self.settings.repo_name}/gdex-rs && {compile_cmd})',
+            f'(cd {self.settings.repo_name}/fermi-rs && {compile_cmd})',
             CommandMaker.alias_binaries(
-                f'./{self.settings.repo_name}/gdex-rs/target/release/'
+                f'./{self.settings.repo_name}/fermi-rs/target/release/'
             )
         ]
         g = Group(*ips, user='ubuntu', connect_kwargs=self.connect, forward_agent=True)
@@ -183,14 +183,14 @@ class Bench:
         # Recompile the latest code.
         cmd = CommandMaker.compile(False, None, False)
         Print.info(f"About to run {cmd}...")
-        subprocess.run(cmd, check=True, cwd='../gdex-rs')
+        subprocess.run(cmd, check=True, cwd='../fermi-rs')
 
         # Create alias for the client and nodes binary.
         cmd = CommandMaker.alias_binaries(PathMaker.binary_path(True))
         Print.info(f"About to run {cmd}...")
         subprocess.run([cmd], shell=True)
 
-        cmd = CommandMaker.init_gdex_genesis(self.local_proto_dir)
+        cmd = CommandMaker.init_fermi_genesis(self.local_proto_dir)
         Print.info(f"About to run {cmd}...")
         subprocess.run([cmd], shell=True)
 
@@ -199,7 +199,7 @@ class Bench:
         key_files = [PathMaker.key_file(i) for i in range(len(hosts))]
 
         for filename in key_files:
-            cmd = CommandMaker.generate_gdex_key(filename).split()
+            cmd = CommandMaker.generate_fermi_key(filename).split()
             Print.info(f"About to run {cmd}...")
             subprocess.run(cmd, check=True)
             keys += [Key.from_file(self.local_proto_dir + filename)]
@@ -237,7 +237,7 @@ class Bench:
                 worker_to_worker.append(validator_dict["workers"][i]["worker_to_worker"])
                 consensus_address.append(validator_dict["workers"][i]["transactions"])
 
-            cmd = CommandMaker.add_gdex_validator_genesis(
+            cmd = CommandMaker.add_fermi_validator_genesis(
                 self.local_proto_dir,
                 name,
                 balance,
@@ -251,14 +251,14 @@ class Bench:
             )
             Print.info(f"About to run {cmd}...")
             subprocess.run([cmd], shell=True)
-        cmd = CommandMaker.add_controllers_gdex_genesis(self.local_proto_dir)
+        cmd = CommandMaker.add_controllers_fermi_genesis(self.local_proto_dir)
         Print.info(f"About to run {cmd}...")
         subprocess.run([cmd], shell=True)
-        cmd = CommandMaker.build_gdex_genesis(self.local_proto_dir)
+        cmd = CommandMaker.build_fermi_genesis(self.local_proto_dir)
         Print.info(f"About to run {cmd}...")
         subprocess.run([cmd], shell=True)
         for i, name in enumerate(names):
-            cmd = CommandMaker.verify_and_sign_gdex_genesis(self.local_proto_dir, self.local_proto_dir + key_files[i])
+            cmd = CommandMaker.verify_and_sign_fermi_genesis(self.local_proto_dir, self.local_proto_dir + key_files[i])
             Print.info(f"About to run {cmd}...")
             subprocess.run([cmd], shell=True)
             
@@ -282,7 +282,7 @@ class Bench:
                 print(i, name, ip)
                 c = Connection(ip, user='ubuntu', connect_kwargs=self.connect)
                 print("cleanup cmd = ", CommandMaker.cleanup())
-                c.run(f'(cd gdex-core/benchmark && {CommandMaker.cleanup()}) || true', hide=False)
+                c.run(f'(cd fermi-core/benchmark && {CommandMaker.cleanup()}) || true', hide=False)
                 c.run(f'(mkdir -p {remote_committee_dir}) || true')
                 c.run(f'(mkdir {remote_signatures_dir}) || true')
                 c.put(self.local_proto_dir + "genesis.blob", self.remote_proto_dir)
@@ -324,7 +324,7 @@ class Bench:
             metrics_address = '/'.join(metrics_address)
 
             host = Committee.ip_from_multi_address(validator_dict['grpc_address'])
-            cmd = CommandMaker.run_gdex_node(
+            cmd = CommandMaker.run_fermi_node(
                 self.remote_proto_dir,
                 self.remote_proto_dir,
                 self.remote_proto_dir + PathMaker.key_file(i),
@@ -343,14 +343,14 @@ class Bench:
             validator_grpc_address = validator_dict['grpc_address']
             host = Committee.ip_from_multi_address(validator_grpc_address)
             if self.bench_parameters.order_bench:
-                cmd = CommandMaker.run_gdex_orderbook_client(
+                cmd = CommandMaker.run_fermi_orderbook_client(
                     multiaddr_to_url_data(validator_grpc_address),
                     self.remote_proto_dir + PathMaker.key_file(0),
                     rate_share,
                     [multiaddr_to_url_data(node['grpc_address']) for node in committee.json['authorities'].values() if node['grpc_address'] != validator_grpc_address]
                 )
             else:
-                cmd = CommandMaker.run_gdex_client(
+                cmd = CommandMaker.run_fermi_client(
                     multiaddr_to_url_data(validator_grpc_address),
                     self.remote_proto_dir + PathMaker.key_file(i),
                     rate_share,

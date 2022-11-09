@@ -18,18 +18,18 @@ In fact, smart contracts enabled to create a multitude of [awesome apps](https:/
 
 ---
 
-## Developing Contracts in Axion
-Developers can choose between using [Javascript](../../../4.tools/js-sdk.md) or [Rust](../../../4.tools/js-sdk.md) to write smart contracts in Axion.
+## Developing Contracts in Fermi
+Developers can choose between using [Javascript](../../../4.tools/js-sdk.md) or [Rust](../../../4.tools/js-sdk.md) to write smart contracts in Fermi.
 
-Indistinctly from the language chosen, the Axion SDK will help you to compile the contract into WebAssembly, from which point it can be deployed and executed on the Axion platform.
+Indistinctly from the language chosen, the Fermi SDK will help you to compile the contract into WebAssembly, from which point it can be deployed and executed on the Fermi platform.
 
 :::tip
-See how simple it is to build a contract in Axion with our [**Quickstart Guide**](../../../2.develop/quickstart.md). You will spin-up your first dApp in a matter of seconds.
+See how simple it is to build a contract in Fermi with our [**Quickstart Guide**](../../../2.develop/quickstart.md). You will spin-up your first dApp in a matter of seconds.
 :::
 
 ---
 
-## Advantages of Axion Contracts
+## Advantages of Fermi Contracts
 
 ### 1. Simple to Build 
 Thanks to our unique [Javascript SDK](../../../4.tools/js-sdk.md) and our [vast documentation](../../../2.develop/welcome.md).

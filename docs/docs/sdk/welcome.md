@@ -1,6 +1,6 @@
 ---
 id: welcome
-title: "Axion SDKs"
+title: "Fermi SDKs"
 hide_table_of_contents: false
 ---
 
@@ -45,7 +45,7 @@ If you have any questions, or simply would want to chat with us, please do throu
           src={require("@site/static/docs/assets/home/discord.png").default} />
         <div class="avatar__intro">
           <div class="avatar__name">Discord</div>
-          <small class="avatar__subtitle"><a href="https://discord.gg/kwYjDn4yka">Axion Protocol</a></small>
+          <small class="avatar__subtitle"><a href="https://discord.gg/kwYjDn4yka">Fermi Protocol</a></small>
         </div>
       </div>
     </div>

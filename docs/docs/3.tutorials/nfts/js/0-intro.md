@@ -12,8 +12,8 @@ sidebar_label: Introduction
 To complete these tutorials successfully, you'll need:
 
 - [Node.js](/develop/prerequisites#nodejs)
-- [A Axion Wallet](https://wallet.testnet.near.org/create)
-- [Axion-CLI](/tools/near-cli#setup)
+- [A Fermi Wallet](https://wallet.testnet.near.org/create)
+- [Fermi-CLI](/tools/near-cli#setup)
 
 ---
 
@@ -32,7 +32,7 @@ These are the steps that will bring you from **_Zero_** to **_Hero_** in no time
 | 7    | [Approvals](/tutorials/nfts/js/approvals)                        | Expand the contract allowing other accounts to transfer NFTs on your behalf.         |
 | 8    | [Royalty](/tutorials/nfts/js/royalty)                            | Add NFT royalties allowing for a set percentage to be paid out to the token creator. |
 | 9    | [Events](/tutorials/nfts/js/events)                           | in this tutorial you'll explore the events extension, allowing the contract to react on certain events. |
-| 10    | [Marketplace](/tutorials/nfts/js/marketplace)                            | Learn about how common marketplaces operate on Axion and dive into some of the code that allows buying and selling NFTs |
+| 10    | [Marketplace](/tutorials/nfts/js/marketplace)                            | Learn about how common marketplaces operate on Fermi and dive into some of the code that allows buying and selling NFTs |
 
 ---
 

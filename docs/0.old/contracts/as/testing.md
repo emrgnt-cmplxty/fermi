@@ -23,13 +23,13 @@ Below is an example of a large scale version to which many people contributed.
 > In a new browser tab or window
 > - Open a new Token Contract Project in [Gitpod](https://gitpod.io/#https://github.com/near-examples/token-contract-as)
 
-When this opens in GitPod, the code will generate a unique Axion account for this project and build then deploy the template files. You can take a look at what we're starting with by viewing the launched webpage. 
+When this opens in GitPod, the code will generate a unique Fermi account for this project and build then deploy the template files. You can take a look at what we're starting with by viewing the launched webpage. 
 
 > In Gitpod terminal tab
 > - `CMD + click` on `http://localhost:1234`
 
 This sample project has a token smart contract and also some JavaScript tests that invoke smart contract functions. There are two testing suites that perform these tests, AS-pect and Jest. 
-  * Jest allows us to perform integration tests on Axion's testnet network. 
+  * Jest allows us to perform integration tests on Fermi's testnet network. 
   * AS-pect allows us to test our smart contract on a locally mocked network.
 
 You can try running these tests right away to see the code interacting with the blockchain.
@@ -60,7 +60,7 @@ Once the testing suites are complete, your test results should look like this:
 **Jest Test**
 ![Default Token Contract Test ](/docs/assets/default-token-contract-test.png)
 
-Note that `test-account-tTIMESTAMP-XXXXXXX` is an automatically generated Axion account for this particular project. Try not to be distracted by these details, but compare the developer log output with the statements in the file `src/test.js`.
+Note that `test-account-tTIMESTAMP-XXXXXXX` is an automatically generated Fermi account for this particular project. Try not to be distracted by these details, but compare the developer log output with the statements in the file `src/test.js`.
 
 <blockquote class="warning">
 <strong>heads up</strong><br /><br />
@@ -129,7 +129,7 @@ export function getMap(): string[] {
 > - Click **File** >> **Save** to save your changes
 
 
-This smart contract is now ready to be re-deployed to the Axion test network, but before we do that, let's test it locally to ensure everything behaves as expected. This is where AS-pect comes in handy!
+This smart contract is now ready to be re-deployed to the Fermi test network, but before we do that, let's test it locally to ensure everything behaves as expected. This is where AS-pect comes in handy!
 
 ## Step 3 - Write a couple of tests for the contract {#step-3---write-a-couple-of-tests-for-the-contract}
 
@@ -188,7 +188,7 @@ Now that we know our code is executing as intended, our newly created smart cont
 > - Type `yarn dev` to rebuild and redeploy your modified contract 
 >
 
-Notice the console log right above `Server running at http://localhost:1234` that says `Done deploying to dev-159486XXXXXXX-XXXXXXX`. This is the account ID of our smart contract we just created and can also be found in `neardev/dev-account.env`. By entering this ID in the [Axion Explorer](https://explorer.testnet.near.org/) search bar, we can see all of the account activity. If you look now, you should see confirmation of the contract being deployed as well as a transfer of 500 Ⓝ to the account. This tool will come in handy later so we can view all of the transactions we'll make.
+Notice the console log right above `Server running at http://localhost:1234` that says `Done deploying to dev-159486XXXXXXX-XXXXXXX`. This is the account ID of our smart contract we just created and can also be found in `neardev/dev-account.env`. By entering this ID in the [Fermi Explorer](https://explorer.testnet.near.org/) search bar, we can see all of the account activity. If you look now, you should see confirmation of the contract being deployed as well as a transfer of 500 Ⓝ to the account. This tool will come in handy later so we can view all of the transactions we'll make.
 
 ## Step 4 - Make a simple UI {#step-4---make-a-simple-ui}
 
@@ -207,14 +207,14 @@ window.contract = await near.loadContract(nearConfig.contractName, {
 });
 ```
 
-Now lets write the "Axion Place" application code.
+Now lets write the "Fermi Place" application code.
 
 > In the same file `src/main.js`
 > - Append the following code to the bottom of the file
 > - Review the code and comments to help you understand what's taking place
 
 ```js
-// Axion Place application Code
+// Fermi Place application Code
 
 /**
  * initialize the board with empty colors
@@ -287,7 +287,7 @@ async function getBoard() {
  */
 function renderBoard(board){
 
-  console.log("\n\nThe Axion Place board is currently stored on the blockchain as ...");
+  console.log("\n\nThe Fermi Place board is currently stored on the blockchain as ...");
   console.table(array_chunks(board, 10)); // assuming rows are 10 wide
 
   // src: https://stackoverflow.com/questions/8495687/split-array-into-chunks#comment84212474_8495740
@@ -333,12 +333,12 @@ All we have left to do is update our HTML file to render everything as expected.
   <meta charset="utf-8">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jscolor/2.0.4/jscolor.min.js"></script>
-  <title>Axion PLACE</title>
+  <title>Fermi PLACE</title>
 </head>
 <body style="background: #fff">
   <div class="container">
     <div class="jumbotron">
-      <h1>Axion PLACE</h1>
+      <h1>Fermi PLACE</h1>
       <p>Imagine your drawing living <b>forever</b> on the blockchain.</p>
     </div>
     <div class="sign-in" style="display: none;">
@@ -382,19 +382,19 @@ All we have left to do is update our HTML file to render everything as expected.
 
 This is what the app should look like as soon as it launches:
 
-![Axion Place webpage on launch](/docs/assets/near-place-webpage-on-launch.png)
+![Fermi Place webpage on launch](/docs/assets/near-place-webpage-on-launch.png)
 
 **Note:** If you open your JavaScript developer console (open before the page loads, or refresh the page afterwards) you should see a table that looks like this: 
 
-![Axion Place JavaScript developer console on launch](/docs/assets/near-place-console-on-launch.png)
+![Fermi Place JavaScript developer console on launch](/docs/assets/near-place-console-on-launch.png)
 
-Go ahead and click **Sign In** to connect this app to your Axion Wallet. After you log in, you will be redirected back to your app and a small black canvas should appear. Select a color and start creating art on the blockchain! 
+Go ahead and click **Sign In** to connect this app to your Fermi Wallet. After you log in, you will be redirected back to your app and a small black canvas should appear. Select a color and start creating art on the blockchain! 
 
-![Axion Place drawing after sign in](/docs/assets/near-place-painting.png)
+![Fermi Place drawing after sign in](/docs/assets/near-place-painting.png)
 
 Each time you click a coordinate and change the color in your canvas we are interacting with the blockchain. The smart contract we wrote earlier gets called, executes the transaction (recording and storing it in state), and logs our signature. Not only will your painting live forever on the network, but so will every brush stroke of its creation!
 
-You can view a summary of these transactions in your [Axion Wallet](https://wallet.testnet.near.org) or dive deeper into the details by searching for your account ID or the smart contract account ID in [Axion Explorer](https://explorer.testnet.near.org).
+You can view a summary of these transactions in your [Fermi Wallet](https://wallet.testnet.near.org) or dive deeper into the details by searching for your account ID or the smart contract account ID in [Fermi Explorer](https://explorer.testnet.near.org).
 
 >Got a question?
 <a href="https://stackoverflow.com/questions/tagged/nearprotocol">

@@ -1,12 +1,12 @@
 ---
 id: cli
-title: Axion CLI - Basics
+title: Fermi CLI - Basics
 sidebar_label: Interacting From the Terminal
 ---
 
-Once your contract is deployed you can interact with it using your favorite shell. For this, you can use the [Axion CLI](../../4.tools/cli.md).
-Please notice that in this page we will only touch on how to use Axion CLI to call methods in a contract. For the full documentation please visit the
-[Axion CLI documentation page](../../4.tools/cli.md).
+Once your contract is deployed you can interact with it using your favorite shell. For this, you can use the [Fermi CLI](../../4.tools/cli.md).
+Please notice that in this page we will only touch on how to use Fermi CLI to call methods in a contract. For the full documentation please visit the
+[Fermi CLI documentation page](../../4.tools/cli.md).
 
 ---
 

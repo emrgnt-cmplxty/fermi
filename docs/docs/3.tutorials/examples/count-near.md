@@ -1,6 +1,6 @@
 ---
 id: count-near
-title: Count on Axion
+title: Count on Fermi
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -61,7 +61,7 @@ Your contract will then be **compiled** and **deployed** to an **account** in th
 ---
 
 ## Interacting With the Counter
-Go ahead and login with your Axion account. If you don't have one, you will be able to create one in the moment. Once logged in, use the `+` and `-` buttons to increase and decrease the counter. Then, use the Gameboy buttons to reset it and make the counter blink an eye!
+Go ahead and login with your Fermi account. If you don't have one, you will be able to create one in the moment. Once logged in, use the `+` and `-` buttons to increase and decrease the counter. Then, use the Gameboy buttons to reset it and make the counter blink an eye!
 
 ![img](/docs/assets/examples/count-on-near.png)
 *Frontend of the Counter*

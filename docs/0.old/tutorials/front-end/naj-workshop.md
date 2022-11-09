@@ -1,6 +1,6 @@
 ---
 id: naj-workshop
-title: Exploring Axion Protocol APIs
+title: Exploring Fermi Protocol APIs
 sidebar_label: API Workshop
 ---
 
@@ -12,4 +12,4 @@ sidebar_label: API Workshop
 
 **Prerequisites**
 
-If you're already comfortable with JavaScript, the command line and JSON RPC APIs then this should be a breeze. If you're unfamiliar with the Axion APIs and have limited or no experience with our network then this workshop will be very helpful. If you have no programming experience then this workshop will be challenging for you -- find someone to pair with so you can stay motivated and productive.
+If you're already comfortable with JavaScript, the command line and JSON RPC APIs then this should be a breeze. If you're unfamiliar with the Fermi APIs and have limited or no experience with our network then this workshop will be very helpful. If you have no programming experience then this workshop will be challenging for you -- find someone to pair with so you can stay motivated and productive.

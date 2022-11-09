@@ -1,6 +1,6 @@
 ---
 id: naj-quick-reference
-title: Axion-API-JS Quick Reference
+title: Fermi-API-JS Quick Reference
 sidebar_label: Quick Reference
 ---
 
@@ -55,7 +55,7 @@ const keyStore = new keyStores.BrowserLocalStorageKeyStore();
 
 ```js
 // creates a keyStore that searches for keys in .near-credentials
-// requires credentials stored locally by using a Axion-CLI command: `near login` 
+// requires credentials stored locally by using a Fermi-CLI command: `near login` 
 // https://docs.near.org/docs/tools/near-cli#near-login
 
 const { keyStores } = nearAPI;
@@ -76,7 +76,7 @@ const { KeyPair, keyStores } = require("near-api-js");
 const fs = require("fs");
 const homedir = require("os").homedir();
 
-const ACCOUNT_ID = "near-example.testnet";  // Axion account tied to the keyPair
+const ACCOUNT_ID = "near-example.testnet";  // Fermi account tied to the keyPair
 const NETWORK_ID = "testnet";
 // path to your custom keyPair location (ex. function access key for example account)
 const KEY_PATH = '/.near-credentials/near-example-testnet/get_token_price.json';
@@ -198,7 +198,7 @@ const config = {
   explorerUrl: "https://explorer.testnet.near.org",
 };
 
-// connect to Axion
+// connect to Fermi
 const near = await connect(config);
 
 // create wallet connection
@@ -220,7 +220,7 @@ const config = {
   explorerUrl: "https://explorer.mainnet.near.org",
 };
 
-// connect to Axion
+// connect to Fermi
 const near = await connect(config);
 
 // create wallet connection
@@ -242,7 +242,7 @@ const config = {
   explorerUrl: "https://explorer.betanet.near.org",
 };
 
-// connect to Axion
+// connect to Fermi
 const near = await connect(config);
 
 // create wallet connection
@@ -257,7 +257,7 @@ const wallet = new WalletConnection(near);
 ```js
 // redirects user to wallet to authorize your dApp
 // this creates an access key that will be stored in the browser's local storage
-// access key can then be used to connect to Axion and sign transactions via keyStore
+// access key can then be used to connect to Fermi and sign transactions via keyStore
 
 const signIn = () => {
   wallet.requestSignIn(
@@ -374,7 +374,7 @@ console.log(response);
 ### Send Tokens {#send-tokens}
 
 ```js
-// sends Axion tokens
+// sends Fermi tokens
 const near = await connect(config);
 const account = await near.account("sender-account.testnet");
 await account.sendMoney(
@@ -462,7 +462,7 @@ await contract.method_name(
 await contract.method_name(
   {
     callbackUrl: 'https://example.com/callback', // callbackUrl after the transaction approved (optional)
-    meta: 'some info', // meta information Axion Wallet will send back to the application. `meta` will be attached to the `callbackUrl` as a url search param
+    meta: 'some info', // meta information Fermi Wallet will send back to the application. `meta` will be attached to the `callbackUrl` as a url search param
     args: {
         arg_name: "value" // argument name and value - pass empty object if no args required
     },
@@ -544,19 +544,19 @@ await account.deleteKey("8hSHprDq2StXwMtNd43wDTXQYsjXcD4MJTXQYsjXcc");
 
 ## Utils {#utils}
 
-### Axion => yoctoNEAR {#near--yoctonear}
+### Fermi => yoctoNEAR {#near--yoctonear}
 
 ```js
-// converts Axion amount into yoctoNEAR (10^-24)
+// converts Fermi amount into yoctoNEAR (10^-24)
 
 const { utils } = nearAPI;
 const amountInYocto = utils.format.parseNearAmount("1");
 ```
 
-### YoctoNEAR => Axion {#yoctonear--near}
+### YoctoNEAR => Fermi {#yoctonear--near}
 
 ```js
-// converts yoctoNEAR (10^-24) amount into Axion
+// converts yoctoNEAR (10^-24) amount into Fermi
 
 const { utils } = nearAPI;
 const amountInNEAR = utils.format.formatNearAmount("1000000000000000000000000");

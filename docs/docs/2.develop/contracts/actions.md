@@ -6,7 +6,7 @@ title: Transfers & Actions
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-Smart contracts can perform specific `Actions` such as transferring Axion, or calling other contracts.
+Smart contracts can perform specific `Actions` such as transferring Fermi, or calling other contracts.
 
 An important property of `Actions` is that they can be batched together when acting on the same contract. **Batched actions** act as a unit: they execute in the same [receipt](../../1.concepts/basics/transactions/overview.md#receipt-receipt), and if **any fails**, then they **all get reverted**.
 
@@ -17,9 +17,9 @@ but **cannot** call two methods on different contracts.
 
 ---
 
-## Transfer Axion Ⓝ
+## Transfer Fermi Ⓝ
 
-You can send $Axion from the your contract to any other account on the network. The Gas cost for transferring $Axion is fixed and is based on the protocol's genesis config. Currently, it costs `~0.45 TGas`.
+You can send $Fermi from the your contract to any other account on the network. The Gas cost for transferring $Fermi is fixed and is based on the protocol's genesis config. Currently, it costs `~0.45 TGas`.
 
 <Tabs className="language-tabs" groupId="code-tabs">
   <TabItem value="🌐 JavaScript">
@@ -74,7 +74,7 @@ Remember that your balance is used to cover for the contract's storage. When sen
 ## Function Call
 
 Your smart contract can call methods in another contract. In the snippet bellow we call a method
-in a deployed [Hello Axion](../quickstart.md) contract, and check if everything went
+in a deployed [Hello Fermi](../quickstart.md) contract, and check if everything went
 right in the callback.
 
 <Tabs className="language-tabs" groupId="code-tabs">

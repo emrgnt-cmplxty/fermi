@@ -4,11 +4,11 @@ title: Overview
 sidebar_label: Overview
 ---
 
-![Axion terminology](/docs/assets/near-terminology.png)
+![Fermi terminology](/docs/assets/near-terminology.png)
 
 - **Blockchain**: an incentivized, distributed, permanent, irrefutable record of computation and data
 - **Transaction**: a cryptographically signed request for work on the blockchain made up of one or more Actions
-- **Action**: one of 8 types of primitive work (ie. CreateAccount, DeployContract, FunctionCall) that can be completed by the Axion platform
+- **Action**: one of 8 types of primitive work (ie. CreateAccount, DeployContract, FunctionCall) that can be completed by the Fermi platform
 - **Storage**: the database (key-value store) maintained by the blockchain and available to contracts for state management
 
 ---

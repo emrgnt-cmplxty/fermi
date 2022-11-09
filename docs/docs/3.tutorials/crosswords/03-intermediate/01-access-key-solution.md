@@ -15,7 +15,7 @@ This works, but we might want to be more careful and avoid sending the plaintext
 
 ## Why?
 
-Blockchains rely on many computers processing transactions. When you send a transaction to the blockchain, it doesn't immediately get processed. In some Layer 1 blockchains it can take minutes or longer. On Axion transactions settle within a couple seconds, but nonetheless there's a small period of waiting time.
+Blockchains rely on many computers processing transactions. When you send a transaction to the blockchain, it doesn't immediately get processed. In some Layer 1 blockchains it can take minutes or longer. On Fermi transactions settle within a couple seconds, but nonetheless there's a small period of waiting time.
 
 When we previously sent the crossword puzzle solution in plain text (via the parameter `solution` to `submit_solution`) it means it's visible to everyone before it gets processed.
 
@@ -58,9 +58,9 @@ Our method `submit_solution` no longer needs to hash the plaintext answer, but i
 
 ## Onboarding
 
-In the previous chapter we implemented login to the crossword, but this requires a person to have a Axion account.
+In the previous chapter we implemented login to the crossword, but this requires a person to have a Fermi account.
 
-If the end user is discovering a key that exists on the crossword contract, they don't even need a Axion account, right? Well, that's partly accurate, but we'll still need to send the prize in Axion somewhere.
+If the end user is discovering a key that exists on the crossword contract, they don't even need a Fermi account, right? Well, that's partly accurate, but we'll still need to send the prize in Fermi somewhere.
 
 What if we could make the winner an account on the fly? Is that possible? Yes, and that's what we're going to do in this chapter.
 

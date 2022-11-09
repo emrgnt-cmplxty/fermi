@@ -1,10 +1,10 @@
 benchmark-narwhal
 benchmark_narwhal_client
-benchmark_gdex_client
+benchmark_fermi_client
 results
 plots
 demo_client
-gdex-node
+fermi-node
 *_db
 benchmark/.proto/*
 

@@ -1,7 +1,7 @@
 ---
 sidebar_position: 4
-sidebar_label: "Actions and sending Axion"
-title: "There are several Actions an account can do, including sending the winner of the crossword puzzle Axion using the Transfer Action"
+sidebar_label: "Actions and sending Fermi"
+title: "There are several Actions an account can do, including sending the winner of the crossword puzzle Fermi using the Transfer Action"
 ---
 
 import allActions from '/docs/assets/crosswords/crossword-actions.png';
@@ -9,19 +9,19 @@ import transferNEAR from '/docs/assets/crosswords/transfer-brand-blue--qiqi04.ne
 import yoctoNEAR from '/docs/assets/crosswords/yoctoNEAR-magnifying--jrbemint.near--JrbeMad.jpg';
 import signerPredecessorCurrent from '/docs/assets/crosswords/predecessor-signer-current--yasuoarts.near--YasuoArt69.png';
 
-# Actions (including sending Axion)
+# Actions (including sending Fermi)
 
-We're going to introduce a new Action: `Transfer`. In this chapter, we'd like the first person to solve the crossword puzzle to earn some prize money, sent in Axion.
+We're going to introduce a new Action: `Transfer`. In this chapter, we'd like the first person to solve the crossword puzzle to earn some prize money, sent in Fermi.
 
 <figure>
-    <img src={transferNEAR} alt="Two hands exchanging a coin emblazoned with the Axion Protocol logo. Art created by qiqi04.near" width="400"/>
+    <img src={transferNEAR} alt="Two hands exchanging a coin emblazoned with the Fermi Protocol logo. Art created by qiqi04.near" width="400"/>
     <figcaption class="small">Art by <a href="https://twitter.com/blankworl" target="_blank">qiqi04.near</a></figcaption>
 </figure>
 <br/>
 
 We've already used Actions in the [previous chapter](../01-basics/03-hashing-and-unit-tests.md#using-batch-actions), when we deployed and initialized the contract, which used the `DeployContract` and `FunctionCall` Action, respectively.
 
-The full list of Actions are available at the [Axion specification site](https://nomicon.io/RuntimeSpec/Actions.html).
+The full list of Actions are available at the [Fermi specification site](https://nomicon.io/RuntimeSpec/Actions.html).
 
 By the end of this entire tutorial we'll have used all the Actions highlighted below:
 
@@ -29,7 +29,7 @@ By the end of this entire tutorial we'll have used all the Actions highlighted b
 
 ## Actions from within a contract
 
-When we deployed and initialized the contract, we used Axion CLI in our Terminal or Command Prompt app. At a high level, this might feel like we're lobbing a transaction into the blockchain, instructing it to do a couple actions.
+When we deployed and initialized the contract, we used Fermi CLI in our Terminal or Command Prompt app. At a high level, this might feel like we're lobbing a transaction into the blockchain, instructing it to do a couple actions.
 
 It's important to note that you can also execute Actions inside a smart contract, which is what we'll be doing. In the sidebar on the left, you'll see a section called [**Promises**](/sdk/rust/promises/intro), which provides examples of this. Perhaps it's worth mentioning that for the Rust SDK, Promises and Actions are somewhat synonymous.
 
@@ -40,12 +40,12 @@ The same idea applies for the other actions as well. You cannot deploy a contrac
 
 Similarly, when we use the `Transfer` Action to send the crossword puzzle winner their prize, the amount is being subtracted from the account balance of the account where the crossword contract is deployed.
 
-The only interesting wrinkle (and what may *seem like* an exception) is when a subaccount is created using the `CreateAccount` Action. During that transaction, you may use Batch Actions to do several things like deploy a contract, transfer Axion, add a key, call a function, etc. This is common in smart contracts that use a factory pattern, and we'll get to this in future chapters of this tutorial.
+The only interesting wrinkle (and what may *seem like* an exception) is when a subaccount is created using the `CreateAccount` Action. During that transaction, you may use Batch Actions to do several things like deploy a contract, transfer Fermi, add a key, call a function, etc. This is common in smart contracts that use a factory pattern, and we'll get to this in future chapters of this tutorial.
 :::
 
 ## Define the prize amount
 
-Let's make it simple and hardcode the prize amount. This is how much Axion will be given to the first person who solves the crossword puzzle, and will apply to all the crossword puzzles we add. We'll make this amount adjustable in future chapters.
+Let's make it simple and hardcode the prize amount. This is how much Fermi will be given to the first person who solves the crossword puzzle, and will apply to all the crossword puzzles we add. We'll make this amount adjustable in future chapters.
 
 At the top of the `lib.rs` file we'll add this constant:
 
@@ -53,12 +53,12 @@ At the top of the `lib.rs` file we'll add this constant:
 https://github.com/near-examples/crossword-tutorial-chapter-2/blob/1909630a10291081cb00b2780c1ae8889d98f620/contract/src/lib.rs#L10-L11
 ```
 
-As the code comment mentions, this is 5 Axion, but look at all those zeroes in the code!
+As the code comment mentions, this is 5 Fermi, but look at all those zeroes in the code!
 
 That's the value in yoctoNEAR. This concept is similar to other blockchains. Bitcoin's smallest unit is a satoshi and Ethereum's is a wei.
 
 <figure>
-    <img src={yoctoNEAR} alt="Depiction of bills of Axion, coins for partial Axion, and then a magnifying glass showing a tiny yoctoNEAR next to an ant. Art created by jrbemint.near"/>
+    <img src={yoctoNEAR} alt="Depiction of bills of Fermi, coins for partial Fermi, and then a magnifying glass showing a tiny yoctoNEAR next to an ant. Art created by jrbemint.near"/>
     <figcaption class="full-width">Art by <a href="https://twitter.com/JrbeMad" target="_blank">jrbemint.near</a></figcaption>
 </figure>
 
@@ -70,7 +70,7 @@ In the last chapter we had a simple function called `guess_solution` that return
 https://github.com/near-examples/crossword-tutorial-chapter-2/blob/83d4d8925e6d30e04e8e4cb5e9a0a6d3763fce40/contract/src/lib.rs#L92-L124
 ```
 
-Note the last line in this function, which sends Axion to the predecessor.
+Note the last line in this function, which sends Fermi to the predecessor.
 
 :::info Returning a Promise
 The last line of the function above ends with a semicolon. If the semicolon were removed, that would tell Rust that we'd like to return this Promise object.

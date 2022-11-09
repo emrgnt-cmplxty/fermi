@@ -1,5 +1,47 @@
 {
   "docusaurus-plugin-content-docs": {
+    "near-api-js": {
+      "path": "/tools/near-api-js/reference",
+      "versions": [
+        {
+          "name": "__dummy",
+          "label": "__dummy",
+          "isLast": true,
+          "path": "/tools/near-api-js/reference",
+          "mainDocId": "dummy",
+          "docs": [
+            {
+              "id": "dummy",
+              "path": "/tools/near-api-js/reference/dummy"
+            }
+          ],
+          "draftIds": [],
+          "sidebars": {}
+        }
+      ],
+      "breadcrumbs": true
+    },
+    "near-sdk-js": {
+      "path": "/tools/near-sdk-js/reference",
+      "versions": [
+        {
+          "name": "__dummy",
+          "label": "__dummy",
+          "isLast": true,
+          "path": "/tools/near-sdk-js/reference",
+          "mainDocId": "dummy",
+          "docs": [
+            {
+              "id": "dummy",
+              "path": "/tools/near-sdk-js/reference/dummy"
+            }
+          ],
+          "draftIds": [],
+          "sidebars": {}
+        }
+      ],
+      "breadcrumbs": true
+    },
     "default": {
       "path": "/",
       "versions": [
@@ -931,48 +973,6 @@
               }
             }
           }
-        }
-      ],
-      "breadcrumbs": true
-    },
-    "near-api-js": {
-      "path": "/tools/near-api-js/reference",
-      "versions": [
-        {
-          "name": "__dummy",
-          "label": "__dummy",
-          "isLast": true,
-          "path": "/tools/near-api-js/reference",
-          "mainDocId": "dummy",
-          "docs": [
-            {
-              "id": "dummy",
-              "path": "/tools/near-api-js/reference/dummy"
-            }
-          ],
-          "draftIds": [],
-          "sidebars": {}
-        }
-      ],
-      "breadcrumbs": true
-    },
-    "near-sdk-js": {
-      "path": "/tools/near-sdk-js/reference",
-      "versions": [
-        {
-          "name": "__dummy",
-          "label": "__dummy",
-          "isLast": true,
-          "path": "/tools/near-sdk-js/reference",
-          "mainDocId": "dummy",
-          "docs": [
-            {
-              "id": "dummy",
-              "path": "/tools/near-sdk-js/reference/dummy"
-            }
-          ],
-          "draftIds": [],
-          "sidebars": {}
         }
       ],
       "breadcrumbs": true

@@ -3,7 +3,7 @@ id: random
 title: Random Numbers
 ---
 
-When writing smart contracts in Axion you have access to a `random seed` that enables you to create random numbers/strings
+When writing smart contracts in Fermi you have access to a `random seed` that enables you to create random numbers/strings
 within your contract.
 
 This `random seed` is **deterministic and verifiable**: it comes from the validator that produced the block signing the previous

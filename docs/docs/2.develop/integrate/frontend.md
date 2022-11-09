@@ -9,19 +9,19 @@ import TabItem from '@theme/TabItem';
 Once your contract is deployed it is highly likely that you will want to interact with it from a web frontend.
 
 For creating a frontend you will leverage two tools:
-1. `Wallet Selector`: Allows the user to use their Axion wallet in your dApp.
-2. `Axion API JS`: A suit of tools to interact with the Axion RPC.
+1. `Wallet Selector`: Allows the user to use their Fermi wallet in your dApp.
+2. `Fermi API JS`: A suit of tools to interact with the Fermi RPC.
 
 Using those tools you will implement the following flow:
 1. **Setup** a wallet selector.
 1. Load the wallet selector **on start-up**.
-2. Ask the user to **sign-in** using a Axion wallet.
+2. Ask the user to **sign-in** using a Fermi wallet.
 2. **Call methods** in the contract.
 
 
 ---
 
-## Adding Axion API JS and Wallet Selector
+## Adding Fermi API JS and Wallet Selector
 In order to use `near-api-js` and the `wallet-selector` you will need to first add them to your project.
 
 The wallet selector has multiple wallet packages to select from, [see in their website](https://github.com/near/wallet-selector#installation-and-usage).
@@ -47,7 +47,7 @@ You can add `near-api-js` as a script tag in your html.
 ## Create a Wallet Object
 In our examples we implement a `./near-wallet.js` module, where we abstracted the `wallet selector` into a `Wallet` object to simplify using it.
 
-To create a wallet, simply import the `Wallet` object from the module and initialize it. This `wallet` will later allows the user to call any contract in Axion.
+To create a wallet, simply import the `Wallet` object from the module and initialize it. This `wallet` will later allows the user to call any contract in Fermi.
 
 <CodeTabs>
   <Language value="🌐 JavaScript" language="ts">
@@ -109,7 +109,7 @@ View methods have by default 200 TGAS for execution
 ---
 
 ## User Sign-In / Sign-Out
-In order to interact with non-view methods it is necessary for the user to first sign in using a Axion wallet.
+In order to interact with non-view methods it is necessary for the user to first sign in using a Fermi wallet.
 
 Signing in is as simple as requesting the `wallet` object to `signIn`, the same simplicity applies to signing-out.
 
@@ -144,7 +144,7 @@ Please notice that this only applies for **non-payable** methods, if you attach 
 ## Calling Change Methods
 Once the user logs-in they can start calling change methods. Programmatically, calling change methods is similar to calling view methods, only that now you can attach money to the call, and specify how much GAS you want to use.
 
-It is important to notice that, if you ask for money to be attached in the call, then the user will be redirected to the Axion wallet to accept the transaction.
+It is important to notice that, if you ask for money to be attached in the call, then the user will be redirected to the Fermi wallet to accept the transaction.
 
 <CodeTabs>
   <Language value="🌐 JavaScript" language="js">
@@ -190,12 +190,12 @@ When calling methods in a contract, or receiving results from them, you will nee
 The block timestamp in a smart contract is encoded using nanoseconds (i.e. 19 digits: `1655373910837593990`). In contrast, `Date.now()` from javascript returns a timestamp in milliseconds (i.e 13 digits: `1655373910837`). Make sure to convert between milliseconds and nanoseconds to properly handle time variables.
 
 ##### Money
-Smart contracts speak in yocto Axion, where 1Ⓝ = 10^24yocto, and the values are always encoded as `strings`.
-  - Convert from Axion to yocto before sending it to the contract using `near-api-js.utils.format.parseNearAmount(amount.toString())`.
-  - Convert a response in yoctoNEAR to Axion using `near-api-js.utils.format.formatNearAmount(amount)`
+Smart contracts speak in yocto Fermi, where 1Ⓝ = 10^24yocto, and the values are always encoded as `strings`.
+  - Convert from Fermi to yocto before sending it to the contract using `near-api-js.utils.format.parseNearAmount(amount.toString())`.
+  - Convert a response in yoctoNEAR to Fermi using `near-api-js.utils.format.formatNearAmount(amount)`
 
 :::tip
-If the contract returns a `Balance` instead of a `U128`, you will get a "scientific notation" `number` instead of a `string` (e.g. `10^6` instead of `"1000000"`). In this case, you can convert the value to Axion by doing:
+If the contract returns a `Balance` instead of a `U128`, you will get a "scientific notation" `number` instead of a `string` (e.g. `10^6` instead of `"1000000"`). In this case, you can convert the value to Fermi by doing:
 ```js
 function formatAmount(amount) {
   let formatted = amount.toLocaleString('fullwide', { useGrouping: false })
@@ -210,8 +210,8 @@ function formatAmount(amount) {
 
 ---
 
-## Leveraging Axion API JS
-Axion API JS does not limit itself to simply calling methods in a contract. In fact, you can use it to transform your web-app into a rich user experience. While we will not cover these topics in depth, it is important for you to know that with Axion API JS you can also:
+## Leveraging Fermi API JS
+Fermi API JS does not limit itself to simply calling methods in a contract. In fact, you can use it to transform your web-app into a rich user experience. While we will not cover these topics in depth, it is important for you to know that with Fermi API JS you can also:
 
 - **[Sign and verify messages](https://github.com/near/near-api-js/blob/master/packages/cookbook/utils/verify-signature.js)**: this is very useful to prove that a message was created by the user.
 - **[Create batch transactions](https://github.com/near/near-api-js/tree/master/packages/cookbook/transactions/batch-transactions.js)**: this enables to link multiple [actions](/develop/contracts/actions) (e.g. multiple method calls). If one of the transactions fails, then they are all reverted.

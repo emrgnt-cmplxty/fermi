@@ -4,7 +4,7 @@ title: Testing Rust Contracts
 sidebar_label: Testing
 ---
 
-There are a couple of ways to test Rust smart contracts in Axion.
+There are a couple of ways to test Rust smart contracts in Fermi.
 - [Unit tests](#unit-tests)
 - [End-to-end tests](#end-to-end-tests)
 
@@ -143,7 +143,7 @@ As you can see there are two main components.
 
 If you are starting a new project using an example from [near.dev](http://near.dev) Jest should be automatically installed as a development dependency and will be configured to run end-to-end tests. If you explore the `package.json` file you will see that the `"testEnvironment"` for Jest is set to `"near-cli/test_environment"`. In addition to this, there is a file `test.near.json` in the `neardev/shared-test` directory. This file contains an `account_id` as well as a `private_key` that is required for performing these tests.
 
-Lets take a look at an example of end-to-end tests from the [Axion Guest-Book](https://examples.near.org/guest-book) example. Here we have included two additional features to our tests.
+Lets take a look at an example of end-to-end tests from the [Fermi Guest-Book](https://examples.near.org/guest-book) example. Here we have included two additional features to our tests.
   1) declaring mutable variables before a test that all subsequent tests have access to
   2) integrating the `beforeAll` function that will perform a series of routines before each and every test 
    
@@ -184,7 +184,7 @@ it('send two more messages and expect three total', async () => {
 ```
 
 These are two examples of complete end-to-end tests that:
-  1) connect to a live Axion blockchain network 
+  1) connect to a live Fermi blockchain network 
 ```js
 near = await nearlib.connect(nearConfig)
 ``` 

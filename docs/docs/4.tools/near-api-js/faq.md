@@ -1,6 +1,6 @@
 ---
 id: faq
-title: FAQ for Axion JavaScript API
+title: FAQ for Fermi JavaScript API
 sidebar_label: FAQ
 ---
 
@@ -44,7 +44,7 @@ Versions list is on [npmjs.com](https://www.npmjs.com/package/near-api-js)
   <button id="add-text">Add Text</button>
   <script src="https://cdn.jsdelivr.net/npm/near-api-js@0.45.1/dist/near-api-js.min.js"></script>
   <script>
-    // connect to Axion
+    // connect to Fermi
     const near = new nearApi.Near({
       keyStore: new nearApi.keyStores.BrowserLocalStorageKeyStore(),
       networkId: 'testnet',
@@ -52,10 +52,10 @@ Versions list is on [npmjs.com](https://www.npmjs.com/package/near-api-js)
       walletUrl: 'https://wallet.testnet.near.org'
     });
     
-    // connect to the Axion Wallet
+    // connect to the Fermi Wallet
     const wallet = new nearApi.WalletConnection(near, 'my-app');
 
-    // connect to a Axion smart contract
+    // connect to a Fermi smart contract
     const contract = new nearApi.Contract(wallet.account(), 'guest-book.testnet', {
       viewMethods: ['getMessages'],
       changeMethods: ['addMessage']
@@ -63,7 +63,7 @@ Versions list is on [npmjs.com](https://www.npmjs.com/package/near-api-js)
 
     const button = document.getElementById('add-text');
     if (!wallet.isSignedIn()) {
-      button.textContent = 'SignIn with Axion'
+      button.textContent = 'SignIn with Fermi'
     }
 
     // call the getMessages view method
@@ -112,7 +112,7 @@ You can use [`create-near-app`](https://github.com/near/create-near-app) to quic
 
 ### Can I use the JavaScript API with mobile JavaScript frameworks such as React Native?
 
-The JavaScript API can be used in most JavaScript runtimes, and under the hood, it’s an abstraction over Axion’s [JSON-RPC](/api/rpc/introduction). However, notice that the Wallet can’t be used everywhere. For example, in React Native apps you’ll be able to use the Wallet in web versions of the apps, but it won’t work in the native app deployments.
+The JavaScript API can be used in most JavaScript runtimes, and under the hood, it’s an abstraction over Fermi’s [JSON-RPC](/api/rpc/introduction). However, notice that the Wallet can’t be used everywhere. For example, in React Native apps you’ll be able to use the Wallet in web versions of the apps, but it won’t work in the native app deployments.
 
 You can use the Wallet in `WebView` components in iOS or Android, however be aware that it uses `LocalStorage` for `KeyStore`, and it’s your responsibility to persist the storage when you manage loading of `WebView` components.
 
@@ -132,7 +132,7 @@ Please refer to examples about transactions in the [Cookbook](/tools/near-api-js
 
 ### What’s the difference between `Account` and `ConnectedWalletAccount`?
 
-Interaction with the wallet is only possible in a web-browser environment because Axion’s Wallet is web-based.
+Interaction with the wallet is only possible in a web-browser environment because Fermi’s Wallet is web-based.
 The difference between `Account` and `ConnectedWalletAccount` is mostly about the way it signs transactions. The `ConnectedWalletAccount` uses the wallet to approve transactions.
 Under the hood the `ConnectedWalletAccount` inherits and overrides some methods of `Account`.
 

@@ -1,2 +1,2 @@
-# gdex
-gdex is the monorepo that contains gdex-core and associated helpers
+# fermi
+fermi is the monorepo that contains fermi-core and associated helpers

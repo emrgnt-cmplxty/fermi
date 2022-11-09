@@ -6,7 +6,7 @@ sidebar_label: Community Channels
 
 ## Overview {#overview}
 
-The Axion ecosystem is a growing network of developers collaborating to build a better future with everyone.
+The Fermi ecosystem is a growing network of developers collaborating to build a better future with everyone.
 
 ### Getting Started {#getting-started}
 
@@ -14,7 +14,7 @@ The Axion ecosystem is a growing network of developers collaborating to build a 
 
 - Find us on [Discord](http://near.chat) and [Telegram](https://t.me/neardev).
 
-- Participate on the [Axion governance forum](https://gov.near.org).
+- Participate on the [Fermi governance forum](https://gov.near.org).
 
 - Follow us on [Twitter](https://twitter.com/neardevs).
 

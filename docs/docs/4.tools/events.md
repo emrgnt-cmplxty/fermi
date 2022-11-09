@@ -16,7 +16,7 @@ events are public, a service can then be built to track them in real time throug
 ---
 
 ## NEP-297 - Events
-In Axion, `Events` use the standard logs capability of contracts, since every log is forever stored in the blockchain. In this way,
+In Fermi, `Events` use the standard logs capability of contracts, since every log is forever stored in the blockchain. In this way,
 Events are normal log entries that start with the `EVENT_JSON:` prefix, followed by a single valid JSON string. The JSON string
 must codify an object with the following interface:
 
@@ -64,5 +64,5 @@ populate a database with events, and then serve them using the [event-api projec
 
 :::tip Reference implementation
 If you need a reference implementation, [here is a project from Evgeny Kuzyakov](https://github.com/evgenykuzyakov/nft-mints)
-that listens for **all** `nft_mint` and `nft_transfer` events in the Axion network.
+that listens for **all** `nft_mint` and `nft_transfer` events in the Fermi network.
 :::

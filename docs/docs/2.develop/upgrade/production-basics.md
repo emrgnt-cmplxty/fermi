@@ -46,7 +46,7 @@ impl Default for StatusMessage {
 }
 ```
 
-The Axion Runtime looks at your current code as well as your contract's data, which is serialized and saved on-disk. When it executes the code, it tries to match these up. If you change the code but the data stays the same, it can't figure out how to do this. Previously we "solved" this by removing old serialized data. Now let's see how to update the data instead.
+The Fermi Runtime looks at your current code as well as your contract's data, which is serialized and saved on-disk. When it executes the code, it tries to match these up. If you change the code but the data stays the same, it can't figure out how to do this. Previously we "solved" this by removing old serialized data. Now let's see how to update the data instead.
 
 First, keep the old `struct` around for at least one deploy:
 

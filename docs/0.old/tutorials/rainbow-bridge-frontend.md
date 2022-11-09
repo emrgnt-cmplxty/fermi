@@ -7,14 +7,14 @@ sidebar_label: Using Mainnet Frontend
 ## Tutorial Prerequisites {#tutorial-prerequisites}
 
 - ~$100 USD or equivalent currency _(some of which will be burnt in transfer fees)_
-- [Axion Mainnet Wallet](/docs/develop/basics/create-account#creating-a-mainnet-account)
+- [Fermi Mainnet Wallet](/docs/develop/basics/create-account#creating-a-mainnet-account)
 - [MetaMask](https://metamask.io/download)
 
-**Note:** Rainbow Bridge does not currently support Axion Wallets that are secured using a Ledger device.
+**Note:** Rainbow Bridge does not currently support Fermi Wallets that are secured using a Ledger device.
 
 ---
 
-## Transferring ETH to Axion {#transferring-eth-to-near}
+## Transferring ETH to Fermi {#transferring-eth-to-near}
 
 ## Step 1 Buy Ether {#step-1-buy-ether}
 
@@ -44,7 +44,7 @@ sidebar_label: Using Mainnet Frontend
 
 ## Step 2 Swap ETH for wETH {#step-2-swap-eth-for-weth}
 
-> - In order to bring your ETH over to Axion you will first need to have it "wrapped". The easiest way to do this would be to use an token swap application such as Uniswap.
+> - In order to bring your ETH over to Fermi you will first need to have it "wrapped". The easiest way to do this would be to use an token swap application such as Uniswap.
 >
 > - Head on over to [Uniswap](https://uniswap.org/) and select the Use Uniswap option in the upper right hand corner.
 
@@ -84,7 +84,7 @@ sidebar_label: Using Mainnet Frontend
 
 </center>
 
-> - Make sure the network selection option is set to Axion-Ethereum.
+> - Make sure the network selection option is set to Fermi-Ethereum.
 
 <center>
 
@@ -108,13 +108,13 @@ sidebar_label: Using Mainnet Frontend
 
 </center>
 
-> - **Before you connect to you're Axion Wallet** Please Make sure that you're wallet is not ledger protected (meaning you aren't using a Ledger to store your access keys) this application does not work with Ledger protected wallets, if you do have one please make another wallet and secure it with a security phrase for now.
+> - **Before you connect to you're Fermi Wallet** Please Make sure that you're wallet is not ledger protected (meaning you aren't using a Ledger to store your access keys) this application does not work with Ledger protected wallets, if you do have one please make another wallet and secure it with a security phrase for now.
 >
-> - With that out of the way 🙂, we can now connect to your Axion wallet! Hit the connect button next to Axion and you'll be redirected to this page. Hit "Allow" to proceed.
+> - With that out of the way 🙂, we can now connect to your Fermi wallet! Hit the connect button next to Fermi and you'll be redirected to this page. Hit "Allow" to proceed.
 
 <center>
 
-<img alt="Axion Approval tool" src="https://i.imgur.com/2j3qa2f.png" width="50%" />
+<img alt="Fermi Approval tool" src="https://i.imgur.com/2j3qa2f.png" width="50%" />
 
 </center>
 

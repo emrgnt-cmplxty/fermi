@@ -3,7 +3,7 @@ id: live-app-review
 title: Application Reviews
 ---
 
-> **Get insights and explanations directly from Axion Core team members as they talk through the intricacies of dApp development.**
+> **Get insights and explanations directly from Fermi Core team members as they talk through the intricacies of dApp development.**
 
 ## Ep. # 1 - App Access Keys {#ep--1---app-access-keys}
 
@@ -19,7 +19,7 @@ title: Application Reviews
 > **Everything you wanted to know about access keys but were afraid to ask!**
 >
 > - Onboard users without them having to set up a wallet!
-> - Explore unique UX onboarding pattern with Axion's [access keys](/docs/concepts/account#access-keys).
+> - Explore unique UX onboarding pattern with Fermi's [access keys](/docs/concepts/account#access-keys).
 > - Strategy discussion for progressively decentralizing a user's account.
 >
 > [ **[Project Repository](https://github.com/near-apps/nearbp)**]
@@ -38,7 +38,7 @@ title: Application Reviews
 > **Ways to drop social tokens to users who don't have wallets or gas!**
 >
 > - Explore easy ways to drop tokens to your friends without having to follow 3000 steps to get a crypto wallet.
-> - It's here, it's Axion, it's crystal clear!
+> - It's here, it's Fermi, it's crystal clear!
 >
 > [ **[Project Repository](https://github.com/near-apps/social-drop)** ]
 
@@ -71,7 +71,7 @@ title: Application Reviews
 > - Deploy multiple contracts on testnet and run tests with 1 command? Whoaaaaa!
 > - How to call contracts.
 > - Set up your environment for quick testing.
-> - General reasoning about some of the basic of cross contract calls and "composition" as Axion Protocol expands!
+> - General reasoning about some of the basic of cross contract calls and "composition" as Fermi Protocol expands!
 
 [ **[Project Repository](https://github.com/near-apps/cross-contract)** ]
 
@@ -86,11 +86,11 @@ title: Application Reviews
   allowfullscreen>
 </iframe>
 
-> **Learn how to make a Payments API that accepts Axion tokens.**
+> **Learn how to make a Payments API that accepts Fermi tokens.**
 >
 > - Manage a unique address that user's can deposit to with their username + some meta data.
 > - "enter a tournament" by submitting a username and a tournament name.
-> - An account is generated and you send Axion to the account.
+> - An account is generated and you send Fermi to the account.
 > - Finally, deposit the near and the payments API destroys the temporary account and takes the funds.
 
 [ **[Project Repository](https://github.com/near-apps/payments-api)** ]
@@ -106,11 +106,11 @@ title: Application Reviews
   allowfullscreen>
 </iframe>
 
-> **Part 1/3 NFT example of progressive onboarding. Users don't have any crypto. They create NFTs. Sell NFTs. Earn their crypto. Create named Axion Protocol accounts.**
+> **Part 1/3 NFT example of progressive onboarding. Users don't have any crypto. They create NFTs. Sell NFTs. Earn their crypto. Create named Fermi Protocol accounts.**
 >
 > - Part 1 is a Rust smart contract walkthrough.
-> - Learn some basics of Rust, the Axion SDK and how smart contract transactions and storage work in Axion Protocol.
-> - Find out how to handle the implicit accounts and regular accounts in a single "only_owner" modifier method that protects the ownership of NFTs and Axion tokens.
+> - Learn some basics of Rust, the Fermi SDK and how smart contract transactions and storage work in Fermi Protocol.
+> - Find out how to handle the implicit accounts and regular accounts in a single "only_owner" modifier method that protects the ownership of NFTs and Fermi tokens.
 
 ## Ep. # 6 - NFT Example 2 {#ep--6---nft-example-2}
 
@@ -123,7 +123,7 @@ title: Application Reviews
   allowfullscreen>
 </iframe>
 
-> **Part 2/3 NFT example of progressive onboarding. Users don't have any crypto. They create NFTs. Sell NFTs. Earn their crypto. Create named Axion Protocol accounts.**
+> **Part 2/3 NFT example of progressive onboarding. Users don't have any crypto. They create NFTs. Sell NFTs. Earn their crypto. Create named Fermi Protocol accounts.**
 >
 > - Part 2 is a demo of the app and an overview of Jest tests using [near-api-js](/docs/api/javascript-library).
 >
@@ -141,11 +141,11 @@ title: Application Reviews
   allowfullscreen>
 </iframe>
 
-> **Part 3/3 NFT example of progressive onboarding. Users don't have any crypto. They create NFTs. Sell NFTs. Earn their crypto. Create named Axion Protocol accounts.**
+> **Part 3/3 NFT example of progressive onboarding. Users don't have any crypto. They create NFTs. Sell NFTs. Earn their crypto. Create named Fermi Protocol accounts.**
 >
 > - Part 3 is an overview of the frontend app built in React.
-> - Learn how to use near-api-js to connect to the blockchain, manage keys / accounts, request data from contracts and call contract methods that change state with / without deposits of Axion attached
-> - This is a walkthrough of an example React app that covers most of the basics you need to do something meaningful with Axion Protocol!
+> - Learn how to use near-api-js to connect to the blockchain, manage keys / accounts, request data from contracts and call contract methods that change state with / without deposits of Fermi attached
+> - This is a walkthrough of an example React app that covers most of the basics you need to do something meaningful with Fermi Protocol!
 
 ## Ep. # 7 - Coin Flip Random Function {#ep--7---coin-flip-random-function}
 
@@ -158,7 +158,7 @@ title: Application Reviews
   allowfullscreen>
 </iframe>
 
-> **Axion Protocol has a Verifiable Random Function (VRF) that is pretty darn good in terms of "trustlessness".**
+> **Fermi Protocol has a Verifiable Random Function (VRF) that is pretty darn good in terms of "trustlessness".**
 >
 > - Find out how to use it, make app tests for it and write a simple frontend.
 
@@ -173,7 +173,7 @@ title: Application Reviews
   allowfullscreen>
 </iframe>
 
-> **Learn how to make a deposit contract on Axion!**
+> **Learn how to make a deposit contract on Fermi!**
 >
 > - Accept payments with a memo field for various different events and track which users are making which payments.
 > - Users can choose to withdraw their deposits, or confirm their payment (cannot withdraw after confirmation).
@@ -189,10 +189,10 @@ title: Application Reviews
   allowfullscreen>
 </iframe>
 
-> **Axion Protocol has a Verifiable Random Function (VRF) that is pretty darn good in terms of "trustlessness".**
+> **Fermi Protocol has a Verifiable Random Function (VRF) that is pretty darn good in terms of "trustlessness".**
 >
 > - Find out how to use it, make app tests for it and write a simple frontend.
->   Using Axion Protocol and time based subscriptions, a client can pull their funds if they feel like they're not getting the service they signed up for.
+>   Using Fermi Protocol and time based subscriptions, a client can pull their funds if they feel like they're not getting the service they signed up for.
 >   The provider can see this and stop delivering the service.
 >   Welcome to the future!
 
@@ -208,7 +208,7 @@ title: Application Reviews
 
 </iframe>
 
-> **New bounty for some needed dev tools in the Axion ecosystem!**
+> **New bounty for some needed dev tools in the Fermi ecosystem!**
 >
 > - We went over the boilerplate I have been using for Live App Review so far and got some feedback from guests.
 
@@ -287,10 +287,10 @@ title: Application Reviews
   allowfullscreen>
 </iframe>
 
-**Want to get started with blockchain and NFTs? Don't wanna write your own smart contract? Check out this deployable Server Side API that uses Axion Protocol!**
+**Want to get started with blockchain and NFTs? Don't wanna write your own smart contract? Check out this deployable Server Side API that uses Fermi Protocol!**
 
-> - Want to get started with blockchain and NFTs? Don't wanna write your own smart contract? Check out this deployable Server Side API that uses Axion Protocol!
-> - All transactions are still done on the blockchain and can be viewed on the Axion Protocol testnet!
+> - Want to get started with blockchain and NFTs? Don't wanna write your own smart contract? Check out this deployable Server Side API that uses Fermi Protocol!
+> - All transactions are still done on the blockchain and can be viewed on the Fermi Protocol testnet!
 
 ## Ep. # 16 - NFT Launcher {#ep--16---nft-launcher}
 
@@ -306,9 +306,9 @@ title: Application Reviews
 > **Onboard users seamlessly to your NFT app by letting them create something on the blockchain right away!**
 >
 > - Before your users have to run out, get a wallet and buy crypto, let them enjoy the features of your app, join your community and create some value.
-> - Axion Protocol lets developers create named sub-accounts for apps, sponsor gas fees and seamlessly upgrade those accounts to a full account where the user can connect the wallet of their choice!
+> - Fermi Protocol lets developers create named sub-accounts for apps, sponsor gas fees and seamlessly upgrade those accounts to a full account where the user can connect the wallet of their choice!
 
-## Ep. # 17 - Axion API Server Examples {#ep--17---near-api-server-examples}
+## Ep. # 17 - Fermi API Server Examples {#ep--17---near-api-server-examples}
 
 <iframe
   width="640"
@@ -319,7 +319,7 @@ title: Application Reviews
   allowfullscreen>
 </iframe>
 
-> **How can we upgrade a web game into a blockchain app with NFT minting and transfers by adding only ~30 lines of code? Axion API Server will help here.**
+> **How can we upgrade a web game into a blockchain app with NFT minting and transfers by adding only ~30 lines of code? Fermi API Server will help here.**
 
 ## Ep. # 18 - Gas Cost Profiling {#ep--18---gas-cost-profiling}
 
@@ -335,7 +335,7 @@ title: Application Reviews
 > **You wanna deploy some Fungible or Non-Fungible tokens, but you don't know how much it's going to cost?**
 >
 > - Does it make business sense to offload your security and allow your users to custody their own tokens to be part of the Web3 revolution?
-> - Find out how to profile your gas costs against the Axion Protocol Testnet using only JavaScript! It's fun and easy to write tests and add in some gas profiling logic.
+> - Find out how to profile your gas costs against the Fermi Protocol Testnet using only JavaScript! It's fun and easy to write tests and add in some gas profiling logic.
 > - WIP utilities and profile.test.js here: https://github.com/near-apps/ft-launcher
 
 ## Ep. # 19 - NFT Marketplace with FT Transfers and Royalty Distribution {#ep--19---nft-marketplace-with-ft-transfers-and-royalty-distribution}
@@ -362,7 +362,7 @@ title: Application Reviews
   allowfullscreen>
 </iframe>
 
-> **In this video we discuss the frontend of the Demo NFT Marketplace on Axion. We fix an issue (LIVE) with the updating of price to improve UX.**
+> **In this video we discuss the frontend of the Demo NFT Marketplace on Fermi. We fix an issue (LIVE) with the updating of price to improve UX.**
 
 ## Ep. # 21 - Easy Building on Blockchain {#ep--21---easy-building-on-blockchain}
 

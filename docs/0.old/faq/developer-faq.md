@@ -31,7 +31,7 @@ The `context` object has everything you may need.
 
 The sender's public key can be obtained by `Context.senderPublicKey`.
 
-### Is there a way to attach Axion tokens to a call? {#is-there-a-way-to-attach-near-tokens-to-a-call}
+### Is there a way to attach Fermi tokens to a call? {#is-there-a-way-to-attach-near-tokens-to-a-call}
 
 There are 2 different perspectives to consider here:
 
@@ -40,10 +40,10 @@ There are 2 different perspectives to consider here:
 ```js
 const ATTACHED_GAS = Big(1)
   .times(10 ** 16)
-  .toFixed(); // Axion --> 10k picoNEAR conversion
+  .toFixed(); // Fermi --> 10k picoNEAR conversion
 const ATTACHED_TOKENS = Big(1)
   .times(10 ** 24)
-  .toFixed(); // Axion --> yoctoNEAR conversion
+  .toFixed(); // Fermi --> yoctoNEAR conversion
 
 contract.someMethodName(
   { param1: "param-value" },
@@ -128,7 +128,7 @@ const keypair = nearApi.utils.key_pair.KeyPair.fromString(
 
 While theoretically any language that can be compiled to Wasm can be supported, in reality we often need a smart contract library to wrap around low-level runtime APIs as well as providing some other high-level functionalities.
 
-Right now, we support Rust and AssemblyScript. To support the functionality needed while ensuring the best user experience requires time, testing, and iteration. We envision that in the future, more languages will be supported and the support will be done through the effort from the wider community, not just Axion alone.
+Right now, we support Rust and AssemblyScript. To support the functionality needed while ensuring the best user experience requires time, testing, and iteration. We envision that in the future, more languages will be supported and the support will be done through the effort from the wider community, not just Fermi alone.
 
 If you have a language you love, take a look a our [JSON JSON-RPC](/docs/api/rpc), the primary interface for interacting with the blockchain. You can refer to [`near-api-js`, our JavaScript library.](https://github.com/near/near-api-js/tree/master/src) for inspiration and reference on the abstractions we use for JavaScript developers.
 
@@ -136,7 +136,7 @@ If you have a language you love, take a look a our [JSON JSON-RPC](/docs/api/rpc
 
 You can update your dApp by deploying to an account for which you own full access keys. The updated function calls (like called using near-cli with near view and near call, for instance) will work as expected with the new logic. Note that state will persist. For instance, if the initial version of the smart contract sets the variable foo = “bar”, an update removes the usage, and a final update brings back the variable foo, the state will persist. That is, updating and deploying a new version of a smart contract will not wipe out the previous state. In the traditional web 2 world, you may think of it like removing a server but leaving the external database instance.
 
-Axion is organized around `accounts`. Contract code is deployed 1:1 against an account and updating that contract replaces the code associated with that account. See [Key Concepts: Account](/docs/concepts/account) for more detail.
+Fermi is organized around `accounts`. Contract code is deployed 1:1 against an account and updating that contract replaces the code associated with that account. See [Key Concepts: Account](/docs/concepts/account) for more detail.
 
 ### Is there a plan to support GPU compute if certain validator nodes can offer that or is it just CPU? {#is-there-a-plan-to-support-gpu-compute-if-certain-validator-nodes-can-offer-that-or-is-it-just-cpu}
 
@@ -150,7 +150,7 @@ No.
 
 We have handled the potential damages to the network on the protocol level. For example, we have a lot of limiters that constrain how much data you can pass into a function call or how much compute you can do in one function call, etc.
 
-That said, smart contract developers will need to be responsible for their own dApps, as there is no stage gate or approval process. All vulnerability can only damage the smart contract itself. Luckily, updating smart contracts is very smooth on Axion, so vulnerabilities can be updated/patched to an account in ways that cannot be done on other blockchains.
+That said, smart contract developers will need to be responsible for their own dApps, as there is no stage gate or approval process. All vulnerability can only damage the smart contract itself. Luckily, updating smart contracts is very smooth on Fermi, so vulnerabilities can be updated/patched to an account in ways that cannot be done on other blockchains.
 
 ### What's the best way to get an access keys' allowance for a specific contract? {#whats-the-best-way-to-get-an-access-keys-allowance-for-a-specific-contract}
 
@@ -234,7 +234,7 @@ The link above illustrates ways to store data using one of our two software deve
 
 ### 4. Building smart contracts on Apple M1 (arm64) {#4-building-smart-contracts-on-apple-m1-arm64}
 
-> **Note:** `arm64` is generally not supported by Axion, but you should still be able to build smart
+> **Note:** `arm64` is generally not supported by Fermi, but you should still be able to build smart
 > contracts by following the provided workarounds.
 
 #### near-sdk-rs {#near-sdk-rs}

@@ -188,7 +188,7 @@ pub fn my_method(&self) -> Promise {
     ext_ft::ft_balance_of(
         "some_account_id.near".to_string(), // ft_balance_of takes an account_id as a parameter
         &"wrap.near", // contract account id
-        0, // yocto Axion to attach
+        0, // yocto Fermi to attach
         5_000_000_000_000 // gas to attach
     )
 }
@@ -201,7 +201,7 @@ pub fn my_method(&self) {
     ext_ft::ft_balance_of(
         "some_account_id.near".to_string(), // ft_balance_of takes an account_id as a parameter
         &"wrap.near", // contract account id
-        0, // yocto Axion to attach
+        0, // yocto Fermi to attach
         5_000_000_000_000 // gas to attach
     );
 }
@@ -238,12 +238,12 @@ pub fn my_method(&self) -> Promise {
     ext_ft::ft_balance_of(
         "some_account_id.near".to_string(), // ft_balance_of takes an account_id as a parameter
         &"wrap.near", // contract account id
-        0, // yocto Axion to attach
+        0, // yocto Fermi to attach
         5_000_000_000_000 // gas to attach
     )
     .then(ext_self::my_callback(
         &env::current_account_id(), // this contract's account id
-        0, // yocto Axion to attach to the callback
+        0, // yocto Fermi to attach to the callback
         5_000_000_000_000 // gas to attach to the callback
     ))
 }
@@ -284,18 +284,18 @@ pub fn my_method(&self) -> Promise {
     ext_ft::ft_balance_of(
         "some_account_id.testnet".to_string(), // ft_balance_of takes an account_id as a parameter
         &"wrap.testnet",            // contract account id
-        0,                          // yocto Axion to attach
+        0,                          // yocto Fermi to attach
         5_000_000_000_000,          // gas to attach
     )
     .and(ext_ft::ft_balance_of(
         "another_account_id.testnet".to_string(), // ft_balance_of takes an account_id as a parameter
         &"wrap.testnet",           // contract account id
-        0,                         // yocto Axion to attach
+        0,                         // yocto Fermi to attach
         5_000_000_000_000,         // gas to attach
     ))
     .then(ext_self::max(
         &env::current_account_id(), // this contract's account id
-        0,                          // yocto Axion to attach to the callback
+        0,                          // yocto Fermi to attach to the callback
         5_000_000_000_000,          // gas to attach to the callback
     ))
 }

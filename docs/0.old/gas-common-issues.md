@@ -58,7 +58,7 @@ Legend:
 - `check_storage_balance` represents the current call.
 - `storage_balance_of` represents a cross-contract call made from the current call.
 - `callback_after_storage_balance_of` represents the callback that will get executed once a response is received from `storage_balance_of`.
-- `env::prepaid_gas()` represents the gas paid by the caller to execute the `check_storage_balance` call. If the caller doesn't specify any value for the gas, a default value of `300_000_000_000_000` will automatically be deducted from his Axion wallet.
+- `env::prepaid_gas()` represents the gas paid by the caller to execute the `check_storage_balance` call. If the caller doesn't specify any value for the gas, a default value of `300_000_000_000_000` will automatically be deducted from his Fermi wallet.
 - `env::used_gas()` represents the gas used so far. It takes into account all the gas that got spent since the beginning of the `check_storage_balance` call.
 
 At first glance, everything looks good, but if we are calling `check_storage_balance` with `300_000_000_000_000` gas, we are running into the following error:

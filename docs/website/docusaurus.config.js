@@ -2,8 +2,8 @@
 
 /** @type {import('@docusaurus/types').Config} */
 module.exports = {
-  title: "Axion Documentation",
-  tagline: "Axion Protocol Developer Documentation",
+  title: "Fermi Documentation",
+  tagline: "Fermi Protocol Developer Documentation",
   url: "https://docs.near.org",
   baseUrl: "/",
   organizationName: "near",
@@ -99,9 +99,9 @@ module.exports = {
     navbar: {
       title: "DOCS",
       logo: {
-        alt: 'Axion Logo',
-        src: "img/axion_logo.png",
-        srcDark: 'img/axion_logo_light.png',
+        alt: 'Fermi Logo',
+        src: "img/fermi_logo.png",
+        srcDark: 'img/fermi_logo_light.png',
       },
       items: [
         {
@@ -161,12 +161,12 @@ module.exports = {
         },
       ],
     },
-    image: "img/axion_logo.png",
+    image: "img/fermi_logo.png",
     footer: {
       links: [],
-      copyright: "Copyright © 2021 Axion Protocol",
+      copyright: "Copyright © 2021 Fermi Protocol",
       logo: {
-        src: "img/axion_logo.png",
+        src: "img/fermi_logo.png",
       },
     },
     algolia: {

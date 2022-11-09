@@ -27,4 +27,4 @@ cargo install wasm-snip wasm-gc
 apt install binaryen wabt
 ```
 ## WARNING
-Minification could be rather aggressive, so you must test the contract after minification. Standalone Axion runtime could be helpful [here](https://github.com/nearprotocol/nearcore/tree/master/runtime/near-vm-runner).
+Minification could be rather aggressive, so you must test the contract after minification. Standalone Fermi runtime could be helpful [here](https://github.com/nearprotocol/nearcore/tree/master/runtime/near-vm-runner).

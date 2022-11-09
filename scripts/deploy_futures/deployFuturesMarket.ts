@@ -11,14 +11,14 @@ import localConfig from "./localConfig.json"
 import { getJsonRpcUrl } from "./utils"
 
 // EXTERNAL
-import { AxionClient, AxionTypes, AxionUtils, AxionAccount } from 'axion-sdk'
+import { FermiClient, FermiTypes, FermiUtils, FermiAccount } from 'fermi-sdk'
 import { TenexTransaction, TenexUtils } from 'tenex-sdk'
 
 class DeploymentBuilder {
     public privateKey: Uint8Array
-    public client: AxionClient
+    public client: FermiClient
   
-    constructor(privateKey: Uint8Array, client: AxionClient) {
+    constructor(privateKey: Uint8Array, client: FermiClient) {
       this.privateKey = privateKey
       this.client = client
     }
@@ -32,9 +32,9 @@ class DeploymentBuilder {
             /* client */ this.client
         );
         console.log('Sending asset creation tranasction')
-        const result: AxionTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
+        const result: FermiTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
         console.log('result=', result)
-        AxionUtils.checkSubmissionResult(result)
+        FermiUtils.checkSubmissionResult(result)
     }
 
     async sendCreateMarketplaceRequest(quoteAssetId: number) {
@@ -46,9 +46,9 @@ class DeploymentBuilder {
             /* client */ this.client
         );
         console.log('Sending create marketplace tranasction')
-        const result: AxionTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
+        const result: FermiTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
         console.log('result=', result)
-        AxionUtils.checkSubmissionResult(result)
+        FermiUtils.checkSubmissionResult(result)
     }
 
     async sendCreateMarketRequest(baseAssetId: number) {
@@ -60,9 +60,9 @@ class DeploymentBuilder {
             /* client */ this.client
         );
         console.log('Sending create market tranasction')
-        const result: AxionTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
+        const result: FermiTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
         console.log('result=', result)
-        AxionUtils.checkSubmissionResult(result)
+        FermiUtils.checkSubmissionResult(result)
     }
 
     async sendUpdatePricesRequest(latestPrices: number[]) {
@@ -74,9 +74,9 @@ class DeploymentBuilder {
             /* client */ this.client
         );
         console.log('Sending update prices tranasction')
-        const result: AxionTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
+        const result: FermiTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
         console.log('result=', result)
-        AxionUtils.checkSubmissionResult(result)
+        FermiUtils.checkSubmissionResult(result)
     }
 
     async sendAccountDepositRequest(quantity: number, marketAdmin: Uint8Array) {
@@ -88,9 +88,9 @@ class DeploymentBuilder {
             /* client */ this.client
         );
         console.log('Sending create market tranasction')
-        const result: AxionTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
+        const result: FermiTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
         console.log('result=', result)
-        AxionUtils.checkSubmissionResult(result)
+        FermiUtils.checkSubmissionResult(result)
     }
 
     async sendFuturesLimitOrderRequest(baseAssetId: number, quoteAssetId: number, side: number, price: number, quantity: number, marketAdmin: Uint8Array) {
@@ -102,9 +102,9 @@ class DeploymentBuilder {
             /* client */ this.client
         );
         console.log('Sending create market tranasction')
-        const result: AxionTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
+        const result: FermiTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
         console.log('result=', result)
-        AxionUtils.checkSubmissionResult(result)
+        FermiUtils.checkSubmissionResult(result)
     }
 }
 
@@ -114,10 +114,10 @@ async function main() {
     const deploymentAuthority = config['authorities'][authorities[localConfig.deploymentAuthority]]
     console.log("deploymentAuthority=", deploymentAuthority)
 
-    const client = new AxionClient(getJsonRpcUrl(deploymentAuthority))
+    const client = new FermiClient(getJsonRpcUrl(deploymentAuthority))
     
-    const deployerPrivateKey = AxionUtils.hexToBytes(deploymentAuthority.private_key)
-    const deployerPublicKey = await AxionAccount.getPublicKey(deployerPrivateKey)
+    const deployerPrivateKey = FermiUtils.hexToBytes(deploymentAuthority.private_key)
+    const deployerPublicKey = await FermiAccount.getPublicKey(deployerPrivateKey)
 
     const deployer = new DeploymentBuilder(deployerPrivateKey, client)
     console.log('Starting Deployment Now...')

@@ -1,10 +1,10 @@
 ---
 id: networks
-title: Axion Networks
+title: Fermi Networks
 sidebar_label: Networks
 ---
 
-Axion Protocol operates on several networks each operating with their own independent validators and unique state. These networks are as follows:
+Fermi Protocol operates on several networks each operating with their own independent validators and unique state. These networks are as follows:
 
 * [`mainnet`](/concepts/basics/networks#mainnet)
 * [`testnet`](/concepts/basics/networks#testnet)
@@ -24,7 +24,7 @@ Axion Protocol operates on several networks each operating with their own indepe
 
 ## Testnet {#testnet}
 
-`testnet` is a public network and the final testing network for `nearcore` changes before deployment to `mainnet`. `testnet` is intended for testing all aspects of the Axion platform prior to `mainnet` deployment. From account creation, mock token transfers, development tooling, and smart contract development, the `testnet` environment closely resembles `mainnet` behavior. All `nearcore` changes are deployed as release candidates on first testnet, before the changes are released on `mainnet`. A number of `testnet` validators validate transactions and create new blocks. dApp developers deploy their applications on `testnet` before deploying on `mainnet`. It is important to note that `testnet` has its own transactions and states.
+`testnet` is a public network and the final testing network for `nearcore` changes before deployment to `mainnet`. `testnet` is intended for testing all aspects of the Fermi platform prior to `mainnet` deployment. From account creation, mock token transfers, development tooling, and smart contract development, the `testnet` environment closely resembles `mainnet` behavior. All `nearcore` changes are deployed as release candidates on first testnet, before the changes are released on `mainnet`. A number of `testnet` validators validate transactions and create new blocks. dApp developers deploy their applications on `testnet` before deploying on `mainnet`. It is important to note that `testnet` has its own transactions and states.
 
 * [ Status: [https://rpc.testnet.near.org/status](./) ]
 * [ [Explorer](https://explorer.testnet.near.org) ]
@@ -42,7 +42,7 @@ Axion Protocol operates on several networks each operating with their own indepe
 
 ## Localnet {#localnet}
 
-`localnet` is intended for developers who want to work with the Axion platform independent of the public blockchain. You will need to generate nodes yourself. `localnet` gives you the total control over accounts, economics, and other factors for more advanced use cases (including making changes to `nearcore`). For developers, `localnet` is the right choice if you prefer to avoid leaking information about your work during the development process.
+`localnet` is intended for developers who want to work with the Fermi platform independent of the public blockchain. You will need to generate nodes yourself. `localnet` gives you the total control over accounts, economics, and other factors for more advanced use cases (including making changes to `nearcore`). For developers, `localnet` is the right choice if you prefer to avoid leaking information about your work during the development process.
 
 
 More on local development [here](https://near-nodes.io/validator/running-a-node)

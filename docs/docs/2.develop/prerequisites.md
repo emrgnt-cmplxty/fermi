@@ -10,7 +10,7 @@ In order to develop smart contracts you will need Node.js for javascript, and th
 
 ## Developing Contracts in Rust
 
-Follow [these instructions](https://doc.rust-lang.org/book/ch01-01-installation.html) for setting up Rust. Then, add the `wasm32-unknown-unknown` toolchain which enables compiling Rust to [Web Assembly (wasm)](https://webassembly.org/), the low-level language used by the Axion platform.
+Follow [these instructions](https://doc.rust-lang.org/book/ch01-01-installation.html) for setting up Rust. Then, add the `wasm32-unknown-unknown` toolchain which enables compiling Rust to [Web Assembly (wasm)](https://webassembly.org/), the low-level language used by the Fermi platform.
 
 ```bash
 # Get Rust in linux and MacOS

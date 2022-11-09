@@ -5,9 +5,9 @@ title: Fungible Tokens
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-Besides the native Axion token, Axion accounts have access to a multitude of fungible tokens (e.g. [these whitelisted tokens](https://guide.ref.finance/developers-1/cli-trading#query-whitelisted-tokens)). Moreover, it is even possible for users to create their own fungible tokens.
+Besides the native Fermi token, Fermi accounts have access to a multitude of fungible tokens (e.g. [these whitelisted tokens](https://guide.ref.finance/developers-1/cli-trading#query-whitelisted-tokens)). Moreover, it is even possible for users to create their own fungible tokens.
 
-In contrast with the Axion native token, fungible token (FT) are **not stored** in the user's wallet. In fact, each FT lives in **their own contract** which is in charge of doing **bookkeeping**. This is, the contract keeps track of how many tokens each user has, and handles transfers internally.
+In contrast with the Fermi native token, fungible token (FT) are **not stored** in the user's wallet. In fact, each FT lives in **their own contract** which is in charge of doing **bookkeeping**. This is, the contract keeps track of how many tokens each user has, and handles transfers internally.
 
 In order for a contract to be considered a FT-contract it has to follow the [**NEP-141 and NEP-148 standards**](https://nomicon.io/Standards/FungibleToken/). The **NEP-141** & **NEP-148** standards explain the **minimum interface** required to be implemented, as well as the expected functionality.
 
@@ -23,7 +23,7 @@ We provide a [FT reference implementation](https://github.com/near-examples/FT) 
 Creating a new FT is as simple as deploying a new FT contract and initializing it. On initialization you will define the token's metadata such as its name (e.g. Ethereum), symbol (e.g. ETH) and total supply (e.g. 10M). You will also define an `owner`, which will own the tokens **total supply**.
 
 <Tabs className="language-tabs" groupId="code-tabs">
-  <TabItem value="cli" label="Axion CLI">
+  <TabItem value="cli" label="Fermi CLI">
 
   ```bash
   # 1. Deploy the contract in a testnet account
@@ -47,7 +47,7 @@ On initialization you will define an **owner**, who will own **ALL** the tokens.
 You can query the FT's metadata by calling the `ft_metadata`.
 
 <Tabs className="language-tabs" groupId="code-tabs">
-  <TabItem value="cli" label="Axion CLI">
+  <TabItem value="cli" label="Fermi CLI">
 
   ```bash
   near view <ft-contract> ft_metadata
@@ -62,7 +62,7 @@ You can query the FT's metadata by calling the `ft_metadata`.
 In order for a user to own and transfer tokens they need to first **register** in the contract. This is done by calling `storage_deposit` and attaching 0.00125Ⓝ. This method also allows to pay for other users to register them.
 
 <Tabs className="language-tabs" groupId="code-tabs">
-  <TabItem value="cli" label="Axion CLI">
+  <TabItem value="cli" label="Fermi CLI">
 
   ```bash
   near call <ft-contract> storage_deposit '{"account_id": "<account-to-register>"}' --accountId <your-account> --amount 0.00125
@@ -77,7 +77,7 @@ You can make sure a user is registered by asserting they have a `storage_balance
 :::
 
 :::tip
-After you call the `storage_deposit` the FT will appear in the Axion WALLET. 
+After you call the `storage_deposit` the FT will appear in the Fermi WALLET. 
 :::
 
 <hr class="subsection"/>
@@ -86,7 +86,7 @@ After you call the `storage_deposit` the FT will appear in the Axion WALLET.
 To know how many coins a user has you will need to query the method `ft_balance_of`.
 
 <Tabs className="language-tabs" groupId="code-tabs">
-  <TabItem value="cli" label="Axion CLI">
+  <TabItem value="cli" label="Fermi CLI">
 
   ```bash
   near view <ft-contract> ft_balance_of '{"account_id": "<users-account>"}'
@@ -105,7 +105,7 @@ To know how many coins a user has you will need to query the method `ft_balance_
 To send FT to another account you will use the `ft_transfer` method, indicating the receiver and the amount of FT you want to send.
 
 <Tabs className="language-tabs" groupId="code-tabs">
-  <TabItem value="cli" label="Axion CLI">
+  <TabItem value="cli" label="Fermi CLI">
 
   ```bash
   near call <ft-contract> ft_transfer '{"receiver_id": "<receiver-account>", "amount": "<amount>"}' --accountId <your-account> --depositYocto 1
@@ -125,10 +125,10 @@ In order to send a fungible token to an account, both the sender and receiver mu
 <hr class="subsection"/>
 
 ## Attaching FTs to a Call
-Natively, only Axion tokens (Ⓝ) can be attached to a method calls. However, the FT standard enables to attach fungible tokens in a call by using the FT-contract as intermediary. This means that, instead of you attaching tokens directly to the call, you ask the FT-contract to do both a transfer and a method call in your name.
+Natively, only Fermi tokens (Ⓝ) can be attached to a method calls. However, the FT standard enables to attach fungible tokens in a call by using the FT-contract as intermediary. This means that, instead of you attaching tokens directly to the call, you ask the FT-contract to do both a transfer and a method call in your name.
 
 <Tabs className="language-tabs" groupId="code-tabs">
-  <TabItem value="cli" label="Axion CLI">
+  <TabItem value="cli" label="Fermi CLI">
 
   ```bash
   near call <ft-contract> ft_transfer_call '{"receiver_id": "<receiver-contract>", "amount": "<amount>", "msg": "<a-string-message>"}' --accountId <user_account_id> --depositYocto 1

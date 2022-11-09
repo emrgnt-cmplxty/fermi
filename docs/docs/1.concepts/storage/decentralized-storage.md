@@ -4,7 +4,7 @@ title: Decentralized Storage Solutions
 sidebar_label: Alternative Solutions
 ---
 
-> In this article you'll find a brief overview of different decentralized storage solutions that can be integrated into your decentralized applications (dApps). This will allow you to store large amounts of data using a more economical alternative to native Axion storage.
+> In this article you'll find a brief overview of different decentralized storage solutions that can be integrated into your decentralized applications (dApps). This will allow you to store large amounts of data using a more economical alternative to native Fermi storage.
 
 - [Arweave](#arweave)
 - [Crust](#crust)
@@ -47,20 +47,20 @@ You should see the response: `arlocal started on port 1984`.
 You can specify the port by using `npx arlocal <desired port number>`.
 :::
 
-### Axion-Arweave frontend
+### Fermi-Arweave frontend
 
-The [Axion-Arweave repository](https://github.com/near-examples/Axion-Arweave-Tutorial) has a simple frontend that allows you to store `.png` files using arlocal.
+The [Fermi-Arweave repository](https://github.com/near-examples/Fermi-Arweave-Tutorial) has a simple frontend that allows you to store `.png` files using arlocal.
 
 - Now open your second terminal and clone the frontend by running the following command:
 
 ```bash
-git clone https://github.com/near-examples/Axion-Arweave-Tutorial.git
+git clone https://github.com/near-examples/Fermi-Arweave-Tutorial.git
 ```
 
 - Install dependencies by running the following in the project folder:
 
 ```bash
-cd Axion-Arweave-Tutorial
+cd Fermi-Arweave-Tutorial
 yarn
 ```
 
@@ -118,7 +118,7 @@ Crust supports multiple storage-layer protocols such as IPFS and exposes instant
 Crustʼs technical stack is also capable of supporting data manipulation and computing.
 
 The Crust protocol is 100% compatible with the [IPFS](https://ipfs.io) protocol, and it matches people who have hard drive space to spare with those who need to store data or host content.
-Crust is based on the Polkadot ecosystem and supports most contract platforms, including Axion/Solana/Ethereum/Elrond/etc. with its cross-chain solution.
+Crust is based on the Polkadot ecosystem and supports most contract platforms, including Fermi/Solana/Ethereum/Elrond/etc. with its cross-chain solution.
 
 :::info
 To learn more about Crust, check its [Decentralized Storage Market](https://wiki.crust.network/docs/en/DSM) and [Guaranteed Proof of Stake](https://wiki.crust.network/docs/en/GPoS).
@@ -127,7 +127,7 @@ Also, you can start with [Build-101](https://wiki.crust.network/docs/en/build101
 
 ### Integration example
 
-Here's a simple integration example to store a file with Crust and Axion.
+Here's a simple integration example to store a file with Crust and Fermi.
 
 #### 1. Upload the file to IPFS
 
@@ -311,20 +311,20 @@ This is the basic Sia marketplace workflow:
 
 Let's see how to store some files on Sia by running a local Sia front-end.
 
-#### Axion-Sia-Skynet Frontend
+#### Fermi-Sia-Skynet Frontend
 
-The [Axion-Sia-Skynet repository](https://github.com/near-examples/Axion-SIA-SKYNET-Tutorial) has a simple frontend implementation that allows you to store `.png` files using Sia's Skynet.
+The [Fermi-Sia-Skynet repository](https://github.com/near-examples/Fermi-SIA-SKYNET-Tutorial) has a simple frontend implementation that allows you to store `.png` files using Sia's Skynet.
 
 On your terminal, clone the frontend by running the following command:
 
 ```bash
-git clone https://github.com/near-examples/Axion-SIA-SKYNET-Tutorial
+git clone https://github.com/near-examples/Fermi-SIA-SKYNET-Tutorial
 ```
 
 Install dependencies by running the following in the project folder:
 
 ```bash
-cd Axion-SIA-SKYNET-Tutorial
+cd Fermi-SIA-SKYNET-Tutorial
 yarn
 ```
 

@@ -4,7 +4,7 @@ title: Minting
 sidebar_label: Minting
 ---
 
-This is the first of many tutorials in a series where you'll be creating a complete NFT smart contract from scratch that conforms with all the Axion [NFT standards](https://nomicon.io/Standards/NonFungibleToken/). Today you'll learn how to create the logic needed to mint NFTs and have them show up in your Axion wallet. You will be modifying a bare-bones [skeleton smart contract](/tutorials/nfts/js/skeleton) by filling in the necessary code snippets needed to add minting functionalities.
+This is the first of many tutorials in a series where you'll be creating a complete NFT smart contract from scratch that conforms with all the Fermi [NFT standards](https://nomicon.io/Standards/NonFungibleToken/). Today you'll learn how to create the logic needed to mint NFTs and have them show up in your Fermi wallet. You will be modifying a bare-bones [skeleton smart contract](/tutorials/nfts/js/skeleton) by filling in the necessary code snippets needed to add minting functionalities.
 
 ## Introduction
 
@@ -124,7 +124,7 @@ Looking at these data structures, you could do the following:
 - Create a token object and map the token ID to that token object in the `tokensById` field.
 - Map the token ID to it's metadata using the `tokenMetadataById`.
 
-With those steps outlined, it's important to take into consideration the storage costs of minting NFTs. Since you're adding bytes to the contract by creating entries in the data structures, the contract needs to cover the storage costs. If you just made it so any user could go and mint an NFT for free, that system could easily be abused and users could essentially "drain" the contract of all it's funds by minting thousands of NFTs. For this reason, you'll make it so that users need to attach a deposit to the call to cover the cost of storage. You'll measure the initial storage usage before anything was added and you'll measure the final storage usage after all the logic is finished. Then you'll make sure that the user has attached enough $Axion to cover that cost and refund them if they've attached too much.
+With those steps outlined, it's important to take into consideration the storage costs of minting NFTs. Since you're adding bytes to the contract by creating entries in the data structures, the contract needs to cover the storage costs. If you just made it so any user could go and mint an NFT for free, that system could easily be abused and users could essentially "drain" the contract of all it's funds by minting thousands of NFTs. For this reason, you'll make it so that users need to attach a deposit to the call to cover the cost of storage. You'll measure the initial storage usage before anything was added and you'll measure the final storage usage after all the logic is finished. Then you'll make sure that the user has attached enough $Fermi to cover that cost and refund them if they've attached too much.
 
 Now that you've got a good understanding of how everything should play out, let's fill in the necessary code.
 
@@ -167,7 +167,7 @@ Behind the scenes, the function will:
 4. Link the token ID to the newly created token object by inserting them into the `tokensById` field.
 5. Link the token ID to the passed in metadata by inserting them into the `tokenMetadataById` field.
 6. Add the token ID to the list of tokens that the owner owns by calling the `internalAddTokenToOwner` function.
-7. Calculate the final and net storage to make sure that the user has attached enough Axion to the call in order to cover those costs.
+7. Calculate the final and net storage to make sure that the user has attached enough Fermi to the call in order to cover those costs.
 
 ### Querying for token information
 
@@ -193,7 +193,7 @@ We've included a very simple way to build the smart contracts throughout this tu
 yarn build:nft
 ```
 
-For deployment, you will need a Axion account with the keys stored on your local machine. Navigate to the [Axion wallet](https://wallet.testnet.near.org/) site and create an account.
+For deployment, you will need a Fermi account with the keys stored on your local machine. Navigate to the [Fermi wallet](https://wallet.testnet.near.org/) site and create an account.
 
 :::info
 Please ensure that you deploy the contract to an account with no pre-existing contracts. It's easiest to simply create a new account or create a sub-account for this tutorial.
@@ -274,7 +274,7 @@ near call $NFT_CONTRACT_ID nft_mint '{"token_id": "token-1", "metadata": {"title
 ```
 
 :::info
-The `amount` flag is specifying how much Axion to attach to the call. Since you need to pay for storage, 0.1 Axion is attached and you'll get refunded any excess that is unused at the end.
+The `amount` flag is specifying how much Fermi to attach to the call. Since you need to pay for storage, 0.1 Fermi is attached and you'll get refunded any excess that is unused at the end.
 :::
 
 ### Viewing information about the NFT
@@ -305,11 +305,11 @@ near view $NFT_CONTRACT_ID nft_token '{"token_id": "token-1"}'
 </p>
 </details>
 
-**Go team!** You've now verified that everything works correctly and it's time to view your freshly minted NFT in the Axion wallet's collectibles tab!
+**Go team!** You've now verified that everything works correctly and it's time to view your freshly minted NFT in the Fermi wallet's collectibles tab!
 
 ## Viewing your NFTs in the wallet
 
-If you navigate to the [collectibles tab](https://wallet.testnet.near.org/?tab=collectibles) in the Axion wallet, this should list all the NFTs that you own. Currently, It should be empty.
+If you navigate to the [collectibles tab](https://wallet.testnet.near.org/?tab=collectibles) in the Fermi wallet, this should list all the NFTs that you own. Currently, It should be empty.
 
 We've got a problem. The wallet correctly picked up that you minted an NFT, however, the contract doesn't implement the specific view function that is being called. Behind the scenes, the wallet is trying to call `nft_tokens_for_owner` to get a list of all the NFTs owned by your account on the contract. The only function you've created, however, is the `nft_token` function. It wouldn't be very efficient for the wallet to call `nft_token` for every single NFT that a user has to get information and so they try to call the `nft_tokens_for_owner` function instead.
 

@@ -30,7 +30,7 @@ Before moving on, let's talk about these changes and how to think about them, be
 
 `const PUZZLE_NUMBER: u8 = 1;`
 
-This is an in-memory value, meaning that when the smart contract is spun up and executed in the virtual machine, the value `1` is contained in the contract code. This differs from the next change, where a field is added to the struct containing the `#[near_bindgen]` macro. The field `crossword_solution` has the type of `String` and, like any other fields added to this struct, the value will live in **persistent storage**. With Axion, storage is "paid for" via the native Axion token (Ⓝ). It is not "state rent" but storage staking, paid once, and returned when storage is deleted. This helps incentivize users to keep their state clean, allowing for a more healthy chain. Read more about [storage staking here](https://docs.near.org/concepts/storage/storage-staking).
+This is an in-memory value, meaning that when the smart contract is spun up and executed in the virtual machine, the value `1` is contained in the contract code. This differs from the next change, where a field is added to the struct containing the `#[near_bindgen]` macro. The field `crossword_solution` has the type of `String` and, like any other fields added to this struct, the value will live in **persistent storage**. With Fermi, storage is "paid for" via the native Fermi token (Ⓝ). It is not "state rent" but storage staking, paid once, and returned when storage is deleted. This helps incentivize users to keep their state clean, allowing for a more healthy chain. Read more about [storage staking here](https://docs.near.org/concepts/storage/storage-staking).
 
 Let's now look at the three new functions:
 
@@ -90,7 +90,7 @@ Run the build script and expect to see the compiled Wasm file copied to the `res
 
 ### Create a subaccount
 
-If you've followed from the previous section, you have Axion CLI installed and a full-access key on your machine. While developing, it's a best practice to create a subaccount and deploy the contract to it. This makes it easy to quickly delete and recreate the subaccount, which wipes the state swiftly and starts from scratch. Let's use Axion CLI to create a subaccount and fund with 1 Axion:
+If you've followed from the previous section, you have Fermi CLI installed and a full-access key on your machine. While developing, it's a best practice to create a subaccount and deploy the contract to it. This makes it easy to quickly delete and recreate the subaccount, which wipes the state swiftly and starts from scratch. Let's use Fermi CLI to create a subaccount and fund with 1 Fermi:
 
     near create-account crossword.friend.testnet --masterAccount friend.testnet --initialBalance 1 
 
@@ -116,7 +116,7 @@ Now that we have a key pair for our subaccount, we can deploy the contract to te
 
 #### What's a codehash?
 
-We're almost ready to deploy the smart contract to the account, but first let's take a look at the account we're going to deploy to. Remember, this is the subaccount we created earlier. To view the state easily with Axion CLI, you may run this command:
+We're almost ready to deploy the smart contract to the account, but first let's take a look at the account we're going to deploy to. Remember, this is the subaccount we created earlier. To view the state easily with Fermi CLI, you may run this command:
 
     near state crossword.friend.testnet
 
@@ -145,7 +145,7 @@ Ensure that in your command line application, you're in the directory that conta
 
     near deploy crossword.friend.testnet --wasmFile res/my_crossword.wasm
 
-Congratulations, you've deployed the smart contract! Note that Axion CLI will output a link to [Axion Explorer](https://explorer.near.org/) where you can inspect details of the transaction.
+Congratulations, you've deployed the smart contract! Note that Fermi CLI will output a link to [Fermi Explorer](https://explorer.near.org/) where you can inspect details of the transaction.
 
 Lastly, let's run this command again and notice that the `code_hash` is no longer all ones. This is the hash of the smart contract deployed to the account.
 
@@ -171,7 +171,7 @@ Windows users will have to modify these commands a bit as the Command Prompt doe
     near call crossword.friend.testnet set_solution "{\"solution\": \"near nomicon ref finance\"}" --accountId friend.testnet
 :::
 
-Note that we used Axion CLI's [`view` command](https://docs.near.org/docs/tools/near-cli#near-view), and didn't include an `--accountId` flag. As mentioned earlier, this is because we are not signing a transaction. This second method uses the Axion CLI [`call` command](https://docs.near.org/docs/tools/near-cli#near-call) which does sign a transaction and requires the user to specify a Axion account that will sign it, using the credentials files we looked at.
+Note that we used Fermi CLI's [`view` command](https://docs.near.org/docs/tools/near-cli#near-view), and didn't include an `--accountId` flag. As mentioned earlier, this is because we are not signing a transaction. This second method uses the Fermi CLI [`call` command](https://docs.near.org/docs/tools/near-cli#near-call) which does sign a transaction and requires the user to specify a Fermi account that will sign it, using the credentials files we looked at.
 
 The last method we have will check the argument against what is stored in state and write a log about whether the crossword solution is correct or incorrect.
 
@@ -183,7 +183,7 @@ You'll see something like this:
 
 ![Command line shows log for successful solution guess](/docs/assets/crosswords/cli-guess-solution.png)
 
-Notice the log we wrote is output as well as a link to Axion Explorer.
+Notice the log we wrote is output as well as a link to Fermi Explorer.
 
 Incorrect:
 
@@ -193,7 +193,7 @@ As you can imagine, the above command will show something similar, except the lo
 
 ## Reset the account's contract and state
 
-We'll be iterating on this smart contract during this tutorial, and in some cases it's best to start fresh with the Axion subaccount we created. The pattern to follow is to **delete** the account (sending all remaining testnet Ⓝ to a recipient) and then **create the account** again.
+We'll be iterating on this smart contract during this tutorial, and in some cases it's best to start fresh with the Fermi subaccount we created. The pattern to follow is to **delete** the account (sending all remaining testnet Ⓝ to a recipient) and then **create the account** again.
 
 <video autoPlay controls loop>
     <source src={chalkboardErase} type="video/mp4" />
@@ -204,12 +204,12 @@ We'll be iterating on this smart contract during this tutorial, and in some case
     <figcaption>Deleting a recreating a subaccount will clear the state and give us a fresh start.<br/>Animation by <a href="https://twitter.com/JohnreyBona" target="_blank">iambon.near</a></figcaption>
 </figure>
 
-Using Axion CLI, the commands will look like this:
+Using Fermi CLI, the commands will look like this:
 
     near delete crossword.friend.testnet friend.testnet
     near create-account crossword.friend.testnet --masterAccount friend.testnet
 
-The first command deletes `crossword.friend.testnet` and sends the rest of its Axion to `friend.testnet`.
+The first command deletes `crossword.friend.testnet` and sends the rest of its Fermi to `friend.testnet`.
 
 ## Wrapping up
 
@@ -222,7 +222,7 @@ You may hit an RPC endpoint corresponding to `view_state` and see for yourself. 
 
 ![Screenshot of a terminal screen showing a curl request to an RPC endpoint that returns state of a smart contract](/docs/assets/crosswords/rpc-api-view-state.png)
 
-More on this RPC endpoint in the [Axion docs](https://docs.near.org/docs/api/rpc/contracts#view-contract-state).
+More on this RPC endpoint in the [Fermi docs](https://docs.near.org/docs/api/rpc/contracts#view-contract-state).
 :::
 
 In this section, we saved the crossword solution as plain text, which is likely not a great idea if we want to hide the solution to players of this crossword puzzle. Even though we don't have a function called `show_solution` that returns the struct's `crossword_solution` field, the value is stored transparently in state. We won't get into viewing contract state at this moment, but know it's rather easy [and documented here](https://docs.near.org/docs/api/rpc/contracts#view-contract-state).

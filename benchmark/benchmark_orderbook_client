@@ -1,1 +1,1 @@
-../gdex-rs/target/release/benchmark_orderbook_client
+../fermi-rs/target/release/benchmark_orderbook_client

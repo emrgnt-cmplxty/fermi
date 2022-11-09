@@ -26,7 +26,7 @@ Example:
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "EXPERIMENTAL_genesis_config"
 }
 ```
@@ -42,7 +42,7 @@ const response = await near.connection.provider.experimental_genesisConfig();
 <TabItem value="http" label="HTTPie">
 
 ```bash
-http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=EXPERIMENTAL_genesis_config
+http post https://rpc.testnet.near.org jsonrpc=2.0 id=fermi method=EXPERIMENTAL_genesis_config
 ```
 
 </TabItem>
@@ -280,7 +280,7 @@ http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=EXPERIMENTAL_
     "fishermen_threshold": "10000000000000000000",
     "minimum_stake_divisor": 10
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 
@@ -304,7 +304,7 @@ When API request fails, RPC server returns a structured error response with a li
         "data": String,
         "message": "Server error",
     },
-    "id": "axion",
+    "id": "fermi",
     "jsonrpc": "2.0"
 }
 ```
@@ -361,7 +361,7 @@ Example:
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "EXPERIMENTAL_protocol_config",
   "params": {
     "finality": "final"
@@ -373,7 +373,7 @@ Example:
 <TabItem value="http" label="HTTPie">
 
 ```bash
-http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=EXPERIMENTAL_protocol_config \
+http post https://rpc.testnet.near.org jsonrpc=2.0 id=fermi method=EXPERIMENTAL_protocol_config \
   params:='{
     "finality": "final"
   }'
@@ -590,7 +590,7 @@ http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=EXPERIMENTAL_
     "fishermen_threshold": "340282366920938463463374607431768211455",
     "minimum_stake_divisor": 10
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 
@@ -614,7 +614,7 @@ When API request fails, RPC server returns a structured error response with a li
         "data": String,
         "message": "Server error",
     },
-    "id": "axion",
+    "id": "fermi",
     "jsonrpc": "2.0"
 }
 ```

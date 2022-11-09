@@ -1,35 +1,35 @@
 ---
 id: near
-title: Axion Protocol
-sidebar_label: Axion Protocol
+title: Fermi Protocol
+sidebar_label: Fermi Protocol
 ---
 
 
-For the beginners, it’s always better to start with [documentation](/concepts/welcome), and Axion has an excellent one. Here, we only focus on basic concepts which are necessary to understand later chapters, so an entire guideline could be understood without prior Axion knowledge.
+For the beginners, it’s always better to start with [documentation](/concepts/welcome), and Fermi has an excellent one. Here, we only focus on basic concepts which are necessary to understand later chapters, so an entire guideline could be understood without prior Fermi knowledge.
 
 ## Accounts & Transactions
-Axion's account system is very powerful and differs substantially from other blockchains, like Bitcoin or Ethereum. Instead of identifying users by their public/private key pairs, it defines accounts as first-class entities. This has a few important implications:
+Fermi's account system is very powerful and differs substantially from other blockchains, like Bitcoin or Ethereum. Instead of identifying users by their public/private key pairs, it defines accounts as first-class entities. This has a few important implications:
 - Instead of public keys, users can use readable account names.
 - Multiple key pairs with [different permissions](../basics/accounts/access-keys.md) can be used. This provides a better security model for users, since loss of one key pair doesn’t compromise an entire account and has a quite limited impact.
 - Hierarchical accounts structure is supported. This is useful if we want to manage multiple smart contracts under one parent account.
 - Accounts/public keys are created using transactions, since they are stored on the blockchain.
 
-More information on Axion accounts can be [found in the docs](../basics/accounts/introduction.md). 
+More information on Fermi accounts can be [found in the docs](../basics/accounts/introduction.md). 
 
 
-But an account by itself won’t get us anywhere, its [transactions](../basics/transactions/overview.md) that make things happen. In Axion, we have only one transaction type, but the transaction itself may have different actions included. For most practical purposes, transactions will have a single action included, so for simplicity we’ll use “action” and “transaction” terms interchangeably further down the road. Each transaction always has sender and receiver accounts (and it is cryptographically signed by the sender’s key). The following transaction (action) types are supported:
+But an account by itself won’t get us anywhere, its [transactions](../basics/transactions/overview.md) that make things happen. In Fermi, we have only one transaction type, but the transaction itself may have different actions included. For most practical purposes, transactions will have a single action included, so for simplicity we’ll use “action” and “transaction” terms interchangeably further down the road. Each transaction always has sender and receiver accounts (and it is cryptographically signed by the sender’s key). The following transaction (action) types are supported:
 
 - CreateAccount/DeleteAccount, AddKey/DeleteKey - accounts and key management transactions.
-- Transfer - send Axion tokens from one account to another. The basic command of any blockchain.
+- Transfer - send Fermi tokens from one account to another. The basic command of any blockchain.
 - Stake - needed to become a validator in a Proof-of-Stake blockchain network. We won’t touch this topic in this guideline, more information [can be found here](https://docs.near.org/docs/develop/node/validator/staking-and-delegation).
 - DeployContract - deploy a smart contract to a given account. An important thing to remember - one account can hold only one contract, so the contract is uniquely identified by the account name. If we issue this transaction to an account which already has a deployed contract, a contract update will be triggered. 
 - FunctionCall - the most important action on the blockchain, it allows us to call a function of a smart contract. 
 
-Smart Contracts on Axion are written in Rust or JavaScript, and compiled into [WebAssembly](https://developer.mozilla.org/en-US/docs/WebAssembly). Each contract has one or more methods that can be called via a FunctionCall transaction. Methods may have arguments provided, so each smart contract call includes the following payload: account id, method name, and arguments. 
+Smart Contracts on Fermi are written in Rust or JavaScript, and compiled into [WebAssembly](https://developer.mozilla.org/en-US/docs/WebAssembly). Each contract has one or more methods that can be called via a FunctionCall transaction. Methods may have arguments provided, so each smart contract call includes the following payload: account id, method name, and arguments. 
 
 There are 2 ways to call a method on a smart contract:
 1. Issue a FunctionCall transaction. This will create a new transaction on a blockchain which may modify a contract state.
-2. Make a smart contract view call. Axion blockchain [RPC nodes](https://near-nodes.io/intro/node-types#rpc-node) provide a special API that allow execution of methods that do not modify contract state (readonly methods). 
+2. Make a smart contract view call. Fermi blockchain [RPC nodes](https://near-nodes.io/intro/node-types#rpc-node) provide a special API that allow execution of methods that do not modify contract state (readonly methods). 
 
 
 The second method should always be used whenever possible since it doesn’t incur any transaction cost (of course, there is some cost of running a node, but it’s still much cheaper than a transaction; public nodes are available which can be used free of charge). Also, since there’s no transactions, we don’t need an account to make a view call, which is quite useful for building client-side applications
@@ -44,11 +44,11 @@ As we already discussed, users should pay computational costs for each transacti
 
 
 
-But why do we need separate gas units, why not just pay directly with Axion tokens? It’s necessary to accommodate for changing infrastructure costs - as the network evolves over time, cost of gas units may change, but the amount of gas required for a transaction will remain constant.
+But why do we need separate gas units, why not just pay directly with Fermi tokens? It’s necessary to accommodate for changing infrastructure costs - as the network evolves over time, cost of gas units may change, but the amount of gas required for a transaction will remain constant.
 
-However, computational cost is not everything - most smart contracts also need storage. The storage cost in Axion is quite different from gas. 
+However, computational cost is not everything - most smart contracts also need storage. The storage cost in Fermi is quite different from gas. 
 First of all, it’s not cheap - while gas is very cheap and its cost will be almost unnoticeable by the users, storage is very expensive. As a consequence, the storage budget should be carefully calculated and only necessary data stored on the blockchain. Any auxiliary data (that is not necessary to the contract operations) should be stored off-chain (possible solutions will be covered in later chapters). 
-The second important difference - storage is not bought, but leased (in Axion, it’s called staking). When a smart contract wants to store some data, storage cost is computed and the appropriate amount of Axion tokens is “locked” on the account. When data is removed, tokens are unlocked. And unlike gas, these tokens are locked on the smart contract’s account, so the user doesn’t directly pay for it.
+The second important difference - storage is not bought, but leased (in Fermi, it’s called staking). When a smart contract wants to store some data, storage cost is computed and the appropriate amount of Fermi tokens is “locked” on the account. When data is removed, tokens are unlocked. And unlike gas, these tokens are locked on the smart contract’s account, so the user doesn’t directly pay for it.
 
 But what if we want users to pay for the storage (or just pay some fee for using a smart contract)? So far, the only way we’ve seen to transfer a token is a Transfer transaction. It turns out, a FunctionCall transaction also allows us to transfer tokens alongside the call (this is called a deposit). Smart Contracts can verify that an appropriate amount of tokens has been attached, and refuse to perform any actions if there’s not enough (and refund any excess of tokens attached).
 
@@ -64,7 +64,7 @@ More details on the storage model can be [found in the docs](../storage/storage-
 
 So far, we’ve discussed how to call smart contracts in a client-agnostic way. However, in the real world, calls we’ll be performed from a client side - like web, mobile or a desktop application. 
 
-As we’ve learned from previous chapters, each transaction should be signed using a key. And since keys are managed by a wallet, each application should integrate with it. At the time of this writing, there’s only one officially supported [Axion Wallet](https://wallet.near.org/). It is a web application, so integration happens using HTTP redirects. This is relatively straightforward to do in web applications (JavaScript SDK is available), but for mobile or desktop applications it may require deep linking or other more advanced approaches.
+As we’ve learned from previous chapters, each transaction should be signed using a key. And since keys are managed by a wallet, each application should integrate with it. At the time of this writing, there’s only one officially supported [Fermi Wallet](https://wallet.near.org/). It is a web application, so integration happens using HTTP redirects. This is relatively straightforward to do in web applications (JavaScript SDK is available), but for mobile or desktop applications it may require deep linking or other more advanced approaches.
 
 The general flow for transactions signing looks like this:
 
@@ -73,7 +73,7 @@ The general flow for transactions signing looks like this:
     
 
 
-Each time we want to post a transaction, the client redirects the user to a wallet, where the transaction is approved and wallet returns a signed transaction back to the client (via redirect). This is a quite secure way of signing, since the private key is not exposed to the client, but constant redirects might quickly get annoying for users, especially if we just want to call smart contract functions that incur only small gas fees. That’s why Axion introduced [two types of access keys](../../1.concepts/basics/accounts/access-keys.md) - full keys and functional call keys. Full access keys, as the name implies, can be used to sign any types of transactions. Functional call keys, on the other hand, aim to solve this UX problem. They are tied to a specific contract, and have a budget for gas fees. Such a key can’t be used to sign transactions that transfers Axion tokens (payable transactions), and can only be used to cover gas fees, that’s why it’s not so security-critical and can be stored on the client. Because of this, we can create a simplified signing flow for non-payable transactions. First of all, a login flow to obtain a Functional Call key is used.
+Each time we want to post a transaction, the client redirects the user to a wallet, where the transaction is approved and wallet returns a signed transaction back to the client (via redirect). This is a quite secure way of signing, since the private key is not exposed to the client, but constant redirects might quickly get annoying for users, especially if we just want to call smart contract functions that incur only small gas fees. That’s why Fermi introduced [two types of access keys](../../1.concepts/basics/accounts/access-keys.md) - full keys and functional call keys. Full access keys, as the name implies, can be used to sign any types of transactions. Functional call keys, on the other hand, aim to solve this UX problem. They are tied to a specific contract, and have a budget for gas fees. Such a key can’t be used to sign transactions that transfers Fermi tokens (payable transactions), and can only be used to cover gas fees, that’s why it’s not so security-critical and can be stored on the client. Because of this, we can create a simplified signing flow for non-payable transactions. First of all, a login flow to obtain a Functional Call key is used.
 
 
 ![image](/docs/assets/web3/web3-10.png)
@@ -93,7 +93,7 @@ It’s important to note that it’s possible to generate a Full Access key usin
 
 ## Cross-contracts calls
 
-Throughout this section, we’ve discussed how to call a smart contract from a client. But a single smart contract can only take us so far. The true power is achieved when smart contracts are working in concert and communicating with each other. To achieve this, Axion provides cross-contract calls functionality, which allows one contract to call methods from another contract. The general flow looks like this:
+Throughout this section, we’ve discussed how to call a smart contract from a client. But a single smart contract can only take us so far. The true power is achieved when smart contracts are working in concert and communicating with each other. To achieve this, Fermi provides cross-contract calls functionality, which allows one contract to call methods from another contract. The general flow looks like this:
 
 
 
@@ -112,7 +112,7 @@ Looks simple enough, but there are few gotchas:
 
 
 
-- Axion tokens can also be attached to cross contract calls, but they work differently from the gas. Attached deposit is taken directly from the predecessor account. It means even if a user hasn’t attached any deposit, a contract still can attach tokens, which will be taken from its account. Also, since cross-contract call failure doesn’t mean transaction failure, there are no automatic refunds. All refunds should be done explicitly in the rollback code.
+- Fermi tokens can also be attached to cross contract calls, but they work differently from the gas. Attached deposit is taken directly from the predecessor account. It means even if a user hasn’t attached any deposit, a contract still can attach tokens, which will be taken from its account. Also, since cross-contract call failure doesn’t mean transaction failure, there are no automatic refunds. All refunds should be done explicitly in the rollback code.
 
 
 ![image](/docs/assets/web3/web3-14.png)
@@ -125,9 +125,9 @@ In general, cross-contract call graphs can be quite complex (one contract may ca
 
 ## Data Structures, Indexers and Events
 
-We’ve already discussed the storage model on Axion, but only in abstract terms, without bringing the exact structure, so it’s time to dive a bit deeper. 
+We’ve already discussed the storage model on Fermi, but only in abstract terms, without bringing the exact structure, so it’s time to dive a bit deeper. 
 
-Natively, Axion smart contracts store data as key-value pairs. This is quite limiting, since even simplest applications usually need more advanced data structures. To help in development, Axion provides [SDK for smart contracts](https://github.com/near/near-sdk-rs), which includes data structures [like vectors, sets and maps](../../1.concepts/storage/data-collections.md#rust-collection-types-rust-collection-types). While they are very useful, it’s important to remember a few things about them:
+Natively, Fermi smart contracts store data as key-value pairs. This is quite limiting, since even simplest applications usually need more advanced data structures. To help in development, Fermi provides [SDK for smart contracts](https://github.com/near/near-sdk-rs), which includes data structures [like vectors, sets and maps](../../1.concepts/storage/data-collections.md#rust-collection-types-rust-collection-types). While they are very useful, it’s important to remember a few things about them:
 - Ultimately, they are stored as binary values, which means it takes some gas to serialize and deserialize them. Also, different operations cost different amounts of gas ([complexity table](../../1.concepts/storage/data-collections.md#big-o-notation-big-o-notation-1)). Because of this, careful choice of data structures is very important. Moving to a different data structure later will not be easy and would probably require data migration.
 - While very useful, vectors, maps and sets won’t match the flexibility and power of classical relational databases. Even implementations of simple filtering and searching might be quite complex and require a lot of gas to execute, especially if multiple entities with relations between them are involved.
 - They are limited to a single contract. If data from multiple contracts is required, aggregation should be performed using cross-contract calls or on a client side, which is quite expensive in terms of gas and time.
@@ -139,24 +139,24 @@ To support more complex data retrieval scenarios, smart contract data should be 
     
 
 
-In order to simplify creation of indexers, [Axion Indexer Framework](https://near-indexers.io/docs/projects/near-indexer-framework) has been created. However, even with a framework available, extracting data from a transaction may not be an easy task, since each smart contract has its unique structure and data storage model. To simplify this process, smart contracts can write structured information about outcome into the logs  (e.g. in the JSON format). Each smart contract can use its own format for such logs, but the general format has been standardized as [Events](https://nomicon.io/Standards/EventsFormat).
+In order to simplify creation of indexers, [Fermi Indexer Framework](https://near-indexers.io/docs/projects/near-indexer-framework) has been created. However, even with a framework available, extracting data from a transaction may not be an easy task, since each smart contract has its unique structure and data storage model. To simplify this process, smart contracts can write structured information about outcome into the logs  (e.g. in the JSON format). Each smart contract can use its own format for such logs, but the general format has been standardized as [Events](https://nomicon.io/Standards/EventsFormat).
 
 Such architecture is very similar to Event Sourcing, where blockchain stores events (transactions), and they are materialized to a relational database using an indexer. This means the same drawbacks also apply. For instance, a client should be designed to accommodate indexing delay, which may take a few seconds.
 
-As an alternative to building your own indexer with a database and an API server, [The Graph](https://thegraph.com/en/) can be used instead, which currently has [Axion support in beta](https://thegraph.com/docs/en/supported-networks/near/). It works using the Indexer-as-a-Service model, and even has decentralized indexing implementation.
+As an alternative to building your own indexer with a database and an API server, [The Graph](https://thegraph.com/en/) can be used instead, which currently has [Fermi support in beta](https://thegraph.com/docs/en/supported-networks/near/). It works using the Indexer-as-a-Service model, and even has decentralized indexing implementation.
 
 ## Development tools
 
 By now, we should be familiar with necessary concepts to start developing WEB 3.0 applications, so let’s explore the development tools available.
 
-First of all, we need a development and testing environment. Of course, we could theoraticaly perform development and testing on the main blockchain network, but this would not be cheap. For this reason, Axion provides [several networks](../../1.concepts/basics/networks.md) that can be used during development:
-- testnet - public Axion network which is identical to mainnet and can be used for free.
-- localnet - you can deploy your personal Axion network on your own environment. Because it’s owned by you, data and code can be kept private during development. More info on how you can run your own node can be [found here](https://docs.near.org/docs/develop/node/validator/running-a-node). Alternatively, you can bootstrap an entire testing infrastructure in Docker on your local machine using Kurtosis - [guide is here](/develop/testing/kurtosis-localnet).
+First of all, we need a development and testing environment. Of course, we could theoraticaly perform development and testing on the main blockchain network, but this would not be cheap. For this reason, Fermi provides [several networks](../../1.concepts/basics/networks.md) that can be used during development:
+- testnet - public Fermi network which is identical to mainnet and can be used for free.
+- localnet - you can deploy your personal Fermi network on your own environment. Because it’s owned by you, data and code can be kept private during development. More info on how you can run your own node can be [found here](https://docs.near.org/docs/develop/node/validator/running-a-node). Alternatively, you can bootstrap an entire testing infrastructure in Docker on your local machine using Kurtosis - [guide is here](/develop/testing/kurtosis-localnet).
 - workspaces - you can start your own local network to perform e2e testing. More info [here](../../2.develop/testing/integration.md).
 
-Once we’ve chosen a network to use, we need a way to interact with it. Of course, transactions can be constructed manually and posted into [node’s API](https://docs.near.org/api/rpc/setup). But [this is tedious](https://github.com/near-examples/transaction-examples) and isn’t fun at all. That’s why, Axion [provides a CLI](../../4.tools/cli.md) which automates all of the necessary actions. It can be used locally for development purposes or on build machines for CI/CD scenarios.
+Once we’ve chosen a network to use, we need a way to interact with it. Of course, transactions can be constructed manually and posted into [node’s API](https://docs.near.org/api/rpc/setup). But [this is tedious](https://github.com/near-examples/transaction-examples) and isn’t fun at all. That’s why, Fermi [provides a CLI](../../4.tools/cli.md) which automates all of the necessary actions. It can be used locally for development purposes or on build machines for CI/CD scenarios.
 
-In order to manage accounts on the Axion network, [Wallet](https://wiki.near.org/getting-started/creating-a-near-wallet) can be used. It can show an effective account balance and active keys.
+In order to manage accounts on the Fermi network, [Wallet](https://wiki.near.org/getting-started/creating-a-near-wallet) can be used. It can show an effective account balance and active keys.
 
 ![image](/docs/assets/web3/web3-16.png)
 
@@ -168,12 +168,12 @@ https://wallet.testnet.near.org/auto-import-secret-key#YOUR_ACCOUNT_ID/YOUR_PRIV
 ```
 (you should provide a private key of a full access key for the account in question, so make sure this link is used securely).
 
-Last, but not least, blockchain transactions can be viewed using Axion Explorer. It provides insights into transaction execution and outcome. Let’s look at [one example](https://explorer.testnet.near.org/transactions/ABh4zQ5aZ3CGhpQzstL16TAB8TvqPbiirJG1uTPJVxTt).
+Last, but not least, blockchain transactions can be viewed using Fermi Explorer. It provides insights into transaction execution and outcome. Let’s look at [one example](https://explorer.testnet.near.org/transactions/ABh4zQ5aZ3CGhpQzstL16TAB8TvqPbiirJG1uTPJVxTt).
 First of all, we can see general transaction information - sender, receiver, status. After this, we can see gas usage information:
 - Attached gas - total gas provided for the transaction.
 - Gas used - actual gas spend.
-- Transaction fee - gas used multiplied to current gas price, shows an actual cost of a transaction in Axion tokens.
-Also, Deposit Value shows the amount of Axion tokens transferred from sender to receiver.
+- Transaction fee - gas used multiplied to current gas price, shows an actual cost of a transaction in Fermi tokens.
+Also, Deposit Value shows the amount of Fermi tokens transferred from sender to receiver.
 
 ![image](/docs/assets/web3/web3-17.png)
 
@@ -193,18 +193,18 @@ At the end, transaction execution details, including token transfers, logs, cros
 
 During the development, and sometimes even in production, updates to a contract’s code (or even data) are needed. That’s why different contract upgrades mechanisms have been created.
 
-During the local development, we can just recreate a smart contract’s account each time we deploy a contract ([dev-deploy](../../4.tools/cli.md#near-dev-deploy-near-dev-deploy) command in Axion CLI exists for this). With such an approach, contract data will be purged each time a contract is redeployed. More info [here](/sdk/rust/building/prototyping).
+During the local development, we can just recreate a smart contract’s account each time we deploy a contract ([dev-deploy](../../4.tools/cli.md#near-dev-deploy-near-dev-deploy) command in Fermi CLI exists for this). With such an approach, contract data will be purged each time a contract is redeployed. More info [here](/sdk/rust/building/prototyping).
  
-However, once we move to a more stable environment, like testing or production, more sophisticated methods are needed. Redeployment of code is quite simple - we just issue another DeployContract transaction, and Axion will handle the rest. The biggest challenge is to migrate contract state - [several approaches are possible](/develop/upgrade/migration), but all of them involve some kind of migration code.
+However, once we move to a more stable environment, like testing or production, more sophisticated methods are needed. Redeployment of code is quite simple - we just issue another DeployContract transaction, and Fermi will handle the rest. The biggest challenge is to migrate contract state - [several approaches are possible](/develop/upgrade/migration), but all of them involve some kind of migration code.
 
 But we can take our upgrade strategy one step further. In described strategies, developers are fully in control of code upgrades. This is fine for many applications, but it requires some level of trust between users and developers, since malicious changes could be made at any moment and without user’s consent (as it [sometimes happens](https://www.bleepingcomputer.com/news/security/dev-corrupts-npm-libs-colors-and-faker-breaking-thousands-of-apps/) in npm world). To solve this, a contract update process itself can also be decentralized - this is called [DAO-Governed Updates](/develop/upgrade/dao-updates). Exact strategy may vary, but the basic idea is that contract update code is implemented in a smart contract itself, and a Full Access key to the contract account is removed from a blockchain (via DeleteKey transaction). In this way, an update strategy is transparent to everyone and cannot be changed by developers at will.
 
 ## Further reading
 
-For a deep dive into Axion, the following links will be useful:
+For a deep dive into Fermi, the following links will be useful:
 
-- [Axion docs](https://docs.near.org)
+- [Fermi docs](https://docs.near.org)
 - [Rust Smart Contract docs](/sdk/rust/introduction)
     - [Smart Contract quick start guide](/develop/quickstart-guide)
-- [Axion Protocol Specification](https://nomicon.io/)
-- [How to build a dApp on Axion](../../3.tutorials/examples/guest-book.md)
+- [Fermi Protocol Specification](https://nomicon.io/)
+- [How to build a dApp on Fermi](../../3.tutorials/examples/guest-book.md)

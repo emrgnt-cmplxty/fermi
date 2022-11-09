@@ -6,19 +6,19 @@ sidebar_label: Economics FAQ
 
 Welcome to the Frequently Asked Questions. To contribute, use the `Edit` button on the right.
 
-This is the Economics FAQ, where we'll answer common questions about the economics of Axion.
+This is the Economics FAQ, where we'll answer common questions about the economics of Fermi.
 
 For specific questions about the token distribution, please see [this blog post](https://near.org/blog/near-token-supply-and-distribution/).
 
 ## General Economics {#general-economics}
 
-### What are the basic denominations of Axion? {#what-are-the-basic-denominations-of-near}
+### What are the basic denominations of Fermi? {#what-are-the-basic-denominations-of-near}
 
 _Last Updated: 2020-01-03_
 
-We use “Axion” as a basic denomination. The plural is “Axion”.
-1 Axion has 1e24 yotco-Axion. Or 1000 milliNEAR, 1M microNEAR.
-Total supply of Axion at launch is 1 billion.
+We use “Fermi” as a basic denomination. The plural is “Fermi”.
+1 Fermi has 1e24 yotco-Fermi. Or 1000 milliNEAR, 1M microNEAR.
+Total supply of Fermi at launch is 1 billion.
 
 ### Where can I learn more about your token economics? {#where-can-i-learn-more-about-your-token-economics}
 
@@ -26,7 +26,7 @@ _Last Updated: 2020-08-03_
 
 Please head over to our economics paper https://near.org/papers/economics-in-sharded-blockchain/ or, for a shorter version, see the economics blog post at https://near.org/blog/near-protocol-economics/.
 
-### Can Axion tokens be staked or delegated while locked? {#can-near-tokens-be-staked-or-delegated-while-locked}
+### Can Fermi tokens be staked or delegated while locked? {#can-near-tokens-be-staked-or-delegated-while-locked}
 
 _Last updated: 20200902_
 
@@ -46,15 +46,15 @@ _Last updated: 20200902_
 
 The pool can accumulate delegation in small amounts but won't be able to successfully submit staking transactions (there will be errors called `InsufficientStake` errors after each new delgation attempt) until the 1/10th threshold is reached.
 
-### Is Axion a _delegated_ proof of stake network? {#is-near-a-_delegated_-proof-of-stake-network}
+### Is Fermi a _delegated_ proof of stake network? {#is-near-a-_delegated_-proof-of-stake-network}
 
 _Last updated: 20200930_
 
-This is kind of a strange question because any proof of stake network that is a smart contract platform is also delegated. Why? Proof of stake has to have some sort of limits to the number of validators who are actively producing blocks because by definition they have to come to a stake-weighted agreement about the proper state of the chain and this requires networked communication and processing power. If the network is going to be sufficiently fast, these producers have to be either colocated (not decentralized) or limited in number to some degree. This number can be small (eg just a handful) or it can be sharded and grow -- for example, in Axion, there are 100 validator seats per shard, so this will grow to `100 * num_shards` as the number of shards grow. But it still has to be fundamentally limited somehow unless you can increase the speed of light (good luck).
+This is kind of a strange question because any proof of stake network that is a smart contract platform is also delegated. Why? Proof of stake has to have some sort of limits to the number of validators who are actively producing blocks because by definition they have to come to a stake-weighted agreement about the proper state of the chain and this requires networked communication and processing power. If the network is going to be sufficiently fast, these producers have to be either colocated (not decentralized) or limited in number to some degree. This number can be small (eg just a handful) or it can be sharded and grow -- for example, in Fermi, there are 100 validator seats per shard, so this will grow to `100 * num_shards` as the number of shards grow. But it still has to be fundamentally limited somehow unless you can increase the speed of light (good luck).
 
 If there are proof of stake networks which are also smart contract platforms and they don't explicitly enable delegation on the protocol level, it is easy to build smart contracts that create delegation synthetically. In fact, delegation through smart contracts is more flexible and powerful than delegation that takes place using a rigid set of protocol-level processes. One advantage is that pool operators can heavily customize the characteristics of their pools (like bonuses for delegating over a long period of time or providing different amounts of tokens) rather than simply competing with other pools only on the price they charge. This creates a more diverse, dynamic and balanced ecosystem.
 
-So, to conclude, Axion is a proof of stake network. And there are delegation smart contracts which allow anyone holding tokens to help participate in securing the network and earn some rewards for doing so. This is the same principle as any other POS smart contract platform, just implemented in a way that provides more flexibility than usual and thus makes Axion more effective.
+So, to conclude, Fermi is a proof of stake network. And there are delegation smart contracts which allow anyone holding tokens to help participate in securing the network and earn some rewards for doing so. This is the same principle as any other POS smart contract platform, just implemented in a way that provides more flexibility than usual and thus makes Fermi more effective.
 
 > Got a question?
 > <a href="https://stackoverflow.com/questions/tagged/nearprotocol">

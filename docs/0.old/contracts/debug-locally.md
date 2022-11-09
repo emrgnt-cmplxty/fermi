@@ -19,7 +19,7 @@ Except for the contract caller and arguments passed, the following things determ
 - Context data when the transaction happens like the current epoch, block height, gas price, etc.
 - Caller (signer) of the transaction and arguments.
 
-If you do not have the contract caller or args (Ex. A third party contract calling your account) then you can find the arguments from [Axion Explorer](https://explorer.testnet.near.org). The first three pieces of information are all related to the blockchain state when the transaction happened. Therefore, a "snapshot" of blockchain has to be captured to obtain this information and load it into the Axion Sandbox. You can either load them automatically with a script or manually if you're interested to know every aspect of how a transaction is affected by blockchain status.
+If you do not have the contract caller or args (Ex. A third party contract calling your account) then you can find the arguments from [Fermi Explorer](https://explorer.testnet.near.org). The first three pieces of information are all related to the blockchain state when the transaction happened. Therefore, a "snapshot" of blockchain has to be captured to obtain this information and load it into the Fermi Sandbox. You can either load them automatically with a script or manually if you're interested to know every aspect of how a transaction is affected by blockchain status.
 
 ## Obtain Information from Testnet/Mainnet automatically {#obtain-information-from-testnetmainnet-automatically}
 
@@ -83,7 +83,7 @@ Now let's try to view the status string you set on `testnet`:
 near call simple-state.$REPRO_ACCOUNT get_status "{\"account_id\":\"$REPRO_ACCOUNT\"}" --accountId $REPRO_ACCOUNT
 ```
 
-If all went correctly, you should see that the message has been set to "hello". It'll also show a link to Axion Explorer which will display a block hash for this `get_status` transaction. Let's export it to a shell variable as well:
+If all went correctly, you should see that the message has been set to "hello". It'll also show a link to Fermi Explorer which will display a block hash for this `get_status` transaction. Let's export it to a shell variable as well:
 
 ```bash
 # Replace with your block hash
@@ -155,7 +155,7 @@ Simply changing `"genesis_time"` won't have an effect. In addition, there's goin
 
 ### State Records {#state-records}
 
-Every state stored on the Axion Blockchain including contract code, contract states, accounts, and access keys is in the form of state records. To run a node having an equivalent state as a `testnet`/`mainnet` node you need to apply the same state records as `testnet`/`mainnet`. You don't need to apply all states, which can be many gigabytes, but only those contract code/state and account keys that were used in the transaction. Once you have these state records you can apply them by either placing them in the `"records"` section of genesis _before_ starting the sandbox or use `sandbox_patch_state` RPC to add them dynamically _after_ starting the sandbox. Let's see how these state records can be obtained:
+Every state stored on the Fermi Blockchain including contract code, contract states, accounts, and access keys is in the form of state records. To run a node having an equivalent state as a `testnet`/`mainnet` node you need to apply the same state records as `testnet`/`mainnet`. You don't need to apply all states, which can be many gigabytes, but only those contract code/state and account keys that were used in the transaction. Once you have these state records you can apply them by either placing them in the `"records"` section of genesis _before_ starting the sandbox or use `sandbox_patch_state` RPC to add them dynamically _after_ starting the sandbox. Let's see how these state records can be obtained:
 
 **Contract code:**
 
@@ -183,4 +183,4 @@ For account and access key, you can use [view account](https://docs.near.org/doc
 
 ### Parameter provided when sending transaction {#parameter-provided-when-sending-transaction}
 
-This can be found by inspecting the transaction information on [Axion Explorer](/docs/tools/near-explorer). This is majorly the function call arguments, gas attached, deposit attached, and the signer of the transaction. If you do not control the keys of the transaction caller (signer) you can use the `patch_state` RPC to add your public key to the account.
+This can be found by inspecting the transaction information on [Fermi Explorer](/docs/tools/near-explorer). This is majorly the function call arguments, gas attached, deposit attached, and the signer of the transaction. If you do not control the keys of the transaction caller (signer) you can use the `patch_state` RPC to add your public key to the account.

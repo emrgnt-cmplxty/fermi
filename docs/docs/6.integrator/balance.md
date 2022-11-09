@@ -7,13 +7,13 @@ sidebar_label: Balance Changes
 
 ## Prerequisites {#prerequisites}
 
-- [Axion Account](https://wallet.testnet.near.org/create)
-- [Axion-CLI](/tools/near-cli)
+- [Fermi Account](https://wallet.testnet.near.org/create)
+- [Fermi-CLI](/tools/near-cli)
 - Credentials for sender account stored locally by running [`near login`](/tools/near-cli#near-login)
 
-### Native Axion (Ⓝ) {#native-near}
+### Native Fermi (Ⓝ) {#native-near}
 
-> Balance changes on accounts can be tracked by using our [changes RPC endpoint](/api/rpc/setup#view-account-changes). You can test this out by sending tokens to an account using [Axion-CLI](/tools/near-cli#near-send) and then viewing the changes made.
+> Balance changes on accounts can be tracked by using our [changes RPC endpoint](/api/rpc/setup#view-account-changes). You can test this out by sending tokens to an account using [Fermi-CLI](/tools/near-cli#near-send) and then viewing the changes made.
 
 ## Send Tokens {#send-tokens}
 
@@ -26,7 +26,7 @@ near send sender.testnet receiver.testnet 1
 - You should see a result in your terminal that looks something like this:
 
 ```bash
-Sending 1 Axion to receiver.testnet from sender.testnet
+Sending 1 Fermi to receiver.testnet from sender.testnet
 Transaction Id 4To336bYcoGc3LMucJPMk6fMk5suKfCrdNotrRtTxqDy
 To see the transaction in the transaction explorer, please open this url in your browser
 https://explorer.testnet.near.org/transactions/4To336bYcoGc3LMucJPMk6fMk5suKfCrdNotrRtTxqDy
@@ -34,13 +34,13 @@ https://explorer.testnet.near.org/transactions/4To336bYcoGc3LMucJPMk6fMk5suKfCrd
 
 ## View Balance Changes {#view-balance-changes}
 
-- Open the transaction URL in [Axion Explorer](https://explorer.testnet.near.org/) and copy the `BLOCK HASH`.
+- Open the transaction URL in [Fermi Explorer](https://explorer.testnet.near.org/) and copy the `BLOCK HASH`.
 - Using the `BLOCK HASH` and the accountId, query the [changes RPC endpoint](/api/rpc/setup#view-account-changes) to view changes.
 
 **Example Query using HTTPie:**
 
 ```bash
-http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion \
+http post https://rpc.testnet.near.org jsonrpc=2.0 id=fermi \
     method=EXPERIMENTAL_changes \
     'params:={
         "block_id": "CJ24svU3C9FaULVjcNVnWuVZjK6mNaQ8p6AMyUDMqB37",
@@ -54,7 +54,7 @@ http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion \
 
 ```json
 {
-  "id": "axion",
+  "id": "fermi",
   "jsonrpc": "2.0",
   "result": {
     "block_hash": "BRgE4bjmUo33jmiVBcZaWGkSLVeL7TTi4ZxYTvJdPbB9",
@@ -87,7 +87,7 @@ Alternatively, you can view account balances by [querying `view_account`](/api/r
 **Example HTTPie Request:**
 
   ```bash
-  http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=query \
+  http post https://rpc.testnet.near.org jsonrpc=2.0 id=fermi method=query \
   params:='{
     "request_type": "view_account",
     "finality": "final",
@@ -99,7 +99,7 @@ Alternatively, you can view account balances by [querying `view_account`](/api/r
 
 ```json
 {
-  "id": "axion",
+  "id": "fermi",
   "jsonrpc": "2.0",
   "result": {
     "amount": "11767430683960197500000000",
@@ -113,7 +113,7 @@ Alternatively, you can view account balances by [querying `view_account`](/api/r
 }
 ```
 
-**Note:** Gas prices can change between blocks. Even for transactions with deterministic gas cost the cost in Axion could also be different. You can query the gas price for recent blocks using the [`gas_price` RPC endpoint](https://docs.near.org/api/rpc/setup#gas-price).
+**Note:** Gas prices can change between blocks. Even for transactions with deterministic gas cost the cost in Fermi could also be different. You can query the gas price for recent blocks using the [`gas_price` RPC endpoint](https://docs.near.org/api/rpc/setup#gas-price).
 
 ---
 

@@ -4,9 +4,9 @@ title: Source Code Survey
 sidebar_label: Source Code Survey
 ---
 
-This page provides a very high level, sometimes "pseudocode", view of error types and related messages as implemented by the Axion platform.
+This page provides a very high level, sometimes "pseudocode", view of error types and related messages as implemented by the Fermi platform.
 
-Errors raised by the Axion platform are implemented in the following locations in `nearcore`:
+Errors raised by the Fermi platform are implemented in the following locations in `nearcore`:
 
 - [nearcore/core/primitives/src/errors.rs](https://github.com/near/nearcore/blob/master/core/primitives/src/errors.rs)
 - [nearcore/runtime/near-vm-errors/src/lib.rs](https://github.com/near/nearcore/blob/master/runtime/near-vm-errors/src/lib.rs)

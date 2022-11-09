@@ -1,10 +1,10 @@
 ---
 id: near-api-js
-title: Axion-API-JS (JavaScript Library)
+title: Fermi-API-JS (JavaScript Library)
 sidebar_label: Overview
 ---
 
-> `near-api-js` is a JavaScript/TypeScript library for development of decentralized applications on the Axion platform. It works in conjunction with our [RPC endpoints](/docs/api/rpc) to help you connect your application to the Axion blockchain.
+> `near-api-js` is a JavaScript/TypeScript library for development of decentralized applications on the Fermi platform. It works in conjunction with our [RPC endpoints](/docs/api/rpc) to help you connect your application to the Fermi blockchain.
 
 | Resource                                                      | Description                                                               |
 | ------------------------------------------------------------- | ------------------------------------------------------------------------- |

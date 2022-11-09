@@ -1,25 +1,25 @@
 ---
 id: deploy
-title: Axion CLI - Basics
+title: Fermi CLI - Basics
 sidebar_label: Deploying and Using
 ---
 
-After your contract is ready you can deploy it in the Axion network for everyone to use it.
+After your contract is ready you can deploy it in the Fermi network for everyone to use it.
 
-Let us guide you on how to use the [Axion CLI](../4.tools/cli.md) to deploy your contract
+Let us guide you on how to use the [Fermi CLI](../4.tools/cli.md) to deploy your contract
 and call its methods.
 
 ---
 
 ## Deploying a Contract
 
-Thanks to the `Axion CLI` deploying a contract is as simple as:
+Thanks to the `Fermi CLI` deploying a contract is as simple as:
 
 1. Compiling the contract to wasm (done automatically through `yarn build` in our templates).
-2. Deploy it into the desired account using the [Axion CLI](../4.tools/cli.md#near-deploy):
+2. Deploy it into the desired account using the [Fermi CLI](../4.tools/cli.md#near-deploy):
 
 ```bash
-# Login to Axion
+# Login to Fermi
 near login
 
 # 1. Deploy wasm to the <accountId> account (with no state initialization)
@@ -46,9 +46,9 @@ You can use `near dev_deploy` to deploy the contract into a newly created accoun
 ---
 
 ## Calling the Contract
-Once your contract is deployed you can interact with it using your favorite shell. For this, you can use the [Axion CLI](../4.tools/cli.md).
-Please notice that in this page we will only touch on how to use Axion CLI to call methods in a contract. For the full documentation please visit the
-[Axion CLI documentation page](../4.tools/cli.md).
+Once your contract is deployed you can interact with it using your favorite shell. For this, you can use the [Fermi CLI](../4.tools/cli.md).
+Please notice that in this page we will only touch on how to use Fermi CLI to call methods in a contract. For the full documentation please visit the
+[Fermi CLI documentation page](../4.tools/cli.md).
 
 <hr class="subsection" />
 

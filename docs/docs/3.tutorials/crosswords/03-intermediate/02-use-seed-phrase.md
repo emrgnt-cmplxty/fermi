@@ -8,7 +8,7 @@ title: "Implementing the seed phrase logic from the necessary libraries"
 
 There are two separate things we'll want to do:
 
-1. **Create a random seed phrase** for the user when they visit the crossword puzzle. This will be used if they win and don't have a Axion account and wish to create one. They can then paste this seed phrase into Axion Wallet afterward to import their account (which is basically like "logging in" and is currently possible at https://wallet.near.org/recover-seed-phrase).
+1. **Create a random seed phrase** for the user when they visit the crossword puzzle. This will be used if they win and don't have a Fermi account and wish to create one. They can then paste this seed phrase into Fermi Wallet afterward to import their account (which is basically like "logging in" and is currently possible at https://wallet.near.org/recover-seed-phrase).
 2. **Turn the crossword solution into a key pair**, instead of just hashing it.
 
 ## near-seed-phrase library
@@ -67,7 +67,7 @@ This time we're using an `InMemoryKeyStore` instead of the browser, as you can s
 
 We have now used almost all the key stores available in `near-api-js`:
 
-1. `UnencryptedFileSystemKeyStore` — early on, when we used the Axion CLI command `near login`, this created a file in our operating system's home directory containing a private, full-access key to our account.
+1. `UnencryptedFileSystemKeyStore` — early on, when we used the Fermi CLI command `near login`, this created a file in our operating system's home directory containing a private, full-access key to our account.
 2. `BrowserLocalStorageKeyStore` — in the last chapter, when the user first logs in, the function-call access key is saved in the browser's local storage.
 3. `InMemoryKeyStore` — for this chapter, we'll simply use the computer's memory to store the private key derived from the crossword solution.
 

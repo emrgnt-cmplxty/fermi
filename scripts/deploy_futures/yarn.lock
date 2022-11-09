@@ -370,7 +370,7 @@ astral-regex@^2.0.0:
   resolved "https://registry.yarnpkg.com/astral-regex/-/astral-regex-2.0.0.tgz#483143c567aeed4785759c0865786dc77d7d2e31"
   integrity sha512-Z7tMw1ytTXt5jqMcOP+OQteU1VuNK9Y02uuJtKQ1Sv69jXQKKg5cibLwGJow8yzZP+eAc18EmLGPal0bp36rvQ==
 
-"axion-js-sdk@file:../../sdk/js/axion":
+"fermi-js-sdk@file:../../sdk/js/fermi":
   version "1.0.0"
   dependencies:
     "@grpc/grpc-js" "^1.2.2"
@@ -390,7 +390,7 @@ astral-regex@^2.0.0:
     node-fetch "2.6.1"
     yargs "^15.1.0"
 
-"axion-sdk@file:../../sdk/js/axion":
+"fermi-sdk@file:../../sdk/js/fermi":
   version "1.0.0"
   dependencies:
     "@grpc/grpc-js" "^1.2.2"
@@ -1428,7 +1428,7 @@ table@^6.0.9:
     "@types/yargs" "^15.0.3"
     "@typescript-eslint/eslint-plugin" "^5.39.0"
     "@typescript-eslint/parser" "^5.39.0"
-    axion-js-sdk "file:../../../../Library/Caches/Yarn/v6/npm-tenex-sdk-1.0.0-e133607e-330a-4620-8cfa-fc6c6ce021c1-1668010057115/node_modules/axion"
+    fermi-js-sdk "file:../../../../Library/Caches/Yarn/v6/npm-tenex-sdk-1.0.0-e133607e-330a-4620-8cfa-fc6c6ce021c1-1668010057115/node_modules/fermi"
     blakejs "^1.2.1"
     cli-table "^0.3.1"
     eslint "^7.8.0"

@@ -36,7 +36,7 @@ For this example, we'll only implement the `add` functionality, but already we'v
 > In a new browser tab or window
 > - Open a new Token Contract Project in [Gitpod](https://gitpod.io/#https://github.com/near-examples/token-contract-as)
 
-When this opens in GitPod, the code will generate a unique Axion account for this project and build then deploy the template files. You can take a look at what we're starting with by clicking "Open Browser" to see the token example running.
+When this opens in GitPod, the code will generate a unique Fermi account for this project and build then deploy the template files. You can take a look at what we're starting with by clicking "Open Browser" to see the token example running.
 
 This sample project has a token smart contract and also some JavaScript tests that invoke smart contract functions. You can try running these tests right away to see the code interacting with the blockchain.
 
@@ -50,7 +50,7 @@ Once finished, the tests running in your terminal will appear like this:
 
 ![Default Token Contract Test ](/docs/assets/default-token-contract-test.png)
 
-Note that `test-account-XXXXXXXXX_TIMESTAMP-XXXXXXX` here is an automatically generated Axion account for this particular project. Don't be distracted by these details, just compare the developer log output with the statements in the file `src/test.js`.
+Note that `test-account-XXXXXXXXX_TIMESTAMP-XXXXXXX` here is an automatically generated Fermi account for this particular project. Don't be distracted by these details, just compare the developer log output with the statements in the file `src/test.js`.
 
 <blockquote class="warning">
 <strong>heads up</strong><br /><br />
@@ -71,7 +71,7 @@ We're interested in writing only one function for this example. A function that 
 import { context, storage, logging } from "near-sdk-as";
 
 export function addLongNumbers(a: string, b: string): string {
-  // sends logs to the terminal of the contract placing call and the Axion Explorer
+  // sends logs to the terminal of the contract placing call and the Fermi Explorer
   logging.log("-------------------------------------------------------")
   logging.log('Contract Called : ' + context.contractName)
   logging.log('Contract Signer : ' + context.predecessor)
@@ -112,7 +112,7 @@ export function addLongNumbers(a: string, b: string): string {
   // Reverse again and combine the values for the final result
   let reversedResultArray = resultArray.reverse();
 
-  // More terminal / Axion Explorer logs
+  // More terminal / Fermi Explorer logs
   logging.log(">>> RESULT : " + reversedResultArray.join(""))
   logging.log("-------------------------------------------------------")
   return reversedResultArray.join("");
@@ -246,9 +246,9 @@ Normally, we would create a UI at this point, but since we're calling this from 
 
 Keep the tab open that you've been working on, you're going to need the ID of the contract you just created later.
 
-The rest of the ID is the prefix "dev-" to be something like `dev-159372XXXX-XXXXXXX`.  In fact the ID of the contract is just the Axion account created for the contract by Gitpod automatically.
+The rest of the ID is the prefix "dev-" to be something like `dev-159372XXXX-XXXXXXX`.  In fact the ID of the contract is just the Fermi account created for the contract by Gitpod automatically.
 
-You can read more about [accounts on the Axion platform here](/docs/concepts/account).
+You can read more about [accounts on the Fermi platform here](/docs/concepts/account).
 
 </blockquote>
 
@@ -396,7 +396,7 @@ describe("CalculatorAPI", function() {
   })
     accountId = process.env.CONTRACT_NAME;
     contract = await near.loadContract(accountId, {
-    // NOTE: This configuration only needed while Axion is still in development
+    // NOTE: This configuration only needed while Fermi is still in development
     // View methods are read only. They don't modify the state, but usually return some value.
     viewMethods: [],
     // Change methods can modify the state. But you don't receive the returned value when called.
@@ -450,7 +450,7 @@ Remember when we took a note that the 'Contract Called' and the 'Contract Signer
 
 And we're done!
 
-You can also view the details of your account & transactions by using the [Axion Explorer](https://explorer.testnet.near.org/).
+You can also view the details of your account & transactions by using the [Fermi Explorer](https://explorer.testnet.near.org/).
 
 This is a simple example of a contract that calls another contract, but this opens up a lot of opportunities.
 

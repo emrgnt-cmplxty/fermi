@@ -29,7 +29,7 @@ In order to create a new NFT (a.k.a. mint it) you need first to deploy an [NFT c
 Once deployed and initialized, you can call the `nft_mint` method. You will need to pass as parameters a unique id, an owner, the token's metadata, and (optionally) royalties. The metadata will include information such as the title, a description, and an URL to associated media.
 
 <Tabs className="language-tabs" groupId="code-tabs">
-  <TabItem value="cli" label="Axion CLI">
+  <TabItem value="cli" label="Fermi CLI">
 
   ```bash
   # 1. Deploy the contract in a testnet account
@@ -65,7 +65,7 @@ You might have noticed that one of the parameters is a structure called royaltie
 You can query the NFT's metadata by calling the `nft_metadata`.
 
 <Tabs className="language-tabs" groupId="code-tabs">
-  <TabItem value="cli" label="Axion CLI">
+  <TabItem value="cli" label="Fermi CLI">
 
   ```bash
   near view <nft-contract> nft_metadata
@@ -80,7 +80,7 @@ You can query the NFT's metadata by calling the `nft_metadata`.
 You can authorize other users to transfer an NFT you own. This is useful, for example, to enable listing your NFT in a marketplace. In such scenario, you **trust** that the marketplace will only transfer the NFT upon receiving a certain amount of money in exchange.
 
 <Tabs className="language-tabs" groupId="code-tabs">
-  <TabItem value="cli" label="Axion CLI">
+  <TabItem value="cli" label="Fermi CLI">
 
   ```bash
   near call <nft-contract> nft_approve '{
@@ -105,7 +105,7 @@ If the `msg` parameter is included, then a cross-contract call will be made to `
 Transferring an NFT can happen in two scenarios: (1) you ask to transfer an NFT, and (2) an authorized account asks to transfer the NFT. In both cases, it is necessary to invoke the `nft_transfer` method, indicating the token id, the receiver, and an (optionally) an [approval_id](https://nomicon.io/Standards/Tokens/NonFungibleToken/ApprovalManagement).
 
 <Tabs className="language-tabs" groupId="code-tabs">
-  <TabItem value="cli" label="Axion CLI">
+  <TabItem value="cli" label="Fermi CLI">
 
   ```bash
   near call <nft-contract> nft_transfer '{"receiver_id": "<receiver-account>", "token_id": "<token-unique-id>"}' --accountId <your-account> --depositYocto 1
@@ -121,10 +121,10 @@ Implement [events](https://nomicon.io/Standards/Tokens/NonFungibleToken/Event) t
 <hr class="subsection"/>
 
 ## Attaching NFTs to a Call
-Natively, only Axion tokens (Ⓝ) can be attached to a method calls. However, the NFT standard enables to attach a non-fungible tokens in a call by using the NFT-contract as intermediary. This means that, instead of you attaching tokens directly to the call, you ask the NFT-contract to do both a transfer and a method call in your name.
+Natively, only Fermi tokens (Ⓝ) can be attached to a method calls. However, the NFT standard enables to attach a non-fungible tokens in a call by using the NFT-contract as intermediary. This means that, instead of you attaching tokens directly to the call, you ask the NFT-contract to do both a transfer and a method call in your name.
 
 <Tabs className="language-tabs" groupId="code-tabs">
-  <TabItem value="cli" label="Axion CLI">
+  <TabItem value="cli" label="Fermi CLI">
 
   ```bash
   near call <nft-contract> nft_transfer_call '{"receiver_id": "<receiver-contract>", "token_id": "<token_id>", "msg": "<a-string-message>"}' --accountId <your-account> --depositYocto 1

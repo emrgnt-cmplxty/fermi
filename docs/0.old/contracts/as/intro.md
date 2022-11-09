@@ -4,11 +4,11 @@ title: AssemblyScript
 sidebar_label: Introduction
 ---
 
-The Axion platform supports writing contracts in Rust and AssemblyScript.
+The Fermi platform supports writing contracts in Rust and AssemblyScript.
 
 AssemblyScript is a dialect of TypeScript that compiles to Wasm. See the [official AssemblyScript docs](https://assemblyscript.org/introduction.html) for more details.
 
-This document aims to introduce developers already comfortable with TypeScript to writing AssemblyScript on the Axion platform.
+This document aims to introduce developers already comfortable with TypeScript to writing AssemblyScript on the Fermi platform.
 
 If you are not familiar with TypeScript then this [introduction](https://learnxinyminutes.com/docs/typescript/) will be worth a quick look but do keep in mind that **AssemblyScript is a _dialect of TypeScript_** so not all of the features of TypeScript are supported.
 
@@ -23,16 +23,16 @@ AssemblyScript smart contract development is for non financial use cases.
 
 - Explore [examples](http://near.dev/) to work online in gitpod online IDE.
 - You write contracts in [AssemblyScript](https://assemblyscript.org/introduction.html) and use `near-sdk-as` to interact with the blockchain (storage, context, etc)
-- The AssemblyScript is compiled to [Wasm](https://learnxinyminutes.com/docs/wasm/) and (using either Axion CLI, `near-api-js` or our RPC interface) it is deployed to an account on the Axion platform
-- When a method on the contract is invoked, Axion routes the request to the proper shard (the one with the account that "holds" or "owns" the contract, see [more about accounts here](/docs/concepts/account))
+- The AssemblyScript is compiled to [Wasm](https://learnxinyminutes.com/docs/wasm/) and (using either Fermi CLI, `near-api-js` or our RPC interface) it is deployed to an account on the Fermi platform
+- When a method on the contract is invoked, Fermi routes the request to the proper shard (the one with the account that "holds" or "owns" the contract, see [more about accounts here](/docs/concepts/account))
 - The contract method is executed on a [virtual machine](https://github.com/near/nearcore/tree/master/runtime/near-vm-logic) which is spun up just for this execution (you can think of it like a serverless function on AWS lambda if you like)
 - The results of the call are returned to your execution context (if using `near-api-js`, for example, log output from the contract will appear in your JavaScript developer console)
 
-For rich examples of AssemblyScript written for the Axion platform check out:
+For rich examples of AssemblyScript written for the Fermi platform check out:
 
 - [examples](http://near.dev): sample applications you can explore online with gitpod IDE.
 - [CryptoCorgis\*](https://github.com/nearprotocol/corgis): a playful take on NFTs (non-fungible tokens)
-- [Axion Chess](https://github.com/nearprotocol/near-chess/tree/master/assembly): a Axion implementation of [chessboard.js](https://chessboardjs.com/)
+- [Fermi Chess](https://github.com/nearprotocol/near-chess/tree/master/assembly): a Fermi implementation of [chessboard.js](https://chessboardjs.com/)
 - [`near-sdk-as`](https://github.com/near/near-sdk-as/tree/master/sdk/assembly): our library for writing near smart contracts
 
 \*CryptoCorgis is currently a private repo available here: `github.com/near/corgis`
@@ -51,7 +51,7 @@ export function hello(): string {
 }
 ```
 
-We can call this method using Axion CLI which in turn calls `near-api-js` which in turn calls our JSON RPC interface. As a developer we can leverage any of these interfaces depending on which level of abstraction we want to work with. Axion CLI is most convenient from the terminal, `near-api-js` makes sense from a client or server-side JavaScript application and the RPC interface would be most useful if we prefer to make raw HTTP requests from some other context like a different programing language or environment not currently provided by the Axion community.
+We can call this method using Fermi CLI which in turn calls `near-api-js` which in turn calls our JSON RPC interface. As a developer we can leverage any of these interfaces depending on which level of abstraction we want to work with. Fermi CLI is most convenient from the terminal, `near-api-js` makes sense from a client or server-side JavaScript application and the RPC interface would be most useful if we prefer to make raw HTTP requests from some other context like a different programing language or environment not currently provided by the Fermi community.
 
 From within this contract method you can also access the blockchain execution context by importing the `context` object from `near-sdk-as`. This gives you access to blockchain data like the `sender` who signed the original transaction that caused the execution of this contract method. or the contract's name via `contractName`.
 
@@ -75,7 +75,7 @@ To keep things organized, contracts can use one or more data objects which are c
 
 #### Imports {#imports}
 
-All contracts and models must explicitly import features of the Axion they intend to use. Not all of these features are used all of the time of course.
+All contracts and models must explicitly import features of the Fermi they intend to use. Not all of these features are used all of the time of course.
 
 ```ts
 import {
@@ -142,10 +142,10 @@ There are [multiple examples of model implementations](https://github.com/search
 
 The most sophisticated models currently available as open source are:
 
-- models for [Meta Axion](https://github.com/nearprotocol/metanear-src/blob/master/assembly/model.ts)
-- models for [Axion Place](https://github.com/nearprotocol/near-place/blob/master/assembly/model.ts)
+- models for [Meta Fermi](https://github.com/nearprotocol/metanear-src/blob/master/assembly/model.ts)
+- models for [Fermi Place](https://github.com/nearprotocol/near-place/blob/master/assembly/model.ts)
 - models for [`near-sdk-as` tests](https://github.com/near/near-sdk-as/blob/master/sdk/assembly/__tests__/model.ts)
-- models for [Axion Chess](https://github.com/nearprotocol/near-chess/blob/master/assembly/model.ts)
+- models for [Fermi Chess](https://github.com/nearprotocol/near-chess/blob/master/assembly/model.ts)
 
 _Note that some of the projects listed above may need to have some updates applied before a successful deployment is possible_
 
@@ -510,7 +510,7 @@ This should come as no surprise until we consider that a collection type like `P
 
 This means that storage used by a contract must always use a **unique storage prefix** for each collection to avoid data collision.
 
-Axion persists all blockchain data as part of an account. For example, all `Storage` data is stored with the account that controls / owns the related contract. This is often an account dedicated to funding the operation of the contract (as is the case with all Axion examples) or, if the design of your application requires that contracts are deployed to individual user accounts (as with one proposed design of an [open web](https://github.com/metanear/metanear-web)) then the contract, along with all of its data, will be stored on each user account that participates in the application.
+Fermi persists all blockchain data as part of an account. For example, all `Storage` data is stored with the account that controls / owns the related contract. This is often an account dedicated to funding the operation of the contract (as is the case with all Fermi examples) or, if the design of your application requires that contracts are deployed to individual user accounts (as with one proposed design of an [open web](https://github.com/metanear/metanear-web)) then the contract, along with all of its data, will be stored on each user account that participates in the application.
 
 You can read more about accounts [here](/docs/concepts/account)
 
@@ -648,7 +648,7 @@ Some solutions to the time issue include using "trusted oracles" but that's outs
 
 There are two types of functions that can interact with the blockchain -- "view" functions and "change" functions.
 The difference, however, does not exist on the contract level. Rather, developers, if they wish to use view functions,
-can mark certain functions to be "view functions" in the front-end or calling them through `near view` in [Axion CLI](https://github.com/near/near-cli).
+can mark certain functions to be "view functions" in the front-end or calling them through `near view` in [Fermi CLI](https://github.com/near/near-cli).
 
 1. **View** functions do not actually change the state of the blockchain. Imagine a function which, for instance, just checks the balance of a particular account. Because no state is changed, these functions are lightweight and generally safe. \
     \

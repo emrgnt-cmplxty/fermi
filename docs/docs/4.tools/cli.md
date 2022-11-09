@@ -1,17 +1,17 @@
 ---
 id: near-cli
-title: Axion CLI
+title: Fermi CLI
 ---
 
-The Axion [Command Line Interface](https://github.com/near/near-cli) (CLI) is a tool that enables to interact with the Axion network directly from the shell. Among other things,
-the Axion CLI enables you to:
+The Fermi [Command Line Interface](https://github.com/near/near-cli) (CLI) is a tool that enables to interact with the Fermi network directly from the shell. Among other things,
+the Fermi CLI enables you to:
 
-- Login with a Axion account
+- Login with a Fermi account
 - Deploy a contract
 - Interact and query information from a deployed contract
 
 :::tip
-Under the hood, Axion CLI utilizes the [`Axion JavaScript API`](https://github.com/near/near-api-js)
+Under the hood, Fermi CLI utilizes the [`Fermi JavaScript API`](https://github.com/near/near-api-js)
 :::
 ---
 
@@ -23,7 +23,7 @@ _Click on a command for more information and examples._
 
 | Command                                   | Description                                                                                                                    |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| [`near login`](#near-login)               | stores a full access key locally using [Axion Wallet](https://wallet.testnet.near.org/)                                         |
+| [`near login`](#near-login)               | stores a full access key locally using [Fermi Wallet](https://wallet.testnet.near.org/)                                         |
 | [`near keys`](#near-keys)                 | displays all access keys and their details for a given account                                                                 |
 | [`near generate-key`](#near-generate-key) | generates a local key pair **or** shows public key & [implicit account](/concepts/basics/accounts/account-id#implicit-accounts) |
 | [`near add-key`](#near-add-key)           | adds a new access key to an account                                                                                            |
@@ -43,7 +43,7 @@ _Click on a command for more information and examples._
 
 | Command                               | Description                                                                    |
 | ------------------------------------- | ------------------------------------------------------------------------------ |
-| [`near deploy`](#near-deploy)         | deploys a smart contract to the Axion blockchain                                |
+| [`near deploy`](#near-deploy)         | deploys a smart contract to the Fermi blockchain                                |
 | [`near dev-deploy`](#near-dev-deploy) | creates a development account and deploys a contract to it _(`testnet` only)_  |
 | [`near call`](#near-call)             | makes a contract call which can invoke `change` _or_ `view` methods            |
 | [`near view`](#near-view)             | makes a contract call which can **only** invoke a `view` method                |
@@ -67,7 +67,7 @@ _Click on a command for more information and examples._
 
 | Command                   | Description                                                                                                                            |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| [`near repl`](#near-repl) | launches an interactive connection to the Axion blockchain ([REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop)) |
+| [`near repl`](#near-repl) | launches an interactive connection to the Fermi blockchain ([REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop)) |
 
 > For EVM support see [Project Aurora's](https://aurora.dev) [`aurora-cli`](https://github.com/aurora-is-near/aurora-cli).
 
@@ -122,7 +122,7 @@ Copy/pasting can be a bit odd using `WSL`.
 
 > If a `near-cli` update is available, you will be notified in the terminal after running any command. _(see example below)_
 
-![Axion CLI detects a new version](/docs/assets/update_near-cli.png)
+![Fermi CLI detects a new version](/docs/assets/update_near-cli.png)
 
 - Follow the instructions to update by running:
 
@@ -144,7 +144,7 @@ npm outdated -g  # note the difference between Current and Latest
 
 **Troubleshooting:**
 
-> If you have any issues upgrading Axion CLI, the fastest way to resolve the issue is to uninstall then reinstall.
+> If you have any issues upgrading Fermi CLI, the fastest way to resolve the issue is to uninstall then reinstall.
 
 ```bash
 npm uninstall -g near-cli
@@ -178,7 +178,7 @@ export NEAR_ENV=mainnet
 
 ### `near login` {#near-login}
 
-> locally stores a full access key of an account you created with [Axion Wallet](https://wallet.testnet.near.org/).
+> locally stores a full access key of an account you created with [Fermi Wallet](https://wallet.testnet.near.org/).
 
 - arguments: `none`
 - options: `default`
@@ -189,7 +189,7 @@ export NEAR_ENV=mainnet
 near login
 ```
 
-- You will be redirected to [Axion Wallet](https://wallet.testnet.near.org/) requesting full access to your account.
+- You will be redirected to [Fermi Wallet](https://wallet.testnet.near.org/) requesting full access to your account.
 - From here, select which account you would like an access key to.
 
 ![near wallet login](/docs/assets/near-login.png)
@@ -333,7 +333,7 @@ near generate-key --useLedgerKey
 
 You should then see the following prompt to confirm this request on your Ledger device:
 
-    Make sure to connect your Ledger and open Axion app
+    Make sure to connect your Ledger and open Fermi app
     Waiting for confirmation on Ledger...
 
 After confirming the request on your Ledger device, a public key and implicit accountId will be displayed.
@@ -362,7 +362,7 @@ near generate-key --useLedgerKey="44'/397'/0'/0'/2'"
 
 You should then see the following prompt to confirm this request on your Ledger device:
 
-    Make sure to connect your Ledger and open Axion app
+    Make sure to connect your Ledger and open Fermi app
     Waiting for confirmation on Ledger...
 
 After confirming the request on your Ledger device, a public key and implicit accountId will be displayed.
@@ -585,7 +585,7 @@ near state example.testnet
 
 ### `near send` {#near-send}
 
-> Sends Axion tokens (Ⓝ) from one account to another.
+> Sends Fermi tokens (Ⓝ) from one account to another.
 
 - arguments: `senderId` `receiverId` `amount`
 - options: `default`
@@ -600,7 +600,7 @@ near send sender.testnet receiver.testnet 10
 
 **Example Response**
 
-    Sending 10 Axion to receiver.testnet from sender.testnet
+    Sending 10 Fermi to receiver.testnet from sender.testnet
     Transaction Id BYTr6WNyaEy2ykAiQB9P5VvTyrJcFk6Yw95HPhXC6KfN
     To see the transaction in the transaction explorer, please open this url in your browser
     https://explorer.testnet.near.org/transactions/BYTr6WNyaEy2ykAiQB9P5VvTyrJcFk6Yw95HPhXC6KfN
@@ -710,7 +710,7 @@ near dev-deploy out/main.wasm
 | Options                   | Description                                                  |
 | ------------------------- | ------------------------------------------------------------ |
 | `--gas`                   | Max amount of gas this call can use (in gas units)           |
-| `--deposit` or `--amount` | Number of tokens to attach (in Axion) to a function call      |
+| `--deposit` or `--amount` | Number of tokens to attach (in Fermi) to a function call      |
 | `--depositYocto`          | Number of tokens to attach (in yoctoNEAR) to a function call |
 | `--base64`                | Treat arguments as base64-encoded                            |
 
@@ -1184,7 +1184,7 @@ Proposals for the epoch after next (new: 51, passing: 49, expected seat price = 
 
 ### `near repl` {#near-repl}
 
-> Launches Axion [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop) _(an interactive JavaScript programming environment)_ connected to Axion.
+> Launches Fermi [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop) _(an interactive JavaScript programming environment)_ connected to Fermi.
 
 - arguments: `none`
 - options: `--accountId`
@@ -1195,8 +1195,8 @@ To launch, run:
 near repl
 ```
 
-- You will then be shown a prompt `>` and can begin interacting with Axion.
-- Try typing the following into your prompt that converts Axion (Ⓝ) into yoctoNEAR (10^-24):
+- You will then be shown a prompt `>` and can begin interacting with Fermi.
+- Try typing the following into your prompt that converts Fermi (Ⓝ) into yoctoNEAR (10^-24):
 
 ```bash
 nearAPI.utils.format.parseNearAmount('1000')
@@ -1255,7 +1255,7 @@ const myPrivateKey =
 nearAPI.KeyPair.fromString(myPrivateKey).publicKey.toString();
 ```
 
-With Axion REPL, you have complete access to [`near-api-js`](https://github.com/near/near-api-js) to help you develop on the Axion platform.
+With Fermi REPL, you have complete access to [`near-api-js`](https://github.com/near/near-api-js) to help you develop on the Fermi platform.
 
 ---
 
@@ -1272,13 +1272,13 @@ With Axion REPL, you have complete access to [`near-api-js`](https://github.com/
 | `--useLedgerKey`              | uses Ledger with given HD key path `[default: "44'/397'/0'/0'/1'"]`                                                                    |
 | `--seedPhrase`                | uses a mnemonic seed phrase                                                                                                            |
 | `--seedPath`                  | specify a HD path derivation `[default: "m/44'/397'/0'"]`                                                                              |
-| `--walletUrl`                 | selects a [Axion wallet](http://wallet.testnet.near.org) URL                                                                            |
+| `--walletUrl`                 | selects a [Fermi wallet](http://wallet.testnet.near.org) URL                                                                            |
 | `--contractName`              | selects an account contract name                                                                                                       |
 | `--masterAccount`             | selects a master account                                                                                                               |
 | `--helperAccount`             | selects an expected top-level account for a network                                                                                    |
 | `--verbose`, `-v`             | shows verbose output                                                                                                                   |
 | `--gas`                       | specifies amount of gas to use for a contract call `[default: "100000000000000"]`                                                      |
-| `--deposit`                   | Number of Axion tokens (Ⓝ) to attach `[default: "0"]`                                                                                   |
+| `--deposit`                   | Number of Fermi tokens (Ⓝ) to attach `[default: "0"]`                                                                                   |
 | `--depositYocto`              | Number of tokens to attach (in yocto Ⓝ) to a function call `[default: null]`                                                           |
 
 :::tip Got a question?

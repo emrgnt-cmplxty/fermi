@@ -25,7 +25,7 @@ The JSON-RPC enables you to query the network and get details about specific blo
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "getLatestBlockInfo",
   "params": []
 }
@@ -35,7 +35,7 @@ The JSON-RPC enables you to query the network and get details about specific blo
 <TabItem value="🌐 JavaScript" label="JavaScript">
 
 ```js
-const response = await axionClient.getLatestBlockInfo();
+const response = await fermiClient.getLatestBlockInfo();
 ```
 
 </TabItem>
@@ -56,7 +56,7 @@ const response = await axionClient.getLatestBlockInfo();
       "block_id": "0x23a4001a11c639a4130363935e1064d13d3f777f6a2f3496113bf1f5d7bece44",
     },
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 
@@ -80,7 +80,7 @@ const response = await axionClient.getLatestBlockInfo();
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "getBlockInfo",
   "params": [1]
 }
@@ -90,7 +90,7 @@ const response = await axionClient.getLatestBlockInfo();
 <TabItem value="🌐 JavaScript" label="JavaScript">
 
 ```js
-const response = await axionClient.getBlockInfo(1);
+const response = await fermiClient.getBlockInfo(1);
 ```
 
 </TabItem>
@@ -111,7 +111,7 @@ const response = await axionClient.getBlockInfo(1);
       "block_id": "0x7e7366d15e8d91b3ba3928cef72568f0f31751ec600bc30ada81d39061822af6",
     },
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 
@@ -135,7 +135,7 @@ const response = await axionClient.getBlockInfo(1);
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "getBlock",
   "params": [1]
 }
@@ -145,7 +145,7 @@ const response = await axionClient.getBlockInfo(1);
 <TabItem value="🌐 JavaScript" label="JavaScript">
 
 ```js
-const response = await axionClient.getBlock(1);
+const response = await fermiClient.getBlock(1);
 ```
 
 </TabItem>
@@ -183,7 +183,7 @@ const response = await axionClient.getBlock(1);
       ...
     ],
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 

@@ -5,7 +5,7 @@ Examples from our [RPC](https://docs.near.org/docs/develop/front-end/rpc) are us
 ```
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "EXPERIMENTAL_tx_status",
   "params": ["8uxq5BAC4zZL4Set7gtraqZSWduYXRUiNggpKhWmBnzK", "nf-finance.near"]
 }

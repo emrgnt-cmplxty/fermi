@@ -1,6 +1,6 @@
 ---
 id: quick-reference
-title: Using JavaScript API to interact with Axion
+title: Using JavaScript API to interact with Fermi
 sidebar_label: Using JavaScript API
 ---
 
@@ -9,9 +9,9 @@ import TabItem from '@theme/TabItem';
 
 ## What is `near-api-js`
 
-`near-api-js` is a complete library to interact with the Axion blockchain. You can use it in the browser, or in Node.js runtime.
+`near-api-js` is a complete library to interact with the Fermi blockchain. You can use it in the browser, or in Node.js runtime.
 
-You'll typically first create a connection to Axion with [`connect`](#connect) using a [`KeyStore`](#key-store).
+You'll typically first create a connection to Fermi with [`connect`](#connect) using a [`KeyStore`](#key-store).
 With the connection object you now can:
 - Interact with the [Wallet](#wallet) in a browser.
 - Instantiate an [Account](#account) object to:
@@ -24,7 +24,7 @@ With the connection object you now can:
 The library also contains some [utils](#utils) functions.
 
 :::tip
-To quickly get started with integrating Axion in a web browser, read our [Web Frontend integration](/develop/integrate/frontend) article.
+To quickly get started with integrating Fermi in a web browser, read our [Web Frontend integration](/develop/integrate/frontend) article.
 :::
 
 :::info
@@ -32,7 +32,7 @@ Note the difference between `near-api-js` and `near-sdk-js`:
 
 The JavaScript _SDK_ is a library for developing smart contracts. It contains classes and functions you use to write your smart contract code.
 
-The JavaScript _API_ is a complete library for all possible commands to interact with Axion. It’s a wrapper for the RPC endpoints, a library to interact with Axion Wallet in the browser, and a tool for keys management.
+The JavaScript _API_ is a complete library for all possible commands to interact with Fermi. It’s a wrapper for the RPC endpoints, a library to interact with Fermi Wallet in the browser, and a tool for keys management.
 :::
 
 ---
@@ -89,7 +89,7 @@ const myKeyStore = new keyStores.BrowserLocalStorageKeyStore();
 
 ```js
 // creates a keyStore that searches for keys in .near-credentials
-// requires credentials stored locally by using a Axion-CLI command: `near login` 
+// requires credentials stored locally by using a Fermi-CLI command: `near login` 
 // https://docs.near.org/tools/cli#near-login
 
 const { keyStores } = nearAPI;
@@ -112,7 +112,7 @@ const { KeyPair, keyStores } = require("near-api-js");
 const fs = require("fs");
 const homedir = require("os").homedir();
 
-const ACCOUNT_ID = "near-example.testnet";  // Axion account tied to the keyPair
+const ACCOUNT_ID = "near-example.testnet";  // Fermi account tied to the keyPair
 const NETWORK_ID = "testnet";
 // path to your custom keyPair location (ex. function access key for example account)
 const KEY_PATH = '/.near-credentials/near-example-testnet/get_token_price.json';
@@ -150,7 +150,7 @@ await myKeyStore.setKey("testnet", "example-account.testnet", keyPair);
 </TabItem>
 </Tabs>
 
-## Connecting to Axion {#connect}
+## Connecting to Fermi {#connect}
 
 The object returned from `connect` is your entry-point for all commands in the API.
 To sign a transaction you'll need a [`KeyStore`](#key-store) to create a connection.
@@ -226,7 +226,7 @@ const nearConnection = await connect(connectionConfig);
 
 ## Interacting with the Wallet {#wallet}
 
-Wallet interaction is possible only in the browser, because Axion's Wallet is web-based.
+Wallet interaction is possible only in the browser, because Fermi's Wallet is web-based.
 
 ### Creating Wallet Connection {#wallet-connection}
 
@@ -247,7 +247,7 @@ const connectionConfig = {
   explorerUrl: "https://explorer.testnet.near.org",
 };
 
-// connect to Axion
+// connect to Fermi
 const nearConnection = await connect(connectionConfig);
 
 // create wallet connection
@@ -269,7 +269,7 @@ const connectionConfig = {
   explorerUrl: "https://explorer.mainnet.near.org",
 };
 
-// connect to Axion
+// connect to Fermi
 const nearConnection = await connect(connectionConfig);
 
 // create wallet connection
@@ -291,7 +291,7 @@ const connectionConfig = {
   explorerUrl: "https://explorer.betanet.near.org",
 };
 
-// connect to Axion
+// connect to Fermi
 const nearConnection = await connect(connectionConfig);
 
 // create wallet connection
@@ -312,7 +312,7 @@ This will redirect the current page to the Wallet authentication page.
 You can configure success and failure redirect URLs.
 
 This action creates an access key that will be stored in the browser's local storage.
-The access key can then be used to connect to Axion and sign transactions via the KeyStore.
+The access key can then be used to connect to Fermi and sign transactions via the KeyStore.
 
 ```js
 // const walletConnection = new WalletConnection(nearConnection);
@@ -442,7 +442,7 @@ console.log(response);
 ### Send Tokens {#send-tokens}
 
 ```js
-// sends Axion tokens
+// sends Fermi tokens
 const account = await nearConnection.account("sender-account.testnet");
 await account.sendMoney(
   "receiver-account.testnet", // receiver account
@@ -587,7 +587,7 @@ await contract.method_name(
 await contract.method_name(
   {
     callbackUrl: 'https://example.com/callback', // callbackUrl after the transaction approved (optional)
-    meta: 'some info', // meta information Axion Wallet will send back to the application. `meta` will be attached to the `callbackUrl` as a url search param
+    meta: 'some info', // meta information Fermi Wallet will send back to the application. `meta` will be attached to the `callbackUrl` as a url search param
     args: {
         arg_name: "value" // argument name and value - pass empty object if no args required
     },
@@ -620,10 +620,10 @@ console.log(response);
 
 ## Utils {#utils}
 
-### Axion => yoctoNEAR {#near--yoctonear}
+### Fermi => yoctoNEAR {#near--yoctonear}
 
 ```js
-// converts Axion amount into yoctoNEAR (10^-24)
+// converts Fermi amount into yoctoNEAR (10^-24)
 
 const { utils } = nearAPI;
 const amountInYocto = utils.format.parseNearAmount("1");
@@ -631,10 +631,10 @@ const amountInYocto = utils.format.parseNearAmount("1");
 
 [<span class="typedoc-icon typedoc-icon-function"></span> Function `parseNearAmount`](https://near.github.io/near-api-js/modules/utils_format#parsenearamount)
 
-### YoctoNEAR => Axion {#yoctonear--near}
+### YoctoNEAR => Fermi {#yoctonear--near}
 
 ```js
-// converts yoctoNEAR (10^-24) amount into Axion
+// converts yoctoNEAR (10^-24) amount into Fermi
 
 const { utils } = nearAPI;
 const amountInNEAR = utils.format.formatNearAmount("1000000000000000000000000");

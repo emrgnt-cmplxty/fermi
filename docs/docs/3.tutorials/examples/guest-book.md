@@ -62,7 +62,7 @@ Your contract will then be **compiled** and **deployed** to an **account** in th
 ![img](/docs/assets/examples/guest-book.png)
 *Frontend of the Guest Book app*
 
-Go ahead and login with your Axion account. If you don't have one, you will be able to create one in the moment. Once logged in,
+Go ahead and login with your Fermi account. If you don't have one, you will be able to create one in the moment. Once logged in,
 you will be able to sign a message in the guest book. You can further send some money alongside your message. If you attach
 more than 0.01Ⓝ then your message will be marked as "premium".
 

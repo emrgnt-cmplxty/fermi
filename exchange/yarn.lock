@@ -4344,7 +4344,7 @@ available-typed-arrays@^1.0.5:
   resolved "https://registry.yarnpkg.com/available-typed-arrays/-/available-typed-arrays-1.0.5.tgz#92f95616501069d07d10edb2fc37d3e1c65123b7"
   integrity sha512-DMD0KiN46eipeziST1LPP/STfDU0sufISXmjSgvVsoU2tqxctQeASejWcfNtxYKqETM1UxQ8sp2OrSBWpHY6sw==
 
-"axion-js-sdk@file:../sdk/js/axion":
+"fermi-js-sdk@file:../sdk/js/fermi":
   version "1.0.0"
   dependencies:
     "@grpc/grpc-js" "^1.2.2"
@@ -13307,7 +13307,7 @@ telejson@^6.0.8:
     "@types/yargs" "^15.0.3"
     "@typescript-eslint/eslint-plugin" "^5.39.0"
     "@typescript-eslint/parser" "^5.39.0"
-    axion-js-sdk "file:../../../Library/Caches/Yarn/v6/npm-tenex-js-sdk-1.0.0-8af3276e-4b80-4d17-9c10-96783944c1cd-1668009136403/node_modules/axion"
+    fermi-js-sdk "file:../../../Library/Caches/Yarn/v6/npm-tenex-js-sdk-1.0.0-8af3276e-4b80-4d17-9c10-96783944c1cd-1668009136403/node_modules/fermi"
     blakejs "^1.2.1"
     cli-table "^0.3.1"
     eslint "^7.8.0"

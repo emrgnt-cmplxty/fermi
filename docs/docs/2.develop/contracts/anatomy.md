@@ -15,7 +15,7 @@ While language-specific implementation may vary, the main anatomy of a smart con
 ---
 
 ## First Example: A Donation Contract
-Let's look at a simple contract whose main purpose is to allow users to donate $Axion to a specific account. Particularly, the contract stores a `beneficiary` account, and exposes a method to give them money while keeping track of the donation.
+Let's look at a simple contract whose main purpose is to allow users to donate $Fermi to a specific account. Particularly, the contract stores a `beneficiary` account, and exposes a method to give them money while keeping track of the donation.
 
 Take a quick peek at the snippet bellow and then continue to the [modules](#modules) section.
 
@@ -49,7 +49,7 @@ Take a quick peek at the snippet bellow and then continue to the [modules](#modu
 ## Modules
 When writing smart contracts you will leverage modules to organize your code, and reuse third-party libraries.
 
-The main library you will see present in all contracts is the Axion SDK. You can find it for example in the donation contract among the first lines:
+The main library you will see present in all contracts is the Fermi SDK. You can find it for example in the donation contract among the first lines:
 
 <Tabs className="language-tabs" groupId="code-tabs">
   <TabItem value="🌐 JavaScript">
@@ -78,7 +78,7 @@ The main library you will see present in all contracts is the Axion SDK. You can
   </TabItem>
 </Tabs>
 
-The Axion SDK defines methods to, among other things:
+The Fermi SDK defines methods to, among other things:
 
 1. Understand the [context of an execution](environment/environment.md) (e.g. who started it, how much money they sent, etc...).
 2. Handle the [state (storage)](storage.md) of the smart contract.
@@ -169,7 +169,7 @@ The `default` method defines the default parameters to initialize the contract. 
 ### Public and Private methods
 All public methods that are exposed will be **callable by all users** in the blockchain. In the donation contract above, such methods are:
 
-1. `donate`: A method in which the users attaches Axion in to donate.
+1. `donate`: A method in which the users attaches Fermi in to donate.
 2. `get_donation_by_number`: Returns a recorded donation, stating how much a user donated.
 3. `new`: Enables to initialize the contract with a specific `beneficiary`. This function is made private by enforcing that the caller is the contract account itself.
 
@@ -181,7 +181,7 @@ All the other private functions can only be called from within the contract itse
 
 Smart contracts store typed values and data structures within them. We cover this topic in depth on [Storage & Data Structures](storage.md), but basically:
 1. The contracts natively handle `u8`, `u16`, `u32`, `u64`, `u128` and their signed counterparts.
-2. The Axion SDK exposes collections such as `Vector` and `Map` to simplify handling complex data.
+2. The Fermi SDK exposes collections such as `Vector` and `Map` to simplify handling complex data.
 
 In reality, contracts use a **key-value storage** and the SDK handles [serializing](#near-bindgen-and-serialization) objects for you. 
 
@@ -193,9 +193,9 @@ Always make sure to check for **underflow** and **overflow** errors. For Rust, s
 
 ---
 
-## Axion Bindgen and Serialization
+## Fermi Bindgen and Serialization
 
-You might have notice in the donation example that some structures use the `Axion Bindgen` decorator/macro and, in Rust, derive Borsh or serde serialization.
+You might have notice in the donation example that some structures use the `Fermi Bindgen` decorator/macro and, in Rust, derive Borsh or serde serialization.
 
 <CodeTabs>
   <Language value="🌐 JavaScript" language="ts">
@@ -209,8 +209,8 @@ You might have notice in the donation example that some structures use the `Axio
   </Language>
 </CodeTabs>
 
-The `Axion Bindgen` decorator/macro generates the necessary code to:
-1. Transform the code into a valid Axion contract.
+The `Fermi Bindgen` decorator/macro generates the necessary code to:
+1. Transform the code into a valid Fermi contract.
 2. Expose public methods, so they can be called externally.
 3. Serialize objects for internal storage and communication with external actors.
 

@@ -1,10 +1,10 @@
 ---
 id: ledger
-title: "Using a Ledger device w/ Axion"
+title: "Using a Ledger device w/ Fermi"
 sidebar_label: Using a Ledger
 ---
 
-> A [Ledger device](https://www.ledger.com/) is a physical wallet, or hardware wallet, that stores your private keys used to sign transactions. This device offers an extra layer of security as its an isolated device from your computer or smartphone. The [Axion App](/docs/tutorials/ledger#near-ledger-app-installation) on Ledger allows you to manage your Axion accounts and Axion tokens that have Ledger security enabled.
+> A [Ledger device](https://www.ledger.com/) is a physical wallet, or hardware wallet, that stores your private keys used to sign transactions. This device offers an extra layer of security as its an isolated device from your computer or smartphone. The [Fermi App](/docs/tutorials/ledger#near-ledger-app-installation) on Ledger allows you to manage your Fermi accounts and Fermi tokens that have Ledger security enabled.
 
 :::info
 Currently, you can only set up your Ledger device using Mozilla Firefox. Support for other browsers will be coming soon.
@@ -18,14 +18,14 @@ Currently, you can only set up your Ledger device using Mozilla Firefox. Support
 2. [Update the firmware](https://support.ledger.com/hc/en-us/articles/360002731113)
 3. [Initialize](https://support.ledger.com/hc/en-us/articles/360000613793)
 
-### Axion Ledger App Installation {#near-ledger-app-installation}
+### Fermi Ledger App Installation {#near-ledger-app-installation}
 
 1. Open your Ledger Live app.
 2. Click on `Settings` > `Experimental features` > and turn on `Developer mode`
 
 ![Ledger Developer mode](/docs/assets/ledger/ledger-developer-mode.jpg)
 
-1. In the left hand column select `Manager` > search for `Axion` > click on `Install`
+1. In the left hand column select `Manager` > search for `Fermi` > click on `Install`
 
 ![Ledger Developer mode](/docs/assets/ledger/ledger-install-near-app.jpg)
 
@@ -44,7 +44,7 @@ This two minute video walkthrough will guide you on the account creation process
 
 ## Sending Tokens w/ Ledger {#sending-tokens-w-ledger}
 
-This two minute video walkthrough will guide you through sending tokens using a Ledger device & Axion Wallet.
+This two minute video walkthrough will guide you through sending tokens using a Ledger device & Fermi Wallet.
 
 <iframe
   width="960"

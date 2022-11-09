@@ -28,7 +28,7 @@ app.post('/todos', async(req, res) => {
 });
 ```
 
-In our Axion application, instead of HTTP endpoints, we'll have smart contract methods
+In our Fermi application, instead of HTTP endpoints, we'll have smart contract methods
 which will store information on the blockchain. We'll explore how this in implemented shortly.
 
 ## Development notes {#development-notes}
@@ -112,7 +112,7 @@ describe('contract methods', () => {
 
 We'll use `create-react-app` to scaffold out our web app and the
 [`near-api-js`](https://www.github.com/near/near-api-js) library to
-integrate Axion with React.
+integrate Fermi with React.
 
 ```bash
 npx create-react-app todos-crud-web
@@ -134,7 +134,7 @@ import * as nearAPI from 'near-api-js';
 async function initContract() {
   const nearConfig = getConfig(process.env.NODE_ENV || 'testnet');
 
-  // Initializing connection to the Axion TestNet
+  // Initializing connection to the Fermi TestNet
   const near = await nearAPI.connect({
     deps: {
       keyStore: new nearAPI.keyStores.BrowserLocalStorageKeyStore()
@@ -194,7 +194,7 @@ const App = ({ contract, currentUser, nearConfig, wallet }) => {
   const signIn = () => {
     wallet.requestSignIn(
       nearConfig.contractName,
-      'Axion ToDo List'
+      'Fermi ToDo List'
     );
   };
 
@@ -204,7 +204,7 @@ const App = ({ contract, currentUser, nearConfig, wallet }) => {
   };
   return (
     <>
-      <h1>Axion Todos CRUD App</h1>
+      <h1>Fermi Todos CRUD App</h1>
       { currentUser
           ? <div>
               <h2>
@@ -284,7 +284,7 @@ module.exports = getConfig;
 
 ## Data Storage {#data-storage}
 
-With Axion we can conveniently store information on the blockchain by using one of
+With Fermi we can conveniently store information on the blockchain by using one of
 the SDK-provided [collections](/docs/concepts/data-storage).
 These collections will take the place of a traditional database for us and can be
 thought of like database tables.
@@ -547,7 +547,7 @@ const App = ({ contract, currentUser, nearConfig, wallet }) => {
   const signIn = () => {
     wallet.requestSignIn(
       nearConfig.contractName,
-      'Axion ToDo List'
+      'Fermi ToDo List'
     );
   };
 
@@ -557,7 +557,7 @@ const App = ({ contract, currentUser, nearConfig, wallet }) => {
   };
   return (
     <>
-      <h1>Axion Todos CRUD App</h1>
+      <h1>Fermi Todos CRUD App</h1>
       { currentUser
           ? <div>
               <h2>
@@ -922,7 +922,7 @@ const App = ({ contract, currentUser, nearConfig, wallet }) => {
   const signIn = () => {
     wallet.requestSignIn(
       nearConfig.contractName,
-      'Axion ToDo List'
+      'Fermi ToDo List'
     );
   };
 
@@ -932,7 +932,7 @@ const App = ({ contract, currentUser, nearConfig, wallet }) => {
   };
   return (
     <>
-      <h1>Axion Todos CRUD App</h1>
+      <h1>Fermi Todos CRUD App</h1>
       { currentUser
           ? <div>
               <h2>

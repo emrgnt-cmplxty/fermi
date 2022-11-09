@@ -3,7 +3,7 @@ id: near-sdk-js
 title: JavaScript SDK
 ---
 
-JavaScript is the most popular programming language, used by nearly 14 million developers worldwide. You can write smart-contracts in JavaScript or Typescript, and our SDK will pack them with a lightweight runtime. This can then be compiled into a single Wasm file that can be deployed into the Axion network.
+JavaScript is the most popular programming language, used by nearly 14 million developers worldwide. You can write smart-contracts in JavaScript or Typescript, and our SDK will pack them with a lightweight runtime. This can then be compiled into a single Wasm file that can be deployed into the Fermi network.
 
 ---
 

@@ -22,7 +22,7 @@ This guide presumes that you are transitioning from near-sdk-sim `3.2.0` (the la
 
 ## Async Runtime and Error Handling
 
-In this section we will be working purely with test signatures, so it applies to pretty much all Axion contract tests regardless of what is written inside. We will walk through each change one by one. Let's start with how your tests look like right now; chances are something like this:
+In this section we will be working purely with test signatures, so it applies to pretty much all Fermi contract tests regardless of what is written inside. We will walk through each change one by one. Let's start with how your tests look like right now; chances are something like this:
 
 ```rust
 #[test]
@@ -57,13 +57,13 @@ This way you can use `?` anywhere inside the test to safely unpack any `anyhow::
 
 ## Initialization and Deploying Contracts
 
-Unlike Axion Simulator, `workspaces-rs` uses an actual Axion node and makes all calls through it. First, you need to decide which network you want your tests to be run on:
+Unlike Fermi Simulator, `workspaces-rs` uses an actual Fermi node and makes all calls through it. First, you need to decide which network you want your tests to be run on:
 
-- `sandbox` - perfect choice if you are just interested in local development and testing; `workspaces-rs` will instantiate a [sandbox](https://github.com/near/sandbox) instance on your local machine which will run an isolated Axion node.
+- `sandbox` - perfect choice if you are just interested in local development and testing; `workspaces-rs` will instantiate a [sandbox](https://github.com/near/sandbox) instance on your local machine which will run an isolated Fermi node.
 - `testnet` - an environment much closer to the real world; you can test integrations with other deployed contracts on testnet without bearing any financial risk.
 - `mainnet` - a network with reduced amount of features due to how dangerous it can be to do transactions there, but can still be useful for automating deployments and pulling deployed contracts.
 
-In this guide we will be focusing on `sandbox` since it covers the same use cases Axion Simulator did. But of course feel free to explore whether other networks can be of potential use to you when writing new tests/workflows.
+In this guide we will be focusing on `sandbox` since it covers the same use cases Fermi Simulator did. But of course feel free to explore whether other networks can be of potential use to you when writing new tests/workflows.
 
 One of the ways to initialize simulator and deploy a contract is shown below (the other way is through `deploy!` macro which we will look at in the next section):
 
@@ -123,7 +123,7 @@ You might have noticed that `init_simulator` used to accept an optional genesis 
 
 ## Making Transactions and View Calls
 
-As always, let's take a look at how we used to make calls with Axion Simulator:
+As always, let's take a look at how we used to make calls with Fermi Simulator:
 
 ```rust title="Calls - near-sdk-sim"
 // Example 1: No Macros
@@ -162,7 +162,7 @@ call!(
 let root_balance: U128 = view!(ft.ft_balance_of(root.account_id())).unwrap_json();
 ```
 
-Note how Example 2's `call!` and `view!` macros accept a contract function invocation as if it was just regular Rust. Unlike Axion Simulator, `workspaces-rs` never stores metadata about the deployed contract and hence does not support high-level syntax like that. This might change in the future once our ACI implementation is ready, but for the remainder of this section we will be migrating Example 1.
+Note how Example 2's `call!` and `view!` macros accept a contract function invocation as if it was just regular Rust. Unlike Fermi Simulator, `workspaces-rs` never stores metadata about the deployed contract and hence does not support high-level syntax like that. This might change in the future once our ACI implementation is ready, but for the remainder of this section we will be migrating Example 1.
 
 Workspaces have a unified way of making all types of calls via a [builder](https://doc.rust-lang.org/1.0.0/style/ownership/builders.html) pattern. Generally, calls are constructed by following these steps:
 
@@ -249,7 +249,7 @@ let res = contract
 
 ## Inspecting Logs
 
-The API for inspecting logs is fairly close to what it was in Axion Simulator, but there are still some things you should keep in mind when migrating. Let's take the same transaction we used in the [batch transactions](#batch-transactions) section and try to inspect its logs. This is how one would check that the transaction logged a specific message in a certain position with Axion Simulator:
+The API for inspecting logs is fairly close to what it was in Fermi Simulator, but there are still some things you should keep in mind when migrating. Let's take the same transaction we used in the [batch transactions](#batch-transactions) section and try to inspect its logs. This is how one would check that the transaction logged a specific message in a certain position with Fermi Simulator:
 
 ```rust title="Logs - near-sdk-sim"
 assert_eq!(
@@ -291,7 +291,7 @@ assert_eq!(outcome.logs[2], format!("Account @{} burned {}", contract.id(), 10))
 
 ## Profiling Gas
 
-Axion Simulator never had accurate gas estimations since it only tried to mirror nearcore, but nearcore has extra functionality on top which consumes gas (like cross-contract calls are processed separately from the same transaction and that incurs gas fees). Workspaces offers the better experience here and aligns very well with what you can do on testnet and mainnet. It provides the added benefit of allowing the developer to accurately profile gas usage before deploying to `mainnet`.
+Fermi Simulator never had accurate gas estimations since it only tried to mirror nearcore, but nearcore has extra functionality on top which consumes gas (like cross-contract calls are processed separately from the same transaction and that incurs gas fees). Workspaces offers the better experience here and aligns very well with what you can do on testnet and mainnet. It provides the added benefit of allowing the developer to accurately profile gas usage before deploying to `mainnet`.
 
 :::warning
 Since `workspaces-rs` is now using accurate gas measurements, some testing flows that were previously being tested with sdk-sim that would depend on gas reports might not work anymore. You should do your due diligence if you plan to deploy to `mainnet`.

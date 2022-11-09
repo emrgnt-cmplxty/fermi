@@ -28,7 +28,7 @@ Example:
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "query",
   "params": {
     "request_type": "view_account",
@@ -53,7 +53,7 @@ const response = await near.connection.provider.query({
 <TabItem value="http" label="HTTPie">
 
 ```bash
-http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=query \
+http post https://rpc.testnet.near.org jsonrpc=2.0 id=fermi method=query \
   params:='{
     "request_type": "view_account",
     "finality": "final",
@@ -80,7 +80,7 @@ http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=query \
     "block_height": 17795474,
     "block_hash": "9MjpcnwW3TSdzGweNfPbkx8M74q1XzUcT1PAN8G5bNDz"
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 
@@ -104,7 +104,7 @@ When API request fails, RPC server returns a structured error response with a li
         "data": String,
         "message": "Server error",
     },
-    "id": "axion",
+    "id": "fermi",
     "jsonrpc": "2.0"
 }
 ```
@@ -223,7 +223,7 @@ Example:
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "EXPERIMENTAL_changes",
   "params": {
     "changes_type": "account_changes",
@@ -248,7 +248,7 @@ const response = await near.connection.provider.experimental_changes({
 <TabItem value="http" label="HTTPie">
 
 ```bash
-http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=EXPERIMENTAL_changes \
+http post https://rpc.testnet.near.org jsonrpc=2.0 id=fermi method=EXPERIMENTAL_changes \
   params:='{
     "changes_type": "account_changes",
     "account_ids": ["your_account.testnet"],
@@ -301,7 +301,7 @@ http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=EXPERIMENTAL_
       }
     ]
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 
@@ -325,7 +325,7 @@ When API request fails, RPC server returns a structured error response with a li
         "data": String,
         "message": "Server error",
     },
-    "id": "axion",
+    "id": "fermi",
     "jsonrpc": "2.0"
 }
 ```
@@ -416,7 +416,7 @@ Example:
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "query",
   "params": {
     "request_type": "view_code",
@@ -441,7 +441,7 @@ const response = await near.connection.provider.query({
 <TabItem value="http" label="HTTPie">
 
 ```bash
-http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=query \
+http post https://rpc.testnet.near.org jsonrpc=2.0 id=fermi method=query \
   params:='{
     "request_type": "view_code",
     "finality": "final",
@@ -465,7 +465,7 @@ http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=query \
     "block_height": 17814234,
     "block_hash": "GT1D8nweVQU1zyCUv399x8vDv2ogVq71w17MyR66hXBB"
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 
@@ -489,7 +489,7 @@ When API request fails, RPC server returns a structured error response with a li
         "data": String,
         "message": "Server error",
     },
-    "id": "axion",
+    "id": "fermi",
     "jsonrpc": "2.0"
 }
 ```
@@ -619,7 +619,7 @@ Example:
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "query",
   "params": {
     "request_type": "view_state",
@@ -646,7 +646,7 @@ const response = await near.connection.provider.query({
 <TabItem value="http" label="HTTPie">
 
 ```bash
-http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=query \
+http post https://rpc.testnet.near.org jsonrpc=2.0 id=fermi method=query \
   params:='{
     "request_type": "view_state",
     "finality": "final",
@@ -847,7 +847,7 @@ http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=query \
     "block_height": 17814234,
     "block_hash": "GT1D8nweVQU1zyCUv399x8vDv2ogVq71w17MyR66hXBB"
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 </p>
@@ -881,7 +881,7 @@ When API request fails, RPC server returns a structured error response with a li
         "data": String,
         "message": "Server error",
     },
-    "id": "axion",
+    "id": "fermi",
     "jsonrpc": "2.0"
 }
 ```
@@ -1021,7 +1021,7 @@ Example:
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "EXPERIMENTAL_changes",
   "params": {
     "changes_type": "data_changes",
@@ -1048,7 +1048,7 @@ const response = await near.connection.provider.experimental_changes({
 <TabItem value="http" label="HTTPie">
 
 ```bash
-http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=EXPERIMENTAL_changes \
+http post https://rpc.testnet.near.org jsonrpc=2.0 id=fermi method=EXPERIMENTAL_changes \
   params:='{
     "changes_type": "data_changes",
     "account_ids": ["guest-book.testnet"],
@@ -1096,7 +1096,7 @@ http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=EXPERIMENTAL_
       }
     ]
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 
@@ -1120,7 +1120,7 @@ When API request fails, RPC server returns a structured error response with a li
         "data": String,
         "message": "Server error",
     },
-    "id": "axion",
+    "id": "fermi",
     "jsonrpc": "2.0"
 }
 ```
@@ -1211,7 +1211,7 @@ Example:
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "EXPERIMENTAL_changes",
   "params": {
     "changes_type": "contract_code_changes",
@@ -1236,7 +1236,7 @@ const response = await near.connection.provider.experimental_changes({
 <TabItem value="http" label="HTTPie">
 
 ```bash
-http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=EXPERIMENTAL_changes \
+http post https://rpc.testnet.near.org jsonrpc=2.0 id=fermi method=EXPERIMENTAL_changes \
   params:='{
     "changes_type": "contract_code_changes",
     "account_ids": ["dev-1602714453032-7566969"],
@@ -1270,7 +1270,7 @@ http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=EXPERIMENTAL_
       }
     ]
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 
@@ -1294,7 +1294,7 @@ When API request fails, RPC server returns a structured error response with a li
         "data": String,
         "message": "Server error",
     },
-    "id": "axion",
+    "id": "fermi",
     "jsonrpc": "2.0"
 }
 ```
@@ -1387,7 +1387,7 @@ Example:
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "query",
   "params": {
     "request_type": "call_function",
@@ -1416,7 +1416,7 @@ const response = await near.connection.provider.query({
 <TabItem value="http" label="HTTPie">
 
 ```bash
-http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=query \
+http post https://rpc.testnet.near.org jsonrpc=2.0 id=fermi method=query \
   params:='{
     "request_type": "call_function",
     "finality": "final",
@@ -1442,7 +1442,7 @@ http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=query \
     "block_height": 17817336,
     "block_hash": "4qkA4sUUG8opjH5Q9bL5mWJTnfR4ech879Db1BZXbx6P"
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 
@@ -1468,7 +1468,7 @@ When API request fails, RPC server returns a structured error response with a li
         "data": String,
         "message": "Server error",
     },
-    "id": "axion",
+    "id": "fermi",
     "jsonrpc": "2.0"
 }
 ```

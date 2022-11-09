@@ -38,7 +38,7 @@ git clone https://github.com/near-examples/transaction-examples.git
 
 In [`send-tokens-easy.js`](https://github.com/near-examples/transaction-examples/blob/9e999253aafa2c3e3b537810a0b8ce7596c3506c/send-tokens-easy.js#L1-L5) we use two dependencies:
 
-1. [Axion API JavaScript library](https://github.com/near/near-api-js)
+1. [Fermi API JavaScript library](https://github.com/near/near-api-js)
 2. [`dotenv`](https://www.npmjs.com/package/dotenv) (used to load environment variables for private key)
 
 ```js
@@ -49,10 +49,10 @@ require("dotenv").config();
 
 The second line above deconstructs several utilities from nearAPI that you will use to interact with the blockchain.
 
-- `connect` - create a connection to Axion passing configuration variables
+- `connect` - create a connection to Fermi passing configuration variables
 - `KeyPair` - creates a keyPair from the private key you'll provide in an `.env` file
 - `keyStores` - stores the keyPair that you will create from the private key and used to sign Transactions
-- `utils` - used to format Axion amounts
+- `utils` - used to format Fermi amounts
 
 ### Accounts & Network {#accounts--network}
 
@@ -66,7 +66,7 @@ const networkId = "testnet";
 
 ### Formatting Token Amounts {#formatting-token-amounts}
 
-When sending Axion tokens (Ⓝ) during a transaction, the amount needs to be converted into [Yocto](https://en.wikipedia.org/wiki/Yocto-) Ⓝ or (10^-24).
+When sending Fermi tokens (Ⓝ) during a transaction, the amount needs to be converted into [Yocto](https://en.wikipedia.org/wiki/Yocto-) Ⓝ or (10^-24).
 
 - To perform this you will use the [`near-api-js`](https://github.com/near/near-api-js) method [`parseNearAmount()`](https://github.com/near/near-api-js/blob/d4d4cf1ac3182fa998b1e004e6782219325a641b/src/utils/format.ts#L53-L63) (located in `utils/format`)
 
@@ -79,7 +79,7 @@ const amount = nearAPI.utils.format.parseNearAmount("1.5");
 In order to sign transactions you will need to create a "Key Store" that will hold a [full access key](/concepts/basics/accounts/access-keys#full-access-keys) to sign your transactions. There are several ways to accomplish this, but for this example we will use a private key stored in either an `.env` file in your project or an environment variable exported globally.
 
 - If you created the account using [`near-cli`](/tools/near-cli) or ran [`near login`](/tools/near-cli#for-accounts) in your terminal, your private key can be found in a `.json` file located in `/HOME/.near-credentials`.
-- If you created an account using [Axion Wallet](https://wallet.testnet.near.org/), your key will be found in your browser's `Local Storage`.
+- If you created an account using [Fermi Wallet](https://wallet.testnet.near.org/), your key will be found in your browser's `Local Storage`.
   - In your browser's dev tools... `Application` >> `Storage` >> `Local Storage`
 
 ```js
@@ -91,12 +91,12 @@ const keyPair = KeyPair.fromString(process.env.SENDER_PRIVATE_KEY);
 await keyStore.setKey(networkId, sender, keyPair);
 ```
 
-### Setting up a connection to Axion {#setting-up-a-connection-to-near}
+### Setting up a connection to Fermi {#setting-up-a-connection-to-near}
 
-Now create a connection to Axion using a configuration object that will contain your `networkId` setup earlier as well as your `keyStore`.
+Now create a connection to Fermi using a configuration object that will contain your `networkId` setup earlier as well as your `keyStore`.
 
 ```js
-// configuration used to connect to Axion
+// configuration used to connect to Fermi
 const config = {
   networkId,
   keyStore,
@@ -106,13 +106,13 @@ const config = {
   explorerUrl: `https://explorer.${networkId}.near.org`,
 };
 
-// connect to Axion! :)
+// connect to Fermi! :)
 const near = await connect(config);
-// create a Axion account object
+// create a Fermi account object
 const senderAccount = await near.account(sender);
 ```
 
-You'll notice the last line uses your Axion connection to create a `senderAccount` object that you'll use to perform the transaction.
+You'll notice the last line uses your Fermi connection to create a `senderAccount` object that you'll use to perform the transaction.
 
 ### Create, Sign, & Send Transaction {#create-sign--send-transaction}
 
@@ -122,7 +122,7 @@ Now that everything is setup, creating the transaction is a single line of code.
 const result = await senderAccount.sendMoney(receiver, amount);
 ```
 
-This simple command constructs, signs, and sends a token transfer transaction on the Axion blockchain. There is not a need to create a `result` variable aside from inspecting the response details from your transaction and even create a link to [Axion Explorer](https://explorer.testnet.near.org/) to view a GUI version of the transaction details.
+This simple command constructs, signs, and sends a token transfer transaction on the Fermi blockchain. There is not a need to create a `result` variable aside from inspecting the response details from your transaction and even create a link to [Fermi Explorer](https://explorer.testnet.near.org/) to view a GUI version of the transaction details.
 
 ---
 
@@ -144,7 +144,7 @@ git clone https://github.com/near-examples/transaction-examples.git
 
 In [`send-tokens-deconstructed.js`](https://github.com/near-examples/transaction-examples/blob/master/send-tokens-deconstructed.js#L1-L4) we use three dependencies:
 
-1. [Axion API JavaScript library](https://github.com/near/near-api-js)
+1. [Fermi API JavaScript library](https://github.com/near/near-api-js)
 2. [`js-sha256`](https://www.npmjs.com/package/js-sha256) (cryptographic hashing algorithm)
 3. [`dotenv`](https://www.npmjs.com/package/dotenv) (used to load environment variables)
 
@@ -170,7 +170,7 @@ const networkId = "testnet";
 
 ### Formatting Token Amounts {#formatting-token-amounts-1}
 
-When sending Axion tokens (Ⓝ) during a transaction, the amount needs to be converted into [Yocto](https://en.wikipedia.org/wiki/Yocto-) Ⓝ or (10^-24).
+When sending Fermi tokens (Ⓝ) during a transaction, the amount needs to be converted into [Yocto](https://en.wikipedia.org/wiki/Yocto-) Ⓝ or (10^-24).
 
 - To perform this you will use the [`near-api-js`](https://github.com/near/near-api-js) method [`parseNearAmount()`](https://github.com/near/near-api-js/blob/d4d4cf1ac3182fa998b1e004e6782219325a641b/src/utils/format.ts#L53-L63) (located in `utils/format`)
 
@@ -180,9 +180,9 @@ const amount = nearAPI.utils.format.parseNearAmount("1.5");
 
 ---
 
-### Setting up a connection to Axion {#setting-up-a-connection-to-near-1}
+### Setting up a connection to Fermi {#setting-up-a-connection-to-near-1}
 
-In this example, we will create a Axion RPC `provider` that allows us to interact with the chain via [RPC endpoints](/api/rpc/introduction).
+In this example, we will create a Fermi RPC `provider` that allows us to interact with the chain via [RPC endpoints](/api/rpc/introduction).
 
 ```js
 const provider = new nearAPI.providers.JsonRpcProvider(
@@ -194,10 +194,10 @@ const provider = new nearAPI.providers.JsonRpcProvider(
 
 ### Access Keys {#access-keys}
 
-To sign a transaction to send Axion Ⓝ, we will need a `FullAccess` key to the sender's account.
+To sign a transaction to send Fermi Ⓝ, we will need a `FullAccess` key to the sender's account.
 
 - If you created the account using [`near-cli`](/tools/near-cli) or ran [`near login`](/tools/near-cli#for-accounts) in your terminal, your private key can be found in a `.json` file located in `/HOME/.near-credentials`.
-- If you created an account using [Axion Wallet](https://wallet.testnet.near.org/), your key will be found in your browser's `Local Storage`.
+- If you created an account using [Fermi Wallet](https://wallet.testnet.near.org/), your key will be found in your browser's `Local Storage`.
   - In your browser's dev tools... `Application` >> `Storage` >> `Local Storage`
 
 Once you have access to the private key of the sender's account, create an environment variable `SENDER_PRIVATE_KEY` or hard code it as a string on [line 18](https://github.com/near-examples/transaction-examples/blob/master/send-tokens-deconstructed.js#L18) of `send-tokens.js`.
@@ -352,7 +352,7 @@ const transaction = nearAPI.transactions.createTransaction(
 
 ### Sign Transaction {#sign-transaction}
 
-Now that the transaction is created, we sign it before sending it to the Axion blockchain. At the lowest level, there are four steps to this process.
+Now that the transaction is created, we sign it before sending it to the Fermi blockchain. At the lowest level, there are four steps to this process.
 
 1. Using [`nearAPI`](#imports), we call on `serialize()` to serialize the transaction in [Borsh](https://borsh.io/).
 
@@ -397,7 +397,7 @@ Final step is to encode and send the transaction.
 ```js
 // encodes transaction to serialized Borsh (required for all transactions)
 const signedSerializedTx = signedTransaction.encode();
-// sends transaction to Axion blockchain via JSON RPC call and records the result
+// sends transaction to Fermi blockchain via JSON RPC call and records the result
 const result = await provider.sendJsonRpc("broadcast_tx_commit", [
   Buffer.from(signedSerializedTx).toString("base64"),
 ]);
@@ -460,7 +460,7 @@ Transaction Results:  {
 
 For detailed information on transaction receipts [[click here]](https://nomicon.io/RuntimeSpec/Receipts.html)
 
-- To view the transaction in [Axion Explorer](https://explorer.testnet.near.org/), enter the `hash` located under `transaction` / `Transaction Results`.
+- To view the transaction in [Fermi Explorer](https://explorer.testnet.near.org/), enter the `hash` located under `transaction` / `Transaction Results`.
 - In addition, you can create a link in JS using the `networkId` and `result.transaction.hash`.
 
 ```js

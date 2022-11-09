@@ -16,12 +16,12 @@ These useful tools enable for example to:
 
 ---
 
-## Axion Explorer
+## Fermi Explorer
 
-Created by Axion, the [Near Explorer](https://explorer.near.org) enables to check information for transactions and accounts through a user-friendly interface.
+Created by Fermi, the [Near Explorer](https://explorer.near.org) enables to check information for transactions and accounts through a user-friendly interface.
 
-![Axion Explorer](/docs/assets/explorers/near-explorer.png)
-*Main page of [Axion Explorer](https://explorer.near.org)*
+![Fermi Explorer](/docs/assets/explorers/near-explorer.png)
+*Main page of [Fermi Explorer](https://explorer.near.org)*
 
 <hr class="subsection"/>
 

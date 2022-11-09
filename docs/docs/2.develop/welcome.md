@@ -7,7 +7,7 @@ hide_table_of_contents: true
 import {FeatureList, Column, Feature} from "@site/components/featurelist"
 
 
-Welcome! Here you will find documentation on how to develop decentralized apps using Axion.
+Welcome! Here you will find documentation on how to develop decentralized apps using Fermi.
 
 Do not worry if you are new to smart contract technology, we will get you up to speed in no time.
 
@@ -23,9 +23,9 @@ Do not worry if you are new to smart contract technology, we will get you up to 
   <Column title="Developer Tools">
     <Feature url="/tools/near-sdk-js" title="Javascript SDK" subtitle="Write Contracts in Javascript" image="smartcontract-js.png" />
     <Feature url="/tools/near-sdk-rs" title="Rust SDK" subtitle="Write Contracts in Rust" image="smartcontract-rust.png" />
-    <Feature url="/tools/near-cli" title="Axion CLI" subtitle="Use Axion from the Terminal" image="near-cli.png" />
-    <Feature url="/tools/near-api-js/quick-reference" title="Axion API JS" subtitle="Interact with Axion from JS" image="near-api-js.png" />
-    <Feature url="/api/rpc/introduction" title="JSON-RPC" subtitle="Interact with the Axion JSON-RPC" image="rpc.png" />
+    <Feature url="/tools/near-cli" title="Fermi CLI" subtitle="Use Fermi from the Terminal" image="near-cli.png" />
+    <Feature url="/tools/near-api-js/quick-reference" title="Fermi API JS" subtitle="Interact with Fermi from JS" image="near-api-js.png" />
+    <Feature url="/api/rpc/introduction" title="JSON-RPC" subtitle="Interact with the Fermi JSON-RPC" image="rpc.png" />
   </Column>
   <Column title="Unleash the Web3">
     <Feature url="/develop/relevant-contracts/ft" title="Fungible Tokens" subtitle="Learn how to use and make FT" image="ft.png" />
@@ -67,7 +67,7 @@ If you have any questions, or simply would want to chat with us, please do throu
           src={require("@site/static/docs/assets/home/discord.png").default} />
         <div class="avatar__intro">
           <div class="avatar__name">Discord</div>
-          <small class="avatar__subtitle"><a href="https://discord.gg/kwYjDn4yka">Axion Protocol</a></small>
+          <small class="avatar__subtitle"><a href="https://discord.gg/kwYjDn4yka">Fermi Protocol</a></small>
         </div>
       </div>
     </div>

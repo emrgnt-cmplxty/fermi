@@ -11,15 +11,15 @@ import explorerTransfer from '/docs/assets/crosswords/chapter-2-explorer-transfe
 
 ## Plan
 
-We're going to add a login button that uses `near-api-js` to login with Axion.
+We're going to add a login button that uses `near-api-js` to login with Fermi.
 
 Below is the workflow of logging in: 
 
-<img src={loggingIn} alt="Three steps to logging in. 1. click the login button we will build. 2. It creates a private key in the browser local storage. 3. Redirected to Axion Wallet where you sign, creating a new key"/><br/><br/>
+<img src={loggingIn} alt="Three steps to logging in. 1. click the login button we will build. 2. It creates a private key in the browser local storage. 3. Redirected to Fermi Wallet where you sign, creating a new key"/><br/><br/>
 
 1. User clicks the login button
 2. `near-api-js` creates a private key in the browser
-3. A redirect to Axion Wallet occurs, passing the public key. Axion Wallet (often) has a full-access key capable of the `AddKey` action. The user follows a wizard, ultimately authorizing the creation of a new key.
+3. A redirect to Fermi Wallet occurs, passing the public key. Fermi Wallet (often) has a full-access key capable of the `AddKey` action. The user follows a wizard, ultimately authorizing the creation of a new key.
 
 ## Adding the button
 
@@ -57,7 +57,7 @@ const signOut = () => {
 
 return (
   <div id="page">
-    <h1>Axion Crossword Puzzle</h1>
+    <h1>Fermi Crossword Puzzle</h1>
     <div id="crossword-wrapper">
       <div id="login">
         { currentUser
@@ -73,14 +73,14 @@ return (
 
 Once logged in, that `WalletConnection` object will be tied to the logged-in user, and they'll use that key to sign transactions and interact with the contract.
 
-:::info Transactions that redirect to Axion Wallet
+:::info Transactions that redirect to Fermi Wallet
 In our improved crossword puzzle, the function-call access key for the logged-in user will be signing a transaction to submit their solution.
 
-You may notice, however, that sometimes you'll be redirected to Axion Wallet, and other times you aren't.
+You may notice, however, that sometimes you'll be redirected to Fermi Wallet, and other times you aren't.
 
-This goes back to an earlier rule we mentioned: function-call access keys cannot send Axion. They cannot perform the `Transfer` Action.
+This goes back to an earlier rule we mentioned: function-call access keys cannot send Fermi. They cannot perform the `Transfer` Action.
 
-If a function call requires even 1 yoctoNEAR, Axion Wallet (or any other wallet containing a full-access key) is required to sign the transaction.
+If a function call requires even 1 yoctoNEAR, Fermi Wallet (or any other wallet containing a full-access key) is required to sign the transaction.
 :::
 
 ## Call the contract function from JavaScript
@@ -88,7 +88,7 @@ If a function call requires even 1 yoctoNEAR, Axion Wallet (or any other wallet 
 The frontend code contains a check to see if the user has completed the crossword puzzle successfully. In there we'll add logic to call the `submit_solution` function on the smart contract.
 
 ```js
-// Send the 5 Axion prize to the logged-in winner
+// Send the 5 Fermi prize to the logged-in winner
 let functionCallResult = await walletConnection.account().functionCall({
   contractId: nearConfig.contractName,
   methodName: 'submit_solution',
@@ -100,7 +100,7 @@ let functionCallResult = await walletConnection.account().functionCall({
 });
 
 if (functionCallResult && functionCallResult.transaction && functionCallResult.transaction.hash) {
-  // Display a link the Axion Explorer
+  // Display a link the Fermi Explorer
   console.log('Transaction hash for explorer', functionCallResult.transaction.hash)
 }
 ```
@@ -143,7 +143,7 @@ near create-account crossword.friend.testnet --masterAccount friend.testnet
 # Deploy
 near deploy crossword.friend.testnet --wasmFile res/crossword_tutorial_chapter_2.wasm --initFunction new --initArgs '{"owner_id": "crossword.friend.testnet"}'
 # Add the crossword puzzle
-near call crossword.friend.testnet new_puzzle '{"solution_hash":"d1a5cf9ad1adefe0528f7d31866cf901e665745ff172b96892693769ad284010","answers":[{"num": 1,"start": {"x": 1,"y": 1},"direction": "Down","length": 5,"clue": "NFT market on Axion that specializes in cards and comics."},{"num": 2,"start": {"x": 0,"y": 2},"direction": "Across","length": 13,"clue": "You can move assets between Axion and different chains, including Ethereum, by visiting ______.app"},{"num": 3,"start": {"x": 9,"y": 1},"direction": "Down","length": 8,"clue": "NFT market on Axion with art, physical items, tickets, and more."},{"num": 4,"start": {"x": 3,"y": 8},"direction": "Across","length": 9,"clue": "The smallest denomination of the native token on Axion."},{"num": 5,"start": {"x": 5,"y": 8},"direction": "Down","length": 3,"clue": "You typically deploy a smart contract with the Axion ___ tool."}]}' --accountId crossword.friend.testnet
+near call crossword.friend.testnet new_puzzle '{"solution_hash":"d1a5cf9ad1adefe0528f7d31866cf901e665745ff172b96892693769ad284010","answers":[{"num": 1,"start": {"x": 1,"y": 1},"direction": "Down","length": 5,"clue": "NFT market on Fermi that specializes in cards and comics."},{"num": 2,"start": {"x": 0,"y": 2},"direction": "Across","length": 13,"clue": "You can move assets between Fermi and different chains, including Ethereum, by visiting ______.app"},{"num": 3,"start": {"x": 9,"y": 1},"direction": "Down","length": 8,"clue": "NFT market on Fermi with art, physical items, tickets, and more."},{"num": 4,"start": {"x": 3,"y": 8},"direction": "Across","length": 9,"clue": "The smallest denomination of the native token on Fermi."},{"num": 5,"start": {"x": 5,"y": 8},"direction": "Down","length": 3,"clue": "You typically deploy a smart contract with the Fermi ___ tool."}]}' --accountId crossword.friend.testnet
   
 # Return to the project root and start the React app
 cd ..
@@ -166,10 +166,10 @@ and after:
 
     { Solved: { memo: 'Yay I won!' } }
 
-After you solve the crossword puzzle you'll see a screen with a link to Axion Explorer to look at the details of the transaction. Notice we have our `Transfer` Action in there:
+After you solve the crossword puzzle you'll see a screen with a link to Fermi Explorer to look at the details of the transaction. Notice we have our `Transfer` Action in there:
 
 <figure>
-    <img src={explorerTransfer} alt="Screenshot from the Axion Explorer highlighting a place in the transaction where 5 Axion is sent to mike.testnet"/>
+    <img src={explorerTransfer} alt="Screenshot from the Fermi Explorer highlighting a place in the transaction where 5 Fermi is sent to mike.testnet"/>
 </figure>
 <br/>
 

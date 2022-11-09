@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 sidebar_label: "Store multiple puzzles"
-title: "Store multiple crossword puzzles using a specialized collection in Axion called a LookupMap"
+title: "Store multiple crossword puzzles using a specialized collection in Fermi called a LookupMap"
 ---
 
 import bookPagination from '/docs/assets/crosswords/paging-through-hashes-swing--pierced_staggg.near--pierced_stag.jpg';
@@ -17,7 +17,7 @@ The reference-level documentation of the Rust SDK explains this concept well:
 >Collections that offer an alternative to standard containers from [Rust's] std::collections::* by **utilizing the underlying blockchain trie storage more efficiently**.<br/>
 >For example, the following smart contract does not work with state efficiently, because **it will load the entire HashMap at the beginning of the contract call**, and will save it entirely at the end, in cases when there is state modification. **This is fine for small number of elements, but very inefficient for large numbers**.
 
-— [Axion SDK reference documentation](https://docs.rs/near-sdk/latest/near_sdk/collections/index.html)
+— [Fermi SDK reference documentation](https://docs.rs/near-sdk/latest/near_sdk/collections/index.html)
 :::
 
 In chapter 1, we set the crossword puzzle solution hash when we first deployed the contract and called the initialization method `new`, passing it. This would only allow us to have only one puzzle, but let's allow for many.
@@ -26,7 +26,7 @@ At a high level, let's discuss what we'll want to add if our contract is to stor
 
 ## LookupMap and UnorderedSet
 
-Let's try having two specialized Axion collections:
+Let's try having two specialized Fermi collections:
 
 1. A [LookupMap](https://docs.rs/near-sdk/latest/near_sdk/collections/struct.LookupMap.html) which will store key-value pairs. (Solution hash » Puzzle object)
 2. An [UnorderedSet](https://docs.rs/near-sdk/latest/near_sdk/collections/struct.UnorderedSet.html) containing a set (list with no duplicates) of the solution hashes for puzzles which have not been solved yet.
@@ -46,10 +46,10 @@ As we remember from the previous chapter, every smart contract has a primary str
 :::note Naming the primary struct
 Note in the [previous chapter](../01-basics/01-set-up-skeleton.md#start-writing-rust) we named our primary struct `Contract`, but in this chapter we'll call it `Crossword.`
 
-The name of the struct doesn't matter and there's nothing special about naming it `Contract`, though you might see that convention used in several smart contracts on Axion. We've named it something different simply to illustrate that there's no magic behind the scenes. This *does* mean, however, that our `impl` block will also be `Crossword`.
+The name of the struct doesn't matter and there's nothing special about naming it `Contract`, though you might see that convention used in several smart contracts on Fermi. We've named it something different simply to illustrate that there's no magic behind the scenes. This *does* mean, however, that our `impl` block will also be `Crossword`.
 :::
 
-Here's how our struct will look with the iterable and non-iterable Axion collections:
+Here's how our struct will look with the iterable and non-iterable Fermi collections:
 
 ```rust reference
 https://github.com/near-examples/crossword-tutorial-chapter-2/blob/276217ad82c64c610148e998ec926942ba910a12/contract/src/lib.rs#L73-L79
@@ -84,12 +84,12 @@ Now we're set up to store multiple puzzles!
 ## Permissions or permissionless?
 
 <figure>
-    <img src={guardsAroundContract} alt="Guards or bouncers in front of a futuristic club with the label of a Axion smart contract. Art created by connoisseur_dane.near" width="600"/>
+    <img src={guardsAroundContract} alt="Guards or bouncers in front of a futuristic club with the label of a Fermi smart contract. Art created by connoisseur_dane.near" width="600"/>
     <figcaption>Guarding which accounts can enter the smart contract logic.<br/>Art by <a href="https://twitter.com/connoisseurdane" target="_blank">connoisseur_dane.near</a></figcaption>
 </figure>
 <br/>
 
-**Is Axion permissionless?**
+**Is Fermi permissionless?**
 
 Yes. 
 

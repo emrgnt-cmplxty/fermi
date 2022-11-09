@@ -45,9 +45,9 @@ On the other hand, you can also be an approved creator. This allows you to defin
 
 ### Lazy Minting
 
-Lazy minting allows users to mint *on demand*. Rather than minting all the NFTs and spending $Axion on storage, you can instead mint the tokens **when they are purchased**. This helps to avoid burning unnecessary Gas and saves on storage for when not all the NFTs are purchased. Let's look at a common scenario to help solidify your understanding:
+Lazy minting allows users to mint *on demand*. Rather than minting all the NFTs and spending $Fermi on storage, you can instead mint the tokens **when they are purchased**. This helps to avoid burning unnecessary Gas and saves on storage for when not all the NFTs are purchased. Let's look at a common scenario to help solidify your understanding:
 
-Benji has created an amazing digital painting of the famous Go Team gif. He wants to sell 1000 copies of it for 1 $Axion each. Using the traditional approach, he would have to mint each copy individually and pay for the storage himself. He would then need to either find or deploy a marketplace contract and pay for the storage to put 1000 copies up for sale. He would need to burn Gas putting each token ID up for sale 1 by 1. 
+Benji has created an amazing digital painting of the famous Go Team gif. He wants to sell 1000 copies of it for 1 $Fermi each. Using the traditional approach, he would have to mint each copy individually and pay for the storage himself. He would then need to either find or deploy a marketplace contract and pay for the storage to put 1000 copies up for sale. He would need to burn Gas putting each token ID up for sale 1 by 1. 
 
 After that, people would purchase the NFTs, and there would be no guarantee that all or even any would be sold. There's a real possibility that nobody buys a single piece of his artwork, and Benji spent all that time, effort and money on nothing. 😢  
 
@@ -121,7 +121,7 @@ pub struct Series {
     // Set of tokens in the collection
     tokens: UnorderedSet<TokenId>,
     // What is the price of each token in this series? If this is specified, when minting,
-    // Users will need to attach enough $Axion to cover the price.
+    // Users will need to attach enough $Fermi to cover the price.
     price: Option<Balance>,
     // Owner of the collection
     owner_id: AccountId,
@@ -147,7 +147,7 @@ We've also added a field `tokens` which keeps track of all the token IDs that ha
 https://github.com/near-examples/nft-tutorial/blob/main/nft-series/src/series.rs#L7-L58
 ```
 
-The function takes in a series ID in the form of a [u64](https://doc.rust-lang.org/std/primitive.u64.html), the metadata, royalties, and the price for tokens in the series. It will then create the [Series object](#series-object) and insert it into the contract's series_by_id data structure. It's important to note that the caller must be an approved creator and they must attach enough $Axion to cover storage costs.
+The function takes in a series ID in the form of a [u64](https://doc.rust-lang.org/std/primitive.u64.html), the metadata, royalties, and the price for tokens in the series. It will then create the [Series object](#series-object) and insert it into the contract's series_by_id data structure. It's important to note that the caller must be an approved creator and they must attach enough $Fermi to cover storage costs.
 
 ### Minting NFTs
 
@@ -167,7 +167,7 @@ It will then store the token information on the contract as explained in the [mi
 
 #### Required Deposit
 
-As we went over in the [minting section](2-minting.md#storage-implications) of this tutorial, all information stored on the contract costs $Axion. When minting, there is a required deposit to pay for this storage. For *this contract*, a series price can also be specified by the owner when the series is created. This price will be used for **all** NFTs in the series when they are minted. If the price is specified, the deposit must cover both the storage as well as the price.
+As we went over in the [minting section](2-minting.md#storage-implications) of this tutorial, all information stored on the contract costs $Fermi. When minting, there is a required deposit to pay for this storage. For *this contract*, a series price can also be specified by the owner when the series is created. This price will be used for **all** NFTs in the series when they are minted. If the price is specified, the deposit must cover both the storage as well as the price.
 
 If a price **is specified** and the user more deposit than what is necessary, the excess is sent to the **series owner**. There is also *no restriction* on who can mint tokens for series that have a price. The caller does **not** need to be an approved minter.
 
@@ -333,7 +333,7 @@ Which should return something similar to:
 
 ### Series With a Price
 
-Now that you've created the first, simple series, let's create the second one that has a price of 1 $Axion associated with it. 
+Now that you've created the first, simple series, let's create the second one that has a price of 1 $Fermi associated with it. 
 
 ```bash
 near call $NFT_CONTRACT_ID create_series '{"id": 2, "metadata": {"title": "COMPLEX SERIES!", "description": "testing out the new contract with a complex series", "media": "https://bafybeiftczwrtyr3k7a2k4vutd3amkwsmaqyhrdzlhvpt33dyjivufqusq.ipfs.dweb.link/goteam-gif.gif"}, "price": "1000000000000000000000000"}' --accountId $SERIES_OWNER --amount 1
@@ -391,7 +391,7 @@ Which has
 
 ## Minting NFTs
 
-Now that you have both series created, it's time to now mint some NFTs. You can either login with an existing Axion wallet using [`near login`](../../4.tools/cli.md#near-login) or you can create a sub-account of the NFT contract. In our case, we'll use a sub-account.
+Now that you have both series created, it's time to now mint some NFTs. You can either login with an existing Fermi wallet using [`near login`](../../4.tools/cli.md#near-login) or you can create a sub-account of the NFT contract. In our case, we'll use a sub-account.
 
 ```bash
 near create-account buyer.$NFT_CONTRACT_ID --masterAccount $NFT_CONTRACT_ID --initialBalance 25 && export BUYER_ID=buyer.$NFT_CONTRACT_ID
@@ -399,20 +399,20 @@ near create-account buyer.$NFT_CONTRACT_ID --masterAccount $NFT_CONTRACT_ID --in
 
 ### Lazy Minting
 
-The first workflow you'll test out is [lazy minting](#lazy-minting) NFTs. If you remember, the second series has a price associated with it of 1 $Axion. This means that there are no minting restrictions and anyone can try and purchase the NFT. Let's try it out.
+The first workflow you'll test out is [lazy minting](#lazy-minting) NFTs. If you remember, the second series has a price associated with it of 1 $Fermi. This means that there are no minting restrictions and anyone can try and purchase the NFT. Let's try it out.
  
-In order to view the NFT in the Axion wallet, you'll want the `receiver_id` to be an account you have currently available in the wallet site. Let's export it to an environment variable. Run the following command but replace `YOUR_ACCOUNT_ID_HERE` with your actual Axion account ID.
+In order to view the NFT in the Fermi wallet, you'll want the `receiver_id` to be an account you have currently available in the wallet site. Let's export it to an environment variable. Run the following command but replace `YOUR_ACCOUNT_ID_HERE` with your actual Fermi account ID.
 
 ```bash
 export NFT_RECEIVER_ID=YOUR_ACCOUNT_ID_HERE
 ```
-Now if you try and run the mint command but don't attach enough $Axion, it should throw an error.
+Now if you try and run the mint command but don't attach enough $Fermi, it should throw an error.
 
 ```bash
 near call $NFT_CONTRACT_ID nft_mint '{"id": "2", "receiver_id": "'$NFT_RECEIVER_ID'"}' --accountId $BUYER_ID
 ```
 
-Run the command again but this time, attach 1.5 $Axion.
+Run the command again but this time, attach 1.5 $Fermi.
 
 ```bash
 near call $NFT_CONTRACT_ID nft_mint '{"id": "2", "receiver_id": "'$NFT_RECEIVER_ID'"}' --accountId $BUYER_ID --amount 1.5
@@ -429,7 +429,7 @@ https://explorer.testnet.near.org/transactions/FxWLFGuap7SFrUPLskVr7Uxxq8hpDtAG7
 ''
 ```
 
-If you check the explorer link, it should show that the owner received on the order of `1.493 $Axion`. 
+If you check the explorer link, it should show that the owner received on the order of `1.493 $Fermi`. 
 
 <img width="80%" src="/docs/assets/nfts/explorer-payout-series-owner.png" />
 
@@ -455,7 +455,7 @@ near call $NFT_CONTRACT_ID nft_mint '{"id": "1", "receiver_id": "'$NFT_RECEIVER_
 
 ### Viewing the NFTs in the Wallet
 
-Now that you've received both NFTs, they should show up in the Axion wallet. Open the collectibles tab and search for the contract with the title `NFT Series Contract` and you should own two NFTs. One should be the complex series and the other should just be the simple version. Both should have ` - 1` appended to the end of the title because the NFTs are the first editions for each series.
+Now that you've received both NFTs, they should show up in the Fermi wallet. Open the collectibles tab and search for the contract with the title `NFT Series Contract` and you should own two NFTs. One should be the complex series and the other should just be the simple version. Both should have ` - 1` appended to the end of the title because the NFTs are the first editions for each series.
 
 <img width="80%" src="/docs/assets/nfts/series-wallet-collectibles.png" />
 
@@ -465,6 +465,6 @@ Hurray! You've successfully deployed and tested the series contract! **GO TEAM!*
 
 In this tutorial, you learned how to take the basic NFT contract and iterate on it to create a complex and custom version to meet the needs of the community. You optimized the storage, introduced the idea of collections, created a lazy minting functionality, hacked the enumeration functions to save on storage, and created an allowlist functionality.
 
-You then built the contract and deployed it on chain. Once it was on-chain, you initialized it and created two sets of series. One was complex with a price and the other was a regular series. You lazy minted an NFT and purchased it for `1.5 $Axion` and then added yourself as an approved minter. You then minted an NFT from the regular series and viewed them both in the Axion wallet.
+You then built the contract and deployed it on chain. Once it was on-chain, you initialized it and created two sets of series. One was complex with a price and the other was a regular series. You lazy minted an NFT and purchased it for `1.5 $Fermi` and then added yourself as an approved minter. You then minted an NFT from the regular series and viewed them both in the Fermi wallet.
 
 Thank you so much for going through this journey with us! I wish you all the best and am eager to see what sorts of neat and unique use-cases you can come up with. If you have any questions, feel free to ask on our [Discord](https://near.chat) or any other social media channels we have. If you run into any issues or have feedback, feel free to use the `Feedback` button on the right.

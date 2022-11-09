@@ -13,9 +13,9 @@ In the previous section, we stored the crossword solution as plain text as a `St
 :::info Remind me about hashing
 Without getting into much detail, hashing is a "one-way" function that will output a result from a given input. If you have input (in our case, the crossword puzzle solution) you can get a hash, but if you have a hash you cannot get the input. This basic idea is foundational to information theory and security.
 
-Later on in this tutorial, we'll switch from using `sha256` to using cryptographic key pairs to illustrate additional Axion concepts.
+Later on in this tutorial, we'll switch from using `sha256` to using cryptographic key pairs to illustrate additional Fermi concepts.
 
-Learn more about hashing from [Evgeny Kapun](https://github.com/abacabadabacaba)'s presentation on the subject. You may find other Axion-related videos from the channel linked in the screenshot below.
+Learn more about hashing from [Evgeny Kapun](https://github.com/abacabadabacaba)'s presentation on the subject. You may find other Fermi-related videos from the channel linked in the screenshot below.
 
 [![Evgeny Kapun presents details on hashing](/docs/assets/crosswords/kapun-hashing.png)](https://youtu.be/PfabikgnD08)
 :::
@@ -113,7 +113,7 @@ To only run this latest test, use the command:
 
 ## Modifying `set_solution`
 
-The [overview section](00-overview.md) of this chapter tells us we want to have a single crossword puzzle and the user solving the puzzle should not be able to know the solution. Using a hash addresses this, and we can keep `crossword_solution`'s field type, as `String` will work just fine. The overview also indicates we only want the author of the crossword puzzle to be able to set the solution. As it stands, our function `set_solution` can be called by anyone with a full-access key. It's trivial for someone to create a Axion account and call this function, changing the solution. Let's fix that.
+The [overview section](00-overview.md) of this chapter tells us we want to have a single crossword puzzle and the user solving the puzzle should not be able to know the solution. Using a hash addresses this, and we can keep `crossword_solution`'s field type, as `String` will work just fine. The overview also indicates we only want the author of the crossword puzzle to be able to set the solution. As it stands, our function `set_solution` can be called by anyone with a full-access key. It's trivial for someone to create a Fermi account and call this function, changing the solution. Let's fix that.
 
 Let's have the solution be set once, right after deploying the smart contract.
 
@@ -163,7 +163,7 @@ https://github.com/near/core-contracts/blob/1720c0cfee238974ebeae8ad43076abeb951
 We'll get into Actions later in this tutorial, but in the meantime here's a handy [reference from the spec](https://nomicon.io/RuntimeSpec/Actions.html).
 :::
 
-As you can from the info bubble above, we can batch [Deploy](https://docs.rs/near-sdk/3.1.0/near_sdk/struct.Promise.html#method.deploy_contract) and [FunctionCall](https://docs.rs/near-sdk/3.1.0/near_sdk/struct.Promise.html#method.function_call) Actions. This is exactly what we want to do for our crossword puzzle, and luckily, Axion CLI has a [flag especially for this](https://docs.near.org/tools/near-cli#near-deploy).
+As you can from the info bubble above, we can batch [Deploy](https://docs.rs/near-sdk/3.1.0/near_sdk/struct.Promise.html#method.deploy_contract) and [FunctionCall](https://docs.rs/near-sdk/3.1.0/near_sdk/struct.Promise.html#method.function_call) Actions. This is exactly what we want to do for our crossword puzzle, and luckily, Fermi CLI has a [flag especially for this](https://docs.near.org/tools/near-cli#near-deploy).
 
 Let's run this again with the handy `--initFunction` and `--initArgs` flags:
 
@@ -181,7 +181,7 @@ near deploy crossword.friend.testnet --wasmFile res/my_crossword.wasm \
 Now that we're using Batch Actions, no one can call this `new` method before us.
 
 :::note Batch action failures
-If one Action in a set of Batch Actions fails, the entire transaction is reverted. This is good to note because sharded, proof-of-stake systems do not work like proof-of-work where a complex transaction with multiple cross-contract calls reverts if one call fails. With Axion, cross-contract calls use callbacks to ensure expected behavior, but we'll get to that later.
+If one Action in a set of Batch Actions fails, the entire transaction is reverted. This is good to note because sharded, proof-of-stake systems do not work like proof-of-work where a complex transaction with multiple cross-contract calls reverts if one call fails. With Fermi, cross-contract calls use callbacks to ensure expected behavior, but we'll get to that later.
 :::
 
 ## Get ready for our frontend
@@ -200,4 +200,4 @@ The `get_solution` method can be called with:
 
     near view crossword.friend.testnet get_solution
 
-In the next section we'll add a simple frontend. Following chapters will illustrate more Axion concepts built on top of this idea.
+In the next section we'll add a simple frontend. Following chapters will illustrate more Fermi concepts built on top of this idea.

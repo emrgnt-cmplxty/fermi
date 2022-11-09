@@ -9,21 +9,21 @@ import localConfig from "./localConfig.json"
 import { getJsonRpcUrl } from "./utils"
 
 // EXTERNAL
-import { AxionClient, AxionTypes, AxionUtils, AxionAccount, TenexTransaction, TenexUtils } from 'tenex-axion-sdk'
+import { FermiClient, FermiTypes, FermiUtils, FermiAccount, TenexTransaction, TenexUtils } from 'tenex-fermi-sdk'
 
 class TakerBuilder {
     public takerPrivateKey: Uint8Array
     public funderPrivateKey: Uint8Array
-    public client: AxionClient.AxionClient
+    public client: FermiClient.FermiClient
   
-    constructor(takerPrivateKey: Uint8Array, funderPrivateKey: Uint8Array, client: AxionClient.AxionClient) {
+    constructor(takerPrivateKey: Uint8Array, funderPrivateKey: Uint8Array, client: FermiClient.FermiClient) {
         this.takerPrivateKey = takerPrivateKey
         this.funderPrivateKey = funderPrivateKey
         this.client = client
     }
 
     async fundTakerAccount(quantity: number) {
-        const takerPublicKey = await AxionAccount.getPublicKey(this.takerPrivateKey)
+        const takerPublicKey = await FermiAccount.getPublicKey(this.takerPrivateKey)
 
         const signedTransaction = await TenexUtils.buildSignedTransaction(
             /* request */ TenexTransaction.buildPaymentRequest(/* receiver */ takerPublicKey, /* assetId */ 1, quantity),
@@ -33,9 +33,9 @@ class TakerBuilder {
             /* client */ this.client
         );
         console.log('Sending fund account tranasction')
-        const result: AxionTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
+        const result: FermiTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
         console.log('result=', result)
-        AxionUtils.checkSubmissionResult(result)
+        FermiUtils.checkSubmissionResult(result)
     }
 
     async sendAccountDepositRequest(quantity: number, marketAdmin: Uint8Array) {
@@ -47,9 +47,9 @@ class TakerBuilder {
             /* client */ this.client
         );
         console.log('Sending account deposit request')
-        const result: AxionTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
+        const result: FermiTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
         console.log('result=', result)
-        AxionUtils.checkSubmissionResult(result)
+        FermiUtils.checkSubmissionResult(result)
     }
 
     async sendFuturesLimitOrderRequest(baseAssetId: number, quoteAssetId: number, side: number, price: number, quantity: number, marketAdmin: Uint8Array) {
@@ -61,9 +61,9 @@ class TakerBuilder {
             /* client */ this.client
         );
         console.log('Sending futures limit order request')
-        const result: AxionTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
+        const result: FermiTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
         console.log('result=', result)
-        AxionUtils.checkSubmissionResult(result)
+        FermiUtils.checkSubmissionResult(result)
     }
 }
 
@@ -72,12 +72,12 @@ async function main() {
     const authorities = Object.keys(config["authorities"])
 
     const futuresAuthority = config['authorities'][authorities[localConfig.deploymentAuthority]]
-    const futuresPrivateKey = AxionUtils.hexToBytes(futuresAuthority.private_key)
-    const futuresPublicKey = await AxionAccount.getPublicKey(futuresPrivateKey)
+    const futuresPrivateKey = FermiUtils.hexToBytes(futuresAuthority.private_key)
+    const futuresPublicKey = await FermiAccount.getPublicKey(futuresPrivateKey)
 
     const takerAuthority = config['authorities'][authorities[localConfig.takerAuthority]]
-    const client = new AxionClient(getJsonRpcUrl(takerAuthority))
-    const takerPrivateKey = AxionUtils.hexToBytes(takerAuthority.private_key)
+    const client = new FermiClient(getJsonRpcUrl(takerAuthority))
+    const takerPrivateKey = FermiUtils.hexToBytes(takerAuthority.private_key)
 
     console.log("Funding another authority and taking the available liquidity!")
 

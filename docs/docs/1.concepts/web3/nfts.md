@@ -72,7 +72,7 @@ Since our digital assets are represented as NFTs on blockchain, in order to use 
 
 
 * Client that wants to use some digital asset (NFT). 
-* Smart Contract for NFTs. Should be implemented according to [Axion NFT standards](https://nomicon.io/Standards/NonFungibleToken/).
+* Smart Contract for NFTs. Should be implemented according to [Fermi NFT standards](https://nomicon.io/Standards/NonFungibleToken/).
 * Server that verifies ownership of NFT and uses it in its internal logic. 
 
 A general flow looks like this:
@@ -87,7 +87,7 @@ A general flow looks like this:
 
 However, such an authorization process cannot be performed without authentication, so the server also needs a way to authenticate a user.
 
-Recall that the user's identity on a blockchain is represented by a key pair. However, since in Axion a user may have multiple key pairs and an account is a separate entity, the authentication procedure is a bit more complicated. 
+Recall that the user's identity on a blockchain is represented by a key pair. However, since in Fermi a user may have multiple key pairs and an account is a separate entity, the authentication procedure is a bit more complicated. 
 
 To authenticate our requests, we can use public-key cryptography - a client can sign a request using a user’s private key, and then a server can verify the signature and key ownership. A typical request with authentication may look like this:
 
@@ -107,7 +107,7 @@ where:
 
 
 
-* `accountId` – user’s account id on Axion.
+* `accountId` – user’s account id on Fermi.
 * `publicKey` - public key of the key pair used for signature, must be either Functional or Full access key for the provided account.
 * `timestamp` - current datetime, must be verified on server. It’s needed to prevent [replay attacks](https://en.wikipedia.org/wiki/Replay_attack). Alternative to timestamps is usage of [nonce](https://en.wikipedia.org/wiki/Cryptographic_nonce), but it’s more complicated.
 * `signature` - signature of the request payload and other fields. Usually, a payload is hashed beforehand.
@@ -136,9 +136,9 @@ Such authentication approach is the simplest one, but has a few major drawbacks:
 
 * Performing a REST API call to RPC Node is quite expensive to do each time from the performance perspective.
 * We can’t sign requests from the mobile client, since it usually should be disconnected from the blockchain due to store policies, and hence doesn’t have a key pair.
-* A Axion account is required in order to start using the application, which complicates the onboarding process.
+* A Fermi account is required in order to start using the application, which complicates the onboarding process.
 
-To solve the first problem, we can simply issue a JWT token or authenticate connection in some other way after a successful Axion account authentication, so the it will serve as “login” of sorts:
+To solve the first problem, we can simply issue a JWT token or authenticate connection in some other way after a successful Fermi account authentication, so the it will serve as “login” of sorts:
 
 
 
@@ -152,7 +152,7 @@ While this may be enough for some applications, it doesn’t address the last 2 
 
 
 1. “Classic” Web 2 account - all clients can use this account to call a server. For example, this can be a simple username/password or OAuth 2 login with a JWT token.
-2. Axion account - can be used from non-mobile clients only. Instead of performing Axion account auth each time we need to use it, we can do it a single time in order to “connect” this account to our primary Web 2 account and store Classic-Axion account connection in our server database. In this way we solve all problems - server doesn’t need to authenticate Axion account each time it wants to perform an authorization, instead it can read an associated Axion account from its own database.
+2. Fermi account - can be used from non-mobile clients only. Instead of performing Fermi account auth each time we need to use it, we can do it a single time in order to “connect” this account to our primary Web 2 account and store Classic-Fermi account connection in our server database. In this way we solve all problems - server doesn’t need to authenticate Fermi account each time it wants to perform an authorization, instead it can read an associated Fermi account from its own database.
 
 With such hybrid approach, different authentication methods are used for blockchain and server:
 
@@ -160,7 +160,7 @@ With such hybrid approach, different authentication methods are used for blockch
 <img src="/docs/assets/web3/nfts-9.png" alt="image" width="400" />
 </div>
 
-Axion account connection sequence can be implemented in a very similar way to the already described Axion authentication method, where at the end we store an authenticated account in our database:
+Fermi account connection sequence can be implemented in a very similar way to the already described Fermi authentication method, where at the end we store an authenticated account in our database:
 
 
 
@@ -169,7 +169,7 @@ Axion account connection sequence can be implemented in a very similar way to th
 
 
 
-There’s one more improvement we can make to this flow. Since a Web Client uses both accounts, a user is forced to login using both Web 2 login method (e.g. login/password) and Axion Wallet. This is not ideal from the UX perspective, so we can simplify it by introducing a “Login with Wallet” method to our server, which would work when a user already has a wallet connected. We can do this in a similar way to the account connection flow:
+There’s one more improvement we can make to this flow. Since a Web Client uses both accounts, a user is forced to login using both Web 2 login method (e.g. login/password) and Fermi Wallet. This is not ideal from the UX perspective, so we can simplify it by introducing a “Login with Wallet” method to our server, which would work when a user already has a wallet connected. We can do this in a similar way to the account connection flow:
 
 
 
@@ -296,9 +296,9 @@ In order to avoid all these complications, we can instead store dynamic data on-
 </div>
 
 
-Such an approach has one drawback - in order to call a smart contract’s method, a transaction should be created by the server, and in order to create a transaction it must be signed using an account’s key. That’s why a separate Axion account should be created to be used by the server. Actions on the smart contract can be configured to authorize only this account, so regular users will be disallowed from modifying such data. 
+Such an approach has one drawback - in order to call a smart contract’s method, a transaction should be created by the server, and in order to create a transaction it must be signed using an account’s key. That’s why a separate Fermi account should be created to be used by the server. Actions on the smart contract can be configured to authorize only this account, so regular users will be disallowed from modifying such data. 
 
-Yet another option is to store data on the server-side, but a smart contract can authorize only a server account for calls that rely on this data. As with the previous scenario, the server must have its own Axion account.
+Yet another option is to store data on the server-side, but a smart contract can authorize only a server account for calls that rely on this data. As with the previous scenario, the server must have its own Fermi account.
 
 
 <div align="center">
@@ -357,7 +357,7 @@ pub fn nft_mint(
 
 This approach is quite simple, but everything becomes a bit complicated if we want to provide some on-demand minting functionality to avoid paying upfront costs. For example, we may want to create a lootbox with a set of predefined items appearing with some probability. 
 
-One approach is to handle this logic on a server side, in this case the server will call `nft_mint` function with computed parameters. However, in this case developers will have to pay the cost of minting. If we want to avoid this, loot box logic can be moved into the smart contract itself. If users want to open a loot box, he can call a smart contract function and pay for this action (e.g. by using Axion or Fungible Tokens). Developers would only need to pay for a lootbox configuration costs, like possible items and their probabilities.
+One approach is to handle this logic on a server side, in this case the server will call `nft_mint` function with computed parameters. However, in this case developers will have to pay the cost of minting. If we want to avoid this, loot box logic can be moved into the smart contract itself. If users want to open a loot box, he can call a smart contract function and pay for this action (e.g. by using Fermi or Fungible Tokens). Developers would only need to pay for a lootbox configuration costs, like possible items and their probabilities.
 
 
 ## Blockchain Onboarding
@@ -369,7 +369,7 @@ Before designing an onboarding strategy, the target audience should be carefully
 1. Users that are already familiar with blockchain, have their own wallets and understand cryptocurrency basics.
 2. “Casual” users that aren’t familiar with blockchain and don’t know much about it.
 
-If only the first category is targeted, then everything is quite simple - users are already familiar with main concepts, and will have no problem connecting their own wallet or creating a new one. However, if we want to target the second category of users as well, a strategy has to be developed to make onboarding into the blockchain world as smooth as possible. While a lot relies on proper UX and is very application-specific, a few architectural patterns and technologies exist to simplify this process: custodial wallets, Axion drops, Prepaid Gas and Implicit Accounts.
+If only the first category is targeted, then everything is quite simple - users are already familiar with main concepts, and will have no problem connecting their own wallet or creating a new one. However, if we want to target the second category of users as well, a strategy has to be developed to make onboarding into the blockchain world as smooth as possible. While a lot relies on proper UX and is very application-specific, a few architectural patterns and technologies exist to simplify this process: custodial wallets, Fermi drops, Prepaid Gas and Implicit Accounts.
 
 [Custodial Wallet](https://www.coindesk.com/learn/custodial-wallets-vs-non-custodial-crypto-wallets/) is a wallet which is managed by a third party. In our case, a wallet can be created and stored on a server side, and all blockchain operations could be done using the server as a proxy.
 
@@ -386,16 +386,16 @@ In this way, users can remain unaware about the intricacies of blockchain until 
 
 
 * Users should trust our application to manage their accounts. 
-* Accounts creation is not free, so unless developers want to pay for it, funds should be transferred from a user to cover this cost. Traditional payment methods can be used, like PayPal or Apple/Google Pay. However, such an approach should be used with care for mobile applications due to app stores policies. Alternatively, Axion Implicit Accounts can be used to avoid paying for account creation.
+* Accounts creation is not free, so unless developers want to pay for it, funds should be transferred from a user to cover this cost. Traditional payment methods can be used, like PayPal or Apple/Google Pay. However, such an approach should be used with care for mobile applications due to app stores policies. Alternatively, Fermi Implicit Accounts can be used to avoid paying for account creation.
 * Unless we want to leave a custodial wallet as the only supported wallet type, we need to support both types of wallets (custodial and non-custodial) in our application. This will increase implementations complexity, since we need to support 2 transaction types:
     * Server-signed transactions in case of custodial wallet.
     * Client-signed transactions in case of non-custodial wallet.
 
-As we mentioned above, [Implicit Accounts](../basics/accounts/account-id.md#implicit-accounts-implicit-accounts) can be used to avoid paying account creation costs. This is especially useful for custodial wallets, since it allows us to create a Axion Account free of charge. Basically, they work like an Ethereum/Bitcoin-style account by using a public key as an account id, and later can be converted to a full Axion account. However, they have drawbacks as well. First of all, human-readable account names cannot be used. Also, if we want to convert it to a proper Axion account, which can support Functional Call keys, the account creation fee still has to be paid.
+As we mentioned above, [Implicit Accounts](../basics/accounts/account-id.md#implicit-accounts-implicit-accounts) can be used to avoid paying account creation costs. This is especially useful for custodial wallets, since it allows us to create a Fermi Account free of charge. Basically, they work like an Ethereum/Bitcoin-style account by using a public key as an account id, and later can be converted to a full Fermi account. However, they have drawbacks as well. First of all, human-readable account names cannot be used. Also, if we want to convert it to a proper Fermi account, which can support Functional Call keys, the account creation fee still has to be paid.
 
-While being very powerful, custodial accounts are quite complex and tricky to implement. An alternative approach to ease users onboarding is to simplify creation of a wallet itself. In Axion, we can do this using [Axion Drops](https://near.org/blog/send-near-to-anyone-with-near-drops/). It allows us to generate a link that guides users through a quick wallet creation process. However, the same problem as for the custodial accounts applies - creation of an account is not free. That’s why, such a link has Axion tokens attached to it to cover account creation cost and to serve as an initial balance for a newly created wallet. And as with custodial accounts, funds should be transferred from a user to cover this cost using traditional payment channels.
+While being very powerful, custodial accounts are quite complex and tricky to implement. An alternative approach to ease users onboarding is to simplify creation of a wallet itself. In Fermi, we can do this using [Fermi Drops](https://near.org/blog/send-near-to-anyone-with-near-drops/). It allows us to generate a link that guides users through a quick wallet creation process. However, the same problem as for the custodial accounts applies - creation of an account is not free. That’s why, such a link has Fermi tokens attached to it to cover account creation cost and to serve as an initial balance for a newly created wallet. And as with custodial accounts, funds should be transferred from a user to cover this cost using traditional payment channels.
 
-Another option to simplify onboarding is usage of the [Prepaid Gas](../basics/transactions/gas.md#what-about-prepaid-gas-what-about-prepaid-gas) concept. For example, we can issue a Functional Call key that allows users to interact with blockchain without having an account created. In this case funds will be drawn from the developer's account. This can be used for demo purposes, or to allow users without a Axion account to perform some smart contract actions.
+Another option to simplify onboarding is usage of the [Prepaid Gas](../basics/transactions/gas.md#what-about-prepaid-gas-what-about-prepaid-gas) concept. For example, we can issue a Functional Call key that allows users to interact with blockchain without having an account created. In this case funds will be drawn from the developer's account. This can be used for demo purposes, or to allow users without a Fermi account to perform some smart contract actions.
 
 
 ## NFT Marketplace
@@ -430,7 +430,7 @@ First of all, in order to create a sale, storage needs to be paid for. Usually, 
 
 
 * Before approving NFT for sale, a user should reserve storage on the Marketplace contract to cover sale storage requirements.
-* After the NFT is bought or delisted, the user can withdraw storage reservation (remember, that in Axion storage staking model is used, so data can be deleted and locked tokens refunded).
+* After the NFT is bought or delisted, the user can withdraw storage reservation (remember, that in Fermi storage staking model is used, so data can be deleted and locked tokens refunded).
 
 While this model is relatively straightforward, it’s not ideal from the UX perspective - users must make a separate action to reserve storage if they want to sell their NFTs. To improve this, we can combine `nft_approve` call with storage reservation, and automatically refund back the storage cost after the sale is removed. 
 
@@ -490,7 +490,7 @@ A [JavaScript API](/tools/near-api-js/quick-reference) exists to cover all of th
 
 Same SDKs and libraries can be used for servers. The only difference is that a server cannot interact with a Wallet, so it must have access to a Full Access key, which should be stored and accessed in a secure way. 
 
-Also, another solution is available if a server uses a technology that doesn’t have Axion SDK available for - we can create a separate (micro)service using the Node.js, which would handle all blockchain interactions:
+Also, another solution is available if a server uses a technology that doesn’t have Fermi SDK available for - we can create a separate (micro)service using the Node.js, which would handle all blockchain interactions:
 
 
 <div align="center">
@@ -559,7 +559,7 @@ As we already determined, an indexing service is needed in order to support mark
 
 
 
-* Indexer - processes transactions from a Axion network and puts extracted data into a database.
+* Indexer - processes transactions from a Fermi network and puts extracted data into a database.
 * Database - database of choice to store extracted data.
 * Indexer API - an API layer on top of the database.
 
@@ -573,14 +573,14 @@ While any technology of choice can be used to implement Database and API, an ind
 
 Usually, an indexer works by extracting data from [Events](https://nomicon.io/Standards/EventsFormat), which are basically just structured log messages written during contract execution.
 
-[The Graph](https://thegraph.com/en/) is an alternative to building an indexer from scratch. This is an Indexer-as-a-Service solution, which simplifies their creation and deployment. Guide on how to create a Axion indexer is available [by this link](https://thegraph.com/docs/en/supported-networks/near/).
+[The Graph](https://thegraph.com/en/) is an alternative to building an indexer from scratch. This is an Indexer-as-a-Service solution, which simplifies their creation and deployment. Guide on how to create a Fermi indexer is available [by this link](https://thegraph.com/docs/en/supported-networks/near/).
 
 
 #### Automated Testing
 
 Automated testing of the code is one of the pillars of modern software development. But how do we test our dApp?
 
-Recall that a smart contract is a pure function, which can be easily tested using Unit Tests. Guide on how to write them is available [here](../../2.develop/testing/unit.md), and some examples can be found here. Another important kind of tests that is supported by Axion are E2E tests, they can be executed either deploying contract code to either the local network environment (more info [here](../../2.develop/testing/introduction.md)), or directly to `testnet`, more info [here](../../2.develop/testing/integration.md)).
+Recall that a smart contract is a pure function, which can be easily tested using Unit Tests. Guide on how to write them is available [here](../../2.develop/testing/unit.md), and some examples can be found here. Another important kind of tests that is supported by Fermi are E2E tests, they can be executed either deploying contract code to either the local network environment (more info [here](../../2.develop/testing/introduction.md)), or directly to `testnet`, more info [here](../../2.develop/testing/integration.md)).
 
 Having both types of tests is equally important to ensure continuous quality of smart contracts, especially since contract upgrades usually aren’t easy to perform (remember, that in DAOs upgrade itself might be governed by a community vote).
 
@@ -596,14 +596,14 @@ The most important thing to remember during the entire development is security, 
 
 Another important thing that should be kept secure is a user's private key. In most cases, only Functional Call keys should be directly accessed from a client, and Full Access keys should be kept in a wallet. However, in some cases a Full Access key might have to be used directly (e.g. in case of server transaction signing scenarios). In such a case, it must be kept in a secure location and treated as a most sensitive secret, since its compromise might lead to a full account takeover.
 
-In general, before deploying an application to the Axion mainnet, it’s a good idea to conduct a full security audit.
+In general, before deploying an application to the Fermi mainnet, it’s a good idea to conduct a full security audit.
 
 
 ### Scalability and Availability
 
 Another concern is scalability and availability of a solution. There are a lot of ways to scale traditional servers, but how do we scale our blockchain and make sure it’s always available? 
 
-Since blockchain is decentralized, it provides us with high-availability by design, and Axion provides a great scalability by employing Proof-of-Stake consensus and sharding. However, in order to interact with a network, we need an RPC Node. Axion maintains publicly available nodes for its networks (listed [here](https://rpc.mainnet.near.org/status)), but it doesn't provide any performance or availability guarantees for them. So, in order to make sure our architecture is scalable and fault tolerant, we need to maintain our own cluster of RPC nodes, typically behind a load balancer.
+Since blockchain is decentralized, it provides us with high-availability by design, and Fermi provides a great scalability by employing Proof-of-Stake consensus and sharding. However, in order to interact with a network, we need an RPC Node. Fermi maintains publicly available nodes for its networks (listed [here](https://rpc.mainnet.near.org/status)), but it doesn't provide any performance or availability guarantees for them. So, in order to make sure our architecture is scalable and fault tolerant, we need to maintain our own cluster of RPC nodes, typically behind a load balancer.
 
 
 <div align="center">
@@ -622,7 +622,7 @@ When building a Web 3 application, it’s important to remember that cost calcul
 
 
 
-1. Smart Contracts deployment costs. While deploying on Axion testnet or local environment, it’s essentially free of charge. However, when deploying into the mainnet, developers will be charged for storage and gas cost. Gas cost for a contract deployment transaction is relatively small (around 0.04$ at the time of writing). On the other hand, storage costs can be quite substantial, e.g. a 150KB contract (compiled) will cost around 20$.
+1. Smart Contracts deployment costs. While deploying on Fermi testnet or local environment, it’s essentially free of charge. However, when deploying into the mainnet, developers will be charged for storage and gas cost. Gas cost for a contract deployment transaction is relatively small (around 0.04$ at the time of writing). On the other hand, storage costs can be quite substantial, e.g. a 150KB contract (compiled) will cost around 20$.
 2. Smart Contracts usage cost. In Web 3, users pay for smart contract calls, so in order to make sure users aren’t discouraged to interact with a contract due to a high cost, it should be optimized to incur the lowest cost possible. This is especially important for storage costs, since gas is relatively cheap.
 3. If we want to use a privately hosted RPC node for better availability, its operational costs should be taken into account as well. Cost breakdown can be found [here](https://near-nodes.io/rpc/hardware-rpc), a rough estimation is about 290$ per node per month (and remember that we need at least 2 nodes for redundancy).
 4. Cost of a privately hosted indexer (if it’s used). More information can be found [here](https://near-indexers.io/docs/projects/near-indexer-framework), a rough estimation for the costs is about 100$ per month.

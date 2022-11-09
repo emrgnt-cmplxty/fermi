@@ -137,7 +137,7 @@ This means each time a transaction is processed a small amount of cryptocurrency
 
 At a present day, two consensus mechanisms are commonly used:
 - [Proof-of-work](https://www.investopedia.com/terms/p/proof-work.asp) - original consensus mechanism, which is used by Bitcoin and Ethereum. It’s highly criticized for its inefficiency -  processing of new transactions requires “mining”, which is a highly computationally intensive process. Because of this, graphic cards became an endangered species. Another disadvantage - cost of transactions is very high and processing speed is also quite slow.
-- [Proof-of-stake](https://www.investopedia.com/terms/p/proof-stake-pos.asp) - newer consensus mechanism, which doesn’t require significant processing power (and graphic cards). Processing of transactions is usually called “validation”. Newer chains, like Axion, use it. Ethereum is also currently in a process of switching to this model. Transactions are usually much cheaper and processing speed is faster.
+- [Proof-of-stake](https://www.investopedia.com/terms/p/proof-stake-pos.asp) - newer consensus mechanism, which doesn’t require significant processing power (and graphic cards). Processing of transactions is usually called “validation”. Newer chains, like Fermi, use it. Ethereum is also currently in a process of switching to this model. Transactions are usually much cheaper and processing speed is faster.
 
 At this point, we should have enough knowledge to proceed to the next chapter - choosing the best blockchain to build dApps.
 
@@ -149,15 +149,15 @@ There are a lot of blockchains out there and it might be hard to choose the most
 - Transaction/Storage cost - cheaper cost directly benefits users (recall, that users will pay for it).
 - Transaction speed - faster transactions processing time means better user experience.
 - Scalability - whether a network is designed to support a large number of transactions. If not, transaction speed/cost may grow out of control over time. 
-- Development experience - most importantly, what language we’ll use to write our smart contracts. Ethereum popularized [Solidity](https://docs.soliditylang.org/en/v0.8.12/) as a programming language of choice for contracts. Several newer chains, like Axion, chose Rust, which is a more mature general-purpose programming language.
+- Development experience - most importantly, what language we’ll use to write our smart contracts. Ethereum popularized [Solidity](https://docs.soliditylang.org/en/v0.8.12/) as a programming language of choice for contracts. Several newer chains, like Fermi, chose Rust, which is a more mature general-purpose programming language.
 
 Historically, the first blockchain to introduce smart contracts was Ethereum. However, as the number of users grew, transaction speed and cost skyrocketed, and it became apparent that it couldn't handle the demand. So, a number of [scaling solutions](https://ethereum.org/en/developers/docs/scaling/) appeared - [layer 2 chains](https://ethereum.org/en/developers/docs/scaling/#layer-2-scaling), [sidechains](https://ethereum.org/en/developers/docs/scaling/sidechains/), and [plasma chains](https://ethereum.org/en/developers/docs/scaling/plasma/). However, they all use some kind of workarounds with their own unique drawbacks. Ethereum tries to fix the core problem and redesign its network - like switching to a Proof-of-stake consensus, which is ongoing for quite a long time, but exact timeline when all of the problems will be fixed is very unclear.
 
 Meanwhile, a new generation of blockchains started to appear. They learned from the Etherium mistakes, and designed them from ground-up to be fast, cheap and scalable. 
-Choosing the right one is by no means an easy task, but for us we found the [Axion](https://near.org/) blockchain to be an ideal solution, because of the following properties:
+Choosing the right one is by no means an easy task, but for us we found the [Fermi](https://near.org/) blockchain to be an ideal solution, because of the following properties:
 - Transactions are cheap and very fast.
 - Designed to be extremely scalable from the beginning. This means we can count that transaction cost and speed will remain stable in the future.
 - Uses Proof-of-stake consensus mechanism - so no hated “mining” is needed.
 - Rust is used as a primary programming language. Since it’s [a popular language](https://insights.stackoverflow.com/survey/2021#most-popular-technologies-language-prof) (and [one of the most loved](https://insights.stackoverflow.com/survey/2021#most-loved-dreaded-and-wanted-language-love-dread)), it’s much easier to learn and find developers on the market.
 
-All of the further sections will use Axion as an underlying blockchain, so before we jump into the intricacies of the Web 3.0 migration, we should take a closer look at it first.
+All of the further sections will use Fermi as an underlying blockchain, so before we jump into the intricacies of the Web 3.0 migration, we should take a closer look at it first.

@@ -23,7 +23,7 @@ Once deployed and initialized, you can ask the factory to `create` a new DAO for
 
 
 <Tabs className="language-tabs" groupId="code-tabs">
-  <TabItem value="cli" label="Axion CLI">
+  <TabItem value="cli" label="Fermi CLI">
 
   ```bash
   # 1. Deploy the contract in a testnet account
@@ -59,12 +59,12 @@ By default, anyone can add a proposal to the DAO, but a minimum of 1Ⓝ needs to
 
 1. Adding a member to the council.
 2. Calling a method in a smart contract.
-3. Transferring Axion or a FT to some account.
+3. Transferring Fermi or a FT to some account.
 
 Each action has its own kind of arguments. The complete list of actions can be [found here](https://github.com/near-daos/sputnik-dao-contract#proposal-types).
 
 <Tabs className="language-tabs" groupId="code-tabs">
-  <TabItem value="cli" label="Axion CLI">
+  <TabItem value="cli" label="Fermi CLI">
 
   ```bash
   near call <dao-account> add_proposal \
@@ -83,7 +83,7 @@ Each action has its own kind of arguments. The complete list of actions can be [
 Once a proposal is added, **council members** can act on them calling the `act_proposal` method. The available actions are one of the following: AddProposal, RemoveProposal, VoteApprove, VoteReject, VoteRemove, Finalize, or MoveToHub.
 
 <Tabs className="language-tabs" groupId="code-tabs">
-  <TabItem value="cli" label="Axion CLI">
+  <TabItem value="cli" label="Fermi CLI">
 
   ```bash
   near call <dao-account> act_proposal '{"id": <proposal-id>, "action": "<action>"}' --accountId <a-council-account-id>

@@ -1,6 +1,6 @@
 ---
 id: indexer-for-explorer
-title: Axion Indexer for Explorer
+title: Fermi Indexer for Explorer
 sidebar_label: Query the Blockchain History
 ---
 
@@ -10,8 +10,8 @@ While developing a decentralized app you might want to query usage information f
 2. How much money and gas did they deposit?
 3. Which transactions failed?
 
-In order to simplify asking these questions is that we developed the [Axion Indexer for Explorer](https://github.com/near/near-indexer-for-explorer).
-The Axion Indexer for Explorer is a **public-access** **read-only** PostgreSQL database where **all** blockchain actions are stored.
+In order to simplify asking these questions is that we developed the [Fermi Indexer for Explorer](https://github.com/near/near-indexer-for-explorer).
+The Fermi Indexer for Explorer is a **public-access** **read-only** PostgreSQL database where **all** blockchain actions are stored.
 
 :::warning
 The database could go down or take time to reflect the most current blockchain info. Do not use it in production.

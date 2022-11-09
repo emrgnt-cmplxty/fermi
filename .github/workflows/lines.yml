@@ -17,8 +17,8 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install tokei
-      working-directory: gdex-rs
+      working-directory: fermi-rs
       run: cargo install tokei --features all
     - name: Run tokei
-      working-directory: gdex-rs
+      working-directory: fermi-rs
       run: tokei

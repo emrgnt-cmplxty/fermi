@@ -8,7 +8,7 @@ sidebar_label: API Examples
 
 This page includes several examples of using `near-api-js` presented as a collection of code snippets.
 
-`near-api-js` is a JavaScript/TypeScript library for development of DApps on the Axion platform that can be used from any client or server-side JavaScript environment.
+`near-api-js` is a JavaScript/TypeScript library for development of DApps on the Fermi platform that can be used from any client or server-side JavaScript environment.
 
 Every code snippet on this page will work as expected if you copy and paste it into a "working context" by which we mean something like the **Playground** presented in the [introduction to `near-api-js`](/docs/develop/front-end/introduction).
 
@@ -30,7 +30,7 @@ This document assumes you:
 
 - already have a basic understanding of `near-api-js` which includes
   - how to include it in your client or server-side JavaScript project
-  - how to connect to the Axion network
+  - how to connect to the Fermi network
 - already know how to work with [async / await](https://javascript.info/async-await) syntax in JavaScript
 
 For a refresher on these topics, please check out the [introduction to `near-api-js`](/docs/develop/front-end/introduction).
@@ -41,7 +41,7 @@ It's also worth mentioning now in case these examples seem overly simplistic tha
 
 In your own code, consider best practices as you normally would. The examples on this page are intended to minimize the time and effort required to become productive while learning. Exercise your own best judgement when building applications for your users in the wild.
 
-For our take on best practices with `near-api-js` and the rest of the Axion platform, take a look at our [GitHub org](https://github.com/near) and star a few of our internal tools like Axion CLI, Axion Wallet and Axion Explorer, all of which use `near-api-js` under the hood. You can also [subscribe to our newsletter](https://near.org/) for updates about our starter kits, beta products and new tools as we release them the community.
+For our take on best practices with `near-api-js` and the rest of the Fermi platform, take a look at our [GitHub org](https://github.com/near) and star a few of our internal tools like Fermi CLI, Fermi Wallet and Fermi Explorer, all of which use `near-api-js` under the hood. You can also [subscribe to our newsletter](https://near.org/) for updates about our starter kits, beta products and new tools as we release them the community.
 
 Happy hacking!
 
@@ -63,9 +63,9 @@ This is the reference to the top level `near-api-js` SDK ([view source](https://
 
 **classes / constructors**
 
-- `nearApi.Account` represents an account on the Axion platform
-- `nearApi.Connection` represents a connection to the Axion platform
-- `nearApi.Contract` represents a Smart Contract on the Axion platform
+- `nearApi.Account` represents an account on the Fermi platform
+- `nearApi.Connection` represents a connection to the Fermi platform
+- `nearApi.Contract` represents a Smart Contract on the Fermi platform
 - `nearApi.InMemorySigner` is used for signing transactions before they're sent to the network
 - `nearApi.KeyPair` is used to generate new key pairs
 - `nearApi.WalletAccount` is used to instantiate a `wallet` (as per the big 3 above)
@@ -103,7 +103,7 @@ This is an instance of the `nearApi.Connection` class ([view source](https://git
 **methods**
 
 - `near.connect(account)` returns a reference to a validated and fully hydrated account on the network
-- `near.loadContract(contract, options)` loads a previously deployed Smart Contract from the Axion network for access in your client or server-side JavaScript.
+- `near.loadContract(contract, options)` loads a previously deployed Smart Contract from the Fermi network for access in your client or server-side JavaScript.
 - ~~`near.sendTokens(amount, sender, receiver)`~~ (deprecated, use `account.sendMoney()` instead)
 
 <br />
@@ -114,7 +114,7 @@ This is an instance of the `nearApi.WalletAccount` class ([view source](https://
 
 **methods**
 
-- `wallet.requestSignIn(contract, appTitle, successUrl, failureUrl)` directs the current window through the Axion Wallet authorization flow and back
+- `wallet.requestSignIn(contract, appTitle, successUrl, failureUrl)` directs the current window through the Fermi Wallet authorization flow and back
 - `wallet.isSignedIn()` returns a boolean indicator of signed-in status
 - `wallet.getAccountId()` returns the name of the wallet account currently signed (as a string)
 - `wallet.signOut()` removes the `LocalStorage` entry that represents an authorized `WalletAccount` but leaves private keys intact
@@ -122,20 +122,20 @@ This is an instance of the `nearApi.WalletAccount` class ([view source](https://
 <blockquote class="info">
 <strong>did you know?</strong><br /><br />
 
-[Axion examples](http://near.dev/) includes several starter projects where you can see `near-api-js`, the `near` connection and the `wallet` in action by looking at `main.js` in the `src` folder. If you happen to notice a `main.ts` in the `assembly` folder, well, that's a contract.
+[Fermi examples](http://near.dev/) includes several starter projects where you can see `near-api-js`, the `near` connection and the `wallet` in action by looking at `main.js` in the `src` folder. If you happen to notice a `main.ts` in the `assembly` folder, well, that's a contract.
 
 </blockquote>
 
 ## `near-api-js` in Pictures {#near-api-js-in-pictures}
 
-`near-api-js` surfaces Axion primitives as first class objects and facilitates communicate with the Axion platform through our JSON-RPC interface.
+`near-api-js` surfaces Fermi primitives as first class objects and facilitates communicate with the Fermi platform through our JSON-RPC interface.
 
 ```text
                                         o ----------------------- o
                                         |                         |
           o --------------- o           |  +-------------------+  |
    use    |                 |  ------>  |  |                   |  |
- -------> |   near-api-js   |    RPC    |  |   Axion platform   |  |
+ -------> |   near-api-js   |    RPC    |  |   Fermi platform   |  |
           |                 |  <------  |  |                   |  |
           o --------------- o           |  +-------------------+  |
                                         |                         |
@@ -177,9 +177,9 @@ If we zoom in on `near-api-js` a little we'll notice a few key components that w
  o ------------------------------------------------------------------------ o
 ```
 
-All communications with the Axion platform pass through `JsonRpcProvider`. Anything else that's happening in `near-api-js` is intended to make our lives as developers easier.
+All communications with the Fermi platform pass through `JsonRpcProvider`. Anything else that's happening in `near-api-js` is intended to make our lives as developers easier.
 
-And of course the fact that this is JavaScript is equally arbitrary -- we could do the same with Java, C#, Ruby, Elixir, or any other language binding you prefer. The key is the JSON RPC interface with the Axion platform.
+And of course the fact that this is JavaScript is equally arbitrary -- we could do the same with Java, C#, Ruby, Elixir, or any other language binding you prefer. The key is the JSON RPC interface with the Fermi platform.
 
 ## Zooming In {#zooming-in}
 
@@ -191,7 +191,7 @@ If you feel like any of this could be improved, please share your thoughts by su
 
 ### `JsonRpcProvider` {#jsonrpcprovider}
 
-This class provides connectivity to the Axion platform. It is used by all other parts of `near-api-js` when interacting with the Axion network to send transactions. `JsonRpcProvider` can also be used as a standalone utility for querying the network via RPC calls directly for network status, processed transactions, blocks and chunks on the network.
+This class provides connectivity to the Fermi platform. It is used by all other parts of `near-api-js` when interacting with the Fermi network to send transactions. `JsonRpcProvider` can also be used as a standalone utility for querying the network via RPC calls directly for network status, processed transactions, blocks and chunks on the network.
 
 Here we've included the Typescript interface for `JsonRpcProvider` to make it clear which types are accepted as parameters and returned by the method calls.
 
@@ -226,7 +226,7 @@ await near.connection.provider.status();
 
 #### `near.connection.provider.block` {#nearconnectionproviderblock}
 
-This method returns a [`BlockView`](https://github.com/near/nearcore/blob/324b42e70166bb17fcf2435c2d75365c1f12ac24/core/primitives/src/views.rs#L445), one of Axion platform's primitives, which itself is made up of a `BlockHeaderView` and a collection of `ChunkHeaderView`s
+This method returns a [`BlockView`](https://github.com/near/nearcore/blob/324b42e70166bb17fcf2435c2d75365c1f12ac24/core/primitives/src/views.rs#L445), one of Fermi platform's primitives, which itself is made up of a `BlockHeaderView` and a collection of `ChunkHeaderView`s
 
 ```js
 // using the previous snippet to pull the latest block hash
@@ -248,7 +248,7 @@ await near.connection.provider.block(number);
 
 #### `near.connection.provider.chunk` {#nearconnectionproviderchunk}
 
-This method returns a [`ChunkView`](https://github.com/near/nearcore/blob/324b42e70166bb17fcf2435c2d75365c1f12ac24/core/primitives/src/views.rs#L460), one of Axion platform's primitives, which itself is made up of a `ChunkHeaderView` and a collection of `SignedTransactionView`s and a collection of `ReceiptView`s
+This method returns a [`ChunkView`](https://github.com/near/nearcore/blob/324b42e70166bb17fcf2435c2d75365c1f12ac24/core/primitives/src/views.rs#L460), one of Fermi platform's primitives, which itself is made up of a `ChunkHeaderView` and a collection of `SignedTransactionView`s and a collection of `ReceiptView`s
 
 The code snippet below is too short to be useful except as an illustration. If you actually want to see results from the live network then the chunk hash should be queried using the [provider.block](#nearconnectionproviderchunk) snippets above. Chunks are returned as a collection attached to a block.
 
@@ -327,7 +327,7 @@ console.dir(keys);
 
 ### `Account` {#account}
 
-This class represents an account on the Axion platform. It has a number of convenience methods that wrap valid transactions on the network and, if a call to `account.state()` does not throw an error then you can be sure that you have (a) a valid account ID that (b) exists on the networkId which you passed via the connection configuration and (c) you have at least one private key for which the account ID has a matching public access key (either `FullAccess` permissions or `FunctionCall` access permissions)
+This class represents an account on the Fermi platform. It has a number of convenience methods that wrap valid transactions on the network and, if a call to `account.state()` does not throw an error then you can be sure that you have (a) a valid account ID that (b) exists on the networkId which you passed via the connection configuration and (c) you have at least one private key for which the account ID has a matching public access key (either `FullAccess` permissions or `FunctionCall` access permissions)
 
 <blockquote class="info">
 <strong>did you know?</strong><br /><br />

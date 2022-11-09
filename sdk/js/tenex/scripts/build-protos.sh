@@ -15,15 +15,15 @@ yarn run grpc_tools_node_protoc \
     --ts_out=grpc_js:${PROTO_DEST} \
     --js_out=import_style=commonjs,binary:${PROTO_DEST} \
     --grpc_out=grpc_js:${PROTO_DEST} \
-    -I ../../gdex-rs/types/proto \
-    ../../gdex-rs/types/proto/transaction.proto
+    -I ../../fermi-rs/types/proto \
+    ../../fermi-rs/types/proto/transaction.proto
 
 # Typescript code generation
 yarn run grpc_tools_node_protoc \
     --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts \
     --ts_out=${PROTO_DEST} \
-     -I ../../gdex-rs/types/proto \
-    ../../gdex-rs/types/proto/transaction.proto
+     -I ../../fermi-rs/types/proto \
+    ../../fermi-rs/types/proto/transaction.proto
 
 # Generate proto for bank
 
@@ -33,15 +33,15 @@ yarn run grpc_tools_node_protoc \
     --ts_out=grpc_js:${PROTO_DEST} \
     --js_out=import_style=commonjs,binary:${PROTO_DEST} \
     --grpc_out=grpc_js:${PROTO_DEST} \
-    -I ../../gdex-rs/controller/src/bank/proto \
-    ../../gdex-rs/controller/src/bank/proto/*.proto
+    -I ../../fermi-rs/controller/src/bank/proto \
+    ../../fermi-rs/controller/src/bank/proto/*.proto
 
 # Typescript code generation
 yarn run grpc_tools_node_protoc \
     --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts \
     --ts_out=${PROTO_DEST} \
-     -I ../../gdex-rs/controller/src/bank/proto \
-    ../../gdex-rs/controller/src/bank/proto/*.proto
+     -I ../../fermi-rs/controller/src/bank/proto \
+    ../../fermi-rs/controller/src/bank/proto/*.proto
 
 # Generate proto for futures
 
@@ -51,12 +51,12 @@ yarn run grpc_tools_node_protoc \
     --ts_out=grpc_js:${PROTO_DEST} \
     --js_out=import_style=commonjs,binary:${PROTO_DEST} \
     --grpc_out=grpc_js:${PROTO_DEST} \
-    -I ../../gdex-rs/controller/src/futures/proto \
-    ../../gdex-rs/controller/src/futures/proto/*.proto
+    -I ../../fermi-rs/controller/src/futures/proto \
+    ../../fermi-rs/controller/src/futures/proto/*.proto
 
 # TypeScript code generation
 yarn run grpc_tools_node_protoc \
     --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts \
     --ts_out=${PROTO_DEST} \
-     -I ../../gdex-rs/controller/src/futures/proto \
-    ../../gdex-rs/controller/src/futures/proto/*.proto
+     -I ../../fermi-rs/controller/src/futures/proto \
+    ../../fermi-rs/controller/src/futures/proto/*.proto

@@ -58,8 +58,8 @@ Your contract will then be **compiled** and **deployed** to an **account** in th
 ---
 
 ## Interacting With the dApp
-Go ahead and login with your Axion account. If you don't have one, you will be able to create one in the moment. Once logged in, input the amount of Axion you want
-to donate and press the donate button. You will be redirected to the Axion Wallet to confirm the transaction. After confirming it, the donation will be listed
+Go ahead and login with your Fermi account. If you don't have one, you will be able to create one in the moment. Once logged in, input the amount of Fermi you want
+to donate and press the donate button. You will be redirected to the Fermi Wallet to confirm the transaction. After confirming it, the donation will be listed
 in the "Latest Donations".
 
 ![img](/docs/assets/examples/donation.png)
@@ -101,7 +101,7 @@ The frontend is composed by a single HTML file (`/index.html`). This file define
 The website's logic lives in `/assets/js/index.js`, which communicates with the contract through `/assets/js/near/utils.js`.
 
 An interesting aspect of the donation example is that it showcases how to retrieve a result after being redirected to the
-Axion wallet to accept a transaction.
+Fermi wallet to accept a transaction.
 
 <CodeTabs>
   <Language value="🌐 JavaScript" language="js">

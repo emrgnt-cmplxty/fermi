@@ -1,10 +1,10 @@
 ---
 id: contracts
-title: Axion API REST Server
+title: Fermi API REST Server
 sidebar_label: Contracts
 ---
 
-> [Axion REST API Server](https://github.com/near-examples/near-api-rest-server) is a project that allows you create your own simple REST API server that interacts with the Axion blockchain.
+> [Fermi REST API Server](https://github.com/near-examples/near-api-rest-server) is a project that allows you create your own simple REST API server that interacts with the Fermi blockchain.
 
 ---
 
@@ -12,7 +12,7 @@ sidebar_label: Contracts
 
 ### `/deploy` {#deploy}
 
-> _Deploys a smart contract to the Axion blockchain based on the wasm file located in `/contracts` folder._
+> _Deploys a smart contract to the Fermi blockchain based on the wasm file located in `/contracts` folder._
 
 **Method:** **`POST`**
 
@@ -196,7 +196,7 @@ _**Note:** Use [`near login`](https://docs.near.org/docs/tools/near-cli#near-log
 | `method`                         | _Public method on the smart contract that you will be calling._                                                       |
 | `params`                         | _Arguments the method of the contract takes. Pass an empty object if no args are needed._                             |
 | `attached_gas`                   | _Amount of gas you will be attaching to the call in [TGas](https://docs.near.org/docs/concepts/gas#thinking-in-gas)._ |
-| `attached_tokens`                | _Amount of tokens to be sent to the contract you are calling in yoctoNEAR (10^-24 Axion)._                             |
+| `attached_tokens`                | _Amount of tokens to be sent to the contract you are calling in yoctoNEAR (10^-24 Fermi)._                             |
 
 _**Note:** Use [`near login`](https://docs.near.org/docs/tools/near-cli#near-login) to save your key pair to your local machine._
 

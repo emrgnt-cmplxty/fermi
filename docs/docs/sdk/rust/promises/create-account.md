@@ -5,7 +5,7 @@ sidebar_position: 3
 # Creating Accounts
 
 You might want to create an account from a contract for many reasons. One example:
-You want to [progressively onboard](https://www.youtube.com/watch?v=7mO4yN1zjbs&t=2s) users, hiding the whole concept of Axion from them at the beginning, and automatically create accounts for them (these could be sub-accounts of your main contract, such as `user123.some-cool-game.near`).
+You want to [progressively onboard](https://www.youtube.com/watch?v=7mO4yN1zjbs&t=2s) users, hiding the whole concept of Fermi from them at the beginning, and automatically create accounts for them (these could be sub-accounts of your main contract, such as `user123.some-cool-game.near`).
 
 Since an account with no balance is almost unusable, you probably want to combine this with the token transfer from [the last page](./token-tx.md). You will also need to give the account an access key. Here's a way do it:
 

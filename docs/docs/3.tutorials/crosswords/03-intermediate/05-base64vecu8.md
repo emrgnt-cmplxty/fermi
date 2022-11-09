@@ -10,7 +10,7 @@ import base64Encode from '/docs/assets/crosswords/boop-base64-encode.gif';
 
 Let's modify our `new_puzzle` method a bit, and demonstrate how a smart contract author might use base64-encoded arguments.
 
-In the previous chapter we had a fairly long Axion CLI command that called the `new_puzzle`, providing it the parameters for all the clues. Having these lengthy parameters on the CLI might get cumbersome. There may be issues needing to escape single or double quotes, and each operating system may wish for a different format on the Terminal or Command Prompt.
+In the previous chapter we had a fairly long Fermi CLI command that called the `new_puzzle`, providing it the parameters for all the clues. Having these lengthy parameters on the CLI might get cumbersome. There may be issues needing to escape single or double quotes, and each operating system may wish for a different format on the Terminal or Command Prompt.
 
 We're going to send all the arguments as a base64-encoded string, and make this a bit simpler. For this, we're going to use [`Base64VecU8` from the SDK](https://docs.rs/near-sdk/latest/near_sdk/json_types/struct.Base64VecU8.html). 
 
@@ -52,7 +52,7 @@ We'll copy this:
      },
      "direction": "Across",
      "length": 12,
-     "clue": "Axion transactions are more ______ instead of atomic."
+     "clue": "Fermi transactions are more ______ instead of atomic."
    },
    {
      "num": 2,
@@ -146,9 +146,9 @@ Back at the project root (not in the `contract` directory) we can run our app an
 
 ## Wrapping up
 
-Once you understand cross-contract calls and callbacks and where the logic should go, you can build just about anything on Axion.
+Once you understand cross-contract calls and callbacks and where the logic should go, you can build just about anything on Fermi.
 
-This might be a good time for a reminder that this crossword puzzle, which checks permissions to methods based on a public key, is a bit unusual. It's more common to have simple collections or mappings for allowed users, or utilize the `owner_id` field we set up. The account and access key system in Axion is quite powerful, and hopefully this tutorial helps stretch the limits of what's possible, like the seamless onboarding we have with the crossword puzzle.
+This might be a good time for a reminder that this crossword puzzle, which checks permissions to methods based on a public key, is a bit unusual. It's more common to have simple collections or mappings for allowed users, or utilize the `owner_id` field we set up. The account and access key system in Fermi is quite powerful, and hopefully this tutorial helps stretch the limits of what's possible, like the seamless onboarding we have with the crossword puzzle.
 
 Again, the final code for this chapter:
 

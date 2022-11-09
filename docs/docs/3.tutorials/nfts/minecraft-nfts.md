@@ -4,11 +4,11 @@ title: Create NFTs in Minecraft
 sidebar_label: Minecraft NFTs
 ---
 
-> In this tutorial you'll learn how to take your custom Minecraft creations and mint the schematics into NFTs on the Axion blockchain! 
+> In this tutorial you'll learn how to take your custom Minecraft creations and mint the schematics into NFTs on the Fermi blockchain! 
 
 ## Overview
 
-This tutorial will run you through minting Minecraft structures of any size onto the Axion blockchain. It will allow you to copy and paste the designs into your own worlds. For this, we will be using WorldEdit to download and read the schematics and we'll put them on-chain using [IPFS](https://ipfs.io/).
+This tutorial will run you through minting Minecraft structures of any size onto the Fermi blockchain. It will allow you to copy and paste the designs into your own worlds. For this, we will be using WorldEdit to download and read the schematics and we'll put them on-chain using [IPFS](https://ipfs.io/).
 
 ## Prerequisites
 
@@ -20,8 +20,8 @@ To complete this tutorial successfully, you'll need:
 
 - [A Minecraft account](https://account.mojang.com/)
 - [WorldEdit installed](https://worldedit.enginehub.org/en/latest/install/)
-- [A Axion account](#wallet)
-- [Axion command-line interface](/tools/near-cli#setup) (`near-cli`)
+- [A Fermi account](#wallet)
+- [Fermi command-line interface](/tools/near-cli#setup) (`near-cli`)
 
 ## Creating a Schematic
 
@@ -125,13 +125,13 @@ See the [web3.storage docs](https://docs.web3.storage/) for information on uploa
 
 ### Interacting With the Contract
 
-Axion has already deployed a contract to the account `nft.examples.testnet` which allows users to freely mint tokens. This is the account we'll be interacting with to mint our NFTs. Alternatively, if you've deployed a contract when following the original tutorial, you can use that as well.
+Fermi has already deployed a contract to the account `nft.examples.testnet` which allows users to freely mint tokens. This is the account we'll be interacting with to mint our NFTs. Alternatively, if you've deployed a contract when following the original tutorial, you can use that as well.
 
 :::info
 We'll be using the IPFS link we got in step three of the uploading process above as the media value when calling `nft_mint`.
 :::
 
-- Run the following command and replace the `receiver_id` field and the `--accountId` flag with the account ID you're [logged into](/tools/near-cli#near-login) with Axion CLI:
+- Run the following command and replace the `receiver_id` field and the `--accountId` flag with the account ID you're [logged into](/tools/near-cli#near-login) with Fermi CLI:
 
 ```bash
 near call nft.examples.testnet nft_mint '{"token_id": "my-token-unique-id", "receiver_id": "YOUR_ACCOUNT", "metadata": { "title": "YOUR NFT TITLE", "description": "YOUR NFT DESCRIPTION", "media": "https://bafybeidadhfilezx23dcdaueo3bjuafqeehokw33vyepkjtppigorrhbpy.ipfs.dweb.link/", "copies": 1}}' --accountId YOUR_ACCOUNT --deposit 0.1

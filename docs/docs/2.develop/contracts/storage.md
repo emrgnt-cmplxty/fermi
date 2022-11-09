@@ -199,7 +199,7 @@ Your contract needs to lock a portion of their balance proportional to the amoun
 Currently, it cost approximately **1 Ⓝ** to store **100kb** of data.
 
 :::caution
-An error will raise if your contract tries to increase its state while not having Axion to cover for storage.
+An error will raise if your contract tries to increase its state while not having Fermi to cover for storage.
 :::
 
 :::warning

@@ -9,14 +9,14 @@ import {
 } from '../tenex/transaction'
 import { transactionParams, buildTransaction, buildSignedTransaction } from '../tenex/utils'
 import { testData } from './config'
-import { AxionUtils } from 'axion-js-sdk'
+import { FermiUtils } from 'fermi-js-sdk'
 
 // EXTERNAL
 import { test, expect } from '@jest/globals'
 import { getPublicKey } from '@noble/ed25519'
 
 // TODO - extend test workflow to cover all transaction types and cleanup the online tests
-// https://github.com/gdexorg/gdex/issues/184
+// https://github.com/fermiorg/fermi/issues/184
 
 test('Payment transaction workflow', async () => {
   const receiver = await getPublicKey(testData.receiverPrivateKey)
@@ -31,7 +31,7 @@ test('Payment transaction workflow', async () => {
     /* fee */ undefined,
     /* client */ undefined
   )
-  expect(AxionUtils.getTransactionDigest(transaction)).toStrictEqual(testData.expectedPaymentDigest)
+  expect(FermiUtils.getTransactionDigest(transaction)).toStrictEqual(testData.expectedPaymentDigest)
 
   const signedTransaction = await buildSignedTransaction(
     /* request */ paymentRequest,
@@ -57,7 +57,7 @@ test('Futures deposit workflow', async () => {
     /* fee */ undefined,
     /* client */ undefined
   )
-  expect(AxionUtils.getTransactionDigest(transaction)).toStrictEqual(testData.expectedAccountDepositDigest)
+  expect(FermiUtils.getTransactionDigest(transaction)).toStrictEqual(testData.expectedAccountDepositDigest)
 
   const signedTransaction = await buildSignedTransaction(
     /* request */ depositRequest,
@@ -83,7 +83,7 @@ test('Futures withdrawal workflow', async () => {
     /* fee */ undefined,
     /* client */ undefined
   )
-  expect(AxionUtils.getTransactionDigest(transaction)).toStrictEqual(testData.expectedAccountWithdrawalDigest)
+  expect(FermiUtils.getTransactionDigest(transaction)).toStrictEqual(testData.expectedAccountWithdrawalDigest)
 
   const signedTransaction = await buildSignedTransaction(
     /* request */ withdrawalRequest,
@@ -109,7 +109,7 @@ test('Futures limit order workflow', async () => {
     /* fee */ undefined,
     /* client */ undefined
   )
-  expect(AxionUtils.getTransactionDigest(transaction)).toStrictEqual(testData.expectedFuturesLimitOrderDigest)
+  expect(FermiUtils.getTransactionDigest(transaction)).toStrictEqual(testData.expectedFuturesLimitOrderDigest)
 
   const signedTransaction = await buildSignedTransaction(
     /* request */ orderRequest,

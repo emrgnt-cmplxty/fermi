@@ -17,7 +17,7 @@ We're going to take a small detour to talk about the linkdrop smart contract.  I
 
 There’s nothing special about testnet accounts; there is no real-world cost to you as a developer when creating testnet accounts, so feel free to create or delete at your convenience.
 
-When a user signs up for a testnet account on Axion Wallet, they'll see this:
+When a user signs up for a testnet account on Fermi Wallet, they'll see this:
 
 <img src={createTestnetAccount} width="400" />
 
@@ -30,14 +30,14 @@ There are two ways to create this subaccount:
 1. Use a full-access key for the account `testnet` to sign a transaction with the `CreateAccount` Action.
 2. In a smart contract deployed to the `testnet` account, call the `CreateAccount` Action, which is an async method that returns a Promise. (More info about writing a [`CreateAccount` Promise](/sdk/rust/promises/create-account).)
 
-(In the example below that uses Axion CLI to create a new account, it's calling `CreateAccount` on the linkdrop contract that is deployed to the top level "near" account on mainnet.)
+(In the example below that uses Fermi CLI to create a new account, it's calling `CreateAccount` on the linkdrop contract that is deployed to the top level "near" account on mainnet.)
 
 
 ## Mainnet
 
 On mainnet, the account `near` also has the linkdrop contract deployed to it.
 
-Using Axion CLI, a person can create a mainnet account by calling the linkdrop contract, like shown below:
+Using Fermi CLI, a person can create a mainnet account by calling the linkdrop contract, like shown below:
 
 <img src={createMainnetAccount} />
 
@@ -105,7 +105,7 @@ And that's it! Now we've seen a method and a callback in action for a simple con
 :::tip This is important
 Understanding cross-contract calls and callbacks is quite important in smart contract development.
 
-Since Axion's transactions are asynchronous, the use of callbacks may be a new paradigm shift for smart contract developers from other ecosystems. 
+Since Fermi's transactions are asynchronous, the use of callbacks may be a new paradigm shift for smart contract developers from other ecosystems. 
 
 Feel free to dig into the linkdrop contract and play with the ideas presented in this section.
 

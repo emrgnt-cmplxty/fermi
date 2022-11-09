@@ -15,7 +15,7 @@ Also, you may visit the reference material at: https://docs.rs/near-sdk
   <h1><code>near-sdk</code></h1>
 
   <p>
-    <strong>Rust library for writing Axion smart contracts.</strong>
+    <strong>Rust library for writing Fermi smart contracts.</strong>
   </p>
   <p>
     Previously known as <code>near-bindgen</code>.
@@ -51,7 +51,7 @@ Also, you may visit the reference material at: https://docs.rs/near-sdk
 
 ## Example {#example}
 
-Wrap a struct in `#[near_bindgen]` and it generates a smart contract compatible with the Axion blockchain:
+Wrap a struct in `#[near_bindgen]` and it generates a smart contract compatible with the Fermi blockchain:
 ```rust
 use near_sdk::{near_bindgen, env};
 
@@ -189,8 +189,8 @@ The general workflow is the following:
 1. Create a crate and configure the `Cargo.toml` similarly to how it is configured in [examples/status-message/Cargo.toml](https://github.com/near/near-sdk-rs/tree/master/examples/status-message/Cargo.toml);
 2. Crate needs to have one `pub` struct that will represent the smart contract storage:
     * The struct needs to implement `Default` trait which
-    Axion will use to create the initial state of the contract upon its first usage;
-    * The struct also needs to implement `BorshSerialize` and `BorshDeserialize` traits which Axion will use to save/load contract's internal state;
+    Fermi will use to create the initial state of the contract upon its first usage;
+    * The struct also needs to implement `BorshSerialize` and `BorshDeserialize` traits which Fermi will use to save/load contract's internal state;
 
    Here is an example of a smart contract struct:
    ```rust
@@ -205,7 +205,7 @@ The general workflow is the following:
    
    The crate is mandatory even if your contract does not use the storage. Just declare an empty crate.
 
-3. Define methods that Axion will expose as smart contract methods:
+3. Define methods that Fermi will expose as smart contract methods:
     * You are free to define any methods for the struct but only public methods will be exposed as smart contract methods;
     * Methods need to use either `&self`, `&mut self`, or `self`;
     * Decorate the `impl` section with `#[near_bindgen]` macro. That is where all the M.A.G.I.C. (Macros-Auto-Generated Injected Code) is happening

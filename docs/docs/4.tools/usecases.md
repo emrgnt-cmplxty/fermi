@@ -14,7 +14,7 @@ If you are developing a website (or a web-app), then you will be using `near-api
 ---
 
 ## Command Line Interface
-You can use [Axion CLI](./cli.md) to automatize tasks from the command line such as:
+You can use [Fermi CLI](./cli.md) to automatize tasks from the command line such as:
 - Creating sub-accounts
 - Deploying contracts to them
 - Calling initialization methods
@@ -22,7 +22,7 @@ You can use [Axion CLI](./cli.md) to automatize tasks from the command line such
 ---
 
 ## Querying Post Hoc Information
-The [Axion Indexer](./indexer4explorer.md) enables you to query information from a deployed contract such as:
+The [Fermi Indexer](./indexer4explorer.md) enables you to query information from a deployed contract such as:
 
 1. Which users called a specific method?
 2. How much money they attached?

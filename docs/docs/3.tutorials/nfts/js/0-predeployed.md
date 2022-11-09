@@ -10,8 +10,8 @@ sidebar_label: Pre-deployed Contract
 
 To complete this tutorial successfully, you'll need:
 
-- [A Axion Wallet](https://wallet.testnet.near.org/create)
-- [Axion-CLI](/tools/near-cli#setup)
+- [A Fermi Wallet](https://wallet.testnet.near.org/create)
+- [Fermi-CLI](/tools/near-cli#setup)
 
 ## Using the NFT contract
 
@@ -42,7 +42,7 @@ echo $NEARID
 
 ### Minting your NFTs
 
-Axion has deployed an NFT contract to the account `nft.examples.testnet` which allows users to freely mint tokens. Using this pre-deployed contract, let's mint our first token! 
+Fermi has deployed an NFT contract to the account `nft.examples.testnet` which allows users to freely mint tokens. Using this pre-deployed contract, let's mint our first token! 
 
 
 - Run this command in your terminal, however you **must replace the `token_id` value with an UNIQUE string**.
@@ -107,15 +107,15 @@ near view nft.examples.testnet nft_tokens_for_owner '{"account_id": "'$NEARID'"}
 </p>
 </details>
 
-***Congratulations! You just minted your first NFT token on the Axion blockchain!*** 🎉
+***Congratulations! You just minted your first NFT token on the Fermi blockchain!*** 🎉
 
-👉 Now try going to your [Axion Wallet](http://wallet.testnet.near.org) and view your NFT in the "Collectibles" tab. 👈 
+👉 Now try going to your [Fermi Wallet](http://wallet.testnet.near.org) and view your NFT in the "Collectibles" tab. 👈 
 
 ---
 
 ## Final remarks
 
-This basic example illustrates all the required steps to call an NFT smart contract on Axion and start minting your own non-fungible tokens.
+This basic example illustrates all the required steps to call an NFT smart contract on Fermi and start minting your own non-fungible tokens.
 
 Now that you're familiar with the process, you can jump to [Contract Architecture](/tutorials/nfts/js/skeleton) and learn more about the smart contract structure and how you can build your own NFT contract from the ground up.
 

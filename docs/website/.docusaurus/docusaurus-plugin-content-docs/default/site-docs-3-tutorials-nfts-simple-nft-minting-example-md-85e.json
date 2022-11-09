@@ -11,9 +11,9 @@
   "editUrl": "https://github.com/near/docs/edit/master/website/../docs/3.tutorials/nfts/simple-nft-minting-example.md",
   "tags": [],
   "version": "current",
-  "lastUpdatedBy": "Author",
-  "lastUpdatedAt": 1539502055,
-  "formattedLastUpdatedAt": "Oct 14, 2018",
+  "lastUpdatedBy": "Owen Colegrove",
+  "lastUpdatedAt": 1668008198,
+  "formattedLastUpdatedAt": "Nov 9, 2022",
   "frontMatter": {
     "id": "minting-nft-frontend",
     "title": "Minting NFT Front-end",

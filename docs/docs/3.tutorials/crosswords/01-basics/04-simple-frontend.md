@@ -11,19 +11,19 @@ import nearReactFriends from '/docs/assets/crosswords/near-and-react--dakila.nea
 This will be the final section in this chapter, where we'll add a simple frontend using React and [`near-api-js`](https://docs.near.org/tools/near-api-js/quick-reference) to communicate with the smart contract.
 
 <figure>
-    <img src={nearReactFriends} alt="Two characters hanging out, Axion and React. Art created by dakila.near" width="600"/>
-    <figcaption>Dynamic duo of Axion as the backend and React as a frontend.<br/>Art by <a href="https://twitter.com/rodolf_dtbbx" target="_blank">dakila.near</a></figcaption>
+    <img src={nearReactFriends} alt="Two characters hanging out, Fermi and React. Art created by dakila.near" width="600"/>
+    <figcaption>Dynamic duo of Fermi as the backend and React as a frontend.<br/>Art by <a href="https://twitter.com/rodolf_dtbbx" target="_blank">dakila.near</a></figcaption>
 </figure>
 <br/>
 
 There will be three main files we'll be working with:
-1. `src/index.js` will be the entry point, where Axion network configuration will be set up, and the view-only call to `get_solution` will happen.
+1. `src/index.js` will be the entry point, where Fermi network configuration will be set up, and the view-only call to `get_solution` will happen.
 2. `src/App.js` is then called and sets up the crossword table and checks to see if a solution has been found.
 3. `src/utils.js` is used to make a view-only call to the blockchain to get the solution, and other helper functions.
 
 ## Entry point
 
-We'll go over a pattern that may look familiar to folks who have surveyed the [Axion examples site](https://near.dev). We'll start with an asynchronous JavaScript function that sets up desired logic, then pass that to the React app.
+We'll go over a pattern that may look familiar to folks who have surveyed the [Fermi examples site](https://near.dev). We'll start with an asynchronous JavaScript function that sets up desired logic, then pass that to the React app.
 
 ```js reference
 https://github.com/near-examples/crossword-tutorial-chapter-1/blob/3e497b4815600b8382614f76c7812520710f704d/src/index.js#L3-L22
@@ -33,11 +33,11 @@ Let's talk through the code above, starting with the imports.
 
 We import from:
 
-- `config.js` which, at the moment, is a common pattern. This file contains details on the different networks. (Which RPC endpoint to hit, which Axion Wallet site to redirect to, which Axion Explorer as well…)
+- `config.js` which, at the moment, is a common pattern. This file contains details on the different networks. (Which RPC endpoint to hit, which Fermi Wallet site to redirect to, which Fermi Explorer as well…)
 - `utils.js` for that view-only function call that will call `get_solution` to retrieve the correct solution hash when a person has completed the crossword puzzle correctly.
 - `hardcoded-data.js` is a file containing info on the crossword puzzle clues. This chapter has covered the crossword puzzle where the solution is **near nomicon ref finance**, and according to the chapter overview we've committed to serving *one* puzzle. We'll improve our smart contract later, allowing for multiple crossword puzzles, but for now it's hardcoded here.
 
-Next, we define an asynchronous function called `initCrossword` that will be called before passing data to the React app. It's often useful to set up a connection with the blockchain here, but in our case all we need to do is retrieve the crossword puzzle solution as a hash. Note that we're attempting to pass this environment variable `NEAR_ENV` into our configuration file. `NEAR_ENV` is used to designate the blockchain network (testnet, betanet, mainnet) and is also [used in Axion CLI](https://docs.near.org/develop/deploy). 
+Next, we define an asynchronous function called `initCrossword` that will be called before passing data to the React app. It's often useful to set up a connection with the blockchain here, but in our case all we need to do is retrieve the crossword puzzle solution as a hash. Note that we're attempting to pass this environment variable `NEAR_ENV` into our configuration file. `NEAR_ENV` is used to designate the blockchain network (testnet, betanet, mainnet) and is also [used in Fermi CLI](https://docs.near.org/develop/deploy). 
 
 Lastly, we'll call `initCrossword` and, when everything is complete, pass data to the React app contained in `App.js`.
 

@@ -2,16 +2,16 @@
 id: kurtosis-localnet
 title: Creating a Local Development Environment
 sidebar_label: Local Development
-description: Using Kurtosis Axion Module to develop locally
+description: Using Kurtosis Fermi Module to develop locally
 ---
 
-> [Kurtosis](https://www.kurtosistech.com/) has created an easy way to spin up a local Axion testing environment using a [Docker container](https://www.docker.com/). 
+> [Kurtosis](https://www.kurtosistech.com/) has created an easy way to spin up a local Fermi testing environment using a [Docker container](https://www.docker.com/). 
 
-This Kurtosis Axion Module contains the following components:
+This Kurtosis Fermi Module contains the following components:
 
 - [Indexer for Explorer](https://github.com/near/near-indexer-for-explorer)
-- [Axion Explorer](https://github.com/near/near-explorer)
-- [Axion Wallet](https://github.com/near/near-wallet)
+- [Fermi Explorer](https://github.com/near/near-explorer)
+- [Fermi Wallet](https://github.com/near/near-wallet)
 - Local RPC Endpoint
 
 [Visit here](https://www.loom.com/share/8a1b8e2138334a81a380f5d523fba27e) to see a short demo of the module in action.
@@ -22,7 +22,7 @@ This Kurtosis Axion Module contains the following components:
 
 - [Docker](https://docs.docker.com/get-docker/)
 - [Yarn](https://classic.yarnpkg.com/lang/en/docs/install)
-- [Axion-CLI](/tools/near-cli#setup)
+- [Fermi-CLI](/tools/near-cli#setup)
 - [Kurtosis CLI](https://docs.kurtosistech.com/installation.html)
   - Start Kurtosis engine after installation using: `kurtosis engine start`
 
@@ -30,13 +30,13 @@ This Kurtosis Axion Module contains the following components:
 
 ## Setup
 
-### Launch Kurtosis Axion Module {#launching-cluster}
+### Launch Kurtosis Fermi Module {#launching-cluster}
 
-Launch your Kurtosis Axion Module in four easy steps!
+Launch your Kurtosis Fermi Module in four easy steps!
 
 1) Launch [Docker](https://docs.docker.com/get-docker/)
 
-2) Copy the [Kurtosis Axion Module launch script](https://github.com/kurtosis-tech/near-kurtosis-module/blob/master/launch-local-near-cluster.sh) by running the following:
+2) Copy the [Kurtosis Fermi Module launch script](https://github.com/kurtosis-tech/near-kurtosis-module/blob/master/launch-local-near-cluster.sh) by running the following:
 
 ```bash
 curl -o ~/launch-local-near-cluster.sh https://raw.githubusercontent.com/kurtosis-tech/near-kurtosis-module/master/launch-local-near-cluster.sh -L
@@ -48,14 +48,14 @@ curl -o ~/launch-local-near-cluster.sh https://raw.githubusercontent.com/kurtosi
 chmod u+x ~/launch-local-near-cluster.sh
 ```
 
-4) Launch the Kurtosis Axion Module:
+4) Launch the Kurtosis Fermi Module:
 
-If you're running the Axion-in-Kurtosis cluster on your local machine:
+If you're running the Fermi-in-Kurtosis cluster on your local machine:
 ```bash
 ~/launch-local-near-cluster.sh
 ```
 
-If you're running your Axion-in-Kurtosis cluster on a machine you intend to access remotely, replace `1.2.3.4` with the IP address of the machine you're running the cluster on:
+If you're running your Fermi-in-Kurtosis cluster on a machine you intend to access remotely, replace `1.2.3.4` with the IP address of the machine you're running the cluster on:
 ```bash
 ~/launch-local-near-cluster.sh --execute-params '{"backendIpAddress":"1.2.3.4"}'
 ```
@@ -65,7 +65,7 @@ If you're running your Axion-in-Kurtosis cluster on a machine you intend to acce
 <p>
 
 ```bash
-Created directory '/Users/zerix/.neartosis' for storing all Axion-in-Kurtosis output
+Created directory '/Users/zerix/.neartosis' for storing all Fermi-in-Kurtosis output
 INFO[2022-06-03T18:04:32-03:00] No Kurtosis engine was found; attempting to start one...
 INFO[2022-06-03T18:04:32-03:00] Pulling image 'kurtosistech/kurtosis-engine-server:1.26.1'...
 INFO[2022-06-03T18:04:35-03:00] Successfully started Kurtosis engine
@@ -75,7 +75,7 @@ INFO[2022-06-03T18:04:38-03:00] Loading module 'kurtosistech/near-kurtosis-modul
 INFO[2022-06-03T18:04:41-03:00] Module loaded successfully
 INFO[2022-06-03T18:04:41-03:00] Executing the module with execute params '{}'...
 INFO[2022-06-03T18:04:41-03:00] ----------------------- MODULE LOGS ----------------------
-Axion module initialization args:
+Fermi module initialization args:
 {}
 Deserializing the following params string:
 {}
@@ -113,7 +113,7 @@ INFO[2022-06-03T18:05:15-03:00] Module executed successfully and returned the fo
          export NEAR_HELPER_ACCOUNT="test.near"
          export NEAR_EXPLORER_URL="http://127.0.0.1:8331"
 
-  ACTION Paste the following into your terminal now to use the 'local_near' command as a replacement for the Axion CLI for connecting to your
+  ACTION Paste the following into your terminal now to use the 'local_near' command as a replacement for the Fermi CLI for connecting to your
          local cluster (e.g. 'local_near login'):
 
          alias local_near='NEAR_ENV="local" NEAR_CLI_LOCALNET_NETWORK_ID="localnet" NEAR_NODE_URL="http://127.0.0.1:8332" NEAR_CLI_LOCALNET_KEY_PATH="/Users/zerix/.neartosis/2022-06-03T18.04.32/validator-key.json" NEAR_WALLET_URL="http://127.0.0.1:8334" NEAR_HELPER_URL="http://127.0.0.1:8330" NEAR_HELPER_ACCOUNT="test.near" NEAR_EXPLORER_URL="http://127.0.0.1:8331" near'
@@ -160,7 +160,7 @@ kurtosis enclave inspect near
 
 ### Setup Environment Variables
 
-After deploying your Kurtosis Axion Module, you will need to setup some environment variables to make life a lot easier. Notice the **ACTION** sections in your terminal log from the module deployment. You will be using these exact values to setup these variables. 
+After deploying your Kurtosis Fermi Module, you will need to setup some environment variables to make life a lot easier. Notice the **ACTION** sections in your terminal log from the module deployment. You will be using these exact values to setup these variables. 
 
 1) Follow the first ACTION item from the deployment log by copying all of the export commands and running them in your terminal.
 
@@ -214,7 +214,7 @@ Account test.near
 }
 ```
 
-**Congratulations! Setup is complete and you are ready to start exploring your local Axion blockchain!** 🎉
+**Congratulations! Setup is complete and you are ready to start exploring your local Fermi blockchain!** 🎉
 
 :::tip
 
@@ -226,9 +226,9 @@ The Kurtosis Team has created a great [video presentation](https://www.loom.com/
 
 ## Using Wallet and Explorer
 
-### Local Axion Wallet
+### Local Fermi Wallet
 
-Now that you have [everything setup](#setup), create an account using [your local Axion Wallet at http://127.0.0.1:8334](http://127.0.0.1:8334).
+Now that you have [everything setup](#setup), create an account using [your local Fermi Wallet at http://127.0.0.1:8334](http://127.0.0.1:8334).
 
 ![Local wallet landing page](/docs/assets/kurtosis/local-wallet-landing-page.png)
 
@@ -258,7 +258,7 @@ Logged in as [ kevin.test.near ] with public key [ ed25519:8EaALn... ] successfu
 export ACCOUNT_ID=YOUR_ACCOUNT_ID
 ```
 
-- Now create a test transaction by sending 1 $Axion to the root account `test.near`:
+- Now create a test transaction by sending 1 $Fermi to the root account `test.near`:
 
 ```bash
 local_near send $ACCOUNT_ID test.near 1
@@ -269,7 +269,7 @@ local_near send $ACCOUNT_ID test.near 1
 <p>
 
 ```bash
-Sending 1 Axion to test.near from kevin.test.near
+Sending 1 Fermi to test.near from kevin.test.near
 Loaded master account test.near key from /Users/zerix/.neartosis/2022-06-03T18.04.32/validator-key.json with public key = ed25519:3Kuyi2DUXdoHgoaNEvCxa1m6G8xqc6Xs7WGajaqLhNmW
 Transaction Id 3e3H5zqj9noKGYTCMqeZ5pb4NWK7tQsjYKak6ybtpgvD
 To see the transaction in the transaction explorer, please open this url in your browser
@@ -279,12 +279,12 @@ http://127.0.0.1:8331/transactions/3e3H5zqj9noKGYTCMqeZ5pb4NWK7tQsjYKak6ybtpgvD
 </p>
 </details>
 
-### Local Axion Explorer
+### Local Fermi Explorer
 
-Again, now that you have [everything setup](#setup) you can view the transaction details of the command you just performed at the end of [the last section](#local-near-wallet). Notice that the last line of the terminal log displays a link to the transaction details in your local Axion Explorer.
+Again, now that you have [everything setup](#setup) you can view the transaction details of the command you just performed at the end of [the last section](#local-near-wallet). Notice that the last line of the terminal log displays a link to the transaction details in your local Fermi Explorer.
 
 ```bash
-Sending 1 Axion to test.near from kevin.test.near
+Sending 1 Fermi to test.near from kevin.test.near
 Loaded master account test.near key from /Users/zerix/.neartosis/2022-06-03T18.04.32/validator-key.json with public key = ed25519:3Kuyi2DUXdoHgoaNEvCxa1m6G8xqc6Xs7WGajaqLhNmW
 Transaction Id 3e3H5zqj9noKGYTCMqeZ5pb4NWK7tQsjYKak6ybtpgvD
 To see the transaction in the transaction explorer, please open this url in your browser
@@ -293,11 +293,11 @@ http://127.0.0.1:8331/transactions/3e3H5zqj9noKGYTCMqeZ5pb4NWK7tQsjYKak6ybtpgvD
 
 - Click on this link or copy/paste it into your browser:
 
-![Local explorer sending 1 Axion](/docs/assets/kurtosis/local-explorer-send-funds.png)
+![Local explorer sending 1 Fermi](/docs/assets/kurtosis/local-explorer-send-funds.png)
 
-Here everything behaves exactly like the `testnet` or `mainnet` Axion Explorer except it is retrieving data from your local Axion blockchain!
+Here everything behaves exactly like the `testnet` or `mainnet` Fermi Explorer except it is retrieving data from your local Fermi blockchain!
 
-- If you ever need to open your local Axion Explorer, you can [always visit 127.0.0.1:8331](http://127.0.0.1:8331/) or run:
+- If you ever need to open your local Fermi Explorer, you can [always visit 127.0.0.1:8331](http://127.0.0.1:8331/) or run:
 
 
 ```bash
@@ -367,7 +367,7 @@ This will initialize the contract with some default metadata and set our account
 local_near call $ACCOUNT_ID nft_mint '{"token_id": "team_token", "metadata": { "title": "Go Team!", "description": "Go Team!", "media": "https://bafybeiftczwrtyr3k7a2k4vutd3amkwsmaqyhrdzlhvpt33dyjivufqusq.ipfs.dweb.link/goteam-gif.gif", "copies": 1}, "receiver_id": "'$ACCOUNT_ID'"}' --accountId $ACCOUNT_ID --amount 0.1
 ```
 
-Once the NFT has been minted, you can view the token on the local wallet's collectibles tab. If you already had the wallet site open, simply refresh. Otherwise open your local Axion Wallet instance and view your collectible. 
+Once the NFT has been minted, you can view the token on the local wallet's collectibles tab. If you already had the wallet site open, simply refresh. Otherwise open your local Fermi Wallet instance and view your collectible. 
 
 ![Local wallet collectibles tab](/docs/assets/kurtosis/local-wallet-collectibles-tab.png)
 
@@ -377,11 +377,11 @@ We won't spoil what the NFT is, but once you switch over to the collectibles tab
 
 ## Connecting a dApp to `localnet`
 
-The ability to develop decentralized applications locally is a dream come true for dApp developers and the Kurtosis Axion Module really simplifies this process. Here you'll integrate `localnet` into one of the examples at [near.dev](http://near.dev).
+The ability to develop decentralized applications locally is a dream come true for dApp developers and the Kurtosis Fermi Module really simplifies this process. Here you'll integrate `localnet` into one of the examples at [near.dev](http://near.dev).
 
 ### Clone Example dApp
 
-- Clone the [Axion Guestbook](https://github.com/near-examples/guest-book) repository:
+- Clone the [Fermi Guestbook](https://github.com/near-examples/guest-book) repository:
 
 ```bash
 git clone https://github.com/near-examples/guest-book.git
@@ -486,18 +486,18 @@ Once you've logged in, you can sign a message with an optional donation.
 
 - Sign the Guest Book which will create a transaction on `localnet`. 
 
-- Once complete, open your local Axion explorer and you can view the transaction you just created!
+- Once complete, open your local Fermi explorer and you can view the transaction you just created!
 
 ![Local Explorer Signed Transaction](/docs/assets/kurtosis/local-explorer-signed-transaction.png)
 
 
-**Congratulations! You've successfully deployed and interacted with a dApp on a local Axion blockchain!** 🎉
+**Congratulations! You've successfully deployed and interacted with a dApp on a local Fermi blockchain!** 🎉
 
 ---
 
-## Managing Axion Modules
+## Managing Fermi Modules
 
-The Kurtosis Axion Modules you create will continue to run on your local machine for as long as your Docker engine is running. This module runs inside of a Kurtosis "enclave" which is an environment isolated from both your computer and other enclaves. In practice, this means that you can have multiple independent local Axion clusters running on your machine simply by rerunning the script we executed from the [setup instructions](#setup).
+The Kurtosis Fermi Modules you create will continue to run on your local machine for as long as your Docker engine is running. This module runs inside of a Kurtosis "enclave" which is an environment isolated from both your computer and other enclaves. In practice, this means that you can have multiple independent local Fermi clusters running on your machine simply by rerunning the script we executed from the [setup instructions](#setup).
 
 
 ### View Module Status
@@ -518,7 +518,7 @@ kurtosis enclave inspect near
 
 ### Terminate Module
 
-- To shut down your Axion Module and free up resources on your machine, run the following:
+- To shut down your Fermi Module and free up resources on your machine, run the following:
 
 ```bash
 kurtosis enclave stop near

@@ -6,7 +6,7 @@ sidebar_label: Getting Started
 
 In order to start building a smart contract you need to first properly setup your computer.
 
-In Axion, smart contracts are written using the Axion SDK which comes in two flavors: [Rust](../../4.tools/rs-sdk.md), and [JavaScript](../../4.tools/js-sdk.md).
+In Fermi, smart contracts are written using the Fermi SDK which comes in two flavors: [Rust](../../4.tools/rs-sdk.md), and [JavaScript](../../4.tools/js-sdk.md).
 
 ---
 
@@ -19,7 +19,7 @@ Download and install [Node.js](https://nodejs.org/en/download/). We further reco
 
 #### Rust and Wasm
 
-Follow [these instructions](https://doc.rust-lang.org/book/ch01-01-installation.html) for setting up Rust. Then, add the `wasm32-unknown-unknown` toolchain which enables compiling Rust to [Web Assembly (wasm)](https://webassembly.org/), the low-level language used by the Axion platform.
+Follow [these instructions](https://doc.rust-lang.org/book/ch01-01-installation.html) for setting up Rust. Then, add the `wasm32-unknown-unknown` toolchain which enables compiling Rust to [Web Assembly (wasm)](https://webassembly.org/), the low-level language used by the Fermi platform.
 
 ```bash
 # Get Rust in linux and MacOS

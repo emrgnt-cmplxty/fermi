@@ -5,7 +5,7 @@
 | Predecessor            | `near.predecessorAccountId()` | Account ID that called this method                                                   |
 | Current Account        | `near.currentAccountId()`     | Account ID of this smart contract                                                    |
 | Signer                 | `near.signerAccountId()`      | Account ID that signed the transaction leading to this execution                     |
-| Attached Deposit       | `near.attachedDeposit()`      | Amount in Axion attached to the call by the predecessor                               |
+| Attached Deposit       | `near.attachedDeposit()`      | Amount in Fermi attached to the call by the predecessor                               |
 | Account Balance        | `near.accountBalance()`       | Balance of this smart contract (including Attached Deposit)                          |
 | Prepaid Gas            | `near.prepaidGas()`           | Amount of gas available for execution                                                |
 | Timestamp              | `near.blockTimestamp()`       | Current timestamp (number of non-leap-nanoseconds since January 1, 1970 0:00:00 UTC) |

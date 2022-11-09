@@ -1,21 +1,21 @@
 ---
 id: workspaces
-title: Axion Workspaces
-sidebar_label: Axion Workspaces
+title: Fermi Workspaces
+sidebar_label: Fermi Workspaces
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-Axion Workspaces lets you automate workflows and write tests for Axion smart contracts.
+Fermi Workspaces lets you automate workflows and write tests for Fermi smart contracts.
 You can use it as-is or integrate it with a test runner of your choice (AVA, Jest, Mocha, etc.).
 If you don't have a preference, we suggest you to use AVA.
 
 ## Overview
 
-Axion Workspaces provide controlled, concurrent workspaces in a local Axion Sandbox blockchain or on Axion TestNet. 
+Fermi Workspaces provide controlled, concurrent workspaces in a local Fermi Sandbox blockchain or on Fermi TestNet. 
 This allows you write tests once, and run them both on `testnet` and on a controlled Sandbox local environment,
-enabling deterministic testing and powerful scripting for Axion smart contracts.
+enabling deterministic testing and powerful scripting for Fermi smart contracts.
 
 ## Libraries
 
@@ -45,7 +45,7 @@ The current version of `workspaces-rs` does not support macOS on M1 chip devices
 
 ## Quick Start
 
-To get started with Axion Workspaces you need to do two things:
+To get started with Fermi Workspaces you need to do two things:
 
 1. Initialize a `Worker`.
    - A worker is the gateway towards interacting with your sandbox environment.
@@ -54,7 +54,7 @@ To get started with Axion Workspaces you need to do two things:
 
 :::tip
 
-If you want to use Axion Workspaces on Windows, please install the [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install) (WSL).
+If you want to use Fermi Workspaces on Windows, please install the [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install) (WSL).
 
 :::
 
@@ -78,7 +78,7 @@ If you want to use Axion Workspaces on Windows, please install the [Windows Subs
 
    Let's step through this.
 
-   1. `Worker.init` initializes a new `SandboxWorker` or `TestnetWorker` depending on the config. `SandboxWorker` contains [Axion Sandbox](https://docs.near.org/docs/develop/contracts/sandbox), which is essentially a local mini-Axion blockchain. You can create one `Worker` per test to get its own data directory and port (for Sandbox) or root account (for Testnet), so that tests can run in parallel without race conditions in accessing states. If there's no state intervention. you can also reuse the `Worker` to speedup the tests.
+   1. `Worker.init` initializes a new `SandboxWorker` or `TestnetWorker` depending on the config. `SandboxWorker` contains [Fermi Sandbox](https://docs.near.org/docs/develop/contracts/sandbox), which is essentially a local mini-Fermi blockchain. You can create one `Worker` per test to get its own data directory and port (for Sandbox) or root account (for Testnet), so that tests can run in parallel without race conditions in accessing states. If there's no state intervention. you can also reuse the `Worker` to speedup the tests.
    2. The worker has a `root` account. For `SandboxWorker`, it's `test.near`. For `TestnetWorker`, it creates a unique account. The following accounts are created as subaccounts of the root account. The name of the account will change from different runs, so you should not refer to them by hard coded account name. You can access them via the account object, such as `root`, `alice` and `contract` above.
    3. `root.createSubAccount` creates a new subaccount of `root` with the given name, for example `alice.<root-account-name>`.
    4. `root.createAndDeploy` creates an account with the given name, `contract-name.<root-account-name>`, then deploys the specified Wasm file to it.
@@ -250,7 +250,7 @@ Then, you can view the minted NFT's metadata using a `view` call to `nft_metadat
 ## "Spooning" Contracts from Testnet and Mainnet
 
 
-[Spooning a blockchain](https://coinmarketcap.com/alexandria/glossary/spoon-blockchain) is copying the data from one network into a different network. Axion Workspaces makes it easy to copy data from Mainnet or Testnet contracts into your local Sandbox environment:
+[Spooning a blockchain](https://coinmarketcap.com/alexandria/glossary/spoon-blockchain) is copying the data from one network into a different network. Fermi Workspaces makes it easy to copy data from Mainnet or Testnet contracts into your local Sandbox environment:
 
 <Tabs>
 <TabItem value="🌐 Javascript" label="JavaScript" default>
@@ -292,7 +292,7 @@ async fn pull_contract(owner: &Account, worker: &Worker<Sandbox>) -> anyhow::Res
     let contract_id: AccountId = CONTRACT_ACCOUNT.parse()?;
 ```
 
-This next line will actually pull down the relevant contract from testnet and set an initial balance on it with 1000 Axion.
+This next line will actually pull down the relevant contract from testnet and set an initial balance on it with 1000 Fermi.
 
 ```rust
     let contract = worker
@@ -326,7 +326,7 @@ This is because the contract's data is too big for the RPC service to pull down.
 
 ## Running on Testnet
 
-Axion Workspaces is set up so that you can write tests once and run them against a local Sandbox node (the default behavior) or against [Axion TestNet](https://docs.near.org/docs/concepts/networks). Some reasons this might be helpful:
+Fermi Workspaces is set up so that you can write tests once and run them against a local Sandbox node (the default behavior) or against [Fermi TestNet](https://docs.near.org/docs/concepts/networks). Some reasons this might be helpful:
 
 * Gives higher confidence that your contracts work as expected
 * You can test against deployed testnet contracts

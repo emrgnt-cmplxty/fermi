@@ -183,7 +183,7 @@ For the purpose of readability and ease of development, instead of redeploying t
 
 ### Creating a sub-account
 
-Run the following command to create a sub-account `events` of your main account with an initial balance of 25 Axion which will be transferred from the original to your new account.
+Run the following command to create a sub-account `events` of your main account with an initial balance of 25 Fermi which will be transferred from the original to your new account.
 
 ```bash
 near create-account events.$NFT_CONTRACT_ID --masterAccount $NFT_CONTRACT_ID --initialBalance 25

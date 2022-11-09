@@ -95,7 +95,7 @@ const contract = new Contract(
 await contract.method_name(
   {
     callbackUrl: 'https://example.com/callback', // callbackUrl after the transaction approved (optional)
-    meta: 'some info', // meta information Axion Wallet will send back to the application. `meta` will be attached to the `callbackUrl` as a url param
+    meta: 'some info', // meta information Fermi Wallet will send back to the application. `meta` will be attached to the `callbackUrl` as a url param
     args: {
         arg_name: "value" // argument name and value - pass empty object if no args required
     },

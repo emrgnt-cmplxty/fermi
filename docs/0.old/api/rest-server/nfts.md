@@ -1,10 +1,10 @@
 ---
 id: nfts
-title: Axion API REST Server
+title: Fermi API REST Server
 sidebar_label: NFTs
 ---
 
-> [Axion REST API Server](https://github.com/near-examples/near-api-rest-server) is a project that allows you create your own simple REST API server that interacts with the Axion blockchain.
+> [Fermi REST API Server](https://github.com/near-examples/near-api-rest-server) is a project that allows you create your own simple REST API server that interacts with the Fermi blockchain.
 
 ---
 
@@ -87,7 +87,7 @@ _Requires [`/init`](#init) configuration with master account._
 ]
 ```
 
-_(`tx` is the transaction hash that can be queried in [Axion Explorer](http://explorer.testnet.near.org))_
+_(`tx` is the transaction hash that can be queried in [Fermi Explorer](http://explorer.testnet.near.org))_
 
 ---
 
@@ -124,7 +124,7 @@ _(This creates `EXAMPLE_TOKEN_1`, `EXAMPLE_TOKEN_2`, & `EXAMPLE_TOKEN_3`)_
 ]
 ```
 
-_(Above response are transaction hashes that can be queried in [Axion Explorer](http://explorer.testnet.near.org))_
+_(Above response are transaction hashes that can be queried in [Fermi Explorer](http://explorer.testnet.near.org))_
 
 ---
 
@@ -171,7 +171,7 @@ _**Note:** Use [`near login`](https://docs.near.org/docs/tools/near-cli#near-log
 }
 ```
 
-_(`tx` is the transaction hash that can be queried in [Axion Explorer](http://explorer.testnet.near.org))_
+_(`tx` is the transaction hash that can be queried in [Fermi Explorer](http://explorer.testnet.near.org))_
 
 ---
 
@@ -208,7 +208,7 @@ _(`tx` is the transaction hash that can be queried in [Axion Explorer](http://ex
 }
 ```
 
-_(`tx` is the transaction hash that can be queried in [Axion Explorer](http://explorer.testnet.near.org))_
+_(`tx` is the transaction hash that can be queried in [Fermi Explorer](http://explorer.testnet.near.org))_
 
 ---
 

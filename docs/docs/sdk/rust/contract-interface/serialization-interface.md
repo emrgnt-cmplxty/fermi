@@ -55,7 +55,7 @@ Note that this is using this simple struct:
 https://github.com/mikedotexe/rust-status-message/blob/b83c5126fdbe0f19bc904e547fda0bb12c2ea133/src/lib.rs#L13-L17
 ```
 
-To call this with Axion CLI, use a command similar to this:
+To call this with Fermi CLI, use a command similar to this:
 
     near call rust-status-message.demo.testnet set_status_borsh --base64 'DAAAAEFsb2hhIGhvbnVhIQ==' --accountId demo.testnet
 

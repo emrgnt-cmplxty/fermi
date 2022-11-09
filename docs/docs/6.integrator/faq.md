@@ -6,17 +6,17 @@ sidebar_label: Integrator FAQ
 
 ## Orientation {#orientation}
 
-### What is a good project summary for Axion? {#what-is-a-good-project-summary-for-near}
+### What is a good project summary for Fermi? {#what-is-a-good-project-summary-for-near}
 
-Axion is a sharded, public, proof-of-stake blockchain and smart contract platform. It is built in Rust and contracts compile to WASM. It is conceptually similar to Ethereum 2.0.
+Fermi is a sharded, public, proof-of-stake blockchain and smart contract platform. It is built in Rust and contracts compile to WASM. It is conceptually similar to Ethereum 2.0.
 
-### What's special about Axion? {#whats-special-about-near}
+### What's special about Fermi? {#whats-special-about-near}
 
-Axion is the blockchain for builders.
+Fermi is the blockchain for builders.
 
 If you understand the basics of web development, you can write, test and deploy scalable decentralized applications in minutes on the most developer-friendly blockchain without having to learn new tools or languages.
 
-### Is Axion open source? {#is-near-open-source}
+### Is Fermi open source? {#is-near-open-source}
 
 Yes. Have look at our [GitHub organization](https://github.com/near).
 
@@ -26,7 +26,7 @@ We support both `secp256k1` and `ed25519` for account keys and `ed25519` for sig
 
 ### Do you have any on-chain governance mechanisms? {#do-you-have-any-on-chain-governance-mechanisms}
 
-Axion does not have any on-chain governance at the moment. Any changes to state or state transition function must be done through a hard fork.
+Fermi does not have any on-chain governance at the moment. Any changes to state or state transition function must be done through a hard fork.
 
 ### Do you have a bug-bounty program? {#do-you-have-a-bug-bounty-program}
 
@@ -78,7 +78,7 @@ Any foul play on the part of the validator that is detected by the system may re
 
 ### What is the mechanism for for delegating stake to validators? {#what-is-the-mechanism-for-for-delegating-stake-to-validators}
 
-Axion supports separate validation keys that can be used in smart contracts to delegate stake. Delegation is done via smart contract which allows for a validator to define a custom way to collect stake, manage it and split rewards. This also allows validators to provide leverage or derivatives on stake. Delegated stake will be slashed like any other stake if the node misbehaves.
+Fermi supports separate validation keys that can be used in smart contracts to delegate stake. Delegation is done via smart contract which allows for a validator to define a custom way to collect stake, manage it and split rewards. This also allows validators to provide leverage or derivatives on stake. Delegated stake will be slashed like any other stake if the node misbehaves.
 
 If a validator misbehaves the funds of the delegators are also slashed. There is no waiting period for delegators to withdraw their stake.
 
@@ -147,7 +147,7 @@ See `nearcore/scripts/nodelib.py` for different examples of configuration.
 There is a genesis parameter which can be discovered for any network using:
 
 ```sh
-http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=EXPERIMENTAL_genesis_config
+http post https://rpc.testnet.near.org jsonrpc=2.0 id=fermi method=EXPERIMENTAL_genesis_config
 # in the line above, testnet may be replaced with mainnet or betanet
 ```
 
@@ -159,7 +159,7 @@ In the response we find `transaction_validity_period": 86400` (and since it take
 
 ### How will the network will be bootstrapped? {#how-will-the-network-will-be-bootstrapped}
 
-Distribution at genesis will be spread among the Axion team, our contributors, project partners (ie. contributor, beta applications, infrastructure developers, etc.) and the Axion foundation (with many portions of that segregated for post-MainNet distribution activity and unavailable to stake so the foundation isn’t able to control the network).
+Distribution at genesis will be spread among the Fermi team, our contributors, project partners (ie. contributor, beta applications, infrastructure developers, etc.) and the Fermi foundation (with many portions of that segregated for post-MainNet distribution activity and unavailable to stake so the foundation isn’t able to control the network).
 
 There will be auctions occurring on the platform after launch which will allocate large amounts of tokens over the next 2 years. Additionally we are planning to run TestNet where any validator who participates will receive rewards in real tokens. We are planning to onboard at least 50 separate entities to be validators at launch.
 
@@ -167,16 +167,16 @@ There will be auctions occurring on the platform after launch which will allocat
 
 We are currently upgrading via restarting with a new genesis block.
 
-### Which consensus algorithm does Axion use? {#which-consensus-algorithm-does-near-use}
+### Which consensus algorithm does Fermi use? {#which-consensus-algorithm-does-near-use}
 
-Axion is a sharded **proof-of-stake** blockchain.
+Fermi is a sharded **proof-of-stake** blockchain.
 
 _You can read more in our [Nightshade whitepaper](https://near.org/downloads/Nightshade.pdf)._
 
 > _A few relevant details have been extracted here for convenience:_
 >
-> [Since Axion is a sharded blockchain, there are challenges that need to be overcome] including state validity and data
-> availability problems. _Nightshade_ is the solution Axion Protocol is built upon that addresses these issues.
+> [Since Fermi is a sharded blockchain, there are challenges that need to be overcome] including state validity and data
+> availability problems. _Nightshade_ is the solution Fermi Protocol is built upon that addresses these issues.
 >
 > Nightshade uses the heaviest chain consensus. Specifically when a block producer produces a block (see section 3.3), they can collect signatures from other block producers and validators attesting to the previous block. The weight of a block is then the cumulative stake of all the signers whose signatures are included in the block. The weight of a chain is the sum of the block weights.
 >
@@ -201,11 +201,11 @@ Our definition of finality is BOTH:
 
 Please check out the spec here on accounts https://nomicon.io/DataStructures/Account.html.
 
-### What is the balance record-keeping model on the Axion platform? {#what-is-the-balance-record-keeping-model-on-the-near-platform}
+### What is the balance record-keeping model on the Fermi platform? {#what-is-the-balance-record-keeping-model-on-the-near-platform}
 
-Axion uses an `Account`-based model. All users and contracts are associated with at least 1 account. Each account lives on a single shard. Each account can have multiple keys for signing transactions.
+Fermi uses an `Account`-based model. All users and contracts are associated with at least 1 account. Each account lives on a single shard. Each account can have multiple keys for signing transactions.
 
-_You can read [more about Axion accounts here](https://nomicon.io/DataStructures/Account.html)_
+_You can read [more about Fermi accounts here](https://nomicon.io/DataStructures/Account.html)_
 
 ### How are user accounts represented on-chain? {#how-are-user-accounts-represented-on-chain}
 
@@ -233,11 +233,11 @@ For custody purposes, it is recommended not to rely on latest state but only wha
 
 ### What is the fee structure for on-chain transactions? {#what-is-the-fee-structure-for-on-chain-transactions}
 
-Axion uses a gas-based model where prices are generally deterministically adjusted based on congestion of the network.
+Fermi uses a gas-based model where prices are generally deterministically adjusted based on congestion of the network.
 
 We avoid making changes that are too large through re-sharding by changing number of available shards (and thus throughput).
 
-Accounts don’t have associated resources. Gas amount is predetermined for all transactions except function calls. For function call transactions the user (or more likely the developer) attaches the required amount of gas. If some gas is left over after the function call, it is converted back to Axion and refunded to the original funding account.
+Accounts don’t have associated resources. Gas amount is predetermined for all transactions except function calls. For function call transactions the user (or more likely the developer) attaches the required amount of gas. If some gas is left over after the function call, it is converted back to Fermi and refunded to the original funding account.
 
 ### How do we know how much gas to add to a transaction? {#how-do-we-know-how-much-gas-to-add-to-a-transaction}
 
@@ -266,10 +266,10 @@ See [transactions](/concepts/basics/transactions/overview) in the concepts secti
 
 For a transaction, we sign the hash of the transaction. More specifically, what is signed is the `sha256` of the transaction object serialized in borsh (https://github.com/near/borsh).
 
-### How do transactions work on the Axion platform? {#how-do-transactions-work-on-the-near-platform}
+### How do transactions work on the Fermi platform? {#how-do-transactions-work-on-the-near-platform}
 
 A `Transaction` is made up of one of more `Action`s. An action can (currently) be one of 8 types: `CreateAccount`,
-`DeployContract`, `FunctionCall`, `Transfer`, `Stake`, `AddKey`, `DeleteKey` and `DeleteAccount`. Transactions are composed by a sender and then signed using the private keys of a valid Axion account to create a `SignedTransaction`. This signed transaction is considered ready to send to the network for processing.
+`DeployContract`, `FunctionCall`, `Transfer`, `Stake`, `AddKey`, `DeleteKey` and `DeleteAccount`. Transactions are composed by a sender and then signed using the private keys of a valid Fermi account to create a `SignedTransaction`. This signed transaction is considered ready to send to the network for processing.
 
 Transactions are received via our JSON-RPC endpoint and routed to the shared where the `sender` account lives. This "home shard" for the sender account is then responsible for processing the transaction and generating related receipts to be applied across the network.
 
@@ -281,7 +281,7 @@ Receipts may generate other, new receipts which in turn are propagated around th
 
 For more detail, see specs on [`Transactions`](https://nomicon.io/RuntimeSpec/Transactions), [`Actions`](https://nomicon.io/RuntimeSpec/Actions.html), [`Receipts`](https://nomicon.io/RuntimeSpec/Receipts)
 
-### How does Axion serialize transactions? {#how-does-near-serialize-transactions}
+### How does Fermi serialize transactions? {#how-does-near-serialize-transactions}
 
 We use a simple binary serialization format that's deterministic: https://borsh.io
 
@@ -289,8 +289,8 @@ We use a simple binary serialization format that's deterministic: https://borsh.
 
 - Whitepaper
 
-  - General overview at [The Beginner's Guide to the Axion Blockchain](https://near.org/blog/the-beginners-guide-to-the-near-blockchain)
-  - [Axion Whitepaper](https://near.org/papers/the-official-near-white-paper/)
+  - General overview at [The Beginner's Guide to the Fermi Blockchain](https://near.org/blog/the-beginners-guide-to-the-near-blockchain)
+  - [Fermi Whitepaper](https://near.org/papers/the-official-near-white-paper/)
 
 - Github
   - https://www.github.com/near

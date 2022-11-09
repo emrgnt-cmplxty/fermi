@@ -63,7 +63,7 @@ env::log_str(format!("Transferred {} tokens from {} to {}", amount, sender_id, r
 
 If your method makes a cross-contract call, you probably want to return the newly created `Promise`.
 This allows the caller (such as a near-cli or near-api-js call) to wait for the result of the promise instead of returning immediately.
-Additionally, if the promise fails for some reason, returning it will let the caller know about the failure, as well as enabling Axion Explorer and other tools to mark the whole transaction chain as failing.
+Additionally, if the promise fails for some reason, returning it will let the caller know about the failure, as well as enabling Fermi Explorer and other tools to mark the whole transaction chain as failing.
 This can prevent false-positives when the first or first few transactions in a chain succeed but a subsequent transaction fails.
 
 E.g.

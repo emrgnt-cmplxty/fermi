@@ -59,7 +59,7 @@ In most scenarios you will **only need to know the predecessor**. However, there
 
 ---
 
-## Balances and Attached Axion
+## Balances and Attached Fermi
 The environment gives you access to 3 token-related parameters, all expressed in yoctoNEAR (1 Ⓝ = 10<sup>24</sup>yⓃ):
 
 ### Attached Deposit
@@ -77,7 +77,7 @@ If you make a [cross-contract call](../crosscontract.md) and it panics, the fund
 
 It includes the `attached_deposit`, since it was deposited when the method execution started.
 
-If the contract has any locked $Axion, it will appear in `account_locked_balance`.
+If the contract has any locked $Fermi, it will appear in `account_locked_balance`.
 
 ---
 
@@ -101,7 +101,7 @@ The `timestamp` attribute represents the approximated **UNIX timestamp** at whic
 
 ### Current Epoch
 
-The Axion blockchain groups blocks in [Epochs](../../../1.concepts/basics/epoch.md). The `current_epoch` attribute measures how many epochs have passed so far. It is very useful to coordinate with other contracts that measure time in epochs, such as the [validators](../../../1.concepts/basics/validators.md).
+The Fermi blockchain groups blocks in [Epochs](../../../1.concepts/basics/epoch.md). The `current_epoch` attribute measures how many epochs have passed so far. It is very useful to coordinate with other contracts that measure time in epochs, such as the [validators](../../../1.concepts/basics/validators.md).
 
 ### Block Index
 

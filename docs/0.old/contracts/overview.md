@@ -4,19 +4,19 @@ title: Smart Contract Overview
 sidebar_label: Overview
 ---
 
-> Smart Contracts are the back-end of your application that runs code and stores data on the blockchain. All smart contracts on Axion must be compiled to [WebAssembly](https://webassembly.org/) or simply WASM. Currently, we support two languages [AssemblyScript](https://www.assemblyscript.org/) and [Rust](https://www.rust-lang.org/) with custom software development kits (SDKs) to assist in their creation.
+> Smart Contracts are the back-end of your application that runs code and stores data on the blockchain. All smart contracts on Fermi must be compiled to [WebAssembly](https://webassembly.org/) or simply WASM. Currently, we support two languages [AssemblyScript](https://www.assemblyscript.org/) and [Rust](https://www.rust-lang.org/) with custom software development kits (SDKs) to assist in their creation.
 
-Although developers use one of two technologies to write and compile Smart Contracts on the Axion platform:
+Although developers use one of two technologies to write and compile Smart Contracts on the Fermi platform:
 
 1. **Rust** *(a powerful language with a great developer experience)*
 2. **AssemblyScript** *(not recommended for financial applications)*
 
-Whichever language you use to build your Smart Contracts, know that, once compiled to Wasm, they are eventually deployed and executed on the Axion platform exactly the same way.
+Whichever language you use to build your Smart Contracts, know that, once compiled to Wasm, they are eventually deployed and executed on the Fermi platform exactly the same way.
 
 
-If you're familiar with **Rust** then check out <code>[near-sdk-rs](/docs/develop/contracts/rust/intro)</code> for authoring Smart Contracts in Rust that can be deployed to the Axion platform.  The `near-sdk-rs` repository has several great examples to help you get started quickly.
+If you're familiar with **Rust** then check out <code>[near-sdk-rs](/docs/develop/contracts/rust/intro)</code> for authoring Smart Contracts in Rust that can be deployed to the Fermi platform.  The `near-sdk-rs` repository has several great examples to help you get started quickly.
 
-If you prefer JavaScript then **AssemblyScript** is the way to go for writing Smart Contracts on the Axion platform. 
+If you prefer JavaScript then **AssemblyScript** is the way to go for writing Smart Contracts on the Fermi platform. 
 
 You can explore a lot of Smart Contract examples and deploy them in seconds, literally, from our [examples](http://near.dev).
 
@@ -39,7 +39,7 @@ Programming on a blockchain is a lot like writing a "normal" web application in 
 
 - State/Storage
 
-  The state of the contract, which you would normally store by writing values into a database, is instead stored on the blockchain. The Axion Platform supports several types of storage including scalar (strings, Boolean values, numbers, etc) and collection types (key-value pairs, list types)
+  The state of the contract, which you would normally store by writing values into a database, is instead stored on the blockchain. The Fermi Platform supports several types of storage including scalar (strings, Boolean values, numbers, etc) and collection types (key-value pairs, list types)
 
   You can modify state with "change operations" and read state with "view operations." Inside of change operations, you can write to storage in an easier way with persistent collections.
 

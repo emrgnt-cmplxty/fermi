@@ -15,7 +15,7 @@ import {
   UpdateTimeRequest,
   UpdatePricesRequest,
 } from './transaction'
-import { AxionTypes, AxionUtils, AxionAccount, AxionClient } from 'axion-js-sdk'
+import { FermiTypes, FermiUtils, FermiAccount, FermiClient } from 'fermi-js-sdk'
 
 export const transactionParams = {
   protoVersion: {
@@ -78,13 +78,13 @@ export function lookupControllerAndType(request: supportedOrders): [number, numb
 
 export async function buildTransaction(
   request: supportedOrders,
-  sender: AxionTypes.PrivateKey,
-  recentBlockDigest: AxionTypes.Digest | undefined,
+  sender: FermiTypes.PrivateKey,
+  recentBlockDigest: FermiTypes.Digest | undefined,
   fee: number | undefined,
-  client: AxionClient | undefined
-): Promise<AxionTypes.Transaction> {
-  const transaction = new AxionTypes.Transaction()
-  const version = new AxionTypes.Version()
+  client: FermiClient | undefined
+): Promise<FermiTypes.Transaction> {
+  const transaction = new FermiTypes.Transaction()
+  const version = new FermiTypes.Version()
   const [targetController, requestType] = lookupControllerAndType(request)
 
   version.setMajor(transactionParams.protoVersion.major)
@@ -99,9 +99,9 @@ export async function buildTransaction(
     if (client === undefined) {
       throw Error('Client must be defined if recentBlockDigest is not')
     }
-    const blockInfoResponse: AxionTypes.BlockInfo = await client.getLatestBlockInfo()
+    const blockInfoResponse: FermiTypes.BlockInfo = await client.getLatestBlockInfo()
     const recentBlockDigest = blockInfoResponse.block_id
-    transaction.setRecentBlockHash(AxionUtils.hexToBytes(recentBlockDigest))
+    transaction.setRecentBlockHash(FermiUtils.hexToBytes(recentBlockDigest))
   }
   transaction.setRequestType(requestType)
   transaction.setFee(fee == undefined ? transactionParams.minFee : fee)
@@ -112,18 +112,18 @@ export async function buildTransaction(
 
 export async function buildSignedTransaction(
   request: supportedOrders,
-  senderPrivKey: AxionTypes.PrivateKey,
-  recentBlockDigest: AxionTypes.Digest | undefined,
+  senderPrivKey: FermiTypes.PrivateKey,
+  recentBlockDigest: FermiTypes.Digest | undefined,
   fee: number | undefined,
-  client: AxionClient | undefined
-): Promise<AxionTypes.SignedTransaction> {
-  const sender = await AxionAccount.getPublicKey(senderPrivKey)
+  client: FermiClient | undefined
+): Promise<FermiTypes.SignedTransaction> {
+  const sender = await FermiAccount.getPublicKey(senderPrivKey)
   const transaction = await buildTransaction(request, sender, recentBlockDigest, fee, client)
-  const transactionDigest = AxionUtils.getTransactionDigest(transaction)
+  const transactionDigest = FermiUtils.getTransactionDigest(transaction)
 
-  const signedTransaction = new AxionTypes.SignedTransaction()
+  const signedTransaction = new FermiTypes.SignedTransaction()
   signedTransaction.setTransaction(transaction)
-  const signature = await AxionAccount.sign(transactionDigest, senderPrivKey)
+  const signature = await FermiAccount.sign(transactionDigest, senderPrivKey)
   signedTransaction.setSignature(signature)
 
   return signedTransaction

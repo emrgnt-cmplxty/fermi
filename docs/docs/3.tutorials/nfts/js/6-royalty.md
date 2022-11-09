@@ -59,7 +59,7 @@ To simplify the payout calculation, let's add a helper `royaltyToPayout` functio
 https://github.com/near-examples/nft-tutorial-js/blob/6.royalty/src/nft-contract/internal.ts#L13-L16
 ```
 
-If you were to use the `royaltyToPayout` function and pass in `2000` as the `royaltyPercentage` and an `amountToPay` of 1 Axion, it would return a value of 0.2 Axion.
+If you were to use the `royaltyToPayout` function and pass in `2000` as the `royaltyPercentage` and an `amountToPay` of 1 Fermi, it would return a value of 0.2 Fermi.
 
 ### Royalties
 
@@ -86,19 +86,19 @@ Token {
 }
 ```
 
-If a user were to call `nft_payout` on the token and pass in a balance of 1 Axion, it would loop through the token's royalty field and insert the following into the payout object:
+If a user were to call `nft_payout` on the token and pass in a balance of 1 Fermi, it would loop through the token's royalty field and insert the following into the payout object:
 
 ```js
 Payout {
     payout: {
-        "benji": 0.1 Axion,
-        "josh": 0.05 Axion,
-        "mike": 0.2 Axion
+        "benji": 0.1 Fermi,
+        "josh": 0.05 Fermi,
+        "mike": 0.2 Fermi
     }
 }
 ```
 
-At the very end, it will insert `damian` into the payout object and give him `1 Axion - 0.1 - 0.05 - 0.2 = 0.65 Axion`.
+At the very end, it will insert `damian` into the payout object and give him `1 Fermi - 0.1 - 0.05 - 0.2 = 0.65 Fermi`.
 
 **nft_transfer_payout**
 
@@ -138,7 +138,7 @@ As you saw in the previous tutorial, adding changes like these will cause proble
 
 ### Creating a sub-account
 
-Run the following command to create a sub-account `royalty` of your main account with an initial balance of 25 Axion which will be transferred from the original to your new account.
+Run the following command to create a sub-account `royalty` of your main account with an initial balance of 25 Fermi which will be transferred from the original to your new account.
 
 ```bash
 near create-account royalty.$NFT_CONTRACT_ID --masterAccount $NFT_CONTRACT_ID --initialBalance 25

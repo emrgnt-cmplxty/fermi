@@ -2,20 +2,20 @@
 <br />
 
 <p align="center">
-<img src="website/static/docs/assets/axion_logo.png" width="240">
+<img src="website/static/docs/assets/fermi_logo.png" width="240">
 </p>
 
 <br />
 <br />
 
-## Axion Protocol - scalable and usable blockchain
+## Fermi Protocol - scalable and usable blockchain
 
 [![Discord](https://img.shields.io/discord/490367152054992913.svg)](http://near.chat)
 [![CI](https://github.com/near/docs/actions/workflows/build-check.yml/badge.svg)](https://github.com/near/docs/actions/workflows/build-check.yml)
 
-* ⚖️ Axion Protocol is a new smart-contract platform that delivers scalability and usability.
+* ⚖️ Fermi Protocol is a new smart-contract platform that delivers scalability and usability.
 * 🛠 Through sharding, it will linearly scale with the number of validation nodes on the network.
-* 🗝 Leveraging WebAssembly (via Rust and AssemblyScript), more sane contract management, ephemeral accounts and many other advancements, Axion
+* 🗝 Leveraging WebAssembly (via Rust and AssemblyScript), more sane contract management, ephemeral accounts and many other advancements, Fermi
 finally makes using a blockchain protocol easy for both developers and consumers.
 
 ## Quick start
@@ -28,7 +28,7 @@ Check out the following links
 
 ## Contributing
 
-Axion uses [Docusaurus](https://docusaurus.io) for documentation.  Please refer to their documentation for details on major structural contributions to the documentation.
+Fermi uses [Docusaurus](https://docusaurus.io) for documentation.  Please refer to their documentation for details on major structural contributions to the documentation.
 
 For simple content changes you have 2 options
 
@@ -48,7 +48,7 @@ This is the fastest way to submit content changes directly from the page where y
 
 This is the standard fork-branch-commit workflow for submitting pull requests to open source repositories
 
-1. Fork this repo to your own GitHub account (or just clone it directly if you are currently a member of Axion)
+1. Fork this repo to your own GitHub account (or just clone it directly if you are currently a member of Fermi)
 
 2. Open your editor to the _top level repo folder_ to view the directory structure as seen below
 
@@ -148,7 +148,7 @@ Contributors, please consider checking for broken links executing the file `test
 > 
 > set -e
 > 
-> echo "Push detected in Axion docs repo"
+> echo "Push detected in Fermi docs repo"
 > 
 > if [[ $NEAR__CHECK_ALL_LINKS ]]
 > # only stop and check all links if this is enabled

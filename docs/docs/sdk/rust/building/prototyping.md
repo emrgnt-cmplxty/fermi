@@ -13,7 +13,7 @@ When you change the interface of a contract and re-deploy it, you may see this e
 
 ### Why does this happen?
 
-When your contract is executed, the Axion Runtime reads the serialized state from disk and attempts to load it using current contract code. When your code changes but the serialized state stays the same, it can't figure out how to do this.
+When your contract is executed, the Fermi Runtime reads the serialized state from disk and attempts to load it using current contract code. When your code changes but the serialized state stays the same, it can't figure out how to do this.
 
 ### How can you avoid such errors?
 

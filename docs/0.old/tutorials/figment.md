@@ -4,7 +4,7 @@ title: Figment Tutorials
 sidebar_label: Figment Tutorials
 ---
 
-> [Figment.io](https://learn.figment.io/pathways/near-pathway) has created some wonderful tutorials on their learning platform where they provide you step by step instructions to get started interacting with Axion. You can even earn tokens for your participation! 
+> [Figment.io](https://learn.figment.io/pathways/near-pathway) has created some wonderful tutorials on their learning platform where they provide you step by step instructions to get started interacting with Fermi. You can even earn tokens for your participation! 
 >
 > [ [Click here ](https://learn.figment.io/pathways/near-pathway)] or the image below to check it out!
 

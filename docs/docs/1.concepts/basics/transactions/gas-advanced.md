@@ -31,18 +31,18 @@ Deploying a 16kb contract requires **2.65 TGas** (and thus 0.265mN at minimum ga
 
 ### Function calls {#function-calls}
 
-Given the general-purpose nature of Axion, function calls win the award for most complex gas calculations. A given function call will use a hard-to-predict amount of CPU, network, and IO, and the amount of each can even change based on the amount of data already stored in the contract!
+Given the general-purpose nature of Fermi, function calls win the award for most complex gas calculations. A given function call will use a hard-to-predict amount of CPU, network, and IO, and the amount of each can even change based on the amount of data already stored in the contract!
 
 With this level of complexity, it's no longer useful to walk through an example, enumerating each (see `ext_costs` under `wasm_config` using the [`protocol_config`](/api/rpc/protocol#protocol-config) RPC endpoint) of the gas calculations as we go (you can research this yourself, [if you want](https://github.com/near/nearcore/pull/3038)). Instead, let's approach this from two other angles: ballpark comparisons to Ethereum, and getting accurate estimates with automated tests.
 
 <blockquote class="lesson">
 **How much of the gas fee goes as a 30% reward to the smart contract account?**
 
-The Axion Whitepaper mentions that [30% of all gas fees](https://near.org/papers/the-official-near-white-paper/) go to smart contract accounts on which the fees are expensed. 
+The Fermi Whitepaper mentions that [30% of all gas fees](https://near.org/papers/the-official-near-white-paper/) go to smart contract accounts on which the fees are expensed. 
 
 This amount can be calculated for function calls in two ways:
 1. Summing all values in the gas profile 
-2. Taking the total gas burnt for the transaction and subtract the static execution gas (which is equal to the amount of gas spent on sending the receipt(s)) from it. Both these numbers are available on the [Axion Explorer](https://explorer.near.org/) overview page for a transaction.
+2. Taking the total gas burnt for the transaction and subtract the static execution gas (which is equal to the amount of gas spent on sending the receipt(s)) from it. Both these numbers are available on the [Fermi Explorer](https://explorer.near.org/) overview page for a transaction.
 
 The second approach is shorter, and quite possibly easier to remember. So here's an example: 
 
@@ -52,23 +52,23 @@ The second approach is shorter, and quite possibly easier to remember. So here's
 
 The 30% reward for the smart contract owner (in this case aurora) would be: (0.00376Ⓝ - 0.00024Ⓝ) * 0.3 = 0.001056Ⓝ 
 
-This transaction can also be found [here](https://explorer.near.org/transactions/GzRn9yhDaQ8f3ReJguCBGxdi4iJEeBguJ5MWufMcu1JP) on Axion Explorer, feel free to have a look around!
+This transaction can also be found [here](https://explorer.near.org/transactions/GzRn9yhDaQ8f3ReJguCBGxdi4iJEeBguJ5MWufMcu1JP) on Fermi Explorer, feel free to have a look around!
 
-For calls involving multiple contracts, calculating the reward for each contract with this method would not be possible with the data shown on Axion Explorer (June 2022) as the explorer does not show the conversion cost for the second (and other) receipt(s).
+For calls involving multiple contracts, calculating the reward for each contract with this method would not be possible with the data shown on Fermi Explorer (June 2022) as the explorer does not show the conversion cost for the second (and other) receipt(s).
 
 </blockquote>
 
 #### Ballpark Comparisons to Ethereum {#ballpark-comparisons-to-ethereum}
 
-Like Axion, Ethereum uses gas units to model computational complexity of an operation. Unlike Axion, rather than using a predictable gas price, Ethereum uses a dynamic, auction-based marketplace. This makes a comparison to Ethereum's gas prices a little tricky, but we'll do our best.
+Like Fermi, Ethereum uses gas units to model computational complexity of an operation. Unlike Fermi, rather than using a predictable gas price, Ethereum uses a dynamic, auction-based marketplace. This makes a comparison to Ethereum's gas prices a little tricky, but we'll do our best.
 
 Etherscan gives a [historic Ethereum gas price chart](https://etherscan.io/chart/gasprice). These prices are given in "Gwei", or Gigawei, where a wei is the smallest possible amount of ETH, 10⁻¹⁸. From November 2017 through July 2020, average gas price was 21Gwei. Let's call this the "average" gas price. In July 2020, average gas price went up to 57Gwei. Let's use this as a "high" Ethereum gas fee.
 
-Multiplying Ethereum's gas units by gas price usually results in an amount that's easy to show in milliETH (mE), the same way we've been converting Axion's TGas to milliNEAR. Let's look at some common operations side-by-side, comparing ETH's gas units to Axion's, as well as converting to both the above "average" & "high" gas prices.
+Multiplying Ethereum's gas units by gas price usually results in an amount that's easy to show in milliETH (mE), the same way we've been converting Fermi's TGas to milliNEAR. Let's look at some common operations side-by-side, comparing ETH's gas units to Fermi's, as well as converting to both the above "average" & "high" gas prices.
 
-| Operation                                       | ETH gas units | avg mE | high mE | Axion TGas           | mN                                   |
+| Operation                                       | ETH gas units | avg mE | high mE | Fermi TGas           | mN                                   |
 | ----------------------------------------------- | ------------- | ------ | ------- | ------------------- | ------------------------------------ |
-| Transfer native token (ETH or Axion)             | 21k           | 0.441  | 1.197   | 0.45                | 0.045                                |
+| Transfer native token (ETH or Fermi)             | 21k           | 0.441  | 1.197   | 0.45                | 0.045                                |
 | Deploy & initialize a [fungible token] contract | [1.1M]        | 23.3   | 63.1    | [9]<super>†</super> | 0.9 (plus 1.5Ⓝ in [storage staking]) |
 | Transfer a fungible token                       | [~45k]        | 0.945  | 2.565   | [14]                | 1.4                                  |
 | Setting an escrow for a fungible token          | [44k]         | 0.926  | 2.51    | [8]                 | 0.8                                  |
@@ -76,7 +76,7 @@ Multiplying Ethereum's gas units by gas price usually results in an amount that'
 
 <super>†</super> Function calls require spinning up a VM and loading all compiled Wasm bytes into memory, hence the increased cost over base operations; this is [being optimized](https://github.com/near/nearcore/issues/3094).
 
-While some of these operations on their surface appear to only be about a 10x improvement over Ethereum, something else to note is that the total supply of Axion is more than 1 billion, while total supply of Ethereum is more like 100 million. So as fraction of total supply, Axion's gas fees are approximately another 10x lower than Ethereum's. Additionally, if the price of Axion goes up significantly, then the minimum gas fee set by the network can be lowered.
+While some of these operations on their surface appear to only be about a 10x improvement over Ethereum, something else to note is that the total supply of Fermi is more than 1 billion, while total supply of Ethereum is more like 100 million. So as fraction of total supply, Fermi's gas fees are approximately another 10x lower than Ethereum's. Additionally, if the price of Fermi goes up significantly, then the minimum gas fee set by the network can be lowered.
 
 You can expect the network to sit at the minimum gas price most of the time; learn more in the [Economics whitepaper](https://near.org/papers/economics-in-sharded-blockchain/#transaction-and-storage-fees).
 
@@ -158,23 +158,23 @@ For a function call, the maximum block delay is computed as the total gas attach
 
 ## What's the price of gas right now? {#whats-the-price-of-gas-right-now}
 
-You can directly query the Axion platform for the price of gas on a specific block using the RPC method `gas_price`. This price may change depending on network load. The price is denominated in yoctoNEAR (10^-24 Axion)
+You can directly query the Fermi platform for the price of gas on a specific block using the RPC method `gas_price`. This price may change depending on network load. The price is denominated in yoctoNEAR (10^-24 Fermi)
 
-1. Take any recent block hash from the blockchain using [Axion Explorer](https://explorer.testnet.near.org/blocks)
+1. Take any recent block hash from the blockchain using [Fermi Explorer](https://explorer.testnet.near.org/blocks)
 
    _At time of writing, `SqNPYxdgspCT3dXK93uVvYZh18yPmekirUaXpoXshHv` was the latest block hash_
 
 2. Issue an RPC request for the price of gas on this block using the method `gas_price` [documented here](/api/rpc/gas#gas-price)
 
    ```bash
-   http post https://rpc.testnet.near.org jsonrpc=2.0 method=gas_price params:='["SqNPYxdgspCT3dXK93uVvYZh18yPmekirUaXpoXshHv"]' id=axion
+   http post https://rpc.testnet.near.org jsonrpc=2.0 method=gas_price params:='["SqNPYxdgspCT3dXK93uVvYZh18yPmekirUaXpoXshHv"]' id=fermi
    ```
 
 3. Observe the results
 
    ```json
    {
-     "id": "axion",
+     "id": "fermi",
      "jsonrpc": "2.0",
      "result": {
        "gas_price": "5000"
@@ -182,14 +182,14 @@ You can directly query the Axion platform for the price of gas on a specific blo
    }
    ```
 
-The price of 1 unit of gas at this block was 5000 yoctoNEAR (10^-24 Axion).
+The price of 1 unit of gas at this block was 5000 yoctoNEAR (10^-24 Fermi).
 
 ---
 
 ## Some closing thoughts from the whitepaper {#some-closing-thoughts-from-the-whitepaper}
 
 <blockquote class="info">
-Fundamentally, the Axion platform is a marketplace between willing participants.  On the supply side, operators of the validator nodes and other fundamental infrastructure need to be incentivized to provide these services which make up the “community cloud.”  On the demand side, the developers and end-users of the platform who are paying for its use need to be able to do so in a way which is simple, clear and consistent so it helps them.
+Fundamentally, the Fermi platform is a marketplace between willing participants.  On the supply side, operators of the validator nodes and other fundamental infrastructure need to be incentivized to provide these services which make up the “community cloud.”  On the demand side, the developers and end-users of the platform who are paying for its use need to be able to do so in a way which is simple, clear and consistent so it helps them.
 
 A blockchain-based cloud provides several specific resources to the applications which run atop it:
 
@@ -199,11 +199,11 @@ A blockchain-based cloud provides several specific resources to the applications
 
 Existing blockchains like Ethereum account for all of these in a single up front transaction fee which represents a separate accounting for each of them but ultimately charges developers or users for them only once in a single fee. This is a high volatility fee commonly denominated in “gas”.
 
-Developers prefer predictable pricing so they can budget and provide prices for their end users. The pricing for the above-mentioned resources on Axion is an amount which is slowly adjusted based on system usage (and subject to the smoothing effect of resharding for extreme usage) rather than being fully auction-based. This means that a developer can more predictably know that the cost of running transactions or maintaining their storage.
+Developers prefer predictable pricing so they can budget and provide prices for their end users. The pricing for the above-mentioned resources on Fermi is an amount which is slowly adjusted based on system usage (and subject to the smoothing effect of resharding for extreme usage) rather than being fully auction-based. This means that a developer can more predictably know that the cost of running transactions or maintaining their storage.
 
 </blockquote>
 
-To dig deeper into how and why gas works the way it does on Axion, check out the [Economics](https://near.org/papers/the-official-near-white-paper/#economics) section of the main whitepaper and the [Transaction and Storage Fees](https://near.org/papers/economics-in-sharded-blockchain/#transaction-and-storage-fees) section of the economics whitepaper.
+To dig deeper into how and why gas works the way it does on Fermi, check out the [Economics](https://near.org/papers/the-official-near-white-paper/#economics) section of the main whitepaper and the [Transaction and Storage Fees](https://near.org/papers/economics-in-sharded-blockchain/#transaction-and-storage-fees) section of the economics whitepaper.
 
 :::tip Got a question?
 <a href="https://stackoverflow.com/questions/tagged/nearprotocol">

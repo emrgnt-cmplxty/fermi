@@ -25,7 +25,7 @@ Example:
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "status",
   "params": []
 }
@@ -42,7 +42,7 @@ const response = await near.connection.provider.status();
 <TabItem value="http" label="HTTPie">
 
 ```bash
-http post https://rpc.testnet.near.org jsonrpc=2.0 method=status params:='[]' id=axion
+http post https://rpc.testnet.near.org jsonrpc=2.0 method=status params:='[]' id=fermi
 ```
 
 </TabItem>
@@ -239,7 +239,7 @@ http post https://rpc.testnet.near.org jsonrpc=2.0 method=status params:='[]' id
     },
     "validator_account_id": "nearup-node8"
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 
@@ -263,7 +263,7 @@ When API request fails, RPC server returns a structured error response with a li
         "data": String,
         "message": "Server error",
     },
-    "id": "axion",
+    "id": "fermi",
     "jsonrpc": "2.0"
 }
 ```
@@ -319,7 +319,7 @@ Example:
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "network_info",
   "params": []
 }
@@ -329,7 +329,7 @@ Example:
 <TabItem value="http" label="HTTPie">
 
 ```bash
-http post https://rpc.testnet.near.org jsonrpc=2.0 method=network_info params:='[]' id=axion
+http post https://rpc.testnet.near.org jsonrpc=2.0 method=network_info params:='[]' id=fermi
 ```
 
 </TabItem>
@@ -362,7 +362,7 @@ http post https://rpc.testnet.near.org jsonrpc=2.0 method=network_info params:='
       }
     ]
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 
@@ -386,7 +386,7 @@ When API request fails, RPC server returns a structured error response with a li
         "data": String,
         "message": "Server error",
     },
-    "id": "axion",
+    "id": "fermi",
     "jsonrpc": "2.0"
 }
 ```
@@ -444,7 +444,7 @@ Here is the exhaustive list of the error variants that can be returned by `netwo
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "validators",
   "params": [17791098]
 }
@@ -461,7 +461,7 @@ const response = await near.connection.provider.validators(17791098);
 <TabItem value="http" label="HTTPie">
 
 ```bash
-http post https://rpc.testnet.near.org jsonrpc=2.0 method=validators params:='[17791098]' id=axion
+http post https://rpc.testnet.near.org jsonrpc=2.0 method=validators params:='[17791098]' id=fermi
 ```
 
 </TabItem>
@@ -475,7 +475,7 @@ http post https://rpc.testnet.near.org jsonrpc=2.0 method=validators params:='[1
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "validators",
   "params": ["FiG2nMjjue3YdgYAyM3ZqWXSaG6RJj5Gk7hvY8vrEoGw"]
 }
@@ -493,7 +493,7 @@ const response = await near.connection.provider.validators(
 <TabItem value="http" label="HTTPie">
 
 ```bash
-http post https://rpc.testnet.near.org jsonrpc=2.0 method=validators params:='["FiG2nMjjue3YdgYAyM3ZqWXSaG6RJj5Gk7hvY8vrEoGw"]' id=axion
+http post https://rpc.testnet.near.org jsonrpc=2.0 method=validators params:='["FiG2nMjjue3YdgYAyM3ZqWXSaG6RJj5Gk7hvY8vrEoGw"]' id=fermi
 ```
 
 </TabItem>
@@ -507,7 +507,7 @@ http post https://rpc.testnet.near.org jsonrpc=2.0 method=validators params:='["
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "validators",
   "params": [null]
 }
@@ -524,7 +524,7 @@ const response = await near.connection.provider.validators(null);
 <TabItem value="http" label="HTTPie">
 
 ```bash
-http post https://rpc.testnet.near.org jsonrpc=2.0 method=validators params:='[null]' id=axion
+http post https://rpc.testnet.near.org jsonrpc=2.0 method=validators params:='[null]' id=fermi
 ```
 
 </TabItem>
@@ -1232,7 +1232,7 @@ http post https://rpc.testnet.near.org jsonrpc=2.0 method=validators params:='[n
     "epoch_start_height": 17754191,
     "epoch_height": 321
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 
@@ -1256,7 +1256,7 @@ When API request fails, RPC server returns a structured error response with a li
         "data": String,
         "message": "Server error",
     },
-    "id": "axion",
+    "id": "fermi",
     "jsonrpc": "2.0"
 }
 ```

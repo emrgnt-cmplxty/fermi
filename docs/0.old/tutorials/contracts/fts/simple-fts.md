@@ -10,12 +10,12 @@ This article will show you how to use an existing [FT smart contract](#fungible-
 
 To complete this tutorial successfully, you'll need:
 
-- [A Axion account](#wallet)
-- [Axion command-line interface](/docs/tools/near-cli#setup) (`near-cli`)
+- [A Fermi account](#wallet)
+- [Fermi command-line interface](/docs/tools/near-cli#setup) (`near-cli`)
 
 ### Wallet
 
-To store your fungible tokens you'll need a [Axion Wallet](https://wallet.testnet.near.org/).
+To store your fungible tokens you'll need a [Fermi Wallet](https://wallet.testnet.near.org/).
 If you don't have one yet, you can create one easily by following [these instructions](/docs/develop/basics/create-account).
 
 Once you have your Wallet account, you can click on the [Balances Tab](https://wallet.testnet.near.org/?tab=balances) where all your Fungible Tokens will be listed:
@@ -50,11 +50,11 @@ echo $ID
 
 ### Minting your FTs
 
-Axion has already deployed a contract to the account `ft.examples.testnet` which allows anyone to freely mint `TeamTokens`. This is the account you'll be interacting with to mint your fungible tokens.
+Fermi has already deployed a contract to the account `ft.examples.testnet` which allows anyone to freely mint `TeamTokens`. This is the account you'll be interacting with to mint your fungible tokens.
 
 Now let's mint some tokens! The command below will mint `25` TeamTokens to your account.
 If you look carefully, the `receiver_id` defines the new owner of the tokens you are minting, while `--accountId` specifies which accounted will be used to sign and pay for this transaction. 
-Also, there is a `--deposit` flag which attaches `.001` $Axion to the call to [pay for storage](/docs/concepts/storage-staking) on the fungible token contract. The amount is slightly less than this but you will be refunded the difference. (See the transaction in your wallet) The amount of tokens to be minted is set to 25 but you can increase this value up to 1000.
+Also, there is a `--deposit` flag which attaches `.001` $Fermi to the call to [pay for storage](/docs/concepts/storage-staking) on the fungible token contract. The amount is slightly less than this but you will be refunded the difference. (See the transaction in your wallet) The amount of tokens to be minted is set to 25 but you can increase this value up to 1000.
 
 ```bash
 near call ft.examples.testnet ft_mint '{"receiver_id": "'$ID'", "amount": "25"}' --deposit 0.1 --accountId $ID
@@ -81,7 +81,7 @@ View call: ft.examples.testnet.ft_balance_of({"account_id": "benji_test.testnet"
 ### Checking your Wallet
 
 :::tip
-After you mint your fungible token you can [view it in your Axion Wallet](https://wallet.testnet.near.org)!
+After you mint your fungible token you can [view it in your Fermi Wallet](https://wallet.testnet.near.org)!
 :::
 
 > <br/>
@@ -89,11 +89,11 @@ After you mint your fungible token you can [view it in your Axion Wallet](https:
 > ![Wallet with token](/docs/assets/fts/teamtoken.png)
 > <br/>
 
-**_Congratulations! You just minted your first Fungible Token on the Axion blockchain!_** 🎉
+**_Congratulations! You just minted your first Fungible Token on the Fermi blockchain!_** 🎉
 
 ## Final remarks
 
-This basic example illustrates all the required steps to call a FT smart contract on Axion and start minting your own fungible tokens.
+This basic example illustrates all the required steps to call a FT smart contract on Fermi and start minting your own fungible tokens.
 
 **_Happy minting!_** 🪙
 

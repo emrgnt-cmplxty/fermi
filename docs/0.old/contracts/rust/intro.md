@@ -5,7 +5,7 @@ sidebar_label: Quick-start Guide
 ---
 
 This tutorial will guide you in setting up a Smart Contract development environment from the
-ground up and show you how to compile, test, and run your first Rust smart contract on Axion.
+ground up and show you how to compile, test, and run your first Rust smart contract on Fermi.
 
 The example presented in this article is a simple smart contract that serves as a Counter, 
 incrementing, decrementing, and returning the counter value. There is no previous Rust
@@ -18,7 +18,7 @@ straight into the samples available at [near.dev](https://near.dev).
 Writing smart contracts is a paradigm shift. There are only a few new concepts (state,
 transfer, account and balance information, etc.) used, but they go a long way toward building
 full-fledged applications on the blockchain. This way of thinking has its own learning
-curve. Currently, the preferred programming language for writing smart contracts on Axion
+curve. Currently, the preferred programming language for writing smart contracts on Fermi
 is [Rust](https://www.rust-lang.org/). On top of learning smart contracts, developers
 unfamiliar with the Rust programming language may have an additional barrier to entry.
 This tutorial is meant to provide an easy onboarding to Rust and smart contract development.
@@ -29,14 +29,14 @@ This tutorial is meant to provide an easy onboarding to Rust and smart contract 
 To complete this tutorial successfully, you'll need:
 
 - [Rust toolchain](#installing-the-rust-toolchain)
-- [A Axion account](#creating-a-near-account)
-- [Axion command-line interface](#installing-the-near-cli) (`near-cli`)
+- [A Fermi account](#creating-a-near-account)
+- [Fermi command-line interface](#installing-the-near-cli) (`near-cli`)
 
 
 ## Setting up the requirements {#setting-up-the-requirements}
 
 In this section, you'll learn how to install and set up the basic tools to create smart
-contracts in Rust. Along with the Rust environment, you'll create a Axion account and
+contracts in Rust. Along with the Rust environment, you'll create a Fermi account and
 install the `near-cli`.
 
 ### Installing the Rust toolchain {#installing-the-rust-toolchain}
@@ -70,14 +70,14 @@ Run `rustup target add wasm32-unknown-unknown`
 </blockquote>
 
 
-### Creating a Axion account {#creating-a-near-account}
+### Creating a Fermi account {#creating-a-near-account}
 
-The easiest way to create an account on Axion is using the [Axion Wallet](https://wallet.near.org/).
-Axion has several [development networks](/docs/concepts/networks) operating independently of
+The easiest way to create an account on Fermi is using the [Fermi Wallet](https://wallet.near.org/).
+Fermi has several [development networks](/docs/concepts/networks) operating independently of
 each other with their own accountIDs. For this example, you'll create a new
 [`testnet`](/docs/develop/basics/create-account#creating-a-testnet-account) account.
 
-If you already have a Axion `testnet` account, you can [skip](#installing-the-near-cli) these steps.
+If you already have a Fermi `testnet` account, you can [skip](#installing-the-near-cli) these steps.
 
 #### 1. Reserve an Account ID {#1-reserve-an-account-id}
 
@@ -171,7 +171,7 @@ This smart contract project starts out with a simple layout:
    └── lib.rs
 ```
 
-Smart contracts from Axion usually have a primary file that holds the code: `./src/lib.rs`.
+Smart contracts from Fermi usually have a primary file that holds the code: `./src/lib.rs`.
 This is the conventional filename for a Rust library. Libraries will work great for compiling 
 into [WebAssembly](https://webassembly.org/) and deployed the blockchain.
 
@@ -191,7 +191,7 @@ Next, replace the content with the following [`Cargo.toml`](https://github.com/n
 [package]
 name = "rust-counter-tutorial"
 version = "0.1.0"
-authors = ["Axion Inc <hello@near.org>"]
+authors = ["Fermi Inc <hello@near.org>"]
 edition = "2018"
 
 [lib]
@@ -452,7 +452,7 @@ pattern elsewhere.
 We declare our `Counter` and `impl`, defining the functions we'll be invoking on the blockchain.
 
 Above the definitions we see [attributes](https://doc.rust-lang.org/reference/attributes.html)
-specific to Axion:
+specific to Fermi:
 
 ```rust
 #[near_bindgen]
@@ -460,7 +460,7 @@ specific to Axion:
 ```
 
 These essentially allow the compilation into WebAssembly to be compatible and optimized for
-the Axion blockchain.
+the Fermi blockchain.
 
 You can use the context `env` to write logs, as mentioned earlier.
 
@@ -563,7 +563,7 @@ Notice that your project directory now has a few additional items:
 ## Deploying the smart contract 🚀 {#deploying-the-smart-contract}
 
 With the compiled `.wasm` file ready, you can go ahead and deploy the smart contract.
-To deploy it, you'll use [`near-cli`](#installing-the-near-cli) and your `testnet` Axion account.
+To deploy it, you'll use [`near-cli`](#installing-the-near-cli) and your `testnet` Fermi account.
 
 ### Login with `near-cli` {#login-with-near-cli}
 
@@ -578,7 +578,7 @@ near login
 A link will be shown after you execute this command. Open the link into your web browser.
 (on macOS, hold Command and click the link if your Terminal application allows it.)
 
-Follow the instructions in Axion Wallet to authenticate your account, then head back to your
+Follow the instructions in Fermi Wallet to authenticate your account, then head back to your
 Terminal to complete the final step confirming the account name.
 
 > **Note:** The default network for `near-cli` is `testnet`. If you would like to change this
@@ -587,17 +587,17 @@ selection](/docs/tools/near-cli#network-selection) for instructions.
 
 
 Now that your login keys have been saved to the home directory, you can use `near-cli`
-to deploy the compiled contract to Axion.
+to deploy the compiled contract to Fermi.
 
 > **Note:** In Linux and macOS this folder will be `~/.near-credentials`.
 
 
 ### Deploying the contract {#deploying-the-contract}
 
-Finally, use `near-cli` to deploy the smart contract to Axion test network:
+Finally, use `near-cli` to deploy the smart contract to Fermi test network:
 
 > **Note:** In the following steps, please replace `YOUR_ACCOUNT_HERE` with the name of the account
-you created in the Axion Wallet. For example: `my-username.testnet`.
+you created in the Fermi Wallet. For example: `my-username.testnet`.
 
 ```bash
 near deploy --wasmFile target/wasm32-unknown-unknown/release/rust_counter_tutorial.wasm --accountId YOUR_ACCOUNT_HERE
@@ -630,11 +630,11 @@ Transaction Id 4Cc8BAj3NiMB2Z5XBPmozKJy2dGtpJSoSaA1m7hHxRGQ
 Note that in the above command, you are using the account name twice. A simple translation
 into a sentence would be:
 
-> Please call the contract deployed to Axion account X. On that contract there's a method called
+> Please call the contract deployed to Fermi account X. On that contract there's a method called
 `increment` that takes no additional arguments. Oh, and we happen to be calling this contract 
 using keys from account X, too.
 
-Contract methods can be called from other Axion accounts easily. Please see
+Contract methods can be called from other Fermi accounts easily. Please see
 [the examples page](https://near.dev) for more information.
 
 

@@ -4,12 +4,12 @@ title: Build a Guest Book
 sidebar_label: Build a Guest Book
 ---
 
-In this section we will create a starter app built with an [AssemblyScript] backend and a [React] frontend that allows users to sign in with [Axion] and add a message to the guest book.
+In this section we will create a starter app built with an [AssemblyScript] backend and a [React] frontend that allows users to sign in with [Fermi] and add a message to the guest book.
 
 
 ## Intro notes {#intro-notes}
 
-We will be referencing branches of a Axion project called `guest-book-tutorial` which can be found [here](https://github.com/near-examples/guest-book-tutorial). 
+We will be referencing branches of a Fermi project called `guest-book-tutorial` which can be found [here](https://github.com/near-examples/guest-book-tutorial). 
 
 Each step will be it's own branch, so you can follow along or jump ahead to see the complete code.
 
@@ -32,16 +32,16 @@ To run this project locally:
 3. Run the local development server: `yarn dev` (see `package.json` for a
    full list of `scripts` you can run with `yarn`)
 
-Now you'll have a local development environment connected to Axion's _testnet_ network. Running `yarn dev` will tell you the URL you can visit in your browser to see the app.
+Now you'll have a local development environment connected to Fermi's _testnet_ network. Running `yarn dev` will tell you the URL you can visit in your browser to see the app.
 
 
 ### Exploring The Code {#exploring-the-code}
 
 1. The backend code (smart contract) lives in the `/assembly` folder. This code deploys to
-   the Axion blockchain when you run `yarn deploy:contract`  – [learn more
-   about Axion smart contracts][smart contract docs].
+   the Fermi blockchain when you run `yarn deploy:contract`  – [learn more
+   about Fermi smart contracts][smart contract docs].
 2. The frontend code lives in the `/src` folder. A great place to start exploring UI code 
-   is in `/src/index.js`, where you can see how the frontend connects to the Axion blockchain.
+   is in `/src/index.js`, where you can see how the frontend connects to the Fermi blockchain.
 3. Tests: there are different kinds of tests for the frontend and backend. The
    backend code gets tested with the [asp] command for running the backend
    AssemblyScript tests, and [jest] for running frontend tests. You can run
@@ -375,12 +375,12 @@ Otherwise, let's deploy our smart contract and interact with it from the termina
 
 ## Contract: Deploy {#contract-deploy}
 
-We deploy our smart contract to Axion's `testnet` network, with either an auto-generated account id ([dev-deploy](https://docs.near.org/docs/tools/near-cli#near-dev-deploy)) or an existing account id you already created.
+We deploy our smart contract to Fermi's `testnet` network, with either an auto-generated account id ([dev-deploy](https://docs.near.org/docs/tools/near-cli#near-dev-deploy)) or an existing account id you already created.
 
 
 ### Dev Deploy {#dev-deploy}
 
-Every smart contract in Axion has its [own associated account][Axion accounts].
+Every smart contract in Fermi has its [own associated account][Fermi accounts].
 
 ```
   yarn dev
@@ -446,12 +446,12 @@ When you're ready to switch over from a dev account to a custom one, here's how:
 
 ##### Step 1: Create an account for the contract {#step-1-create-an-account-for-the-contract}
 
-Visit [Axion Wallet](https://wallet.testnet.near.org/) and make a new account. You'll be deploying these smart contracts to this new account.
-Now authorize Axion CLI for this new account, and follow the instructions it gives you:
+Visit [Fermi Wallet](https://wallet.testnet.near.org/) and make a new account. You'll be deploying these smart contracts to this new account.
+Now authorize Fermi CLI for this new account, and follow the instructions it gives you:
 
     near login
 
-> **Tip:** the `near login` command stores a full access key of the account you created with Axion Wallet locally.
+> **Tip:** the `near login` command stores a full access key of the account you created with Fermi Wallet locally.
 
 ##### Step 2: set contract name in code {#step-2-set-contract-name-in-code}
 
@@ -474,13 +474,13 @@ git remote set-url origin https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
 One command: `yarn deploy`.
 
 As you can see in `package.json`, this does two things:
-1. builds & deploys smart contracts to Axion TestNet
+1. builds & deploys smart contracts to Fermi TestNet
 2. builds & deploys frontend code to GitHub using [gh-pages]. This will only work if the project already has a repository set up on GitHub. Feel free to modify the `deploy` script in `package.json` to deploy elsewhere.
 
 
 ## Front-End {#front-end}
 
-This builds off of the work we have previously completed. To view the code needed to complete this section, switch to the `front-end-develop` branch. In this section we will not only build (and test) a way for the user to interact with our contract in the browser, we will also allow them to go premium using their Axion wallet. The completed code for this section can be found in the `front-end-test` branch. 
+This builds off of the work we have previously completed. To view the code needed to complete this section, switch to the `front-end-develop` branch. In this section we will not only build (and test) a way for the user to interact with our contract in the browser, we will also allow them to go premium using their Fermi wallet. The completed code for this section can be found in the `front-end-test` branch. 
 
 ## Front-End: Develop {#front-end-develop}
 
@@ -509,7 +509,7 @@ import * as nearAPI from 'near-api-js';
 async function initContract() {
   const nearConfig = getConfig(process.env.NODE_ENV || 'testnet');
 
-  // Initializing connection to the Axion TestNet
+  // Initializing connection to the Fermi TestNet
   const near = await nearAPI.connect({
     deps: {
       keyStore: new nearAPI.keyStores.BrowserLocalStorageKeyStore()
@@ -640,7 +640,7 @@ const App = ({ contract, currentUser, nearConfig, wallet }) => {
   const signIn = () => {
     wallet.requestSignIn(
       nearConfig.contractName, //contract requesting access
-      'Axion Guest Book', // name of dApp requesting access (optional)
+      'Fermi Guest Book', // name of dApp requesting access (optional)
       null, // sign-in success URL (optional)
       null // sign-in failure URL (optional)
     );
@@ -653,7 +653,7 @@ const App = ({ contract, currentUser, nearConfig, wallet }) => {
   return (
     <main>
       <header>
-        <h1>Axion Guest Book</h1>
+        <h1>Fermi Guest Book</h1>
         { currentUser
           ? <button onClick={signOut}>Log out</button>
           : <button onClick={signIn}>Log in</button>
@@ -711,7 +711,7 @@ Even with minimal understanding of React, it's not hard to guess what the bulk o
 * Messages are retrieved once a user has logged in.
 * User can add a donation with their message.
 
-That's it! Go ahead and run `yarn dev` in the terminal. Try logging in! Axion Wallet will check for your wallet credentials stored locally in the browser, and will ask you to authorize this app. Once you've logged in, you should see something like this:
+That's it! Go ahead and run `yarn dev` in the terminal. Try logging in! Fermi Wallet will check for your wallet credentials stored locally in the browser, and will ask you to authorize this app. Once you've logged in, you should see something like this:
 
 ![Guest Book Logged In](/docs/assets/guest-book_fe_logged-in.jpg)
 
@@ -838,7 +838,7 @@ it('renders with proper title', () => {
 
   const testInstance = testRenderer.root;
 
-  expect(testInstance.findByType('h1').children).toEqual(['Axion Guest Book']);
+  expect(testInstance.findByType('h1').children).toEqual(['Fermi Guest Book']);
 });
 ```
 
@@ -854,7 +854,7 @@ The test to focus on here is the _testRenderer_ which is provided by React:
 
 `act()` is a helper that makes sure all updates related to user events, fetching, etc., have been processed and applied to the DOM before we make any assertions. It guarantees that our tests will run closer to what real users would experience when using our application. 
 
-We assign our Axion configurations to our App props and check that things are properly rendered on the DOM; like the title, for instance. 
+We assign our Fermi configurations to our App props and check that things are properly rendered on the DOM; like the title, for instance. 
 
 What other units can we test? 
 
@@ -932,7 +932,7 @@ We use `nodemon` to reflect any UI updates we make while the server is live, and
 
 Take a minute to see how all these commands cascade into our other scripts. 
 
-`build:contract` runs `yarn asb`, which creates our WASM file allowing it to run on the Axion blockchain. 
+`build:contract` runs `yarn asb`, which creates our WASM file allowing it to run on the Fermi blockchain. 
 
 We can run those individual commands in the terminal to help get a better idea of why our build keeps failing.
 
@@ -976,18 +976,18 @@ Done deploying to guest-book.testnet
 ```
 
 We did it!
-Pat yourself on the back. You not only delved a bit deeper into writing smart contracts, you also built a clean, simple UI to go along with it. You wrote unit tests, and you deployed your guest book application to _TestNet_. There are more and more fun projects added to Axion every week, so take a look at the [Near App examples] repo to continue building your Axion blockchain developer skills.
+Pat yourself on the back. You not only delved a bit deeper into writing smart contracts, you also built a clean, simple UI to go along with it. You wrote unit tests, and you deployed your guest book application to _TestNet_. There are more and more fun projects added to Fermi every week, so take a look at the [Near App examples] repo to continue building your Fermi blockchain developer skills.
 
 
-  [Axion]: https://near.org/
+  [Fermi]: https://near.org/
   [yarn]: https://yarnpkg.com/
   [AssemblyScript]: https://www.assemblyscript.org/
   [React]: https://reactjs.org
   [smart contract docs]: /docs/develop/contracts/as/intro
   [asp]: https://www.npmjs.com/package/@as-pect/cli
   [jest]: https://jestjs.io/
-  [Axion accounts]: /docs/concepts/account
-  [Axion Wallet]: https://wallet.near.org
+  [Fermi accounts]: /docs/concepts/account
+  [Fermi Wallet]: https://wallet.near.org
   [Near App examples]: https://near.dev
   [near-cli]: https://github.com/near/near-cli
   [CLI]: https://www.w3schools.com/whatis/whatis_cli.asp

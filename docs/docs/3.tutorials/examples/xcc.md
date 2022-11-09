@@ -6,7 +6,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import {CodeTabs, Language, Github} from "@site/components/codetabs"
 
-This example performs the simplest cross-contract call possible: it calls our [Hello Axion](hello-near.md) example to set and retrieve a greeting.
+This example performs the simplest cross-contract call possible: it calls our [Hello Fermi](hello-near.md) example to set and retrieve a greeting.
 It is one of the simplest examples on making a cross-contract call, and the perfect gateway to the world of interoperative contracts.
 
 :::info
@@ -49,13 +49,13 @@ You have two options to start using the project. The first and recommended is to
 ---
 
 ### Interacting With the Contract
-Since this example does not have a frontend, we will interact with it through the [Axion CLI](../../2.develop/integrate/cli.md).
+Since this example does not have a frontend, we will interact with it through the [Fermi CLI](../../2.develop/integrate/cli.md).
 
 <!-- Expand on this explanation adding snippets  -->
 Check the README.md. Briefly, you will need to:
 
 #### 1. Build and Deploy the Contract
-You can automatically compile and deploy the contract in the Axion testnet by running:
+You can automatically compile and deploy the contract in the Fermi testnet by running:
 
 ```bash
 ./deploy.sh
@@ -71,7 +71,7 @@ cat ./neardev/dev-account # e.g. dev-1659899566943-21539992274727
 
 `query_greeting` performs a cross-contract call, calling the `get_greeting()` method from `hello-nearverse.testnet`.
 
-`Call` methods can only be invoked using a Axion account, since the account needs to pay GAS for the transaction.
+`Call` methods can only be invoked using a Fermi account, since the account needs to pay GAS for the transaction.
 
 ```bash
 # Use near-cli to ask the contract to query the greeting

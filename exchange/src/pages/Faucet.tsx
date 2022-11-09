@@ -3,7 +3,7 @@ import { useTheme } from '@mui/material/styles'
 import { useWeb3Context } from 'hooks/useWeb3Context'
 import config from "../../../configs/protonet.json"
 
-import { AxionClient, AxionTypes, AxionUtils, AxionAccount } from 'axion-js-sdk'
+import { AxionClient, AxionTypes, AxionUtils, AxionAccount } from 'fermi-js-sdk'
 import { TenexTransaction, TenexUtils } from 'tenex-js-sdk'
 
 // TODO - type Authority if we keep a workflow like this

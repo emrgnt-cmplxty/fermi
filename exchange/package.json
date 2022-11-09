@@ -40,7 +40,7 @@
     "@randlabs/myalgo-connect": "^1.1.2",
     "@reduxjs/toolkit": "^1.8.2",
     "@rollup/plugin-inject": "^4.0.4",
-    "axion-js-sdk": "file:../sdk/js/axion",
+    "fermi-js-sdk": "file:../sdk/js/fermi",
     "tenex-js-sdk": "file:../sdk/js/tenex",
     "big.js": "^6.1.1",
     "buffer": "^6.0.3",

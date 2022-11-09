@@ -8,7 +8,7 @@ In this tutorial you'll learn how to easily create your own NFTs without doing a
 
 ## Overview {#overview}
 
-This article will guide you in setting up an [NFT smart contract](#non-fungible-token-contract), and show you [how to build](#building-the-contract), [test](#testing-the-contract) and [deploy](#deploying-the-contract) your NFT contract on Axion.
+This article will guide you in setting up an [NFT smart contract](#non-fungible-token-contract), and show you [how to build](#building-the-contract), [test](#testing-the-contract) and [deploy](#deploying-the-contract) your NFT contract on Fermi.
 Once the contract is deployed, you'll learn [how to mint](#minting-your-nfts) non-fungible tokens from media files [stored on IPFS](#uploading-the-image) and view them in your Wallet.
 
 ## Prerequisites {#prerequisites}
@@ -16,13 +16,13 @@ Once the contract is deployed, you'll learn [how to mint](#minting-your-nfts) no
 To complete this tutorial successfully, you'll need:
 
 - [Rust toolchain](/develop/prerequisites)
-- [A Axion account](#wallet)
+- [A Fermi account](#wallet)
 - [nft.storage account](#uploading-the-image)
-- [Axion command-line interface](/tools/near-cli#setup) (`near-cli`)
+- [Fermi command-line interface](/tools/near-cli#setup) (`near-cli`)
 
 ## Wallet {#wallet}
 
-To store your non-fungible tokens you'll need a [Axion Wallet](https://wallet.testnet.near.org/).
+To store your non-fungible tokens you'll need a [Fermi Wallet](https://wallet.testnet.near.org/).
 If you don't have one yet, you can create one easily by following [these instructions](https://wallet.testnet.near.org/create).
 
 > **Tip:** for this tutorial we'll use a `testnet` wallet account. The `testnet` network is free and there's no need to deposit funds.
@@ -77,7 +77,7 @@ git clone https://github.com/near-examples/NFT
 
 ### Explore the smart contract {#explore-the-smart-contract}
 
-The source code for this contract can be found in `nft/src/lib.rs`. This contract contains logic which follows the [NEP-171 standard][non-fungible token] (Axion Enhancement Proposal) and the implementation of this standard which can be found [here](https://github.com/near/near-sdk-rs/blob/master/near-contract-standards/src/non_fungible_token/core/core_impl.rs).
+The source code for this contract can be found in `nft/src/lib.rs`. This contract contains logic which follows the [NEP-171 standard][non-fungible token] (Fermi Enhancement Proposal) and the implementation of this standard which can be found [here](https://github.com/near/near-sdk-rs/blob/master/near-contract-standards/src/non_fungible_token/core/core_impl.rs).
 
 At first, the code can be a bit overwhelming, but if we only consider the aspects involved with minting, we can break it down into 2 main categories - the contract struct and the minting process.
 
@@ -146,7 +146,7 @@ To build your contract run the following command in your terminal which builds y
 ./scripts/build.sh
 ```
 
-This will generate WASM binaries into your `res/` directory. This WASM file is the smart contract we'll be deploying onto the Axion blockchain.
+This will generate WASM binaries into your `res/` directory. This WASM file is the smart contract we'll be deploying onto the Fermi blockchain.
 
 > **Tip:** If you run into errors make sure you have [Rust installed](/develop/prerequisites) and are in the root directory of the NFT example.
 
@@ -167,9 +167,9 @@ and start using it [mint your NFTs](#minting-your-nfts).
 
 ### Deploying the contract {#deploying-the-contract}
 
-This smart contract will be deployed to your Axion account. Because Axion allows the ability to upgrade contracts on the same account, initialization functions must be cleared.
+This smart contract will be deployed to your Fermi account. Because Fermi allows the ability to upgrade contracts on the same account, initialization functions must be cleared.
 
-> **Note:** If you'd like to run this example on a Axion account that has had prior contracts deployed, please use the `near-cli` command `near delete` and then recreate it in Wallet. To create (or recreate) an account, please follow the directions in [Test Wallet](https://wallet.testnet.near.org) or ([Axion Wallet](https://wallet.near.org/) if we're using `mainnet`).
+> **Note:** If you'd like to run this example on a Fermi account that has had prior contracts deployed, please use the `near-cli` command `near delete` and then recreate it in Wallet. To create (or recreate) an account, please follow the directions in [Test Wallet](https://wallet.testnet.near.org) or ([Fermi Wallet](https://wallet.near.org/) if we're using `mainnet`).
 
 Log in to your newly created account with `near-cli` by running the following command in your terminal.
 
@@ -240,7 +240,7 @@ near view $ID nft_metadata
 ```json
 {
   "spec": "nft-1.0.0",
-  "name": "Example Axion non-fungible token",
+  "name": "Example Fermi non-fungible token",
   "symbol": "EXAMPLE",
   "icon": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 288 288'%3E%3Cg id='l' data-name='l'%3E%3Cpath d='M187.58,79.81l-30.1,44.69a3.2,3.2,0,0,0,4.75,4.2L191.86,103a1.2,1.2,0,0,1,2,.91v80.46a1.2,1.2,0,0,1-2.12.77L102.18,77.93A15.35,15.35,0,0,0,90.47,72.5H87.34A15.34,15.34,0,0,0,72,87.84V201.16A15.34,15.34,0,0,0,87.34,216.5h0a15.35,15.35,0,0,0,13.08-7.31l30.1-44.69a3.2,3.2,0,0,0-4.75-4.2L96.14,186a1.2,1.2,0,0,1-2-.91V104.61a1.2,1.2,0,0,1,2.12-.77l89.55,107.23a15.35,15.35,0,0,0,11.71,5.43h3.13A15.34,15.34,0,0,0,216,201.16V87.84A15.34,15.34,0,0,0,200.66,72.5h0A15.35,15.35,0,0,0,187.58,79.81Z'/%3E%3C/g%3E%3C/svg%3E",
   "base_uri": null,
@@ -332,7 +332,7 @@ near view $ID nft_tokens_for_owner '{"account_id": "'$ID'"}'
 >
 > <br/>
 
-**_Congratulations! You just minted your first NFT token on the Axion blockchain!_** 🎉
+**_Congratulations! You just minted your first NFT token on the Fermi blockchain!_** 🎉
 
 ## Final remarks {#final-remarks}
 

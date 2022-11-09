@@ -8,7 +8,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 
-Wallet interaction is possible only in the browser, because Axion's Wallet is web-based.
+Wallet interaction is possible only in the browser, because Fermi's Wallet is web-based.
 
 Most frequent action is Sign In. Your user is redirected to the Wallet page to authorize your application.
 Once the user has Signed In, an access key is saved in browser's LocalStorage.
@@ -34,7 +34,7 @@ const connectionConfig = {
   explorerUrl: "https://explorer.testnet.near.org",
 };
 
-// connect to Axion
+// connect to Fermi
 const nearConnection = await connect(connectionConfig);
 
 // create wallet connection
@@ -56,7 +56,7 @@ const connectionConfig = {
   explorerUrl: "https://explorer.mainnet.near.org",
 };
 
-// connect to Axion
+// connect to Fermi
 const nearConnection = await connect(connectionConfig);
 
 // create wallet connection
@@ -78,7 +78,7 @@ const connectionConfig = {
   explorerUrl: "https://explorer.betanet.near.org",
 };
 
-// connect to Axion
+// connect to Fermi
 const nearConnection = await connect(connectionConfig);
 
 // create wallet connection

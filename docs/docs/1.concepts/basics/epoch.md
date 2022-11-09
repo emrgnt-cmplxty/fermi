@@ -22,7 +22,7 @@ An **epoch** is a unit of time when validators of the network remain constant. I
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "EXPERIMENTAL_protocol_config",
   "params": {
     "finality": "final"
@@ -34,7 +34,7 @@ An **epoch** is a unit of time when validators of the network remain constant. I
 <TabItem value="http" label="HTTPie">
 
 ```bash
-http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=EXPERIMENTAL_protocol_config \
+http post https://rpc.testnet.near.org jsonrpc=2.0 id=fermi method=EXPERIMENTAL_protocol_config \
   params:='{
     "finality": "final"
   }'

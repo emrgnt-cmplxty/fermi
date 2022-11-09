@@ -4,11 +4,11 @@ title: Marketplace
 sidebar_label: Marketplace
 ---
 
-In this tutorial, you'll learn the basics of an NFT marketplace contract where you can buy and sell non-fungible tokens for $Axion. In the previous tutorials, you went through and created a fully fledged NFT contract that incorporates all the standards found in the [NFT standard](https://nomicon.io/Standards/NonFungibleToken). 
+In this tutorial, you'll learn the basics of an NFT marketplace contract where you can buy and sell non-fungible tokens for $Fermi. In the previous tutorials, you went through and created a fully fledged NFT contract that incorporates all the standards found in the [NFT standard](https://nomicon.io/Standards/NonFungibleToken). 
 
 ## Introduction
 
-Throughout this tutorial, you'll learn how a marketplace contract could work on Axion. This is meant to be an example and there is no canonical implementation. Feel free to branch off and modify this contract to meet your specific needs.
+Throughout this tutorial, you'll learn how a marketplace contract could work on Fermi. This is meant to be an example and there is no canonical implementation. Feel free to branch off and modify this contract to meet your specific needs.
 
 Using the same repository as the previous tutorials, if you checkout the `8.marketplace` branch, you should have the necessary files to complete the tutorial.
 
@@ -44,7 +44,7 @@ nft-tutorial-js
 
 ## Understanding the contract
 
-At first, the contract can be quite overwhelming but if you strip away all the fluff and dig into the core functionalities, it's actually quite simple. This contract was designed for only one thing - to allow people to buy and sell NFTs for Axion. This includes the support for paying royalties, updating the price of your sales, removing sales and paying for storage.
+At first, the contract can be quite overwhelming but if you strip away all the fluff and dig into the core functionalities, it's actually quite simple. This contract was designed for only one thing - to allow people to buy and sell NFTs for Fermi. This includes the support for paying royalties, updating the price of your sales, removing sales and paying for storage.
 
 Let's go through the files and take note of some of the important functions and what they do.
 
@@ -62,25 +62,25 @@ https://github.com/near-examples/nft-tutorial-js/blob/8.marketplace/src/market-c
 
 ### Storage management model {#storage-management-model}
 
-Next, let's talk about the storage management model chosen for this contract. On the NFT contract, users attached $Axion to the calls that needed storage paid for. For example, if someone was minting an NFT, they would need to attach `x` amount of Axion to cover the cost of storing the data on the contract. 
+Next, let's talk about the storage management model chosen for this contract. On the NFT contract, users attached $Fermi to the calls that needed storage paid for. For example, if someone was minting an NFT, they would need to attach `x` amount of Fermi to cover the cost of storing the data on the contract. 
 
-On this marketplace contract, however, the storage model is a bit different. Users will need to deposit $Axion onto the marketplace to cover the storage costs. Whenever someone puts an NFT for sale, the marketplace needs to store that information which costs $Axion. Users can either deposit as much Axion as they want so that they never have to worry about storage again or they can deposit the minimum amount to cover 1 sale on an as-needed basis. 
+On this marketplace contract, however, the storage model is a bit different. Users will need to deposit $Fermi onto the marketplace to cover the storage costs. Whenever someone puts an NFT for sale, the marketplace needs to store that information which costs $Fermi. Users can either deposit as much Fermi as they want so that they never have to worry about storage again or they can deposit the minimum amount to cover 1 sale on an as-needed basis. 
 
-You might be thinking about the scenario when a sale is purchased. What happens to the storage that is now being released on the contract? This is why we've introduced a storage withdrawal function. This allows users to withdraw any excess storage that is not being used. Let's go through some scenarios to understand the logic. The required storage for 1 sale is 0.01 Axion on the marketplace contract.
+You might be thinking about the scenario when a sale is purchased. What happens to the storage that is now being released on the contract? This is why we've introduced a storage withdrawal function. This allows users to withdraw any excess storage that is not being used. Let's go through some scenarios to understand the logic. The required storage for 1 sale is 0.01 Fermi on the marketplace contract.
 
 **Scenario A**
 
 - Benji wants to list his NFT on the marketplace but has never paid for storage. 
-- He deposits exactly 0.01 Axion using the `storage_deposit` method. This will cover 1 sale.
+- He deposits exactly 0.01 Fermi using the `storage_deposit` method. This will cover 1 sale.
 - He lists his NFT on the marketplace and is now using up 1 out of his prepaid 1 sales and has no more storage left. If he were to call `storage_withdraw`, nothing would happen.
-- Dorian loves his NFT and quickly purchases it before anybody else can. This means that Benji's sale has now been taken down (since it was purchased) and Benji is using up 0 out of his prepaid 1 sales. In other words, he has an excess of 1 sale or 0.01 Axion.
-- Benji can now call `storage_withdraw` and will be transferred his 0.01 Axion back. On the contract's side, after withdrawing, he will have 0 sales paid for and will need to deposit storage before trying to list anymore NFTs.
+- Dorian loves his NFT and quickly purchases it before anybody else can. This means that Benji's sale has now been taken down (since it was purchased) and Benji is using up 0 out of his prepaid 1 sales. In other words, he has an excess of 1 sale or 0.01 Fermi.
+- Benji can now call `storage_withdraw` and will be transferred his 0.01 Fermi back. On the contract's side, after withdrawing, he will have 0 sales paid for and will need to deposit storage before trying to list anymore NFTs.
 
 **Scenario B**
 
 - Dorian owns one hundred beautiful NFTs and knows that he wants to list all of them.
-- To avoid having to call `storage_deposit` everytime he wants to list an NFT, he calls it once. Since Dorian is a baller, he attaches 10 Axion which is enough to cover 1000 sales. He now has an excess of 9 Axion or 900 sales.
-- Dorian needs the 9 Axion for something else but doesn't want to take down his 100 listings. Since he has an excess of 9 Axion, he can easily withdraw and still have his 100 listings. After calling `storage_withdraw` and being transferred 9 Axion, he will have an excess of 0 sales.
+- To avoid having to call `storage_deposit` everytime he wants to list an NFT, he calls it once. Since Dorian is a baller, he attaches 10 Fermi which is enough to cover 1000 sales. He now has an excess of 9 Fermi or 900 sales.
+- Dorian needs the 9 Fermi for something else but doesn't want to take down his 100 listings. Since he has an excess of 9 Fermi, he can easily withdraw and still have his 100 listings. After calling `storage_withdraw` and being transferred 9 Fermi, he will have an excess of 0 sales.
 
 With this behavior in mind, the following two functions outline the logic.
 
@@ -88,7 +88,7 @@ With this behavior in mind, the following two functions outline the logic.
 https://github.com/near-examples/nft-tutorial-js/blob/8.marketplace/src/market-contract/index.ts#L58-L121
 ```
 
-In this contract, the storage required for each sale is 0.01 Axion but you can query that information using the `storage_minimum_balance` function. In addition, if you wanted to check how much storage a given account has paid, you can query the `storage_balance_of` function.
+In this contract, the storage required for each sale is 0.01 Fermi but you can query that information using the `storage_minimum_balance` function. In addition, if you wanted to check how much storage a given account has paid, you can query the `storage_balance_of` function.
 
 With that out of the way, it's time to move onto the `nft_callbacks.ts` file where you'll look at how NFTs are put for sale.
 
@@ -136,7 +136,7 @@ https://github.com/near-examples/nft-tutorial-js/blob/8.marketplace/src/market-c
 
 ### Purchasing NFTs {#purchasing-nfts}
 
-For purchasing NFTs, you must call the `offer` function. It takes an `nft_contract_id` and `token_id` as parameters. You must attach the correct amount of Axion to the call in order to purchase. Behind the scenes, this will make sure your deposit is greater than the list price and call a private method `processPurchase` which will perform a cross-contract call to the NFT contract to invoke the `nft_transfer_payout` function. This will transfer the NFT using the [approval management](https://nomicon.io/Standards/NonFungibleToken/ApprovalManagement.html) standard that you learned about and it will return the `Payout` object which includes royalties.
+For purchasing NFTs, you must call the `offer` function. It takes an `nft_contract_id` and `token_id` as parameters. You must attach the correct amount of Fermi to the call in order to purchase. Behind the scenes, this will make sure your deposit is greater than the list price and call a private method `processPurchase` which will perform a cross-contract call to the NFT contract to invoke the `nft_transfer_payout` function. This will transfer the NFT using the [approval management](https://nomicon.io/Standards/NonFungibleToken/ApprovalManagement.html) standard that you learned about and it will return the `Payout` object which includes royalties.
 
 The marketplace will then call `resolve_purchase` where it will check for malicious payout objects and then if everything went well, it will pay the correct accounts.
 
@@ -200,4 +200,4 @@ You then went through the [nft_callbacks](#nft_callbacks-ts) file to understand 
 
 Finally, you went through the enumeration methods found in the [`sale_view`](#sale_view-ts) file. These allow you to query for important information found on the marketplace contract. 
 
-You should now have a solid understanding of NFTs and marketplaces on Axion. Feel free to branch off and expand on these contracts to create whatever cool applications you'd like. The world is your oyster! Thanks for joining on this journey and don't forget, **Go Team!**
+You should now have a solid understanding of NFTs and marketplaces on Fermi. Feel free to branch off and expand on these contracts to create whatever cool applications you'd like. The world is your oyster! Thanks for joining on this journey and don't forget, **Go Team!**

@@ -50,7 +50,7 @@ Let's delete the subaccount and recreate it, to start from a blank slate.
 </figure>
 <br/>
 
-Here's how to delete and recreate the subaccount using Axion CLI:
+Here's how to delete and recreate the subaccount using Fermi CLI:
 
 ```bash
 # Delete the subaccount and send remaining balance to friend.testnet
@@ -69,11 +69,11 @@ We're going to use these clues below for our improved puzzle. The **Answer** col
 
 | Number | Answer    | Clue | (x, y) coords | length |
 | ----------- | ----------- | ----------- | ----------- | ----------- |
-| 1 | paras | NFT market on Axion that specializes in cards and comics. | (1, 1) | 5 |
-| 2 | rainbowbridge | You can move assets between Axion and different chains, including Ethereum, by visiting ______.app | (0, 2) | 13 |
-| 3 | mintbase | NFT market on Axion with art, physical items, tickets, and more. | (9, 1) | 8 |
-| 4 | yoctonear | The smallest denomination of the native token on Axion. | (3, 8) | 9 |
-| 5 | cli | You typically deploy a smart contract with the Axion ___ tool. | (5, 8) | 3 |
+| 1 | paras | NFT market on Fermi that specializes in cards and comics. | (1, 1) | 5 |
+| 2 | rainbowbridge | You can move assets between Fermi and different chains, including Ethereum, by visiting ______.app | (0, 2) | 13 |
+| 3 | mintbase | NFT market on Fermi with art, physical items, tickets, and more. | (9, 1) | 8 |
+| 4 | yoctonear | The smallest denomination of the native token on Fermi. | (3, 8) | 9 |
+| 5 | cli | You typically deploy a smart contract with the Fermi ___ tool. | (5, 8) | 3 |
 
 The x and y coordinates have their origin in the upper-left side of the puzzle grid, and each row and column start at 0.
 
@@ -85,7 +85,7 @@ Let's derive the sha256 hash using an [easy online tool](https://www.wolframalph
 
 ## Add the puzzle
 
-Add a new puzzle using Axion CLI with this long command, replacing `crossword.friend.testnet` with your subaccount:
+Add a new puzzle using Fermi CLI with this long command, replacing `crossword.friend.testnet` with your subaccount:
 
 ```
 near call crossword.friend.testnet new_puzzle '{
@@ -99,7 +99,7 @@ near call crossword.friend.testnet new_puzzle '{
      },
      "direction": "Down",
      "length": 5,
-     "clue": "NFT market on Axion that specializes in cards and comics."
+     "clue": "NFT market on Fermi that specializes in cards and comics."
    },
    {
      "num": 2,
@@ -109,7 +109,7 @@ near call crossword.friend.testnet new_puzzle '{
      },
      "direction": "Across",
      "length": 13,
-     "clue": "You can move assets between Axion and different chains, including Ethereum, by visiting ______.app"
+     "clue": "You can move assets between Fermi and different chains, including Ethereum, by visiting ______.app"
    },
    {
      "num": 3,
@@ -119,7 +119,7 @@ near call crossword.friend.testnet new_puzzle '{
      },
      "direction": "Down",
      "length": 8,
-     "clue": "NFT market on Axion with art, physical items, tickets, and more."
+     "clue": "NFT market on Fermi with art, physical items, tickets, and more."
    },
    {
      "num": 4,
@@ -129,7 +129,7 @@ near call crossword.friend.testnet new_puzzle '{
      },
      "direction": "Across",
      "length": 9,
-     "clue": "The smallest denomination of the native token on Axion."
+     "clue": "The smallest denomination of the native token on Fermi."
    },
    {
      "num": 5,
@@ -139,7 +139,7 @@ near call crossword.friend.testnet new_puzzle '{
      },
      "direction": "Down",
      "length": 3,
-     "clue": "You typically deploy a smart contract with the Axion ___ tool."
+     "clue": "You typically deploy a smart contract with the Fermi ___ tool."
    }
   ]
 }' --accountId crossword.friend.testnet

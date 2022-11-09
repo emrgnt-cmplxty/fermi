@@ -1,12 +1,12 @@
 ---
 id: data-storage
 title: "Data Storage / Collections"
-sidebar_label: Storage on Axion
+sidebar_label: Storage on Fermi
 ---
 
 ## Overview {#overview}
 
-> All data stored on the Axion blockchain is done in key / value pairs. There are several collection methods in the SDKs we've created that will help you store your data on chain.
+> All data stored on the Fermi blockchain is done in key / value pairs. There are several collection methods in the SDKs we've created that will help you store your data on chain.
 >
 > - [`near-sdk-as`](https://github.com/near/near-sdk-as) for [AssemblyScript](https://www.assemblyscript.org/) smart contracts
 > - [`near-sdk-rs`](https://github.com/near/near-sdk-rs) for [Rust](https://www.rust-lang.org/) smart contracts
@@ -32,7 +32,7 @@ For information on storage costs, please see [ **[storage staking](/docs/concept
 
 ### Big-O Notation {#big-o-notation}
 
-> The [Big-O notation](https://en.wikipedia.org/wiki/Big_O_notation) values in the chart below describe the [time complexity](https://en.wikipedia.org/wiki/Time_complexity) of the various collection methods found in `near-sdk-as`. These method complexities correlate with [gas](/docs/concepts/gas) consumption on Axion, helping you decide which collection to utilize in your project. There are three types found in our collection methods:
+> The [Big-O notation](https://en.wikipedia.org/wiki/Big_O_notation) values in the chart below describe the [time complexity](https://en.wikipedia.org/wiki/Time_complexity) of the various collection methods found in `near-sdk-as`. These method complexities correlate with [gas](/docs/concepts/gas) consumption on Fermi, helping you decide which collection to utilize in your project. There are three types found in our collection methods:
 
 - O(1) - _[constant](https://en.wikipedia.org/wiki/Time_complexity#Constant_time)_
 - O(n) - _[linear](https://en.wikipedia.org/wiki/Time_complexity#Linear_time)_
@@ -209,7 +209,7 @@ map.getSome(key)
 
 ### Big-O Notation {#big-o-notation-1}
 
-> The [Big-O notation](https://en.wikipedia.org/wiki/Big_O_notation) values in the chart below describe the [time complexity](https://en.wikipedia.org/wiki/Time_complexity) of the various collection methods found in `near-sdk-rs`. These method complexities correlate with [gas](/docs/concepts/gas) consumption on Axion, helping you decide which collection to utilize in your project. There are three types found in our collection methods:
+> The [Big-O notation](https://en.wikipedia.org/wiki/Big_O_notation) values in the chart below describe the [time complexity](https://en.wikipedia.org/wiki/Time_complexity) of the various collection methods found in `near-sdk-rs`. These method complexities correlate with [gas](/docs/concepts/gas) consumption on Fermi, helping you decide which collection to utilize in your project. There are three types found in our collection methods:
 
 - O(1) - _[constant](https://en.wikipedia.org/wiki/Time_complexity#Constant_time)_
 - O(n) - _[linear](https://en.wikipedia.org/wiki/Time_complexity#Linear_time)_

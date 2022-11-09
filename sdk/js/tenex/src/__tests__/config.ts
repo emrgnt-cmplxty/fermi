@@ -1,4 +1,4 @@
-// TODO is there a cleaner way to represent this test data - https://github.com/gdexorg/gdex/issues/180
+// TODO is there a cleaner way to represent this test data - https://github.com/fermiorg/fermi/issues/180
 export const testData = {
   defaultRelayer: 'localhost:3014',
   defaultTransactionSubmitter: 'localhost:3005',

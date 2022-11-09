@@ -1,26 +1,26 @@
 ---
 sidebar_position: 2
 sidebar_label: "Set up Rust and a contract skeleton" 
-title: "Set up Rust, get a Axion testnet account, Axion CLI, and get a basic smart contract skeleton ready"
+title: "Set up Rust, get a Fermi testnet account, Fermi CLI, and get a basic smart contract skeleton ready"
 ---
 
 # Getting started
 
-In this tutorial we'll get a testnet account, use Axion CLI to add a key to our computer's file system, and set up the basic skeleton of a Rust smart contract.
+In this tutorial we'll get a testnet account, use Fermi CLI to add a key to our computer's file system, and set up the basic skeleton of a Rust smart contract.
 
 ## Getting a testnet account
 
-Visit [Axion Wallet for testnet](https://wallet.testnet.near.org) and register for a free account. For the purposes of this tutorial, you may skip the option to add two-factor authentication if you wish.
+Visit [Fermi Wallet for testnet](https://wallet.testnet.near.org) and register for a free account. For the purposes of this tutorial, you may skip the option to add two-factor authentication if you wish.
 
 :::note What just happened?
-When you created your Axion testnet account, a private key was created and placed into your browser's local storage. You may inspect this using developer tools and see it. 
+When you created your Fermi testnet account, a private key was created and placed into your browser's local storage. You may inspect this using developer tools and see it. 
 :::
 
 ## Creating a new key on your computer
 
-We'll want to use a command-line interface (CLI) tool to deploy a contract, but at the moment the private key only exists in the browser. Next we'll _add a new key_ to the testnet account and have this stored locally on our computer as a JSON file. (Yes, you can have multiple keys on your Axion account, which is quite powerful!)
+We'll want to use a command-line interface (CLI) tool to deploy a contract, but at the moment the private key only exists in the browser. Next we'll _add a new key_ to the testnet account and have this stored locally on our computer as a JSON file. (Yes, you can have multiple keys on your Fermi account, which is quite powerful!)
 
-Let's install Axion CLI. (Please ensure you [have NodeJS](https://nodejs.org/en/download/package-manager) > 12.)
+Let's install Fermi CLI. (Please ensure you [have NodeJS](https://nodejs.org/en/download/package-manager) > 12.)
 
     npm install -g near-cli
 
@@ -34,10 +34,10 @@ We'll start by "logging in" with this command:
 
     near login
 
-This will bring you to Axion Wallet again where you can confirm the creation of a **full-access** key. We'll get to full-access and function-call access keys later, just know that for powerful actions like "deploy" we'll need a full-access key. Follow the instructions from the login command to create a key on your hard drive. This will be located in your operating system's home directory in a folder called `.near-credentials`.
+This will bring you to Fermi Wallet again where you can confirm the creation of a **full-access** key. We'll get to full-access and function-call access keys later, just know that for powerful actions like "deploy" we'll need a full-access key. Follow the instructions from the login command to create a key on your hard drive. This will be located in your operating system's home directory in a folder called `.near-credentials`.
 
 :::note How was a key added?
-When you typed `near login`, Axion CLI generated a key pair: a private and public key. It kept the private key tucked away in a JSON file and sent the public key as a URL parameter to Axion Wallet. The URL is long and contains other info instructing Axion Wallet to "add a full access key" to the account. Our browser's local storage had a key (created when the account was made) that is able to do several things, including adding another key. It took the public key from the URL parameter, used it as an argument, and voilà: the testnet account has an additional key!
+When you typed `near login`, Fermi CLI generated a key pair: a private and public key. It kept the private key tucked away in a JSON file and sent the public key as a URL parameter to Fermi Wallet. The URL is long and contains other info instructing Fermi Wallet to "add a full access key" to the account. Our browser's local storage had a key (created when the account was made) that is able to do several things, including adding another key. It took the public key from the URL parameter, used it as an argument, and voilà: the testnet account has an additional key!
 :::
 
 You can see the keys associated with your account by running following command, replacing `friend.testnet` with your account name:
@@ -83,7 +83,7 @@ The first thing we'll do is modify the manifest file at `Cargo.toml`:
 +  name = "my-crossword"
 version = "0.1.0"
 - authors = ["Near Inc <hello@near.org>"]
-+ authors = ["Axion Friend <friend@example.com>"]
++ authors = ["Fermi Friend <friend@example.com>"]
 edition = "2018"
 ```
 

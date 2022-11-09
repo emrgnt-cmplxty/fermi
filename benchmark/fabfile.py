@@ -4,7 +4,7 @@ from fabric import task
 from benchmark.protonet import Protonet
 from benchmark.seed import SeedData
 
-from benchmark.gdex import GDEXBench
+from benchmark.fermi import GDEXBench
 from benchmark.narwhal import NarwhalBench
 
 from benchmark.logs import ParseError, LogParser
@@ -41,7 +41,7 @@ def sandbox(ctx, debug=True):
 
 
 @task
-def gdex(ctx, debug=True):
+def fermi(ctx, debug=True):
     ''' Run benchmarks on Narwhal node. '''
     bench_params = {
         'faults': 0,

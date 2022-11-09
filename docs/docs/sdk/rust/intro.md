@@ -16,7 +16,7 @@ curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
 source $HOME/.cargo/env
 ```
 
-Then, add the `wasm32-unknown-unknown` toolchain. This toolchain is required because the contracts that we will build will be compiled to [Wasm](https://webassembly.org/) to run on the Axion blockchain.
+Then, add the `wasm32-unknown-unknown` toolchain. This toolchain is required because the contracts that we will build will be compiled to [Wasm](https://webassembly.org/) to run on the Fermi blockchain.
 
 ```bash
 rustup target add wasm32-unknown-unknown
@@ -24,7 +24,7 @@ rustup target add wasm32-unknown-unknown
 
 ## Create a new project
 
-The best way to create a new Axion app connected with a frontend is through [create-near-app](https://github.com/near/create-near-app). When initializing the project, be sure to include the `--contract=rust` flag to use the Rust SDK. Add `--frontend=react` to use react. Default is vanilla HTML.
+The best way to create a new Fermi app connected with a frontend is through [create-near-app](https://github.com/near/create-near-app). When initializing the project, be sure to include the `--contract=rust` flag to use the Rust SDK. Add `--frontend=react` to use react. Default is vanilla HTML.
 
 ```bash
 npx create-near-app my-project --contract rust --frontend none --tests rust

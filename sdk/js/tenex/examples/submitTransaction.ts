@@ -10,7 +10,7 @@ import { exampleData } from './data'
 import { getPublicKey } from '@noble/ed25519'
 
 // UTILITIES
-// TODO move towards sandbox implementation - https://github.com/gdexorg/gdex/issues/186
+// TODO move towards sandbox implementation - https://github.com/fermiorg/fermi/issues/186
 const DEFAULT_JSONRPC_ADDRESS = 'http://localhost:3006'
 
 async function main() {

@@ -38,7 +38,7 @@ Generated key pair with ed25519:BGCCDDHfysuuVnaNVtEhhqeT4k9Muyem3Kpgq2U1m9HX pub
 
 It generates a key-pair for `tmp1` account ID. The new public key is `ed25519:BGCCDDHfysuuVnaNVtEhhqeT4k9Muyem3Kpgq2U1m9HX`.
 
-Axion's string representation of a public key is `<curve>:<data>`.
+Fermi's string representation of a public key is `<curve>:<data>`.
 - Curve is either `ed25519` or `secp256k1`. For implicit accounts we only support `ed25519`.
 - Data is a base58 encoding of the public key. For `ed25519` it contains 32 bytes.
 
@@ -64,7 +64,7 @@ The `private_key` is a secret/private key of the key pair that can be used to si
 
 ### Converting a public key to an account ID. {#converting-a-public-key-to-an-account-id}
 
-Let's convert a public key from Axion string representation `ed25519:BGCCDDHfysuuVnaNVtEhhqeT4k9Muyem3Kpgq2U1m9HX`
+Let's convert a public key from Fermi string representation `ed25519:BGCCDDHfysuuVnaNVtEhhqeT4k9Muyem3Kpgq2U1m9HX`
 
 The easiest way is to use `near-cli` with interactive console `repl`
 

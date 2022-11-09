@@ -3,7 +3,7 @@ id: account-id
 title: Address (Account ID)
 ---
 
-Every Axion account is identified by a specific address. Based on their name, two types of accounts can be distinguished:
+Every Fermi account is identified by a specific address. Based on their name, two types of accounts can be distinguished:
 1. **Named accounts**, with human readable names such as `alice.near`.
 2. **Implicit accounts**, referred by 64 chars (e.g. `98793cd91a3f870fb126f662858[...]`).
 
@@ -29,7 +29,7 @@ Check our section on how to [create implicit accounts](creating-accounts.md#loca
 
 
 ## Named Accounts
-In Axion, users can register **named accounts** (e.g. `bob.near`) which are simpler to use and remember.
+In Fermi, users can register **named accounts** (e.g. `bob.near`) which are simpler to use and remember.
 
 Moreover, named accounts can create **sub-accounts** of themselves, helping to better organize related-accounts.
 In this way, named accounts work as domains, particularly:

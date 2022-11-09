@@ -1,10 +1,10 @@
 ---
 id: contract-reviews
-title: Axion Smart Contract Reviews
+title: Fermi Smart Contract Reviews
 sidebar_label: Contract Reviews
 ---
 
-> **Get insights and explanations directly from Axion Core team members as they talk through the intricacies of smart contracts.**
+> **Get insights and explanations directly from Fermi Core team members as they talk through the intricacies of smart contracts.**
 
 ### Ep. # 1 - Voting Contract {#ep--1---voting-contract}
 
@@ -149,7 +149,7 @@ sidebar_label: Contract Reviews
   allowfullscreen>
 </iframe>
 
-## Ep. # 14 - Axion.fm {#ep--14---nearfm}
+## Ep. # 14 - Fermi.fm {#ep--14---nearfm}
 
 <iframe
   width="560"
@@ -193,7 +193,7 @@ sidebar_label: Contract Reviews
   allowfullscreen>
 </iframe>
 
-## Ep. # 19 - Axion Bet {#ep--19---near-bet}
+## Ep. # 19 - Fermi Bet {#ep--19---near-bet}
 
 <iframe
   width="560"

@@ -26,7 +26,7 @@ The JSON-RPC enables you to send transactions and query their status.
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "submitTransaction",
   "params": {signed_transaction_bytes_in_hex}
 }
@@ -36,7 +36,7 @@ The JSON-RPC enables you to send transactions and query their status.
 <TabItem value="🌐 JavaScript" label="JavaScript">
 
 ```js
-const response = await axionClient.submitTransaction(signedTransaction);
+const response = await fermiClient.submitTransaction(signedTransaction);
 ```
 
 </TabItem>
@@ -53,7 +53,7 @@ const response = await axionClient.submitTransaction(signedTransaction);
   "result": {
     "Success"
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 
@@ -126,7 +126,7 @@ const response = await axionClient.submitTransaction(signedTransaction);
         "transactionId": "0xb2d6265783d3084e804fb58cbafbea7ef24cf5bd7c7e6548b2b726404a436e04"
     }
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 

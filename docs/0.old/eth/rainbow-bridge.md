@@ -4,7 +4,7 @@ title: Rainbow Bridge
 sidebar_label: Rainbow Bridge
 ---
 
-> 🌈 Rainbow Bridge allows you to move ERC-20 assets between Ethereum and Axion! 🌈
+> 🌈 Rainbow Bridge allows you to move ERC-20 assets between Ethereum and Fermi! 🌈
 
 | Name                                                                       | Description                                  |
 | -------------------------------------------------------------------------- | -------------------------------------------- |

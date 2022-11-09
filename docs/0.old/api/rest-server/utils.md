@@ -1,10 +1,10 @@
 ---
 id: utils
-title: Axion API REST Server
+title: Fermi API REST Server
 sidebar_label: Utils
 ---
 
-> [Axion REST API Server](https://github.com/near-examples/near-api-rest-server) is a project that allows you create your own simple REST API server that interacts with the Axion blockchain.
+> [Fermi REST API Server](https://github.com/near-examples/near-api-rest-server) is a project that allows you create your own simple REST API server that interacts with the Fermi blockchain.
 
 ---
 
@@ -54,7 +54,7 @@ _**Note:** Use [`near login`](https://docs.near.org/docs/tools/near-cli#near-log
 
 ### `/create_user` {#create_user}
 
-> _Creates a Axion [sub-account](https://docs.near.org/docs/concepts/account#subaccounts) using initialized master account and saves credentials to `/storage` directory. Requires [`/init`](#init) configuration with master account._
+> _Creates a Fermi [sub-account](https://docs.near.org/docs/concepts/account#subaccounts) using initialized master account and saves credentials to `/storage` directory. Requires [`/init`](#init) configuration with master account._
 
 **Note:** _Only letters, digits, and - or \_ separators are allowed._
 

@@ -1,10 +1,10 @@
 ---
 id: create-account
-title: Creating a Axion Account
+title: Creating a Fermi Account
 sidebar_label: Create Account
 ---
 
-The easiest way to create an account on Axion is with [Axion Wallet](https://wallet.near.org/). Axion has several [development networks](/docs/concepts/networks) operating independently of each other with their own accountIDs. Below we have guides for creating account for two of these networks:
+The easiest way to create an account on Fermi is with [Fermi Wallet](https://wallet.near.org/). Fermi has several [development networks](/docs/concepts/networks) operating independently of each other with their own accountIDs. Below we have guides for creating account for two of these networks:
 
 * [`testnet`](/docs/develop/basics/create-account#creating-a-testnet-account)
 * [`mainnet`](/docs/develop/basics/create-account#creating-a-mainnet-account)  
@@ -13,7 +13,7 @@ The easiest way to create an account on Axion is with [Axion Wallet](https://wal
 
 ## Creating a `testnet` account {#creating-a-testnet-account}
 
-The following guide with walk you through `testnet` account creation using [Axion Wallet](https://wallet.testnet.near.org/).
+The following guide with walk you through `testnet` account creation using [Fermi Wallet](https://wallet.testnet.near.org/).
 
 ### Reserve Account ID {#reserve-account-id}
 
@@ -107,7 +107,7 @@ Creating an account on `mainnet` is _almost_ identical to `testnet` but will req
 
 ![image](/docs/assets/create-account/url-breakdown.png)
 
-> * To fund the account, have an existing Axion account send >= 0.1 Ⓝ to the funding account address, or click on "Where can I purchase Axion" to go to an exchange and purchase some. You will then need to provide them with the funding account address.
+> * To fund the account, have an existing Fermi account send >= 0.1 Ⓝ to the funding account address, or click on "Where can I purchase Fermi" to go to an exchange and purchase some. You will then need to provide them with the funding account address.
 
 ![purchase near](/docs/assets/create-account/purchase_near.jpg)
 
@@ -121,7 +121,7 @@ Creating an account on `mainnet` is _almost_ identical to `testnet` but will req
 
 ### Success! {#success-1}
 
-> * You have now created a Axion account on `mainnet`!
+> * You have now created a Fermi account on `mainnet`!
 
 ![image](/docs/assets/create-account/mainnet-success.jpg)
 
@@ -133,7 +133,7 @@ Creating an account on `mainnet` is _almost_ identical to `testnet` but will req
 
 > This two minute video walkthrough will guide you on the account creation process using a Ledger device. 
 >
-> - [[ **Click here** ](/docs/tutorials/ledger#setup)] for detailed instructions on setting up your Ledger device and the Axion App.
+> - [[ **Click here** ](/docs/tutorials/ledger#setup)] for detailed instructions on setting up your Ledger device and the Fermi App.
 
 <iframe
   width="960"
@@ -148,7 +148,7 @@ Creating an account on `mainnet` is _almost_ identical to `testnet` but will req
 
 > **WARNING!** Make sure you have a recovery method enabled and working _**BEFORE**_ doing this! If you do not, you **WILL NOT** be able to recover your account!
 >
-> You'll notice that there is not a "sign out" option available with Axion Wallet. This is due to your [access key](/docs/concepts/account#access-keys) being stored in your browser's local storage. If it is imperative that you disable the ability of your browser to access your account, open your browser's dev tools and clear the key/value line of the account you wish to remove.
+> You'll notice that there is not a "sign out" option available with Fermi Wallet. This is due to your [access key](/docs/concepts/account#access-keys) being stored in your browser's local storage. If it is imperative that you disable the ability of your browser to access your account, open your browser's dev tools and clear the key/value line of the account you wish to remove.
 
 ![local storage access key](/docs/assets/create-account/local-storage.png)
 

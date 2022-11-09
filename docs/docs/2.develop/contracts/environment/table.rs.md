@@ -5,7 +5,7 @@
 | Predecessor            | `env::predecessor_account_id()` | Account ID that called this method                                     |
 | Current Account        | `env::current_account_id()`     | Account ID of this smart contract                                      |
 | Signer                 | `env::signer_account_id()`      | Account ID that signed the transaction leading to this execution |
-| Attached Deposit       | `env::attached_deposit()`       | Amount in Axion attached to the call by the predecessor                                    |
+| Attached Deposit       | `env::attached_deposit()`       | Amount in Fermi attached to the call by the predecessor                                    |
 | Account Balance        | `env::account_balance()`        | Balance of this smart contract (including Attached Deposit)            |
 | Prepaid Gas            | `env::prepaid_gas()`            | Amount of gas available for execution                                  |
 | Timestamp              | `env::block_timestamp()`        | Current timestamp (number of non-leap-nanoseconds since January 1, 1970 0:00:00 UTC)|

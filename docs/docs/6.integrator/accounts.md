@@ -8,13 +8,13 @@ sidebar_label: Accounts
 
 Please see the [documentation for accounts](/concepts/basics/accounts/model) for basic information.
 
-- For exchanges, Axion supports [implicit account](https://nomicon.io/DataStructures/Account.html#implicit-account-ids) creation which allows the creation of accounts without paying for transactions.
+- For exchanges, Fermi supports [implicit account](https://nomicon.io/DataStructures/Account.html#implicit-account-ids) creation which allows the creation of accounts without paying for transactions.
 - You can create an implicit account by following the steps in [this guide](/integrator/implicit-accounts).
-- Accounts must have enough tokens to cover its storage which currently costs 0.0001 Axion per byte. This equates to a minimum balance of 0.0182 Axion for an account with one access key. You can query the live storage price using the [`protocol-config`](https://docs.near.org/api/rpc/setup#protocol-config) RPC endpoint. For more details on storage fees see [this section of the economics paper](https://near.org/papers/economics-in-sharded-blockchain/#transaction-and-storage-fees).
+- Accounts must have enough tokens to cover its storage which currently costs 0.0001 Fermi per byte. This equates to a minimum balance of 0.0182 Fermi for an account with one access key. You can query the live storage price using the [`protocol-config`](https://docs.near.org/api/rpc/setup#protocol-config) RPC endpoint. For more details on storage fees see [this section of the economics paper](https://near.org/papers/economics-in-sharded-blockchain/#transaction-and-storage-fees).
 
 ## Transfer from Function Call {#transfer-from-function-call}
 
-Axion allows transfers to happen within a function call. More importantly, when an account is deployed with some contract, it is possible that the only way to transfer tokens from that account is through a function call. Therefore, exchanges need to support transfers through function calls as well. We recommend the following approach:
+Fermi allows transfers to happen within a function call. More importantly, when an account is deployed with some contract, it is possible that the only way to transfer tokens from that account is through a function call. Therefore, exchanges need to support transfers through function calls as well. We recommend the following approach:
 
 Exchange can [query block by height](/api/rpc/setup#block) to get blocks on each height, and for every block,
 [query its chunk](/api/rpc/setup#chunk) to obtain the transactions included in the block. For each transaction,
@@ -39,13 +39,13 @@ View call: evgeny.lockup.near.get_owner_account_id()
 'evgeny.near'
 ```
 
-Now we want to transfer some unlocked tokens (1 Axion) with the following call
+Now we want to transfer some unlocked tokens (1 Fermi) with the following call
 
 ```bash
 near call evgeny.lockup.near transfer '{"amount":"1000000000000000000000000", "receiver_id": "evgeny.near"}' --accountId=evgeny.near
 ```
 
-**Note**: the response below can be obtained by hitting the RPC with the transaction hash and Axion account like this:
+**Note**: the response below can be obtained by hitting the RPC with the transaction hash and Fermi account like this:
 
 ```bash
 http post https://rpc.testnet.near.org jsonrpc=2.0 id=txstatus method=EXPERIMENTAL_tx_status \
@@ -322,7 +322,7 @@ of the rpc return result, this leads us to this execution outcome
 ```
 
 and its status contains `SuccessValue`, which indicates that the receipt has succeeded. Therefore we know that
-`1000000000000000000000000` yoctoNEAR, or 1 Axion has been successfully transferred.
+`1000000000000000000000000` yoctoNEAR, or 1 Fermi has been successfully transferred.
 
 **Example of transfer from a multisig contract**
 
@@ -331,7 +331,7 @@ by the multisig contract involves multiple transactions. In the following exampl
 a mutlisig contract that requires two confirmations.
 
 - First step: `add_request_and_confirm`. This initiates the action that the multisig contract wants to perform with one
-  confirmation. The multisig contract `multsigtest.testnet` wants to transfer 1 Axion to `bowen` and it first
+  confirmation. The multisig contract `multsigtest.testnet` wants to transfer 1 Fermi to `bowen` and it first
   sends a transaction that calls `add_request_and_confirm` with a request
 
 ```json
@@ -348,7 +348,7 @@ a mutlisig contract that requires two confirmations.
 }
 ```
 
-that indicates it wants to transfer 1 Axion to `bowen`. Notice that this transaction only records the action
+that indicates it wants to transfer 1 Fermi to `bowen`. Notice that this transaction only records the action
 but does not perform the actual transfer. The transaction result is as follows:
 
 <details>

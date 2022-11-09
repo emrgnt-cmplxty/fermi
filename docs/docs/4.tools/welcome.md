@@ -4,14 +4,14 @@ title: Tools
 sidebar_label: 🏠 Home
 ---
 
-Welcome! The Axion ecosystem has a complete set of tools for you to make the most out of the Axion network.
+Welcome! The Fermi ecosystem has a complete set of tools for you to make the most out of the Fermi network.
 In this page you will find:
 
 1. [Wallets](https://www.mynearwallet.com/) to handle your assets.
 2. [Explorers](explorer.md) to quickly obtain information from the blockchain.
 3. Websites to simplify creating and participating on governance projects.
 4. Tools to query [past information](indexer4explorer.md) from the blockchain as well as [real time events](events.md).
-5. Developer tools to deploy and interact with contracts such as the [Axion CLI](cli.md) and [Axion JavaScript API](/tools/near-api-js/quick-reference).
+5. Developer tools to deploy and interact with contracts such as the [Fermi CLI](cli.md) and [Fermi JavaScript API](/tools/near-api-js/quick-reference).
 
 <hr class="subsection" />
 
@@ -41,7 +41,7 @@ In this page you will find:
         <div class="card__body">
           <h4>Learn</h4>
           <small>
-            Learn how the Axion blockchain works
+            Learn how the Fermi blockchain works
           </small>
         </div>
       </div>
@@ -86,7 +86,7 @@ In this page you will find:
         <div class="card__body">
           <h4>JSON-RPC</h4>
           <small>
-            Interact with the Axion JSON-RPC
+            Interact with the Fermi JSON-RPC
           </small>
         </div>
       </div>
@@ -137,7 +137,7 @@ If you have any questions, or simply would want to chat with us, please do throu
           src={require("@site/static/docs/assets/home/discord.png").default} />
         <div class="avatar__intro">
           <div class="avatar__name">Discord</div>
-          <small class="avatar__subtitle"><a href="https://discord.gg/kwYjDn4yka">Axion Protocol</a></small>
+          <small class="avatar__subtitle"><a href="https://discord.gg/kwYjDn4yka">Fermi Protocol</a></small>
         </div>
       </div>
     </div>

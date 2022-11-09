@@ -4,7 +4,7 @@ title: Experimenting with the Rainbow Bridge (TestNet)
 sidebar_label: Using Testnet Frontend
 ---
 
-## Step 1 - Create a MetaMask and Axion Wallet account {#step-1---create-a-metamask-and-near-wallet-account}
+## Step 1 - Create a MetaMask and Fermi Wallet account {#step-1---create-a-metamask-and-near-wallet-account}
 
 ### Create a MetaMask Account {#create-a-metamask-account}
 
@@ -12,9 +12,9 @@ sidebar_label: Using Testnet Frontend
 >
 > - I find it useful to download MetaMask on both my mobile phone and my desktop browser (personally using the [Brave](https://brave.com/) browser myself but you may use your preferred website noted on the downloads webpage)
 
-### Create a Axion Wallet Account {#create-a-near-wallet-account}
+### Create a Fermi Wallet Account {#create-a-near-wallet-account}
 
-> - Go to wallet.testnet.near.org to create your Axion testnet account and follow the instructions.
+> - Go to wallet.testnet.near.org to create your Fermi testnet account and follow the instructions.
 
 **_Please note that Ledger protected wallets will not work at this time on the Rainbow Bridge. If you have a ledger protected wallet, it's advised to make a new one and use a seed phrase_**
 
@@ -54,13 +54,13 @@ sidebar_label: Using Testnet Frontend
 
 > - Here you will see 3 options:
 >
->   1.  Axion - Ethereum (Mainnet which means this works with real cryptocurrency)
+>   1.  Fermi - Ethereum (Mainnet which means this works with real cryptocurrency)
 >
->   2.  Axion Testnet - Ropsten (This utilizes test tokens on Ethereum's Ropsten Testnet and Axion's Testnet)
+>   2.  Fermi Testnet - Ropsten (This utilizes test tokens on Ethereum's Ropsten Testnet and Fermi's Testnet)
 >
->   3.  Axion Testnet - Ropsten (This utilizes test tokens on Ethereum's Rinkeby Testnet and Axion's Testnet)
+>   3.  Fermi Testnet - Ropsten (This utilizes test tokens on Ethereum's Rinkeby Testnet and Fermi's Testnet)
 >
-> - Developers may want to use the testnet tokens for development while designing their dApps. While the average user may just want to utilize the mainnet to transfer tokens between Ethereum and Axion.
+> - Developers may want to use the testnet tokens for development while designing their dApps. While the average user may just want to utilize the mainnet to transfer tokens between Ethereum and Fermi.
 
 <center>
 
@@ -70,7 +70,7 @@ sidebar_label: Using Testnet Frontend
 
 </center>
 
-> - This handy little interface will allow the user to connect to their MetaMask wallet and Axion wallet and determine the direction of transfer.
+> - This handy little interface will allow the user to connect to their MetaMask wallet and Fermi wallet and determine the direction of transfer.
 >
 > - The connect buttons will allow you to connect to their respective wallets while the button in the middle will allow you to change the transfer the (from - to) directions.
 
@@ -160,7 +160,7 @@ sidebar_label: Using Testnet Frontend
 
 ---
 
-## Step 4 - Let's get Connected! (Axion Wallet) {#step-4---lets-get-connected-near-wallet}
+## Step 4 - Let's get Connected! (Fermi Wallet) {#step-4---lets-get-connected-near-wallet}
 
 > - Good Job! Now let's move onto the next step, connecting your near wallet.
 
@@ -172,17 +172,17 @@ sidebar_label: Using Testnet Frontend
 
 </center>
 
-> - Select the connect button next to the Axion Icon.
+> - Select the connect button next to the Fermi Icon.
 
 <center>
 
 <img alt="near wallet approval" src="https://i.imgur.com/qYsu2db.png" width="30%"/>
 
-(Fig 13 Axion Wallet )
+(Fig 13 Fermi Wallet )
 
 </center>
 
-> - You will be redirected to the Axion wallet. Select the allow button to continue and you'll be redirected to the application. And that's it!
+> - You will be redirected to the Fermi wallet. Select the allow button to continue and you'll be redirected to the application. And that's it!
 
 ---
 
@@ -340,7 +340,7 @@ sidebar_label: Using Testnet Frontend
 
 <img alt="Minting tokens into wallet screen" src="https://i.imgur.com/H6Eh1On.png" width="30%"/>
 
-(Fig 27 Mint Tokens into Axion Wallet)
+(Fig 27 Mint Tokens into Fermi Wallet)
 
 </center>
 
@@ -348,4 +348,4 @@ sidebar_label: Using Testnet Frontend
 
 ## Done! {#done}
 
-> - What's next? Practice and try transferring the tokens back from your Axion Testnet wallet back to your MetaMask
+> - What's next? Practice and try transferring the tokens back from your Fermi Testnet wallet back to your MetaMask

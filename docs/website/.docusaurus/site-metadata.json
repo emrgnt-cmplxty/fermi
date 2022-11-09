@@ -21,9 +21,9 @@
       "name": "@docusaurus/plugin-google-analytics",
       "version": "2.1.0"
     },
-    "docusaurus-plugin-debug": {
+    "docusaurus-plugin-sitemap": {
       "type": "package",
-      "name": "@docusaurus/plugin-debug",
+      "name": "@docusaurus/plugin-sitemap",
       "version": "2.1.0"
     },
     "docusaurus-theme-classic": {

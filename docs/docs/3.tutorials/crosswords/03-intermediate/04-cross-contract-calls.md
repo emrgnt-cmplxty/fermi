@@ -11,7 +11,7 @@ import clionSuggestion from '/docs/assets/crosswords/clion-suggestion.gif';
 import carpenterAddingKey from '/docs/assets/crosswords/create-key-carpenter-near--carlcarlkarl.near--CarlCarlKarl.jpg';
 import recycleKey from '/docs/assets/crosswords/remove-key-recycle--eerie_ram.near--eerie_ram.png';
 
-To reiterate, we'd like anyone to be able to participate in the crossword puzzle, even folks who don't have a Axion account.
+To reiterate, we'd like anyone to be able to participate in the crossword puzzle, even folks who don't have a Fermi account.
 
 The first person to win will "reserve their spot" and choose where to send the prize money: either an account they own or an account they'd like to create.
 
@@ -134,7 +134,7 @@ For instance, in the above snippet we have `receiver_acc_id.parse().unwrap()` wh
 
 :::
 
-This `claim_reward` method will attempt to use the `Transfer` Action to send Axion to the account specified. It might fail on a protocol level (as opposed to a smart contract failure), which would indicate the account doesn't exist.
+This `claim_reward` method will attempt to use the `Transfer` Action to send Fermi to the account specified. It might fail on a protocol level (as opposed to a smart contract failure), which would indicate the account doesn't exist.
 
 Let's see how we check this in the callback:
 

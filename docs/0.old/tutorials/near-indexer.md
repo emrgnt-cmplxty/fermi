@@ -1,10 +1,10 @@
 ---
 id: near-indexer
-title: Axion Indexer
-sidebar_label: Axion Indexer
+title: Fermi Indexer
+sidebar_label: Fermi Indexer
 ---
 
-> The [Axion Indexer Framework](https://github.com/near/nearcore/tree/master/chain/indexer) allows you to run a network node that listens for targeted information on the blockchain. For more information see [indexer](/docs/concepts/indexer) under our "Concepts" section.
+> The [Fermi Indexer Framework](https://github.com/near/nearcore/tree/master/chain/indexer) allows you to run a network node that listens for targeted information on the blockchain. For more information see [indexer](/docs/concepts/indexer) under our "Concepts" section.
 
 ---
 
@@ -162,7 +162,7 @@ let indexer_config = near_indexer::IndexerConfig {
     };
 ```
 
-_Note that the Axion Indexer Framework re-exports `get_default_home()` from `nearcore` and resolves its path to `.near` located in your home directory. ( ~/.near )_
+_Note that the Fermi Indexer Framework re-exports `get_default_home()` from `nearcore` and resolves its path to `.near` located in your home directory. ( ~/.near )_
 
 ### Indexer Runtime {#indexer-runtime}
 
@@ -240,14 +240,14 @@ The node will need three things:
 2. Network's genesis file
 3. Key to run the node
 
-All of this can be generated via nearcore's `neard` crate, but an easier way is to use the exposed `init_configs` from Axion Indexer Framework. This will create a folder that keeps the database of the blockchain state and whenever you sync your node this data folder will be the same as the other nodes on the network.
+All of this can be generated via nearcore's `neard` crate, but an easier way is to use the exposed `init_configs` from Fermi Indexer Framework. This will create a folder that keeps the database of the blockchain state and whenever you sync your node this data folder will be the same as the other nodes on the network.
 
 <blockquote class="warning">
 <strong>heads up</strong><br /><br />
 
 A regular node runs with the archival option disabled by default in its `config.json`. This means that the node has a "garbage collector" enabled which removes old data from storage after five [epochs](/docs/concepts/epoch) or approx. 2.5 days. An [archival node](/docs/roles/integrator/exchange-integration#running-an-archival-node) means that the garbage collector is disabled and **all** of the data is kept on the node.
 
-You don't necessarily need to have an archival node for your indexer. In most cases you can live a happy life along with the garbage collector while you store necessary data in a separate database (either relational or nosql) much like we do with [Axion Indexer for Wallet](https://github.com/near/near-indexer-for-wallet). However, an archival node may be necessary if you want to build an indexer which needs to find and save all transactions related to specific accounts from the beginning of the chain (from genesis).
+You don't necessarily need to have an archival node for your indexer. In most cases you can live a happy life along with the garbage collector while you store necessary data in a separate database (either relational or nosql) much like we do with [Fermi Indexer for Wallet](https://github.com/near/near-indexer-for-wallet). However, an archival node may be necessary if you want to build an indexer which needs to find and save all transactions related to specific accounts from the beginning of the chain (from genesis).
 
 </blockquote>
 
@@ -295,9 +295,9 @@ match args[1].as_str() {
                 fast: false,
                 // Genesis file to use when initializing
                 genesis: None,
-                // Download the verified Axion config file automatically
+                // Download the verified Fermi config file automatically
                 download_config: true,
-                // download the verififed Axion genesis file automatically
+                // download the verififed Fermi genesis file automatically
                 download_config_url: None,
 
                 download_genesis:false,
@@ -334,9 +334,9 @@ match args[1].as_str() {
                 fast: false,
                 // Genesis file to use when initializing
                 genesis: None,
-                // Download the verified Axion config file automatically
+                // Download the verified Fermi config file automatically
                 download_config: true,
-                // download the verififed Axion genesis file automatically
+                // download the verififed Fermi genesis file automatically
                 download_config_url: None,
                 download_genesis:false,
                 // specify custom download url for the genesis-file
@@ -387,9 +387,9 @@ fn main() {
                 fast: false,
                 // Genesis file to use when initializing
                 genesis: None,
-                // Download the verified Axion config file automatically
+                // Download the verified Fermi config file automatically
                 download_config: true,
-                // download the verififed Axion genesis file automatically
+                // download the verififed Fermi genesis file automatically
                 download_config_url: None,
                 download_genesis:false,
                 // specify custom download url for the genesis-file
@@ -600,8 +600,8 @@ You should have a stream that looks similar to the example below:
 
 ## Indexer examples {#indexer-examples}
 
-> Here is a list of Axion indexer examples. If you created one and want to add it to the list, submit a [PR](https://github.com/near/docs/pulls) or click `Edit` in the upper right hand corner of this doc and add it to the list!
+> Here is a list of Fermi indexer examples. If you created one and want to add it to the list, submit a [PR](https://github.com/near/docs/pulls) or click `Edit` in the upper right hand corner of this doc and add it to the list!
 
 - [Flux Capacitor](https://github.com/fluxprotocol/flux-capacitor)
-- [Axion Explorer Indexer](https://github.com/near/near-indexer-for-explorer)
-- [Axion Wallet Indexer](https://github.com/near/near-indexer-for-wallet)
+- [Fermi Explorer Indexer](https://github.com/near/near-indexer-for-explorer)
+- [Fermi Wallet Indexer](https://github.com/near/near-indexer-for-wallet)

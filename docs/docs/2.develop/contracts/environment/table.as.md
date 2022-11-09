@@ -5,7 +5,7 @@
 | Predecessor            | `context.predecessor`          | Account ID that called this method                                     |
 | Current Account        | `context.contractName`         | Account ID of this smart contract                                      |
 | Signer                 | `context.sender`               | Account ID that signed the transaction leading to this execution |
-| Attached Deposit       | `context.attachedDeposit`      | Amount in Axion attached to the call by the predecessor                                   |
+| Attached Deposit       | `context.attachedDeposit`      | Amount in Fermi attached to the call by the predecessor                                   |
 | Account Balance        | `context.accountBalance`       | Balance of this smart contract (including Attached Deposit)            |
 | Prepaid Gas            | `context.prepaidGas`           | Amount of gas available for execution                                  |
 | Timestamp              | `context.blockTimestamp`       | Current timestamp (number of non-leap-nanoseconds since January 1, 1970 0:00:00 UTC)|

@@ -339,7 +339,7 @@ function Footer() {
         </div>
 
         <p className="text-14 mt-50 md:mt-100">Copyright &copy;
-          {new Date().getFullYear()} <a href="https://near.org" className="hover:text-yellow">Axion Protocol</a><span className="mx-10">|</span>All rights
+          {new Date().getFullYear()} <a href="https://near.org" className="hover:text-yellow">Fermi Protocol</a><span className="mx-10">|</span>All rights
           reserved<span className="mx-10">|</span>
           <a href="mailto:hello@near.org" className="hover:text-yellow">
             hello@near.org

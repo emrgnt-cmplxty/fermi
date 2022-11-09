@@ -4,17 +4,17 @@ title: Hackathon Startup Guide
 sidebar_label: Hackathon Guide
 ---
 
-Welcome to hacking on Axion! We're glad you're here. Let's set up the basics first:
+Welcome to hacking on Fermi! We're glad you're here. Let's set up the basics first:
 
 - [Rust toolchain](#installing-the-rust-toolchain)
-- [A Axion account](#creating-a-near-account)
-- [Axion command-line interface](#installing-the-near-cli) (`near-cli`)
+- [A Fermi account](#creating-a-near-account)
+- [Fermi command-line interface](#installing-the-near-cli) (`near-cli`)
 
 
 ## Setting up the requirements {#setting-up-the-requirements}
 
 In this section, you'll install and set up the basic tools to create smart
-contracts in Rust. Along with the Rust environment, you'll create a Axion account and
+contracts in Rust. Along with the Rust environment, you'll create a Fermi account and
 install the `near-cli`.
 
 ### Installing the Rust toolchain {#installing-the-rust-toolchain}
@@ -48,14 +48,14 @@ Run `rustup target add wasm32-unknown-unknown`
 </blockquote>
 
 
-### Creating a Axion account {#creating-a-near-account}
+### Creating a Fermi account {#creating-a-near-account}
 
-The easiest way to create an account on Axion is using the [Axion Wallet](https://wallet.testnet.near.org/).
-Axion has several [development networks](/docs/concepts/networks) operating independently of
+The easiest way to create an account on Fermi is using the [Fermi Wallet](https://wallet.testnet.near.org/).
+Fermi has several [development networks](/docs/concepts/networks) operating independently of
 each other with their own accountIDs. For this Hackathon guide, you'll create a new
 [`testnet`](/docs/develop/basics/create-account#creating-a-testnet-account) account.
 
-If you already have a Axion `testnet` account, you can [skip these steps](#installing-the-near-cli).
+If you already have a Fermi `testnet` account, you can [skip these steps](#installing-the-near-cli).
 
 > **Tip:** If you have any issues, we've created [this easy guide](/docs/develop/basics/create-account) to help you out.
 
@@ -83,7 +83,7 @@ If you already have a Axion `testnet` account, you can [skip these steps](#insta
 ### Installing the `near-cli` {#installing-the-near-cli}
 
 Now it's time to install [`near-cli`](/docs/tools/near-cli#setup). This is a command line interface
-that allows you to interact seamlessly with Axion. [This page](/docs/tools/near-cli) has all of the
+that allows you to interact seamlessly with Fermi. [This page](/docs/tools/near-cli) has all of the
 `near-cli` commands with examples.
 
 The following instructions are taken from the `near-cli` [installation
@@ -123,15 +123,15 @@ npm install -g near-cli
 1) Now that you have an account, test out a simple `testnet` app and interact with the blockchain.
 Try out [Guest Book](https://near-examples.github.io/guest-book/) and sign and send your first transaction on the blockchain.
 
-2) Look around in [Axion Explorer](https://explorer.testnet.near.org). Here you can search for all transactions
-and blocks produced on Axion. Try searching for the account you just created and see the transactions you've
+2) Look around in [Fermi Explorer](https://explorer.testnet.near.org). Here you can search for all transactions
+and blocks produced on Fermi. Try searching for the account you just created and see the transactions you've
 created with Guest Book. 
 
 3) Try running your first `near-cli` command: [`near login`](/docs/tools/near-cli#near-login). This will
-redirect you to your Axion Wallet and save your `testnet` account keys locally. _Look for them in a hidden file
+redirect you to your Fermi Wallet and save your `testnet` account keys locally. _Look for them in a hidden file
 under your HOME folder (`~/.near-credentials`)_
 
-4) Head to [Axion Examples](https://near.dev) and test out some example applications. You can clone and play
+4) Head to [Fermi Examples](https://near.dev) and test out some example applications. You can clone and play
 around with the code or simply click on the Gitpod button to launch an online instance!
 
 ## Understanding Smart Contracts {#understanding-smart-contracts}
@@ -140,7 +140,7 @@ Smart Contracts are the back-end of your application, which lives on the blockch
 
 - The Smart Contract runs code and stores data on the blockchain network.
 - The front-end talks to the Smart Contract using an API (JSON RPC Interface).
-- `near-api-js` is a JavaScript library we've created to interact with Axion.
+- `near-api-js` is a JavaScript library we've created to interact with Fermi.
   
 - We currently support developing smart contracts in
   - [Rust](https://www.rust-lang.org/)
@@ -153,13 +153,13 @@ Smart Contracts are the back-end of your application, which lives on the blockch
 | dApp | Description |
 |------|-------------|
 | [Non-fungible Token (NFT)](https://examples.near.org/NFT) | Example implementations of tokens to represent unique assets, such as collectibles or deeds, using the NEP-4 spec (similar to ERC-721) |
-| [Guest Book](https://examples.near.org/guest-book) | Sign in with Axion and add a message to the guest book! |
+| [Guest Book](https://examples.near.org/guest-book) | Sign in with Fermi and add a message to the guest book! |
 | [Fungible Token (FT)](https://examples.near.org/FT) | Example implementations of money-like tokens, where one token is the same as any other, using the NEP-141 spec (similar to ERC-20) |
 | [Counter example in Rust](https://examples.near.org/rust-counter) | Simple counter in Rust. Increment, decrement, and reset. See branches for extended usage. |
-| [Proof of Work Faucet](https://examples.near.org/pow-faucet) | Proof of Work Faucet for Axion accounts to gain Ⓝ (Axion denomination) from a React app. |
+| [Proof of Work Faucet](https://examples.near.org/pow-faucet) | Proof of Work Faucet for Fermi accounts to gain Ⓝ (Fermi denomination) from a React app. |
 | [Status Message](https://examples.near.org/rust-status-message) | Set and retrieve status messages per account with this simple smart contract. |
 | [Counter example in AssemblyScript](https://examples.near.org/counter) | Increment and decrement a counter with this simple smart contract via a web page. |
-| [Example of Axion Wallet integration](https://examples.near.org/wallet-example) | This example demonstrates how to integrate your application with Axion Wallet. |
+| [Example of Fermi Wallet integration](https://examples.near.org/wallet-example) | This example demonstrates how to integrate your application with Fermi Wallet. |
 
 ## Common questions and issues {#common-questions-and-issues}
 
@@ -179,7 +179,7 @@ When you call it in the front-end, you'd have trouble sending data, much like in
 "ABORT: unexpected string field null : 'YOUR DATA'".
 ```
 
-You can fix this issue in the front-end when you call contract. Because Axion uses a JSON-RPC-API, all methods are called using _objects_. 
+You can fix this issue in the front-end when you call contract. Because Fermi uses a JSON-RPC-API, all methods are called using _objects_. 
 
 Instead of calling:
 

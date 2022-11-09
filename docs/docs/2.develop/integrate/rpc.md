@@ -7,8 +7,8 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 
-Here we will only briefly mention how to use the Axion RPC.
-If you want to find the full documentation on Axion RPC please follow this link.
+Here we will only briefly mention how to use the Fermi RPC.
+If you want to find the full documentation on Fermi RPC please follow this link.
 
 ---
 
@@ -31,7 +31,7 @@ View methods are those that perform **read-only** operations. Calling these meth
 ```json
 {
   "jsonrpc": "2.0",
-  "id": "axion",
+  "id": "fermi",
   "method": "query",
   "params": {
     "request_type": "call_function",
@@ -60,7 +60,7 @@ const response = await near.connection.provider.query({
 <TabItem value="http" label="HTTPie">
 
 ```bash
-http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=query \
+http post https://rpc.testnet.near.org jsonrpc=2.0 id=fermi method=query \
   params:='{
     "request_type": "call_function",
     "finality": "final",
@@ -86,7 +86,7 @@ http post https://rpc.testnet.near.org jsonrpc=2.0 id=axion method=query \
     "block_height": 17817336,
     "block_hash": "4qkA4sUUG8opjH5Q9bL5mWJTnfR4ech879Db1BZXbx6P"
   },
-  "id": "axion"
+  "id": "fermi"
 }
 ```
 
@@ -167,7 +167,7 @@ const recentBlockHash = near-api-js.utils.serialize.base_decode(
 
 ### Sign Transaction {#sign-transaction}
 
-Now that the transaction is created, we sign it before sending it to the Axion blockchain. At the lowest level, there are four steps to this process.
+Now that the transaction is created, we sign it before sending it to the Fermi blockchain. At the lowest level, there are four steps to this process.
 
 1. Using [`nearAPI`](/integrator/create-transactions#imports), we call on `serialize()` to serialize the transaction in [Borsh](https://borsh.io/).
 
@@ -212,7 +212,7 @@ Final step is to encode and send the transaction.
 ```js
 // encodes transaction to serialized Borsh (required for all transactions)
 const signedSerializedTx = signedTransaction.encode();
-// sends transaction to Axion blockchain via JSON RPC call and records the result
+// sends transaction to Fermi blockchain via JSON RPC call and records the result
 const result = await provider.sendJsonRpc("broadcast_tx_commit", [
   Buffer.from(signedSerializedTx).toString("base64"),
 ]);

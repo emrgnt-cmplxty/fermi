@@ -1,14 +1,14 @@
 ---
 id: overview
-title: Axion APIs
+title: Fermi APIs
 sidebar_label: Overview
 ---
 
-Take a look at the different available APIs to help you build amazing apps on Axion.
+Take a look at the different available APIs to help you build amazing apps on Fermi.
 
 ## JSON-RPC {#rpc-api}
 
-[Axion JSON-RPC](/docs/api/rpc) provides a simple JSON RPC 2.0 API to interact with the Axion blockchain.
+[Fermi JSON-RPC](/docs/api/rpc) provides a simple JSON RPC 2.0 API to interact with the Fermi blockchain.
 
 | API | Description |
 |-----|-------------|
@@ -24,11 +24,11 @@ Take a look at the different available APIs to help you build amazing apps on Ax
 
 ## REST Server {#rest-server}
 
-[Axion REST API Server](/docs/api/rest-server/overview) is a project that allows you create your own simple
-REST API server that interacts with the Axion blockchain.
+[Fermi REST API Server](/docs/api/rest-server/overview) is a project that allows you create your own simple
+REST API server that interacts with the Fermi blockchain.
 
 | Route                                      | Description                                                                                                                 |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| [CONTRACTS](/docs/api/rest-server/contracts)                              |  Deploy, view, and call smart contracts on Axion.         |
+| [CONTRACTS](/docs/api/rest-server/contracts)                              |  Deploy, view, and call smart contracts on Fermi.         |
 | [UTILS](/docs/api/rest-server/utils)                                  |    Init accounts, create sub-accounts, and view key pairs.                                                 |
 | [NFTs](/docs/api/rest-server/nfts)                            |        Mint, view, and transfer NFTs.                                       |

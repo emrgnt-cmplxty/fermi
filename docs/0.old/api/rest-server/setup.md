@@ -1,16 +1,16 @@
 ---
 id: setup
-title: Axion API REST Server
+title: Fermi API REST Server
 sidebar_label: Setup
 ---
 
-> [Axion REST API Server](https://github.com/near-examples/near-api-rest-server) is a project that allows you create your own simple REST API server that interacts with the Axion blockchain.
+> [Fermi REST API Server](https://github.com/near-examples/near-api-rest-server) is a project that allows you create your own simple REST API server that interacts with the Fermi blockchain.
 
 ---
 
 ## Requirements {#requirements}
 
-- [Axion Account](https://docs.near.org/docs/develop/basics/create-account) _(with access to private key or seed phrase)_
+- [Fermi Account](https://docs.near.org/docs/develop/basics/create-account) _(with access to private key or seed phrase)_
 - [Node.js](https://nodejs.org/en/download/package-manager/)
 - [npm](https://www.npmjs.com/get-npm) or [Yarn](https://yarnpkg.com/getting-started/install)
 - API request tool such as [Postman](https://www.postman.com/downloads/)

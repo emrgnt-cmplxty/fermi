@@ -20,17 +20,17 @@ class PathMaker:
     @staticmethod
     def binary_path(release=True):
         if release:
-            return join('..', 'gdex-rs', 'target', 'release')
+            return join('..', 'fermi-rs', 'target', 'release')
         else:
-            return join('..', 'gdex-rs', 'target', 'debug')
+            return join('..', 'fermi-rs', 'target', 'debug')
 
     @staticmethod
     def narwhal_node_crate_path():
         return join('..', 'benchmark-narwhal')
 
     @staticmethod
-    def gdex_build_path():
-        return "../gdex-rs/"
+    def fermi_build_path():
+        return "../fermi-rs/"
 
     @staticmethod
     def examples_crate_path():

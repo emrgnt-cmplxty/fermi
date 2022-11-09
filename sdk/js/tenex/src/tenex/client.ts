@@ -1,10 +1,10 @@
 // IMPORTS
 
 // INTERNAL
-import { AxionClient, AxionTypes } from 'axion-js-sdk'
+import { FermiClient, FermiTypes } from 'fermi-js-sdk'
 import { MarketplaceResponse, MarketResponse, MarketplaceUserInfoResponse, OrderbookDepthResponse } from './types'
 
-export default class TenexClient extends AxionClient {
+export default class TenexClient extends FermiClient {
   public jsonrpcURI: string
   public namespace: string
 
@@ -15,14 +15,14 @@ export default class TenexClient extends AxionClient {
   }
 
   async getFuturesMarketPlaces(): Promise<MarketplaceResponse[]> {
-    const response: AxionTypes.Response<MarketplaceResponse[]> = await this.request(
+    const response: FermiTypes.Response<MarketplaceResponse[]> = await this.request(
       `${this.namespace}_getFuturesMarketplaces`
     )
     return response.result
   }
 
   async getFuturesMarkets(marketAdmin: string): Promise<MarketResponse[]> {
-    const response: AxionTypes.Response<MarketResponse[]> = await this.request(
+    const response: FermiTypes.Response<MarketResponse[]> = await this.request(
       `${this.namespace}_getMarkets`,
       `["${marketAdmin}"]`
     )
@@ -30,7 +30,7 @@ export default class TenexClient extends AxionClient {
   }
 
   async getUserMarketplaceInfo(marketAdmin: string, user: string): Promise<MarketplaceUserInfoResponse> {
-    const response: AxionTypes.Response<MarketplaceUserInfoResponse> = await this.request(
+    const response: FermiTypes.Response<MarketplaceUserInfoResponse> = await this.request(
       `${this.namespace}_getUserMarketplaceInfo`,
       `["${marketAdmin}", "${user}"]`
     )
@@ -42,7 +42,7 @@ export default class TenexClient extends AxionClient {
     if (depth > 100) {
       throw new Error("Maximum order book depth exceeded")
     }
-    const response: AxionTypes.Response<OrderbookDepthResponse> = await this.request(
+    const response: FermiTypes.Response<OrderbookDepthResponse> = await this.request(
       `${this.namespace}_getOrderbookDepth`,
       `["${marketAdmin}", ${baseAssetId}, ${quoteAssetId}, ${depth}]`
     )

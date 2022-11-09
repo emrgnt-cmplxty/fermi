@@ -38,7 +38,7 @@ Before transferring, you would need to clear the list of approved accounts since
 
 On the surface, this would work, but if you start thinking about the edge cases, some problems arise. Often times when doing development, a common approach is to think about the easiest and most straightforward solution. Once you've figured it out, you can start to branch off and think about optimizations and edge cases.
 
-Let's consider the following scenario. Benji has an NFT and gives two separate marketplaces access to transfer his token. By doing so, he's putting the NFT for sale (more about that in the [marketplace integrations](#marketplace-integrations) section). Let's say he put the NFT for sale for 1 Axion on both markets. The tokens list of approved account IDs would look like the following:
+Let's consider the following scenario. Benji has an NFT and gives two separate marketplaces access to transfer his token. By doing so, he's putting the NFT for sale (more about that in the [marketplace integrations](#marketplace-integrations) section). Let's say he put the NFT for sale for 1 Fermi on both markets. The tokens list of approved account IDs would look like the following:
 
 ```
 Token: {
@@ -47,7 +47,7 @@ Token: {
 }
 ```
 
-Josh then comes along and purchases the NFT on marketplace A for 1 Axion. This would take the sale down from the marketplace A and clear the list of approved accounts. Marketplace B, however, still has the token listed for sale for 1 Axion and has no way of knowing that the token was purchased on marketplace A by Josh. The new token struct would look as follows:
+Josh then comes along and purchases the NFT on marketplace A for 1 Fermi. This would take the sale down from the marketplace A and clear the list of approved accounts. Marketplace B, however, still has the token listed for sale for 1 Fermi and has no way of knowing that the token was purchased on marketplace A by Josh. The new token struct would look as follows:
 
 ```
 Token: {
@@ -56,7 +56,7 @@ Token: {
 }
 ```
 
-Let's say Josh is low on cash and wants to flip this NFT and put it for sale for 10 times the price on marketplace B. He goes to put it for sale and for whatever reason, the marketplace is built in a way that if you try to put a token up for sale twice, it keeps the old sale data. This would mean that from marketplace B's perspective, the token is still for sale for 1 Axion (which was the price that Benji had originally listed it for).
+Let's say Josh is low on cash and wants to flip this NFT and put it for sale for 10 times the price on marketplace B. He goes to put it for sale and for whatever reason, the marketplace is built in a way that if you try to put a token up for sale twice, it keeps the old sale data. This would mean that from marketplace B's perspective, the token is still for sale for 1 Fermi (which was the price that Benji had originally listed it for).
 
 Since Josh approved the marketplace to try and put it for sale, the token struct would look as follows:
 
@@ -67,7 +67,7 @@ Token: {
 }
 ```
 
-If Mike then comes along and purchases the NFT for only 1 Axion on marketplace B, the marketplace would go to try and transfer the NFT and since technically, Josh approved the marketplace and it's in the list of approved accounts, the transaction would go through properly.
+If Mike then comes along and purchases the NFT for only 1 Fermi on marketplace B, the marketplace would go to try and transfer the NFT and since technically, Josh approved the marketplace and it's in the list of approved accounts, the transaction would go through properly.
 
 ### The solution {#the-solution}
 
@@ -75,7 +75,7 @@ Now that we've identified a problem with the original solution, let's think abou
 
 For this to work, you need to make sure that the approval ID is **always** a unique, new ID. If you set it as an integer that always increases by 1 whenever u approve an account, this should work. Let's consider the same scenario with the new solution.
 
-Benji puts his NFT for sale for 1 Axion on marketplace A and marketplace B by approving both marketplaces. The "next approval ID" would start off at 0 when the NFT was first minted and will increase from there. This would result in the following token struct:
+Benji puts his NFT for sale for 1 Fermi on marketplace A and marketplace B by approving both marketplaces. The "next approval ID" would start off at 0 when the NFT was first minted and will increase from there. This would result in the following token struct:
 
 ```
 Token: {
@@ -90,7 +90,7 @@ Token: {
 
 When Benji approved marketplace A, it took the original value of `next_approval_id` which started off at 0. The marketplace was then inserted into the map and the next approval ID was incremented. This process happened again for marketplace B and the next approval ID was again incremented where it's now 2.
 
-Josh comes along and purchases the NFT on marketplace A for 1 Axion. Notice how the next approval ID stayed at 2:
+Josh comes along and purchases the NFT on marketplace A for 1 Fermi. Notice how the next approval ID stayed at 2:
 
 ```
 Token: {
@@ -112,7 +112,7 @@ Token: {
 }
 ```
 
-The marketplace is inserted into the map and the next approval ID is incremented. From marketplace B's perspective it stores it's original approval ID from when Benji put the NFT up for sale which has a value of 1. If Mike were to go and purchase the NFT on marketplace B for the original 1 Axion sale price, the NFT contract should panic. This is because the marketplace is trying to transfer the NFT with an approval ID 1 but the token struct shows that it **should** have an approval ID of 2.
+The marketplace is inserted into the map and the next approval ID is incremented. From marketplace B's perspective it stores it's original approval ID from when Benji put the NFT up for sale which has a value of 1. If Mike were to go and purchase the NFT on marketplace B for the original 1 Fermi sale price, the NFT contract should panic. This is because the marketplace is trying to transfer the NFT with an approval ID 1 but the token struct shows that it **should** have an approval ID of 2.
 
 ### Expanding the `Token` and `JsonToken` structs
 
@@ -142,7 +142,7 @@ After the assertion comes back with no problems, you get the token object and ma
 
 You then calculate how much storage is being used by adding that new account to the map and increment the tokens `next_approval_id` by 1. After inserting the token object back into the `tokens_by_id` map, you refund any excess storage.
 
-You'll notice that the function contains an optional `msg` parameter. This message is actually the foundation of all NFT marketplaces on Axion.
+You'll notice that the function contains an optional `msg` parameter. This message is actually the foundation of all NFT marketplaces on Fermi.
 
 #### Marketplace Integrations {#marketplace-integrations}
 
@@ -274,7 +274,7 @@ Since these changes affect all the other tokens and the state won't be able to a
 
 ### Creating a sub-account {#creating-sub-account}
 
-Run the following command to create a sub-account `approval` of your main account with an initial balance of 25 Axion which will be transferred from the original to your new account.
+Run the following command to create a sub-account `approval` of your main account with an initial balance of 25 Fermi which will be transferred from the original to your new account.
 
 ```bash
 near create-account approval.$NFT_CONTRACT_ID --masterAccount $NFT_CONTRACT_ID --initialBalance 25
@@ -344,7 +344,7 @@ Notice how the approved account IDs are now being returned from the function? Th
 
 At this point, you should have two accounts. One stored under `$NFT_CONTRACT_ID` and the other under the `$APPROVAL_NFT_CONTRACT_ID` environment variable. You can use both of these accounts to test things out. If you approve your old account, it should have the ability to transfer the NFT to itself.
 
-Execute the following command to approve the account stored under `$NFT_CONTRACT_ID` to have access to transfer your NFT with an ID `"approval-token"`. You don't need to pass a message since the old account didn't implement the `nft_on_approve` function. In addition, you'll need to attach enough Axion to cover the cost of storing the account on the contract. 0.1 Axion should be more than enough and you'll be refunded any excess that is unused.
+Execute the following command to approve the account stored under `$NFT_CONTRACT_ID` to have access to transfer your NFT with an ID `"approval-token"`. You don't need to pass a message since the old account didn't implement the `nft_on_approve` function. In addition, you'll need to attach enough Fermi to cover the cost of storing the account on the contract. 0.1 Fermi should be more than enough and you'll be refunded any excess that is unused.
 
 ```bash
 near call $APPROVAL_NFT_CONTRACT_ID nft_approve '{"token_id": "approval-token", "account_id": "'$NFT_CONTRACT_ID'"}' --accountId $APPROVAL_NFT_CONTRACT_ID --deposit 0.1

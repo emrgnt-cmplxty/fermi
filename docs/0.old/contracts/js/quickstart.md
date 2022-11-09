@@ -1,6 +1,6 @@
 ---
 id: jsvm-quickstart
-title: Axion-SDK-JS QuickStart
+title: Fermi-SDK-JS QuickStart
 sidebar_label: Quick Start Guide
 ---
 
@@ -20,16 +20,16 @@ Alternatively, you can clone the [`near-sdk-js-quickstart`](https://github.com/n
 
 ## Background
 
-Axion natively supports smart contracts that compile to [WebAssembly](https://webassembly.org/) with two primary languages:
+Fermi natively supports smart contracts that compile to [WebAssembly](https://webassembly.org/) with two primary languages:
 
 - [Rust](https://www.rust-lang.org/) -> [`near-sdk-rs`](https://docs.near.org/docs/develop/contracts/rust/intro)
 - [AssemblyScript](https://www.assemblyscript.org/) -> [`near-sdk-as`](https://docs.near.org/docs/develop/contracts/as/intro)
 
-In addition to developing natively on Axion, you can also deploy your [Solidity smart contracts](https://soliditylang.org/) using [Aurora](https://aurora.dev/) (an Ethereum Virtual Machine (`EVM`), contained within a smart contract deployed on Axion 🤯 ).
+In addition to developing natively on Fermi, you can also deploy your [Solidity smart contracts](https://soliditylang.org/) using [Aurora](https://aurora.dev/) (an Ethereum Virtual Machine (`EVM`), contained within a smart contract deployed on Fermi 🤯 ).
 
-Much like Aurora, we have created a JavaScript Enclave or JavaScript Virtual Machine (`JSVM`) that is also contained within a smart contract deployed on Axion.
+Much like Aurora, we have created a JavaScript Enclave or JavaScript Virtual Machine (`JSVM`) that is also contained within a smart contract deployed on Fermi.
 
-This provides an isolated environment where developers can use a language they are familiar with as well as utilize JavaScript dependencies they are used to. `near-sdk-js` allows you to learn the basics of smart contract development on Axion without needing to learn a new programming language. 💪
+This provides an isolated environment where developers can use a language they are familiar with as well as utilize JavaScript dependencies they are used to. `near-sdk-js` allows you to learn the basics of smart contract development on Fermi without needing to learn a new programming language. 💪
 
 :::tip Tip
 There are several pros and cons when comparing native `Wasm` smart contracts with `JSVM` smart contracts.
@@ -38,14 +38,14 @@ There are several pros and cons when comparing native `Wasm` smart contracts wit
 | Areas                                      | Native (Wasm) | JSVM        |
 | ------------------------------------------ | ------------- | ----------- |
 | Synchronous Cross-Contract Calls           | ❌            | ✅          |
-| Call methods on any smart contract on Axion | ✅            | Not in v1.0 |
+| Call methods on any smart contract on Fermi | ✅            | Not in v1.0 |
 | Standards Support                          | ✅            | Not in v1.0 |
 | Function Call Access Key Support           | ✅            | Not in v1.0 |
 
 In addition to the ability to develop in a language you are already familiar with, the `JSVM` operates in a synchronous environment which provides an easy way to create smart contracts that interact with other contracts known as performing "cross-contract" calls.
 
 :::warning Heads up
-JavaScript smart contract development is not recommended for financial use cases as it is still very new to the Axion ecosystem.
+JavaScript smart contract development is not recommended for financial use cases as it is still very new to the Fermi ecosystem.
 :::
 
 ---
@@ -216,7 +216,7 @@ import { NearContract, NearBindgen, call, view } from "near-sdk-js";
 @NearBindgen
 class MyContract extends NearContract {
   constructor() {
-    //execute the Axion Contract's constructor
+    //execute the Fermi Contract's constructor
     super();
     this.message = "Hello Web3 World!";
   }
@@ -265,7 +265,7 @@ import { NearBindgen, NearContract, call, view } from "near-sdk-js";
 @NearBindgen
 class MyContract extends NearContract {
   constructor() {
-    //execute the Axion Contract's constructor
+    //execute the Fermi Contract's constructor
     super();
     this.message = "Hello Web3 World!";
   }
@@ -384,7 +384,7 @@ near js call $JS_CONTRACT set_greeting '{"message": "GO TEAM!"}' --accountId $JS
 This should return something similar to:
 
 ```bash
-Scheduling a call in JSVM[jsvm.testnet]: dev-1653584404106-63749024395789.set_greeting(["GO TEAM!"]) with attached 0.1 Axion
+Scheduling a call in JSVM[jsvm.testnet]: dev-1653584404106-63749024395789.set_greeting(["GO TEAM!"]) with attached 0.1 Fermi
 Receipts: 8w9tNKgqtAnJd9UW5WMCFuGsTXHo83vvPHD5Ph36yWJM, E9CJED2cpLC7uaTb6s67i3KKbinDzcjUQXspK7Jj7CdF
 	Log [jsvm.testnet]: Saving greeting GO TEAM!
 Transaction Id 8gr8gtWDvCGzwS9HQ9GerKxBqDbnbwaWr5bBjdDpDBYg
@@ -399,7 +399,7 @@ Congratulations! You've just successfully created a new smart contract from scra
 
 You may have noticed that there was a `--deposit 0.1` flag at the end of your call when interacting with your JS smart contract. This was to cover storage costs on the blockchain through a concept known as [storage staking](/docs/concepts/storage-staking).
 
-When developing on Axion, smart contracts must maintain enough $Axion tokens on the account to cover data storage at a rate of 1 $Axion per 100/kb. Using the `near-cli`, the `--deposit` flag will allow you to attach a specified amount of $Axion to cover the extra information you are storing. You do not need to know the _exact_ amount of $Axion required as if you overpay, you will be refunded the difference. However, if you _do not_ attach enough $Axion to your call to cover additional storage, the contract call will fail.
+When developing on Fermi, smart contracts must maintain enough $Fermi tokens on the account to cover data storage at a rate of 1 $Fermi per 100/kb. Using the `near-cli`, the `--deposit` flag will allow you to attach a specified amount of $Fermi to cover the extra information you are storing. You do not need to know the _exact_ amount of $Fermi required as if you overpay, you will be refunded the difference. However, if you _do not_ attach enough $Fermi to your call to cover additional storage, the contract call will fail.
 
 ## Help & Feedback 
 

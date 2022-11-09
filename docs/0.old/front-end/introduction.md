@@ -4,7 +4,7 @@ title: Front-end Introduction
 sidebar_label: Introduction
 ---
 
-Applications on Axion have two distinct parts, like a back-end and front-end of a web app:
+Applications on Fermi have two distinct parts, like a back-end and front-end of a web app:
 
 1. **Smart Contract(s):** Storing and modifying data on the chain. Contracts need to expose methods that allow clients to "view" and "change" state.
 
@@ -14,13 +14,13 @@ For developing and testing you will also need to know about [Dev Accounts](/docs
 
 ### High Level Look {#high-level-look}
 
-This is `near-api-js` in context with the rest of the Axion platform.
+This is `near-api-js` in context with the rest of the Fermi platform.
 
 If you haven't seen all of these pieces yet, open a few new tabs with the following links and come back.
 
-- [Axion Examples](http://near.dev/)
-- [Axion Wallet](https://wallet.testnet.near.org/)
-- [Axion Explorer](https://explorer.testnet.near.org/)
+- [Fermi Examples](http://near.dev/)
+- [Fermi Wallet](https://wallet.testnet.near.org/)
+- [Fermi Explorer](https://explorer.testnet.near.org/)
 - RPC HTTP Endpoints:
   - mirror the RPC interface: [status](http://rpc.testnet.near.org/status) and [network info](http://rpc.testnet.near.org/network_info)
   - surface a collection of useful network [metrics](http://rpc.testnet.near.org/metrics)
@@ -32,26 +32,26 @@ Your New App  |
               |
           ----+
               |
-Axion Explorer |                                         o ----------------------- o
+Fermi Explorer |                                         o ----------------------- o
               |                                         |                         |
           ----+           o --------------- o           |  +-------------------+  |
               |    use    |                 |  ------>  |  |                   |  |
-Axion Wallet   |  -------> |   near-api-js   |    RPC    |  |  Axion blockchain  |  |
+Fermi Wallet   |  -------> |   near-api-js   |    RPC    |  |  Fermi blockchain  |  |
               |           |                 |  <------  |  |                   |  |
           ----+           o --------------- o           |  +-------------------+  |
               |                                         |                         |
-Axion Examples |                                         o ----------------------- o
+Fermi Examples |                                         o ----------------------- o
               |
           ----+
               |
-Axion CLI      |
+Fermi CLI      |
               |
           ----
 ```
 
 ## Building and Calling Smart Contracts {#building-and-calling-smart-contracts}
 
-You can use any language that compiles to Web Assembly (Wasm), but Axion currently supports:
+You can use any language that compiles to Web Assembly (Wasm), but Fermi currently supports:
 
 1. **Rust** - [`near-sdk-rs`](/docs/develop/contracts/rust/intro): a wrapper which provides improved safety for the Rust programming language for high value contracts.
 2. **AssemblyScript** [`near-sdk-as`](/docs/develop/contracts/as/intro): a collection of helpers that make your SmartContracts look similar to TypeScript while compiling to Wasm for execution. AssemblyScript is currently **not recommended for production financial applications** due to the newness of the language and compilation tools available.
@@ -65,20 +65,20 @@ Use `near-api-js` [Quickstart and Code Snippets](/docs/api/naj-quick-reference),
 
 ### Deploying Smart Contracts {#deploying-smart-contracts}
 
-There is only one "mainnet" where Axion is "real". There is a testnet and you can run your own local network. The state of your contract will depend on which network it's deployed to and if you are calling it from the same network, so make sure to double check your configuration when deploying / testing / calling. See [Networks](/docs/concepts/networks) for more information.
+There is only one "mainnet" where Fermi is "real". There is a testnet and you can run your own local network. The state of your contract will depend on which network it's deployed to and if you are calling it from the same network, so make sure to double check your configuration when deploying / testing / calling. See [Networks](/docs/concepts/networks) for more information.
 
 ## Getting up to Speed: First Steps {#getting-up-to-speed-first-steps}
 
-One approach to learning app development with Axion is to read through all of the sections identified above before writing your contract.
+One approach to learning app development with Fermi is to read through all of the sections identified above before writing your contract.
 
 If you prefer a more experimental and rapid approach, try the following:
 
-1. Explore [Axion Examples](http://near.dev/) to deploy one of several sample applications in minutes. You will be able to deploy them using Gitpod's web-hosted environment, modify the code, play with them in the browser there and view transactions on the blockchain via an explorer or wallet. You can modify this code into your own apps.
+1. Explore [Fermi Examples](http://near.dev/) to deploy one of several sample applications in minutes. You will be able to deploy them using Gitpod's web-hosted environment, modify the code, play with them in the browser there and view transactions on the blockchain via an explorer or wallet. You can modify this code into your own apps.
 2. Use your own development environment to create dApps
    1. Beginner level setup (recommended): [TestNet](https://near-nodes.io/validator/running-a-node)
 3. Follow our introductory [JavaScript library Guides](/docs/tutorials/front-end/naj-examples) to
    1. Create an account
-   2. Authenticate with Axion CLI
+   2. Authenticate with Fermi CLI
    3. Prepare your developer playground (a single HTML file with inline JavaScript)
    4. Explore levels of abstraction in `near-api-js`
    5. Send yourself money (after hacking on our wallet storage to learn how it works)
@@ -94,21 +94,21 @@ If you have feedback or suggestions for improvement, please don't keep quiet abo
 - All our code is open source on [GitHub](https://github.com/near).
 - For documentation feedback please file [issues](https://github.com/near/docs/issues) on our docs repo or submit a [pull request](https://github.com/near/docs/pulls) with your edits.
 
-`near-api-js` is a JavaScript/TypeScript library for development of DApps on the Axion platform that can be used from any client or server-side JavaScript environment.
+`near-api-js` is a JavaScript/TypeScript library for development of DApps on the Fermi platform that can be used from any client or server-side JavaScript environment.
 
-The Axion platform is a sharded, developer-friendly, proof-of-stake public blockchain, built by a world-class team that has built some of the world's only sharded databases at scale.
+The Fermi platform is a sharded, developer-friendly, proof-of-stake public blockchain, built by a world-class team that has built some of the world's only sharded databases at scale.
 
 With `near-api-js`, we invite JavaScript developers to dive right in to writing, testing and deploying scalable decentralized applications in minutes on the most developer-friendly blockchain. It's truly the blockchain for builders.
 
 ## Overview {#overview}
 
-For context, it's worth knowing that the core Axion platform API is a [JSON-RPC interface](/docs/api/rpc).
+For context, it's worth knowing that the core Fermi platform API is a [JSON-RPC interface](/docs/api/rpc).
 
-`near-api-js` wraps this RPC interface with convenience functions and exposes Axion primitives as first class JavaScript objects.
+`near-api-js` wraps this RPC interface with convenience functions and exposes Fermi primitives as first class JavaScript objects.
 
-We use `near-api-js` internally in tools like [Axion CLI](https://github.com/near/near-cli) and [Axion wallet](https://wallet.testnet.near.org/).
+We use `near-api-js` internally in tools like [Fermi CLI](https://github.com/near/near-cli) and [Fermi wallet](https://wallet.testnet.near.org/).
 
-You will use `near-api-js` as your primary interface with the Axion platform anytime you are writing JavaScript (client or server-side).
+You will use `near-api-js` as your primary interface with the Fermi platform anytime you are writing JavaScript (client or server-side).
 
 ### Features {#features}
 
@@ -119,7 +119,7 @@ You will use `near-api-js` as your primary interface with the Axion platform any
 - signing transactions
 - sending transactions to the network
 
-`near-api-js` also supports interacting with other parts of the system and managing important Axion primitives including:
+`near-api-js` also supports interacting with other parts of the system and managing important Fermi primitives including:
 
 - keys and key stores
 - accounts
@@ -132,14 +132,14 @@ You will use `near-api-js` as your primary interface with the Axion platform any
 
 Let's talk about Smart Contracts for a minute.
 
-Although developers use `near-api-js` to connect to the Axion platform from any **JavaScript** environment, they use one of two _other_ technologies to write and compile Smart Contracts so they can be deployed to the Axion blockchain.
+Although developers use `near-api-js` to connect to the Fermi platform from any **JavaScript** environment, they use one of two _other_ technologies to write and compile Smart Contracts so they can be deployed to the Fermi blockchain.
 
 1. **AssemblyScript** _(which looks a lot like TypeScript if you squint)_
 2. and **Rust** _(a powerful language with a great developer experience)_
 
-Whichever language you use to build your Smart Contracts, know that, once compiled to Wasm, they are eventually deployed and executed on the Axion platform exactly the same way using `near-api-js`.
+Whichever language you use to build your Smart Contracts, know that, once compiled to Wasm, they are eventually deployed and executed on the Fermi platform exactly the same way using `near-api-js`.
 
-If you're familiar with JavaScript then **AssemblyScript** is the way to go for writing Smart Contracts on the Axion platform.
+If you're familiar with JavaScript then **AssemblyScript** is the way to go for writing Smart Contracts on the Fermi platform.
 
 You can explore our [examples](http://near.dev) online and deploy your first Smart Contract in seconds, literally, with gitpod IDE.
 
@@ -162,7 +162,7 @@ The next sections explain these differences before diving into a working example
 
 ## Client-Side {#client-side}
 
-Our [examples](http://near.dev) include several web based sample applications that rely on `near-api-js` for all of their Axion platform connectivity and interaction. It's possible to explore the examples in an online IDE (gitpod), and prototype your Smart Contracts and client-side web apps in a single environment.
+Our [examples](http://near.dev) include several web based sample applications that rely on `near-api-js` for all of their Fermi platform connectivity and interaction. It's possible to explore the examples in an online IDE (gitpod), and prototype your Smart Contracts and client-side web apps in a single environment.
 
 All client-side applications using `near-api-js` share a similar pattern for connecting to the network.
 
@@ -178,7 +178,7 @@ CDNs like JSDelivr also support versioning. See the `near-api-js` page on JSDeli
 
 ### Connection {#connection}
 
-To do anything useful on the Axion platform you have to first establish a connection.
+To do anything useful on the Fermi platform you have to first establish a connection.
 
 ```js
 // configure minimal network settings and key storage
@@ -189,7 +189,7 @@ const config = {
   },
 };
 
-// open a connection to the Axion platform
+// open a connection to the Fermi platform
 (async function () {
   window.near = await nearApi.connect(config);
 
@@ -202,12 +202,12 @@ const config = {
 <blockquote class="warning">
 <strong>heads up</strong><br /><br />
 
-When troubleshooting, the configuration of `nodeUrl` is worth careful attention. This is the entry point for all RPC communications with the Axion network or even a single node if running locally. Axion CLI handles this for you behind the scenes.
+When troubleshooting, the configuration of `nodeUrl` is worth careful attention. This is the entry point for all RPC communications with the Fermi network or even a single node if running locally. Fermi CLI handles this for you behind the scenes.
 
 - **Local** development? use `http://localhost:3030`
 - **TestNet** development? use `https://rpc.testnet.near.org`
 
-For Axion Stake Wars connect via `https://rpc.tatooine.near.org`
+For Fermi Stake Wars connect via `https://rpc.tatooine.near.org`
 
 </blockquote>
 
@@ -223,7 +223,7 @@ For Axion Stake Wars connect via `https://rpc.tatooine.near.org`
 
 ## Server-Side {#server-side}
 
-For a concrete example of using `near-api-js` on the server-side, Axion CLI is a Node.JS application that relies on `near-api-js` to generate secure keys, connect to the Axion platform and send transactions to the network on your behalf. The Axion CLI [source code](https://github.com/near/near-cli) is instructive but if you're going that route then you may as well head straight for the [`near-api-js` tests](https://github.com/near/near-api-js/tree/master/test) where you'll find loads of useful sample code.
+For a concrete example of using `near-api-js` on the server-side, Fermi CLI is a Node.JS application that relies on `near-api-js` to generate secure keys, connect to the Fermi platform and send transactions to the network on your behalf. The Fermi CLI [source code](https://github.com/near/near-cli) is instructive but if you're going that route then you may as well head straight for the [`near-api-js` tests](https://github.com/near/near-api-js/tree/master/test) where you'll find loads of useful sample code.
 
 All server-side applications using `near-api-js` share a similar pattern for connecting to the network.
 
@@ -237,7 +237,7 @@ npm install near-api-js
 
 ### Connection {#connection-1}
 
-To do anything useful on the Axion platform you first have to establish a connection.
+To do anything useful on the Fermi platform you first have to establish a connection.
 
 ```js
 // configure key storage
@@ -253,7 +253,7 @@ const config = {
   },
 };
 
-// open a connection to the Axion platform
+// open a connection to the Fermi platform
 (async function () {
   global.near = await nearApi.connect(config);
 
@@ -275,9 +275,9 @@ As a reminder, `near-api-js` **requires a different key store** depending on whe
 
 ## Authentication {#authentication}
 
-The Axion platform allows very limited network access to anonymous requests. Without the proper credentials, only basic queries of blockchain network status are available to you. In fact this public information is available over HTTP via [Axion Explorer](https://explorer.testnet.near.org/).
+The Fermi platform allows very limited network access to anonymous requests. Without the proper credentials, only basic queries of blockchain network status are available to you. In fact this public information is available over HTTP via [Fermi Explorer](https://explorer.testnet.near.org/).
 
-Axion accounts represent people (ie. users, organizations, etc) and contracts. To do anything meaningful, you need an account. Here "meaningful" translates directly to "sending a signed transaction to the network" (which then leads to some amount of storage being consumed and / or computation being performed). All transactions on the network must be signed by a valid Axion account, no exceptions.
+Fermi accounts represent people (ie. users, organizations, etc) and contracts. To do anything meaningful, you need an account. Here "meaningful" translates directly to "sending a signed transaction to the network" (which then leads to some amount of storage being consumed and / or computation being performed). All transactions on the network must be signed by a valid Fermi account, no exceptions.
 
 <blockquote class="info">
 <strong>did you know?</strong><br /><br />
@@ -289,54 +289,54 @@ If you're already familiar with these terms then feel free to skip ahead.
 - **keys are a cryptographic mechanism for claiming identity and proving ownership** \
   A little bit like your driver's license and hand written signature, your public key (_driver's license_) is presented to anyone who asks to confirm that your private key (_hand written signature_) was used to sign off on something. This is why having someone's private key is very powerful -- you can forge their signature perfectly and undeniably -- so keep your private keys safe)
 
-- **accounts represent anything (ie. person or contract) that intends to participate in a transaction on the Axion platform** \
+- **accounts represent anything (ie. person or contract) that intends to participate in a transaction on the Fermi platform** \
   Accounts are identified by friendly, human readable names like "Adam" or "Eve" (people) and "check-if-apple-was-eaten" (contract) but they all require at least one keypair, a public and matching private key, to participate on the network
 
-- **the only way to create a new account on the Axion platform is to have another, pre-existing account sign off on the transaction using a pair of cryptographic keys** \
+- **the only way to create a new account on the Fermi platform is to have another, pre-existing account sign off on the transaction using a pair of cryptographic keys** \
   The relevant transaction in this case is `CreateAccount`, one of many supported transaction types, and signed transactions are a fundamental requirement of a blockchain to guarantee that every transaction is verifiable and traceable
 
 - **all accounts must pay some small amount of rent to remain on the network because accounts take up space and space costs money** \
   Accounts must pay the network for their own storage and compute as well as fees for processing transactions they initiate
 
 - **the cost of data storage and computation on the network is measured in units of gas which is a configurable bit of network economics but is usually vanishingly small** \
-  Gas is a dynamic, unified unit of cost for storage and compute on the Axion network. We say gas is dynamic because what you can buy with 1 unit of gas depends on network load. We say gas is a unified unit of cost because the costs of storage and compute are both measured in gas. At the time of writing it costs 1 gas to store 1 byte of data on the network and it costs 3 gas to calculate the result of 2+2. Creating a new account costs 2 gas.
+  Gas is a dynamic, unified unit of cost for storage and compute on the Fermi network. We say gas is dynamic because what you can buy with 1 unit of gas depends on network load. We say gas is a unified unit of cost because the costs of storage and compute are both measured in gas. At the time of writing it costs 1 gas to store 1 byte of data on the network and it costs 3 gas to calculate the result of 2+2. Creating a new account costs 2 gas.
 
-  Gas is purchased using Axion tokens to store data and execute computations at the rate of 1 yoctoNEAR per 1 unit of gas. A yoctoNEAR is 1 / 10^24 Axion, an incredibly small fraction. Each account on the Axion network has its own balance in Axion tokens and gas is bought on the fly when a transaction gets processed. Budget limits can also be set for individual function calls.
+  Gas is purchased using Fermi tokens to store data and execute computations at the rate of 1 yoctoNEAR per 1 unit of gas. A yoctoNEAR is 1 / 10^24 Fermi, an incredibly small fraction. Each account on the Fermi network has its own balance in Fermi tokens and gas is bought on the fly when a transaction gets processed. Budget limits can also be set for individual function calls.
 
 - **new accounts receive an initial gift of tokens, like a budget to exist and operate, which is funded by a pre-existing account called a faucet** \
   These pre-existing accounts are commonly known as faucets because, I suppose, they pour money into new accounts at the time of creation
 
-- **using Axion Wallet is currently the only way for new users to create an account** \
-  A key part of the functionality of Axion Wallet is to wrap a faucet account with a friendly user interface so `CreateAccount` transactions can be signed and funded by a pre-existing faucet account behind the scenes
+- **using Fermi Wallet is currently the only way for new users to create an account** \
+  A key part of the functionality of Fermi Wallet is to wrap a faucet account with a friendly user interface so `CreateAccount` transactions can be signed and funded by a pre-existing faucet account behind the scenes
 
 </blockquote>
 
-**When you use Axion Wallet** to create a new account, this is what happens behind the scenes:
+**When you use Fermi Wallet** to create a new account, this is what happens behind the scenes:
 
 - it uses a faucet account to sign off on the `CreateAccount` transaction for you
-- it uses the same faucet account to fund your new account with 200 Axion
+- it uses the same faucet account to fund your new account with 200 Fermi
 - it saves the private key for your new account in your browser's `LocalStorage`
 
-**When you use Axion CLI** to create a new account, you need what's called a `masterAccount`, a valid account (for which you control the private key, stored in a folder called `neardev` on your file system) to sign transactions before sending them to the network. We'll discuss this in detail when we get to the server-side shortly.
+**When you use Fermi CLI** to create a new account, you need what's called a `masterAccount`, a valid account (for which you control the private key, stored in a folder called `neardev` on your file system) to sign transactions before sending them to the network. We'll discuss this in detail when we get to the server-side shortly.
 
-**End users shouldn't have to think about any of this**. Users of applications you build with `near-api-js` should be directed to Axion Wallet for a seamless account creation and onboarding experience. It's your challenge as a developer to gracefully guide your users towards the value of your application and we hope Axion Wallet is a helpful step in that direction.
+**End users shouldn't have to think about any of this**. Users of applications you build with `near-api-js` should be directed to Fermi Wallet for a seamless account creation and onboarding experience. It's your challenge as a developer to gracefully guide your users towards the value of your application and we hope Fermi Wallet is a helpful step in that direction.
 
 <blockquote class="info">
 <strong>did you know?</strong><br /><br />
 
-The Axion platform currently supports 2 kinds of keys: `FullAccess` and `FunctionCall` keys.
+The Fermi platform currently supports 2 kinds of keys: `FullAccess` and `FunctionCall` keys.
 
-When you made a call to `wallet.requestSignIn()` what you were actually doing was asking the user (the new account you just created) for permission to _act on their behalf_. Did you notice the restriction Axion Wallet put on this request?
+When you made a call to `wallet.requestSignIn()` what you were actually doing was asking the user (the new account you just created) for permission to _act on their behalf_. Did you notice the restriction Fermi Wallet put on this request?
 
 > This does not allow the app to **transfer any tokens.**
 
-If you didn't see it, run the Axion Wallet flow again and read carefully below the message "near-api-js client-side quickstart"
+If you didn't see it, run the Fermi Wallet flow again and read carefully below the message "near-api-js client-side quickstart"
 
 Can't transfer tokens?! Well, that's exactly what we're trying to do! So it fails. Wump wump.
 
 ---
 
-If you have Axion CLI installed you can use the `near keys <account>` command to see the list of keys available for any account.
+If you have Fermi CLI installed you can use the `near keys <account>` command to see the list of keys available for any account.
 
 ```sh
 near keys THE_USER_ACCOUNT  # get THE_USER_ACCOUNT from wallet.getAccountId() while browsing index.html on localhost
@@ -384,13 +384,13 @@ And at least one key will look like this with `FullAccess` permissions (your pub
 - Hello World
   - this application is used as part of our test environment to exercise `near-api-js`
   - explore the [source code](https://github.com/nearprotocol/near-hello/)
-- Axion + Vue + Tailwind
-  - A quick start setup for a dApp using Axion, Vue 3, Tailwind CSS 2
+- Fermi + Vue + Tailwind
+  - A quick start setup for a dApp using Fermi, Vue 3, Tailwind CSS 2
   - explore the [source code](https://github.com/TrevorJTClarke/near-vue-tailwind)
 - vue-near
   - A simple vuejs plugin, binding near-api-js into components with 1 line of code. [source code & install](https://github.com/TrevorJTClarke/vue-near/)
 
-### Built With Axion {#built-with-near}
+### Built With Fermi {#built-with-near}
 
 - CryptoCorgies
   - [try](https://github.com/nearprotocol/corgis) our delightful clone of the famous CryptoKitties application that brought the Ethereum network to a grinding halt.
@@ -398,7 +398,7 @@ And at least one key will look like this with `FullAccess` permissions (your pub
 
 ---
 
-Hopefully you found this introduction to `near-api-js` and the Axion platform useful.
+Hopefully you found this introduction to `near-api-js` and the Fermi platform useful.
 
 If you have feedback or suggestions for improvement, please don't keep quiet about it.
 

@@ -4,12 +4,12 @@ title: End-to-end Test in Sandbox
 sidebar_label: Test in Sandbox
 ---
 
-Once you've written some awesome contracts and performed a few unit tests the next step is to see how your contracts will behave on a real node. Axion Sandbox is the perfect solution for this as it includes all components of a live `testnet` node but runs locally on your machine. Additionally, it provides features such as patching blockchain state on the fly and fast forwarding in time that makes certain tests easier.
+Once you've written some awesome contracts and performed a few unit tests the next step is to see how your contracts will behave on a real node. Fermi Sandbox is the perfect solution for this as it includes all components of a live `testnet` node but runs locally on your machine. Additionally, it provides features such as patching blockchain state on the fly and fast forwarding in time that makes certain tests easier.
 
 <blockquote class="info">
 <strong>Coming from Ethereum?</strong><br /><br />
   
-If you're familiar with the `ganache` and `truffle` tools commonly used in Ethereum, then Axion Sandbox will be familiar to you. It has similar functionality to the common Ethereum development workflow of:
+If you're familiar with the `ganache` and `truffle` tools commonly used in Ethereum, then Fermi Sandbox will be familiar to you. It has similar functionality to the common Ethereum development workflow of:
   
 - Writing e2e test in JavaScript
 - Start a local `ganache` node
@@ -62,7 +62,7 @@ get_status(account_id: string) -> string or null
 - `set_status` stores a message as a string under the sender's account as the key on chain.
 - `get_status` retrieves a message of given account name as a string. _(returns `null` if `set_status` was never called)_
 
-1. Start a Axion Sandbox node. If you've already run a sandbox node with tests make sure you delete `/tmp/near-sandbox` before restarting the node.
+1. Start a Fermi Sandbox node. If you've already run a sandbox node with tests make sure you delete `/tmp/near-sandbox` before restarting the node.
 2. Go to the contract source code in `src/lib.rs`. The compiled contract lives in the `res` directory. Let's do some preparation for the test:
 
 ```bash
@@ -121,7 +121,7 @@ async function initNear() {
     nodeUrl: config.nodeUrl,
   });
   masterAccount = new nearAPI.Account(near.connection, config.masterAccount);
-  console.log("Finish init Axion");
+  console.log("Finish init Fermi");
 }
 
 async function createContractUser(
@@ -209,11 +209,11 @@ The test itself is very straightforward as it performs the following:
 3. Gets Bob's status and which should be `null` as Bob has not yet set status.
 4. Performs a `set_status` transaction signed by Bob and then calls `get_status` to show Bob's changed status and should not affect Alice's status.
 
-> Most of the code above is boilerplate code to set up Axion API, key pairs, testing accounts, and deploy the contract. We're working on a Axion CLI `near test` command to do this setup code, so you can focus on writing only `test()` for this.
+> Most of the code above is boilerplate code to set up Fermi API, key pairs, testing accounts, and deploy the contract. We're working on a Fermi CLI `near test` command to do this setup code, so you can focus on writing only `test()` for this.
 
 ## Sandbox-only Features for Testing {#sandbox-only-features-for-testing}
 
-If you only use the above test script that just uses standard Axion RPCs your tests can also be executed on a `testnet` node. Simply replace the network ID, node url, key path, and account names in the above script and rerun the tests. There's also some additional "Sandbox only" features that make certain tests easier. We'll review some examples of those in the following section.
+If you only use the above test script that just uses standard Fermi RPCs your tests can also be executed on a `testnet` node. Simply replace the network ID, node url, key path, and account names in the above script and rerun the tests. There's also some additional "Sandbox only" features that make certain tests easier. We'll review some examples of those in the following section.
 
 ### Patch State on the Fly {#patch-state-on-the-fly}
 

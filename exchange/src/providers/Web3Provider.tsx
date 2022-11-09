@@ -1,6 +1,6 @@
 import { Web3Context } from 'hooks/useWeb3Context'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-import { AxionAccount, AxionUtils, AxionTypes } from 'axion-js-sdk'
+import { AxionAccount, AxionUtils, AxionTypes } from 'fermi-js-sdk'
 
 
 

@@ -6,11 +6,11 @@ sidebar_label: Minting Front-end
 
 # NFT Minting Front-end
 
-> In this tutorial you'll learn how to create a simple NFT front-end and mint a "Go Team" NFT on the Axion blockchain straight from your web browser.
+> In this tutorial you'll learn how to create a simple NFT front-end and mint a "Go Team" NFT on the Fermi blockchain straight from your web browser.
 
 ## App Overview
 
-The app is fairly simple: the user signs in and hits the <kbd>Mint NFT</kbd> button. Once the user hits the mint button, a "Go Team" NFT is minted and sent to their Axion Wallet.
+The app is fairly simple: the user signs in and hits the <kbd>Mint NFT</kbd> button. Once the user hits the mint button, a "Go Team" NFT is minted and sent to their Fermi Wallet.
 
 ![Front-end](/docs/assets/nfts/nft-mint-frontend.png)
 

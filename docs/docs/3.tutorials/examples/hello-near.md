@@ -1,27 +1,27 @@
 ---
 id: hello-near
-title: Hello Axion
+title: Hello Fermi
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import {CodeTabs, Language, Github} from "@site/components/codetabs"
 
-**Hello Axion!** is a friendly decentralized App that stores a greeting message. It is one of the simplest
-smart contracts you can create in Axion, and the perfect gateway to introduce yourself in the world of smart
+**Hello Fermi!** is a friendly decentralized App that stores a greeting message. It is one of the simplest
+smart contracts you can create in Fermi, and the perfect gateway to introduce yourself in the world of smart
 contracts.
 
 ![img](/docs/assets/examples/hello-near-banner.png)
 
 ---
 
-## Starting Hello Axion
+## Starting Hello Fermi
 
-You have two options to start Hello Axion:
+You have two options to start Hello Fermi:
 1. **Recommended:** use the app through Gitpod (a web-based interactive environment)
 2. Start the project locally by using `create-near-app`, our node-based utility.
 
 #### Gitpod
-Hello Axion is available in gitpod. When selecting one, a new tab will open in your browser with a web-based IDE. Give it a minute to compile and deploy the contract, and then a frontend will pop-up for you to interact with the app (make sure the pop-up window is not blocked).
+Hello Fermi is available in gitpod. When selecting one, a new tab will open in your browser with a web-based IDE. Give it a minute to compile and deploy the contract, and then a frontend will pop-up for you to interact with the app (make sure the pop-up window is not blocked).
 
 | 🌐 JavaScript                                                                                                                                                      |  🦀 Rust                                                                                                                                                           | 🚀 AssemblyScript | 
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --- |
@@ -29,7 +29,7 @@ Hello Axion is available in gitpod. When selecting one, a new tab will open in y
 
 
 #### Create Near App (node)
-Hello Axion can be created locally with the help of `create-near-app`. Follow the snippet bellow to create a local project.
+Hello Fermi can be created locally with the help of `create-near-app`. Follow the snippet bellow to create a local project.
 
 ```bash
 npx create-near-app@latest
@@ -39,12 +39,12 @@ and follow the instructions that appear on the screen.
 
 ---
 
-## Interacting With Hello Axion
-Go ahead and login with your Axion account. If you don't have one, you will be able to create one in the moment. Once logged in, change the greeting and see how our Hello Axion app greets you!
+## Interacting With Hello Fermi
+Go ahead and login with your Fermi account. If you don't have one, you will be able to create one in the moment. Once logged in, change the greeting and see how our Hello Fermi app greets you!
 
 
 ![img](/docs/assets/examples/hello-near.png)
-*Frontend of Hello Axion*
+*Frontend of Hello Fermi*
 
 
 ---

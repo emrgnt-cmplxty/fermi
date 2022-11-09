@@ -20,7 +20,7 @@ workspace.xml
 benchmark/.data
 
 # keystore ignore
-.gdex/*
+.fermi/*
 
 # bench and test ignore
 /suite/db.rocks

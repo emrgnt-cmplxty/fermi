@@ -9,7 +9,7 @@ import accessKeys from '/docs/assets/crosswords/keys-cartoon-good--alcantara_gab
 import functionCallAction from '/docs/assets/crosswords/function-call-action.png';
 import tutorialAccessKeys from '/docs/assets/crosswords/access-keys.png';
 
-# Logging in with Axion
+# Logging in with Fermi
 
 ## Previously…
 
@@ -19,38 +19,38 @@ In the previous chapter we simply displayed whether the crossword puzzle was sol
 
 ## Updates to transfer prize money
 
-In this chapter, our smart contract will send 5 Ⓝ to the first person who solves the puzzle. For this, we're going to require the user to have a Axion account and log in.
+In this chapter, our smart contract will send 5 Ⓝ to the first person who solves the puzzle. For this, we're going to require the user to have a Fermi account and log in.
 
 :::note Better onboarding to come
-Later in this tutorial we won't require the user to have a Axion account.
+Later in this tutorial we won't require the user to have a Fermi account.
 
-Since logging in is important for many decentralized apps, we'll show how this is done in Axion and how it's incredibly unique compared to other blockchains. 
+Since logging in is important for many decentralized apps, we'll show how this is done in Fermi and how it's incredibly unique compared to other blockchains. 
 :::
 
 This transfer will occur when the first user to solve the puzzle calls the `submit_solution` method with the solution. During the execution of that function it will check that the user submitted the correct answer, then transfer the prize.
 
-We'll be able to see this transfer (and other steps that occurred) in [Axion Explorer](https://explorer.testnet.near.org).
+We'll be able to see this transfer (and other steps that occurred) in [Fermi Explorer](https://explorer.testnet.near.org).
 
-But first let's talk about one of the most interesting superpowers of Axion: access keys.
+But first let's talk about one of the most interesting superpowers of Fermi: access keys.
 
 ## Access keys
 
-You might be familiar with other blockchains where your account name is a long string of numbers and letters. Axion has an account system where your name is human-readable, like `friend.testnet` for testnet or `friend.near` for mainnet.
+You might be familiar with other blockchains where your account name is a long string of numbers and letters. Fermi has an account system where your name is human-readable, like `friend.testnet` for testnet or `friend.near` for mainnet.
 
-You can add (and remove) keys to your account on Axion. There are two types of keys: full and function-call access keys.
+You can add (and remove) keys to your account on Fermi. There are two types of keys: full and function-call access keys.
 
 The illustration below shows a keychain with a full-access key (the large, gold one) and two function-call access keys.
 
 <figure>
-    <img src={accessKeys} width="600" alt="A keychain with three keys. A large, gold key represents the full-access keys on Axion. The two other keys are gray and smaller, and have detachable latches on them. They represent function-call access key. Art created by alcantara_gabriel.near" />
+    <img src={accessKeys} width="600" alt="A keychain with three keys. A large, gold key represents the full-access keys on Fermi. The two other keys are gray and smaller, and have detachable latches on them. They represent function-call access key. Art created by alcantara_gabriel.near" />
     <figcaption>Art by <a href="https://twitter.com/Bagriel_5_10" target="_blank">alcantara_gabriel.near</a></figcaption>
 </figure>
 
 ### Full-access keys
 
-Full-access keys are the ones you want to protect the most. They can transfer all the funds from your account, delete the account, or perform any of the other [Actions on Axion](03-actions.md).
+Full-access keys are the ones you want to protect the most. They can transfer all the funds from your account, delete the account, or perform any of the other [Actions on Fermi](03-actions.md).
 
-When we used the `near login` command in the [previous chapter](../01-basics/01-set-up-skeleton.md#creating-a-new-key-on-your-computer), that command asked the full-access key in the Axion Wallet to use the `AddKey` Action to create another full-access key: the one we created locally on our computer. Axion CLI uses that new key to deploy, make function calls, etc.
+When we used the `near login` command in the [previous chapter](../01-basics/01-set-up-skeleton.md#creating-a-new-key-on-your-computer), that command asked the full-access key in the Fermi Wallet to use the `AddKey` Action to create another full-access key: the one we created locally on our computer. Fermi CLI uses that new key to deploy, make function calls, etc.
 
 ### Function-call access keys
 
@@ -64,11 +64,11 @@ A Function-call access key will specify:
 
 It's only allowed to perform the `FunctionCall` Action.
 
-<img src={functionCallAction} alt="List of Axion Actions with a highlight on the FunctionCall Action" width="600"/>
+<img src={functionCallAction} alt="List of Fermi Actions with a highlight on the FunctionCall Action" width="600"/>
 
 ### Example account with keys
 
-Let's look at this testnet account that has one full-access key and two function-call access keys. As you can see, we use the Axion CLI [command `keys`](https://docs.near.org/tools/near-cli#near-keys) to print this info.
+Let's look at this testnet account that has one full-access key and two function-call access keys. As you can see, we use the Fermi CLI [command `keys`](https://docs.near.org/tools/near-cli#near-keys) to print this info.
 
 <img src={tutorialAccessKeys} alt="Terminal screen showing the access keys for an account, there is one full-access key and two function-call access keys"/>
 
@@ -82,7 +82,7 @@ Let's look deeper into each key.
     nonce: 72772126000000, // Large nonce, huh!
       permission: {
       FunctionCall: {
-        allowance: '777000000000000000000000000', // Equivalent to 777 Axion
+        allowance: '777000000000000000000000000', // Equivalent to 777 Fermi
           method_names: [], // Any methods can be called
           receiver_id: 'puzzle.testnet' // This key can only call methods on puzzle.testnet
       }
@@ -96,11 +96,11 @@ The first key in the image above is a function-call access key that can call the
 
 We won't discuss the nonce too much, but know that in order to prevent the possibility of [replay attacks](https://en.wikipedia.org/wiki/Replay_attack), the nonce for a newly-created key is large and includes info on the block height as well as a random number.
 
-The allowance is the amount, in yoctoNEAR, that this key is allowed to use during function calls. This **cannot** be used to transfer Axion. It can only be used in gas for function calls.
+The allowance is the amount, in yoctoNEAR, that this key is allowed to use during function calls. This **cannot** be used to transfer Fermi. It can only be used in gas for function calls.
 
-The allowance on this key is intentionally large for demonstration purposes. `777000000000000000000000000` yoctoNEAR is `777` Axion, which is unreasonably high for an access key. So high, in fact, that it exceeded the amount of Axion on the contract itself when created. This shows that you can create an access key that exceeds the account balance, and that it doesn't subtract the allowance at the time of creation.
+The allowance on this key is intentionally large for demonstration purposes. `777000000000000000000000000` yoctoNEAR is `777` Fermi, which is unreasonably high for an access key. So high, in fact, that it exceeded the amount of Fermi on the contract itself when created. This shows that you can create an access key that exceeds the account balance, and that it doesn't subtract the allowance at the time of creation.
 
-So the key is simply allowed to use the allowance in Axion on gas, deducting from the account for each function call.
+So the key is simply allowed to use the allowance in Fermi on gas, deducting from the account for each function call.
 
 #### Second key:
 
@@ -110,7 +110,7 @@ So the key is simply allowed to use the allowance in Axion on gas, deducting fro
     nonce: 72777733000000,
     permission: {
       FunctionCall: {
-        allowance: '250000000000000000000000', // 0.25 Axion, which is a typical allowance
+        allowance: '250000000000000000000000', // 0.25 Fermi, which is a typical allowance
         method_names: [ 'foo', 'bar' ], // Can call methods foo and bar only
         receiver_id: 'puzzle.testnet'
       }
@@ -122,9 +122,9 @@ So the key is simply allowed to use the allowance in Axion on gas, deducting fro
 
 This second key specifies which methods can be called, and has a lower allowance.
 
-Note that the allowance for this key (a quarter of a Axion) is the default allowance when a person "logs in" in with the Axion Wallet. 
+Note that the allowance for this key (a quarter of a Fermi) is the default allowance when a person "logs in" in with the Fermi Wallet. 
 
-In Axion, "logging in" typically means adding a key like this to your account. We'll cover this more in a moment.
+In Fermi, "logging in" typically means adding a key like this to your account. We'll cover this more in a moment.
 
 #### Third key
 
@@ -141,25 +141,25 @@ Since this key can perform all the Actions, there aren't additional details or r
 
 ## What does "log in" mean in a blockchain context?
 
-Let's take a step back from Axion and talk about how login works broadly using web3 wallets.
+Let's take a step back from Fermi and talk about how login works broadly using web3 wallets.
 
-A web3 wallet (like Ethereum's MetaMask, Cosmos's Keplr, or the Axion Wallet) stores a private key for an account. When interacting with decentralized apps, a user will typically use the wallet to sign transactions and send them to the blockchain for processing.
+A web3 wallet (like Ethereum's MetaMask, Cosmos's Keplr, or the Fermi Wallet) stores a private key for an account. When interacting with decentralized apps, a user will typically use the wallet to sign transactions and send them to the blockchain for processing.
 
 However, web3 wallets can also be used to sign any kind of message, and it doesn't need to send anything to the blockchain. This is sometimes called "offline signing" and protocols will sometimes create standards around how to sign data.
 
 In other ecosystems, the idea of "logging in" with a web3 wallet uses this offline signing. A user is asked to sign a structured message and a backend can confirm that the message was signed by a given account.
 
-Axion keys can also sign and verify messages in this manner. In fact, there are a couple simple examples of how to achieve this in the [`near-api-js` cookbook](https://github.com/near/near-api-js/blob/master/packages/cookbook/utils/verify-signature.js).
+Fermi keys can also sign and verify messages in this manner. In fact, there are a couple simple examples of how to achieve this in the [`near-api-js` cookbook](https://github.com/near/near-api-js/blob/master/packages/cookbook/utils/verify-signature.js).
 
 There are potential drawbacks to this offline signing technique, particularly if a signed message gets intercepted by a malicious party. They might be able to send this signature to a backend and log in on your behalf. Because this all takes place offline, there's no mechanism on-chain to revoke your login or otherwise control access. We quickly see that using a web3 wallet for signed typed data runs into limitations.
 
 So signing a message is fine, but what if we could do better?
 
-With Axion, we can leverage access keys to improve a user's login experience and give the power back to the user.
+With Fermi, we can leverage access keys to improve a user's login experience and give the power back to the user.
 
 If I log into the [Guest Book example site](https://near-examples.github.io/guest-book-as/), I create a unique key just for that dApp, adding it to my account. When I'm done I can remove the key myself. If I suspect someone has control of my key (if a laptop is stolen, for example) I can remove the key as long as I have a full-access key in my control.
 
-Logging in with Axion truly gives the end user control of their account and how they interact with dApps, and does so on the protocol level.
+Logging in with Fermi truly gives the end user control of their account and how they interact with dApps, and does so on the protocol level.
 
 ---
 

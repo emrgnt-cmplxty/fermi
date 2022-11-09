@@ -1,6 +1,6 @@
 ---
 id: accounts-keys
-title: Axion accounts and access keys
+title: Fermi accounts and access keys
 sidebar_label: Accounts & keys
 ---
 
@@ -10,9 +10,9 @@ sidebar_label: Accounts & keys
 
 ### Content overview {#content-overview}
 
-This video walks through the steps of creating a new account on Axion Wallet using the "seed phrase" option for recovery. To keep things simpler, we stop before the step to enable two-factor authentication. Using Axion CLI and Axion Wallet's interface, we show that two full access keys have been created on this account.
+This video walks through the steps of creating a new account on Fermi Wallet using the "seed phrase" option for recovery. To keep things simpler, we stop before the step to enable two-factor authentication. Using Fermi CLI and Fermi Wallet's interface, we show that two full access keys have been created on this account.
 
-The Axion CLI command to view the keys is:
+The Fermi CLI command to view the keys is:
 
     near keys videos.testnet
 
@@ -21,7 +21,7 @@ The Axion CLI command to view the keys is:
 1. The seed phrase from the recovery option
 2. The browser local storage (you may see this in Chrome/Brave by right-clicking in the browser window… select "Inspect"… select the "Applications" tab… then on the left pane under "Local Storage" select the Wallet site)
 
-Using Axion CLI we can determine a public key from a private key.
+Using Fermi CLI we can determine a public key from a private key.
 
 ##### From seed phrase: {#from-seed-phrase}
 
@@ -41,7 +41,7 @@ https://nomicon.io/RuntimeSpec/Actions.html
 
 Note that a smart contract's function may execute these actions as well. For instance, a function-call access key could be created for a user, allowing them to call a function `create_my_contract` that programmatically creates a subaccount and deploys a contract to it. `CreateAccount` and `DeployContract` are called from the contract's account, not the signer. So while the results of this function-call access key call are more powerful, full access-like Actions, a malicious contract cannot, for instance, delete the signer's account. It could only programmatically delete its *own account*.
 
-Moving on, we take a look at the three types of key storage with Axion.
+Moving on, we take a look at the three types of key storage with Fermi.
 
 1. Browser local storage (like we saw in Wallet)
 2. Unencrypted file storage (like what happens after `near login` where the key file is stored in the OS's home directory at `~/.near-credentials/`)
@@ -59,7 +59,7 @@ Lastly we cover two final concepts: top-level accounts (TLA) and subaccounts. TL
 
 ### Content overview {#content-overview-1}
 
-This video picks up from Part 1, and "restores" the brower local storage key we removed in there. Using Axion CLI, we discuss the difference between:
+This video picks up from Part 1, and "restores" the brower local storage key we removed in there. Using Fermi CLI, we discuss the difference between:
 
     near generate-key
     
@@ -71,13 +71,13 @@ For reference, see the examples and documentation here:
 - [generate-key](/docs/tools/near-cli#near-generate-key)
 - [add-key](/docs/tools/near-cli#near-add-key)
 
-Then we step through the process of adding an email recovery using the Axion Wallet interface, and then enabling two-factor authentication.
+Then we step through the process of adding an email recovery using the Fermi Wallet interface, and then enabling two-factor authentication.
 
 Next, we take a look at the diagrams of a normal workflow and a 2FA workflow. We discuss the [multisig contract](https://github.com/near/core-contracts/tree/master/multisig) used for 2FA.
 
-Then we learn how the various pieces fit together: the RPC, [Axion Contract Helper](https://github.com/nearprotocol/near-contract-helper), a request transaction, a confirmation transaction, etc.
+Then we learn how the various pieces fit together: the RPC, [Fermi Contract Helper](https://github.com/nearprotocol/near-contract-helper), a request transaction, a confirmation transaction, etc.
 
-By the end of this video a developer will understand how multisig and 2FA works, as well as understand how powerful access keys are at Axion.
+By the end of this video a developer will understand how multisig and 2FA works, as well as understand how powerful access keys are at Fermi.
 
 >Got a question?
 <a href="https://stackoverflow.com/questions/tagged/nearprotocol">

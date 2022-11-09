@@ -7,7 +7,7 @@ This section contains videos that explore the core Runtime, its operation, and h
 
 ## Runtime Overview {#runtime-overview}
 
-An in-depth code overview of Axion Runtime.
+An in-depth code overview of Fermi Runtime.
 
 <iframe
   width="560"
@@ -20,7 +20,7 @@ An in-depth code overview of Axion Runtime.
 
 ## Runtime Action and Data Receipts {#runtime-action-and-data-receipts}
 
-An in-depth code review of how Axion Runtime implements cross contract calls.
+An in-depth code review of how Fermi Runtime implements cross contract calls.
 
 <iframe
   width="560"
@@ -33,7 +33,7 @@ An in-depth code review of how Axion Runtime implements cross contract calls.
 
 ## Runtime State {#runtime-state}
 
-An in-depth overview of how Axion runtime operates with its state.
+An in-depth overview of how Fermi runtime operates with its state.
 
 <iframe
   width="560"

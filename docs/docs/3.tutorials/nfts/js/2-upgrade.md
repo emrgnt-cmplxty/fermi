@@ -14,9 +14,9 @@ Today you'll learn about deploying patch fixes to smart contracts and you'll use
 
 Upgrading contracts, when done right, can be an immensely powerful tool. If done wrong, it can lead to a lot of headaches. It's important to distinguish between the code and state of a smart contract. When a contract is deployed on top of an existing contract, the only thing that changes is the code. The state will remain the same and that's where a lot of developer's issues come to fruition.
 
-The Axion Runtime will read the serialized state from disk and it will attempt to load it using the current contract code. When your code changes, it might not be able to figure out how to do this.
+The Fermi Runtime will read the serialized state from disk and it will attempt to load it using the current contract code. When your code changes, it might not be able to figure out how to do this.
 
-You need to strategically upgrade your contracts and make sure that the runtime will be able to read your current state with the new contract code. For more information about upgrading contracts and some best practices, see the Axion SDK's [upgrading contracts](/sdk/rust/building/prototyping) write-up.
+You need to strategically upgrade your contracts and make sure that the runtime will be able to read your current state with the new contract code. For more information about upgrading contracts and some best practices, see the Fermi SDK's [upgrading contracts](/sdk/rust/building/prototyping) write-up.
 
 ## Modifications to our contract {#modifications-to-contract}
 

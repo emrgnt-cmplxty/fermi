@@ -49,20 +49,20 @@ class CommandMaker:
         return f"./benchmark-narwhal generate_keys --filename {filename}"
 
     @staticmethod
-    def init_gdex_genesis(path):
+    def init_fermi_genesis(path):
         assert isinstance(path, str)
-        return f"./gdex init-genesis --path {path}"
+        return f"./fermi init-genesis --path {path}"
 
     @staticmethod
-    def add_controllers_gdex_genesis(path):
-        return f"./gdex add-controllers-genesis --path {path}"
+    def add_controllers_fermi_genesis(path):
+        return f"./fermi add-controllers-genesis --path {path}"
 
     @staticmethod
-    def build_gdex_genesis(path):
-        return f"./gdex build-genesis --path {path}"
+    def build_fermi_genesis(path):
+        return f"./fermi build-genesis --path {path}"
 
     @staticmethod
-    def add_gdex_validator_genesis(
+    def add_fermi_validator_genesis(
         path,
         name,
         balance,
@@ -76,27 +76,27 @@ class CommandMaker:
     ):
         assert isinstance(path, str)
         return (
-            f"./gdex add-validator-genesis --path {path} --name {name} --balance {balance} --stake {stake}"
+            f"./fermi add-validator-genesis --path {path} --name {name} --balance {balance} --stake {stake}"
             f" --key-file {key_file} --narwhal-primary-to-primary {primary_to_primary_address}"
             f" --narwhal-worker-to-primary {worker_to_primary_address} --narwhal-primary-to-worker {primary_to_worker_address}"
             f" --narwhal-worker-to-worker {worker_to_worker_address} --narwhal-consensus-addresses {consensus_address}"
         )
 
     @staticmethod
-    def verify_and_sign_gdex_genesis(path, filename):
+    def verify_and_sign_fermi_genesis(path, filename):
         assert isinstance(path, str)
         assert isinstance(filename, str)
-        return f"./gdex verify-and-sign-genesis --path {path} --key-file {filename}"
+        return f"./fermi verify-and-sign-genesis --path {path} --key-file {filename}"
 
     @staticmethod
     def finalize_genesis(path):
-        return f"./gdex finalize-genesis --path {path}"
+        return f"./fermi finalize-genesis --path {path}"
 
     @staticmethod
-    def generate_gdex_key(filename, path=".data"):
+    def generate_fermi_key(filename, path=".data"):
         assert isinstance(path, str)
         assert isinstance(filename, str)
-        return f"./gdex generate-keystore {path} {filename}"
+        return f"./fermi generate-keystore {path} {filename}"
 
     @staticmethod
     def run_narwhal_primary(
@@ -117,7 +117,7 @@ class CommandMaker:
         return command
 
     @staticmethod
-    def run_gdex_node(
+    def run_fermi_node(
         db_dir,
         genesis_dir,
         key_path,
@@ -138,7 +138,7 @@ class CommandMaker:
         flamegraph = "flamegraph -- " if flamegraph else ""
 
         command = (
-            f"{flamegraph}./gdex-node {v} run --db-dir {db_dir} --genesis-dir  {genesis_dir} "
+            f"{flamegraph}./fermi-node {v} run --db-dir {db_dir} --genesis-dir  {genesis_dir} "
             f"--key-path {key_path} --name {validator_name} --grpc-address {validator_grpc_address} --jsonrpc-address {validator_jsonrpc_address} --metrics-address {metrics_address}"
         )
         print("Returning execution command = ", command)
@@ -188,18 +188,18 @@ class CommandMaker:
         return command
 
     @staticmethod
-    def run_gdex_client(address, validator_key_path, rate, nodes):
+    def run_fermi_client(address, validator_key_path, rate, nodes):
         assert isinstance(address, str)
         assert isinstance(rate, int) and rate >= 0
         assert isinstance(nodes, list)
         assert all(isinstance(x, str) for x in nodes)
         nodes = f'--nodes {" ".join(nodes)}' if nodes else ""
-        command = f"./benchmark_gdex_client {address} --validator_key_fpath {validator_key_path} --rate {rate} {nodes}"
+        command = f"./benchmark_fermi_client {address} --validator_key_fpath {validator_key_path} --rate {rate} {nodes}"
         print("Returning execution command = ", command)
         return command
 
     @staticmethod
-    def run_gdex_orderbook_client(address, validator_key_path, rate, nodes):
+    def run_fermi_orderbook_client(address, validator_key_path, rate, nodes):
         assert isinstance(address, str)
         assert isinstance(rate, int) and rate >= 0
         assert isinstance(nodes, list)
@@ -231,21 +231,21 @@ class CommandMaker:
     def alias_binaries(origin):
         assert isinstance(origin, str)
         (
-            gdex_node,
+            fermi_node,
             narwhal_node,
             narwhhal_client,
-            gdex_client,
-            gdex,
+            fermi_client,
+            fermi,
             orderbook_client,
         ) = (
-            join(origin, "gdex-node"),
+            join(origin, "fermi-node"),
             join(origin, "benchmark-narwhal"),
             join(origin, "benchmark_narwhal_client"),
-            join(origin, "benchmark_gdex_client"),
-            join(origin, "gdex"),
+            join(origin, "benchmark_fermi_client"),
+            join(origin, "fermi"),
             join(origin, "benchmark_orderbook_client"),
         )
         return (
-            f"rm gdex-node ; rm benchmark-narwhal ; rm benchmark_narwhal_client ; rm benchmark_gdex_client ; rm gdex ; rm benchmark_orderbook_client ; "
-            f"ln -s {gdex_node} . ; ln -s {narwhal_node} . ; ln -s {narwhhal_client} . ; ln -s {gdex_client} . ; ln -s {gdex} . ; ln -s {orderbook_client} ."
+            f"rm fermi-node ; rm benchmark-narwhal ; rm benchmark_narwhal_client ; rm benchmark_fermi_client ; rm fermi ; rm benchmark_orderbook_client ; "
+            f"ln -s {fermi_node} . ; ln -s {narwhal_node} . ; ln -s {narwhhal_client} . ; ln -s {fermi_client} . ; ln -s {fermi} . ; ln -s {orderbook_client} ."
         )

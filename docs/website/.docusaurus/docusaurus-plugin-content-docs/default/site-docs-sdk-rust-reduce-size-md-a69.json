@@ -17,5 +17,10 @@
   "frontMatter": {
     "id": "contract-size",
     "title": "Reducing Contract Size"
+  },
+  "sidebar": "sdk",
+  "previous": {
+    "title": "Best Practices",
+    "permalink": "/sdk/rust/best-practices"
   }
 }

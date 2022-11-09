@@ -19,5 +19,14 @@
     "id": "royalty",
     "title": "Royalty",
     "sidebar_label": "Royalty"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Approvals",
+    "permalink": "/tutorials/nfts/js/approvals"
+  },
+  "next": {
+    "title": "Events",
+    "permalink": "/tutorials/nfts/js/events"
   }
 }

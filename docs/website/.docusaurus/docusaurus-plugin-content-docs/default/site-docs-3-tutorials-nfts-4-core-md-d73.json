@@ -19,5 +19,14 @@
     "id": "core",
     "title": "Core",
     "sidebar_label": "Core"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Enumeration",
+    "permalink": "/tutorials/nfts/enumeration"
+  },
+  "next": {
+    "title": "Approvals",
+    "permalink": "/tutorials/nfts/approvals"
   }
 }

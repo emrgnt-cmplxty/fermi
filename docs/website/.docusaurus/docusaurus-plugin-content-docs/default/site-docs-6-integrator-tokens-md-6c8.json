@@ -18,5 +18,14 @@
     "id": "fungible-tokens",
     "title": "Fungible tokens",
     "sidebar_label": "Fungible Tokens"
+  },
+  "sidebar": "integrate",
+  "previous": {
+    "title": "Create a Transaction",
+    "permalink": "/integrator/create-transactions"
+  },
+  "next": {
+    "title": "Implicit Accounts",
+    "permalink": "/integrator/implicit-accounts"
   }
 }

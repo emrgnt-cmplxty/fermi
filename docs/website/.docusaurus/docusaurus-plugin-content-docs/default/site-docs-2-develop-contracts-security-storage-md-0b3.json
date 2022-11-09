@@ -17,5 +17,14 @@
   "frontMatter": {
     "id": "storage",
     "title": "Million Small Deposits"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "DAO-Governed Updates",
+    "permalink": "/develop/upgrade/dao-updates"
+  },
+  "next": {
+    "title": "Cross-Contract Calls",
+    "permalink": "/develop/contracts/security/callbacks"
   }
 }

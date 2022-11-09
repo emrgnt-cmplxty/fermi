@@ -17,5 +17,14 @@
   "frontMatter": {
     "id": "frontrunning",
     "title": "Front Running"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "Sybil Attacks",
+    "permalink": "/develop/contracts/security/sybil"
+  },
+  "next": {
+    "title": "Random Numbers",
+    "permalink": "/develop/contracts/security/random"
   }
 }

@@ -1,47 +1,5 @@
 {
   "docusaurus-plugin-content-docs": {
-    "near-api-js": {
-      "path": "/tools/near-api-js/reference",
-      "versions": [
-        {
-          "name": "__dummy",
-          "label": "__dummy",
-          "isLast": true,
-          "path": "/tools/near-api-js/reference",
-          "mainDocId": "dummy",
-          "docs": [
-            {
-              "id": "dummy",
-              "path": "/tools/near-api-js/reference/dummy"
-            }
-          ],
-          "draftIds": [],
-          "sidebars": {}
-        }
-      ],
-      "breadcrumbs": true
-    },
-    "near-sdk-js": {
-      "path": "/tools/near-sdk-js/reference",
-      "versions": [
-        {
-          "name": "__dummy",
-          "label": "__dummy",
-          "isLast": true,
-          "path": "/tools/near-sdk-js/reference",
-          "mainDocId": "dummy",
-          "docs": [
-            {
-              "id": "dummy",
-              "path": "/tools/near-sdk-js/reference/dummy"
-            }
-          ],
-          "draftIds": [],
-          "sidebars": {}
-        }
-      ],
-      "breadcrumbs": true
-    },
     "default": {
       "path": "/",
       "versions": [
@@ -254,6 +212,682 @@
               "sidebar": "concepts"
             },
             {
+              "id": "develop/contracts/actions",
+              "path": "/develop/contracts/actions",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/contracts/anatomy",
+              "path": "/develop/contracts/anatomy",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/contracts/crosscontract",
+              "path": "/develop/contracts/crosscontract",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/contracts/environment/environment",
+              "path": "/develop/contracts/environment/",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/contracts/environment/table.as",
+              "path": "/develop/contracts/environment/table.as"
+            },
+            {
+              "id": "develop/contracts/environment/table.js",
+              "path": "/develop/contracts/environment/table.js"
+            },
+            {
+              "id": "develop/contracts/environment/table.rs",
+              "path": "/develop/contracts/environment/table.rs"
+            },
+            {
+              "id": "develop/contracts/introduction",
+              "path": "/develop/contracts/introduction",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/contracts/security/callbacks",
+              "path": "/develop/contracts/security/callbacks",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/contracts/security/checklist",
+              "path": "/develop/contracts/security/checklist",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/contracts/security/frontrunning",
+              "path": "/develop/contracts/security/frontrunning",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/contracts/security/one-yocto",
+              "path": "/develop/contracts/security/one-yocto",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/contracts/security/random",
+              "path": "/develop/contracts/security/random",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/contracts/security/reentrancy-attacks",
+              "path": "/develop/contracts/security/reentrancy-attacks"
+            },
+            {
+              "id": "develop/contracts/security/storage",
+              "path": "/develop/contracts/security/storage",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/contracts/security/sybil",
+              "path": "/develop/contracts/security/sybil",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/contracts/standards",
+              "path": "/develop/contracts/standards"
+            },
+            {
+              "id": "develop/contracts/storage",
+              "path": "/develop/contracts/storage",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/contracts/whatisacontract",
+              "path": "/develop/contracts/whatisacontract",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/deploy",
+              "path": "/develop/deploy",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/integrate/cli",
+              "path": "/develop/integrate/cli"
+            },
+            {
+              "id": "develop/integrate/frontend",
+              "path": "/develop/integrate/frontend",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/integrate/rpc",
+              "path": "/develop/integrate/rpc"
+            },
+            {
+              "id": "develop/prerequisites",
+              "path": "/develop/prerequisites"
+            },
+            {
+              "id": "develop/quickstart-guide",
+              "path": "/develop/quickstart-guide",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/relevant-contracts/dao",
+              "path": "/develop/relevant-contracts/dao",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "develop/relevant-contracts/ft",
+              "path": "/develop/relevant-contracts/ft",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "develop/relevant-contracts/nft",
+              "path": "/develop/relevant-contracts/nft",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "develop/relevant-contracts/oracles",
+              "path": "/develop/relevant-contracts/oracles",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/testing/integration-test",
+              "path": "/develop/testing/integration-test",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/testing/introduction",
+              "path": "/develop/testing/introduction",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/testing/kurtosis-localnet",
+              "path": "/develop/testing/kurtosis-localnet",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/testing/unit-test",
+              "path": "/develop/testing/unit-test",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/testing/workspaces-migration",
+              "path": "/develop/testing/workspaces-migration",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/upgrade-and-lock",
+              "path": "/develop/upgrade-and-lock",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/upgrade/dao-updates",
+              "path": "/develop/upgrade/dao-updates",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/upgrade/migration",
+              "path": "/develop/upgrade/migration",
+              "sidebar": "develop"
+            },
+            {
+              "id": "develop/welcome",
+              "path": "/develop/welcome",
+              "sidebar": "develop"
+            },
+            {
+              "id": "integrator/accounts",
+              "path": "/integrator/accounts",
+              "sidebar": "integrate"
+            },
+            {
+              "id": "integrator/balance-changes",
+              "path": "/integrator/balance-changes",
+              "sidebar": "integrate"
+            },
+            {
+              "id": "integrator/create-transactions",
+              "path": "/integrator/create-transactions",
+              "sidebar": "integrate"
+            },
+            {
+              "id": "integrator/errors/error-implementation",
+              "path": "/integrator/errors/error-implementation",
+              "sidebar": "integrate"
+            },
+            {
+              "id": "integrator/errors/introduction",
+              "path": "/integrator/errors/introduction",
+              "sidebar": "integrate"
+            },
+            {
+              "id": "integrator/errors/token-loss",
+              "path": "/integrator/errors/token-loss",
+              "sidebar": "integrate"
+            },
+            {
+              "id": "integrator/exchange-integration",
+              "path": "/integrator/exchange-integration",
+              "sidebar": "integrate"
+            },
+            {
+              "id": "integrator/faq",
+              "path": "/integrator/faq",
+              "sidebar": "integrate"
+            },
+            {
+              "id": "integrator/fungible-tokens",
+              "path": "/integrator/fungible-tokens",
+              "sidebar": "integrate"
+            },
+            {
+              "id": "integrator/implicit-accounts",
+              "path": "/integrator/implicit-accounts",
+              "sidebar": "integrate"
+            },
+            {
+              "id": "sdk/rust/best-practices",
+              "path": "/sdk/rust/best-practices",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/building/basics",
+              "path": "/sdk/rust/building/basics",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/building/post-processing",
+              "path": "/sdk/rust/building/post-processing",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/building/prototyping",
+              "path": "/sdk/rust/building/prototyping",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/building/reproducible-builds",
+              "path": "/sdk/rust/building/reproducible-builds",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/contract-interface/contract-mutability",
+              "path": "/sdk/rust/contract-interface/contract-mutability",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/contract-interface/payable-methods",
+              "path": "/sdk/rust/contract-interface/payable-methods",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/contract-interface/private-methods",
+              "path": "/sdk/rust/contract-interface/private-methods",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/contract-interface/public-methods",
+              "path": "/sdk/rust/contract-interface/public-methods",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/contract-interface/serialization-interface",
+              "path": "/sdk/rust/contract-interface/serialization-interface",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/contract-size",
+              "path": "/sdk/rust/contract-size",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/contract-structure/collections",
+              "path": "/sdk/rust/contract-structure/collections",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/contract-structure/near-bindgen",
+              "path": "/sdk/rust/contract-structure/near-bindgen",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/contract-structure/nesting",
+              "path": "/sdk/rust/contract-structure/nesting",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/cross-contract/callbacks",
+              "path": "/sdk/rust/cross-contract/callbacks",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/introduction",
+              "path": "/sdk/rust/introduction",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/promises/create-account",
+              "path": "/sdk/rust/promises/create-account",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/promises/deploy-contract",
+              "path": "/sdk/rust/promises/deploy-contract",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/promises/intro",
+              "path": "/sdk/rust/promises/intro",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/promises/token-tx",
+              "path": "/sdk/rust/promises/token-tx",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/testing/integration-tests",
+              "path": "/sdk/rust/testing/integration-tests",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/rust/testing/unit-tests",
+              "path": "/sdk/rust/testing/unit-tests",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "sdk/welcome",
+              "path": "/sdk/welcome",
+              "sidebar": "sdk"
+            },
+            {
+              "id": "tools/explorer",
+              "path": "/tools/explorer",
+              "sidebar": "develop"
+            },
+            {
+              "id": "tools/indexer-for-explorer",
+              "path": "/tools/indexer-for-explorer",
+              "sidebar": "develop"
+            },
+            {
+              "id": "tools/near-api-js/account",
+              "path": "/tools/near-api-js/account"
+            },
+            {
+              "id": "tools/near-api-js/contract",
+              "path": "/tools/near-api-js/contract"
+            },
+            {
+              "id": "tools/near-api-js/cookbook",
+              "path": "/tools/near-api-js/cookbook",
+              "sidebar": "develop"
+            },
+            {
+              "id": "tools/near-api-js/faq",
+              "path": "/tools/near-api-js/faq",
+              "sidebar": "develop"
+            },
+            {
+              "id": "tools/near-api-js/quick-reference",
+              "path": "/tools/near-api-js/quick-reference",
+              "sidebar": "develop"
+            },
+            {
+              "id": "tools/near-api-js/utils",
+              "path": "/tools/near-api-js/utils"
+            },
+            {
+              "id": "tools/near-api-js/wallet",
+              "path": "/tools/near-api-js/wallet"
+            },
+            {
+              "id": "tools/near-cli",
+              "path": "/tools/near-cli",
+              "sidebar": "develop"
+            },
+            {
+              "id": "tools/near-sdk-js",
+              "path": "/tools/near-sdk-js",
+              "sidebar": "develop"
+            },
+            {
+              "id": "tools/near-sdk-rs",
+              "path": "/tools/near-sdk-rs",
+              "sidebar": "develop"
+            },
+            {
+              "id": "tools/realtime",
+              "path": "/tools/realtime",
+              "sidebar": "develop"
+            },
+            {
+              "id": "tools/usecases",
+              "path": "/tools/usecases"
+            },
+            {
+              "id": "tools/welcome",
+              "path": "/tools/welcome"
+            },
+            {
+              "id": "tutorials/crosswords/basics/add-functions-call",
+              "path": "/tutorials/crosswords/basics/add-functions-call",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/crosswords/basics/hashing-and-unit-tests",
+              "path": "/tutorials/crosswords/basics/hashing-and-unit-tests",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/crosswords/basics/overview",
+              "path": "/tutorials/crosswords/basics/overview",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/crosswords/basics/set-up-skeleton",
+              "path": "/tutorials/crosswords/basics/set-up-skeleton",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/crosswords/basics/simple-frontend",
+              "path": "/tutorials/crosswords/basics/simple-frontend",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/crosswords/beginner/actions",
+              "path": "/tutorials/crosswords/beginner/actions",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/crosswords/beginner/adding-a-puzzle",
+              "path": "/tutorials/crosswords/beginner/adding-a-puzzle",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/crosswords/beginner/collections",
+              "path": "/tutorials/crosswords/beginner/collections",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/crosswords/beginner/logging-in",
+              "path": "/tutorials/crosswords/beginner/logging-in",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/crosswords/beginner/logging-in-implementation",
+              "path": "/tutorials/crosswords/beginner/logging-in-implementation",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/crosswords/beginner/overview",
+              "path": "/tutorials/crosswords/beginner/overview",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/crosswords/beginner/structs-enums",
+              "path": "/tutorials/crosswords/beginner/structs-enums",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/crosswords/intermediate/access-key-solution",
+              "path": "/tutorials/crosswords/intermediate/access-key-solution",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/crosswords/intermediate/base64vecu8",
+              "path": "/tutorials/crosswords/intermediate/base64vecu8",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/crosswords/intermediate/cross-contract-calls",
+              "path": "/tutorials/crosswords/intermediate/cross-contract-calls",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/crosswords/intermediate/linkdrop",
+              "path": "/tutorials/crosswords/intermediate/linkdrop",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/crosswords/intermediate/overview",
+              "path": "/tutorials/crosswords/intermediate/overview",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/crosswords/intermediate/use-seed-phrase",
+              "path": "/tutorials/crosswords/intermediate/use-seed-phrase",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/examples/coin-flip",
+              "path": "/tutorials/examples/coin-flip",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/examples/count-near",
+              "path": "/tutorials/examples/count-near",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/examples/donation",
+              "path": "/tutorials/examples/donation",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/examples/guest-book",
+              "path": "/tutorials/examples/guest-book",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/examples/hello-near",
+              "path": "/tutorials/examples/hello-near",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/examples/xcc",
+              "path": "/tutorials/examples/xcc",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/fts/simple-fts",
+              "path": "/tutorials/fts/simple-fts",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/approvals",
+              "path": "/tutorials/nfts/approvals",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/core",
+              "path": "/tutorials/nfts/core",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/enumeration",
+              "path": "/tutorials/nfts/enumeration",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/events",
+              "path": "/tutorials/nfts/events",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/introduction",
+              "path": "/tutorials/nfts/introduction",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/js/approvals",
+              "path": "/tutorials/nfts/js/approvals",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/js/core",
+              "path": "/tutorials/nfts/js/core",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/js/enumeration",
+              "path": "/tutorials/nfts/js/enumeration",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/js/events",
+              "path": "/tutorials/nfts/js/events",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/js/introduction",
+              "path": "/tutorials/nfts/js/introduction",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/js/marketplace",
+              "path": "/tutorials/nfts/js/marketplace",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/js/minting",
+              "path": "/tutorials/nfts/js/minting",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/js/predeployed-contract",
+              "path": "/tutorials/nfts/js/predeployed-contract",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/js/royalty",
+              "path": "/tutorials/nfts/js/royalty",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/js/skeleton",
+              "path": "/tutorials/nfts/js/skeleton",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/js/upgrade-contract",
+              "path": "/tutorials/nfts/js/upgrade-contract",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/marketplace",
+              "path": "/tutorials/nfts/marketplace",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/minecraft-nfts",
+              "path": "/tutorials/nfts/minecraft-nfts",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/minting",
+              "path": "/tutorials/nfts/minting",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/minting-nft-frontend",
+              "path": "/tutorials/nfts/minting-nft-frontend",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/minting-nfts",
+              "path": "/tutorials/nfts/minting-nfts",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/predeployed-contract",
+              "path": "/tutorials/nfts/predeployed-contract",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/royalty",
+              "path": "/tutorials/nfts/royalty",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/series",
+              "path": "/tutorials/nfts/series",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/skeleton",
+              "path": "/tutorials/nfts/skeleton",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/nfts/upgrade-contract",
+              "path": "/tutorials/nfts/upgrade-contract",
+              "sidebar": "tutorials"
+            },
+            {
+              "id": "tutorials/welcome",
+              "path": "/tutorials/welcome",
+              "sidebar": "tutorials"
+            },
+            {
               "id": "welcome",
               "path": "/"
             }
@@ -266,13 +900,79 @@
                 "label": "concepts/welcome"
               }
             },
+            "develop": {
+              "link": {
+                "path": "/develop/welcome",
+                "label": "develop/welcome"
+              }
+            },
             "api": {
               "link": {
                 "path": "/api/rpc/introduction",
                 "label": "api/rpc/introduction"
               }
+            },
+            "tutorials": {
+              "link": {
+                "path": "/tutorials/welcome",
+                "label": "Home"
+              }
+            },
+            "sdk": {
+              "link": {
+                "path": "/sdk/welcome",
+                "label": "sdk/welcome"
+              }
+            },
+            "integrate": {
+              "link": {
+                "path": "/integrator/exchange-integration",
+                "label": "integrator/exchange-integration"
+              }
             }
           }
+        }
+      ],
+      "breadcrumbs": true
+    },
+    "near-api-js": {
+      "path": "/tools/near-api-js/reference",
+      "versions": [
+        {
+          "name": "__dummy",
+          "label": "__dummy",
+          "isLast": true,
+          "path": "/tools/near-api-js/reference",
+          "mainDocId": "dummy",
+          "docs": [
+            {
+              "id": "dummy",
+              "path": "/tools/near-api-js/reference/dummy"
+            }
+          ],
+          "draftIds": [],
+          "sidebars": {}
+        }
+      ],
+      "breadcrumbs": true
+    },
+    "near-sdk-js": {
+      "path": "/tools/near-sdk-js/reference",
+      "versions": [
+        {
+          "name": "__dummy",
+          "label": "__dummy",
+          "isLast": true,
+          "path": "/tools/near-sdk-js/reference",
+          "mainDocId": "dummy",
+          "docs": [
+            {
+              "id": "dummy",
+              "path": "/tools/near-sdk-js/reference/dummy"
+            }
+          ],
+          "draftIds": [],
+          "sidebars": {}
         }
       ],
       "breadcrumbs": true

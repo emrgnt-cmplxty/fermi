@@ -17,5 +17,14 @@
   "frontMatter": {
     "id": "realtime",
     "title": "Track Real Time Events"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "Build the Web Frontend",
+    "permalink": "/develop/integrate/frontend"
+  },
+  "next": {
+    "title": "Query the Blockchain History",
+    "permalink": "/tools/indexer-for-explorer"
   }
 }

@@ -19,5 +19,14 @@
     "sidebar_position": 3,
     "sidebar_label": "Add basic code, create a subaccount, and call methods",
     "title": "Alter the smart contract, learning about basics of development"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Set up Rust and a contract skeleton",
+    "permalink": "/tutorials/crosswords/basics/set-up-skeleton"
+  },
+  "next": {
+    "title": "Hash the solution, unit tests, and an init method",
+    "permalink": "/tutorials/crosswords/basics/hashing-and-unit-tests"
   }
 }

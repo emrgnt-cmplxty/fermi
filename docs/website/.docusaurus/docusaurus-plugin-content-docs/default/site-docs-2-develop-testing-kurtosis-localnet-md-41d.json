@@ -19,5 +19,14 @@
     "title": "Creating a Local Development Environment",
     "sidebar_label": "Local Development",
     "description": "Using Kurtosis Axion Module to develop locally"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "Integration Test",
+    "permalink": "/develop/testing/integration-test"
+  },
+  "next": {
+    "title": "Workspaces Migration",
+    "permalink": "/develop/testing/workspaces-migration"
   }
 }

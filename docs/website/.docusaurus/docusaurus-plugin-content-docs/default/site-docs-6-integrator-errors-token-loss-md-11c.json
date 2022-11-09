@@ -18,5 +18,14 @@
     "id": "token-loss",
     "title": "Avoiding Token Loss",
     "sidebar_label": "Avoiding Token Loss"
+  },
+  "sidebar": "integrate",
+  "previous": {
+    "title": "Source Code Survey",
+    "permalink": "/integrator/errors/error-implementation"
+  },
+  "next": {
+    "title": "Integrator FAQ",
+    "permalink": "/integrator/faq"
   }
 }

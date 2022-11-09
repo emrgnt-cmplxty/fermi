@@ -19,5 +19,14 @@
     "id": "skeleton",
     "title": "Skeleton and Rust Architecture",
     "sidebar_label": "Contract Architecture"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Pre-deployed Contract",
+    "permalink": "/tutorials/nfts/predeployed-contract"
+  },
+  "next": {
+    "title": "Minting",
+    "permalink": "/tutorials/nfts/minting"
   }
 }

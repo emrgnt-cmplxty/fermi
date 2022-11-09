@@ -18,5 +18,14 @@
     "id": "workspaces-migration",
     "sidebar_label": "Workspaces Migration",
     "title": "Migrating from Simulation Testing to Workspaces"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "Local Development",
+    "permalink": "/develop/testing/kurtosis-localnet"
+  },
+  "next": {
+    "title": "Deploying and Using",
+    "permalink": "/develop/deploy"
   }
 }

@@ -18,5 +18,14 @@
     "id": "whatisacontract",
     "title": "What is a Smart Contract?",
     "sidebar_label": "What is a Smart Contract?"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "Examples & Tutorials",
+    "permalink": "/tutorials/welcome"
+  },
+  "next": {
+    "title": "Getting Started",
+    "permalink": "/develop/contracts/introduction"
   }
 }

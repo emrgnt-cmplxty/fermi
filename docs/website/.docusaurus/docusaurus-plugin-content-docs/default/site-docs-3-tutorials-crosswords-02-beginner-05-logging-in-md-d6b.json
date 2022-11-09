@@ -19,5 +19,14 @@
     "sidebar_position": 5,
     "sidebar_label": "Access keys and login 1/2",
     "title": "Covering access keys and login"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Add a puzzle",
+    "permalink": "/tutorials/crosswords/beginner/adding-a-puzzle"
+  },
+  "next": {
+    "title": "Access keys and login 2/2",
+    "permalink": "/tutorials/crosswords/beginner/logging-in-implementation"
   }
 }

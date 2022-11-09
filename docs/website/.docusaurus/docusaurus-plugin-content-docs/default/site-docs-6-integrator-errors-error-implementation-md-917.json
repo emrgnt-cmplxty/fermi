@@ -18,5 +18,14 @@
     "id": "error-implementation",
     "title": "Source Code Survey",
     "sidebar_label": "Source Code Survey"
+  },
+  "sidebar": "integrate",
+  "previous": {
+    "title": "Introduction",
+    "permalink": "/integrator/errors/introduction"
+  },
+  "next": {
+    "title": "Avoiding Token Loss",
+    "permalink": "/integrator/errors/token-loss"
   }
 }

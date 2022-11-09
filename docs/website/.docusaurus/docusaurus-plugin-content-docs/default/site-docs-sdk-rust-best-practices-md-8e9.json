@@ -17,5 +17,14 @@
   "frontMatter": {
     "id": "best-practices",
     "title": "Best Practices"
+  },
+  "sidebar": "sdk",
+  "previous": {
+    "title": "Unit Tests",
+    "permalink": "/sdk/rust/testing/unit-tests"
+  },
+  "next": {
+    "title": "Reducing Contract Size",
+    "permalink": "/sdk/rust/contract-size"
   }
 }

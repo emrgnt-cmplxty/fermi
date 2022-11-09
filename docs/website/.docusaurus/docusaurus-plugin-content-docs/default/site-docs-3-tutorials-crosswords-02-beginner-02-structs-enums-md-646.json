@@ -19,5 +19,14 @@
     "sidebar_position": 3,
     "sidebar_label": "Using structs and enums",
     "title": "How to think about structs and enums when writing a Rust smart contract on Axion"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Store multiple puzzles",
+    "permalink": "/tutorials/crosswords/beginner/collections"
+  },
+  "next": {
+    "title": "Actions and sending Axion",
+    "permalink": "/tutorials/crosswords/beginner/actions"
   }
 }

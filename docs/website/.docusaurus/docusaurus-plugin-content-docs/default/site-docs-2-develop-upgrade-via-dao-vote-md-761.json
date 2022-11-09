@@ -16,5 +16,14 @@
   "formattedLastUpdatedAt": "Oct 14, 2018",
   "frontMatter": {
     "id": "dao-updates"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "Migrating Contracts",
+    "permalink": "/develop/upgrade/migration"
+  },
+  "next": {
+    "title": "Million Small Deposits",
+    "permalink": "/develop/contracts/security/storage"
   }
 }

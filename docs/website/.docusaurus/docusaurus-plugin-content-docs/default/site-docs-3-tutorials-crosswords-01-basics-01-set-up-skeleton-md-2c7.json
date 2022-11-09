@@ -19,5 +19,14 @@
     "sidebar_position": 2,
     "sidebar_label": "Set up Rust and a contract skeleton",
     "title": "Set up Rust, get a Axion testnet account, Axion CLI, and get a basic smart contract skeleton ready"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Overview",
+    "permalink": "/tutorials/crosswords/basics/overview"
+  },
+  "next": {
+    "title": "Add basic code, create a subaccount, and call methods",
+    "permalink": "/tutorials/crosswords/basics/add-functions-call"
   }
 }

@@ -17,5 +17,14 @@
   "frontMatter": {
     "id": "callbacks",
     "title": "Cross-Contract Calls"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "Million Small Deposits",
+    "permalink": "/develop/contracts/security/storage"
+  },
+  "next": {
+    "title": "Ensure it is the User (1yⓃ)",
+    "permalink": "/develop/contracts/security/one-yocto"
   }
 }

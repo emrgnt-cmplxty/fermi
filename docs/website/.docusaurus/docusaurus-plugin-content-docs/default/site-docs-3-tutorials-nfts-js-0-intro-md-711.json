@@ -19,5 +19,14 @@
     "id": "introduction",
     "title": "NFT Zero to Hero JavaScript Edition",
     "sidebar_label": "Introduction"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Autonomous Organizations",
+    "permalink": "/develop/relevant-contracts/dao"
+  },
+  "next": {
+    "title": "Pre-deployed Contract",
+    "permalink": "/tutorials/nfts/js/predeployed-contract"
   }
 }

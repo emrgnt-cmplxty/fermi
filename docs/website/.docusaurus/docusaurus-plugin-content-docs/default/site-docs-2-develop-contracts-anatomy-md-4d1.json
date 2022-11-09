@@ -18,5 +18,14 @@
     "id": "anatomy",
     "title": "Anatomy of a Contract",
     "sidebar_label": "Types, Classes & Modules"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "Getting Started",
+    "permalink": "/develop/contracts/introduction"
+  },
+  "next": {
+    "title": "Environmental Variables",
+    "permalink": "/develop/contracts/environment/"
   }
 }

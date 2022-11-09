@@ -6,9 +6,9 @@
 export default {
   "title": "Axion Documentation",
   "tagline": "Axion Protocol Developer Documentation",
-  "url": "https://docs.axion.org",
+  "url": "https://docs.near.org",
   "baseUrl": "/",
-  "organizationName": "axion",
+  "organizationName": "near",
   "projectName": "docs",
   "scripts": [
     "https://buttons.github.io/buttons.js",
@@ -21,7 +21,7 @@ export default {
     "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&family=Source+Code+Pro:ital,wght@0,400;0,600;1,400;1,600&display=swap",
     "/css/copy-code-button.css",
     "/css/landing-page.css",
-    "/css/axion.min.css"
+    "/css/near.min.css"
   ],
   "favicon": "img/favicon.ico",
   "customFields": {
@@ -46,7 +46,7 @@ export default {
           "showLastUpdateAuthor": true,
           "showLastUpdateTime": true,
           "breadcrumbs": true,
-          "editUrl": "https://github.com/axion/docs/edit/master/website",
+          "editUrl": "https://github.com/near/docs/edit/master/website",
           "path": "../docs",
           "sidebarPath": "./sidebars.json",
           "routeBasePath": "/"
@@ -70,18 +70,18 @@ export default {
     [
       "@docusaurus/plugin-content-docs",
       {
-        "id": "axion-api-js",
-        "path": "../__generated/axion-api-js",
-        "routeBasePath": "/tools/axion-api-js/reference",
+        "id": "near-api-js",
+        "path": "../__generated/near-api-js",
+        "routeBasePath": "/tools/near-api-js/reference",
         "includeCurrentVersion": false
       }
     ],
     [
       "@docusaurus/plugin-content-docs",
       {
-        "id": "axion-sdk-js",
-        "path": "../__generated/axion-sdk-js",
-        "routeBasePath": "/tools/axion-sdk-js/reference",
+        "id": "near-sdk-js",
+        "path": "../__generated/near-sdk-js",
+        "routeBasePath": "/tools/near-sdk-js/reference",
         "includeCurrentVersion": false
       }
     ]
@@ -284,9 +284,9 @@ export default {
     "algolia": {
       "appId": "0LUM67N2P2",
       "apiKey": "129d0f429e1bb0510f0261dda1e88ed4",
-      "indexName": "axion",
+      "indexName": "near",
       "contextualSearch": true,
-      "externalUrlRegex": "axion-sdk\\.io",
+      "externalUrlRegex": "near-sdk\\.io",
       "searchParameters": {},
       "placeholder": "Search the Docs...",
       "searchPagePath": "search"

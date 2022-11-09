@@ -17,5 +17,14 @@
   "frontMatter": {
     "id": "environment",
     "title": "Environmental Variables"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "Types, Classes & Modules",
+    "permalink": "/develop/contracts/anatomy"
+  },
+  "next": {
+    "title": "Storage & Data Structures",
+    "permalink": "/develop/contracts/storage"
   }
 }

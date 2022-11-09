@@ -1,9 +1,0 @@
-@import 'variables';
-@import 'mixins';
-
-.overview {
-  @include themify('background-color', 'palette.background.navbar');
-
-  margin-bottom: 2 * $s;
-  margin-right: 2 * $s;
-}

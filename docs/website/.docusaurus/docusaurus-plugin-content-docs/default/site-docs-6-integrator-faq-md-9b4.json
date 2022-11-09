@@ -18,5 +18,10 @@
     "id": "faq",
     "title": "Integrator FAQ",
     "sidebar_label": "Integrator FAQ"
+  },
+  "sidebar": "integrate",
+  "previous": {
+    "title": "Avoiding Token Loss",
+    "permalink": "/integrator/errors/token-loss"
   }
 }

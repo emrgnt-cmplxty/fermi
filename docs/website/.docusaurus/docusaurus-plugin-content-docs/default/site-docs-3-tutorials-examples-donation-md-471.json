@@ -17,5 +17,14 @@
   "frontMatter": {
     "id": "donation",
     "title": "Donation"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Guest Book",
+    "permalink": "/tutorials/examples/guest-book"
+  },
+  "next": {
+    "title": "Cross Contract Call",
+    "permalink": "/tutorials/examples/xcc"
   }
 }

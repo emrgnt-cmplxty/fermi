@@ -18,5 +18,14 @@
     "id": "prototyping",
     "sidebar_label": "Rapid Prototyping",
     "title": "Upgrading Contracts: Rapid Prototyping"
+  },
+  "sidebar": "sdk",
+  "previous": {
+    "title": "Basic Instructions",
+    "permalink": "/sdk/rust/building/basics"
+  },
+  "next": {
+    "title": "Post Processing Tools",
+    "permalink": "/sdk/rust/building/post-processing"
   }
 }

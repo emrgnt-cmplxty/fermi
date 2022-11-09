@@ -20,5 +20,14 @@
     "sidebar_position": 1,
     "sidebar_label": "Overview",
     "title": "Basics overview laying out what will be accomplished in this first section."
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Lazy Minting, Collections, and More!",
+    "permalink": "/tutorials/nfts/series"
+  },
+  "next": {
+    "title": "Set up Rust and a contract skeleton",
+    "permalink": "/tutorials/crosswords/basics/set-up-skeleton"
   }
 }

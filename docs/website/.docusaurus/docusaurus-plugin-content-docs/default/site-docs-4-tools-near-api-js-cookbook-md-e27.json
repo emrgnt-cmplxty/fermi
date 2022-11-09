@@ -18,5 +18,14 @@
     "id": "cookbook",
     "title": "Common Use Cases",
     "sidebar_label": "Cookbook"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "Using JavaScript API",
+    "permalink": "/tools/near-api-js/quick-reference"
+  },
+  "next": {
+    "title": "FAQ",
+    "permalink": "/tools/near-api-js/faq"
   }
 }

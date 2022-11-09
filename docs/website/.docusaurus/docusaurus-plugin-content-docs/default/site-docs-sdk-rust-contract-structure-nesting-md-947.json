@@ -17,5 +17,14 @@
   "sidebarPosition": 3,
   "frontMatter": {
     "sidebar_position": 3
+  },
+  "sidebar": "sdk",
+  "previous": {
+    "title": "Collections",
+    "permalink": "/sdk/rust/contract-structure/collections"
+  },
+  "next": {
+    "title": "Public Method Types",
+    "permalink": "/sdk/rust/contract-interface/public-methods"
   }
 }

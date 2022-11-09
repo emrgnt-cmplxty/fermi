@@ -17,5 +17,14 @@
   "frontMatter": {
     "id": "coin-flip",
     "title": "Coin Flip"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Cross Contract Call",
+    "permalink": "/tutorials/examples/xcc"
+  },
+  "next": {
+    "title": "Fungible Tokens",
+    "permalink": "/develop/relevant-contracts/ft"
   }
 }

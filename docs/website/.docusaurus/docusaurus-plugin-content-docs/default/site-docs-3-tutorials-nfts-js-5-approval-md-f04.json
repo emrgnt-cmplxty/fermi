@@ -19,5 +19,14 @@
     "id": "approvals",
     "title": "Approvals",
     "sidebar_label": "Approvals"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Core",
+    "permalink": "/tutorials/nfts/js/core"
+  },
+  "next": {
+    "title": "Royalty",
+    "permalink": "/tutorials/nfts/js/royalty"
   }
 }

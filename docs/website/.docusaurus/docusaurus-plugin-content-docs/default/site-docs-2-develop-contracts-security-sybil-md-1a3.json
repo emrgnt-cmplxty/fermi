@@ -17,5 +17,14 @@
   "frontMatter": {
     "id": "sybil",
     "title": "Sybil Attacks"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "Ensure it is the User (1yⓃ)",
+    "permalink": "/develop/contracts/security/one-yocto"
+  },
+  "next": {
+    "title": "Front Running",
+    "permalink": "/develop/contracts/security/frontrunning"
   }
 }

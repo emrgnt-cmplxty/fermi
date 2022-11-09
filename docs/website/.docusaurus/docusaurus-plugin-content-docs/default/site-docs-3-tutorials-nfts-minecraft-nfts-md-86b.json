@@ -18,5 +18,14 @@
     "id": "minecraft-nfts",
     "title": "Create NFTs in Minecraft",
     "sidebar_label": "Minecraft NFTs"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Minting Front-end",
+    "permalink": "/tutorials/nfts/minting-nft-frontend"
+  },
+  "next": {
+    "title": "Autonomous Organizations",
+    "permalink": "/develop/relevant-contracts/dao"
   }
 }

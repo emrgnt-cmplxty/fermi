@@ -17,5 +17,14 @@
   "frontMatter": {
     "id": "ft",
     "title": "Fungible Tokens"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Coin Flip",
+    "permalink": "/tutorials/examples/coin-flip"
+  },
+  "next": {
+    "title": "Minting FTs (Simple)",
+    "permalink": "/tutorials/fts/simple-fts"
   }
 }

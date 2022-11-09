@@ -19,5 +19,14 @@
     "sidebar_position": 5,
     "sidebar_label": "Cross-contract calls, etc.",
     "title": "Adding cross-contract calls, access key shuffling, etc."
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Linkdrop contract",
+    "permalink": "/tutorials/crosswords/intermediate/linkdrop"
+  },
+  "next": {
+    "title": "Base64 params, wrap up",
+    "permalink": "/tutorials/crosswords/intermediate/base64vecu8"
   }
 }

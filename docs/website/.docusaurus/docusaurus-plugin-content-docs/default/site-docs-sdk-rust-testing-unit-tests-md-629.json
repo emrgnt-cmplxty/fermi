@@ -17,5 +17,14 @@
   "sidebarPosition": 1,
   "frontMatter": {
     "sidebar_position": 1
+  },
+  "sidebar": "sdk",
+  "previous": {
+    "title": "Integration Tests",
+    "permalink": "/sdk/rust/testing/integration-tests"
+  },
+  "next": {
+    "title": "Best Practices",
+    "permalink": "/sdk/rust/best-practices"
   }
 }

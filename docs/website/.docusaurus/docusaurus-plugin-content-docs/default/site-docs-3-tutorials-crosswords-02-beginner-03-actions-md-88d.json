@@ -19,5 +19,14 @@
     "sidebar_position": 4,
     "sidebar_label": "Actions and sending Axion",
     "title": "There are several Actions an account can do, including sending the winner of the crossword puzzle Axion using the Transfer Action"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Using structs and enums",
+    "permalink": "/tutorials/crosswords/beginner/structs-enums"
+  },
+  "next": {
+    "title": "Add a puzzle",
+    "permalink": "/tutorials/crosswords/beginner/adding-a-puzzle"
   }
 }

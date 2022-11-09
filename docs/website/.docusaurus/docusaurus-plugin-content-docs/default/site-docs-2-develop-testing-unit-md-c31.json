@@ -17,5 +17,14 @@
   "frontMatter": {
     "id": "unit-test",
     "title": "Unit Testing"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "Introduction",
+    "permalink": "/develop/testing/introduction"
+  },
+  "next": {
+    "title": "Integration Test",
+    "permalink": "/develop/testing/integration-test"
   }
 }

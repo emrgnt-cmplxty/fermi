@@ -18,5 +18,10 @@
     "id": "exchange-integration",
     "title": "Exchange Integration",
     "sidebar_label": "Exchange Integration"
+  },
+  "sidebar": "integrate",
+  "next": {
+    "title": "Balance Changes",
+    "permalink": "/integrator/balance-changes"
   }
 }

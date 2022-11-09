@@ -19,5 +19,14 @@
     "id": "upgrade-contract",
     "title": "Upgrading the Contract",
     "sidebar_label": "Upgrade a Contract"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Minting",
+    "permalink": "/tutorials/nfts/minting"
+  },
+  "next": {
+    "title": "Enumeration",
+    "permalink": "/tutorials/nfts/enumeration"
   }
 }

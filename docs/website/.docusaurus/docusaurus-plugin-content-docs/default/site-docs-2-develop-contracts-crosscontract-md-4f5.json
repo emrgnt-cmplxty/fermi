@@ -17,5 +17,14 @@
   "frontMatter": {
     "id": "crosscontract",
     "title": "Cross-Contract Calls"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "Transfers & Actions",
+    "permalink": "/develop/contracts/actions"
+  },
+  "next": {
+    "title": "✅ Checklist",
+    "permalink": "/develop/contracts/security/checklist"
   }
 }

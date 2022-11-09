@@ -19,5 +19,14 @@
     "id": "introduction",
     "title": "NFT Zero to Hero",
     "sidebar_label": "Introduction"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Marketplace",
+    "permalink": "/tutorials/nfts/js/marketplace"
+  },
+  "next": {
+    "title": "Pre-deployed Contract",
+    "permalink": "/tutorials/nfts/predeployed-contract"
   }
 }

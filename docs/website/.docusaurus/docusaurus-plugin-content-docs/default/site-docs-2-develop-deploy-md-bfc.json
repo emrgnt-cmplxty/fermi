@@ -18,5 +18,14 @@
     "id": "deploy",
     "title": "Axion CLI - Basics",
     "sidebar_label": "Deploying and Using"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "Workspaces Migration",
+    "permalink": "/develop/testing/workspaces-migration"
+  },
+  "next": {
+    "title": "Upgrading and Locking",
+    "permalink": "/develop/upgrade-and-lock"
   }
 }

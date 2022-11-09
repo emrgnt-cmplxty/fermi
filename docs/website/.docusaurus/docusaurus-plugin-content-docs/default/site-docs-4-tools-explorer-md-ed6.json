@@ -18,5 +18,14 @@
     "id": "explorer",
     "title": "Explorer",
     "sidebar_label": "🔗 Explorers"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "FAQ",
+    "permalink": "/tools/near-api-js/faq"
+  },
+  "next": {
+    "title": "🔮 Oracles",
+    "permalink": "/develop/relevant-contracts/oracles"
   }
 }

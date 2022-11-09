@@ -18,5 +18,14 @@
     "id": "quickstart-guide",
     "title": "Hello Axion 👋",
     "sidebar_label": "⭐ Quickstart"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "Home",
+    "permalink": "/develop/welcome"
+  },
+  "next": {
+    "title": "Examples & Tutorials",
+    "permalink": "/tutorials/welcome"
   }
 }

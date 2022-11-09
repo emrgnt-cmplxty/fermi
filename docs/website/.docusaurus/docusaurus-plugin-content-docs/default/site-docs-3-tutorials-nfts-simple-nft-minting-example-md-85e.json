@@ -18,5 +18,14 @@
     "id": "minting-nft-frontend",
     "title": "Minting NFT Front-end",
     "sidebar_label": "Minting Front-end"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Minting NFTs",
+    "permalink": "/tutorials/nfts/minting-nfts"
+  },
+  "next": {
+    "title": "Minecraft NFTs",
+    "permalink": "/tutorials/nfts/minecraft-nfts"
   }
 }

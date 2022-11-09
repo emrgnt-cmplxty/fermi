@@ -1,57 +1,57 @@
 {
-  "/__docusaurus/debug-186": {
+  "/__docusaurus/debug-a8e": {
     "__comp": "__comp---theme-debug-config-23-a-2ff",
     "__context": {
-      "plugin": "plugin---docusaurus-debug-355-745"
+      "plugin": "plugin---docusaurus-debug-498-ef1"
     }
   },
-  "/__docusaurus/debug/config-dfb": {
+  "/__docusaurus/debug/config-2c0": {
     "__comp": "__comp---theme-debug-config-23-a-2ff",
     "__context": {
-      "plugin": "plugin---docusaurus-debug-355-745"
+      "plugin": "plugin---docusaurus-debug-498-ef1"
     }
   },
-  "/__docusaurus/debug/content-e5d": {
+  "/__docusaurus/debug/content-4bd": {
     "__comp": "__comp---theme-debug-contentba-8-ce7",
     "__context": {
-      "plugin": "plugin---docusaurus-debug-355-745"
+      "plugin": "plugin---docusaurus-debug-498-ef1"
     },
     "allContent": "allContent---docusaurus-debug-content-246-9aa"
   },
-  "/__docusaurus/debug/globalData-983": {
+  "/__docusaurus/debug/globalData-28f": {
     "__comp": "__comp---theme-debug-global-dataede-0fa",
     "__context": {
-      "plugin": "plugin---docusaurus-debug-355-745"
+      "plugin": "plugin---docusaurus-debug-498-ef1"
     }
   },
-  "/__docusaurus/debug/metadata-41f": {
+  "/__docusaurus/debug/metadata-404": {
     "__comp": "__comp---theme-debug-site-metadata-68-e-3d4",
     "__context": {
-      "plugin": "plugin---docusaurus-debug-355-745"
+      "plugin": "plugin---docusaurus-debug-498-ef1"
     }
   },
-  "/__docusaurus/debug/registry-f0b": {
+  "/__docusaurus/debug/registry-e95": {
     "__comp": "__comp---theme-debug-registry-679-501",
     "__context": {
-      "plugin": "plugin---docusaurus-debug-355-745"
+      "plugin": "plugin---docusaurus-debug-498-ef1"
     }
   },
-  "/__docusaurus/debug/routes-f80": {
+  "/__docusaurus/debug/routes-43d": {
     "__comp": "__comp---theme-debug-routes-946-699",
     "__context": {
-      "plugin": "plugin---docusaurus-debug-355-745"
+      "plugin": "plugin---docusaurus-debug-498-ef1"
     }
   },
-  "/search-581": {
+  "/search-f11": {
     "__comp": "__comp---theme-search-page-1-a-4-d6f",
     "__context": {
-      "plugin": "plugin---searchea-0-779"
+      "plugin": "plugin---search-008-c06"
     }
   },
-  "/tools/near-api-js/reference-3d5": {
+  "/tools/near-api-js/reference-27a": {
     "__comp": "__comp---theme-doc-page-1-be-9be",
     "__context": {
-      "plugin": "plugin---tools-near-api-js-reference-91-b-3a3"
+      "plugin": "plugin---tools-near-api-js-reference-541-e28"
     },
     "versionMetadata": "versionMetadata---tools-near-api-js-referencef-79-455"
   },
@@ -59,10 +59,10 @@
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---tools-near-api-js-reference-dummy-08-c-b85"
   },
-  "/tools/near-sdk-js/reference-5d7": {
+  "/tools/near-sdk-js/reference-558": {
     "__comp": "__comp---theme-doc-page-1-be-9be",
     "__context": {
-      "plugin": "plugin---tools-near-sdk-js-reference-636-b41"
+      "plugin": "plugin---tools-near-sdk-js-reference-688-fef"
     },
     "versionMetadata": "versionMetadata---tools-near-sdk-js-reference-3-b-6-75d"
   },
@@ -70,10 +70,10 @@
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---tools-near-sdk-js-reference-dummyc-19-d90"
   },
-  "/-f87": {
+  "/-9f7": {
     "__comp": "__comp---theme-doc-page-1-be-9be",
     "__context": {
-      "plugin": "plugin---d-7-c-0e0"
+      "plugin": "plugin---05-a-e08"
     },
     "versionMetadata": "versionMetadata---935-fcf"
   },
@@ -81,49 +81,49 @@
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---03-a-a23"
   },
-  "/api/rpc/access-keys-094": {
+  "/api/rpc/access-keys-4e0": {
     "__comp": "__comp---theme-doc-item-178-a40",
-    "content": "content---api-rpc-access-keys-47-a-0a8"
+    "content": "content---api-rpc-access-keysc-9-a-212"
   },
-  "/api/rpc/block-info-33d": {
+  "/api/rpc/block-info-e8c": {
     "__comp": "__comp---theme-doc-item-178-a40",
-    "content": "content---api-rpc-block-info-7-d-7-215"
+    "content": "content---api-rpc-block-info-167-bb2"
   },
-  "/api/rpc/contracts-f7f": {
+  "/api/rpc/contracts-a0c": {
     "__comp": "__comp---theme-doc-item-178-a40",
-    "content": "content---api-rpc-contractsc-60-d65"
+    "content": "content---api-rpc-contracts-2-c-5-79c"
   },
-  "/api/rpc/futures-markets-0c4": {
+  "/api/rpc/futures-markets-178": {
     "__comp": "__comp---theme-doc-item-178-a40",
-    "content": "content---api-rpc-futures-markets-426-899"
+    "content": "content---api-rpc-futures-marketsc-6-e-a11"
   },
-  "/api/rpc/gas-367": {
+  "/api/rpc/gas-865": {
     "__comp": "__comp---theme-doc-item-178-a40",
-    "content": "content---api-rpc-gas-0-aa-781"
+    "content": "content---api-rpc-gasdae-ff0"
   },
-  "/api/rpc/introduction-7c8": {
+  "/api/rpc/introduction-715": {
     "__comp": "__comp---theme-doc-item-178-a40",
-    "content": "content---api-rpc-introduction-00-f-21d"
+    "content": "content---api-rpc-introduction-3-e-8-74f"
   },
-  "/api/rpc/network-5a4": {
+  "/api/rpc/network-4c8": {
     "__comp": "__comp---theme-doc-item-178-a40",
-    "content": "content---api-rpc-network-8-aa-ccf"
+    "content": "content---api-rpc-networkd-9-c-33a"
   },
-  "/api/rpc/protocol-39f": {
+  "/api/rpc/protocol-b32": {
     "__comp": "__comp---theme-doc-item-178-a40",
-    "content": "content---api-rpc-protocol-0-d-6-6fd"
+    "content": "content---api-rpc-protocolf-94-71b"
   },
-  "/api/rpc/providers-ccf": {
+  "/api/rpc/providers-a10": {
     "__comp": "__comp---theme-doc-item-178-a40",
-    "content": "content---api-rpc-providers-831-a0c"
+    "content": "content---api-rpc-providers-836-d38"
   },
-  "/api/rpc/setup-a60": {
+  "/api/rpc/setup-a18": {
     "__comp": "__comp---theme-doc-item-178-a40",
-    "content": "content---api-rpc-setup-9-a-0-c62"
+    "content": "content---api-rpc-setupf-30-4b4"
   },
-  "/api/rpc/transactions-d11": {
+  "/api/rpc/transactions-fff": {
     "__comp": "__comp---theme-doc-item-178-a40",
-    "content": "content---api-rpc-transactionsea-9-f7b"
+    "content": "content---api-rpc-transactionsa-67-c45"
   },
   "/concepts/advanced/papers-3aa": {
     "__comp": "__comp---theme-doc-item-178-a40",
@@ -248,5 +248,557 @@
   "/concepts/welcome-026": {
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---concepts-welcome-4-fe-ef8"
+  },
+  "/develop/contracts/actions-6e2": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-contracts-actions-949-db3"
+  },
+  "/develop/contracts/anatomy-2dd": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-contracts-anatomy-4-d-1-94a"
+  },
+  "/develop/contracts/crosscontract-ca8": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-contracts-crosscontract-4-f-5-af8"
+  },
+  "/develop/contracts/environment/-efc": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-contracts-environment-f-86-d2d"
+  },
+  "/develop/contracts/environment/table.as-7a8": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-contracts-environment-table-as-499-209"
+  },
+  "/develop/contracts/environment/table.js-0ea": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-contracts-environment-table-jsa-02-eb0"
+  },
+  "/develop/contracts/environment/table.rs-f24": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-contracts-environment-table-rsb-0-e-526"
+  },
+  "/develop/contracts/introduction-109": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-contracts-introductionc-78-602"
+  },
+  "/develop/contracts/security/callbacks-e5b": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-contracts-security-callbacks-563-159"
+  },
+  "/develop/contracts/security/checklist-e6b": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-contracts-security-checklistd-32-09c"
+  },
+  "/develop/contracts/security/frontrunning-593": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-contracts-security-frontrunning-75-b-3d7"
+  },
+  "/develop/contracts/security/one-yocto-609": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-contracts-security-one-yoctocb-2-b89"
+  },
+  "/develop/contracts/security/random-2ee": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-contracts-security-random-678-fa7"
+  },
+  "/develop/contracts/security/reentrancy-attacks-875": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-contracts-security-reentrancy-attacks-878-1a6"
+  },
+  "/develop/contracts/security/storage-26a": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-contracts-security-storage-0-b-3-c42"
+  },
+  "/develop/contracts/security/sybil-747": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-contracts-security-sybil-1-a-3-ded"
+  },
+  "/develop/contracts/standards-ba8": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-contracts-standards-437-1c4"
+  },
+  "/develop/contracts/storage-eed": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-contracts-storageeb-5-48e"
+  },
+  "/develop/contracts/whatisacontract-1a1": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-contracts-whatisacontractbce-d7f"
+  },
+  "/develop/deploy-12d": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-deploybfc-4e5"
+  },
+  "/develop/integrate/cli-59f": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-integrate-cliebc-8fc"
+  },
+  "/develop/integrate/frontend-696": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-integrate-frontend-220-0bb"
+  },
+  "/develop/integrate/rpc-520": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-integrate-rpc-71-e-fbc"
+  },
+  "/develop/prerequisites-672": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-prerequisitesfe-1-732"
+  },
+  "/develop/quickstart-guide-fca": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-quickstart-guidee-1-a-e8c"
+  },
+  "/develop/relevant-contracts/dao-41a": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-relevant-contracts-dao-4-f-1-b04"
+  },
+  "/develop/relevant-contracts/ft-ee5": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-relevant-contracts-ft-597-e54"
+  },
+  "/develop/relevant-contracts/nft-72f": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-relevant-contracts-nftac-1-f80"
+  },
+  "/develop/relevant-contracts/oracles-8e4": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-relevant-contracts-oracles-8-a-6-a47"
+  },
+  "/develop/testing/integration-test-e85": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-testing-integration-testfab-87f"
+  },
+  "/develop/testing/introduction-251": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-testing-introduction-48-d-90e"
+  },
+  "/develop/testing/kurtosis-localnet-7b2": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-testing-kurtosis-localnet-41-d-4ca"
+  },
+  "/develop/testing/unit-test-963": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-testing-unit-testc-31-9f3"
+  },
+  "/develop/testing/workspaces-migration-f57": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-testing-workspaces-migration-898-03d"
+  },
+  "/develop/upgrade-and-lock-0a8": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-upgrade-and-lock-132-b8e"
+  },
+  "/develop/upgrade/dao-updates-ee3": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-upgrade-dao-updates-761-d20"
+  },
+  "/develop/upgrade/migration-642": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-upgrade-migratione-6-f-5f5"
+  },
+  "/develop/welcome-6a0": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---develop-welcome-745-d2a"
+  },
+  "/integrator/accounts-947": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---integrator-accountsa-3-b-cbd"
+  },
+  "/integrator/balance-changes-10e": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---integrator-balance-changes-1-ba-47d"
+  },
+  "/integrator/create-transactions-0a8": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---integrator-create-transactions-121-807"
+  },
+  "/integrator/errors/error-implementation-28d": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---integrator-errors-error-implementation-917-c02"
+  },
+  "/integrator/errors/introduction-6ae": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---integrator-errors-introductionc-69-f14"
+  },
+  "/integrator/errors/token-loss-f9d": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---integrator-errors-token-loss-11-c-83b"
+  },
+  "/integrator/exchange-integration-2a4": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---integrator-exchange-integration-380-7b3"
+  },
+  "/integrator/faq-41b": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---integrator-faq-9-b-4-c35"
+  },
+  "/integrator/fungible-tokens-125": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---integrator-fungible-tokens-6-c-8-43b"
+  },
+  "/integrator/implicit-accounts-448": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---integrator-implicit-accountsf-63-3b0"
+  },
+  "/sdk/rust/best-practices-9c2": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-best-practices-8-e-9-abe"
+  },
+  "/sdk/rust/building/basics-300": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-building-basicse-89-7b2"
+  },
+  "/sdk/rust/building/post-processing-a94": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-building-post-processingf-61-8fb"
+  },
+  "/sdk/rust/building/prototyping-fe6": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-building-prototyping-364-858"
+  },
+  "/sdk/rust/building/reproducible-builds-89d": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-building-reproducible-buildsce-5-252"
+  },
+  "/sdk/rust/contract-interface/contract-mutability-34b": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-contract-interface-contract-mutability-39-b-0d4"
+  },
+  "/sdk/rust/contract-interface/payable-methods-ab5": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-contract-interface-payable-methods-431-10e"
+  },
+  "/sdk/rust/contract-interface/private-methods-b27": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-contract-interface-private-methodsf-2-b-411"
+  },
+  "/sdk/rust/contract-interface/public-methods-cea": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-contract-interface-public-methods-0-f-7-e75"
+  },
+  "/sdk/rust/contract-interface/serialization-interface-3f5": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-contract-interface-serialization-interface-3-f-0-d82"
+  },
+  "/sdk/rust/contract-size-fef": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-contract-sizea-69-79f"
+  },
+  "/sdk/rust/contract-structure/collections-4d2": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-contract-structure-collections-47-a-9d3"
+  },
+  "/sdk/rust/contract-structure/near-bindgen-5ef": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-contract-structure-near-bindgen-72-a-e53"
+  },
+  "/sdk/rust/contract-structure/nesting-7e5": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-contract-structure-nesting-947-fc6"
+  },
+  "/sdk/rust/cross-contract/callbacks-5c7": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-cross-contract-callbacks-43-a-11b"
+  },
+  "/sdk/rust/introduction-b9c": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-introductionf-05-ebf"
+  },
+  "/sdk/rust/promises/create-account-626": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-promises-create-account-0-fa-2d7"
+  },
+  "/sdk/rust/promises/deploy-contract-f98": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-promises-deploy-contractd-21-2c9"
+  },
+  "/sdk/rust/promises/intro-35a": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-promises-introba-2-a36"
+  },
+  "/sdk/rust/promises/token-tx-601": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-promises-token-txe-2-d-814"
+  },
+  "/sdk/rust/testing/integration-tests-091": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-testing-integration-testse-30-6fe"
+  },
+  "/sdk/rust/testing/unit-tests-ab2": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-rust-testing-unit-tests-629-b28"
+  },
+  "/sdk/welcome-04d": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---sdk-welcome-877-eae"
+  },
+  "/tools/explorer-1f6": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tools-explorered-6-7b1"
+  },
+  "/tools/indexer-for-explorer-3b9": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tools-indexer-for-explorer-318-ead"
+  },
+  "/tools/near-api-js/account-c34": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tools-near-api-js-account-59-e-269"
+  },
+  "/tools/near-api-js/contract-359": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tools-near-api-js-contractb-5-d-273"
+  },
+  "/tools/near-api-js/cookbook-5a2": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tools-near-api-js-cookbooke-27-b80"
+  },
+  "/tools/near-api-js/faq-f76": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tools-near-api-js-faq-39-f-1b7"
+  },
+  "/tools/near-api-js/quick-reference-8ac": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tools-near-api-js-quick-referenced-40-24f"
+  },
+  "/tools/near-api-js/utils-812": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tools-near-api-js-utilsde-4-d66"
+  },
+  "/tools/near-api-js/wallet-ad4": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tools-near-api-js-walletd-2-f-171"
+  },
+  "/tools/near-cli-0a4": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tools-near-clif-08-4db"
+  },
+  "/tools/near-sdk-js-608": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tools-near-sdk-js-9-a-1-f01"
+  },
+  "/tools/near-sdk-rs-c6a": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tools-near-sdk-rs-7-a-8-93f"
+  },
+  "/tools/realtime-479": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tools-realtimea-55-3a2"
+  },
+  "/tools/usecases-e15": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tools-usecases-7-eb-6dd"
+  },
+  "/tools/welcome-e2c": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tools-welcomec-71-01c"
+  },
+  "/tutorials/crosswords/basics/add-functions-call-3a3": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-crosswords-basics-add-functions-call-017-bb1"
+  },
+  "/tutorials/crosswords/basics/hashing-and-unit-tests-a18": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-crosswords-basics-hashing-and-unit-tests-6-dc-746"
+  },
+  "/tutorials/crosswords/basics/overview-03e": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-crosswords-basics-overviewdec-b09"
+  },
+  "/tutorials/crosswords/basics/set-up-skeleton-920": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-crosswords-basics-set-up-skeleton-2-c-7-0c2"
+  },
+  "/tutorials/crosswords/basics/simple-frontend-20a": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-crosswords-basics-simple-frontendcc-5-f2e"
+  },
+  "/tutorials/crosswords/beginner/actions-328": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-crosswords-beginner-actions-88-d-e6b"
+  },
+  "/tutorials/crosswords/beginner/adding-a-puzzle-d14": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-crosswords-beginner-adding-a-puzzlefc-3-6c7"
+  },
+  "/tutorials/crosswords/beginner/collections-d58": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-crosswords-beginner-collections-79-b-4c7"
+  },
+  "/tutorials/crosswords/beginner/logging-in-452": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-crosswords-beginner-logging-ind-6-b-935"
+  },
+  "/tutorials/crosswords/beginner/logging-in-implementation-bb6": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-crosswords-beginner-logging-in-implementationefd-91f"
+  },
+  "/tutorials/crosswords/beginner/overview-03b": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-crosswords-beginner-overviewda-7-a9b"
+  },
+  "/tutorials/crosswords/beginner/structs-enums-07d": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-crosswords-beginner-structs-enums-646-2a5"
+  },
+  "/tutorials/crosswords/intermediate/access-key-solution-765": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-crosswords-intermediate-access-key-solution-68-c-1f1"
+  },
+  "/tutorials/crosswords/intermediate/base64vecu8-f85": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-crosswords-intermediate-base-64-vecu-88-c-1-134"
+  },
+  "/tutorials/crosswords/intermediate/cross-contract-calls-b04": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-crosswords-intermediate-cross-contract-callsf-95-b93"
+  },
+  "/tutorials/crosswords/intermediate/linkdrop-3e2": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-crosswords-intermediate-linkdrop-97-f-6f8"
+  },
+  "/tutorials/crosswords/intermediate/overview-49c": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-crosswords-intermediate-overview-674-b74"
+  },
+  "/tutorials/crosswords/intermediate/use-seed-phrase-e38": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-crosswords-intermediate-use-seed-phrase-340-bdf"
+  },
+  "/tutorials/examples/coin-flip-ba2": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-examples-coin-flipf-08-20a"
+  },
+  "/tutorials/examples/count-near-cd2": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-examples-count-nearab-9-f05"
+  },
+  "/tutorials/examples/donation-9b7": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-examples-donation-471-0c4"
+  },
+  "/tutorials/examples/guest-book-c73": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-examples-guest-bookc-96-b80"
+  },
+  "/tutorials/examples/hello-near-aa9": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-examples-hello-near-381-f8a"
+  },
+  "/tutorials/examples/xcc-a8e": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-examples-xccc-59-836"
+  },
+  "/tutorials/fts/simple-fts-9c9": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-fts-simple-fts-6-f-0-bd0"
+  },
+  "/tutorials/nfts/approvals-0ef": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-approvalsfcf-3bf"
+  },
+  "/tutorials/nfts/core-252": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-cored-73-691"
+  },
+  "/tutorials/nfts/enumeration-c69": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-enumeration-9-de-439"
+  },
+  "/tutorials/nfts/events-e26": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-events-1-dd-40f"
+  },
+  "/tutorials/nfts/introduction-43c": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-introductionaf-4-6a7"
+  },
+  "/tutorials/nfts/js/approvals-3d3": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-js-approvalsf-04-c6e"
+  },
+  "/tutorials/nfts/js/core-037": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-js-core-16-c-06a"
+  },
+  "/tutorials/nfts/js/enumeration-505": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-js-enumeration-1-d-2-11c"
+  },
+  "/tutorials/nfts/js/events-464": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-js-eventsf-55-92a"
+  },
+  "/tutorials/nfts/js/introduction-153": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-js-introduction-711-2cf"
+  },
+  "/tutorials/nfts/js/marketplace-ccd": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-js-marketplace-3-e-7-d87"
+  },
+  "/tutorials/nfts/js/minting-412": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-js-minting-965-106"
+  },
+  "/tutorials/nfts/js/predeployed-contract-25b": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-js-predeployed-contract-408-972"
+  },
+  "/tutorials/nfts/js/royalty-a32": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-js-royalty-05-a-4b7"
+  },
+  "/tutorials/nfts/js/skeleton-8ee": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-js-skeletondaf-c7b"
+  },
+  "/tutorials/nfts/js/upgrade-contract-c80": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-js-upgrade-contract-5-f-9-b62"
+  },
+  "/tutorials/nfts/marketplace-3ea": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-marketplace-0-e-1-29b"
+  },
+  "/tutorials/nfts/minecraft-nfts-d5f": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-minecraft-nfts-86-b-328"
+  },
+  "/tutorials/nfts/minting-26f": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-minting-91-e-65f"
+  },
+  "/tutorials/nfts/minting-nft-frontend-743": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-minting-nft-frontend-85-e-dc6"
+  },
+  "/tutorials/nfts/minting-nfts-266": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-minting-nfts-954-adc"
+  },
+  "/tutorials/nfts/predeployed-contract-247": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-predeployed-contractc-78-831"
+  },
+  "/tutorials/nfts/royalty-080": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-royalty-555-a63"
+  },
+  "/tutorials/nfts/series-35e": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-seriesf-1-e-2b5"
+  },
+  "/tutorials/nfts/skeleton-baa": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-skeletonc-22-bae"
+  },
+  "/tutorials/nfts/upgrade-contract-bff": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-nfts-upgrade-contract-283-525"
+  },
+  "/tutorials/welcome-d84": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---tutorials-welcome-8-cf-62b"
   }
 }

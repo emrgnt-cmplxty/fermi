@@ -17,5 +17,14 @@
   "frontMatter": {
     "id": "count-near",
     "title": "Count on Axion"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Hello Axion",
+    "permalink": "/tutorials/examples/hello-near"
+  },
+  "next": {
+    "title": "Guest Book",
+    "permalink": "/tutorials/examples/guest-book"
   }
 }

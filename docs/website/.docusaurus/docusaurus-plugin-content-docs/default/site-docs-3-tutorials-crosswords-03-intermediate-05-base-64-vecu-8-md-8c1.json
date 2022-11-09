@@ -19,5 +19,10 @@
     "sidebar_position": 6,
     "sidebar_label": "Base64 params, wrap up",
     "title": "Using base64-encoded arguments when we create a new crossword puzzle"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Cross-contract calls, etc.",
+    "permalink": "/tutorials/crosswords/intermediate/cross-contract-calls"
   }
 }

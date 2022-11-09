@@ -17,5 +17,14 @@
   "frontMatter": {
     "id": "integration-test",
     "title": "Integration Test"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "Unit Testing",
+    "permalink": "/develop/testing/unit-test"
+  },
+  "next": {
+    "title": "Local Development",
+    "permalink": "/develop/testing/kurtosis-localnet"
   }
 }

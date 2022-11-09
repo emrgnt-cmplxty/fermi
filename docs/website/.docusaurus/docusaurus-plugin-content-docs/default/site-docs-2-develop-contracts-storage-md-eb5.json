@@ -17,5 +17,14 @@
   "frontMatter": {
     "id": "storage",
     "title": "Storage & Data Structures"
+  },
+  "sidebar": "develop",
+  "previous": {
+    "title": "Environmental Variables",
+    "permalink": "/develop/contracts/environment/"
+  },
+  "next": {
+    "title": "Transfers & Actions",
+    "permalink": "/develop/contracts/actions"
   }
 }

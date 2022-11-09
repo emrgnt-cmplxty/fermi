@@ -17,5 +17,14 @@
   "frontMatter": {
     "id": "basics",
     "title": "Basic Instructions"
+  },
+  "sidebar": "sdk",
+  "previous": {
+    "title": "Deploying Contracts",
+    "permalink": "/sdk/rust/promises/deploy-contract"
+  },
+  "next": {
+    "title": "Rapid Prototyping",
+    "permalink": "/sdk/rust/building/prototyping"
   }
 }

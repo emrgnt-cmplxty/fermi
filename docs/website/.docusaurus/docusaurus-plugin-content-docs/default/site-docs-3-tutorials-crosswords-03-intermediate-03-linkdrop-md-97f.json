@@ -19,5 +19,14 @@
     "sidebar_position": 4,
     "sidebar_label": "Linkdrop contract",
     "title": "Introducing the linkdrop contract we can use"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Seed phrase logic",
+    "permalink": "/tutorials/crosswords/intermediate/use-seed-phrase"
+  },
+  "next": {
+    "title": "Cross-contract calls, etc.",
+    "permalink": "/tutorials/crosswords/intermediate/cross-contract-calls"
   }
 }

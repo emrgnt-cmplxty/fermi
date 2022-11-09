@@ -18,5 +18,14 @@
     "id": "implicit-accounts",
     "title": "Implicit Accounts",
     "sidebar_label": "Implicit Accounts"
+  },
+  "sidebar": "integrate",
+  "previous": {
+    "title": "Fungible Tokens",
+    "permalink": "/integrator/fungible-tokens"
+  },
+  "next": {
+    "title": "Introduction",
+    "permalink": "/integrator/errors/introduction"
   }
 }

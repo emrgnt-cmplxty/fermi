@@ -17,5 +17,14 @@
   "sidebarPosition": 5,
   "frontMatter": {
     "sidebar_position": 5
+  },
+  "sidebar": "sdk",
+  "previous": {
+    "title": "Payable Methods",
+    "permalink": "/sdk/rust/contract-interface/payable-methods"
+  },
+  "next": {
+    "title": "Callbacks",
+    "permalink": "/sdk/rust/cross-contract/callbacks"
   }
 }

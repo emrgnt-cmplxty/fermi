@@ -16,5 +16,14 @@
   "formattedLastUpdatedAt": "Oct 14, 2018",
   "frontMatter": {
     "id": "introduction"
+  },
+  "sidebar": "sdk",
+  "previous": {
+    "title": "Axion SDKs",
+    "permalink": "/sdk/welcome"
+  },
+  "next": {
+    "title": "near_bindgen",
+    "permalink": "/sdk/rust/contract-structure/near-bindgen"
   }
 }

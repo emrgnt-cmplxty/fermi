@@ -17,5 +17,14 @@
   "frontMatter": {
     "id": "xcc",
     "title": "Cross Contract Call"
+  },
+  "sidebar": "tutorials",
+  "previous": {
+    "title": "Donation",
+    "permalink": "/tutorials/examples/donation"
+  },
+  "next": {
+    "title": "Coin Flip",
+    "permalink": "/tutorials/examples/coin-flip"
   }
 }

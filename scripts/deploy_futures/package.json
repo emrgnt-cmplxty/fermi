@@ -10,7 +10,7 @@
   ],
   "dependencies": {
     "tenex-sdk": "file:../../sdk/js/tenex",
-    "axion-sdk": "file:../../sdk/js/axion"
+    "fermi-sdk": "file:../../sdk/js/fermi"
   },
   "scripts": {
     "deploy-futures": "yarn tsc deployFuturesMarket.ts --esModuleInterop --resolveJsonModule && npx ts-node deployFuturesMarket.ts",

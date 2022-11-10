@@ -10,7 +10,7 @@
 
 ### How is the repo organized?
 
-    fermi-rs 
+    fermi-tenex-rs 
     ├── benchmark                  # Tools for running performance benchmarks
     ├── cli                        # Command line interface implementation
     ├── core                       # Core Blockchain logic, like validation

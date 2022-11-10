@@ -1,12 +1,12 @@
 import { Web3Context } from 'hooks/useWeb3Context'
 import { ReactElement, useCallback, useEffect, useState } from 'react'
-import { AxionAccount, AxionUtils, AxionTypes } from 'fermi-js-sdk'
+import { FermiAccount, FermiUtils, FermiTypes } from 'fermi-js-sdk'
 
 
 
 
 export type Web3Data = {
-  connectWallet: (account: AxionAccount | undefined) => Promise<void>
+  connectWallet: (account: FermiAccount | undefined) => Promise<void>
   disconnectWallet: () => void
   loading: boolean
   connected: boolean,
@@ -44,13 +44,13 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({
 
   // connect to the wallet specified by wallet type
   const connectWallet = useCallback(
-    async (account: AxionAccount.AxionAccount | undefined) => {
+    async (account: FermiAccount.FermiAccount | undefined) => {
       setLoading(true)
       try {
         if (account === undefined) {
-          account = await AxionAccount.generateAccount()
-          localStorage.setItem('axionPrivateKeyHex', AxionUtils.bytesToHex(account.privateKey))
-          localStorage.setItem('axionPublicKeyHex', AxionUtils.bytesToHex(account.publicKey))
+          account = await FermiAccount.generateAccount()
+          localStorage.setItem('axionPrivateKeyHex', FermiUtils.bytesToHex(account.privateKey))
+          localStorage.setItem('axionPublicKeyHex', FermiUtils.bytesToHex(account.publicKey))
         }
         setCurrentAccount(account.publicAddress)
         setPublicKey(account.privateKey)
@@ -71,12 +71,15 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({
   useEffect(() => {
     const axionPrivateKeyHex = localStorage.getItem('axionPrivateKeyHex')
     const axionPublicKeyHex = localStorage.getItem('axionPublicKeyHex')
+    console.log("axionPrivateKeyHex=", axionPrivateKeyHex)
+    console.log("axionPublicKeyHex=", axionPublicKeyHex)
+    
     if (axionPrivateKeyHex && axionPublicKeyHex) {
       const account =  {
-        privateKey: AxionUtils.hexToBytes(axionPrivateKeyHex),
-        publicKey: AxionUtils.hexToBytes(axionPublicKeyHex),
+        privateKey: FermiUtils.hexToBytes(axionPrivateKeyHex),
+        publicKey: FermiUtils.hexToBytes(axionPublicKeyHex),
         publicAddress: axionPublicKeyHex
-      } as AxionAccount.AxionAccount
+      } as FermiAccount.FermiAccount
       connectWallet(account).catch((e) => {throw Error(e)})
     }
   }, [])

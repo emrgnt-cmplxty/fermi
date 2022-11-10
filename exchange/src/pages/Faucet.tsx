@@ -3,7 +3,7 @@ import { useTheme } from '@mui/material/styles'
 import { useWeb3Context } from 'hooks/useWeb3Context'
 import config from "../../../configs/protonet.json"
 
-import { AxionClient, AxionTypes, AxionUtils, AxionAccount } from 'fermi-js-sdk'
+import { FermiClient, FermiTypes, FermiUtils, FermiAccount } from 'fermi-js-sdk'
 import { TenexTransaction, TenexUtils } from 'tenex-js-sdk'
 
 // TODO - type Authority if we keep a workflow like this
@@ -15,17 +15,17 @@ function getJsonRpcUrl(authority: any) {
   return url;
 }
 
-async function airdrop(userPublicKey: AxionTypes.PublicKey) {
+async function airdrop(userPublicKey: FermiTypes.PublicKey) {
   const authorities = Object.keys(config["authorities"])
   //@ts-ignore
   const authority = config['authorities'][authorities[0]]
   console.log("authority = ", authority)
   console.log("getJsonRpcUrl(authority) = ", getJsonRpcUrl(authority))
   
-  let client = new AxionClient(getJsonRpcUrl(authority))
+  let client = new FermiClient(getJsonRpcUrl(authority))
 
   let privateKeyHex = authority.private_key
-  let faucetPrivateKey = AxionUtils.hexToBytes(privateKeyHex)
+  let faucetPrivateKey = FermiUtils.hexToBytes(privateKeyHex)
   
   const paymentRequest = TenexTransaction.buildPaymentRequest(userPublicKey, 0, 100)
   const signedTransaction = await TenexUtils.buildSignedTransaction(
@@ -37,7 +37,7 @@ async function airdrop(userPublicKey: AxionTypes.PublicKey) {
   )
 
   console.log("Submitting airdrop now")
-  const result: AxionTypes.QueriedTransaction = await client.sendAndConfirmTransaction(signedTransaction)
+  const result: FermiTypes.QueriedTransaction = await client.sendAndConfirmTransaction(signedTransaction)
   console.log("result=", result)
 
   let status = result.executed_transaction.result;

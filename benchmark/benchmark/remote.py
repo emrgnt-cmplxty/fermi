@@ -166,9 +166,9 @@ class Bench:
             f'(cd {self.settings.repo_name} && git checkout -f {self.settings.branch})',
             f'(cd {self.settings.repo_name} && git pull -f)',
             'source $HOME/.cargo/env',
-            f'(cd {self.settings.repo_name}/fermi-rs && {compile_cmd})',
+            f'(cd {self.settings.repo_name}/fermi-tenex-rs && {compile_cmd})',
             CommandMaker.alias_binaries(
-                f'./{self.settings.repo_name}/fermi-rs/target/release/'
+                f'./{self.settings.repo_name}/fermi-tenex-rs/target/release/'
             )
         ]
         g = Group(*ips, user='ubuntu', connect_kwargs=self.connect, forward_agent=True)
@@ -183,7 +183,7 @@ class Bench:
         # Recompile the latest code.
         cmd = CommandMaker.compile(False, None, False)
         Print.info(f"About to run {cmd}...")
-        subprocess.run(cmd, check=True, cwd='../fermi-rs')
+        subprocess.run(cmd, check=True, cwd='../fermi-tenex-rs')
 
         # Create alias for the client and nodes binary.
         cmd = CommandMaker.alias_binaries(PathMaker.binary_path(True))

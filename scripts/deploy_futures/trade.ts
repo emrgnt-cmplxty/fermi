@@ -9,14 +9,15 @@ import localConfig from "./localConfig.json"
 import { getJsonRpcUrl } from "./utils"
 
 // EXTERNAL
-import { FermiClient, FermiTypes, FermiUtils, FermiAccount, TenexTransaction, TenexUtils } from 'tenex-fermi-sdk'
+import { FermiClient, FermiTypes, FermiUtils, FermiAccount } from 'fermi-sdk'
+import { TenexTransaction, TenexUtils } from 'tenex-sdk'
 
 class TakerBuilder {
     public takerPrivateKey: Uint8Array
     public funderPrivateKey: Uint8Array
-    public client: FermiClient.FermiClient
+    public client: FermiClient
   
-    constructor(takerPrivateKey: Uint8Array, funderPrivateKey: Uint8Array, client: FermiClient.FermiClient) {
+    constructor(takerPrivateKey: Uint8Array, funderPrivateKey: Uint8Array, client: FermiClient) {
         this.takerPrivateKey = takerPrivateKey
         this.funderPrivateKey = funderPrivateKey
         this.client = client

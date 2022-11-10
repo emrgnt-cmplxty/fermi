@@ -20,9 +20,9 @@ class PathMaker:
     @staticmethod
     def binary_path(release=True):
         if release:
-            return join('..', 'fermi-rs', 'target', 'release')
+            return join('..', 'fermi-tenex-rs', 'target', 'release')
         else:
-            return join('..', 'fermi-rs', 'target', 'debug')
+            return join('..', 'fermi-tenex-rs', 'target', 'debug')
 
     @staticmethod
     def narwhal_node_crate_path():
@@ -30,7 +30,7 @@ class PathMaker:
 
     @staticmethod
     def fermi_build_path():
-        return "../fermi-rs/"
+        return "../fermi-tenex-rs/"
 
     @staticmethod
     def examples_crate_path():

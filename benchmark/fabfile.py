@@ -21,7 +21,7 @@ def sandbox(ctx, debug=True):
         'faults': 0,
         'workers': 1,
         'nodes': 4,
-        'rate': 5_000,
+        'rate': 1_000,
         'tx_size': 213,
         'duration': 1_000_000,
         'mem_profiling': False,

@@ -15,6 +15,7 @@
   "scripts": {
     "deploy-futures": "yarn tsc deployFuturesMarket.ts --esModuleInterop --resolveJsonModule && npx ts-node deployFuturesMarket.ts",
     "execute-trade": "yarn tsc trade.ts --esModuleInterop --resolveJsonModule && npx ts-node trade.ts",
+    "fetch-data": "yarn tsc fetchFuturesData.ts --esModuleInterop --resolveJsonModule && npx ts-node fetchFuturesData.ts",
     "test": "jest"
   },
   "devDependencies": {

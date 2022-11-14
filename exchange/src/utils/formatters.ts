@@ -43,7 +43,7 @@ export const roundDown = (num: number, downRound: number) => {
 export const toTitleCase = (str: string) => {
   return str?.replace(/\w\S*/g, function (txt) {
     return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-  })
+  });
 }
 
 // 'KWkhp3cBfZs5f/c/rdExeUNC7j7jnVcVv9V1g/WDrlg=' -> 'KWkh....rlg='
@@ -111,12 +111,11 @@ export const makeCancelable = <T>(promise: Promise<T>) => {
 
 export const optimizedPath = (currentChainId: ChainId) => {
   return (
-    currentChainId === ChainId.arbitrum_one ||
-    currentChainId === ChainId.arbitrum_rinkeby ||
-    currentChainId === ChainId.optimism
     // ||
     // currentChainId === ChainId.optimism_kovan
-  )
+    (currentChainId === ChainId.arbitrum_one ||
+    currentChainId === ChainId.arbitrum_rinkeby || currentChainId === ChainId.optimism)
+  );
 }
 
 export const formatNumber = (arg: number, nDigis = 2): string => {

@@ -1,7 +1,7 @@
 import { getFuturesPairs, getSpotPairs } from 'api'
 import { SettingsContext } from 'providers/SettingsProvider'
 import { useContext } from 'react'
-import { useQuery, UseQueryOptions, UseQueryResult } from 'react-query'
+import { useQuery, UseQueryOptions, UseQueryResult } from '@tanstack/react-query'
 import {
   AggregateMarketData,
   MarketData,

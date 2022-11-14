@@ -2,7 +2,7 @@ import { getUserData } from 'api'
 import { useWeb3Context } from 'hooks/useWeb3Context'
 import { SettingsContext } from 'providers/SettingsProvider'
 import { useContext } from 'react'
-import { useQuery, UseQueryOptions, UseQueryResult } from 'react-query'
+import { useQuery, UseQueryOptions, UseQueryResult } from '@tanstack/react-query'
 import { UserData } from 'utils/globals'
 
 export const useUserData = (options?: UseQueryOptions<UserData, Error>) => {

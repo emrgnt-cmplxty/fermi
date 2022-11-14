@@ -179,7 +179,7 @@ const OrderSizeInput = () => {
   }
 
   return (
-    <Grid container direction="row">
+    (<Grid container direction="row">
       <Grid item xs={6} sx={{}}>
         <TextField
           InputProps={{
@@ -278,8 +278,8 @@ const OrderSizeInput = () => {
           </ButtonGroup>
         </Grid>
       </Grid>
-    </Grid>
-  )
+    </Grid>)
+  );
 }
 
 const OrderStopOut = () => {

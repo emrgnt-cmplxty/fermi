@@ -34,7 +34,8 @@
     "clean": "rm -rf ./src/proto && mkdir -p ./src/proto && rm -f chat-*.txt && rm -f db.json",
     "build": "yarn run tsc",
     "test": "jest",
-    "example-transaction": "tsc examples/submitTransaction.ts --esModuleInterop && npx ts-node examples/submitTransaction.ts"
+    "example-transaction": "tsc examples/submitTransaction.ts --esModuleInterop && npx ts-node examples/submitTransaction.ts",
+    "postinstall": "yarn link"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.19.3",

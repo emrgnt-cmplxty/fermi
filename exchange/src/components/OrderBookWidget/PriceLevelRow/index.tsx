@@ -27,7 +27,7 @@ const PriceLevelRow = ({
   })
 
   return (
-    <Grid container direction="row">
+    (<Grid container direction="row">
       <Grid
         item
         xs={4}
@@ -74,7 +74,7 @@ const PriceLevelRow = ({
           {total}
         </Typography>
       </Grid>
-    </Grid>
-  )
+    </Grid>)
+  );
 }
 export default PriceLevelRow

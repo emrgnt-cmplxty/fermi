@@ -8,15 +8,13 @@
   "files": [
     "dist/"
   ],
-  "dependencies": {
-    "tenex-sdk": "file:../../sdk/js/tenex",
-    "fermi-sdk": "file:../../sdk/js/fermi"
-  },
+  "dependencies": {},
   "scripts": {
-    "deploy-futures": "yarn tsc deployFuturesMarket.ts --esModuleInterop --resolveJsonModule && npx ts-node deployFuturesMarket.ts",
-    "execute-trade": "yarn tsc trade.ts --esModuleInterop --resolveJsonModule && npx ts-node trade.ts",
-    "fetch-data": "yarn tsc fetchFuturesData.ts --esModuleInterop --resolveJsonModule && npx ts-node fetchFuturesData.ts",
-    "test": "jest"
+    "deploy-futures": "npx ts-node deployFuturesMarket.ts",
+    "execute-trade": "npx ts-node trade.ts",
+    "fetch-data": "npx ts-node fetchFuturesData.ts",
+    "test": "jest",
+    "postinstall": "yarn link fermi-js-sdk tenex-js-sdk"
   },
   "devDependencies": {
     "typescript": "^4.8.2"

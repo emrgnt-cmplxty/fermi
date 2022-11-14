@@ -51,7 +51,7 @@ const LatestPriceRow = ({
   })
 
   return (
-    <Grid container direction="row" sx={{ pt: 1, pb: 0.5 }}>
+    (<Grid container direction="row" sx={{ pt: 1, pb: 0.5 }}>
       <Grid item sx={{ pl: 0.25, pr: 0.25 }}>
         <Typography
           variant="h5"
@@ -108,8 +108,8 @@ const LatestPriceRow = ({
           {formatNumber(markPrice, suggestedDecimals)}
         </Typography>
       </Grid>
-    </Grid>
-  )
+    </Grid>)
+  );
 }
 
 export default LatestPriceRow

@@ -12,7 +12,7 @@ import ThemeProvider from 'providers/ThemeProvider'
 import { Web3ContextProvider } from 'providers/Web3Provider'
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import { ReactQueryDevtools } from 'react-query/devtools'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { BrowserRouter } from 'react-router-dom'
 
 import App from './App'

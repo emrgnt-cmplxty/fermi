@@ -34,3 +34,8 @@ metrics/__pycache__/*
 # sdk ignore
 sdk/js/dist/*
 sdk/js/node_modules/*
+
+docs/website/node_modules/**
+docs/website/build/**
+
+docs/website/.docusaurus

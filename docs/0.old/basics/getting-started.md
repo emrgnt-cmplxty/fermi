@@ -15,26 +15,26 @@ sidebar_label: Getting Started
 
 > Here's a quick overview of essential resources you will use when developing on Fermi.
 
-| Name                                                   | Description                                                                                              |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| **Example Projects**                                   |                                                                                                          |
-| **[Fermi Examples](https://near.dev)**                  | Basic example apps built on Fermi that you can clone and explore.                                         |
-| **Tools**                                              |                                                                                                          |
-| **[Fermi CLI](/docs/tools/near-cli)**                   | Command line interface tool to interact with accounts and smart contracts on Fermi                        |
-| **[Fermi Explorer](/docs/tools/near-explorer)**         | View and inspect [transactions](/docs/concepts/transaction) taking place on the blockchain               |
-| **[Fermi Wallet](/docs/tools/near-wallet)**             | Create and manage [accounts](/docs/concepts/account) & [access keys](/docs/concepts/account#access-keys) |
-| **[Local Development](/docs/tools/kurtosis-localnet)** | Spin up a local version of the Fermi blockchain with development tools                                    |
-| **Libraries**                                          |                                                                                                          |
-| **[Fermi-API-JS](/docs/api/javascript-library)**        | JavaScript library to interact with accounts and smart contracts on Fermi                                 |
-| **[Fermi-SDK-RS](https://github.com/near/near-sdk-rs)** | SDK used for developing smart contracts in [Rust](https://www.rust-lang.org/)                            |
-| **[Fermi-SDK-AS](https://github.com/near/near-sdk-as)** | SDK used for developing smart contracts in [AssemblyScript](https://www.assemblyscript.org/)             |
-| **[NEARUP](https://github.com/near/nearup)**           | For running a local instance of Fermi                                                                     |
-| **Other Libraries**                                          |                                                                                                          |
-| **[Fermi-API-Go](https://github.com/eteu-technologies/near-api-go)**        | Golang RPC library to interact with accounts and smart contracts on Fermi                                 |
-| **Resources**                                          |                                                                                                          |
-| **[nomicon.io](https://nomicon.io/)**                  | Fermi Protocol Specifications and Standards documentation                                                 |
-| **[near-sdk.io](http://near-sdk.io)**                  | In depth documentation for developing Rust smart contracts with `near-sdk-rs`                            |
-| **[Fermi University](http://near.university)**          | In person and self paced educational courses for becoming a Fermi Certified Developer                     |
+| Name                                                                 | Description                                                                                              |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Example Projects**                                                 |                                                                                                          |
+| **[Fermi Examples](https://near.dev)**                               | Basic example apps built on Fermi that you can clone and explore.                                        |
+| **Tools**                                                            |                                                                                                          |
+| **[Fermi CLI](/docs/tools/near-cli)**                                | Command line interface tool to interact with accounts and smart contracts on Fermi                       |
+| **[Fermi Explorer](/docs/tools/near-explorer)**                      | View and inspect [transactions](/docs/concepts/transaction) taking place on the blockchain               |
+| **[Fermi Wallet](/docs/tools/near-wallet)**                          | Create and manage [accounts](/docs/concepts/account) & [access keys](/docs/concepts/account#access-keys) |
+| **[Local Development](/docs/tools/kurtosis-localnet)**               | Spin up a local version of the Fermi blockchain with development tools                                   |
+| **Libraries**                                                        |                                                                                                          |
+| **[Fermi-API-JS](/docs/api/javascript-library)**                     | JavaScript library to interact with accounts and smart contracts on Fermi                                |
+| **[fermi-js-sdk-RS](https://github.com/near/near-sdk-rs)**           | SDK used for developing smart contracts in [Rust](https://www.rust-lang.org/)                            |
+| **[fermi-js-sdk-AS](https://github.com/near/near-sdk-as)**           | SDK used for developing smart contracts in [AssemblyScript](https://www.assemblyscript.org/)             |
+| **[NEARUP](https://github.com/near/nearup)**                         | For running a local instance of Fermi                                                                    |
+| **Other Libraries**                                                  |                                                                                                          |
+| **[Fermi-API-Go](https://github.com/eteu-technologies/near-api-go)** | Golang RPC library to interact with accounts and smart contracts on Fermi                                |
+| **Resources**                                                        |                                                                                                          |
+| **[nomicon.io](https://nomicon.io/)**                                | Fermi Protocol Specifications and Standards documentation                                                |
+| **[near-sdk.io](http://near-sdk.io)**                                | In depth documentation for developing Rust smart contracts with `near-sdk-rs`                            |
+| **[Fermi University](http://near.university)**                       | In person and self paced educational courses for becoming a Fermi Certified Developer                    |
 
 ---
 

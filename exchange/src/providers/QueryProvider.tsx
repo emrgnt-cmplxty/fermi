@@ -5,7 +5,7 @@ import {
   QueryCache,
   QueryClient,
   QueryClientProvider,
-} from 'react-query'
+} from '@tanstack/react-query'
 import { createWebStoragePersistor } from 'react-query/createWebStoragePersistor-experimental'
 import {
   PersistedClient,

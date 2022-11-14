@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react-hooks/pure'
 import { useTransactions } from 'hooks/react-query/transaction'
-import { QueryClient, QueryClientProvider } from 'react-query'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 jest.setTimeout(30000)
 jest.mock('utils/env', () => {

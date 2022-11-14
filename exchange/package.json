@@ -25,7 +25,8 @@
     "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write",
     "prepublishOnly": "pinst --disable",
     "postpublish": "pinst --enable",
-    "postinstall": "mkdir public; tar -xzC public -f vendor/charting_library.tgz; tar -xzC public -f vendor/datafeeds.tgz; tar -xzC src/ -f vendor/charting_library.tgz"
+    "postinstall": "mkdir public; tar -xzC public -f vendor/charting_library.tgz; tar -xzC public -f vendor/datafeeds.tgz; tar -xzC src/ -f vendor/charting_library.tgz;",
+    "prepare": "yarn link fermi-js-sdk tenex-js-sdk"
   },
   "dependencies": {
     "@emotion/react": "^11.9.0",
@@ -38,10 +39,9 @@
     "@mui/material": "^5.8.2",
     "@mui/styles": "^5.8.0",
     "@randlabs/myalgo-connect": "^1.1.2",
-    "@reduxjs/toolkit": "^1.8.2",
     "@rollup/plugin-inject": "^4.0.4",
-    "fermi-js-sdk": "file:../sdk/js/fermi",
-    "tenex-js-sdk": "file:../sdk/js/tenex",
+    "@tanstack/react-query": "^4.16.1",
+    "@tanstack/react-query-devtools": "^4.16.1",
     "big.js": "^6.1.1",
     "buffer": "^6.0.3",
     "clsx": "^1.1.1",
@@ -75,9 +75,7 @@
     "react-hook-form": "^7.31.1",
     "react-loader-spinner": "^4.0.0",
     "react-number-format": "^4.9.3",
-    "react-query": "^3.39.0",
     "react-reduce": "^0.2.0",
-    "react-redux": "^8.0.2",
     "react-resize-detector": "^7.1.1",
     "react-router-dom": "^6.3.0",
     "react-sizeme": "^3.0.1",

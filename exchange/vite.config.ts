@@ -16,6 +16,7 @@ export default defineConfig({
       // for algorand sdk
       path: 'path-browserify',
     },
+    preserveSymlinks: true,
   },
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),

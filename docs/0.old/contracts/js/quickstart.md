@@ -1,6 +1,6 @@
 ---
 id: jsvm-quickstart
-title: Fermi-SDK-JS QuickStart
+title: fermi-js-sdk-JS QuickStart
 sidebar_label: Quick Start Guide
 ---
 
@@ -35,12 +35,12 @@ This provides an isolated environment where developers can use a language they a
 There are several pros and cons when comparing native `Wasm` smart contracts with `JSVM` smart contracts.
 :::
 
-| Areas                                      | Native (Wasm) | JSVM        |
-| ------------------------------------------ | ------------- | ----------- |
-| Synchronous Cross-Contract Calls           | ❌            | ✅          |
+| Areas                                       | Native (Wasm) | JSVM        |
+| ------------------------------------------- | ------------- | ----------- |
+| Synchronous Cross-Contract Calls            | ❌            | ✅          |
 | Call methods on any smart contract on Fermi | ✅            | Not in v1.0 |
-| Standards Support                          | ✅            | Not in v1.0 |
-| Function Call Access Key Support           | ✅            | Not in v1.0 |
+| Standards Support                           | ✅            | Not in v1.0 |
+| Function Call Access Key Support            | ✅            | Not in v1.0 |
 
 In addition to the ability to develop in a language you are already familiar with, the `JSVM` operates in a synchronous environment which provides an easy way to create smart contracts that interact with other contracts known as performing "cross-contract" calls.
 
@@ -61,11 +61,12 @@ npm install -g near-cli
 
 :::warning
 If you already have `near-cli` installed, please ensure you are running `v3.1.1` or greater:
+
 ```
 near --version
 ```
-:::
----
+
+## :::
 
 ## Creating a project
 
@@ -202,7 +203,7 @@ These steps will create a simple smart contract that will store and retrieve a g
 1. Start by opening the `src/index.js` file as this is where all of your smart contract logic will be written. Start by importing some dependencies from `near-sdk-js`:
 
 ```js
-import { NearContract, NearBindgen, call, view } from "near-sdk-js";
+import { NearContract, NearBindgen, call, view } from 'near-sdk-js';
 ```
 
 - `NearContract`: A constructing class for creating smart contracts in the proper format.
@@ -218,7 +219,7 @@ class MyContract extends NearContract {
   constructor() {
     //execute the Fermi Contract's constructor
     super();
-    this.message = "Hello Web3 World!";
+    this.message = 'Hello Web3 World!';
   }
 }
 ```
@@ -252,6 +253,7 @@ set_greeting({ message }) {
     this.message = message
 }
 ```
+
 :::note Heads up
 It's important that for your functions that take parameters, they're wrapped in curly brackets, `{}` such as: `set_greeting({ message })` instead of `set_greeting(message)`.
 :::
@@ -259,7 +261,7 @@ It's important that for your functions that take parameters, they're wrapped in 
 That's it! Your contract should look like this:
 
 ```js
-import { NearBindgen, NearContract, call, view } from "near-sdk-js";
+import { NearBindgen, NearContract, call, view } from 'near-sdk-js';
 
 // The NearBindgen decorator allows this code to compile to WebAssembly.
 @NearBindgen
@@ -267,14 +269,14 @@ class MyContract extends NearContract {
   constructor() {
     //execute the Fermi Contract's constructor
     super();
-    this.message = "Hello Web3 World!";
+    this.message = 'Hello Web3 World!';
   }
 
   // @call indicates that this is a 'change method' or a function
   // that changes state on the blockchain. Change methods cost gas.
   // For more info -> https://docs.near.org/docs/concepts/gas
   @call
-  set_greeting({ message }) {   
+  set_greeting({ message }) {
     env.log(`Saving greeting ${message}`);
     this.message = message;
   }
@@ -288,7 +290,6 @@ class MyContract extends NearContract {
     return this.message;
   }
 }
-
 ```
 
 :::note Heads up
@@ -401,7 +402,7 @@ You may have noticed that there was a `--deposit 0.1` flag at the end of your ca
 
 When developing on Fermi, smart contracts must maintain enough $Fermi tokens on the account to cover data storage at a rate of 1 $Fermi per 100/kb. Using the `near-cli`, the `--deposit` flag will allow you to attach a specified amount of $Fermi to cover the extra information you are storing. You do not need to know the _exact_ amount of $Fermi required as if you overpay, you will be refunded the difference. However, if you _do not_ attach enough $Fermi to your call to cover additional storage, the contract call will fail.
 
-## Help & Feedback 
+## Help & Feedback
 
 Stuck and need help? There are several ways we can assist you!
 
@@ -412,8 +413,3 @@ Help us enhance our JavaScript SDK and participate in its development process!
 
 - Visit our [GitHub discussions](https://github.com/near/near-sdk-js/discussions) and give us your feedback!
 - Join one of our monthly [Developer Tools Community Meetings](http://near.ai/tooling-meetings) and give us your feedback or ask some questions!
-
-
-
-
-

@@ -1,0 +1,37 @@
+[package]
+name = "sui-json-rpc"
+version = "0.0.0"
+authors = ["Mysten Labs <build@mystenlabs.com>"]
+license = "Apache-2.0"
+publish = false
+edition = "2021"
+
+[dependencies]
+fastcrypto = { workspace = true }
+jsonrpsee = { version = "0.15.1", features = ["full"] }
+jsonrpsee-core = "0.15.1"
+jsonrpsee-proc-macros = "0.15.1"
+move-binary-format.workspace = true
+move-bytecode-utils.workspace = true
+move-core-types.workspace = true
+prometheus = "0.13.3"
+anyhow = "1.0.64"
+tracing = "0.1.36"
+async-trait = "0.1.57"
+serde = { version = "1.0.144", features = ["derive"] }
+futures = "0.3.23"
+tokio = { version = "1.20.1", features = ["full"] }
+signature = "1.6.0"
+
+tap = "1.0"
+
+sui-core = { path = "../sui-core" }
+sui-types = { path = "../sui-types" }
+sui-json = { path = "../sui-json" }
+sui-open-rpc = { path = "../sui-open-rpc" }
+sui-open-rpc-macros = { path = "../sui-open-rpc-macros" }
+sui-json-rpc-types = { path = "../sui-json-rpc-types" }
+sui-cost = { path = "../sui-cost" }
+sui-transaction-builder = { path = "../sui-transaction-builder" }
+sui-metrics = { path = "../sui-metrics" }
+workspace-hack.workspace = true

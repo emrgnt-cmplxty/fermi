@@ -1,0 +1,567 @@
+---
+AbortLocation:
+  ENUM:
+    0:
+      Module:
+        NEWTYPE:
+          TYPENAME: ModuleId
+    1:
+      Script: UNIT
+AccountAddress:
+  NEWTYPESTRUCT:
+    TUPLEARRAY:
+      CONTENT: U8
+      SIZE: 20
+AuthorityBatch:
+  STRUCT:
+    - next_sequence_number: U64
+    - initial_sequence_number: U64
+    - size: U64
+    - previous_digest:
+        OPTION:
+          TUPLEARRAY:
+            CONTENT: U8
+            SIZE: 32
+    - transactions_digest:
+        TUPLEARRAY:
+          CONTENT: U8
+          SIZE: 32
+AuthorityPublicKeyBytes:
+  NEWTYPESTRUCT: BYTES
+AuthoritySignInfo:
+  STRUCT:
+    - epoch: U64
+    - authority:
+        TYPENAME: AuthorityPublicKeyBytes
+    - signature:
+        TYPENAME: BLS12381Signature
+BLS12381KeyPair:
+  STRUCT:
+    - type: STR
+    - name: STR
+    - secret: STR
+BLS12381Signature:
+  STRUCT:
+    - sig: BYTES
+CallArg:
+  ENUM:
+    0:
+      Pure:
+        NEWTYPE:
+          SEQ: U8
+    1:
+      Object:
+        NEWTYPE:
+          TYPENAME: ObjectArg
+    2:
+      ObjVec:
+        NEWTYPE:
+          SEQ:
+            TYPENAME: ObjectArg
+ChangeEpoch:
+  STRUCT:
+    - epoch: U64
+    - storage_charge: U64
+    - computation_charge: U64
+    - storage_rebate: U64
+CircularObjectOwnership:
+  STRUCT:
+    - object:
+        TYPENAME: ObjectID
+Data:
+  ENUM:
+    0:
+      Move:
+        NEWTYPE:
+          TYPENAME: MoveObject
+    1:
+      Package:
+        NEWTYPE:
+          TYPENAME: MovePackage
+DeleteKind:
+  ENUM:
+    0:
+      Normal: UNIT
+    1:
+      UnwrapThenDelete: UNIT
+    2:
+      Wrap: UNIT
+Ed25519KeyPair:
+  STRUCT:
+    - type: STR
+    - name:
+        TYPENAME: Ed25519PublicKey
+    - secret:
+        TYPENAME: Ed25519PublicKey
+Ed25519PublicKey:
+  NEWTYPESTRUCT: STR
+EntryArgumentError:
+  STRUCT:
+    - argument_idx: U8
+    - kind:
+        TYPENAME: EntryArgumentErrorKind
+EntryArgumentErrorKind:
+  ENUM:
+    0:
+      TypeMismatch: UNIT
+    1:
+      InvalidObjectByValue: UNIT
+    2:
+      InvalidObjectByMuteRef: UNIT
+    3:
+      ObjectKindMismatch: UNIT
+    4:
+      UnsupportedPureArg: UNIT
+    5:
+      ArityMismatch: UNIT
+Envelope:
+  STRUCT:
+    - data:
+        TYPENAME: AuthorityBatch
+    - auth_signature:
+        TYPENAME: AuthoritySignInfo
+ExecutionDigests:
+  STRUCT:
+    - transaction:
+        TYPENAME: TransactionDigest
+    - effects:
+        TYPENAME: TransactionEffectsDigest
+ExecutionFailureStatus:
+  ENUM:
+    0:
+      InsufficientGas: UNIT
+    1:
+      InvalidGasObject: UNIT
+    2:
+      InvalidTransactionUpdate: UNIT
+    3:
+      ModuleNotFound: UNIT
+    4:
+      FunctionNotFound: UNIT
+    5:
+      InvariantViolation: UNIT
+    6:
+      InvalidTransferObject: UNIT
+    7:
+      InvalidTransferSui: UNIT
+    8:
+      InvalidTransferSuiInsufficientBalance: UNIT
+    9:
+      InvalidCoinObject: UNIT
+    10:
+      EmptyInputCoins: UNIT
+    11:
+      EmptyRecipients: UNIT
+    12:
+      RecipientsAmountsArityMismatch: UNIT
+    13:
+      InsufficientBalance: UNIT
+    14:
+      CoinTypeMismatch: UNIT
+    15:
+      NonEntryFunctionInvoked: UNIT
+    16:
+      EntryTypeArityMismatch: UNIT
+    17:
+      EntryArgumentError:
+        NEWTYPE:
+          TYPENAME: EntryArgumentError
+    18:
+      CircularObjectOwnership:
+        NEWTYPE:
+          TYPENAME: CircularObjectOwnership
+    19:
+      InvalidChildObjectArgument:
+        NEWTYPE:
+          TYPENAME: InvalidChildObjectArgument
+    20:
+      InvalidSharedByValue:
+        NEWTYPE:
+          TYPENAME: InvalidSharedByValue
+    21:
+      TooManyChildObjects:
+        STRUCT:
+          - object:
+              TYPENAME: ObjectID
+    22:
+      InvalidParentDeletion:
+        STRUCT:
+          - parent:
+              TYPENAME: ObjectID
+          - kind:
+              OPTION:
+                TYPENAME: DeleteKind
+    23:
+      InvalidParentFreezing:
+        STRUCT:
+          - parent:
+              TYPENAME: ObjectID
+    24:
+      PublishErrorEmptyPackage: UNIT
+    25:
+      PublishErrorNonZeroAddress: UNIT
+    26:
+      PublishErrorDuplicateModule: UNIT
+    27:
+      SuiMoveVerificationError: UNIT
+    28:
+      MovePrimitiveRuntimeError: UNIT
+    29:
+      MoveAbort:
+        TUPLE:
+          - TYPENAME: ModuleId
+          - U64
+    30:
+      VMVerificationOrDeserializationError: UNIT
+    31:
+      VMInvariantViolation: UNIT
+ExecutionStatus:
+  ENUM:
+    0:
+      Success: UNIT
+    1:
+      Failure:
+        STRUCT:
+          - error:
+              TYPENAME: ExecutionFailureStatus
+Identifier:
+  NEWTYPESTRUCT: STR
+InvalidChildObjectArgument:
+  STRUCT:
+    - child:
+        TYPENAME: ObjectID
+    - parent:
+        TYPENAME: SuiAddress
+InvalidSharedByValue:
+  STRUCT:
+    - object:
+        TYPENAME: ObjectID
+ModuleId:
+  STRUCT:
+    - address:
+        TYPENAME: AccountAddress
+    - name:
+        TYPENAME: Identifier
+MoveCall:
+  STRUCT:
+    - package:
+        TUPLE:
+          - TYPENAME: ObjectID
+          - TYPENAME: SequenceNumber
+          - TYPENAME: ObjectDigest
+    - module:
+        TYPENAME: Identifier
+    - function:
+        TYPENAME: Identifier
+    - type_arguments:
+        SEQ:
+          TYPENAME: TypeTag
+    - arguments:
+        SEQ:
+          TYPENAME: CallArg
+MoveFieldLayout:
+  STRUCT:
+    - name:
+        TYPENAME: Identifier
+    - layout:
+        TYPENAME: MoveTypeLayout
+MoveModulePublish:
+  STRUCT:
+    - modules:
+        SEQ: BYTES
+MoveObject:
+  STRUCT:
+    - type_:
+        TYPENAME: StructTag
+    - has_public_transfer: BOOL
+    - version:
+        TYPENAME: SequenceNumber
+    - contents: BYTES
+MovePackage:
+  STRUCT:
+    - id:
+        TYPENAME: ObjectID
+    - module_map:
+        MAP:
+          KEY: STR
+          VALUE: BYTES
+MoveStructLayout:
+  ENUM:
+    0:
+      Runtime:
+        NEWTYPE:
+          SEQ:
+            TYPENAME: MoveTypeLayout
+    1:
+      WithFields:
+        NEWTYPE:
+          SEQ:
+            TYPENAME: MoveFieldLayout
+    2:
+      WithTypes:
+        STRUCT:
+          - type_:
+              TYPENAME: StructTag
+          - fields:
+              SEQ:
+                TYPENAME: MoveFieldLayout
+MoveTypeLayout:
+  ENUM:
+    0:
+      bool: UNIT
+    1:
+      u8: UNIT
+    2:
+      u64: UNIT
+    3:
+      u128: UNIT
+    4:
+      address: UNIT
+    5:
+      vector:
+        NEWTYPE:
+          TYPENAME: MoveTypeLayout
+    6:
+      struct:
+        NEWTYPE:
+          TYPENAME: MoveStructLayout
+    7:
+      signer: UNIT
+    8:
+      u16: UNIT
+    9:
+      u32: UNIT
+    10:
+      u256: UNIT
+ObjectArg:
+  ENUM:
+    0:
+      ImmOrOwnedObject:
+        NEWTYPE:
+          TUPLE:
+            - TYPENAME: ObjectID
+            - TYPENAME: SequenceNumber
+            - TYPENAME: ObjectDigest
+    1:
+      SharedObject:
+        STRUCT:
+          - id:
+              TYPENAME: ObjectID
+          - initial_shared_version:
+              TYPENAME: SequenceNumber
+ObjectDigest:
+  NEWTYPESTRUCT: BYTES
+ObjectFormatOptions:
+  STRUCT:
+    - include_types: BOOL
+ObjectID:
+  NEWTYPESTRUCT:
+    TYPENAME: AccountAddress
+ObjectInfoRequestKind:
+  ENUM:
+    0:
+      LatestObjectInfo:
+        NEWTYPE:
+          OPTION:
+            TYPENAME: ObjectFormatOptions
+    1:
+      PastObjectInfo:
+        NEWTYPE:
+          TYPENAME: SequenceNumber
+    2:
+      PastObjectInfoDebug:
+        TUPLE:
+          - TYPENAME: SequenceNumber
+          - OPTION:
+              TYPENAME: ObjectFormatOptions
+Owner:
+  ENUM:
+    0:
+      AddressOwner:
+        NEWTYPE:
+          TYPENAME: SuiAddress
+    1:
+      ObjectOwner:
+        NEWTYPE:
+          TYPENAME: SuiAddress
+    2:
+      Shared:
+        STRUCT:
+          - initial_shared_version:
+              TYPENAME: SequenceNumber
+    3:
+      Immutable: UNIT
+Pay:
+  STRUCT:
+    - coins:
+        SEQ:
+          TUPLE:
+            - TYPENAME: ObjectID
+            - TYPENAME: SequenceNumber
+            - TYPENAME: ObjectDigest
+    - recipients:
+        SEQ:
+          TYPENAME: SuiAddress
+    - amounts:
+        SEQ: U64
+PayAllSui:
+  STRUCT:
+    - coins:
+        SEQ:
+          TUPLE:
+            - TYPENAME: ObjectID
+            - TYPENAME: SequenceNumber
+            - TYPENAME: ObjectDigest
+    - recipient:
+        TYPENAME: SuiAddress
+PaySui:
+  STRUCT:
+    - coins:
+        SEQ:
+          TUPLE:
+            - TYPENAME: ObjectID
+            - TYPENAME: SequenceNumber
+            - TYPENAME: ObjectDigest
+    - recipients:
+        SEQ:
+          TYPENAME: SuiAddress
+    - amounts:
+        SEQ: U64
+SequenceNumber:
+  NEWTYPESTRUCT: U64
+SingleTransactionKind:
+  ENUM:
+    0:
+      TransferObject:
+        NEWTYPE:
+          TYPENAME: TransferObject
+    1:
+      Publish:
+        NEWTYPE:
+          TYPENAME: MoveModulePublish
+    2:
+      Call:
+        NEWTYPE:
+          TYPENAME: MoveCall
+    3:
+      TransferSui:
+        NEWTYPE:
+          TYPENAME: TransferSui
+    4:
+      Pay:
+        NEWTYPE:
+          TYPENAME: Pay
+    5:
+      PaySui:
+        NEWTYPE:
+          TYPENAME: PaySui
+    6:
+      PayAllSui:
+        NEWTYPE:
+          TYPENAME: PayAllSui
+    7:
+      ChangeEpoch:
+        NEWTYPE:
+          TYPENAME: ChangeEpoch
+StructTag:
+  STRUCT:
+    - address:
+        TYPENAME: AccountAddress
+    - module:
+        TYPENAME: Identifier
+    - name:
+        TYPENAME: Identifier
+    - type_args:
+        SEQ:
+          TYPENAME: TypeTag
+SuiAddress:
+  NEWTYPESTRUCT:
+    TUPLEARRAY:
+      CONTENT: U8
+      SIZE: 20
+TransactionDigest:
+  NEWTYPESTRUCT: BYTES
+TransactionEffectsDigest:
+  NEWTYPESTRUCT: BYTES
+TransactionKind:
+  ENUM:
+    0:
+      Single:
+        NEWTYPE:
+          TYPENAME: SingleTransactionKind
+    1:
+      Batch:
+        NEWTYPE:
+          SEQ:
+            TYPENAME: SingleTransactionKind
+TransferObject:
+  STRUCT:
+    - recipient:
+        TYPENAME: SuiAddress
+    - object_ref:
+        TUPLE:
+          - TYPENAME: ObjectID
+          - TYPENAME: SequenceNumber
+          - TYPENAME: ObjectDigest
+TransferSui:
+  STRUCT:
+    - recipient:
+        TYPENAME: SuiAddress
+    - amount:
+        OPTION: U64
+TypeTag:
+  ENUM:
+    0:
+      bool: UNIT
+    1:
+      u8: UNIT
+    2:
+      u64: UNIT
+    3:
+      u128: UNIT
+    4:
+      address: UNIT
+    5:
+      signer: UNIT
+    6:
+      vector:
+        NEWTYPE:
+          TYPENAME: TypeTag
+    7:
+      struct:
+        NEWTYPE:
+          TYPENAME: StructTag
+    8:
+      u16: UNIT
+    9:
+      u32: UNIT
+    10:
+      u256: UNIT
+TypedStoreError:
+  ENUM:
+    0:
+      RocksDBError:
+        NEWTYPE: STR
+    1:
+      SerializationError:
+        NEWTYPE: STR
+    2:
+      UnregisteredColumn:
+        NEWTYPE: STR
+    3:
+      CrossDBBatch: UNIT
+    4:
+      MetricsReporting: UNIT
+UpdateItem:
+  ENUM:
+    0:
+      Transaction:
+        NEWTYPE:
+          TUPLE:
+            - U64
+            - TYPENAME: ExecutionDigests
+    1:
+      Batch:
+        NEWTYPE:
+          TYPENAME: Envelope
+

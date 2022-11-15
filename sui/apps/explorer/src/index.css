@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+    font-family: Inter;
+    src: url('./assets/Fonts/Inter-VariableFont_slnt,wght.ttf')
+        format('truetype-variations');
+    font-weight: 1 999;
+}
+
+@font-face {
+    font-family: 'Space Mono';
+    src: url('./assets/Fonts/SpaceMono-Regular.ttf') format('truetype');
+}
+
+/* Define some colors as CSS variables for use outside of the Tailwind class context: */
+:root {
+    --success-light: theme('colors.success.light');
+    --success-dark: theme('colors.success.dark');
+    --warning-light: theme('colors.warning.light');
+    --warning-dark: theme('colors.warning.dark');
+    --issue-light: theme('colors.issue.light');
+    --issue-dark: theme('colors.issue.dark');
+    --sui-steel: theme('colors.sui.steel.DEFAULT');
+}
+
+body {
+    @apply m-0 text-offblack font-sans;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+}
+
+/* Fix inconsistent font size rendering on iphone */
+@media screen and (max-device-width: 480px) {
+    body {
+        text-size-adjust: none;
+    }
+}

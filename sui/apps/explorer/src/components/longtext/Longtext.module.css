@@ -1,0 +1,26 @@
+.extra,
+.copy16,
+.copy24 {
+    @apply cursor-pointer stroke-sui-grey-60 self-start sm:self-end leading-[100%] hover:stroke-sui-steel text-sui-grey-60 hover:text-sui-steel;
+}
+
+.copy16 {
+    @apply hidden sm:block;
+}
+
+.copied {
+    @apply text-green-600 text-sm self-start sm:self-center;
+}
+
+.copied span {
+    @apply block sm:inline w-[20vw] text-center;
+}
+
+.longtext,
+.longtext > a {
+    @apply no-underline text-sui-dark hover:text-[#1F6493] cursor-pointer break-all inline;
+}
+
+.longtextwrapper {
+    @apply flex items-center gap-[6px] min-w-fit;
+}

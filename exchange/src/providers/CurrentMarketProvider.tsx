@@ -3,7 +3,7 @@ import {
   BaseSymbol,
   MarketSymbol,
   MarketType,
-  OrderRungs,
+  OrderRung,
   Trade,
 } from 'utils/globals'
 
@@ -14,9 +14,9 @@ export type CurrentMarket = {
   baseSymbol: BaseSymbol
   quoteSymbol: BaseSymbol
   recentTrades: Trade[]
-  asks: OrderRungs[]
+  asks: OrderRung[]
   rawAsks: any[]
-  bids: OrderRungs[]
+  bids: OrderRung[]
   rawBids: any[]
 }
 
@@ -53,11 +53,10 @@ export const CurrentMarketContext =
   })
 
 interface CurrentMarketProviderProps {
-  id: string
   children: ReactNode
 }
 
-function CurrentMarketProvider({ children, id }: CurrentMarketProviderProps) {
+function CurrentMarketProvider({ children }: CurrentMarketProviderProps) {
   const currentMarketReducer = (
     state: CurrentMarket,
     action: CurrentMarketAction,

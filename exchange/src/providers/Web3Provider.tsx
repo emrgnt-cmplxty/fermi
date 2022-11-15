@@ -1,29 +1,25 @@
 import { Web3Context } from 'hooks/useWeb3Context'
-import { ReactElement, useCallback, useEffect, useState } from 'react'
+import React, { ReactElement, useCallback, useEffect, useState } from 'react'
 import { FermiAccount, FermiUtils, FermiTypes } from 'fermi-js-sdk'
-
-
-
 
 export type Web3Data = {
   connectWallet: (account: FermiAccount | undefined) => Promise<void>
   disconnectWallet: () => void
   loading: boolean
-  connected: boolean,
+  connected: boolean
   publicAddress: string
-  privateKey: Uint8Array,
-  publicKey: Uint8Array,
+  privateKey: Uint8Array
+  publicKey: Uint8Array
   getTxError: (txHash: string) => Promise<string>
   sendTx: (txData: any) => Promise<any>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   signTxData: (unsignedData: string) => Promise<any>
 }
 
-export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({
+export const Web3ContextProvider: React.FC<{ children?: React.ReactNode }> = ({
   // eslint-disable-next-line react/prop-types
   children,
 }) => {
-
   // const [provider, setProvider] = useState<JsonRpcProvider>();
   const [loading, setLoading] = useState(false)
   const [publicAddress, setCurrentAccount] = useState('')
@@ -34,13 +30,12 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({
   const disconnectWallet = useCallback(async () => {
     localStorage.removeItem('axionPrivateKeyHex')
     localStorage.removeItem('axionPublicKeyHex')
-    setCurrentAccount("")
+    setCurrentAccount('')
     setPublicKey(Uint8Array.from([]))
     setPrivateKey(Uint8Array.from([]))
     setConnected(false)
     setLoading(false)
-}, [])
-
+  }, [])
 
   // connect to the wallet specified by wallet type
   const connectWallet = useCallback(
@@ -49,8 +44,14 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({
       try {
         if (account === undefined) {
           account = await FermiAccount.generateAccount()
-          localStorage.setItem('axionPrivateKeyHex', FermiUtils.bytesToHex(account.privateKey))
-          localStorage.setItem('axionPublicKeyHex', FermiUtils.bytesToHex(account.publicKey))
+          localStorage.setItem(
+            'axionPrivateKeyHex',
+            FermiUtils.bytesToHex(account.privateKey),
+          )
+          localStorage.setItem(
+            'axionPublicKeyHex',
+            FermiUtils.bytesToHex(account.publicKey),
+          )
         }
         setCurrentAccount(account.publicAddress)
         setPublicKey(account.privateKey)
@@ -59,28 +60,30 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({
         setLoading(false)
       } catch (e) {
         setError(e)
-        disconnectWallet();
+        disconnectWallet()
         setLoading(false)
       }
     },
     [],
   )
 
-    // handle logic to eagerly connect to the injected ethereum provider,
+  // handle logic to eagerly connect to the injected ethereum provider,
   // if it exists and has granted access already
   useEffect(() => {
     const axionPrivateKeyHex = localStorage.getItem('axionPrivateKeyHex')
     const axionPublicKeyHex = localStorage.getItem('axionPublicKeyHex')
-    console.log("axionPrivateKeyHex=", axionPrivateKeyHex)
-    console.log("axionPublicKeyHex=", axionPublicKeyHex)
-    
+    console.log('axionPrivateKeyHex=', axionPrivateKeyHex)
+    console.log('axionPublicKeyHex=', axionPublicKeyHex)
+
     if (axionPrivateKeyHex && axionPublicKeyHex) {
-      const account =  {
+      const account = {
         privateKey: FermiUtils.hexToBytes(axionPrivateKeyHex),
         publicKey: FermiUtils.hexToBytes(axionPublicKeyHex),
-        publicAddress: axionPublicKeyHex
+        publicAddress: axionPublicKeyHex,
       } as FermiAccount.FermiAccount
-      connectWallet(account).catch((e) => {throw Error(e)})
+      connectWallet(account).catch((e) => {
+        throw Error(e)
+      })
     }
   }, [])
 
@@ -88,9 +91,7 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({
 
   // TODO: we use from instead of publicAddress because of the mock wallet.
   // If we used current account then the tx could get executed
-  const sendTx = async (
-    txData: any,
-  ): Promise<any> => {
+  const sendTx = async (txData: any): Promise<any> => {
     throw new Error('Not yet implemented')
   }
 
@@ -98,7 +99,6 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({
   const signTxData = async (unsignedData: string): Promise<any> => {
     throw new Error('Not yet implemented')
   }
-
 
   const getTxError = async (txHash: string): Promise<string> => {
     throw new Error('Not yet implemented')

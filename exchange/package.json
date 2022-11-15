@@ -16,7 +16,7 @@
     ]
   },
   "scripts": {
-    "dev": "vite --port 3001",
+    "dev": "NODE_ENV=development vite --port 3001",
     "build": "npx vite build",
     "preview": "vite preview",
     "storybook": "start-storybook -p 6006",
@@ -40,8 +40,10 @@
     "@mui/styles": "^5.8.0",
     "@randlabs/myalgo-connect": "^1.1.2",
     "@rollup/plugin-inject": "^4.0.4",
+    "@tanstack/query-sync-storage-persister": "^4.15.1",
     "@tanstack/react-query": "^4.16.1",
     "@tanstack/react-query-devtools": "^4.16.1",
+    "@tanstack/react-query-persist-client": "^4.16.1",
     "big.js": "^6.1.1",
     "buffer": "^6.0.3",
     "clsx": "^1.1.1",

@@ -1,0 +1,19 @@
+[package]
+name = "sui-simulator"
+version = "0.7.0"
+authors = ["Mysten Labs <build@mystenlabs.com>"]
+license = "Apache-2.0"
+publish = false
+edition = "2021"
+
+[dependencies]
+workspace-hack.workspace = true
+sui-framework = { path = "../sui-framework" }
+sui-types = { path = "../sui-types" }
+tracing = "0.1"
+anemo.workspace = true
+fastcrypto = { workspace = true, features = ["copy_key"] }
+telemetry-subscribers.workspace = true
+
+[target.'cfg(msim)'.dependencies]
+msim = { git = "https://github.com/MystenLabs/mysten-sim.git", rev = "89fb343539fd4f160eaa535560b295cec2c41a1a", package = "msim" }

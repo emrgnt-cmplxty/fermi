@@ -1,0 +1,20 @@
+.app {
+    @apply w-full;
+
+    background: linear-gradient(
+        to bottom,
+        #2a4362 50%,
+        #2a4362 0%,
+        #767a81 0%,
+        #767a81 50%
+    );
+}
+
+main {
+    @apply relative z-10 py-2 min-h-[77vh]
+    bg-offwhite rounded-[20px] shadow-2xl;
+}
+
+.suicontainer {
+    @apply max-w-[1440px] mx-auto p-5;
+}

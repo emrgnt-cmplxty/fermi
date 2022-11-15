@@ -38,7 +38,7 @@ const initialState: CurrentOrder = {
   baseSymbol: undefined,
   quoteSymbol: undefined,
   estimatedPrice: 0,
-  orderType: orderTypeMarket as keyof typeof OrderTypeMap,
+  orderType: orderTypeMarket,
   orderPrice: 'MARKET',
   orderSizeBase: 0,
   orderSizeBaseFormatted: '',
@@ -71,10 +71,11 @@ export const CurrentOrderContext = createContext<CurrentOrderContextInterface>({
 })
 
 interface CurrentOrderProviderProps {
+  id: string
   children: ReactNode
 }
 
-function CurrentOrderProvider({ children }: CurrentOrderProviderProps) {
+function CurrentOrderProvider({ children, id }: CurrentOrderProviderProps) {
   const currentOrderReducer = (
     state: CurrentOrder,
     action: CurrentOrderAction,

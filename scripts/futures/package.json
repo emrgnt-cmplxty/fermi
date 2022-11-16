@@ -1,18 +1,21 @@
 {
-  "name": "protonet-standup",
+  "name": "futures-scripts",
   "version": "1.0.0",
-  "author": "Axion Foundation",
+  "author": "Fermi Foundation",
   "license": "MIT",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "files": [
     "dist/"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "node-fetch": "^2.0.0"
+  },
   "scripts": {
     "deploy-futures": "npx ts-node deployFuturesMarket.ts",
     "execute-trade": "npx ts-node trade.ts",
     "fetch-data": "npx ts-node fetchFuturesData.ts",
+    "push-prices": "npx ts-node pushPrices.ts",
     "test": "jest",
     "postinstall": "yarn link fermi-js-sdk tenex-js-sdk"
   },

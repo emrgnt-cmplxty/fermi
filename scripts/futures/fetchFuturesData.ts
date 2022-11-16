@@ -9,7 +9,6 @@ import localConfig from './localConfig.json';
 import { getJsonRpcUrl } from './utils';
 
 // EXTERNAL
-import assert from 'assert';
 import {
   FermiClient,
   FermiTypes,
@@ -55,6 +54,6 @@ async function main() {
   );
   console.log('Market Taker Data: ', marketTakerData);
 
-  console.log('Successfully Traded!');
+  console.log('Successfully Fetched!');
 }
 main();

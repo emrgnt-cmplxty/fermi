@@ -1,0 +1,10 @@
+{
+    "symbolToAssetId" : {
+        "FRMI": 0,
+        "USDC": 1,
+        "BTC": 2,
+        "ETH": 3
+    },
+    "deploymentAuthority": 0,
+    "takerAuthority": 1
+}

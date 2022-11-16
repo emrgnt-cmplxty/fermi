@@ -7,7 +7,7 @@ yarn build
 
 cd ../../../
 
-cd scripts/deploy_futures
+cd scripts/futures
 yarn install
 
 # deploy markets and execute a trade

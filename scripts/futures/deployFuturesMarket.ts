@@ -115,6 +115,7 @@ export class DeploymentBuilder {
 
 async function main() {
   console.log('config=', config);
+  const symbolToAssetId = localConfig['symbolToAssetId'];
   const authorities = Object.keys(config['authorities']);
   const deploymentAuthority =
     config['authorities'][authorities[localConfig.deploymentAuthority]];
@@ -130,14 +131,27 @@ async function main() {
   const deployer = new DeploymentBuilder(deployerPrivateKey, client);
   console.log('Starting Deployment Now...');
 
-  await deployer.sendCreateAsset(/* dummy */ 0);
-  await deployer.sendCreateAsset(/* dummy */ 1);
+  await deployer.sendCreateAsset(/* dummy */ 0); // primary asset
+  const usdcAssetId =  Number(symbolToAssetId["USDC"]);
+  console.log("usdcAssetId=")
+  await deployer.sendCreateAsset(/* dummy */ usdcAssetId); // usdc asset
 
-  await deployer.sendCreateMarketplaceRequest(/* quoteAssetId */ 1);
+  await deployer.sendCreateMarketplaceRequest(/* quoteAssetId */ usdcAssetId);
 
-  await deployer.sendCreateMarketRequest(/* baseAssetId */ 0);
+  let prices: number[] = [];
+  for (var symbol of Object.keys(symbolToAssetId)) {
+    if (symbol == "USDC") {
+      continue
+    }
+    const assetId = Number(symbolToAssetId[symbol])
+    await deployer.sendCreateAsset(/* dummy */ assetId);
+    await deployer.sendCreateMarketRequest(/* baseAssetId */ assetId);
+    prices.push(1_000_000);
+  };
 
-  await deployer.sendUpdatePricesRequest(/* latestPrices */ [1_000_000]);
+  console.log('prices=', prices);
+  // // additional assets
+  await deployer.sendUpdatePricesRequest(/* latestPrices */ prices);
 
   await deployer.sendAccountDepositRequest(
     /* quantity */ 1_000_000,

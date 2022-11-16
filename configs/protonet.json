@@ -1,42 +1,6 @@
 {
     "authorities": {
-        "0hgaqcjn8auZRiV8OcCQq7GbDs6Sy49zuQGCs+3X2p0=": {
-            "grpc_address": "/ip4/127.0.0.1/tcp/3005/http",
-            "jsonrpc_address": "/ip4/127.0.0.1/tcp/3006/http",
-            "metrics_address": "/ip4/127.0.0.1/tcp/3007/http",
-            "primary": {
-                "primary_to_primary": "/ip4/127.0.0.1/tcp/3000/http",
-                "worker_to_primary": "/ip4/127.0.0.1/tcp/3001/http"
-            },
-            "private_key": "0xce97cadcd3b1e9debde9cc295a17ca343d134f517f98cd2135797249989ae11c",
-            "stake": 1,
-            "workers": {
-                "0": {
-                    "primary_to_worker": "/ip4/127.0.0.1/tcp/3002/http",
-                    "transactions": "/ip4/127.0.0.1/tcp/3003/http",
-                    "worker_to_worker": "/ip4/127.0.0.1/tcp/3004/http"
-                }
-            }
-        },
-        "B4oUEueUUI8emxiHHSP7+g/mWUOec93nxPN1A0k4wQU=": {
-            "grpc_address": "/ip4/127.0.0.1/tcp/3029/http",
-            "jsonrpc_address": "/ip4/127.0.0.1/tcp/3030/http",
-            "metrics_address": "/ip4/127.0.0.1/tcp/3031/http",
-            "primary": {
-                "primary_to_primary": "/ip4/127.0.0.1/tcp/3024/http",
-                "worker_to_primary": "/ip4/127.0.0.1/tcp/3025/http"
-            },
-            "private_key": "0x6792c9b8350932a4d76c2a403e191284760e76ac2729f67297ca7fd532f67f19",
-            "stake": 1,
-            "workers": {
-                "0": {
-                    "primary_to_worker": "/ip4/127.0.0.1/tcp/3026/http",
-                    "transactions": "/ip4/127.0.0.1/tcp/3027/http",
-                    "worker_to_worker": "/ip4/127.0.0.1/tcp/3028/http"
-                }
-            }
-        },
-        "HketCU7AOTA309RWe16kfCBSmMAAUFBq+/oRuiUGkyk=": {
+        "Gr3fgGLlB9BaG9wJ3Bavp+XsylN31y9yGhRsLZ3mwgg=": {
             "grpc_address": "/ip4/127.0.0.1/tcp/3013/http",
             "jsonrpc_address": "/ip4/127.0.0.1/tcp/3014/http",
             "metrics_address": "/ip4/127.0.0.1/tcp/3015/http",
@@ -44,7 +8,7 @@
                 "primary_to_primary": "/ip4/127.0.0.1/tcp/3008/http",
                 "worker_to_primary": "/ip4/127.0.0.1/tcp/3009/http"
             },
-            "private_key": "0xf6dd465a9b0225a2e90674ad8da2c01f8d9bafb839d68d47dbbe96b889f092ce",
+            "private_key": "0x7f68678c8073d7781dcfc1248aadff46151fdd8715d72125f95ca2143253aa0d",
             "stake": 1,
             "workers": {
                 "0": {
@@ -54,21 +18,21 @@
                 }
             }
         },
-        "qVA+G1ltf7Eh3I96wTh6XO0BV1WnMhMciFnhy9JVkKA=": {
-            "grpc_address": "/ip4/127.0.0.1/tcp/3021/http",
-            "jsonrpc_address": "/ip4/127.0.0.1/tcp/3022/http",
-            "metrics_address": "/ip4/127.0.0.1/tcp/3023/http",
+        "l5GmI1nbIay1uEYpVSHolgHTsNOBaJExVgKmCZL8S+Q=": {
+            "grpc_address": "/ip4/127.0.0.1/tcp/3005/http",
+            "jsonrpc_address": "/ip4/127.0.0.1/tcp/3006/http",
+            "metrics_address": "/ip4/127.0.0.1/tcp/3007/http",
             "primary": {
-                "primary_to_primary": "/ip4/127.0.0.1/tcp/3016/http",
-                "worker_to_primary": "/ip4/127.0.0.1/tcp/3017/http"
+                "primary_to_primary": "/ip4/127.0.0.1/tcp/3000/http",
+                "worker_to_primary": "/ip4/127.0.0.1/tcp/3001/http"
             },
-            "private_key": "0x06a073f27d148a8b779cdcbbd2d1a13008aa7e3d6e0d3ba6c7520424723cc337",
+            "private_key": "0xab1c22ecea324536a144430fbea11a4b9ecc00ed665cc01dfed05653f610978d",
             "stake": 1,
             "workers": {
                 "0": {
-                    "primary_to_worker": "/ip4/127.0.0.1/tcp/3018/http",
-                    "transactions": "/ip4/127.0.0.1/tcp/3019/http",
-                    "worker_to_worker": "/ip4/127.0.0.1/tcp/3020/http"
+                    "primary_to_worker": "/ip4/127.0.0.1/tcp/3002/http",
+                    "transactions": "/ip4/127.0.0.1/tcp/3003/http",
+                    "worker_to_worker": "/ip4/127.0.0.1/tcp/3004/http"
                 }
             }
         }

@@ -1,0 +1,6 @@
+{
+    "binance": "https://api.binance.com/api/v3/ticker/price?symbol=[SYMBOL]USDT",
+    "kucoin": "https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=[SYMBOL]-USDT",
+    "kraken": "https://api.kraken.com/0/public/Ticker?pair=[SYMBOL]USD",
+    "coinbase": "https://api.coinbase.com/v2/exchange-rates?currency=USD"
+}

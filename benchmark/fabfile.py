@@ -20,7 +20,7 @@ def sandbox(ctx, debug=True):
     bench_params = {
         'faults': 0,
         'workers': 1,
-        'nodes': 4,
+        'nodes': 2,
         'rate': 5_000,
         'tx_size': 213,
         'duration': 1_000_000,

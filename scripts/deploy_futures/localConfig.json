@@ -1,4 +1,4 @@
 {
-    "deploymentAuthority": 1,
-    "takerAuthority": 2
+    "deploymentAuthority": 0,
+    "takerAuthority": 1
 }

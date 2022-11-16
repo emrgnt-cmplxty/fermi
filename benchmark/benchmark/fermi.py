@@ -184,6 +184,11 @@ class GDEXBench:
                 print(cmd, ">>", log_file)
                 self._background_run(cmd, log_file)
 
+            path_bmk  = os.path.abspath(bench_parameters.db_dir) + "/../.."
+            cmd = "cp %s/.committee.json %s/../configs/protonet.json" % (path_bmk, path_bmk)
+            print("Copying committee to protonet.json")
+            subprocess.run(cmd, shell=True)
+
             # Wait for all transactions to be processed.
             Print.info(f'Running benchmark ({bench_parameters.duration} sec)...')
             sleep(bench_parameters.duration)

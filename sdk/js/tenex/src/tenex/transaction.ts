@@ -85,10 +85,10 @@ export function buildUpdateTimeRequest(latest_time: number): UpdateTimeRequest {
   return updateTimeRequest
 }
 
-export function buildUpdatePricesRequest(asset_ids_prices: number[][]): UpdatePricesRequest {
+export function buildUpdatePricesRequest(assetIdsPrices: number[][]): UpdatePricesRequest {
   const updatePricesRequest = new UpdatePricesRequest()
   const priceEntries = []
-  for (const asset_id_price of asset_ids_prices) {
+  for (const asset_id_price of assetIdsPrices) {
     const priceEntry = new PriceEntry()
     priceEntry.setAssetId(asset_id_price[0])
     priceEntry.setPrice(asset_id_price[1])

@@ -8,7 +8,7 @@
 // LOCAL
 import config from '../../configs/protonet.json';
 import localConfig from './localConfig.json';
-import { getJsonRpcUrl } from './utils';
+import { getJsonRpcUrl, SDKAdapter } from './utils';
 
 // EXTERNAL
 import {
@@ -18,100 +18,6 @@ import {
   FermiAccount,
 } from 'fermi-js-sdk';
 import { TenexTransaction, TenexUtils } from 'tenex-js-sdk';
-
-export class DeploymentBuilder {
-    public privateKey: Uint8Array
-    public client: FermiClient
-  
-    constructor(privateKey: Uint8Array, client: FermiClient) {
-      this.privateKey = privateKey
-      this.client = client
-    }
-  
-    async sendCreateAsset(dummy: number) {
-        const signedTransaction = await TenexUtils.buildSignedTransaction(
-            /* request */ TenexTransaction.buildCreateAssetRequest(dummy),
-            /* senderPrivKey */ this.privateKey,
-            /* recentBlockDigest */ undefined,
-            /* fee */ undefined,
-            /* client */ this.client
-        );
-        console.log('Sending asset creation tranasction')
-        const result: FermiTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
-        console.log('result=', result)
-        FermiUtils.checkSubmissionResult(result)
-    }
-
-    async sendCreateMarketplaceRequest(quoteAssetId: number) {
-        const signedTransaction = await TenexUtils.buildSignedTransaction(
-            /* request */ TenexTransaction.buildCreateMarketplaceRequest(quoteAssetId),
-            /* senderPrivKey */ this.privateKey,
-            /* recentBlockDigest */ undefined,
-            /* fee */ undefined,
-            /* client */ this.client
-        );
-        console.log('Sending create marketplace tranasction')
-        const result: FermiTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
-        console.log('result=', result)
-        FermiUtils.checkSubmissionResult(result)
-    }
-
-    async sendCreateMarketRequest(baseAssetId: number) {
-        const signedTransaction = await TenexUtils.buildSignedTransaction(
-            /* request */ TenexTransaction.buildCreateMarketRequest(baseAssetId),
-            /* senderPrivKey */ this.privateKey,
-            /* recentBlockDigest */ undefined,
-            /* fee */ undefined,
-            /* client */ this.client
-        );
-        console.log('Sending create market tranasction')
-        const result: FermiTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
-        console.log('result=', result)
-        FermiUtils.checkSubmissionResult(result)
-    }
-
-    async sendUpdatePricesRequest(asset_ids_prices: number[][]) {
-        const signedTransaction = await TenexUtils.buildSignedTransaction(
-            /* request */ TenexTransaction.buildUpdatePricesRequest(asset_ids_prices),
-            /* senderPrivKey */ this.privateKey,
-            /* recentBlockDigest */ undefined,
-            /* fee */ undefined,
-            /* client */ this.client
-        );
-        console.log('Sending update prices tranasction')
-        const result: FermiTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
-        console.log('result=', result)
-        FermiUtils.checkSubmissionResult(result)
-    }
-
-    async sendAccountDepositRequest(quantity: number, marketAdmin: Uint8Array) {
-        const signedTransaction = await TenexUtils.buildSignedTransaction(
-            /* request */ TenexTransaction.buildAccountDepositRequest(quantity, marketAdmin),
-            /* senderPrivKey */ this.privateKey,
-            /* recentBlockDigest */ undefined,
-            /* fee */ undefined,
-            /* client */ this.client
-        );
-        console.log('Sending create market tranasction')
-        const result: FermiTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
-        console.log('result=', result)
-        FermiUtils.checkSubmissionResult(result)
-    }
-
-    async sendFuturesLimitOrderRequest(baseAssetId: number, quoteAssetId: number, side: number, price: number, quantity: number, marketAdmin: Uint8Array) {
-        const signedTransaction = await TenexUtils.buildSignedTransaction(
-            /* request */ TenexTransaction.buildFuturesLimitOrderRequest(baseAssetId, quoteAssetId, side, price, quantity, marketAdmin),
-            /* senderPrivKey */ this.privateKey,
-            /* recentBlockDigest */ undefined,
-            /* fee */ undefined,
-            /* client */ this.client
-        );
-        console.log('Sending create market tranasction')
-        const result: FermiTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
-        console.log('result=', result)
-        FermiUtils.checkSubmissionResult(result)
-    }
-}
 
 async function main() {
   console.log('config=', config);
@@ -128,7 +34,7 @@ async function main() {
   );
   const deployerPublicKey = await FermiAccount.getPublicKey(deployerPrivateKey);
 
-  const deployer = new DeploymentBuilder(deployerPrivateKey, client);
+  const deployer = new SDKAdapter(deployerPrivateKey, client);
   console.log('Starting Deployment Now...');
 
   await deployer.sendCreateAsset(/* dummy */ 0); // primary asset
@@ -138,7 +44,7 @@ async function main() {
 
   await deployer.sendCreateMarketplaceRequest(/* quoteAssetId */ usdcAssetId);
 
-  let asset_ids_prices: number[][] = [];
+  let assetIdsPrices: number[][] = [];
   for (var symbol of Object.keys(symbolToAssetId)) {
     if (symbol == "USDC") {
       continue
@@ -146,12 +52,12 @@ async function main() {
     const assetId = Number(symbolToAssetId[symbol])
     await deployer.sendCreateAsset(/* dummy */ assetId);
     await deployer.sendCreateMarketRequest(/* baseAssetId */ assetId);
-    asset_ids_prices.push([assetId, 1_000_000]);
+    assetIdsPrices.push([assetId, 1_000_000]);
   };
 
-  console.log('asset_ids_prices=', asset_ids_prices);
+  console.log('assetIdsPrices=', assetIdsPrices);
   // // additional assets
-  await deployer.sendUpdatePricesRequest(/* latestPrices */ asset_ids_prices);
+  await deployer.sendUpdatePricesRequest(/* latestPrices */ assetIdsPrices);
 
   await deployer.sendAccountDepositRequest(
     /* quantity */ 1_000_000,

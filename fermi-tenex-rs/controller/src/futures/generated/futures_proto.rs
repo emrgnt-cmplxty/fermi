@@ -23,9 +23,16 @@ pub struct UpdateTimeRequest {
     pub latest_time: u64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
+pub struct PriceEntry {
+    #[prost(uint64, tag="1")]
+    pub asset_id: u64,
+    #[prost(uint64, tag="2")]
+    pub price: u64,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UpdatePricesRequest {
-    #[prost(uint64, repeated, tag="1")]
-    pub latest_prices: ::prost::alloc::vec::Vec<u64>,
+    #[prost(message, repeated, tag="1")]
+    pub price_entries: ::prost::alloc::vec::Vec<PriceEntry>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct AccountDepositRequest {

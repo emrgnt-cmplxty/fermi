@@ -11,8 +11,9 @@ import {
   CreateMarketRequest,
   CreateMarketplaceRequest,
   UpdateTimeRequest,
+  PriceEntry,
   UpdatePricesRequest,
-} from '../../dist/proto/futures_requests_pb'
+} from '../../dist/proto/futures_proto_pb'
 import { Transaction, SignedTransaction, Version } from '../../dist/proto/transaction_pb'
 
 // EXTERNAL
@@ -84,9 +85,16 @@ export function buildUpdateTimeRequest(latest_time: number): UpdateTimeRequest {
   return updateTimeRequest
 }
 
-export function buildUpdatePricesRequest(latest_prices: number[]): UpdatePricesRequest {
+export function buildUpdatePricesRequest(asset_ids_prices: number[][]): UpdatePricesRequest {
   const updatePricesRequest = new UpdatePricesRequest()
-  updatePricesRequest.setLatestPricesList(latest_prices)
+  const priceEntries = []
+  for (const asset_id_price of asset_ids_prices) {
+    const priceEntry = new PriceEntry()
+    priceEntry.setAssetId(asset_id_price[0])
+    priceEntry.setPrice(asset_id_price[1])
+    priceEntries.push(priceEntry)
+  }
+  updatePricesRequest.setPriceEntriesList(priceEntries)
 
   return updatePricesRequest
 }

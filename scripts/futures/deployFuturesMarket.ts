@@ -70,9 +70,9 @@ export class DeploymentBuilder {
         FermiUtils.checkSubmissionResult(result)
     }
 
-    async sendUpdatePricesRequest(latestPrices: number[]) {
+    async sendUpdatePricesRequest(asset_ids_prices: number[][]) {
         const signedTransaction = await TenexUtils.buildSignedTransaction(
-            /* request */ TenexTransaction.buildUpdatePricesRequest(latestPrices),
+            /* request */ TenexTransaction.buildUpdatePricesRequest(asset_ids_prices),
             /* senderPrivKey */ this.privateKey,
             /* recentBlockDigest */ undefined,
             /* fee */ undefined,
@@ -138,7 +138,7 @@ async function main() {
 
   await deployer.sendCreateMarketplaceRequest(/* quoteAssetId */ usdcAssetId);
 
-  let prices: number[] = [];
+  let asset_ids_prices: number[][] = [];
   for (var symbol of Object.keys(symbolToAssetId)) {
     if (symbol == "USDC") {
       continue
@@ -146,12 +146,12 @@ async function main() {
     const assetId = Number(symbolToAssetId[symbol])
     await deployer.sendCreateAsset(/* dummy */ assetId);
     await deployer.sendCreateMarketRequest(/* baseAssetId */ assetId);
-    prices.push(1_000_000);
+    asset_ids_prices.push([assetId, 1_000_000]);
   };
 
-  console.log('prices=', prices);
+  console.log('asset_ids_prices=', asset_ids_prices);
   // // additional assets
-  await deployer.sendUpdatePricesRequest(/* latestPrices */ prices);
+  await deployer.sendUpdatePricesRequest(/* latestPrices */ asset_ids_prices);
 
   await deployer.sendAccountDepositRequest(
     /* quantity */ 1_000_000,
@@ -159,7 +159,7 @@ async function main() {
   );
 
   await deployer.sendFuturesLimitOrderRequest(
-    /* baseAssetId */ 0,
+    /* baseAssetId */ 2,
     /* quoteAssetId */ 1,
     /* side */ 1,
     /* price */ 1_000,

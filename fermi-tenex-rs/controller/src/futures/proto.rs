@@ -146,8 +146,8 @@ impl Request for UpdateTimeRequest {
 // update prices
 
 impl UpdatePricesRequest {
-    pub fn new(latest_prices: Vec<u64>) -> Self {
-        UpdatePricesRequest { latest_prices }
+    pub fn new(price_entries: Vec<PriceEntry>) -> Self {
+        UpdatePricesRequest { price_entries }
     }
 }
 

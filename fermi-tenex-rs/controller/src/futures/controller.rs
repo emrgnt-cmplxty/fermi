@@ -170,11 +170,15 @@ impl FuturesController {
         // TODO - https://github.com/fermiorg/fermi/issues/159 - move to more robust system to ensure that the prices are being updated in the correct order
 
         if let Some(market_place) = self.market_places.get_mut(&market_admin) {
-            if request.latest_prices.len() != market_place.markets.len() {
+            if request.price_entries.len() != market_place.markets.len() {
                 return Err(GDEXError::MarketPrices);
             }
-            for (counter, (_asset_id, market)) in market_place.markets.iter_mut().enumerate() {
-                market.oracle_price = request.latest_prices[counter];
+            for (counter, (asset_id, market)) in market_place.markets.iter_mut().enumerate() {
+                for price_entry in request.price_entries.iter() {
+                    if price_entry.asset_id == *asset_id {
+                        market.oracle_price = price_entry.price;
+                    }
+                }
             }
         } else {
             return Err(GDEXError::MarketplaceExistence);

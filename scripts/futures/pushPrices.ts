@@ -28,9 +28,9 @@ class PricePusher {
           this.client = client
         }
 
-        async sendUpdatePricesRequest(latestPrices: number[]) {
+        async sendUpdatePricesRequest(asset_ids_prices: number[][]) {
             const signedTransaction = await TenexUtils.buildSignedTransaction(
-                /* request */ TenexTransaction.buildUpdatePricesRequest(latestPrices),
+                /* request */ TenexTransaction.buildUpdatePricesRequest(asset_ids_prices),
                 /* senderPrivKey */ this.privateKey,
                 /* recentBlockDigest */ undefined,
                 /* fee */ undefined,
@@ -43,45 +43,50 @@ class PricePusher {
         }
     }
 
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
 async function main() {
-    const symbolToAssetId = localConfig['symbolToAssetId'];
-    const authorities = Object.keys(config["authorities"])
-    const deploymentAuthority = config['authorities'][authorities[localConfig.deploymentAuthority]]
-    const client = new FermiClient(getJsonRpcUrl(deploymentAuthority))
+    while (true) {
+        const symbolToAssetId = localConfig['symbolToAssetId'];
+        const authorities = Object.keys(config["authorities"])
+        const deploymentAuthority = config['authorities'][authorities[localConfig.deploymentAuthority]]
+        const client = new FermiClient(getJsonRpcUrl(deploymentAuthority))
+        
+        const deployerPrivateKey = FermiUtils.hexToBytes(deploymentAuthority.private_key)
+        const deployer = new PricePusher(deployerPrivateKey, client)
     
-    const deployerPrivateKey = FermiUtils.hexToBytes(deploymentAuthority.private_key)
-    const deployer = new PricePusher(deployerPrivateKey, client)
-
-    const coinbase_resp = await fetch(exchanges["coinbase"].replace("[SYMBOL]", "ALGO"));
-    //@ts-ignore
-    const coinbase_data = await coinbase_resp.json().then(x => x.data.rates);
-
-    let prices: number[] = [];
-    for (var symbol of Object.keys(symbolToAssetId)) {
-        console.log("symbol: ", symbol)
-        if (symbol == "FRMI") {
-            prices.push(1);
-            continue
-        } else if (symbol == "USDC") {
-            continue
+        const coinbase_resp = await fetch(exchanges["coinbase"].replace("[SYMBOL]", "ALGO"));
+        //@ts-ignore
+        const coinbase_data = await coinbase_resp.json().then(x => x.data.rates);
+    
+        let asset_ids_prices: number[][] = [];
+        for (var symbol of Object.keys(symbolToAssetId)) {
+            console.log("symbol: ", symbol)
+            if (symbol == "FRMI") {
+                asset_ids_prices.push([symbolToAssetId[symbol], 1]);
+                continue
+            } else if (symbol == "USDC") {
+                continue
+            }
+            const coinbase_price = 1./coinbase_data[symbol];
+    
+            const kucoin_resp = await fetch(exchanges["kucoin"].replace("[SYMBOL]", symbol));
+            //@ts-ignore
+            const kucoin_data = await kucoin_resp.json().then(x => x.data);
+            const kucoin_price = Number(kucoin_data['price']);
+    
+            const binance_resp = await fetch(exchanges["binance"].replace("[SYMBOL]", symbol));
+            const binance_data = await binance_resp.json();
+            //@ts-ignore
+            const bitcoin_price = Number(binance_data['price']);
+    
+            const avg_price = (coinbase_price + kucoin_price + bitcoin_price) / 3.;
+            asset_ids_prices.push([symbolToAssetId[symbol], parseInt(String(avg_price))])
         }
-        const coinbase_price = 1./coinbase_data[symbol];
-
-        const kucoin_resp = await fetch(exchanges["kucoin"].replace("[SYMBOL]", symbol));
-        //@ts-ignore
-        const kucoin_data = await kucoin_resp.json().then(x => x.data);
-        const kucoin_price = Number(kucoin_data['price']);
-
-        const binance_resp = await fetch(exchanges["binance"].replace("[SYMBOL]", symbol));
-        const binance_data = await binance_resp.json();
-        //@ts-ignore
-        const bitcoin_price = Number(binance_data['price']);
-
-        const avg_price = (coinbase_price + kucoin_price + bitcoin_price) / 3.;
-        prices.push(parseInt(String(avg_price)))
+        console.log("latest asset_ids_prices = ", asset_ids_prices);
+        await deployer.sendUpdatePricesRequest(/* latestPrices */ asset_ids_prices);
+        await delay(5000);
     }
-    console.log("latest prices = ", prices);
-    await deployer.sendUpdatePricesRequest(/* latestPrices */ prices);
 
 }
 

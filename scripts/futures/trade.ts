@@ -134,7 +134,7 @@ async function main() {
 
   // Take the opposite side of the order specified in deployFuturesMarket
   await marketTaker.sendFuturesLimitOrderRequest(
-    /* baseAssetId */ 0,
+    /* baseAssetId */ 2,
     /* quoteAssetId */ 1,
     /* side */ 2,
     /* price */ 100,

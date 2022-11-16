@@ -46,8 +46,13 @@ message UpdateTimeRequest {
     uint64 latest_time = 1;
 }
 
+message PriceEntry {
+    uint64 asset_id = 1;
+    uint64 price = 2;
+}
+
 message UpdatePricesRequest {
-    repeated uint64 latest_prices = 1;
+    repeated PriceEntry price_entries = 1;
 }
 
 message AccountDepositRequest {

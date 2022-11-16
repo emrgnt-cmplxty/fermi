@@ -147,8 +147,8 @@ pub mod futures_tests {
                 .handle_consensus_transaction(&transaction)
         }
 
-        pub fn update_prices(&self, latest_prices: Vec<u64>) -> Result<ExecutionEvents, GDEXError> {
-            let request = UpdatePricesRequest::new(latest_prices);
+        pub fn update_prices(&self, price_entries: Vec<PriceEntry>) -> Result<ExecutionEvents, GDEXError> {
+            let request = UpdatePricesRequest::new(price_entries);
             let transaction = Transaction::new(
                 self.admin_key.public(),
                 CertificateDigest::new([0; fastcrypto::DIGEST_LEN]),
@@ -177,7 +177,8 @@ pub mod futures_tests {
             self.create_market()?;
             self.update_market_params()?;
             self.update_time(INITIAL_TIME)?;
-            self.update_prices(INITIAL_ASSET_PRICES.to_vec())?;
+            let initial_price = vec![PriceEntry{ asset_id: self.base_asset_id, price: INITIAL_ASSET_PRICES[0]}];
+            self.update_prices( initial_price )?;
             self.account_deposit(ADMIN_INITIAL_DEPOSIT, self.admin_key.public().clone())?;
             for user_key in self.user_keys.iter() {
                 self.account_deposit(USER_INITIAL_DEPOSIT, user_key.public().clone())?;
@@ -908,7 +909,9 @@ pub mod futures_tests {
             .unwrap();
 
         // tick to final prices
-        futures_tester.update_prices(FINAL_ASSET_PRICES.to_vec()).unwrap();
+        let initial_price = vec![PriceEntry{ asset_id: 0, price: FINAL_ASSET_PRICES[0]}];
+        futures_tester.update_prices( initial_price ).unwrap();
+
 
         let maker_unrealized_pnl = futures_tester.get_user_unrealized_pnl(maker_index).unwrap();
 

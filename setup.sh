@@ -14,6 +14,7 @@ yarn install
 yarn deploy-futures
 yarn execute-trade
 yarn fetch-data
+nohup yarn push-prices &
 
 ### ### setup the Fermi sandbox
 ### # cd benchmark

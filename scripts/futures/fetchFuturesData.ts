@@ -40,6 +40,7 @@ async function main() {
     marketPlace.admin
   );
   console.log('Market Admin Data: ', marketAdminData);
+  console.log('Market Admin Position: ', marketAdminData.user_market_info[0].position);
 
   console.log('Fetching Market Taker User Data from Marketplace');
   // Is there a cleaner way to fetch teh appropriate public key for the FermiUtils input?
@@ -53,6 +54,7 @@ async function main() {
     FermiUtils.bytesToHex(takerPublicKey)
   );
   console.log('Market Taker Data: ', marketTakerData);
+  console.log('Market Taker Position: ', marketTakerData.user_market_info[0].position);
 
   console.log('Successfully Fetched!');
 }

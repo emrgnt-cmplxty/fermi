@@ -10,6 +10,7 @@ import {
   AccountDepositRequest,
   AccountWithdrawalRequest,
   UpdateMarketParamsRequest,
+  CancelAllRequest,
   CreateMarketRequest,
   CreateMarketplaceRequest,
   UpdateTimeRequest,
@@ -47,6 +48,7 @@ type futuresRequests =
   | AccountDepositRequest
   | FuturesLimitOrderRequest
   | AccountWithdrawalRequest
+  | CancelAllRequest
 
 export type supportedOrders = bankRequests | futuresRequests
 
@@ -71,6 +73,8 @@ export function lookupControllerAndType(request: supportedOrders): [number, numb
     return [transactionParams.controllerType.Futures, FuturesRequestType.FUTURES_LIMIT_ORDER]
   } else if (request instanceof AccountWithdrawalRequest) {
     return [transactionParams.controllerType.Futures, FuturesRequestType.ACCOUNT_WITHDRAWAL]
+  } else if (request instanceof CancelAllRequest) {
+    return [transactionParams.controllerType.Futures, FuturesRequestType.CANCEL_ALL]
   } else {
     throw new Error('Unsupported request type')
   }

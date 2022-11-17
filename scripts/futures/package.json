@@ -12,10 +12,11 @@
     "node-fetch": "^2.0.0"
   },
   "scripts": {
-    "deploy-futures": "npx ts-node deployFuturesMarket.ts",
-    "execute-trade": "npx ts-node trade.ts",
-    "fetch-data": "npx ts-node fetchFuturesData.ts",
+    "deploy": "npx ts-node deployFuturesMarket.ts",
+    "trade": "npx ts-node trade.ts",
+    "fetch": "npx ts-node fetchFuturesData.ts",
     "push-prices": "npx ts-node pushPrices.ts",
+    "make-markets": "npx ts-node makeMarkets.ts",
     "test": "jest",
     "postinstall": "yarn link fermi-js-sdk tenex-js-sdk"
   },

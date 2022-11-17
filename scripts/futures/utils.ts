@@ -68,7 +68,7 @@ export class SDKAdapter {
             /* fee */ undefined,
             /* client */ this.client
         );
-        console.log('Sending create market tranasction')
+        console.log('Sending create account deposit tranasction')
         const result: FermiTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
         console.log('result=', result)
         FermiUtils.checkSubmissionResult(result)
@@ -82,11 +82,14 @@ export class SDKAdapter {
             /* fee */ undefined,
             /* client */ this.client
         );
-        console.log('Sending create market tranasction')
-        const result: FermiTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
-        console.log('result=', result)
-        FermiUtils.checkSubmissionResult(result)
+        console.log('Sending futures limit order tranasction')
+        await this.client.submitTransaction(signedTransaction)
+        // const result: FermiTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
+        // console.log('result=', result)
+        // console.log('result.executed_transaction.events=', result.executed_transaction.events)
+        // FermiUtils.checkSubmissionResult(result)
     }
+
     async sendUpdatePricesRequest(assetIdsPrices: number[][]) {
         const signedTransaction = await TenexUtils.buildSignedTransaction(
             /* request */ TenexTransaction.buildUpdatePricesRequest(assetIdsPrices),
@@ -99,6 +102,20 @@ export class SDKAdapter {
         const result: FermiTypes.QueriedTransaction = await this.client.sendAndConfirmTransaction(signedTransaction)
         console.log('result=', result)
         FermiUtils.checkSubmissionResult(result)
+    }
+
+    async sendCancelAll(targetPublicKey: Uint8Array | string, marketAdminPublicKey: Uint8Array | string) {
+        const signedTransaction = await TenexUtils.buildSignedTransaction(
+            /* request */ TenexTransaction.buildCancelAllRequest(targetPublicKey, marketAdminPublicKey),
+            /* senderPrivKey */ this.privateKey,
+            /* recentBlockDigest */ undefined,
+            /* fee */ undefined,
+            /* client */ this.client
+        );
+        console.log('Sending cancel all tranasction')
+        await this.client.submitTransaction(signedTransaction)
+        // console.log('result=', result)
+        // FermiUtils.checkSubmissionResult(result)
     }
 }
 

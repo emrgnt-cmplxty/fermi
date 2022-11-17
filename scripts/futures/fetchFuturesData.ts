@@ -1,7 +1,5 @@
-// Execute this script with the command: yarn execute-trade
-// This script will fund a taker authority and execute a trade into the futures market
-// This script assumes that the market has been deployed via yarn deploy-futures
-// And that a valid network has been deployed with associated data saved to protonet.json
+// Execute this script with the command: yarn fetch-data
+// This sceript returns relevant data from the deployed futures markets
 
 // LOCAL
 import config from '../../configs/protonet.json';

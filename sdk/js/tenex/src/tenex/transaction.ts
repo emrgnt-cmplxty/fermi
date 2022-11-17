@@ -8,6 +8,7 @@ import {
   AccountDepositRequest,
   AccountWithdrawalRequest,
   UpdateMarketParamsRequest,
+  CancelAllRequest,
   CreateMarketRequest,
   CreateMarketplaceRequest,
   UpdateTimeRequest,
@@ -22,6 +23,7 @@ import assert from 'assert'
 // EXPORTS
 export {
   BankRequestType,
+  CancelAllRequest,
   CreateAssetRequest,
   PaymentRequest,
   FuturesRequestType,
@@ -133,4 +135,12 @@ export function buildFuturesLimitOrderRequest(
   futuresLimitOrderRequest.setMarketAdmin(admin)
 
   return futuresLimitOrderRequest
+}
+
+export function buildCancelAllRequest(target: string | Uint8Array, marketAdmin: string | Uint8Array): CancelAllRequest {
+  const cancelAllRequest = new CancelAllRequest()
+  cancelAllRequest.setTarget(target)
+  cancelAllRequest.setMarketAdmin(marketAdmin)
+
+  return cancelAllRequest
 }

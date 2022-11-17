@@ -14,10 +14,9 @@ cd scripts/futures
 yarn install
 
 # deploy markets and execute a trade
-yarn deploy-futures
-yarn execute-trade
-yarn fetch-data
+yarn deploy
 nohup yarn push-prices &
+nohup yarn make-markets &
 
 ### ### setup the Fermi sandbox
 ### # cd benchmark

@@ -26,7 +26,7 @@ async function main() {
         const client = new FermiClient(getJsonRpcUrl(deploymentAuthority))
         
         const deployerPrivateKey = FermiUtils.hexToBytes(deploymentAuthority.private_key)
-        const deployer = new SDKAdapter(deployerPrivateKey, client)
+        const adapter = new SDKAdapter(deployerPrivateKey, client)
         console.log("success");
         
         const coinbase_resp = await fetch(exchanges["coinbase"].replace("[SYMBOL]", "ALGO"));
@@ -59,7 +59,7 @@ async function main() {
             assetIdsPrices.push([symbolToAssetId[symbol], parseInt(String(avg_price))])
         }
         console.log("latest assetIdsPrices = ", assetIdsPrices);
-        await deployer.sendUpdatePricesRequest(/* latestPrices */ assetIdsPrices);
+        await adapter.sendUpdatePricesRequest(/* latestPrices */ assetIdsPrices);
         await delay(5000);
     }
 

@@ -1,4 +1,7 @@
+yarn install
+
 cd sdk/js/fermi
+yarn install
 yarn build
 
 cd ../tenex

@@ -1,24 +1,6 @@
 {
     "authorities": {
-        "1L/a758RRulZXYHpN9ALUy75nqDURTlP35CMtBX48A8=": {
-            "grpc_address": "/ip4/127.0.0.1/tcp/3013/http",
-            "jsonrpc_address": "/ip4/127.0.0.1/tcp/3014/http",
-            "metrics_address": "/ip4/127.0.0.1/tcp/3015/http",
-            "primary": {
-                "primary_to_primary": "/ip4/127.0.0.1/tcp/3008/http",
-                "worker_to_primary": "/ip4/127.0.0.1/tcp/3009/http"
-            },
-            "private_key": "0x05f9380f59bd1b0a9e00449955a34f38425001e5b22fdb15f3c0975fd0df04d6",
-            "stake": 1,
-            "workers": {
-                "0": {
-                    "primary_to_worker": "/ip4/127.0.0.1/tcp/3010/http",
-                    "transactions": "/ip4/127.0.0.1/tcp/3011/http",
-                    "worker_to_worker": "/ip4/127.0.0.1/tcp/3012/http"
-                }
-            }
-        },
-        "wYTrB3CfN8KKHn8EavQLkycgpCgcq9kb4QKFwY+DWJo=": {
+        "9kBROL3oLmJZJP2LiLi2Qs/ZLtmEK+NNagLXSJSFWD4=": {
             "grpc_address": "/ip4/127.0.0.1/tcp/3005/http",
             "jsonrpc_address": "/ip4/127.0.0.1/tcp/3006/http",
             "metrics_address": "/ip4/127.0.0.1/tcp/3007/http",
@@ -26,13 +8,31 @@
                 "primary_to_primary": "/ip4/127.0.0.1/tcp/3000/http",
                 "worker_to_primary": "/ip4/127.0.0.1/tcp/3001/http"
             },
-            "private_key": "0x88b2e1e40805796abd530fcd1b2559ebd483bc006ec81ef7393a8bf62d206d4f",
+            "private_key": "0x2b382a0cc6ccb4efdc4381636e366c468d921461531d5018f00e7efb296894ec",
             "stake": 1,
             "workers": {
                 "0": {
                     "primary_to_worker": "/ip4/127.0.0.1/tcp/3002/http",
                     "transactions": "/ip4/127.0.0.1/tcp/3003/http",
                     "worker_to_worker": "/ip4/127.0.0.1/tcp/3004/http"
+                }
+            }
+        },
+        "fKnnZn/0kpX5n/Qj+56wjsa2CY2zLese1LtvvblFh3U=": {
+            "grpc_address": "/ip4/127.0.0.1/tcp/3013/http",
+            "jsonrpc_address": "/ip4/127.0.0.1/tcp/3014/http",
+            "metrics_address": "/ip4/127.0.0.1/tcp/3015/http",
+            "primary": {
+                "primary_to_primary": "/ip4/127.0.0.1/tcp/3008/http",
+                "worker_to_primary": "/ip4/127.0.0.1/tcp/3009/http"
+            },
+            "private_key": "0x6a64d97a203d08aa4fca795bc1ca7979693635abb718b7920aebe30f419d478d",
+            "stake": 1,
+            "workers": {
+                "0": {
+                    "primary_to_worker": "/ip4/127.0.0.1/tcp/3010/http",
+                    "transactions": "/ip4/127.0.0.1/tcp/3011/http",
+                    "worker_to_worker": "/ip4/127.0.0.1/tcp/3012/http"
                 }
             }
         }

@@ -1,16 +1,16 @@
-import { useSnackbar } from 'notistack'
-import { ReactElement, ReactNode, useMemo } from 'react'
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
 import {
   MutationCache,
   QueryCache,
   QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query'
-import { createWebStoragePersistor } from 'react-query/createWebStoragePersistor-experimental'
 import {
   PersistedClient,
   persistQueryClient,
-} from 'react-query/persistQueryClient-experimental'
+} from '@tanstack/react-query-persist-client'
+import { useSnackbar } from 'notistack'
+import { ReactElement, ReactNode, useMemo } from 'react'
 
 interface QueryProviderProps {
   children: ReactNode
@@ -23,6 +23,9 @@ function QueryProvider({ children }: QueryProviderProps): ReactElement {
     const client = new QueryClient({
       defaultOptions: {
         cacheTime: 1000 * 60 * 60 * 24,
+        queries: {
+          refetchOnWindowFocus: false,
+        },
       } as any,
 
       // queryCache/mutationCache onError will always be called on every error
@@ -33,12 +36,15 @@ function QueryProvider({ children }: QueryProviderProps): ReactElement {
           // show error toasts if we already have data in the cache
           // which indicates a failed background update
           if (query.state.data !== undefined) {
-            let errorMessage = 'Query error: '
+            let errorMessage = `Query error: `
             if (error instanceof Error) {
               errorMessage += error.message
             }
-            console.error(errorMessage)
-            enqueueSnackbar(errorMessage)
+            console.error(errorMessage, query)
+            //suppress failed to fetch
+            if (errorMessage !== 'Query Error: Failed to fetch') {
+              enqueueSnackbar(errorMessage)
+            }
           }
         },
       }),
@@ -53,7 +59,7 @@ function QueryProvider({ children }: QueryProviderProps): ReactElement {
       }),
     })
 
-    const localStoragePersistor = createWebStoragePersistor({
+    const localStoragePersistor = createSyncStoragePersister({
       storage: window.localStorage,
       serialize: (client: PersistedClient) => {
         const duplicateState = Object.assign({}, client)
@@ -70,7 +76,7 @@ function QueryProvider({ children }: QueryProviderProps): ReactElement {
 
     persistQueryClient({
       queryClient: client,
-      persistor: localStoragePersistor,
+      persister: localStoragePersistor,
     })
 
     return client

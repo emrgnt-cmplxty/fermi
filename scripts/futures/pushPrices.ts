@@ -23,7 +23,7 @@ async function main() {
   console.log('config=', config);
   const authorities = Object.keys(config['authorities']);
 
-  let client = new TenexClient.default(DEFAULT_JSONRPC_ADDRESS);
+  let client = new TenexClient(DEFAULT_JSONRPC_ADDRESS);
   console.log('Fetching Market Places');
   const marketPlaces = await client.getFuturesMarketPlaces();
 

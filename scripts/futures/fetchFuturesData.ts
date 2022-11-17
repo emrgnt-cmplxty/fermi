@@ -57,6 +57,16 @@ async function main() {
   );
   console.log('Market Taker Data: ', marketTakerData);
 
+
+  const orderBookDepth = await client.getOrderbookDepth(
+    marketPlace.admin,
+    2,
+    1,
+    100
+  );
+  console.log('orderBookDepth: ', orderBookDepth);
+
+
   console.log('Successfully Fetched Data!');
 }
 main();

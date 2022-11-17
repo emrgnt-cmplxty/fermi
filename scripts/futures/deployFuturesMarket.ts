@@ -60,7 +60,7 @@ async function main() {
   await deployer.sendUpdatePricesRequest(/* latestPrices */ assetIdsPrices);
 
   await deployer.sendAccountDepositRequest(
-    /* quantity */ 1_000_000,
+    /* quantity */ 1_000_000_000_000,
     /* marketAdmin */ deployerPublicKey
   );
 

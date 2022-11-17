@@ -10,11 +10,11 @@ The JSON-RPC enables you to query the network and get details around deployed fu
 
 ---
 
-## getFuturesMarketPlaces {#get-latest-block-info}
+##  {#get-latest-block-info}
 
 > Queries network and returns data around the available futures market places
 
-- method: `getFuturesMarketPlaces`
+- method: ``
 - params:
   - `[null]`
 
@@ -26,7 +26,7 @@ The JSON-RPC enables you to query the network and get details around deployed fu
 {
   "jsonrpc": "2.0",
   "id": "fermi",
-  "method": "getFuturesMarketPlaces",
+  "method": "",
   "params": []
 }
 ```
@@ -35,7 +35,7 @@ The JSON-RPC enables you to query the network and get details around deployed fu
 <TabItem value="🌐 JavaScript" label="JavaScript">
 
 ```js
-const response = await tenexClient.getFuturesMarketPlaces();
+const response = await tenexClient.();
 ```
 
 </TabItem>
@@ -93,7 +93,7 @@ const response = await tenexClient.getFuturesMarketPlaces();
 <TabItem value="🌐 JavaScript" label="JavaScript">
 
 ```js
-const response = await tenexClient.getFuturesMarketPlaces();
+const response = await tenexClient.();
 ```
 
 </TabItem>

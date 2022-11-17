@@ -105,38 +105,6 @@ async function main() {
 
             break
         }
-        
-        // break
-        // const coinbase_resp = await fetch(exchanges["coinbase"].replace("[SYMBOL]", "ALGO"));
-        // //@ts-ignore
-        // const coinbase_data = await coinbase_resp.json().then(x => x.data.rates);
-    
-        // let assetIdsPrices: number[][] = [];
-        // for (var symbol of Object.keys(symbolToAssetId)) {
-        //     console.log("symbol: ", symbol)
-        //     if (symbol == "FRMI") {
-        //         assetIdsPrices.push([symbolToAssetId[symbol], 1]);
-        //         continue
-        //     } else if (symbol == "USDC") {
-        //         continue
-        //     }
-        //     const coinbase_price = 1./coinbase_data[symbol];
-    
-        //     const kucoin_resp = await fetch(exchanges["kucoin"].replace("[SYMBOL]", symbol));
-        //     //@ts-ignore
-        //     const kucoin_data = await kucoin_resp.json().then(x => x.data);
-        //     const kucoin_price = Number(kucoin_data['price']);
-    
-        //     const binance_resp = await fetch(exchanges["binance"].replace("[SYMBOL]", symbol));
-        //     const binance_data = await binance_resp.json();
-        //     //@ts-ignore
-        //     const bitcoin_price = Number(binance_data['price']);
-    
-        //     const avg_price = (coinbase_price + kucoin_price + bitcoin_price) / 3.;
-        //     assetIdsPrices.push([symbolToAssetId[symbol], parseInt(String(avg_price))])
-        // }
-        // console.log("latest assetIdsPrices = ", assetIdsPrices);
-        // await deployer.sendUpdatePricesRequest(/* latestPrices */ assetIdsPrices);
     }
 }
 

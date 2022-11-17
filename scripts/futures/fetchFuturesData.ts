@@ -23,7 +23,7 @@ async function main() {
   console.log('config=', config);
   const authorities = Object.keys(config['authorities']);
 
-  let client = new TenexClient.default(DEFAULT_JSONRPC_ADDRESS);
+  let client = new TenexClient(DEFAULT_JSONRPC_ADDRESS);
   console.log('Fetching Market Places');
   const marketPlaces = await client.getFuturesMarketPlaces();
 
@@ -40,7 +40,10 @@ async function main() {
     marketPlace.admin
   );
   console.log('Market Admin Data: ', marketAdminData);
-  console.log('Market Admin Position: ', marketAdminData.user_market_info[0].position);
+
+  const user_market_info = marketAdminData.user_market_info[0];
+  console.log('Market Admin Position: ', user_market_info.position);
+  console.log('Market Admin Orders: ', user_market_info.orders);
 
   console.log('Fetching Market Taker User Data from Marketplace');
   // Is there a cleaner way to fetch teh appropriate public key for the FermiUtils input?
@@ -49,13 +52,13 @@ async function main() {
   const takerPublicKey = await FermiAccount.getPublicKey(
     FermiUtils.hexToBytes(takerAuthority.private_key)
   );
+
   const marketTakerData = await client.getUserMarketplaceInfo(
     marketPlace.admin,
     FermiUtils.bytesToHex(takerPublicKey)
   );
   console.log('Market Taker Data: ', marketTakerData);
-  console.log('Market Taker Position: ', marketTakerData.user_market_info[0].position);
 
-  console.log('Successfully Fetched!');
+  console.log('Successfully Fetched Data!');
 }
 main();

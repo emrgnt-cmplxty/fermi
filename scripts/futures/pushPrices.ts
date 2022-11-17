@@ -1,70 +1,61 @@
-// Execute this script with the command: yarn deploy-futures
-// This script will deploy the futures market and launch a single test trade
-// Deployment is made from the perspective of the deployment authority specified in localConfig.json
-// This script assumes that a valid network has been deployed with associated data saved to protonet.json
-
-// IMPORTS
+// Execute this script with the command: yarn execute-trade
+// This script will fund a taker authority and execute a trade into the futures market
+// This script assumes that the market has been deployed via yarn deploy-futures
+// And that a valid network has been deployed with associated data saved to protonet.json
 
 // LOCAL
-import config from "../../configs/protonet.json"
-import exchanges from "./exchanges.json"
-import fetch from 'node-fetch';
-// cleanup this script imoport
-import { delay, getJsonRpcUrl, SDKAdapter } from "./utils"
-import localConfig from "./localConfig.json"
-// import { DeploymentBuilder } from "../deploy_futures/deployFuturesMarket";
+import config from '../../configs/protonet.json';
+import localConfig from './localConfig.json';
+import { getJsonRpcUrl } from './utils';
 
 // EXTERNAL
-import { FermiClient, FermiTypes, FermiUtils, FermiAccount } from 'fermi-js-sdk'
-import { TenexTransaction, TenexUtils, TenexClient } from 'tenex-js-sdk'
+import {
+  FermiClient,
+  FermiTypes,
+  FermiUtils,
+  FermiAccount,
+} from 'fermi-js-sdk';
+import { TenexClient } from 'tenex-js-sdk';
+
+const DEFAULT_JSONRPC_ADDRESS = 'http://localhost:3006';
 
 async function main() {
-    while (true) {
-        const symbolToAssetId = localConfig['symbolToAssetId'];
-        const authorities = Object.keys(config["authorities"])
-        const deploymentAuthority = config['authorities'][authorities[localConfig.deploymentAuthority]]
-        const client = new TenexClient(getJsonRpcUrl(deploymentAuthority))
-        
-        const deployerPrivateKey = FermiUtils.hexToBytes(deploymentAuthority.private_key)
-        // console.log("SDKAdapter=", SDKAdapter)
-        // console.log("getJsonRpcUrl=", getJsonRpcUrl)
-        const deployer = new SDKAdapter(deployerPrivateKey, client)
-        console.log("success");
-        
-        const coinbase_resp = await fetch(exchanges["coinbase"].replace("[SYMBOL]", "ALGO"));
-        //@ts-ignore
-        const coinbase_data = await coinbase_resp.json().then(x => x.data.rates);
-    
-        let assetIdsPrices: number[][] = [];
-        for (var symbol of Object.keys(symbolToAssetId)) {
-            console.log("symbol: ", symbol)
+  console.log('config=', config);
+  const authorities = Object.keys(config['authorities']);
 
-            if (symbol == "FRMI") {
-                assetIdsPrices.push([symbolToAssetId[symbol], 1]);
-                continue
-            } else if (symbol == "USDC") {
-                continue
-            }
-            const coinbase_price = 1./coinbase_data[symbol];
-    
-            const kucoin_resp = await fetch(exchanges["kucoin"].replace("[SYMBOL]", symbol));
-            //@ts-ignore
-            const kucoin_data = await kucoin_resp.json().then(x => x.data);
-            const kucoin_price = Number(kucoin_data['price']);
-    
-            const binance_resp = await fetch(exchanges["binance"].replace("[SYMBOL]", symbol));
-            const binance_data = await binance_resp.json();
-            //@ts-ignore
-            const bitcoin_price = Number(binance_data['price']);
-    
-            const avg_price = (coinbase_price + kucoin_price + bitcoin_price) / 3.;
-            assetIdsPrices.push([symbolToAssetId[symbol], parseInt(String(avg_price))])
-        }
-        console.log("latest assetIdsPrices = ", assetIdsPrices);
-        await deployer.sendUpdatePricesRequest(/* latestPrices */ assetIdsPrices);
-        await delay(5000);
-    }
+  let client = new TenexClient.default(DEFAULT_JSONRPC_ADDRESS);
+  console.log('Fetching Market Places');
+  const marketPlaces = await client.getFuturesMarketPlaces();
 
+  console.log('marketPlaces = ', marketPlaces);
+
+  let marketPlace = marketPlaces[0];
+  console.log('Fetching Markets from First Marketplace');
+  const markets = await client.getFuturesMarkets(marketPlace.admin);
+  console.log('Markets: ', markets);
+
+  console.log('Fetching Market Admin User Data from Marketplace');
+  const marketAdminData = await client.getUserMarketplaceInfo(
+    marketPlace.admin,
+    marketPlace.admin
+  );
+  console.log('Market Admin Data: ', marketAdminData);
+  console.log('Market Admin Position: ', marketAdminData.user_market_info[0].position);
+
+  console.log('Fetching Market Taker User Data from Marketplace');
+  // Is there a cleaner way to fetch teh appropriate public key for the FermiUtils input?
+  const takerAuthority =
+    config['authorities'][authorities[localConfig.takerAuthority]];
+  const takerPublicKey = await FermiAccount.getPublicKey(
+    FermiUtils.hexToBytes(takerAuthority.private_key)
+  );
+  const marketTakerData = await client.getUserMarketplaceInfo(
+    marketPlace.admin,
+    FermiUtils.bytesToHex(takerPublicKey)
+  );
+  console.log('Market Taker Data: ', marketTakerData);
+  console.log('Market Taker Position: ', marketTakerData.user_market_info[0].position);
+
+  console.log('Successfully Fetched!');
 }
-
 main();

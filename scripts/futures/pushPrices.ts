@@ -16,15 +16,14 @@ import localConfig from "./localConfig.json"
 
 // EXTERNAL
 import { FermiClient, FermiTypes, FermiUtils, FermiAccount } from 'fermi-js-sdk'
-import { TenexTransaction, TenexUtils } from 'tenex-js-sdk'
-
+import { TenexTransaction, TenexUtils, TenexClient } from 'tenex-js-sdk'
 
 async function main() {
     while (true) {
         const symbolToAssetId = localConfig['symbolToAssetId'];
         const authorities = Object.keys(config["authorities"])
         const deploymentAuthority = config['authorities'][authorities[localConfig.deploymentAuthority]]
-        const client = new FermiClient(getJsonRpcUrl(deploymentAuthority))
+        const client = new TenexClient(getJsonRpcUrl(deploymentAuthority))
         
         const deployerPrivateKey = FermiUtils.hexToBytes(deploymentAuthority.private_key)
         // console.log("SDKAdapter=", SDKAdapter)

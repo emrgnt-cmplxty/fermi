@@ -23,11 +23,9 @@ async function main() {
         const symbolToAssetId = localConfig['symbolToAssetId'];
         const authorities = Object.keys(config["authorities"])
         const deploymentAuthority = config['authorities'][authorities[localConfig.deploymentAuthority]]
-        const client = new TenexClient(getJsonRpcUrl(deploymentAuthority))
+        const client = new FermiClient(getJsonRpcUrl(deploymentAuthority))
         
         const deployerPrivateKey = FermiUtils.hexToBytes(deploymentAuthority.private_key)
-        // console.log("SDKAdapter=", SDKAdapter)
-        // console.log("getJsonRpcUrl=", getJsonRpcUrl)
         const deployer = new SDKAdapter(deployerPrivateKey, client)
         console.log("success");
         

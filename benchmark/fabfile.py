@@ -47,14 +47,14 @@ def fermi(ctx, debug=True):
         'faults': 0,
         'workers': 1,
         'nodes': 4,
-        'rate': 50_000,
+        'rate': 10_000,
         'tx_size': 213,
         'duration': 20,
         'mem_profiling': False,
         'flamegraph': None, # node or None
         'genesis_dir': '.data/',
         'key_dir': '.data/',
-        'do_orderbook': False,
+        'do_orderbook': True,
         # the database dir will be wiped before running the benchmark
         'db_dir': '.data/db',
         'starting_balance': 5000000000
